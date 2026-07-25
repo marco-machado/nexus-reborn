@@ -4,19 +4,43 @@
 import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
-import { getWorld } from '../game/runtime'
+import { getWorld, setCameraFootprint } from '../game/runtime'
+import { CAMERA_YAW, type CameraFootprint } from '../game/types'
 
-const YAW = Math.PI / 4
 const ELEV = (55 * Math.PI) / 180
 // Keep the eye above the mid-rise roofline even at full zoom-in.
 const MIN_DIST = 44
 const MAX_DIST = 115
-const SIN_Y = Math.sin(YAW)
-const COS_Y = Math.cos(YAW)
+const SIN_Y = Math.sin(CAMERA_YAW)
+const COS_Y = Math.cos(CAMERA_YAW)
 // Screen-up on the ground plane points away from the camera; screen-right is
 // its perpendicular.
 const FWD = { x: -SIN_Y, z: -COS_Y }
 const RIGHT = { x: COS_Y, z: -SIN_Y }
+
+// Screen corners in normalized device coords, clockwise from the top left.
+const NDC: ReadonlyArray<readonly [number, number]> = [
+  [-1, 1],
+  [1, 1],
+  [1, -1],
+  [-1, -1],
+]
+// Cut-off for a corner ray that grazes the ground plane, far past the city at
+// any zoom. The fixed tilt keeps every ray pointing down, so this only guards
+// a later change to the tilt or the field of view.
+const MAX_REACH = 500
+
+// Drops the four view corners onto y=0 and writes the hits into the reused
+// footprint points. Needs the camera world matrix current for the frame.
+function groundFootprint(camera: THREE.Camera, ray: THREE.Vector3, out: CameraFootprint): void {
+  const eye = camera.position
+  for (let i = 0; i < NDC.length; i++) {
+    ray.set(NDC[i][0], NDC[i][1], -1).unproject(camera).sub(eye).normalize()
+    const t = ray.y < -1e-4 ? Math.min(-eye.y / ray.y, MAX_REACH) : MAX_REACH
+    out[i].x = eye.x + ray.x * t
+    out[i].z = eye.z + ray.z * t
+  }
+}
 
 function squadCentroid(out: THREE.Vector3): boolean {
   const w = getWorld()
@@ -53,8 +77,19 @@ export default function CameraRig() {
       targetDist: 72,
       keys: new Set<string>(),
       tmp: new THREE.Vector3(),
+      ray: new THREE.Vector3(),
+      footprint: [
+        { x: 0, z: 0 },
+        { x: 0, z: 0 },
+        { x: 0, z: 0 },
+        { x: 0, z: 0 },
+      ] as CameraFootprint,
     }
   }, [])
+
+  // The rig publishes the footprint from the frame loop; drop it on unmount so
+  // the HUD stops drawing a view that no longer exists.
+  useEffect(() => () => setCameraFootprint(null), [])
 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera
@@ -156,6 +191,9 @@ export default function CameraRig() {
     )
     camera.position.copy(state.tmp)
     camera.lookAt(state.focus)
+    camera.updateMatrixWorld()
+    groundFootprint(camera, state.ray, state.footprint)
+    setCameraFootprint(state.footprint)
   }, 0)
 
   return null
