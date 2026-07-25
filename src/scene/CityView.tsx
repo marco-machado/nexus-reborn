@@ -1,17 +1,48 @@
 // Static city rendering: ground, instanced buildings with lit-window facades,
 // neon banners, streetlights, props and the checkpoint dressing. Everything is
 // built once per city into a single Group; the per-frame cost is instanced
-// draw calls only.
+// draw calls plus a camera-occlusion pass that ghosts buildings hiding the
+// squad: the solid instance collapses while a transparent twin fades in.
 import { useEffect, useMemo } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
+import { float, instancedBufferAttribute, texture } from 'three/tsl'
 import { getWorld } from '../game/runtime'
-import type { BuildingData, CityData, PropData } from '../game/types'
+import type { BuildingData, CityData, PropData, WorldApi } from '../game/types'
 import { makeBuildingGeometry, makeFacadeMaps, makeGlowTexture, makeGroundMaps } from './textures'
 
 const UP = new THREE.Vector3(0, 1, 0)
 
+// Occluder ghosting: faded shell opacity and per-second easing rates.
+const GHOST_OPACITY = 0.16
+const GHOST_IN_RATE = 10
+const GHOST_OUT_RATE = 5
+
+// One batch per facade variant: the solid instanced mesh, its transparent
+// ghost twin and the per-instance fade values driving the ghost material.
+interface FadeBatch {
+  solid: THREE.InstancedMesh
+  ghost: THREE.InstancedMesh
+  fadeAttr: THREE.InstancedBufferAttribute
+  fade: Float32Array
+  occluded: Uint8Array
+  ghosted: Uint8Array
+  pristine: Float32Array
+  boxes: Float32Array
+}
+
+// Neon banner instances keyed to their building so they collapse while the
+// building is ghosted. refs packs batch * 4096 + instance index.
+interface BannerLink {
+  mesh: THREE.InstancedMesh
+  pristine: Float32Array
+  refs: Int32Array
+}
+
 interface Built {
   group: THREE.Group
+  batches: FadeBatch[]
+  bannerLinks: BannerLink[]
   dispose: () => void
   alive: boolean
 }
@@ -51,11 +82,18 @@ function buildCity(city: CityData): Built {
   group.add(ground)
 
   // Buildings, three facade variants chosen by height so window stretch stays
-  // plausible.
+  // plausible. Each variant also gets a ghost twin for occlusion fading: same
+  // geometry and facade maps, transparent, per-instance opacity from fadeAttr
+  // with the window emissive dimmed by fade squared so glass dies out first.
+  // Ghost instance matrices start zeroed (collapsed) and only carry buildings
+  // currently faded, so the extra passes rasterize almost nothing.
   const variantOf = (b: BuildingData): number => (b.h >= 18 ? 0 : b.h >= 10 ? 1 : 2)
   const lists: BuildingData[][] = [[], [], []]
   for (const b of city.buildings) lists[variantOf(b)].push(b)
   const boxGeom = track(makeBuildingGeometry())
+  const batches: FadeBatch[] = []
+  const bannerLinks: BannerLink[] = []
+  const slotOf = new Map<BuildingData, number>()
   for (let v = 0; v < 3; v++) {
     const list = lists[v]
     const maps = makeFacadeMaps(v)
@@ -72,19 +110,58 @@ function buildCity(city: CityData): Built {
       }),
     )
     const mesh = new THREE.InstancedMesh(boxGeom, mat, list.length)
+    const fade = new Float32Array(list.length).fill(1)
+    const fadeAttr = new THREE.InstancedBufferAttribute(fade, 1)
+    fadeAttr.setUsage(THREE.DynamicDrawUsage)
+    const fadeNode = float(instancedBufferAttribute<'float'>(fadeAttr, 'float'))
+    const ghostMat = track(
+      new THREE.MeshStandardNodeMaterial({
+        map: maps.map,
+        roughness: 0.85,
+        metalness: 0.08,
+        transparent: true,
+        depthWrite: false,
+      }),
+    )
+    ghostMat.opacityNode = fadeNode
+    ghostMat.emissiveNode = texture(maps.emissiveMap).mul(fadeNode.mul(fadeNode).mul(0.9))
+    const ghost = new THREE.InstancedMesh(boxGeom, ghostMat, list.length)
+    const boxes = new Float32Array(list.length * 5)
     for (let i = 0; i < list.length; i++) {
       const b = list[i]
+      slotOf.set(b, v * 4096 + i)
       q.identity()
       m.compose(p.set(b.x + b.w / 2, b.h / 2, b.z + b.d / 2), q, sc.set(b.w, b.h, b.d))
       mesh.setMatrixAt(i, m)
       const t = 0.78 + b.tint * 0.34
       col.setRGB(t * 0.92, t * 0.97, t * 1.06)
       mesh.setColorAt(i, col)
+      ghost.setColorAt(i, col)
+      const o = i * 5
+      boxes[o] = b.x
+      boxes[o + 1] = b.z
+      boxes[o + 2] = b.x + b.w
+      boxes[o + 3] = b.z + b.d
+      boxes[o + 4] = b.h
     }
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.frustumCulled = false
-    group.add(mesh)
+    if (ghost.instanceColor) ghost.instanceColor.needsUpdate = true
+    ghost.frustumCulled = false
+    ghost.renderOrder = 3
+    ghost.visible = false
+    group.add(mesh, ghost)
+    batches.push({
+      solid: mesh,
+      ghost,
+      fadeAttr,
+      fade,
+      occluded: new Uint8Array(list.length),
+      ghosted: new Uint8Array(list.length),
+      pristine: (mesh.instanceMatrix.array as Float32Array).slice(),
+      boxes,
+    })
   }
 
   // Rooftop AC boxes on a sample of large roofs.
@@ -169,6 +246,9 @@ function buildCity(city: CityData): Built {
     mesh.instanceMatrix.needsUpdate = true
     mesh.frustumCulled = false
     group.add(mesh)
+    const refs = new Int32Array(items.length)
+    for (let i = 0; i < items.length; i++) refs[i] = slotOf.get(items[i].b) ?? -1
+    bannerLinks.push({ mesh, pristine: (mesh.instanceMatrix.array as Float32Array).slice(), refs })
   }
 
   // Large amber billboard frames on tall buildings near the checkpoint,
@@ -369,6 +449,8 @@ function buildCity(city: CityData): Built {
 
   return {
     group,
+    batches,
+    bannerLinks,
     dispose: () => {
       for (const d of disposables) d.dispose()
     },
@@ -376,8 +458,167 @@ function buildCity(city: CityData): Built {
   }
 }
 
+// Segment-vs-AABB slab test, t clamped to [0, 1] so only geometry strictly
+// between the endpoints counts. Box spans [x0, x1] x [0, h] x [z0, z1].
+function segmentHitsBox(
+  px: number,
+  py: number,
+  pz: number,
+  dx: number,
+  dy: number,
+  dz: number,
+  x0: number,
+  z0: number,
+  x1: number,
+  z1: number,
+  h: number,
+): boolean {
+  let tmin = 0
+  let tmax = 1
+  if (dx !== 0) {
+    const inv = 1 / dx
+    let t1 = (x0 - px) * inv
+    let t2 = (x1 - px) * inv
+    if (t1 > t2) {
+      const t = t1
+      t1 = t2
+      t2 = t
+    }
+    if (t1 > tmin) tmin = t1
+    if (t2 < tmax) tmax = t2
+    if (tmin > tmax) return false
+  } else if (px < x0 || px > x1) {
+    return false
+  }
+  if (dy !== 0) {
+    const inv = 1 / dy
+    let t1 = (0 - py) * inv
+    let t2 = (h - py) * inv
+    if (t1 > t2) {
+      const t = t1
+      t1 = t2
+      t2 = t
+    }
+    if (t1 > tmin) tmin = t1
+    if (t2 < tmax) tmax = t2
+    if (tmin > tmax) return false
+  } else if (py < 0 || py > h) {
+    return false
+  }
+  if (dz !== 0) {
+    const inv = 1 / dz
+    let t1 = (z0 - pz) * inv
+    let t2 = (z1 - pz) * inv
+    if (t1 > t2) {
+      const t = t1
+      t1 = t2
+      t2 = t
+    }
+    if (t1 > tmin) tmin = t1
+    if (t2 < tmax) tmax = t2
+    if (tmin > tmax) return false
+  } else if (pz < z0 || pz > z1) {
+    return false
+  }
+  return tmin < tmax
+}
+
+// Moves one building between the solid and ghost meshes by swapping which
+// twin holds its pristine matrix, and collapses or restores its neon banners.
+function swapInstance(built: Built, bi: number, i: number, toGhost: boolean): void {
+  const batch = built.batches[bi]
+  const solidArr = batch.solid.instanceMatrix.array as Float32Array
+  const ghostArr = batch.ghost.instanceMatrix.array as Float32Array
+  const o = i * 16
+  for (let k = 0; k < 16; k++) {
+    solidArr[o + k] = toGhost ? 0 : batch.pristine[o + k]
+    ghostArr[o + k] = toGhost ? batch.pristine[o + k] : 0
+  }
+  batch.ghosted[i] = toGhost ? 1 : 0
+  const key = bi * 4096 + i
+  for (const link of built.bannerLinks) {
+    let dirty = false
+    for (let j = 0; j < link.refs.length; j++) {
+      if (link.refs[j] !== key) continue
+      const arr = link.mesh.instanceMatrix.array as Float32Array
+      const jo = j * 16
+      for (let k = 0; k < 16; k++) arr[jo + k] = toGhost ? 0 : link.pristine[jo + k]
+      dirty = true
+    }
+    if (dirty) link.mesh.instanceMatrix.needsUpdate = true
+  }
+}
+
+// Scratch sightline endpoints; the whole pass allocates nothing per frame.
+const agentX = new Float32Array(8)
+const agentZ = new Float32Array(8)
+
+// Fades every building whose box crosses a camera-to-agent sightline and
+// restores it once clear. Cost per frame: agents x buildings slab tests
+// (about 1000 for a full squad) plus attribute uploads while fades move.
+function updateOcclusion(built: Built, camera: THREE.Camera, w: WorldApi, dt: number): void {
+  let n = 0
+  for (const u of w.units) {
+    if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
+    if (n >= agentX.length) break
+    agentX[n] = u.pos.x
+    agentZ[n] = u.pos.z
+    n++
+  }
+  const px = camera.position.x
+  const py = camera.position.y
+  const pz = camera.position.z
+  const kIn = 1 - Math.exp(-GHOST_IN_RATE * dt)
+  const kOut = 1 - Math.exp(-GHOST_OUT_RATE * dt)
+  for (let bi = 0; bi < built.batches.length; bi++) {
+    const batch = built.batches[bi]
+    const count = batch.fade.length
+    const occ = batch.occluded
+    occ.fill(0)
+    const boxes = batch.boxes
+    for (let a = 0; a < n; a++) {
+      const dx = agentX[a] - px
+      const dy = 1.4 - py
+      const dz = agentZ[a] - pz
+      for (let i = 0; i < count; i++) {
+        if (occ[i] === 1) continue
+        const o = i * 5
+        if (segmentHitsBox(px, py, pz, dx, dy, dz, boxes[o], boxes[o + 1], boxes[o + 2], boxes[o + 3], boxes[o + 4])) {
+          occ[i] = 1
+        }
+      }
+    }
+    let fadeDirty = false
+    let swapped = false
+    let ghostCount = 0
+    for (let i = 0; i < count; i++) {
+      const target = occ[i] === 1 ? GHOST_OPACITY : 1
+      let f = batch.fade[i]
+      if (f !== target) {
+        f += (target - f) * (target < f ? kIn : kOut)
+        if (Math.abs(f - target) < 0.005) f = target
+        batch.fade[i] = f
+        fadeDirty = true
+      }
+      const wantGhost = f < 1
+      if (wantGhost !== (batch.ghosted[i] === 1)) {
+        swapInstance(built, bi, i, wantGhost)
+        swapped = true
+      }
+      if (batch.ghosted[i] === 1) ghostCount++
+    }
+    if (fadeDirty) batch.fadeAttr.needsUpdate = true
+    if (swapped) {
+      batch.solid.instanceMatrix.needsUpdate = true
+      batch.ghost.instanceMatrix.needsUpdate = true
+    }
+    batch.ghost.visible = ghostCount > 0
+  }
+}
+
 export default function CityView() {
   const world = getWorld()
+  const camera = useThree((s) => s.camera)
   const built = useMemo(() => (world ? buildCity(world.city) : null), [world])
   // Deferred disposal: StrictMode remounts reuse the same memoized resources,
   // so only dispose when the cleanup is not immediately followed by a mount.
@@ -391,6 +632,11 @@ export default function CityView() {
       }, 0)
     }
   }, [built])
+  useFrame((_, rawDt) => {
+    const w = getWorld()
+    if (!built || !w) return
+    updateOcclusion(built, camera, w, Math.min(rawDt, 0.05))
+  }, 0)
   if (!built) return null
   return <primitive object={built.group} />
 }

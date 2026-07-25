@@ -1,8 +1,8 @@
 // Procedural city generator. Deterministic from mission.seed.
 // Layout: a 5-wide north-south avenue feeds a walled checkpoint plaza in the
-// north. 4-wide cross streets and 3-wide secondary vertical roads cut the rest
+// north. 5-wide cross streets and 4-wide secondary vertical roads cut the rest
 // into blocks packed with buildings. Walkable cells: streets, plaza and the
-// 2-wide alleys left between building footprints.
+// 2- to 3-wide alleys left between building footprints.
 // Neon side encoding (shared with the renderer): 0 faces +z, 1 faces +x,
 // 2 faces -z, 3 faces -x.
 import type {
@@ -76,9 +76,9 @@ export function generateCity(mission: MissionDef): CityData {
   // Street plan.
   const hStreets: HSpan[] = []
   let hz = ri(24, 27)
-  while (hz + 4 <= 90) {
-    hStreets.push({ z0: hz, z1: hz + 4 })
-    hz += ri(12, 18)
+  while (hz + 5 <= 90) {
+    hStreets.push({ z0: hz, z1: hz + 5 })
+    hz += ri(13, 19)
   }
   const firstHz = hStreets[0].z0
   const vSecondary: VSpan[] = []
@@ -89,7 +89,7 @@ export function generateCity(mission: MissionDef): CityData {
     [77, 84],
   ]) {
     const c = ri(a, b)
-    vSecondary.push({ x0: c - 1, x1: c + 2, z0: firstHz, z1: 94 })
+    vSecondary.push({ x0: c - 1, x1: c + 3, z0: firstHz, z1: 94 })
   }
   const avenue: VSpan = { x0: AVE.x0, x1: AVE.x1, z0: AVE.z0, z1: AVE.z1 }
 
@@ -106,8 +106,10 @@ export function generateCity(mission: MissionDef): CityData {
   const props: PropData[] = []
   const alleys: AlleyRect[] = []
 
+  // Towers cap at 26 so mid-map high-rises rarely wall off the squad from the
+  // south-east camera; the north wall strip keeps its taller skyline.
   const heightFor = (kind: BuildingData['kind']): number =>
-    kind === 'tower' ? ri(18, 34) : kind === 'slab' ? ri(12, 20) : kind === 'block' ? ri(8, 16) : ri(5, 9)
+    kind === 'tower' ? ri(16, 26) : kind === 'slab' ? ri(12, 20) : kind === 'block' ? ri(8, 16) : ri(5, 9)
 
   const kindFor = (north: boolean): BuildingData['kind'] => {
     const t = rnd()
@@ -131,9 +133,10 @@ export function generateCity(mission: MissionDef): CityData {
     for (let i = 0; i < n; i++) {
       let s = cuts[i]
       const e = cuts[i + 1]
-      if (i > 0 && e - s > 5 && rnd() < 0.4) {
-        gaps.push([s, s + 2])
-        s += 2
+      if (i > 0 && e - s > 4 && rnd() < 0.75) {
+        const g = e - s > 6 ? 3 : 2
+        gaps.push([s, s + g])
+        s += g
       }
       if (e - s >= 3) segs.push([s, e])
     }
@@ -334,7 +337,7 @@ export function generateCity(mission: MissionDef): CityData {
       const dx = ri(a.x0, a.x1 - 1)
       const dz = ri(a.z0, a.z1 - 1)
       if (dx >= 2 && dz >= 2 && dx < 94 && dz < 94 && walk[idx(dx, dz)] === 1) {
-        props.push({ x: dx + 0.5, z: dz + 0.5, kind: 'dumpster', rot: a.x1 - a.x0 === 2 ? 0 : Math.PI / 2, blocking: true })
+        props.push({ x: dx + 0.5, z: dz + 0.5, kind: 'dumpster', rot: a.x1 - a.x0 <= 3 ? 0 : Math.PI / 2, blocking: true })
         walk[idx(dx, dz)] = 0
       }
     }

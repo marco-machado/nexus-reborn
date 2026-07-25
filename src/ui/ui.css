@@ -1608,6 +1608,18 @@
   white-space: nowrap;
 }
 
+/* deploy splash: covers the canvas while it warms up, fades once linked */
+.deploy-splash {
+  z-index: 20;
+  background: var(--bg);
+  transition: opacity 0.45s ease-out, visibility 0.45s;
+}
+
+.deploy-splash.out {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* top bar */
 .hud-top {
   position: absolute;
@@ -1678,11 +1690,21 @@
   background: rgba(224, 75, 60, 0.1);
 }
 
+/* armed abort waits for a confirming second click */
+.hud-btn.abort.armed,
+.hud-btn.abort.armed:hover {
+  color: #ffd7d0;
+  border-color: var(--red-hot);
+  background: rgba(224, 75, 60, 0.22);
+  box-shadow: 0 0 12px rgba(224, 75, 60, 0.4);
+}
+
 /* squad link */
 .hud-squad { top: 44px; left: 10px; width: 238px; }
 .hud-squad-body { display: flex; flex-direction: column; gap: 6px; padding: 6px; }
 
 .hud-agent {
+  position: relative;
   display: grid;
   grid-template-columns: 14px 40px minmax(0, 1fr);
   gap: 7px;
@@ -1698,10 +1720,22 @@
 .hud-agent:hover { border-color: var(--line-strong); }
 
 .hud-agent.sel {
-  border-color: var(--line-amber);
-  border-left-color: var(--amber);
-  background: rgba(240, 180, 69, 0.07);
-  box-shadow: 0 0 10px rgba(240, 180, 69, 0.12);
+  border-color: var(--amber);
+  border-left-color: var(--amber-hot);
+  background: rgba(240, 180, 69, 0.13);
+  box-shadow: 0 0 12px rgba(240, 180, 69, 0.22), inset 0 0 14px rgba(240, 180, 69, 0.08);
+}
+
+/* tag on the agent the weapon bar describes */
+.hud-agent-active {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  padding: 1px 4px;
+  font-size: 7px;
+  letter-spacing: 0.2em;
+  color: #140e03;
+  background: var(--amber);
 }
 
 .hud-agent.dead { opacity: 0.45; cursor: default; }
@@ -1797,6 +1831,12 @@
   scrollbar-color: rgba(126, 240, 212, 0.28) transparent;
 }
 
+/* hanging indent: 9 monospace chars incl tracking keeps wraps past the clock */
+.hud-log {
+  padding-left: 5.94em;
+  text-indent: -5.94em;
+}
+
 .hud-log.sys { color: var(--ink-dim); }
 .hud-log.alert { color: var(--red-hot); }
 .hud-log.ok { color: var(--green); }
@@ -1816,7 +1856,7 @@
 .hud-weapons .hud-panel { position: static; pointer-events: auto; }
 
 .hud-wpn { width: 202px; }
-.hud-wpn.secondary { width: 156px; }
+.hud-wpn.secondary { width: 168px; }
 
 .hud-wpn-body { display: flex; flex-direction: column; padding: 5px 9px 6px; gap: 2px; }
 
@@ -1832,11 +1872,21 @@
 
 .hud-wpn-name {
   font-size: 9.5px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* long sidearm names wrap to two lines instead of ellipsizing */
+.hud-wpn.secondary .hud-wpn-name {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.3;
 }
 
 .hud-ammo { white-space: nowrap; }
@@ -1859,8 +1909,19 @@
 }
 
 .hud-slot:hover { border-color: var(--line-strong); }
-.hud-slot.off { color: rgba(126, 240, 212, 0.26); }
 .hud-slot i { position: absolute; right: 2px; bottom: 0; font-size: 8px; color: var(--ink-dim); }
+
+/* locked progression slots: dim glyph, corner padlock, no hover affordance */
+.hud-slot.locked { color: rgba(126, 240, 212, 0.18); cursor: default; }
+.hud-slot.locked:hover { border-color: var(--line); }
+
+.hud-slot-lock {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  color: var(--ink-dim);
+}
 
 /* minimap */
 .hud-minimap { right: 10px; bottom: 10px; }
@@ -1890,7 +1951,8 @@
   transition: border-color 0.12s, color 0.12s;
 }
 
-.hud-mm-zoom button:hover { border-color: var(--line-strong); color: var(--teal); }
+.hud-mm-zoom button:hover:not(:disabled) { border-color: var(--line-strong); color: var(--teal); }
+.hud-mm-zoom button:disabled { opacity: 0.35; cursor: default; }
 
 /* center overlays */
 .hud-banner-wrap {

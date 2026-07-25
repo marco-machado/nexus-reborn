@@ -54,17 +54,17 @@ export function makeGroundMaps(city: CityData): GroundMaps {
   }
 
   // Road bands, slightly lighter wet asphalt. Widths match the generator:
-  // horizontal streets 4 cells, secondary verticals 3, the avenue 5.
+  // horizontal streets 5 cells, secondary verticals 4, the avenue 5.
   const paintBand = (x0: number, z0: number, x1: number, z1: number): void => {
     ctx.fillStyle = '#374453'
     ctx.fillRect(x0 * s, z0 * s, (x1 - x0) * s, (z1 - z0) * s)
     rCtx.fillStyle = 'rgb(105,105,105)'
     rCtx.fillRect(x0 * s, z0 * s, (x1 - x0) * s, (z1 - z0) * s)
   }
-  for (const cz of city.roadsH) paintBand(2, cz - 2, 94, cz + 2)
+  for (const cz of city.roadsH) paintBand(2, cz - 2, 94, cz + 3)
   for (const cx of city.roadsV) {
     if (cx === 48) paintBand(46, 8, 51, 94)
-    else paintBand(cx - 1, city.roadsH.length > 0 ? city.roadsH[0] - 2 : 24, cx + 2, 94)
+    else paintBand(cx - 1, city.roadsH.length > 0 ? city.roadsH[0] - 2 : 24, cx + 3, 94)
   }
   // Plaza apron around the checkpoint.
   const cp = city.checkpoint
@@ -107,18 +107,21 @@ export function makeGroundMaps(city: CityData): GroundMaps {
   }
   ctx.stroke()
 
-  // Dashed lane markings along road centerlines.
+  // Dashed lane markings along road centerlines. Horizontal streets are 5
+  // cells starting 2 above roadsH; secondary verticals are 4 cells starting 1
+  // left of roadsV, so their centers sit half a cell off the marker row.
   ctx.strokeStyle = 'rgba(88,96,104,0.4)'
   ctx.lineWidth = 3
   ctx.setLineDash([14, 26])
   ctx.beginPath()
   for (const cz of city.roadsH) {
-    ctx.moveTo(2 * s, cz * s)
-    ctx.lineTo(94 * s, cz * s)
+    ctx.moveTo(2 * s, (cz + 0.5) * s)
+    ctx.lineTo(94 * s, (cz + 0.5) * s)
   }
   for (const cx of city.roadsV) {
-    ctx.moveTo((cx + 0.5) * s, 8 * s)
-    ctx.lineTo((cx + 0.5) * s, 94 * s)
+    const lx = cx === 48 ? cx + 0.5 : cx + 1
+    ctx.moveTo(lx * s, 8 * s)
+    ctx.lineTo(lx * s, 94 * s)
   }
   ctx.stroke()
   ctx.setLineDash([])
@@ -241,6 +244,28 @@ export function makeGlowTexture(): THREE.CanvasTexture {
   g.addColorStop(1, 'rgba(255,255,255,0)')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, 128, 128)
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
+// Squad slot plaque: dark chip with a teal border and slot number, shown
+// billboarded above each agent by the unit renderer.
+export function makeSlotTexture(slot: number): THREE.CanvasTexture {
+  const [canvas, ctx] = makeCanvas(64, 64)
+  ctx.clearRect(0, 0, 64, 64)
+  ctx.fillStyle = 'rgba(7,16,18,0.9)'
+  ctx.strokeStyle = '#7ef0d4'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.roundRect(5, 5, 54, 54, 10)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#7ef0d4'
+  ctx.font = 'bold 36px monospace'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(String(slot), 32, 34)
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
   return tex
