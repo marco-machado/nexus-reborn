@@ -1,0 +1,319 @@
+// Imperative unit rendering. A pool of per-unit Groups assembled from shared
+// geometries and materials, updated every frame straight from the world state.
+// Handles walk cycles, death poses, selection rings, alert markers and enemy
+// hp bars for 60+ units without per-frame allocation.
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three/webgpu'
+import { getWorld } from '../game/runtime'
+import { useMissionStore } from '../state/missionStore'
+import type { Unit } from '../game/types'
+import { makeAlertTexture } from './textures'
+
+interface Shared {
+  legGeom: THREE.BoxGeometry
+  torsoGeom: THREE.BoxGeometry
+  coatGeom: THREE.BoxGeometry
+  headGeom: THREE.SphereGeometry
+  visorGeom: THREE.BoxGeometry
+  stripeGeom: THREE.BoxGeometry
+  chestGeom: THREE.BoxGeometry
+  gunGeom: THREE.BoxGeometry
+  ringGeom: THREE.RingGeometry
+  barBgGeom: THREE.PlaneGeometry
+  barFgGeom: THREE.PlaneGeometry
+  alertGeom: THREE.PlaneGeometry
+  agentBody: THREE.MeshStandardMaterial
+  agentCoat: THREE.MeshStandardMaterial
+  agentHead: THREE.MeshStandardMaterial
+  enemyBody: THREE.MeshStandardMaterial
+  enemyCoat: THREE.MeshStandardMaterial
+  enemyHead: THREE.MeshStandardMaterial
+  enemyVisor: THREE.MeshStandardMaterial
+  garrisonChest: THREE.MeshStandardMaterial
+  gunMat: THREE.MeshStandardMaterial
+  ringMat: THREE.MeshBasicMaterial
+  barBgMat: THREE.MeshBasicMaterial
+  barFgMat: THREE.MeshBasicMaterial
+  alertMat: THREE.MeshBasicMaterial
+  civMats: THREE.MeshStandardMaterial[]
+  civHead: THREE.MeshStandardMaterial
+  accentMats: Map<string, THREE.MeshStandardMaterial>
+}
+
+let shared: Shared | null = null
+
+function getShared(): Shared {
+  if (shared) return shared
+  const legGeom = new THREE.BoxGeometry(0.13, 0.7, 0.13)
+  legGeom.translate(0, -0.35, 0)
+  const std = (color: string, roughness: number): THREE.MeshStandardMaterial =>
+    new THREE.MeshStandardMaterial({ color, roughness })
+  shared = {
+    legGeom,
+    torsoGeom: new THREE.BoxGeometry(0.4, 0.55, 0.26),
+    coatGeom: new THREE.BoxGeometry(0.5, 0.42, 0.34),
+    headGeom: new THREE.SphereGeometry(0.14, 10, 8),
+    visorGeom: new THREE.BoxGeometry(0.05, 0.06, 0.2),
+    stripeGeom: new THREE.BoxGeometry(0.12, 0.045, 0.46),
+    chestGeom: new THREE.BoxGeometry(0.05, 0.12, 0.12),
+    gunGeom: new THREE.BoxGeometry(0.6, 0.07, 0.07),
+    ringGeom: new THREE.RingGeometry(0.5, 0.68, 24).rotateX(-Math.PI / 2) as THREE.RingGeometry,
+    barBgGeom: new THREE.PlaneGeometry(0.76, 0.1),
+    barFgGeom: new THREE.PlaneGeometry(0.7, 0.055).translate(0.35, 0, 0) as THREE.PlaneGeometry,
+    alertGeom: new THREE.PlaneGeometry(0.28, 0.5),
+    agentBody: std('#414b57', 0.82),
+    agentCoat: std('#303842', 0.88),
+    agentHead: std('#3a434e', 0.8),
+    enemyBody: std('#393233', 0.78),
+    enemyCoat: std('#2c2729', 0.85),
+    enemyHead: std('#2e292b', 0.8),
+    enemyVisor: new THREE.MeshStandardMaterial({
+      color: '#000000',
+      emissive: new THREE.Color('#ff3b30'),
+      emissiveIntensity: 2.4,
+    }),
+    garrisonChest: new THREE.MeshStandardMaterial({
+      color: '#000000',
+      emissive: new THREE.Color('#ff5c4a'),
+      emissiveIntensity: 3,
+    }),
+    gunMat: new THREE.MeshStandardMaterial({ color: '#0c0e11', roughness: 0.55, metalness: 0.35 }),
+    ringMat: new THREE.MeshBasicMaterial({
+      color: '#7ef0d4',
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+    barBgMat: new THREE.MeshBasicMaterial({ color: '#0b0f12', transparent: true, opacity: 0.8, depthWrite: false }),
+    barFgMat: new THREE.MeshBasicMaterial({ color: '#ff5a4a', transparent: true, opacity: 0.95, depthWrite: false }),
+    alertMat: new THREE.MeshBasicMaterial({
+      map: makeAlertTexture(),
+      color: '#ff4a3c',
+      transparent: true,
+      depthWrite: false,
+    }),
+    civMats: ['#4a4238', '#3d4650', '#55483a', '#414a41', '#5a5044', '#38404b'].map((c) => std(c, 0.95)),
+    civHead: std('#5c5348', 0.9),
+    accentMats: new Map(),
+  }
+  return shared
+}
+
+function accentMat(s: Shared, hex: string): THREE.MeshStandardMaterial {
+  let mat = s.accentMats.get(hex)
+  if (!mat) {
+    mat = new THREE.MeshStandardMaterial({
+      color: '#000000',
+      emissive: new THREE.Color(hex),
+      emissiveIntensity: 2.2,
+    })
+    s.accentMats.set(hex, mat)
+  }
+  return mat
+}
+
+interface View {
+  root: THREE.Group
+  rig: THREE.Group
+  legL: THREE.Mesh
+  legR: THREE.Mesh
+  ring: THREE.Mesh | null
+  bar: THREE.Group | null
+  barFg: THREE.Mesh | null
+  alert: THREE.Mesh | null
+  yaw: number
+  phase: number
+}
+
+function hashId(id: string): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+  return (h >>> 0) / 4294967296
+}
+
+function buildView(u: Unit, s: Shared): View {
+  const root = new THREE.Group()
+  const rig = new THREE.Group()
+  // Slightly larger than life so squads and hostiles read at tactical zoom.
+  rig.scale.setScalar(u.kind === 'civilian' ? 1.05 : 1.22)
+  root.add(rig)
+
+  let body = s.civMats[Math.floor(hashId(u.id) * s.civMats.length) % s.civMats.length]
+  let coat = body
+  let head = s.civHead
+  if (u.kind === 'agent') {
+    body = s.agentBody
+    coat = s.agentCoat
+    head = s.agentHead
+  } else if (u.kind === 'enemy') {
+    body = s.enemyBody
+    coat = s.enemyCoat
+    head = s.enemyHead
+  }
+
+  const legL = new THREE.Mesh(s.legGeom, coat)
+  legL.position.set(0, 0.7, -0.09)
+  const legR = new THREE.Mesh(s.legGeom, coat)
+  legR.position.set(0, 0.7, 0.09)
+  const coatMesh = new THREE.Mesh(s.coatGeom, coat)
+  coatMesh.position.set(0, 0.86, 0)
+  const torso = new THREE.Mesh(s.torsoGeom, body)
+  torso.position.set(0, 1.0, 0)
+  const headMesh = new THREE.Mesh(s.headGeom, head)
+  headMesh.position.set(0, 1.42, 0)
+  rig.add(legL, legR, coatMesh, torso, headMesh)
+
+  if (u.kind === 'agent') {
+    const accent = u.operative ? u.operative.accent : '#7ef0d4'
+    const visor = new THREE.Mesh(s.visorGeom, accentMat(s, accent))
+    visor.position.set(0.12, 1.44, 0)
+    const stripe = new THREE.Mesh(s.stripeGeom, accentMat(s, accent))
+    stripe.position.set(0, 1.29, 0)
+    rig.add(visor, stripe)
+  } else if (u.kind === 'enemy') {
+    const visor = new THREE.Mesh(s.visorGeom, s.enemyVisor)
+    visor.position.set(0.12, 1.44, 0)
+    rig.add(visor)
+    if (u.tag === 'garrison') {
+      const chest = new THREE.Mesh(s.chestGeom, s.garrisonChest)
+      chest.position.set(0.2, 1.05, 0)
+      rig.add(chest)
+    }
+  }
+
+  if (u.weapon) {
+    const gun = new THREE.Mesh(s.gunGeom, s.gunMat)
+    gun.position.set(0.34, 1.0, 0.16)
+    rig.add(gun)
+  }
+
+  let ring: THREE.Mesh | null = null
+  if (u.kind === 'agent') {
+    ring = new THREE.Mesh(s.ringGeom, s.ringMat)
+    ring.position.y = 0.05
+    ring.renderOrder = 5
+    ring.visible = false
+    root.add(ring)
+  }
+
+  let bar: THREE.Group | null = null
+  let barFg: THREE.Mesh | null = null
+  let alert: THREE.Mesh | null = null
+  if (u.kind === 'enemy') {
+    bar = new THREE.Group()
+    bar.position.y = 1.92
+    const bg = new THREE.Mesh(s.barBgGeom, s.barBgMat)
+    bg.renderOrder = 6
+    barFg = new THREE.Mesh(s.barFgGeom, s.barFgMat)
+    barFg.position.set(-0.35, 0, 0.004)
+    barFg.renderOrder = 7
+    bar.add(bg, barFg)
+    bar.visible = false
+    root.add(bar)
+    alert = new THREE.Mesh(s.alertGeom, s.alertMat)
+    alert.position.y = 2.4
+    alert.renderOrder = 7
+    alert.visible = false
+    root.add(alert)
+  }
+
+  return { root, rig, legL, legR, ring, bar, barFg, alert, yaw: 0, phase: hashId(u.id) * Math.PI * 2 }
+}
+
+const TMP_Q = new THREE.Quaternion()
+
+export default function Units() {
+  const camera = useThree((st) => st.camera)
+  const group = useMemo(() => new THREE.Group(), [])
+  const pool = useRef(new Map<string, View>())
+
+  useEffect(() => {
+    const g = group
+    const p = pool.current
+    return () => {
+      p.clear()
+      g.clear()
+    }
+  }, [group])
+
+  useFrame((_, rawDt) => {
+    const w = getWorld()
+    if (!w) return
+    const s = getShared()
+    const dt = Math.min(rawDt, 0.05)
+    const t = w.time
+    const selected = useMissionStore.getState().selected
+    s.ringMat.opacity = 0.38 + 0.2 * Math.sin(t * 4.5)
+    const turn = 1 - Math.exp(-14 * dt)
+
+    for (const u of w.units) {
+      let view = pool.current.get(u.id)
+      if (!view) {
+        view = buildView(u, s)
+        pool.current.set(u.id, view)
+        group.add(view.root)
+      }
+      view.root.position.set(u.pos.x, 0, u.pos.z)
+
+      const dead = u.stance === 'dead' || u.hp <= 0
+      if (dead) {
+        const k = u.deathT !== undefined ? Math.min(1, Math.max(0, (t - u.deathT) / 0.25)) : 1
+        view.rig.rotation.z = (Math.PI / 2) * k
+        view.rig.position.y = -0.08 * k
+        view.legL.rotation.z = 0
+        view.legR.rotation.z = 0
+        if (view.ring) view.ring.visible = false
+        if (view.bar) view.bar.visible = false
+        if (view.alert) view.alert.visible = false
+        continue
+      }
+
+      // Facing: gun points along heading, or at the target while attacking.
+      // Sim heading is atan2(dx, dz), the +X forward model needs heading - PI/2.
+      let desired = u.heading - Math.PI / 2
+      if (u.stance === 'attacking' && u.targetId) {
+        const tgt = w.unit(u.targetId)
+        if (tgt) desired = -Math.atan2(tgt.pos.z - u.pos.z, tgt.pos.x - u.pos.x)
+      }
+      const dy = Math.atan2(Math.sin(desired - view.yaw), Math.cos(desired - view.yaw))
+      view.yaw += dy * turn
+      view.root.rotation.y = view.yaw
+
+      view.rig.rotation.z = 0
+      const moving = u.stance === 'moving' || u.stance === 'fleeing'
+      if (moving) {
+        const ph = t * (5 + u.speed * 1.6) + view.phase
+        const sw = Math.sin(ph) * 0.55
+        view.legL.rotation.z = sw
+        view.legR.rotation.z = -sw
+        view.rig.position.y = Math.abs(Math.sin(ph)) * 0.05
+      } else {
+        view.legL.rotation.z *= 0.8
+        view.legR.rotation.z *= 0.8
+        view.rig.position.y *= 0.8
+      }
+
+      if (view.ring) view.ring.visible = selected.includes(u.id)
+      if (view.bar && view.barFg) {
+        const show = u.alerted || u.hp < u.maxHp
+        view.bar.visible = show
+        if (show) {
+          view.barFg.scale.x = Math.min(1, Math.max(0.001, u.hp / u.maxHp))
+          TMP_Q.copy(view.root.quaternion).invert().multiply(camera.quaternion)
+          view.bar.quaternion.copy(TMP_Q)
+        }
+      }
+      if (view.alert) {
+        view.alert.visible = u.alerted
+        if (u.alerted) {
+          TMP_Q.copy(view.root.quaternion).invert().multiply(camera.quaternion)
+          view.alert.quaternion.copy(TMP_Q)
+        }
+      }
+    }
+  }, 0)
+
+  return <primitive object={group} />
+}

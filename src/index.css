@@ -1,17 +1,136 @@
-*,
-*::before,
-*::after {
+/* CONTRACT: design tokens shared by every screen. Screen specific styles live
+   in src/ui/ui.css written by the UI build. Aesthetic reference: inspiration
+   PNGs. Near black ground, dark teal panels, cyan text, amber CTAs, red
+   threat accents, terminal monospace type, thin borders, scanline overlay. */
+
+:root {
+  --bg: #04070a;
+  --bg-panel: rgba(7, 16, 15, 0.92);
+  --bg-panel-solid: #0a1412;
+  --bg-inset: rgba(4, 10, 9, 0.9);
+  --ink: #b8d8cf;
+  --ink-dim: #5d7d75;
+  --ink-faint: #35504a;
+  --teal: #7ef0d4;
+  --cyan: #59d6c9;
+  --amber: #f0b445;
+  --amber-hot: #ffd075;
+  --red: #e04b3c;
+  --red-hot: #ff6b55;
+  --green: #7de08a;
+  --line: rgba(126, 240, 212, 0.22);
+  --line-strong: rgba(126, 240, 212, 0.45);
+  --line-amber: rgba(240, 180, 69, 0.55);
+  --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, 'Cascadia Mono',
+    'Roboto Mono', monospace;
+}
+
+* {
   box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-  margin: 0;
-  width: 100%;
   height: 100%;
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-root {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+}
+
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.09) 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+.crt-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+.mission-screen {
+  position: absolute;
+  inset: 0;
+}
+
+.deploy-splash {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  letter-spacing: 0.4em;
+}
+
+.canvas-stub,
+.hud-stub,
+.screen-stub {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hud-stub {
+  justify-content: flex-end;
+  padding-bottom: 40px;
+  pointer-events: none;
+}
+
+.screen-stub h1 {
+  color: var(--teal);
+  font-weight: 500;
+  letter-spacing: 0.3em;
+}
+
+.screen-stub button {
+  font-family: var(--font-mono);
+  background: var(--bg-panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 10px 26px;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+}
+
+.screen-stub button:hover {
+  border-color: var(--line-strong);
+  color: var(--teal);
+}
+
+.screen-stub button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
