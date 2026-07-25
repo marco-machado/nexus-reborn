@@ -5,6 +5,7 @@ import { useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
+import { markerQueue } from './clickMarkers'
 
 const MAX_TRACERS = 256
 const TRACER_LIFE = 0.09
@@ -22,12 +23,6 @@ const MAX_SQUAD = 4
 // The sim owns tracer/boom timestamps; accept either an age counter or a
 // world-time stamp (stamps are large once the mission is a few seconds in).
 const ageOf = (tag: number, now: number): number => (tag > 5 ? Math.max(0, now - tag) : Math.max(0, tag))
-
-const markerQueue: Array<{ x: number; z: number }> = []
-
-export function pushClickMarker(x: number, z: number): void {
-  markerQueue.push({ x, z })
-}
 
 interface BoomSlot {
   mesh: THREE.Mesh

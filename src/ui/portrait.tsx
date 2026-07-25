@@ -2,7 +2,7 @@
 // tinted by the operative accent. Geometry jitter is derived deterministically
 // from the operative id and codename so every dossier renders the same face.
 import { useMemo } from 'react'
-import { hashOf, rngFrom } from './bits'
+import { hashOf, rngFrom } from './util'
 
 export interface PortraitOp {
   id: string
