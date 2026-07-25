@@ -172,6 +172,11 @@ export interface CommEntry {
   cls?: 'sys' | 'alert' | 'ok'
 }
 
+// Ground plane footprint of the camera frustum, world XZ, wound clockwise from
+// the top left screen corner. The scene rig owns the points and rewrites them
+// every frame, so readers use them at once and never keep the reference.
+export type CameraFootprint = readonly [Vec2, Vec2, Vec2, Vec2]
+
 // Live simulation surface shared between the scene renderer, the HUD and input.
 export interface WorldApi {
   city: CityData
@@ -187,6 +192,10 @@ export interface WorldApi {
 }
 
 export const CITY_SIZE = 96
+
+// Fixed camera yaw. The scene rig orbits at this angle and the HUD minimap
+// turns by it, so up on the map is up on screen.
+export const CAMERA_YAW = Math.PI / 4
 
 export function cellIndex(size: number, x: number, z: number): number {
   const cx = Math.floor(x)

@@ -1,12 +1,27 @@
 // Canvas minimap. Reads the live world via getWorld() at ~10fps; renders
-// building footprints, road bands, mission zones and unit blips. Canvas colors
-// are hardcoded hexes matching the design tokens in src/index.css.
+// building footprints, road bands, mission zones, the camera viewport and unit
+// blips. The map is turned by the camera yaw, so up on the panel is up on
+// screen and the viewport reads as an upright cone. Canvas colors are
+// hardcoded hexes matching the tokens in src/index.css.
 import { useEffect, useRef } from 'react'
-import { getWorld } from '../game/runtime'
+import { getCameraFootprint, getWorld } from '../game/runtime'
+import { CAMERA_YAW } from '../game/types'
 import { useMissionStore } from '../state/missionStore'
 
 const ZOOM = [1, 1.7, 2.8]
 export const MM_ZOOM_MAX = ZOOM.length - 1
+
+const YAW_SIN = Math.sin(CAMERA_YAW)
+const YAW_COS = Math.cos(CAMERA_YAW)
+
+// World XZ turned into the panel frame, in world units.
+function turnX(x: number, z: number): number {
+  return x * YAW_COS - z * YAW_SIN
+}
+
+function turnZ(x: number, z: number): number {
+  return x * YAW_SIN + z * YAW_COS
+}
 
 // Offset that keeps the focus point centered while the map edge stays pinned
 // to the viewport edge; centers the whole map when it fits.
@@ -28,6 +43,8 @@ const COLOR = {
   enemyHot: '#ff6b55',
   enemyCalm: 'rgba(224,75,60,0.45)',
   civilian: 'rgba(184,216,207,0.26)',
+  viewport: 'rgba(184,216,207,0.5)',
+  viewportFill: 'rgba(184,216,207,0.045)',
   text: 'rgba(93,125,117,0.8)',
 }
 
@@ -76,7 +93,12 @@ export default function Minimap({
 
       const { city, units } = world
       const size = city.size
-      const s = Math.min(width / size, height / size) * (ZOOM[zoom] ?? 1)
+      // A turned square needs its diagonal to fit, not its side. The west
+      // corner sits left of the world origin; these hold for a yaw inside the
+      // first quarter turn, which the fixed camera yaw is.
+      const span = size * (YAW_SIN + YAW_COS)
+      const originX = -size * YAW_SIN
+      const s = (Math.min(width, height) / span) * (ZOOM[zoom] ?? 1)
 
       // When zoomed, pan toward the living agents' centroid.
       let fx = size / 2
@@ -94,10 +116,11 @@ export default function Minimap({
         fx = sx / n
         fz = sz / n
       }
-      const ox = panOffset(width, size * s, fx * s)
-      const oy = panOffset(height, size * s, fz * s)
+      const ox = panOffset(width, span * s, (turnX(fx, fz) - originX) * s)
+      const oy = panOffset(height, span * s, turnZ(fx, fz) * s)
       ctx.save()
-      ctx.translate(ox, oy)
+      ctx.translate(ox - originX * s, oy)
+      ctx.rotate(CAMERA_YAW)
 
       // map footprint background
       ctx.fillStyle = 'rgba(126,240,212,0.025)'
@@ -134,14 +157,19 @@ export default function Minimap({
       ctx.arc(px, pz, Math.max(3, cp.r * s), 0, Math.PI * 2)
       ctx.stroke()
       ctx.setLineDash([])
+      // The glyph turns back out of the map frame so it stands upright.
       ctx.fillStyle = COLOR.checkpoint
+      ctx.save()
+      ctx.translate(px, pz)
+      ctx.rotate(-CAMERA_YAW)
       ctx.beginPath()
-      ctx.moveTo(px, pz - 4)
-      ctx.lineTo(px + 3.2, pz)
-      ctx.lineTo(px, pz + 4)
-      ctx.lineTo(px - 3.2, pz)
+      ctx.moveTo(0, -4)
+      ctx.lineTo(3.2, 0)
+      ctx.lineTo(0, 4)
+      ctx.lineTo(-3.2, 0)
       ctx.closePath()
       ctx.fill()
+      ctx.restore()
 
       // active objective: expanding amber pulse on its world zone
       const activeObj = useMissionStore.getState().objectives.find((o) => o.active && !o.done)
@@ -157,6 +185,27 @@ export default function Minimap({
         ctx.lineWidth = 1.2
         ctx.beginPath()
         ctx.arc(zone.x * s, zone.z * s, Math.max(4, zone.r * s) * (0.55 + phase), 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.restore()
+      }
+
+      // camera viewport: the frustum footprint on the ground, a trapezoid under
+      // the fixed 45 degree yaw. Clipped to the map so a view hanging over the
+      // city edge stops at the border instead of floating on the panel.
+      const view = getCameraFootprint()
+      if (view) {
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(0, 0, size * s, size * s)
+        ctx.clip()
+        ctx.beginPath()
+        ctx.moveTo(view[0].x * s, view[0].z * s)
+        for (let i = 1; i < view.length; i++) ctx.lineTo(view[i].x * s, view[i].z * s)
+        ctx.closePath()
+        ctx.fillStyle = COLOR.viewportFill
+        ctx.fill()
+        ctx.strokeStyle = COLOR.viewport
+        ctx.lineWidth = 1
         ctx.stroke()
         ctx.restore()
       }
