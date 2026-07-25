@@ -97,16 +97,22 @@ export interface ObjectiveDef {
   zone?: { x: number; z: number; r: number }
 }
 
+// Continental sector of the world map. Ids index the atlas.
+export type SectorId = 'na' | 'sa' | 'eu' | 'af' | 'as' | 'oc' | 'an'
+
 export interface MissionDef {
   id: string
   codename: string
   city: string
   district: string
-  sector: string
+  sector: SectorId
   type: string
   client: string
   threat: 'MODERATE' | 'HIGH' | 'SEVERE'
   reward: number
+  // Projected success chance in percent and time to the extraction window.
+  chance: number
+  etaDays: number
   seed: number
   briefing: string[]
   notes: string[]
