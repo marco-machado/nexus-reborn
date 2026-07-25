@@ -13,6 +13,7 @@ import Hud from './Hud'
 export default function MissionScreen() {
   const missionId = useAppStore((s) => s.missionId)
   const squad = useAppStore((s) => s.squad)
+  const linked = useMissionStore((s) => s.squad.length > 0)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -35,14 +36,15 @@ export default function MissionScreen() {
   if (!missionId) return null
   return (
     <div className="mission-screen">
-      {ready ? (
+      {ready && (
         <>
           <GameCanvas />
           <Hud />
         </>
-      ) : (
-        <div className="deploy-splash">ESTABLISHING SQUAD LINK</div>
       )}
+      {/* Full screen splash above the canvas while it warms up; fades out once
+          the simulation populates the squad store on its first tick. */}
+      <div className={'deploy-splash' + (linked ? ' out' : '')}>ESTABLISHING SQUAD LINK</div>
     </div>
   )
 }

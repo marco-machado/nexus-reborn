@@ -3,6 +3,17 @@
 // are hardcoded hexes matching the design tokens in src/index.css.
 import { useEffect, useRef } from 'react'
 import { getWorld } from '../game/runtime'
+import { useMissionStore } from '../state/missionStore'
+
+const ZOOM = [1, 1.7, 2.8]
+export const MM_ZOOM_MAX = ZOOM.length - 1
+
+// Offset that keeps the focus point centered while the map edge stays pinned
+// to the viewport edge; centers the whole map when it fits.
+function panOffset(view: number, mapPx: number, focusPx: number): number {
+  if (mapPx <= view) return (view - mapPx) / 2
+  return Math.min(0, Math.max(view - mapPx, view / 2 - focusPx))
+}
 
 const COLOR = {
   bg: '#030a08',
@@ -20,7 +31,15 @@ const COLOR = {
   text: 'rgba(93,125,117,0.8)',
 }
 
-export default function Minimap({ width = 210, height = 150 }: { width?: number; height?: number }) {
+export default function Minimap({
+  width = 210,
+  height = 150,
+  zoom = 0,
+}: {
+  width?: number
+  height?: number
+  zoom?: number
+}) {
   const ref = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -57,9 +76,26 @@ export default function Minimap({ width = 210, height = 150 }: { width?: number;
 
       const { city, units } = world
       const size = city.size
-      const s = Math.min(width / size, height / size)
-      const ox = (width - size * s) / 2
-      const oy = (height - size * s) / 2
+      const s = Math.min(width / size, height / size) * (ZOOM[zoom] ?? 1)
+
+      // When zoomed, pan toward the living agents' centroid.
+      let fx = size / 2
+      let fz = size / 2
+      let n = 0
+      let sx = 0
+      let sz = 0
+      for (const u of units) {
+        if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
+        sx += u.pos.x
+        sz += u.pos.z
+        n += 1
+      }
+      if (n > 0) {
+        fx = sx / n
+        fz = sz / n
+      }
+      const ox = panOffset(width, size * s, fx * s)
+      const oy = panOffset(height, size * s, fz * s)
       ctx.save()
       ctx.translate(ox, oy)
 
@@ -107,6 +143,24 @@ export default function Minimap({ width = 210, height = 150 }: { width?: number;
       ctx.closePath()
       ctx.fill()
 
+      // active objective: expanding amber pulse on its world zone
+      const activeObj = useMissionStore.getState().objectives.find((o) => o.active && !o.done)
+      const def = activeObj
+        ? world.mission.objectives.find((d) => d.id === activeObj.id)
+        : undefined
+      if (def) {
+        const zone = def.kind === 'extract' ? city.extraction : (def.zone ?? city.checkpoint)
+        const phase = (Date.now() % 1400) / 1400
+        ctx.save()
+        ctx.globalAlpha = 0.85 * (1 - phase)
+        ctx.strokeStyle = COLOR.checkpoint
+        ctx.lineWidth = 1.2
+        ctx.beginPath()
+        ctx.arc(zone.x * s, zone.z * s, Math.max(4, zone.r * s) * (0.55 + phase), 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.restore()
+      }
+
       // units: civilians under enemies under agents
       for (const u of units) {
         if (u.kind !== 'civilian' || u.stance === 'dead' || u.hp <= 0) continue
@@ -138,7 +192,7 @@ export default function Minimap({ width = 210, height = 150 }: { width?: number;
     draw()
     const id = window.setInterval(draw, 100)
     return () => window.clearInterval(id)
-  }, [width, height])
+  }, [width, height, zoom])
 
   return <canvas ref={ref} className="minimap-canvas" style={{ width, height }} />
 }

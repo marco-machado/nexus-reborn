@@ -1,14 +1,15 @@
 // Imperative unit rendering. A pool of per-unit Groups assembled from shared
 // geometries and materials, updated every frame straight from the world state.
-// Handles walk cycles, death poses, selection rings, alert markers and enemy
-// hp bars for 60+ units without per-frame allocation.
+// Handles walk cycles, death poses, selection rings, billboarded squad slot
+// tags with health pips, alert markers and enemy hp bars for 60+ units
+// without per-frame allocation.
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
 import { useMissionStore } from '../state/missionStore'
 import type { Unit } from '../game/types'
-import { makeAlertTexture } from './textures'
+import { makeAlertTexture, makeGlowTexture, makeSlotTexture } from './textures'
 
 interface Shared {
   legGeom: THREE.BoxGeometry
@@ -20,9 +21,11 @@ interface Shared {
   chestGeom: THREE.BoxGeometry
   gunGeom: THREE.BoxGeometry
   ringGeom: THREE.RingGeometry
+  glowGeom: THREE.PlaneGeometry
   barBgGeom: THREE.PlaneGeometry
   barFgGeom: THREE.PlaneGeometry
   alertGeom: THREE.PlaneGeometry
+  tagGeom: THREE.PlaneGeometry
   agentBody: THREE.MeshStandardMaterial
   agentCoat: THREE.MeshStandardMaterial
   agentHead: THREE.MeshStandardMaterial
@@ -33,12 +36,15 @@ interface Shared {
   garrisonChest: THREE.MeshStandardMaterial
   gunMat: THREE.MeshStandardMaterial
   ringMat: THREE.MeshBasicMaterial
+  glowMat: THREE.MeshBasicMaterial
   barBgMat: THREE.MeshBasicMaterial
   barFgMat: THREE.MeshBasicMaterial
+  agentBarMat: THREE.MeshBasicMaterial
   alertMat: THREE.MeshBasicMaterial
   civMats: THREE.MeshStandardMaterial[]
   civHead: THREE.MeshStandardMaterial
   accentMats: Map<string, THREE.MeshStandardMaterial>
+  slotMats: Map<number, THREE.MeshBasicMaterial>
 }
 
 let shared: Shared | null = null
@@ -58,10 +64,12 @@ function getShared(): Shared {
     stripeGeom: new THREE.BoxGeometry(0.12, 0.045, 0.46),
     chestGeom: new THREE.BoxGeometry(0.05, 0.12, 0.12),
     gunGeom: new THREE.BoxGeometry(0.6, 0.07, 0.07),
-    ringGeom: new THREE.RingGeometry(0.5, 0.68, 24).rotateX(-Math.PI / 2) as THREE.RingGeometry,
+    ringGeom: new THREE.RingGeometry(0.55, 0.76, 28).rotateX(-Math.PI / 2) as THREE.RingGeometry,
+    glowGeom: new THREE.PlaneGeometry(2.3, 2.3).rotateX(-Math.PI / 2) as THREE.PlaneGeometry,
     barBgGeom: new THREE.PlaneGeometry(0.76, 0.1),
     barFgGeom: new THREE.PlaneGeometry(0.7, 0.055).translate(0.35, 0, 0) as THREE.PlaneGeometry,
     alertGeom: new THREE.PlaneGeometry(0.28, 0.5),
+    tagGeom: new THREE.PlaneGeometry(0.34, 0.34),
     agentBody: std('#414b57', 0.82),
     agentCoat: std('#303842', 0.88),
     agentHead: std('#3a434e', 0.8),
@@ -86,8 +94,17 @@ function getShared(): Shared {
       side: THREE.DoubleSide,
       depthWrite: false,
     }),
+    glowMat: new THREE.MeshBasicMaterial({
+      map: makeGlowTexture(),
+      color: '#7ef0d4',
+      transparent: true,
+      opacity: 0.3,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
     barBgMat: new THREE.MeshBasicMaterial({ color: '#0b0f12', transparent: true, opacity: 0.8, depthWrite: false }),
     barFgMat: new THREE.MeshBasicMaterial({ color: '#ff5a4a', transparent: true, opacity: 0.95, depthWrite: false }),
+    agentBarMat: new THREE.MeshBasicMaterial({ color: '#7ef0d4', transparent: true, opacity: 0.95, depthWrite: false }),
     alertMat: new THREE.MeshBasicMaterial({
       map: makeAlertTexture(),
       color: '#ff4a3c',
@@ -97,6 +114,7 @@ function getShared(): Shared {
     civMats: ['#4a4238', '#3d4650', '#55483a', '#414a41', '#5a5044', '#38404b'].map((c) => std(c, 0.95)),
     civHead: std('#5c5348', 0.9),
     accentMats: new Map(),
+    slotMats: new Map(),
   }
   return shared
 }
@@ -114,12 +132,25 @@ function accentMat(s: Shared, hex: string): THREE.MeshStandardMaterial {
   return mat
 }
 
+function slotMat(s: Shared, slot: number): THREE.MeshBasicMaterial {
+  let mat = s.slotMats.get(slot)
+  if (!mat) {
+    mat = new THREE.MeshBasicMaterial({ map: makeSlotTexture(slot), transparent: true, depthWrite: false })
+    s.slotMats.set(slot, mat)
+  }
+  return mat
+}
+
 interface View {
   root: THREE.Group
   rig: THREE.Group
   legL: THREE.Mesh
   legR: THREE.Mesh
   ring: THREE.Mesh | null
+  glow: THREE.Mesh | null
+  tag: THREE.Group | null
+  tagFg: THREE.Mesh | null
+  tagLow: boolean
   bar: THREE.Group | null
   barFg: THREE.Mesh | null
   alert: THREE.Mesh | null
@@ -189,13 +220,35 @@ function buildView(u: Unit, s: Shared): View {
     rig.add(gun)
   }
 
+  // Agents carry the selection ring, a soft teal underglow while selected and
+  // a billboarded overhead tag: slot number plaque above a health pip bar.
   let ring: THREE.Mesh | null = null
+  let glow: THREE.Mesh | null = null
+  let tag: THREE.Group | null = null
+  let tagFg: THREE.Mesh | null = null
   if (u.kind === 'agent') {
     ring = new THREE.Mesh(s.ringGeom, s.ringMat)
     ring.position.y = 0.05
     ring.renderOrder = 5
     ring.visible = false
     root.add(ring)
+    glow = new THREE.Mesh(s.glowGeom, s.glowMat)
+    glow.position.y = 0.03
+    glow.renderOrder = 4
+    glow.visible = false
+    root.add(glow)
+    tag = new THREE.Group()
+    tag.position.y = 2.12
+    const plate = new THREE.Mesh(s.tagGeom, slotMat(s, u.agentSlot ?? 0))
+    plate.position.set(0, 0.33, 0)
+    plate.renderOrder = 6
+    const bg = new THREE.Mesh(s.barBgGeom, s.barBgMat)
+    bg.renderOrder = 6
+    tagFg = new THREE.Mesh(s.barFgGeom, s.agentBarMat)
+    tagFg.position.set(-0.35, 0, 0.004)
+    tagFg.renderOrder = 7
+    tag.add(plate, bg, tagFg)
+    root.add(tag)
   }
 
   let bar: THREE.Group | null = null
@@ -219,7 +272,22 @@ function buildView(u: Unit, s: Shared): View {
     root.add(alert)
   }
 
-  return { root, rig, legL, legR, ring, bar, barFg, alert, yaw: 0, phase: hashId(u.id) * Math.PI * 2 }
+  return {
+    root,
+    rig,
+    legL,
+    legR,
+    ring,
+    glow,
+    tag,
+    tagFg,
+    tagLow: false,
+    bar,
+    barFg,
+    alert,
+    yaw: 0,
+    phase: hashId(u.id) * Math.PI * 2,
+  }
 }
 
 const TMP_Q = new THREE.Quaternion()
@@ -245,7 +313,7 @@ export default function Units() {
     const dt = Math.min(rawDt, 0.05)
     const t = w.time
     const selected = useMissionStore.getState().selected
-    s.ringMat.opacity = 0.38 + 0.2 * Math.sin(t * 4.5)
+    s.ringMat.opacity = 0.66 + 0.24 * Math.sin(t * 4.5)
     const turn = 1 - Math.exp(-14 * dt)
 
     for (const u of w.units) {
@@ -265,6 +333,8 @@ export default function Units() {
         view.legL.rotation.z = 0
         view.legR.rotation.z = 0
         if (view.ring) view.ring.visible = false
+        if (view.glow) view.glow.visible = false
+        if (view.tag) view.tag.visible = false
         if (view.bar) view.bar.visible = false
         if (view.alert) view.alert.visible = false
         continue
@@ -295,7 +365,23 @@ export default function Units() {
         view.rig.position.y *= 0.8
       }
 
-      if (view.ring) view.ring.visible = selected.includes(u.id)
+      if (view.ring) {
+        const sel = selected.includes(u.id)
+        view.ring.visible = sel
+        if (view.glow) view.glow.visible = sel
+      }
+      if (view.tag && view.tagFg) {
+        view.tag.visible = true
+        const ratio = Math.min(1, Math.max(0.001, u.hp / u.maxHp))
+        view.tagFg.scale.x = ratio
+        const low = ratio <= 0.3
+        if (low !== view.tagLow) {
+          view.tagLow = low
+          view.tagFg.material = low ? s.barFgMat : s.agentBarMat
+        }
+        TMP_Q.copy(view.root.quaternion).invert().multiply(camera.quaternion)
+        view.tag.quaternion.copy(TMP_Q)
+      }
       if (view.bar && view.barFg) {
         const show = u.alerted || u.hp < u.maxHp
         view.bar.visible = show

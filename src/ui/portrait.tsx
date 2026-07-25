@@ -13,6 +13,7 @@ export interface PortraitOp {
 interface Geometry {
   uid: string
   headPts: string
+  rimPts: string
   shoulderPts: string
   neckPts: string
   crestPts: string | null
@@ -48,7 +49,7 @@ function buildGeometry(op: PortraitOp): Geometry {
   const jawY = 53 + r() * 5
   const chinY = jawY + 6 + r() * 4
 
-  const headPts = p([
+  const headArr: Array<[number, number]> = [
     [cx - headW + j(1.5), crownY + 5],
     [cx - headW * 0.55, crownY + j(1.2)],
     [cx + headW * 0.6, crownY + j(1.2)],
@@ -59,7 +60,10 @@ function buildGeometry(op: PortraitOp): Geometry {
     [cx - 3, chinY],
     [cx - jawW - 1, jawY - 1],
     [cx - headW + 1.5, visorY + visorH + 5],
-  ])
+  ]
+  const headPts = p(headArr)
+  // rim light path: crown across the right side down to the chin
+  const rimPts = p(headArr.slice(1, 7))
 
   const shTopY = 71 + r() * 4
   const shoulderPts = p([
@@ -159,6 +163,7 @@ function buildGeometry(op: PortraitOp): Geometry {
   return {
     uid: 'pp-' + op.id.replace(/[^a-zA-Z0-9_-]/g, ''),
     headPts,
+    rimPts,
     shoulderPts,
     neckPts,
     crestPts: crest,
@@ -195,7 +200,7 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
           <stop offset="1" stopColor={op.accent} stopOpacity="0.25" />
         </linearGradient>
         <radialGradient id={uid + '-g'} cx="0.5" cy="0.4" r="0.6">
-          <stop offset="0" stopColor={op.accent} stopOpacity="0.20" />
+          <stop offset="0" stopColor={op.accent} stopOpacity="0.30" />
           <stop offset="1" stopColor={op.accent} stopOpacity="0" />
         </radialGradient>
         <pattern id={uid + '-s'} width="4" height="3" patternUnits="userSpaceOnUse">
@@ -207,7 +212,7 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       </defs>
 
       {/* backdrop */}
-      <rect x="0" y="0" width="100" height="100" fill="#050d0b" />
+      <rect x="0" y="0" width="100" height="100" fill="#0a1512" />
       <rect x="0" y="0" width="100" height="100" fill={'url(#' + uid + '-g)'} />
       <g stroke="rgba(126,240,212,0.05)" strokeWidth="0.5">
         <line x1="0" y1="25" x2="100" y2="25" />
@@ -217,11 +222,18 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       </g>
 
       {/* bust */}
-      <polygon points={g.shoulderPts} fill="#0c1613" stroke="rgba(126,240,212,0.25)" strokeWidth="0.6" />
-      <polygon points={g.neckPts} fill="#081210" />
+      <polygon points={g.shoulderPts} fill="#132420" stroke="rgba(126,240,212,0.35)" strokeWidth="0.6" />
+      <polygon points={g.neckPts} fill="#0f1d18" />
       <polyline points={g.collarPts} fill="none" stroke="rgba(126,240,212,0.28)" strokeWidth="0.6" />
-      <polygon points={g.headPts} fill="#0d1815" stroke="rgba(126,240,212,0.3)" strokeWidth="0.6" />
-      {g.crestPts && <polygon points={g.crestPts} fill="#0a1411" stroke="rgba(126,240,212,0.25)" strokeWidth="0.5" />}
+      <polygon points={g.headPts} fill="#1c2f28" stroke="rgba(126,240,212,0.45)" strokeWidth="0.6" />
+      <polyline
+        points={g.rimPts}
+        fill="none"
+        stroke="rgba(232,251,242,0.4)"
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+      />
+      {g.crestPts && <polygon points={g.crestPts} fill="#152622" stroke="rgba(126,240,212,0.25)" strokeWidth="0.5" />}
       {g.antenna && (
         <g>
           <line
@@ -255,7 +267,7 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       )}
 
       {/* facet lines */}
-      <g stroke="rgba(255,255,255,0.06)" strokeWidth="0.5">
+      <g stroke="rgba(255,255,255,0.1)" strokeWidth="0.5">
         {g.facets.map((f, i) => (
           <line key={i} x1={f[0]} y1={f[1]} x2={f[2]} y2={f[3]} />
         ))}
@@ -264,7 +276,7 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       <polyline points={g.chestPts} fill="none" stroke={op.accent} strokeWidth="0.8" opacity="0.55" />
 
       {/* scanline texture */}
-      <rect x="0" y="0" width="100" height="100" fill={'url(#' + uid + '-s)'} opacity="0.5" />
+      <rect x="0" y="0" width="100" height="100" fill={'url(#' + uid + '-s)'} opacity="0.35" />
 
       {/* barcode strip + serial */}
       <g fill="rgba(184,216,207,0.55)">

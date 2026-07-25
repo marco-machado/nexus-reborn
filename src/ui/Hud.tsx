@@ -1,14 +1,15 @@
 // In-mission HUD overlay. The root swallows no pointer events; only the
 // panels themselves are interactive so the 3D canvas keeps receiving clicks
 // everywhere else. No keyboard listeners live here (the scene layer owns keys).
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
+import type { SquadMemberUi } from '../state/missionStore'
 import { ROSTER, WEAPONS, missionById } from '../game/data'
 import type { WeaponId } from '../game/types'
-import Minimap from './Minimap'
+import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import { Portrait } from './portrait'
-import { AbilityGlyph, GunSilhouette, ItemGlyph, fmt } from './bits'
+import { AbilityGlyph, GunSilhouette, ItemGlyph, LockGlyph, fmt, pad2 } from './bits'
 import { uiClick } from './sound'
 
 const ABILITIES = ['grenade', 'shield', 'dash', 'scan', 'flame'] as const
@@ -18,6 +19,19 @@ function weaponIdByName(name: string): WeaponId {
     if (w.name === name) return w.id
   }
   return 'assault'
+}
+
+// One baseline kit of each, plus role bonuses from the deployed roster.
+function itemCounts(squad: SquadMemberUi[]): { med: number; cell: number } {
+  let med = 1
+  let cell = 1
+  for (const r of squad) {
+    const role = ROSTER.find((o) => o.codename === r.codename)?.role
+    if (role === 'medic') med += 2
+    else if (role === 'support') med += 1
+    else if (role === 'tech') cell += 1
+  }
+  return { med, cell }
 }
 
 function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
@@ -69,10 +83,21 @@ export default function Hud() {
     if (el) el.scrollTop = el.scrollHeight
   }, [log])
 
+  // Two step abort: first click arms, second confirms, auto resets after 3s.
+  const [abortArmed, setAbortArmed] = useState(false)
+  useEffect(() => {
+    if (!abortArmed) return
+    const id = window.setTimeout(() => setAbortArmed(false), 3000)
+    return () => window.clearTimeout(id)
+  }, [abortArmed])
+
+  const [mmZoom, setMmZoom] = useState(0)
+
   const online = squad.filter((r) => !r.dead).length
   const firstSelected = selected.length > 0 ? squad.find((r) => r.unitId === selected[0]) : undefined
   const active = firstSelected ?? squad.find((r) => !r.dead) ?? squad[0] ?? null
   const sidearmId = active ? weaponIdByName(active.sidearmName) : 'pistol'
+  const items = itemCounts(squad)
 
   return (
     <div className="hud-root">
@@ -100,6 +125,7 @@ export default function Hud() {
           <button
             type="button"
             className={'hud-btn pause' + (paused ? ' on' : '')}
+            aria-label={paused ? 'Resume mission' : 'Pause mission'}
             onClick={() => {
               uiClick()
               setPaused(!paused)
@@ -109,13 +135,18 @@ export default function Hud() {
           </button>
           <button
             type="button"
-            className="hud-btn abort"
+            className={'hud-btn abort' + (abortArmed ? ' armed' : '')}
+            aria-label={abortArmed ? 'Confirm abort mission' : 'Abort mission'}
             onClick={() => {
               uiClick()
-              goto('world')
+              if (abortArmed) {
+                goto('world')
+              } else {
+                setAbortArmed(true)
+              }
             }}
           >
-            ABORT
+            {abortArmed ? 'CONFIRM?' : 'ABORT'}
           </button>
         </div>
       </div>
@@ -136,6 +167,7 @@ export default function Hud() {
               }
             const hpPct = r.maxHp > 0 ? (r.hp / r.maxHp) * 100 : 0
             const isSel = selected.includes(r.unitId)
+            const isActive = active !== null && r.unitId === active.unitId
             return (
               <div
                 key={r.unitId}
@@ -152,6 +184,7 @@ export default function Hud() {
                   }
                 }}
               >
+                {isActive && <span className="hud-agent-active">ACTIVE</span>}
                 <span className="hud-agent-slot">{r.slot}</span>
                 <span className="hud-agent-portrait">
                   <Portrait op={op} size={38} />
@@ -228,7 +261,7 @@ export default function Hud() {
         <div className="hud-weapons">
           <div className="hud-panel hud-wpn corners">
             <div className="hud-panel-head">
-              <span>PRIMARY</span>
+              <span>PRIMARY // {active.codename}</span>
             </div>
             <div className="hud-wpn-body">
               <GunSilhouette weapon={weaponIdByName(active.weaponName)} className="hud-gun" />
@@ -260,12 +293,15 @@ export default function Hud() {
           <div className="hud-panel hud-abilities corners">
             <div className="hud-panel-head">
               <span>ABILITIES</span>
+              <span className="dim">LOCKED</span>
             </div>
             <div className="hud-slots">
-              {ABILITIES.map((k, i) => (
-                <span key={k} className="hud-slot off">
+              {ABILITIES.map((k) => (
+                <span key={k} className="hud-slot locked" title="LOCKED">
                   <AbilityGlyph kind={k} />
-                  <i>{i + 1}</i>
+                  <span className="hud-slot-lock">
+                    <LockGlyph size={7} />
+                  </span>
                 </span>
               ))}
             </div>
@@ -277,11 +313,11 @@ export default function Hud() {
             <div className="hud-slots">
               <span className="hud-slot">
                 <ItemGlyph kind="med" size={16} />
-                <i>02</i>
+                <i>{pad2(items.med)}</i>
               </span>
               <span className="hud-slot">
                 <ItemGlyph kind="cell" size={16} />
-                <i>01</i>
+                <i>{pad2(items.cell)}</i>
               </span>
             </div>
           </div>
@@ -295,12 +331,28 @@ export default function Hud() {
           <span className="dim">SECTOR B</span>
         </div>
         <div className="hud-mm-body">
-          <Minimap />
+          <Minimap zoom={mmZoom} />
           <div className="hud-mm-zoom">
-            <button type="button" onClick={() => uiClick()}>
+            <button
+              type="button"
+              aria-label="Zoom minimap in"
+              disabled={mmZoom >= MM_ZOOM_MAX}
+              onClick={() => {
+                uiClick()
+                setMmZoom((z) => Math.min(MM_ZOOM_MAX, z + 1))
+              }}
+            >
               +
             </button>
-            <button type="button" onClick={() => uiClick()}>
+            <button
+              type="button"
+              aria-label="Zoom minimap out"
+              disabled={mmZoom <= 0}
+              onClick={() => {
+                uiClick()
+                setMmZoom((z) => Math.max(0, z - 1))
+              }}
+            >
               -
             </button>
           </div>

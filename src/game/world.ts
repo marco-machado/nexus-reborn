@@ -344,7 +344,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       killUnit(t, by)
     } else if (t.kind === 'agent' && world.time - lastFlavorT >= FLAVOR_GAP) {
       lastFlavorT = world.time
-      pushLog(t.name, pick(HIT_LINES))
+      pushLog(t.name, pick(HIT_LINES), 'alert')
     }
   }
 
@@ -724,7 +724,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     const next = mission.objectives[activeObjective]
     if (next) {
       if (next.kind === 'extract') {
-        pushLog('SYS', 'Extraction window open. Return to the insertion zone.')
+        pushLog('SYS', 'Extraction window open. Return to the insertion zone.', 'ok')
       } else {
         pushLog('SYS', 'OBJECTIVE: ' + next.label)
       }
@@ -805,7 +805,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     const first = mission.objectives[0]
     if (first) {
       if (first.kind === 'extract') {
-        pushLog('SYS', 'Extraction window open. Return to the insertion zone.')
+        pushLog('SYS', 'Extraction window open. Return to the insertion zone.', 'ok')
       } else {
         pushLog('SYS', 'OBJECTIVE: ' + first.label)
       }
