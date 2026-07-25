@@ -1,10 +1,11 @@
 // Procedural city generator. Deterministic from mission.seed.
 // Layout: a 7-wide north-south avenue feeds a walled checkpoint plaza in the
 // north. 7-wide cross streets and 6-wide secondary vertical roads cut the rest
-// into large blocks. Buildings never reach a block edge: every block keeps a
-// SETBACK ring of open pavement, and ALLEY_W cells separate the few footprints
-// inside it, so the narrowest passage anywhere is 4 cells and a street runs at
-// least 10 cells from one building wall to the one facing it.
+// into large blocks. Buildings never reach a block edge: each block keeps a
+// SETBACK ring of pavement at the kerb, and neighbours inside it stand ALLEY_W
+// apart. So the narrowest gap between two buildings is 4 cells, a street runs
+// at least 10 cells from one wall to the one facing it, and the kerb ring is
+// the one walkable strip narrower than an alley.
 // Neon side encoding (shared with the renderer): 0 faces +z, 1 faces +x,
 // 2 faces -z, 3 faces -x.
 import type {
@@ -135,23 +136,26 @@ export function generateCity(mission: MissionDef): CityData {
     gaps: Array<[number, number]>
   }
 
-  // Cuts one axis of a block into footprints parted by alleys. Every cut gets
-  // an alley, straddling it so both neighbours give up the same ground, and a
-  // stretch left shorter than MIN_SIDE stays an open lot instead of becoming a
-  // sliver of building.
+  // Cuts one axis of a block into footprints parted by alleys. Cuts run in
+  // order and each alley is clamped to leave MIN_SIDE for the footprint before
+  // it, for the one after, and for every cut still to come, so segments and
+  // alleys never overlap and never leave the block. A cut with no room left
+  // ends the split, which is the only way the caller's count is not met.
   const splitAxis = (a0: number, a1: number, n: number): AxisSplit => {
-    if (n <= 1) return { segs: [[a0, a1]], gaps: [] }
     const len = a1 - a0
     const segs: Array<[number, number]> = []
     const gaps: Array<[number, number]> = []
     let s = a0
     for (let i = 1; i < n; i++) {
       const g = ALLEY_W + (rnd() < 0.35 ? 1 : 0)
-      const gs = a0 + Math.round((len * i) / n) + ri(-2, 2) - (g >> 1)
-      const ge = gs + g
-      if (gs - s >= MIN_SIDE) segs.push([s, gs])
-      gaps.push([Math.max(a0, gs), Math.min(a1, ge)])
-      s = ge
+      const lo = s + MIN_SIDE
+      const hi = a1 - MIN_SIDE - g - (n - 1 - i) * (ALLEY_W + MIN_SIDE)
+      if (hi < lo) break
+      const want = a0 + Math.round((len * i) / n) + ri(-2, 2) - (g >> 1)
+      const gs = Math.max(lo, Math.min(hi, want))
+      segs.push([s, gs])
+      gaps.push([gs, gs + g])
+      s = gs + g
     }
     if (a1 - s >= MIN_SIDE) segs.push([s, a1])
     return { segs, gaps }
@@ -182,16 +186,19 @@ export function generateCity(mission: MissionDef): CityData {
       if (nx > nz) nx -= 1
       else nz -= 1
     }
-    // Blocks holding several footprints may lose one to an empty lot; a block
-    // with a single footprint always keeps it, so no whole block goes bare.
-    const lots = nx * nz > 1
     const sx = splitAxis(ix0, ix1, nx)
     const sz = splitAxis(iz0, iz1, nz)
     for (const [gx0, gx1] of sx.gaps) alleys.push({ x0: gx0, z0: iz0, x1: gx1, z1: iz1 })
     for (const [gz0, gz1] of sz.gaps) alleys.push({ x0: ix0, z0: gz0, x1: ix1, z1: gz1 })
+    // A block may lose a footprint to an empty lot, but never its last one:
+    // the skip needs something already standing or another candidate behind it.
+    const planned = sx.segs.length * sz.segs.length
+    let seen = 0
+    let placed = 0
     for (const [bz0, bz1] of sz.segs) {
       for (const [bx0, bx1] of sx.segs) {
-        if (lots && rnd() < 0.1) continue
+        seen++
+        if (rnd() < 0.1 && (placed > 0 || seen < planned)) continue
         const bw = bx1 - bx0
         const bd = bz1 - bz0
         const north = (bz0 + bz1) / 2 < 48
@@ -208,6 +215,7 @@ export function generateCity(mission: MissionDef): CityData {
         }
         buildings.push(b)
         blockRect(bx0, bz0, bx1, bz1)
+        placed++
       }
     }
   }
@@ -350,14 +358,17 @@ export function generateCity(mission: MissionDef): CityData {
     crates++
   }
 
-  // Dumpsters and crates in alleys.
+  // Dumpsters and crates in alleys. A dumpster is longer than it is wide, so
+  // it lies along the alley: unrotated it runs north-south, which suits an
+  // alley narrower across x than across z.
   for (const a of alleys) {
     if (props.length > 200) break
     if (rnd() < 0.6) {
       const dx = ri(a.x0, a.x1 - 1)
       const dz = ri(a.z0, a.z1 - 1)
       if (dx >= 2 && dz >= 2 && dx < 94 && dz < 94 && walk[idx(dx, dz)] === 1) {
-        props.push({ x: dx + 0.5, z: dz + 0.5, kind: 'dumpster', rot: a.x1 - a.x0 <= 3 ? 0 : Math.PI / 2, blocking: true })
+        const rot = a.x1 - a.x0 <= a.z1 - a.z0 ? 0 : Math.PI / 2
+        props.push({ x: dx + 0.5, z: dz + 0.5, kind: 'dumpster', rot, blocking: true })
         walk[idx(dx, dz)] = 0
       }
     }
