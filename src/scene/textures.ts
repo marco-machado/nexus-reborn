@@ -53,19 +53,14 @@ export function makeGroundMaps(city: CityData): GroundMaps {
     }
   }
 
-  // Road bands, slightly lighter wet asphalt. Widths match the generator:
-  // horizontal streets 5 cells, secondary verticals 4, the avenue 5.
+  // Road bands, slightly lighter wet asphalt, straight off the generator spans.
   const paintBand = (x0: number, z0: number, x1: number, z1: number): void => {
     ctx.fillStyle = '#374453'
     ctx.fillRect(x0 * s, z0 * s, (x1 - x0) * s, (z1 - z0) * s)
     rCtx.fillStyle = 'rgb(105,105,105)'
     rCtx.fillRect(x0 * s, z0 * s, (x1 - x0) * s, (z1 - z0) * s)
   }
-  for (const cz of city.roadsH) paintBand(2, cz - 2, 94, cz + 3)
-  for (const cx of city.roadsV) {
-    if (cx === 48) paintBand(46, 8, 51, 94)
-    else paintBand(cx - 1, city.roadsH.length > 0 ? city.roadsH[0] - 2 : 24, cx + 3, 94)
-  }
+  for (const r of city.roadRects) paintBand(r.x0, r.z0, r.x1, r.z1)
   // Plaza apron around the checkpoint.
   const cp = city.checkpoint
   paintBand(cp.x - 7, cp.z - 6, cp.x + 7, cp.z + 6)
@@ -107,21 +102,21 @@ export function makeGroundMaps(city: CityData): GroundMaps {
   }
   ctx.stroke()
 
-  // Dashed lane markings along road centerlines. Horizontal streets are 5
-  // cells starting 2 above roadsH; secondary verticals are 4 cells starting 1
-  // left of roadsV, so their centers sit half a cell off the marker row.
+  // Dashed lane markings down the middle of every band, along its long axis.
   ctx.strokeStyle = 'rgba(88,96,104,0.4)'
   ctx.lineWidth = 3
   ctx.setLineDash([14, 26])
   ctx.beginPath()
-  for (const cz of city.roadsH) {
-    ctx.moveTo(2 * s, (cz + 0.5) * s)
-    ctx.lineTo(94 * s, (cz + 0.5) * s)
-  }
-  for (const cx of city.roadsV) {
-    const lx = cx === 48 ? cx + 0.5 : cx + 1
-    ctx.moveTo(lx * s, 8 * s)
-    ctx.lineTo(lx * s, 94 * s)
+  for (const r of city.roadRects) {
+    if (r.x1 - r.x0 >= r.z1 - r.z0) {
+      const cz = ((r.z0 + r.z1) / 2) * s
+      ctx.moveTo(r.x0 * s, cz)
+      ctx.lineTo(r.x1 * s, cz)
+    } else {
+      const cx = ((r.x0 + r.x1) / 2) * s
+      ctx.moveTo(cx, r.z0 * s)
+      ctx.lineTo(cx, r.z1 * s)
+    }
   }
   ctx.stroke()
   ctx.setLineDash([])
