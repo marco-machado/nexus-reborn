@@ -333,6 +333,61 @@ function itemShape(kind: ItemKind): ReactNode {
   }
 }
 
+export type NavKind = 'world' | 'brief' | 'research' | 'operatives' | 'archives'
+
+export function NavGlyph(props: { kind: NavKind; size?: number }) {
+  const size = props.size ?? 14
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" className="glyph" aria-hidden="true">
+      {navShape(props.kind)}
+    </svg>
+  )
+}
+
+function navShape(kind: NavKind): ReactNode {
+  switch (kind) {
+    case 'world':
+      return (
+        <g fill="none" stroke="currentColor" strokeWidth="1.1">
+          <circle cx="8" cy="8" r="6.2" />
+          <ellipse cx="8" cy="8" rx="2.6" ry="6.2" />
+          <path d="M1.9 8h12.2M2.9 4.6h10.2M2.9 11.4h10.2" strokeWidth="0.9" />
+        </g>
+      )
+    case 'brief':
+      return (
+        <g fill="none" stroke="currentColor" strokeWidth="1.1">
+          <path d="M3.4 1.8h6.2l3 3v9.4H3.4Z" />
+          <path d="M9.4 2v3.2h3.2" strokeWidth="0.9" />
+          <path d="M5.6 8h4.8M5.6 10.4h4.8" strokeWidth="0.9" />
+        </g>
+      )
+    case 'research':
+      return (
+        <g fill="none" stroke="currentColor" strokeWidth="1.1">
+          <path d="M6.6 1.8v4.4L3 12.4a1.4 1.4 0 0 0 1.2 2.1h7.6a1.4 1.4 0 0 0 1.2-2.1L9.4 6.2V1.8Z" />
+          <path d="M5.6 1.8h4.8" />
+          <path d="M4.8 10.6h6.4" strokeWidth="0.9" />
+        </g>
+      )
+    case 'operatives':
+      return (
+        <g fill="none" stroke="currentColor" strokeWidth="1.1">
+          <circle cx="8" cy="5.4" r="3" />
+          <path d="M2.6 14.2c0-3.2 2.4-5 5.4-5s5.4 1.8 5.4 5" />
+        </g>
+      )
+    case 'archives':
+      return (
+        <g fill="none" stroke="currentColor" strokeWidth="1.1">
+          <rect x="2.2" y="2.6" width="11.6" height="4" />
+          <rect x="2.2" y="8" width="11.6" height="5.4" />
+          <path d="M6.4 10.4h3.2" strokeWidth="1.3" />
+        </g>
+      )
+  }
+}
+
 export function LockGlyph(props: { size?: number }) {
   const size = props.size ?? 10
   return (
