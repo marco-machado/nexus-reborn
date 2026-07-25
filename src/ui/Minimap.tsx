@@ -126,10 +126,9 @@ export default function Minimap({
       ctx.fillStyle = 'rgba(126,240,212,0.025)'
       ctx.fillRect(0, 0, size * s, size * s)
 
-      // roads: 3 cell wide bands
+      // roads: the paved bands as generated
       ctx.fillStyle = COLOR.road
-      for (const rz of city.roadsH) ctx.fillRect(0, rz * s, size * s, 3 * s)
-      for (const cxx of city.roadsV) ctx.fillRect(cxx * s, 0, 3 * s, size * s)
+      for (const r of city.roadRects) ctx.fillRect(r.x0 * s, r.z0 * s, (r.x1 - r.x0) * s, (r.z1 - r.z0) * s)
 
       // building footprints
       ctx.fillStyle = COLOR.building

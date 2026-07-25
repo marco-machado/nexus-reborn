@@ -156,12 +156,23 @@ export interface EnemySpawn {
   name?: string
 }
 
+// Half open cell span of one paved road band, [x0, x1) by [z0, z1).
+export interface RoadRect {
+  x0: number
+  z0: number
+  x1: number
+  z1: number
+}
+
 export interface CityData {
   size: number
   walk: Uint8Array
   buildings: BuildingData[]
   props: PropData[]
   lights: LightData[]
+  // Full paved spans, for the ground texture and the minimap.
+  roadRects: RoadRect[]
+  // Centerline rows and columns, for crossing lights.
   roadsH: number[]
   roadsV: number[]
   spawnAgents: Vec2[]
