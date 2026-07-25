@@ -41,11 +41,13 @@ const glFactory = async (props: { canvas: HTMLCanvasElement }): Promise<THREE.We
 }
 
 // Advances the simulation before the priority-1 render pass in Effects.
+// Passes the raw frame delta; the world substeps internally so mission time
+// keeps tracking wall time across long frame gaps.
 function WorldTicker() {
   useFrame((_, dt) => {
     const w = getWorld()
     const ms = useMissionStore.getState()
-    if (w && ms.live && !ms.paused) w.tick(Math.min(dt, 0.05))
+    if (w && ms.live && !ms.paused) w.tick(dt)
   }, 0)
   return null
 }

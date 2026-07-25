@@ -23,6 +23,7 @@ import type { ObjectiveUi, SquadMemberUi } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
 
 const MAX_DT = 0.05
+const MAX_CATCHUP = 5
 const SYNC_INTERVAL = 0.2
 const TRACER_LIFE = 0.09
 const BOOM_LIFE = 0.4
@@ -815,14 +816,31 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     useMissionStore.getState().setClock(clockStr())
   }
 
+  // Consumes the full frame delta in MAX_DT substeps so mission time tracks
+  // wall time even when frames arrive sparsely (throttled or occluded tabs,
+  // capture-driven previews). Clamping to one MAX_DT per frame instead would
+  // silently discard the rest of the delta and freeze the mission clock.
+  // MAX_CATCHUP bounds the work after long frame gaps.
   function tick(rawDt: number): void {
     if (!Number.isFinite(rawDt)) return
-    const dt = Math.min(Math.max(rawDt, 0), MAX_DT)
-    if (dt <= 0) return
+    let remaining = Math.min(Math.max(rawDt, 0), MAX_CATCHUP)
+    if (remaining <= 0) return
     if (!started) {
       started = true
       startup()
     }
+    // Warm-up frames arrive seconds apart while pipelines compile; advance one
+    // step per frame until the mission is underway so the opening moments are
+    // not simulated off screen.
+    if (world.time < 1) remaining = Math.min(remaining, MAX_DT)
+    while (remaining > 0) {
+      const stepDt = Math.min(remaining, MAX_DT)
+      remaining -= stepDt
+      step(stepDt)
+    }
+  }
+
+  function step(dt: number): void {
     world.time += dt
     shots.length = 0
     updateAgents(dt)
