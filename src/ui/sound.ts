@@ -18,6 +18,7 @@ let mod: AudioModuleLike | null = null
 function load(): Promise<AudioModuleLike | null> {
   if (!modPromise) {
     try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- @ts-expect-error would fail to compile whenever audio.ts exists
       // @ts-ignore - src/game/audio.ts is written by a parallel build step and may be absent while this file typechecks.
       modPromise = (import('../game/audio') as Promise<AudioModuleLike>).then(
         (m) => {

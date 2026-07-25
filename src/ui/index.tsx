@@ -17,11 +17,8 @@ import {
   SkullGlyph,
   TargetGlyph,
   HexGlyph,
-  fmt,
-  pad2,
-  hashOf,
-  rngFrom,
 } from './bits'
+import { fmt, pad2, hashOf, rngFrom } from './util'
 import { Portrait } from './portrait'
 import { uiClick, unlockAudio } from './sound'
 

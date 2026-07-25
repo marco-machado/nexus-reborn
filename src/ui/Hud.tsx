@@ -8,7 +8,8 @@ import { ROSTER, WEAPONS, missionById } from '../game/data'
 import type { WeaponId } from '../game/types'
 import Minimap from './Minimap'
 import { Portrait } from './portrait'
-import { AbilityGlyph, GunSilhouette, ItemGlyph, fmt } from './bits'
+import { AbilityGlyph, GunSilhouette, ItemGlyph } from './bits'
+import { fmt } from './util'
 import { uiClick } from './sound'
 
 const ABILITIES = ['grenade', 'shield', 'dash', 'scan', 'flame'] as const

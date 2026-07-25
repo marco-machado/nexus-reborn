@@ -15,6 +15,7 @@ import Rain from './Rain'
 import Units from './Units'
 
 declare module '@react-three/fiber' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- declaration merging needs an interface
   interface ThreeElements extends ThreeToJSXElements<typeof THREE> {}
 }
 

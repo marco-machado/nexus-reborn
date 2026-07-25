@@ -7,7 +7,7 @@ import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
 import { useMissionStore } from '../state/missionStore'
 import type { WorldApi } from '../game/types'
-import { pushClickMarker } from './Fx'
+import { pushClickMarker } from './clickMarkers'
 
 const pickGeom = new THREE.CylinderGeometry(0.55, 0.55, 1.9, 8)
 const invisibleMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
