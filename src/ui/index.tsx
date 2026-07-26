@@ -68,7 +68,7 @@ function statusTone(status: 'READY' | 'INJURED' | 'ON MISSION'): string {
 // card shows them whole instead of clipping mid-word.
 function bioLines(bio: string): string[] {
   return bio
-    .split('.')
+    .split(/\.(?=\s|$)/)
     .map((s) => s.trim())
     .filter(Boolean)
 }
@@ -801,8 +801,8 @@ export function TeamSelect() {
                 </span>
                 <span className="ts-role-main">
                   <b>{ROLE_LABEL[o.role]}</b>
-                  {bioLines(o.bio).map((line) => (
-                    <i key={line} className="dim">
+                  {bioLines(o.bio).map((line, li) => (
+                    <i key={li} className="dim">
                       {line}
                     </i>
                   ))}
