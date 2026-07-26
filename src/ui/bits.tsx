@@ -72,9 +72,15 @@ export function GunSilhouette(props: { weapon: WeaponId; className?: string }) {
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
-      <g fill="currentColor">{gunShape(props.weapon)}</g>
+      <GunShape weapon={props.weapon} />
     </svg>
   )
+}
+
+// The bare shape, for callers that place a gun inside their own drawing.
+// Spans the same 120x40 box as GunSilhouette; paints in currentColor.
+export function GunShape(props: { weapon: WeaponId }) {
+  return <g fill="currentColor">{gunShape(props.weapon)}</g>
 }
 
 function gunShape(id: WeaponId): ReactNode {
