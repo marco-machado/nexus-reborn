@@ -19,6 +19,7 @@ import {
 } from './bits'
 import { fmt, pad2, hashOf, rngFrom } from './util'
 import { Portrait } from './portrait'
+import { Figure } from './figure'
 import { uiClick, unlockAudio } from './sound'
 
 export { WorldMap } from './WorldMap'
@@ -61,6 +62,15 @@ function statusTone(status: 'READY' | 'INJURED' | 'ON MISSION'): string {
   if (status === 'READY') return 'teal'
   if (status === 'INJURED') return 'red'
   return 'amber'
+}
+
+// Role-card copy: each sentence of the bio becomes its own short line so the
+// card shows them whole instead of clipping mid-word.
+function bioLines(bio: string): string[] {
+  return bio
+    .split('.')
+    .map((s) => s.trim())
+    .filter(Boolean)
 }
 
 /* ================================ MAIN MENU =============================== */
@@ -518,11 +528,13 @@ export function TeamSelect() {
   }, 18.3)
   const ready = squad.length === 4
 
+  // every derived readout shifts unsigned: hashOf returns a full 32 bit value,
+  // so a signed shift lands negative and prints counts like -1
   const augs: Array<[string, string, string]> = [
-    ['NEURAL', 'CORTEX INTERFACE', 'TAC-LINK V' + (2 + (fh % 2)) + '.' + ((fh >> 2) % 10)],
+    ['NEURAL', 'CORTEX INTERFACE', 'TAC-LINK V' + (2 + (fh % 2)) + '.' + ((fh >>> 2) % 10)],
     ['CHEST', 'SYNAPTIC BUFFER', 'KINETIC SHIELD RIBS'],
     ['ARMS', 'TARGETING SUBROUTINE', 'STRENGTH BOOSTERS'],
-    ['LEGS', 'AGI SERVOS V' + (2 + ((fh >> 4) % 3)), 'IMPACT ABSORBERS'],
+    ['LEGS', 'AGI SERVOS V' + (2 + ((fh >>> 4) % 3)), 'IMPACT ABSORBERS'],
   ]
   const invKinds = ['med', 'cell', 'frag', 'chip'] as const
 
@@ -555,30 +567,53 @@ export function TeamSelect() {
         <aside className="ts-roster">
           <Panel
             title="ROSTER DATABASE"
-            right={<span className="dim">{ROSTER.length} / 24</span>}
+            right={<span className="dim">{ROSTER.length} ON FILE</span>}
             className="ts-roster-panel"
             bodyClassName="ts-roster-body scroll"
           >
             {ROSTER.map((o, i) => {
               const inSquad = squad.includes(o.id)
+              // reading up on an operative must not move them in or out of the
+              // squad, so the row body focuses and the trailing key assigns
+              const blocked = inSquad ? squad.length <= 1 : squad.length >= 4
               return (
-                <button
+                <div
                   key={o.id}
-                  type="button"
                   className={
                     'ts-row' + (inSquad ? ' sel' : '') + (focus.id === o.id ? ' focus' : '')
                   }
-                  onClick={act(() => {
-                    toggle(o.id)
-                    setFocusId(o.id)
-                  })}
                 >
-                  <span className="ts-row-idx">{pad2(i + 1)}</span>
-                  <span className="ts-row-name">{o.codename}</span>
-                  <span className="ts-row-role">{ROLE_LABEL[o.role]}</span>
-                  <span className={'ts-row-status ' + statusTone(o.status)}>{o.status}</span>
-                  <span className="ts-row-chev">{inSquad ? '>' : ''}</span>
-                </button>
+                  <button
+                    type="button"
+                    className="ts-row-main"
+                    onClick={act(() => setFocusId(o.id))}
+                  >
+                    <span className="ts-row-idx">{pad2(i + 1)}</span>
+                    <span className="ts-row-name">{o.codename}</span>
+                    <span className="ts-row-role">{ROLE_LABEL[o.role]}</span>
+                    <span className={'ts-row-status ' + statusTone(o.status)}>{o.status}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="ts-row-assign"
+                    disabled={blocked}
+                    aria-label={
+                      (inSquad ? 'UNASSIGN ' : 'ASSIGN ') + o.codename + ' // STRIKE TEAM 04'
+                    }
+                    title={
+                      blocked
+                        ? inSquad
+                          ? 'STRIKE TEAM 04 NEEDS AT LEAST ONE OPERATIVE'
+                          : 'STRIKE TEAM 04 IS FULL'
+                        : inSquad
+                          ? 'UNASSIGN'
+                          : 'ASSIGN'
+                    }
+                    onClick={act(() => toggle(o.id))}
+                  >
+                    {inSquad ? '−' : '+'}
+                  </button>
+                </div>
               )
             })}
             <div className="ts-roster-foot">
@@ -614,8 +649,8 @@ export function TeamSelect() {
                   <b>{pad2(slot + 1)}</b>
                   <span className="ts-bay-barcode" aria-hidden="true" />
                 </div>
-                <div className="ts-bay-portrait">
-                  <Portrait op={o} size={176} />
+                <div className="ts-bay-figure">
+                  <Figure op={o} />
                 </div>
                 <div className="ts-bay-info">
                   <div className="ts-bay-name">{o.codename}</div>
@@ -623,13 +658,23 @@ export function TeamSelect() {
                     <span>CONDITION</span>
                     <b className={statusTone(o.status)}>{o.status}</b>
                   </div>
-                  <div className="kv mini">
-                    <span>NEURAL</span>
-                    <b>{86 + (h % 13)}%</b>
-                  </div>
-                  <div className="kv mini">
-                    <span>ARMS</span>
-                    <b>{84 + ((h >> 3) % 15)}%</b>
+                  <div className="ts-bay-stats">
+                    <span className="kv mini">
+                      <span>NEURAL</span>
+                      <b>{86 + (h % 13)}%</b>
+                    </span>
+                    <span className="kv mini">
+                      <span>CHEST</span>
+                      <b>{82 + ((h >>> 6) % 17)}%</b>
+                    </span>
+                    <span className="kv mini">
+                      <span>ARMS</span>
+                      <b>{84 + ((h >>> 3) % 15)}%</b>
+                    </span>
+                    <span className="kv mini">
+                      <span>LEGS</span>
+                      <b>{83 + ((h >>> 9) % 16)}%</b>
+                    </span>
                   </div>
                 </div>
                 {focus.id === id && <div className="ts-bay-tag">- SELECTED -</div>}
@@ -699,41 +744,45 @@ export function TeamSelect() {
               ))}
             </div>
 
-            <div className="ts-box">
-              <label>LOADOUT</label>
-              <div className="ts-weapon corners">
-                <div className="ts-weapon-head">
-                  <span>PRIMARY</span>
-                  <span className="dim">
-                    {primary.magazine}/120
-                  </span>
+            {/* loadout and inventory sit side by side: stacked they push the
+                sidearm and the whole grid past the fold at 1280x720 */}
+            <div className="ts-kit">
+              <div className="ts-box">
+                <label>LOADOUT</label>
+                <div className="ts-weapon corners">
+                  <div className="ts-weapon-head">
+                    <span>PRIMARY</span>
+                    <span className="dim">
+                      {primary.magazine}/120
+                    </span>
+                  </div>
+                  <GunSilhouette weapon={focus.weapon} className="lg" />
+                  <div className="ts-weapon-name">{primary.name}</div>
                 </div>
-                <GunSilhouette weapon={focus.weapon} className="lg" />
-                <div className="ts-weapon-name">{primary.name}</div>
-              </div>
-              <div className="ts-weapon corners secondary">
-                <div className="ts-weapon-head">
-                  <span>SECONDARY</span>
-                  <span className="dim">
-                    {sidearm.magazine}/48
-                  </span>
+                <div className="ts-weapon corners secondary">
+                  <div className="ts-weapon-head">
+                    <span>SECONDARY</span>
+                    <span className="dim">
+                      {sidearm.magazine}/48
+                    </span>
+                  </div>
+                  <GunSilhouette weapon={focus.sidearm} className="sm" />
+                  <div className="ts-weapon-name">{sidearm.name}</div>
                 </div>
-                <GunSilhouette weapon={focus.sidearm} className="sm" />
-                <div className="ts-weapon-name">{sidearm.name}</div>
               </div>
-            </div>
 
-            <div className="ts-box">
-              <label>
-                INVENTORY <span className="dim">12/16</span>
-              </label>
-              <div className="ts-inv">
-                {Array.from({ length: 12 }, (_, i) => (
-                  <span key={i} className="ts-inv-tile">
-                    <ItemGlyph kind={invKinds[(i + (fh % 4)) % 4]} />
-                    <i>{pad2(((fh >> i) % 3) + 1)}</i>
-                  </span>
-                ))}
+              <div className="ts-box">
+                <label>
+                  INVENTORY <span className="dim">12/16</span>
+                </label>
+                <div className="ts-inv">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <span key={i} className="ts-inv-tile">
+                      <ItemGlyph kind={invKinds[(i + (fh % 4)) % 4]} />
+                      <i>{pad2(((fh >>> i) % 3) + 1)}</i>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </Panel>
@@ -752,7 +801,11 @@ export function TeamSelect() {
                 </span>
                 <span className="ts-role-main">
                   <b>{ROLE_LABEL[o.role]}</b>
-                  <i className="dim">{o.bio}</i>
+                  {bioLines(o.bio).map((line) => (
+                    <i key={line} className="dim">
+                      {line}
+                    </i>
+                  ))}
                 </span>
               </div>
             )
@@ -766,9 +819,10 @@ export function TeamSelect() {
         <div className="ts-mass corners">
           <label>DEPLOYMENT MASS</label>
           <div className="ts-mass-num">
-            <b>{mass.toFixed(1)} KG</b>
-            <span className="dim">/ 400.0 KG LIMIT</span>
+            <b>{mass.toFixed(1)}</b>
+            <span className="ts-mass-unit">KG</span>
           </div>
+          <div className="ts-mass-limit dim">/ 400.0 KG LIMIT</div>
           <SegBar value={mass / 4} tone="amber" />
         </div>
         <div className="ts-deploy">
