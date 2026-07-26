@@ -364,8 +364,10 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.72; }
 }
+/* Two whole periods of the 7 5 dash the routes carry, so the loop does not
+   snap the pattern back part way through a dash. */
 @keyframes route-flow {
-  to { stroke-dashoffset: -20; }
+  to { stroke-dashoffset: -24; }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1448,10 +1450,12 @@
   gap: 8px;
   width: 100%;
   max-width: 168px;
+  /* Set on the row, not on the b, so a tone class on the value still wins. */
+  color: var(--ink);
 }
 
 .mb-tac-stat label { font-size: 8px; letter-spacing: 0.14em; color: var(--ink-dim); }
-.mb-tac-stat b { font-size: 11px; letter-spacing: 0.06em; color: var(--ink); white-space: nowrap; }
+.mb-tac-stat b { font-size: 11px; letter-spacing: 0.06em; white-space: nowrap; }
 
 .mb-tac-plate { flex: none; display: flex; justify-content: center; }
 
