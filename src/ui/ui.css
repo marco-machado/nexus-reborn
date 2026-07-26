@@ -1349,7 +1349,7 @@
   min-width: 0;
 }
 
-.mb-recon { flex: 1.55; }
+.mb-recon { flex: 1.3; }
 .mb-recon-body { position: relative; padding: 0; overflow: hidden; }
 
 .mb-recon-svg {
@@ -1372,80 +1372,145 @@
 
 .mb-grid line { stroke: rgba(126, 240, 212, 0.05); }
 
-.mb-block rect,
-.mb-block polygon {
-  fill: rgba(126, 240, 212, 0.02);
-  stroke: rgba(150, 190, 178, 0.16);
-  stroke-width: 0.8;
-}
+/* Recon skyline. Each block is an extruded volume: a dark front face carrying
+   lit windows, a darker right face, and a roof lit from above, so the frame
+   reads as an infrared photograph instead of a wireframe. */
+.mb-block .face { fill: #0b1614; stroke: rgba(158, 206, 192, 0.34); stroke-width: 0.9; }
+.mb-block .side { fill: #060d0c; stroke: rgba(158, 206, 192, 0.26); stroke-width: 0.9; }
+.mb-block .roof { fill: rgba(126, 240, 212, 0.1); stroke: rgba(172, 222, 206, 0.46); stroke-width: 0.9; }
+.mb-win { fill: rgba(190, 240, 225, 0.42); }
 
-.mb-block line { stroke: rgba(150, 190, 178, 0.16); stroke-width: 0.8; }
-
-.mb-target rect,
-.mb-target polygon {
-  fill: rgba(240, 180, 69, 0.05);
-  stroke: var(--amber);
-  stroke-width: 1.1;
-}
-
-.mb-target line { stroke: rgba(240, 180, 69, 0.5); stroke-width: 0.7; }
+.mb-target .face { fill: rgba(240, 180, 69, 0.1); stroke: var(--amber); stroke-width: 1.4; }
+.mb-target .side { fill: rgba(240, 180, 69, 0.05); stroke: rgba(240, 180, 69, 0.72); stroke-width: 1.2; }
+.mb-target .roof { fill: rgba(240, 180, 69, 0.22); stroke: var(--amber-hot); stroke-width: 1.4; }
+.mb-target .floor { stroke: rgba(240, 180, 69, 0.4); stroke-width: 0.8; }
+.mb-target-win { fill: rgba(255, 216, 140, 0.82); }
 
 .mb-target {
-  filter: drop-shadow(0 0 6px rgba(240, 180, 69, 0.45));
+  filter: drop-shadow(0 0 9px rgba(240, 180, 69, 0.5));
   animation: target-pulse 2.4s ease-in-out infinite;
 }
 
 .mb-callout { fill: none; stroke: rgba(240, 180, 69, 0.7); stroke-width: 1; }
-.mb-callout-box rect { fill: rgba(4, 10, 9, 0.9); stroke: rgba(240, 180, 69, 0.5); }
-.mb-callout-box text { fill: var(--amber-hot); font-size: 10px; letter-spacing: 1px; font-family: inherit; }
-.mb-callout-box text.sub { fill: var(--ink-dim); font-size: 8px; }
+.mb-callout-dot { fill: none; stroke: var(--amber); stroke-width: 1.2; }
+.mb-callout-box rect { fill: rgba(4, 10, 9, 0.92); stroke: rgba(240, 180, 69, 0.55); }
+.mb-callout-box text { font-family: inherit; }
+.mb-callout-box text.label { fill: var(--ink-dim); font-size: 8px; letter-spacing: 0.9px; }
+.mb-callout-box text.name { fill: var(--amber-hot); font-size: 10.5px; letter-spacing: 1px; }
+.mb-callout-box text.sub { fill: var(--cyan); font-size: 8px; letter-spacing: 0.9px; }
 
 .mb-route {
   fill: none;
-  stroke-width: 1.6;
-  stroke-dasharray: 6 4;
+  stroke-width: 1.8;
+  stroke-dasharray: 7 5;
   animation: route-flow 1.4s linear infinite;
 }
 
-.mb-route.ins { stroke: rgba(126, 240, 212, 0.85); }
-.mb-route.ext { stroke: rgba(255, 107, 85, 0.85); }
+.mb-route.ins { stroke: rgba(126, 240, 212, 0.9); }
+.mb-route.ext { stroke: rgba(255, 107, 85, 0.9); }
 
-.mb-tri.ins { fill: none; stroke: #7ef0d4; stroke-width: 1.4; }
-.mb-tri.ext { fill: none; stroke: #ff6b55; stroke-width: 1.4; }
+.mb-tri.ins { fill: rgba(4, 10, 9, 0.75); stroke: #7ef0d4; stroke-width: 1.4; }
+.mb-tri.ext { fill: rgba(4, 10, 9, 0.75); stroke: #ff6b55; stroke-width: 1.4; }
 
-.mb-tag rect { fill: rgba(4, 10, 9, 0.9); }
+.mb-tag rect { fill: rgba(4, 10, 9, 0.92); }
 .mb-tag.ins rect { stroke: rgba(126, 240, 212, 0.5); }
 .mb-tag.ext rect { stroke: rgba(255, 107, 85, 0.5); }
 .mb-tag text { font-size: 9px; letter-spacing: 1.2px; font-family: inherit; }
 .mb-tag.ins text { fill: #7ef0d4; }
 .mb-tag.ext text { fill: #ff6b55; }
-.mb-tag text.sub { fill: var(--ink-dim); font-size: 7.5px; }
+.mb-tag text.sub { fill: var(--ink-dim); font-size: 7.5px; letter-spacing: 0.9px; }
 
-.mb-readout text { fill: rgba(126, 240, 212, 0.55); font-size: 8.5px; letter-spacing: 1px; font-family: inherit; }
-.mb-brieflines text { fill: rgba(126, 240, 212, 0.4); font-size: 8.5px; letter-spacing: 0.8px; font-family: inherit; }
+.mb-readout text { fill: rgba(126, 240, 212, 0.72); font-size: 8.5px; letter-spacing: 1px; font-family: inherit; }
+.mb-brieflines text { fill: rgba(126, 240, 212, 0.5); font-size: 8.5px; letter-spacing: 0.8px; font-family: inherit; }
 
-/* tactical map */
+/* tactical map: readout rail, square district plate, legend */
 .mb-tac { flex: 1; }
-.mb-tac-body { flex-direction: row; gap: 10px; padding: 8px; align-items: stretch; }
-.mb-tac-svg { flex: 1; min-width: 0; height: 100%; }
+.mb-tac-body { flex-direction: row; gap: 12px; padding: 9px 10px; align-items: stretch; }
 
-.mb-tac-block { fill: rgba(126, 240, 212, 0.07); }
-.mb-hostile { stroke: rgba(224, 75, 60, 0.5); stroke-width: 1; stroke-dasharray: 4 3; }
-.mb-tac-target { stroke: var(--amber); stroke-width: 1.2; filter: drop-shadow(0 0 4px rgba(240, 180, 69, 0.5)); }
-.mb-tac-label { font-size: 8.5px; letter-spacing: 1px; font-family: inherit; }
-.mb-tac-label.amber { fill: var(--amber-hot); }
-.mb-tac-label.teal { fill: #7ef0d4; }
-.mb-tac-label.red { fill: #ff6b55; }
-.mb-north text { fill: var(--ink-dim); font-size: 10px; font-family: inherit; }
-.mb-north line { stroke: var(--ink-dim); }
-.mb-north polygon { fill: var(--ink-dim); }
-
-.mb-legend {
-  width: 150px;
-  flex: none;
+/* Rail and legend take the slack either side of the square district plate, so
+   the two rules stay against the map and the spare width falls to the edges. */
+.mb-tac-rail {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  border-right: 1px solid var(--line);
+  padding-right: 10px;
+}
+
+.mb-tac-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  max-width: 168px;
+}
+
+.mb-tac-stat label { font-size: 8px; letter-spacing: 0.14em; color: var(--ink-dim); }
+.mb-tac-stat b { font-size: 11px; letter-spacing: 0.06em; color: var(--ink); white-space: nowrap; }
+
+.mb-tac-plate { flex: none; display: flex; justify-content: center; }
+
+.mb-tac-svg {
+  height: 100%;
+  aspect-ratio: 1;
+  flex: none;
+  max-width: 100%;
+  border: 1px solid var(--line);
+}
+
+.mb-tac-grid line { stroke: rgba(126, 240, 212, 0.06); stroke-width: 0.3; }
+.mb-tac-road { fill: rgba(126, 240, 212, 0.1); }
+.mb-tac-block { fill: rgba(140, 240, 214, 0.34); }
+.mb-hostile { stroke: rgba(224, 75, 60, 0.6); stroke-width: 0.55; stroke-dasharray: 1.8 1.4; }
+
+.mb-patrol polyline {
+  fill: none;
+  stroke: rgba(150, 190, 178, 0.55);
+  stroke-width: 0.45;
+  stroke-dasharray: 0.9 1.1;
+}
+
+.mb-patrol circle { fill: rgba(150, 190, 178, 0.6); }
+
+.mb-tac-target { stroke: var(--amber); stroke-width: 0.6; }
+.mb-tac-ring { fill: none; stroke-width: 0.45; stroke-dasharray: 1.4 1.2; }
+.mb-tac-ring.amber { stroke: rgba(240, 180, 69, 0.75); }
+.mb-tac-ring.teal { stroke: rgba(126, 240, 212, 0.6); }
+
+.mb-tac-svg .mb-route {
+  stroke-width: 0.75;
+  stroke-dasharray: 1.7 1.3;
+  animation-name: route-flow-tac;
+}
+
+.mb-tac-svg .mb-tri { stroke-width: 0.5; }
+
+.mb-tac-label { font-size: 4px; letter-spacing: 0.35px; font-family: inherit; }
+.mb-tac-label.amber { fill: var(--amber-hot); }
+.mb-tac-label.teal { fill: #7ef0d4; }
+
+.mb-tac-scale line { stroke: rgba(184, 216, 207, 0.55); stroke-width: 0.4; }
+.mb-tac-scale text { fill: var(--ink-dim); font-size: 3.4px; letter-spacing: 0.2px; font-family: inherit; }
+
+.mb-north rect { fill: rgba(4, 10, 9, 0.85); stroke: var(--line); stroke-width: 0.3; }
+.mb-north text { fill: var(--ink); font-size: 5px; font-family: inherit; }
+.mb-north polygon { fill: var(--ink-dim); }
+
+@keyframes route-flow-tac {
+  to { stroke-dashoffset: -6; }
+}
+
+.mb-legend {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   justify-content: center;
   border-left: 1px solid var(--line);
   padding-left: 10px;
@@ -1455,6 +1520,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
+  width: 100%;
+  max-width: 148px;
   font-size: 8.5px;
   letter-spacing: 0.12em;
   color: var(--ink-dim);
@@ -1465,48 +1532,113 @@
 /* dossier column */
 .mb-dossier { display: flex; min-height: 0; min-width: 0; }
 .mb-dossier-panel { flex: 1; }
-.mb-dossier-body { overflow-y: auto; gap: 9px; }
+.mb-dossier-body { padding: 0; overflow: hidden; position: relative; }
+
+.mb-dossier-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 240, 212, 0.4) transparent;
+}
+
+.mb-dossier-scroll::-webkit-scrollbar { width: 7px; }
+.mb-dossier-scroll::-webkit-scrollbar-thumb { background: rgba(126, 240, 212, 0.4); }
+
+/* Says so when the dossier runs past its frame, so the notes at the foot of
+   it never sit behind a scrollbar nobody can see. */
+.mb-dossier-cue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: linear-gradient(rgba(7, 16, 15, 0), rgba(7, 16, 15, 0.96));
+}
+
+.mb-dossier-cue.on { opacity: 1; }
+
+.mb-dossier-cue span {
+  font-size: 7.5px;
+  letter-spacing: 0.28em;
+  color: var(--amber);
+  animation: mb-cue-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes mb-cue-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 
 .mb-idrow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px;
-  gap: 10px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) clamp(92px, 36%, 122px);
+  gap: 9px;
+  align-items: stretch;
 }
 
-.mb-fields { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.mb-fields { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 
 .field label { display: block; font-size: 8.5px; letter-spacing: 0.22em; color: var(--ink-dim); }
 
 .field .value {
-  margin-top: 3px;
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  margin-top: 2px;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
   color: #e8fbf2;
   border: 1px solid var(--line);
   background: var(--bg-inset);
-  padding: 5px 8px;
+  padding: 3px 7px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.field .value.big { font-size: clamp(16px, 1.5vw, 21px); color: #f2fff9; }
+.field .value.big { font-size: clamp(15px, 1.4vw, 20px); color: #f2fff9; }
 
-.mb-sil { position: relative; background: #0a0f0d; }
-.mb-sil svg { width: 100%; height: auto; display: block; }
+.mb-sil { position: relative; background: #060b0a; overflow: hidden; min-height: 128px; }
+.mb-sil svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.mb-sil-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 26px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(rgba(126, 240, 212, 0), rgba(126, 240, 212, 0.1), rgba(126, 240, 212, 0));
+  animation: mb-sil-scan 4.5s linear infinite;
+}
+
+@keyframes mb-sil-scan {
+  from { top: -26px; }
+  to { top: 100%; }
+}
 
 .mb-sil-id {
   position: absolute;
-  bottom: 5px;
+  bottom: 4px;
   left: 50%;
+  z-index: 2;
   transform: translateX(-50%);
   font-size: 8px;
   letter-spacing: 0.1em;
-  color: var(--ink-dim);
-  background: rgba(4, 10, 9, 0.88);
-  border: 1px solid var(--line);
-  padding: 1px 5px;
+  color: var(--amber);
+  background: rgba(4, 10, 9, 0.9);
+  border: 1px solid var(--line-amber);
+  padding: 1px 6px;
   white-space: nowrap;
 }
 
@@ -1515,22 +1647,22 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   border: 1px solid rgba(224, 75, 60, 0.55);
   background: rgba(224, 75, 60, 0.06);
-  padding: 8px 10px;
+  padding: 5px 9px;
 }
 
 .mb-skull { color: var(--red); display: grid; place-items: center; }
 
 .mb-threat-main label { display: block; font-size: 8.5px; letter-spacing: 0.22em; color: rgba(255, 107, 85, 0.8); }
-.mb-threat-main b { font-size: clamp(16px, 1.5vw, 22px); color: var(--red-hot); letter-spacing: 0.14em; }
+.mb-threat-main b { font-size: clamp(15px, 1.35vw, 20px); color: var(--red-hot); letter-spacing: 0.14em; }
 
-.mb-threat-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.mb-threat-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .mb-threat-blocks { display: flex; gap: 3px; }
 .mb-threat-blocks i {
-  width: 9px;
-  height: 13px;
+  width: 8px;
+  height: 12px;
   background: rgba(224, 75, 60, 0.12);
   border: 1px solid rgba(224, 75, 60, 0.4);
 }
@@ -1539,29 +1671,32 @@
 
 .mb-reward {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  flex-direction: column;
+  gap: 1px;
   border: 1px solid var(--line);
   background: var(--bg-inset);
-  padding: 10px 12px;
+  padding: 5px 11px;
 }
 
 .mb-reward label { font-size: 8.5px; letter-spacing: 0.22em; color: var(--ink-dim); }
-.mb-reward b { font-size: clamp(21px, 2vw, 29px); color: #f2fff9; letter-spacing: 0.08em; }
-.mb-reward span { margin-left: auto; font-size: 8.5px; letter-spacing: 0.18em; }
+.mb-reward-line { display: flex; align-items: baseline; gap: 10px; }
+.mb-reward b { font-size: clamp(20px, 1.9vw, 28px); color: #f2fff9; letter-spacing: 0.06em; white-space: nowrap; }
+.mb-reward b i { font-size: 0.42em; letter-spacing: 0.16em; color: var(--amber); margin-left: 5px; }
+.mb-reward-line span { margin-left: auto; font-size: 8.5px; letter-spacing: 0.18em; white-space: nowrap; }
 
 .mb-box {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid var(--line);
   background: var(--bg-inset);
-  padding: 9px 10px;
+  padding: 6px 9px;
 }
 
 .mb-box > label { font-size: 8.5px; letter-spacing: 0.22em; color: var(--ink-dim); }
+.mb-box .axis { font-size: 7.5px; }
 
-.mb-obj { display: flex; gap: 8px; align-items: center; font-size: 11px; letter-spacing: 0.08em; }
+.mb-obj { display: flex; gap: 8px; align-items: center; font-size: 10.5px; letter-spacing: 0.06em; }
 .mb-obj b { color: var(--cyan); }
 
 .mb-obj-glyph {
@@ -1578,7 +1713,7 @@
   height: 8px;
   border: 1px solid var(--line);
   background: var(--bg-inset);
-  margin: 3px 0;
+  margin: 2px 0;
 }
 
 .mb-meter i {
@@ -1590,51 +1725,54 @@
   box-shadow: 0 0 6px rgba(224, 75, 60, 0.7);
 }
 
-.mb-note { font-size: 10px; letter-spacing: 0.06em; }
+.mb-note { font-size: 9.5px; letter-spacing: 0.04em; line-height: 1.32; }
 
 /* bottom action bar */
 .mb-foot {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: stretch;
   flex: none;
 }
 
-.mb-return { align-self: center; padding: 12px 22px; }
+.mb-return { align-self: center; padding: 12px 20px; }
 
+/* Shrinks with the window rather than dropping out of the footer: the entries
+   ellipsize and keep their full text on hover. */
 .mb-comms {
-  display: none;
-  flex-direction: column;
-  gap: 3px;
-  justify-content: center;
-  padding: 8px 10px;
+  display: flex;
+  flex: 1 1 200px;
+  min-width: 130px;
   max-width: 330px;
+  flex-direction: column;
+  gap: 2px;
+  justify-content: center;
+  padding: 6px 9px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
-  font-size: 8.5px;
-  letter-spacing: 0.06em;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  overflow: hidden;
 }
 
-.mb-comms b { color: var(--cyan); font-size: 8.5px; letter-spacing: 0.18em; }
+.mb-comms b { color: var(--cyan); font-size: 8px; letter-spacing: 0.18em; }
+.mb-comms span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mb-comms i { color: var(--ink-faint); }
 
-@media (min-width: 1350px) {
-  .mb-comms { display: flex; }
-}
-
-.mb-accept { flex: 1; align-self: center; }
+.mb-accept { flex: 3 1 300px; align-self: center; }
 
 .mb-contract {
   display: flex;
   flex-direction: column;
   gap: 4px;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 8px 11px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   font-size: 9px;
   letter-spacing: 0.1em;
   color: var(--ink-dim);
-  min-width: 210px;
+  min-width: 196px;
 }
 
 .mb-contract b { color: var(--ink); }
