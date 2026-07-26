@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
+import { useResearchStore } from '../state/researchStore'
 import { ROSTER, WEAPONS, missionById } from '../game/data'
+import { squadWeapon } from '../game/research'
 import type { WeaponId } from '../game/types'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import { Portrait } from './portrait'
@@ -98,6 +100,8 @@ export default function Hud() {
   const firstSelected = selected.length > 0 ? squad.find((r) => r.unitId === selected[0]) : undefined
   const active = firstSelected ?? squad.find((r) => !r.dead) ?? squad[0] ?? null
   const sidearmId = active ? weaponIdByName(active.sidearmName) : 'pistol'
+  // Same weapon the squad deployed with, research included.
+  const sidearm = squadWeapon(sidearmId, useResearchStore.getState().done)
   const items = itemCounts(squad)
 
   return (
@@ -285,7 +289,7 @@ export default function Hud() {
               <div className="hud-wpn-info">
                 <span className="hud-wpn-name">{active.sidearmName}</span>
                 <span className="hud-ammo sm">
-                  <b>{WEAPONS[sidearmId].magazine}</b>
+                  <b>{sidearm.magazine}</b>
                   <i>/48</i>
                 </span>
               </div>

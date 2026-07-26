@@ -1,6 +1,12 @@
 // CONTRACT FILE. Static game data: weapons, operative roster, missions.
 import type { MissionDef, OperativeDef, WeaponDef, WeaponId } from './types'
 
+// Intel gates the locked missions and the unbuilt screens. It never rises yet,
+// so it is one fixed level with the survey progress that unlocks the next.
+export const INTEL_LEVEL = 1
+export const INTEL_PROGRESS = 25
+export const INTEL_GATE = 'REQUIRES INTEL LVL 2'
+
 export const WEAPONS: Record<WeaponId, WeaponDef> = {
   assault: {
     id: 'assault',

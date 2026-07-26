@@ -14,6 +14,7 @@ import type {
 } from './types'
 import { isWalkable } from './types'
 import { WEAPONS } from './data'
+import { crewBonus, squadWeapon } from './research'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
@@ -21,6 +22,7 @@ import { sfx } from './audio'
 import { useMissionStore } from '../state/missionStore'
 import type { ObjectiveUi, SquadMemberUi } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
+import { useResearchStore } from '../state/researchStore'
 
 const MAX_DT = 0.05
 const MAX_CATCHUP = 5
@@ -102,17 +104,23 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     return nearestWalkable(city, p) ?? { x: p.x, z: p.z }
   }
 
+  // Completed research is read once, at deployment. The world clock is stopped
+  // during a mission, so nothing can finish while this one runs.
+  const researched = useResearchStore.getState().done
+  const bonus = crewBonus(researched)
+
   operatives.forEach((op, i) => {
-    const w = WEAPONS[op.weapon]
+    const w = squadWeapon(op.weapon, researched)
+    const hp = op.maxHp + bonus.maxHp
     addUnit({
       id: 'a' + (i + 1),
       kind: 'agent',
       name: op.name,
       pos: snap(city.spawnAgents[i] ?? { x: city.size / 2, z: city.size - 6 }),
       heading: Math.PI,
-      hp: op.maxHp,
-      maxHp: op.maxHp,
-      speed: op.speed,
+      hp,
+      maxHp: hp,
+      speed: op.speed + bonus.speed,
       weapon: w,
       stance: 'idle',
       path: [],
