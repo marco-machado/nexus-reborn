@@ -77,6 +77,7 @@ export default function Hud() {
   const credits = useAppStore((s) => s.credits)
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
+  const researched = useResearchStore((s) => s.done)
   const mission = missionId ? missionById(missionId) : null
   const district = mission ? mission.district : 'DISTRICT 07'
 
@@ -101,7 +102,7 @@ export default function Hud() {
   const active = firstSelected ?? squad.find((r) => !r.dead) ?? squad[0] ?? null
   const sidearmId = active ? weaponIdByName(active.sidearmName) : 'pistol'
   // Same weapon the squad deployed with, research included.
-  const sidearm = squadWeapon(sidearmId, useResearchStore.getState().done)
+  const sidearm = squadWeapon(sidearmId, researched)
   const items = itemCounts(squad)
 
   return (

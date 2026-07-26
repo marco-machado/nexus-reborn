@@ -20,7 +20,8 @@ interface ResearchStoreState {
   // order, so the list is the record, not a set.
   done: string[]
   labs: Labs
-  start: (node: ResearchNode, t: number) => void
+  // True when the lab took the project, so the caller only bills a real start.
+  start: (node: ResearchNode, t: number) => boolean
   sync: (t: number) => void
 }
 
@@ -32,14 +33,15 @@ export const useResearchStore = create<ResearchStoreState>((set, get) => ({
   done: [],
   labs: idleLabs(),
 
-  start: (node, t) =>
-    set((s) => {
-      if (s.labs[node.branch] || s.done.includes(node.id)) return s
-      if (!node.needs.every((id) => s.done.includes(id))) return s
-      return {
-        labs: { ...s.labs, [node.branch]: { id: node.id, startedT: t, endT: t + node.hours * 3600 } },
-      }
-    }),
+  start: (node, t) => {
+    const s = get()
+    if (s.labs[node.branch] || s.done.includes(node.id)) return false
+    if (!node.needs.every((id) => s.done.includes(id))) return false
+    set({
+      labs: { ...s.labs, [node.branch]: { id: node.id, startedT: t, endT: t + node.hours * 3600 } },
+    })
+    return true
+  },
 
   sync: (t) => {
     const s = get()

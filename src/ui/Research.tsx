@@ -39,6 +39,8 @@ const VIEW_W = 200
 const VIEW_H = 400
 const HEX_W = 46
 const HEX_H = 32
+// The selection ring grows past the outer columns, so the box carries a margin.
+const VIEW_PAD = 8
 const COL_X = [50, 150, 100]
 const ROW_Y = [40, 146, 252, 358]
 
@@ -186,7 +188,11 @@ function BranchColumn(props: {
         <b>{props.branch.name}</b>
         <i className="dim">// {props.branch.sub}</i>
       </div>
-      <svg className="rs-branch-svg" viewBox={'0 0 ' + VIEW_W + ' ' + VIEW_H} preserveAspectRatio="xMidYMin meet">
+      <svg
+        className="rs-branch-svg"
+        viewBox={-VIEW_PAD + ' 0 ' + (VIEW_W + VIEW_PAD * 2) + ' ' + VIEW_H}
+        preserveAspectRatio="xMidYMin meet"
+      >
         <g className="rs-links">
           {nodes.map((n) =>
             n.needs.map((id) => {
@@ -402,8 +408,10 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
         disabled={!can}
         aria-label={'AUTHORIZE ' + nodeTitle(n) + ' // ' + sub}
         onClick={act(() => {
-          spendCredits(n.cost)
-          start(n, useWorldStore.getState().t)
+          // Bill only a lab that actually took the project, and only against
+          // the balance as it stands now, so the two stores cannot drift.
+          if (useAppStore.getState().credits < n.cost) return
+          if (start(n, useWorldStore.getState().t)) spendCredits(n.cost)
         })}
       >
         <span className="cta-inner">AUTHORIZE PROJECT</span>
