@@ -1,0 +1,29 @@
+// The world clock, driven by whichever strategy screen is mounted. World time
+// only advances here, and research projects run on the same clock, so the tick
+// that moves the world is also what finishes them.
+import { useEffect } from 'react'
+import { MAX_DT, useWorldStore } from '../state/worldStore'
+import { useResearchStore } from '../state/researchStore'
+
+// Batched to 20Hz so the clock, the timeline and the lab bars repaint smoothly
+// without a render every frame.
+export function useWorldClock(): void {
+  const tick = useWorldStore((s) => s.tick)
+  const sync = useResearchStore((s) => s.sync)
+  useEffect(() => {
+    let raf = 0
+    let last = performance.now()
+    let acc = 0
+    const step = (now: number) => {
+      raf = requestAnimationFrame(step)
+      acc += Math.min(MAX_DT, (now - last) / 1000)
+      last = now
+      if (acc < 0.05) return
+      tick(acc)
+      acc = 0
+      sync(useWorldStore.getState().t)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [tick, sync])
+}

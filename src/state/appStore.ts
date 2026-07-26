@@ -2,7 +2,7 @@
 import { create } from 'zustand'
 import { DEFAULT_SQUAD } from '../game/data'
 
-export type Phase = 'menu' | 'world' | 'brief' | 'team' | 'mission' | 'debrief'
+export type Phase = 'menu' | 'world' | 'research' | 'brief' | 'team' | 'mission' | 'debrief'
 
 export interface MissionOutcome {
   won: boolean
@@ -22,6 +22,7 @@ interface AppState {
   goto: (phase: Phase) => void
   selectMission: (id: string) => void
   toggleOperative: (id: string) => void
+  spendCredits: (amount: number) => void
   setOutcome: (o: MissionOutcome) => void
 }
 
@@ -42,6 +43,9 @@ export const useAppStore = create<AppState>((set) => ({
       if (s.squad.length >= 4) return s
       return { squad: [...s.squad, id] }
     }),
+  // Funds research. Guarded here so no caller can overdraw the account.
+  spendCredits: (amount) =>
+    set((s) => (amount > 0 && s.credits >= amount ? { credits: s.credits - amount } : s)),
   setOutcome: (o) =>
     set((s) => ({
       outcome: o,

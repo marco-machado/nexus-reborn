@@ -6,7 +6,6 @@ import type { ReactNode, RefObject } from 'react'
 import { useAppStore } from '../state/appStore'
 import {
   DAY,
-  MAX_DT,
   SPEEDS,
   globalInfluence,
   hhmm,
@@ -16,7 +15,7 @@ import {
   useWorldStore,
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
-import { MISSIONS, ROSTER } from '../game/data'
+import { INTEL_GATE, INTEL_LEVEL, INTEL_PROGRESS, MISSIONS, ROSTER } from '../game/data'
 import type { SectorId } from '../game/types'
 import {
   ARCS,
@@ -39,24 +38,11 @@ import {
   yOfLat,
 } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
-import { Chip, LockGlyph, NavGlyph, Panel, SegBar, TargetGlyph } from './bits'
-import type { NavKind } from './bits'
+import { Chip, LockGlyph, Panel, SegBar, TargetGlyph } from './bits'
+import { NavTabs } from './Nav'
+import { useWorldClock } from './clock'
 import { fmt } from './util'
 import { uiClick } from './sound'
-
-// Intel gates the locked missions and the unbuilt tabs. It never rises yet, so
-// it is one fixed level with the survey progress that unlocks the next.
-const INTEL_LEVEL = 1
-const INTEL_PROGRESS = 25
-const INTEL_GATE = 'REQUIRES INTEL LVL 2'
-
-const NAV_TABS: Array<{ key: NavKind; label: string }> = [
-  { key: 'world', label: 'WORLD MAP' },
-  { key: 'brief', label: 'BRIEFING' },
-  { key: 'research', label: 'RESEARCH' },
-  { key: 'operatives', label: 'OPERATIVES' },
-  { key: 'archives', label: 'ARCHIVES' },
-]
 
 function act(fn: () => void): () => void {
   return () => {
@@ -75,27 +61,6 @@ function agoLabel(sec: number): string {
 }
 
 /* --------------------------------- hooks ---------------------------------- */
-
-// Advances world time while the screen is mounted. Batched to 20Hz so the
-// clock and the timeline repaint smoothly without a render every frame.
-function useWorldClock(): void {
-  const tick = useWorldStore((s) => s.tick)
-  useEffect(() => {
-    let raf = 0
-    let last = performance.now()
-    let acc = 0
-    const step = (now: number) => {
-      raf = requestAnimationFrame(step)
-      acc += Math.min(MAX_DT, (now - last) / 1000)
-      last = now
-      if (acc < 0.05) return
-      tick(acc)
-      acc = 0
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [tick])
-}
 
 // True while the list has content below the fold, so the panel can show the
 // cut edge instead of hiding it behind a hairline scrollbar.
@@ -257,7 +222,7 @@ function WorldPlate() {
             {m.locked && <LockGlyph size={8} />}
             {m.codename}
           </span>
-          <span className="wm-tip" aria-hidden="true">
+          <span className="tip" aria-hidden="true">
             <b>{m.codename}</b>
             {m.locked ? (
               <>
@@ -862,32 +827,7 @@ export function WorldMap() {
         </Panel>
       </div>
 
-      {/* nav tabs */}
-      <nav className="wm-nav">
-        {NAV_TABS.map((tab, i) => {
-          const active = i === 0
-          return (
-            <span key={tab.key} className="wm-tab-wrap" title={active ? undefined : INTEL_GATE}>
-              <button
-                type="button"
-                className={'wm-tab' + (active ? ' active' : ' locked')}
-                aria-current={active ? 'page' : undefined}
-                aria-disabled={active ? undefined : true}
-                aria-label={active ? tab.label : tab.label + ' // LOCKED // ' + INTEL_GATE}
-              >
-                <NavGlyph kind={tab.key} size={active ? 15 : 13} />
-                <span className="wm-tab-label">{tab.label}</span>
-                {!active && (
-                  <span className="wm-tab-lock">
-                    <LockGlyph size={9} />
-                  </span>
-                )}
-              </button>
-              {!active && <span className="wm-tip nav">{INTEL_GATE}</span>}
-            </span>
-          )
-        })}
-      </nav>
+      <NavTabs current="world" />
     </div>
   )
 }

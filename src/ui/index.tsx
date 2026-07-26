@@ -1,11 +1,15 @@
-// DOM screens: MainMenu, MissionBrief, TeamSelect, Debrief. The world map
-// screen lives in ./WorldMap and is re-exported here.
-// Flow: menu -> world -> brief -> team -> mission -> debrief -> world.
+// DOM screens: MainMenu, MissionBrief, TeamSelect, Debrief. The world map and
+// research screens live in ./WorldMap and ./Research and are re-exported here.
+// Flow: menu -> world -> brief -> team -> mission -> debrief -> world, with
+// research reachable from the world map nav.
 import './ui.css'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAppStore } from '../state/appStore'
-import { ROSTER, WEAPONS, missionById, operativeById } from '../game/data'
+import { useResearchStore } from '../state/researchStore'
+import { ROSTER, missionById, operativeById } from '../game/data'
+import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
+import type { ResearchNode } from '../game/research'
 import type { AgentRole, MissionDef } from '../game/types'
 import {
   Panel,
@@ -35,6 +39,7 @@ import { Figure } from './figure'
 import { uiClick, unlockAudio } from './sound'
 
 export { WorldMap } from './WorldMap'
+export { Research } from './Research'
 
 /* -------------------------------- helpers -------------------------------- */
 
@@ -83,6 +88,13 @@ function bioLines(bio: string): string[] {
     .split(/\.(?=\s|$)/)
     .map((s) => s.trim())
     .filter(Boolean)
+}
+
+// What an installed augmentation does, in the same words the research screen
+// prints for it.
+function augLine(node: ResearchNode): string {
+  const e = node.effects[0]
+  return e ? benefitOf(e).line : ''
 }
 
 /* ================================ MAIN MENU =============================== */
@@ -782,29 +794,28 @@ export function TeamSelect() {
     return ROSTER.find((o) => o.id === id) ?? ROSTER[0]
   }, [focusId, squad])
 
+  // Completed research rides with the operative: the same numbers the mission
+  // builds units from.
+  const done = useResearchStore((s) => s.done)
+  const bonus = crewBonus(done)
+  const maxHp = focus.maxHp + bonus.maxHp
+  const speed = focus.speed + bonus.speed
   const fh = hashOf(focus.id + focus.name)
   const stats = {
-    hlth: Math.min(100, Math.round(focus.maxHp / 1.35)),
-    stamina: Math.min(100, Math.round((focus.speed / 5.8) * 100)),
+    hlth: Math.min(100, Math.round(maxHp / 1.35)),
+    stamina: Math.min(100, Math.round((speed / 5.8) * 100)),
     focus: 78 + (fh % 21),
-    mobility: Math.min(99, Math.round(focus.speed * 17.5)),
+    mobility: Math.min(99, Math.round(speed * 17.5)),
   }
-  const primary = WEAPONS[focus.weapon]
-  const sidearm = WEAPONS[focus.sidearm]
+  const primary = squadWeapon(focus.weapon, done)
+  const sidearm = squadWeapon(focus.sidearm, done)
   const mass = squad.reduce((a, id) => {
     const o = operativeById(id)
     return a + o.maxHp * 0.48 + o.speed * 5.2
   }, 18.3)
   const ready = squad.length === 4
 
-  // every derived readout shifts unsigned: hashOf returns a full 32 bit value,
-  // so a signed shift lands negative and prints counts like -1
-  const augs: Array<[string, string, string]> = [
-    ['NEURAL', 'CORTEX INTERFACE', 'TAC-LINK V' + (2 + (fh % 2)) + '.' + ((fh >>> 2) % 10)],
-    ['CHEST', 'SYNAPTIC BUFFER', 'KINETIC SHIELD RIBS'],
-    ['ARMS', 'TARGETING SUBROUTINE', 'STRENGTH BOOSTERS'],
-    ['LEGS', 'AGI SERVOS V' + (2 + ((fh >>> 4) % 3)), 'IMPACT ABSORBERS'],
-  ]
+  const augs = installedAugs(done)
   const invKinds = ['med', 'cell', 'frag', 'chip'] as const
 
   return (
@@ -999,15 +1010,15 @@ export function TeamSelect() {
 
             <div className="ts-box">
               <label>AUGMENTATIONS</label>
-              {augs.map(([slotName, main, sub]) => (
-                <div key={slotName} className="ts-aug">
-                  <span className="ts-aug-slot">{slotName}</span>
+              {augs.map(({ slot, node }) => (
+                <div key={slot} className={'ts-aug' + (node ? '' : ' stock')}>
+                  <span className="ts-aug-slot">{slot}</span>
                   <span className="ts-aug-glyph">
                     <HexGlyph size={13} />
                   </span>
                   <span className="ts-aug-main">
-                    <b>{main}</b>
-                    <i className="dim">{sub}</i>
+                    <b>{node ? nodeTitle(node) : 'STOCK ISSUE'}</b>
+                    <i className="dim">{node ? augLine(node) : 'NO PROJECT RESEARCHED'}</i>
                   </span>
                 </div>
               ))}
