@@ -2,7 +2,7 @@
 // screen lives in ./WorldMap and is re-exported here.
 // Flow: menu -> world -> brief -> team -> mission -> debrief -> world.
 import './ui.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAppStore } from '../state/appStore'
 import { ROSTER, WEAPONS, missionById, operativeById } from '../game/data'
@@ -17,7 +17,19 @@ import {
   SkullGlyph,
   HexGlyph,
 } from './bits'
-import { fmt, pad2, hashOf, rngFrom } from './util'
+import {
+  RECON_H,
+  RECON_TARGET,
+  RECON_W,
+  buildReconBlocks,
+  buildTacticalMap,
+  pointsAttr,
+  roofPoints,
+  sidePoints,
+  targetWindows,
+  textWidth,
+} from './briefMap'
+import { fmt, pad2, hashOf } from './util'
 import { Portrait } from './portrait'
 import { Figure } from './figure'
 import { uiClick, unlockAudio } from './sound'
@@ -119,34 +131,6 @@ export function MainMenu() {
 
 /* =============================== MISSION BRIEF ============================ */
 
-interface Block {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-
-function buildRecon(seed: number): { blocks: Block[]; tac: Block[] } {
-  const r = rngFrom(seed >>> 0)
-  const blocks: Block[] = []
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 7; col++) {
-      if (r() < 0.16) continue
-      const x = 20 + col * 86 + r() * 22
-      const y = 46 + row * 72 + r() * 16
-      const w = 30 + r() * 30
-      const h = 24 + r() * 26
-      if (x + w > 262 && x < 396 && y + h > 86 && y < 214) continue
-      blocks.push({ x, y, w, h })
-    }
-  }
-  const tac: Block[] = []
-  for (let i = 0; i < 44; i++) {
-    tac.push({ x: 8 + r() * 410, y: 12 + r() * 178, w: 8 + r() * 22, h: 6 + r() * 14 })
-  }
-  return { blocks, tac }
-}
-
 const THREAT_BLOCKS: Record<MissionDef['threat'], number> = {
   MODERATE: 4,
   HIGH: 6,
@@ -154,6 +138,26 @@ const THREAT_BLOCKS: Record<MissionDef['threat'], number> = {
 }
 
 const OBJECTIVE_TIER = ['PRIMARY', 'SECONDARY', 'TERTIARY']
+
+// Recon callout, sized from its own text so the frame always holds the label.
+// The stack sits below the readouts on the right, clear of both.
+const CALLOUT_LINES = [
+  { text: 'TARGET BUILDING', size: 8, track: 0.9, cls: 'label' },
+  { text: 'CHECKPOINT GATE', size: 10.5, track: 1, cls: 'name' },
+  { text: 'ID: CP-07 // GRID 77-2A', size: 8, track: 0.9, cls: 'sub' },
+]
+const CALLOUT_PAD = 9
+const CALLOUT_W =
+  Math.max(...CALLOUT_LINES.map((l) => textWidth(l.text, l.size, l.track))) + CALLOUT_PAD * 2
+const CALLOUT_H = 52
+const CALLOUT_X = RECON_W - 16 - CALLOUT_W
+const CALLOUT_Y = 104
+
+const COMMS_LOG = [
+  ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
+  ['23:40:45', 'WEATHER: HEAVY RAIN. VISIBILITY LOW.'],
+  ['23:41:02', 'LOCAL: CORPSEC TASKFORCE ONSITE.'],
+]
 
 function LegendRow(props: { label: string; children: ReactNode }) {
   return (
@@ -164,19 +168,69 @@ function LegendRow(props: { label: string; children: ReactNode }) {
   )
 }
 
+function TacStat(props: { label: string; value: ReactNode; tone?: string }) {
+  return (
+    <div className="mb-tac-stat">
+      <label>{props.label}</label>
+      <b className={props.tone}>{props.value}</b>
+    </div>
+  )
+}
+
+// True while the element has content past its bottom edge, so a panel can say
+// so instead of hiding the overflow behind a 5px scrollbar.
+function useScrollCue(): [(el: HTMLDivElement | null) => void, boolean] {
+  const [more, setMore] = useState(false)
+  const node = useRef<HTMLDivElement | null>(null)
+
+  const measure = useCallback(() => {
+    const el = node.current
+    if (!el) return
+    setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 4)
+  }, [])
+
+  const ref = useCallback(
+    (el: HTMLDivElement | null) => {
+      node.current = el
+      measure()
+    },
+    [measure],
+  )
+
+  useLayoutEffect(() => {
+    const el = node.current
+    if (!el) return
+    measure()
+    el.addEventListener('scroll', measure, { passive: true })
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    for (const child of el.children) ro.observe(child)
+    return () => {
+      el.removeEventListener('scroll', measure)
+      ro.disconnect()
+    }
+  }, [measure])
+
+  return [ref, more]
+}
+
 export function MissionBrief() {
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
   const clock = useUtcClock()
   const m = missionId ? missionById(missionId) : null
-  const recon = useMemo(() => buildRecon(m ? m.seed : 1), [m])
-  if (!m) return null
+  const blocks = useMemo(() => buildReconBlocks(m ? m.seed : 1), [m])
+  const targetLights = useMemo(() => targetWindows(m ? m.seed : 1), [m])
+  const tac = useMemo(() => (m ? buildTacticalMap(m) : null), [m])
+  const [dossierRef, dossierMore] = useScrollCue()
+  if (!m || !tac) return null
 
   const initials = m.codename
     .split(' ')
     .map((w) => w.charAt(0))
     .join('')
   const contractId = '77A-' + m.codename.replace(/\s+/g, '') + '-2087'
+  const lz = tac.extraction
 
   return (
     <div className="screen mb">
@@ -200,138 +254,313 @@ export function MissionBrief() {
             bodyClassName="mb-recon-body"
           >
             <div className="mb-sweep" aria-hidden="true" />
-            <svg viewBox="0 0 640 360" preserveAspectRatio="none" className="mb-recon-svg">
-              <rect x="0" y="0" width="640" height="360" fill="#05090b" />
+            <svg
+              viewBox={'0 0 ' + RECON_W + ' ' + RECON_H}
+              preserveAspectRatio="none"
+              className="mb-recon-svg"
+              role="img"
+              aria-label={'Infrared satellite frame over ' + m.district + ', ' + m.city}
+            >
+              <defs>
+                <linearGradient id="mb-recon-scrim" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#020708" stopOpacity="0.94" />
+                  <stop offset="70%" stopColor="#020708" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#020708" stopOpacity="0" />
+                </linearGradient>
+                <radialGradient id="mb-target-glow">
+                  <stop offset="0%" stopColor="#f0b445" stopOpacity="0.26" />
+                  <stop offset="100%" stopColor="#f0b445" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <rect x="0" y="0" width={RECON_W} height={RECON_H} fill="#05090b" />
               <g className="mb-grid">
                 {[60, 132, 204, 276, 332].map((y) => (
-                  <line key={'h' + y} x1="0" y1={y} x2="640" y2={y} />
+                  <line key={'h' + y} x1="0" y1={y} x2={RECON_W} y2={y} />
                 ))}
-                {[80, 180, 280, 380, 480, 580].map((x) => (
-                  <line key={'v' + x} x1={x} y1="0" x2={x} y2="360" />
+                {[96, 192, 288, 384, 480, 576, 672, 768, 864].map((x) => (
+                  <line key={'v' + x} x1={x} y1="0" x2={x} y2={RECON_H} />
                 ))}
               </g>
-              {recon.blocks.map((b, i) => (
+
+              {blocks.map((b, i) => (
                 <g key={i} className="mb-block">
-                  <rect x={b.x} y={b.y} width={b.w} height={b.h} />
-                  <polygon
-                    points={`${b.x},${b.y} ${b.x + 9},${b.y - 7} ${b.x + b.w + 9},${b.y - 7} ${b.x + b.w},${b.y}`}
-                  />
-                  <line x1={b.x + b.w} y1={b.y + b.h} x2={b.x + b.w + 9} y2={b.y + b.h - 7} />
-                  <line x1={b.x + b.w + 9} y1={b.y - 7} x2={b.x + b.w + 9} y2={b.y + b.h - 7} />
+                  <polygon className="side" points={sidePoints(b)} />
+                  <rect className="face" x={b.x} y={b.y} width={b.w} height={b.h} />
+                  {b.windows.map((w, k) => (
+                    <rect key={k} className="mb-win" x={w.x} y={w.y} width="3.4" height="2.4" />
+                  ))}
+                  <polygon className="roof" points={roofPoints(b)} />
                 </g>
               ))}
 
               {/* target building */}
+              <ellipse
+                cx={RECON_TARGET.x + RECON_TARGET.w / 2}
+                cy={RECON_TARGET.y + RECON_TARGET.h / 2}
+                rx="170"
+                ry="120"
+                fill="url(#mb-target-glow)"
+              />
               <g className="mb-target">
-                <rect x="290" y="102" width="76" height="90" />
-                <polygon points="290,102 302,92 378,92 366,102" />
-                <line x1="366" y1="192" x2="378" y2="182" />
-                <line x1="378" y1="92" x2="378" y2="182" />
-                <line x1="315" y1="102" x2="315" y2="192" />
-                <line x1="341" y1="102" x2="341" y2="192" />
-                <line x1="290" y1="132" x2="366" y2="132" />
-                <line x1="290" y1="162" x2="366" y2="162" />
-              </g>
-              <polyline className="mb-callout" points="366,112 452,64 470,64" />
-              <g className="mb-callout-box">
-                <rect x="470" y="46" width="158" height="34" />
-                <text x="478" y="60">TARGET: CHECKPOINT GATE</text>
-                <text x="478" y="73" className="sub">
-                  ID: CP-07 // GRID 77-2A
-                </text>
+                <polygon className="side" points={sidePoints(RECON_TARGET)} />
+                <rect
+                  className="face"
+                  x={RECON_TARGET.x}
+                  y={RECON_TARGET.y}
+                  width={RECON_TARGET.w}
+                  height={RECON_TARGET.h}
+                />
+                {targetLights.map((w, k) => (
+                  <rect key={k} className="mb-target-win" x={w.x} y={w.y} width="3.4" height="2.4" />
+                ))}
+                <polygon className="roof" points={roofPoints(RECON_TARGET)} />
+                {[132, 156, 180].map((y) => (
+                  <line
+                    key={y}
+                    className="floor"
+                    x1={RECON_TARGET.x}
+                    y1={y}
+                    x2={RECON_TARGET.x + RECON_TARGET.w}
+                    y2={y}
+                  />
+                ))}
+                {[455, 480, 505].map((x) => (
+                  <line
+                    key={x}
+                    className="floor"
+                    x1={x}
+                    y1={RECON_TARGET.y}
+                    x2={x}
+                    y2={RECON_TARGET.y + RECON_TARGET.h}
+                  />
+                ))}
               </g>
 
-              {/* insertion route from the south */}
-              <polyline className="mb-route ins" points="96,346 150,318 196,292 232,258 262,226 300,196" />
-              <polygon className="mb-tri ins" points="96,338 103,350 89,350" />
+              {/* insertion route from the south west */}
+              <polyline
+                className="mb-route ins"
+                points="126,338 214,316 292,290 356,258 412,228 452,208"
+              />
+              <polygon className="mb-tri ins" points="126,330 133,344 119,344" />
               <g className="mb-tag ins">
-                <rect x="24" y="316" width="86" height="26" />
-                <text x="30" y="327">INSERTION</text>
-                <text x="30" y="338" className="sub">
+                <rect x="42" y="292" width="120" height="30" />
+                <text x="49" y="305">
+                  INSERTION
+                </text>
+                <text x="49" y="317" className="sub">
                   ROUTE ALPHA
                 </text>
               </g>
 
               {/* extraction route to the south east */}
-              <polyline className="mb-route ext" points="366,168 434,220 500,272 552,312" />
-              <polygon className="mb-tri ext" points="552,306 559,318 545,318" />
+              <polyline className="mb-route ext" points="544,176 640,228 726,276 806,318" />
+              <polygon className="mb-tri ext" points="806,310 813,324 799,324" />
               <g className="mb-tag ext">
-                <rect x="500" y="322" width="94" height="26" />
-                <text x="506" y="333">EXTRACTION</text>
-                <text x="506" y="344" className="sub">
+                <rect x="830" y="270" width="126" height="30" />
+                <text x="837" y="283">
+                  EXTRACTION
+                </text>
+                <text x="837" y="295" className="sub">
                   ROUTE OMEGA
                 </text>
               </g>
 
-              {/* hud readouts */}
+              {/* readouts and briefing, on a scrim so type stays crisp */}
+              <rect x="0" y="0" width={RECON_W} height="98" fill="url(#mb-recon-scrim)" />
               <g className="mb-readout">
-                <text x="628" y="22" textAnchor="end">ALT: 1824M</text>
-                <text x="628" y="34" textAnchor="end">RNG: 3.7KM</text>
-                <text x="628" y="46" textAnchor="end">TRK: 117.3</text>
-                <text x="628" y="58" textAnchor="end">ZOOM: 1.6X</text>
-                <text x="628" y="70" textAnchor="end">MODE: IR-MONO</text>
+                {[
+                  'ALT: 1824M',
+                  'RNG: 3.7KM',
+                  'TRK: 117.3',
+                  'ZOOM: 1.6X',
+                  'MODE: IR-MONO',
+                ].map((line, i) => (
+                  <text key={line} x={RECON_W - 16} y={24 + i * 13} textAnchor="end">
+                    {line}
+                  </text>
+                ))}
               </g>
               <g className="mb-brieflines">
                 {m.briefing.map((line, i) => (
-                  <text key={i} x="14" y={22 + i * 12}>
+                  <text key={i} x="18" y={24 + i * 13}>
                     &gt; {line}
+                  </text>
+                ))}
+              </g>
+
+              {/* target callout, anchored clear of the readouts above */}
+              <polyline
+                className="mb-callout"
+                points={`544,150 700,${CALLOUT_Y + CALLOUT_H / 2} ${CALLOUT_X},${CALLOUT_Y + CALLOUT_H / 2}`}
+              />
+              <circle className="mb-callout-dot" cx="544" cy="150" r="3" />
+              <g className="mb-callout-box">
+                <rect x={CALLOUT_X} y={CALLOUT_Y} width={CALLOUT_W} height={CALLOUT_H} />
+                {CALLOUT_LINES.map((l, i) => (
+                  <text
+                    key={l.text}
+                    className={l.cls}
+                    x={CALLOUT_X + CALLOUT_PAD}
+                    y={CALLOUT_Y + 15 + i * 15}
+                  >
+                    {l.text}
                   </text>
                 ))}
               </g>
             </svg>
           </Panel>
 
-          {/* tactical map */}
+          {/* tactical map, projected from the district the mission builds */}
           <Panel
             title={'TACTICAL MAP // ' + m.city + ' - ' + m.district}
-            right={<span className="dim">GRID REF: 77-2A | NORTH</span>}
+            right={<span className="dim">GRID REF: 77-2A | {tac.size}M SQUARE</span>}
             className="mb-tac"
             bodyClassName="mb-tac-body"
           >
-            <svg viewBox="0 0 460 210" preserveAspectRatio="none" className="mb-tac-svg">
-              <defs>
-                <pattern id="mb-hatch-r" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-                  <rect width="6" height="6" fill="rgba(224,75,60,0.05)" />
-                  <rect width="1.4" height="6" fill="rgba(224,75,60,0.3)" />
-                </pattern>
-                <pattern id="mb-hatch-a" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-                  <rect width="5" height="5" fill="rgba(240,180,69,0.08)" />
-                  <rect width="1.4" height="5" fill="rgba(240,180,69,0.55)" />
-                </pattern>
-              </defs>
-              <rect x="0" y="0" width="460" height="210" fill="#04090a" />
-              <g className="mb-grid">
-                {[42, 84, 126, 168].map((y) => (
-                  <line key={'h' + y} x1="0" y1={y} x2="460" y2={y} />
+            <div className="mb-tac-rail">
+              <TacStat label="CITY BLOCKS" value={tac.counts.blocks} />
+              <TacStat label="STREETS" value={pad2(tac.counts.streets)} />
+              <TacStat label="CIVILIANS" value={pad2(tac.counts.civilians)} />
+              <TacStat label="PATROL CONTACTS" value={pad2(tac.counts.patrols)} tone="amber" />
+              <TacStat label="GARRISON" value={pad2(tac.counts.garrison)} tone="red" />
+              <TacStat label="ROUTE ALPHA" value={tac.counts.alphaMetres + ' M'} tone="teal" />
+              <TacStat label="ROUTE OMEGA" value={tac.counts.omegaMetres + ' M'} tone="red" />
+            </div>
+
+            <div className="mb-tac-plate">
+              <svg
+                viewBox={'0 0 ' + tac.size + ' ' + tac.size}
+                className="mb-tac-svg"
+                role="img"
+                aria-label={
+                  'Tactical plan of ' +
+                  m.district +
+                  ' showing the insertion route to the target and the extraction route back to the landing zone'
+                }
+              >
+                <defs>
+                  <pattern
+                    id="mb-hatch-r"
+                    width="3"
+                    height="3"
+                    patternTransform="rotate(45)"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <rect width="3" height="3" fill="rgba(224,75,60,0.06)" />
+                    <rect width="0.7" height="3" fill="rgba(224,75,60,0.34)" />
+                  </pattern>
+                  <pattern
+                    id="mb-hatch-a"
+                    width="2.4"
+                    height="2.4"
+                    patternTransform="rotate(45)"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <rect width="2.4" height="2.4" fill="rgba(240,180,69,0.1)" />
+                    <rect width="0.7" height="2.4" fill="rgba(240,180,69,0.6)" />
+                  </pattern>
+                </defs>
+                <rect x="0" y="0" width={tac.size} height={tac.size} fill="#04090a" />
+                <g className="mb-tac-grid">
+                  {[16, 32, 48, 64, 80].map((v) => (
+                    <line key={'h' + v} x1="0" y1={v} x2={tac.size} y2={v} />
+                  ))}
+                  {[16, 32, 48, 64, 80].map((v) => (
+                    <line key={'v' + v} x1={v} y1="0" x2={v} y2={tac.size} />
+                  ))}
+                </g>
+
+                {tac.roads.map((r, i) => (
+                  <rect key={i} className="mb-tac-road" x={r.x} y={r.y} width={r.w} height={r.h} />
                 ))}
-                {[57, 114, 171, 228, 285, 342, 399].map((x) => (
-                  <line key={'v' + x} x1={x} y1="0" x2={x} y2="210" />
+                {tac.buildings.map((b, i) => (
+                  <rect
+                    key={i}
+                    className="mb-tac-block"
+                    x={b.x}
+                    y={b.y}
+                    width={b.w}
+                    height={b.h}
+                    opacity={0.42 + b.lit * 0.58}
+                  />
                 ))}
-              </g>
-              {recon.tac.map((b, i) => (
-                <rect key={i} className="mb-tac-block" x={b.x} y={b.y} width={b.w} height={b.h} />
-              ))}
-              <polygon
-                className="mb-hostile"
-                points="206,26 300,22 336,68 302,112 210,108 180,64"
-                fill="url(#mb-hatch-r)"
-              />
-              <rect className="mb-tac-target" x="240" y="52" width="26" height="26" fill="url(#mb-hatch-a)" />
-              <text className="mb-tac-label amber" x="253" y="94" textAnchor="middle">
-                TARGET CP-07
-              </text>
-              <polyline className="mb-route ins" points="36,184 110,168 150,140 174,108 212,86 240,70" />
-              <polyline className="mb-route ext" points="266,72 322,98 372,130 414,154" />
-              <polygon className="mb-tri ins" points="36,177 42,188 30,188" />
-              <polygon className="mb-tri ext" points="414,148 420,159 408,159" />
-              <text className="mb-tac-label teal" x="52" y="196">INS</text>
-              <text className="mb-tac-label red" x="424" y="170">EXT</text>
-              <g className="mb-north">
-                <text x="440" y="20">N</text>
-                <line x1="443" y1="26" x2="443" y2="40" />
-                <polygon points="443,24 447,32 439,32" />
-              </g>
-            </svg>
+
+                <polygon
+                  className="mb-hostile"
+                  points={pointsAttr(tac.hostile)}
+                  fill="url(#mb-hatch-r)"
+                />
+
+                {tac.patrols.map((p, i) => (
+                  <g key={i} className="mb-patrol">
+                    <polyline points={pointsAttr(p)} />
+                    {p.map((n, k) => (
+                      <circle key={k} cx={n.x} cy={n.z} r="0.7" />
+                    ))}
+                  </g>
+                ))}
+
+                <polyline className="mb-route ins" points={pointsAttr(tac.routeAlpha)} />
+                <polyline className="mb-route ext" points={pointsAttr(tac.routeOmega)} />
+
+                {/* target zone */}
+                <rect
+                  className="mb-tac-target"
+                  x={tac.target.x - 3.4}
+                  y={tac.target.z - 3.4}
+                  width="6.8"
+                  height="6.8"
+                  fill="url(#mb-hatch-a)"
+                />
+                <circle
+                  className="mb-tac-ring amber"
+                  cx={tac.target.x}
+                  cy={tac.target.z}
+                  r={tac.target.r}
+                />
+                <text
+                  className="mb-tac-label amber"
+                  x={tac.target.x}
+                  y={tac.target.z + 9.5}
+                  textAnchor="middle"
+                >
+                  TARGET CP-07
+                </text>
+
+                {/* landing zone: the squad inserts and extracts on the same pad */}
+                <circle className="mb-tac-ring teal" cx={lz.x} cy={lz.z} r="4.4" />
+                <polygon
+                  className="mb-tri ins"
+                  points={`${lz.x},${lz.z - 3.2} ${lz.x + 2.4},${lz.z - 0.4} ${lz.x - 2.4},${lz.z - 0.4}`}
+                />
+                <polygon
+                  className="mb-tri ext"
+                  points={`${lz.x - 2.4},${lz.z + 0.6} ${lz.x + 2.4},${lz.z + 0.6} ${lz.x},${lz.z + 3.4}`}
+                />
+                <text className="mb-tac-label teal" x={lz.x + 6.4} y={lz.z + 1.6}>
+                  INS / EXT
+                </text>
+
+                {/* scale bar and north rose */}
+                <g className="mb-tac-scale">
+                  <line x1="6" y1="91" x2="26" y2="91" />
+                  <line x1="6" y1="89" x2="6" y2="93" />
+                  <line x1="16" y1="90" x2="16" y2="92" />
+                  <line x1="26" y1="89" x2="26" y2="93" />
+                  <text x="6" y="87.5">
+                    20 M
+                  </text>
+                </g>
+                <g className="mb-north">
+                  <rect x="85.5" y="2.5" width="9" height="12.5" />
+                  <text x="90" y="7.5" textAnchor="middle">
+                    N
+                  </text>
+                  <polygon points="90,8.6 92,12.6 88,12.6" />
+                </g>
+              </svg>
+            </div>
+
             <div className="mb-legend">
               <LegendRow label="INSERTION POINT">
                 <polygon points="10,2 16,10 4,10" fill="none" stroke="#7ef0d4" strokeWidth="1.2" />
@@ -339,7 +568,7 @@ export function MissionBrief() {
               <LegendRow label="EXTRACTION POINT">
                 <polygon points="4,2 16,2 10,10" fill="none" stroke="#ff6b55" strokeWidth="1.2" />
               </LegendRow>
-              <LegendRow label="TARGET BUILDING">
+              <LegendRow label="TARGET ZONE">
                 <rect x="5" y="1.5" width="9" height="9" fill="none" stroke="#f0b445" strokeWidth="1.2" />
               </LegendRow>
               <LegendRow label="ROUTE ALPHA">
@@ -354,6 +583,8 @@ export function MissionBrief() {
               </LegendRow>
               <LegendRow label="PATROL ROUTE">
                 <line x1="2" y1="6" x2="18" y2="6" stroke="#5d7d75" strokeWidth="1.2" strokeDasharray="1.5 2.5" />
+                <circle cx="6" cy="6" r="1.3" fill="#5d7d75" />
+                <circle cx="14" cy="6" r="1.3" fill="#5d7d75" />
               </LegendRow>
             </div>
           </Panel>
@@ -361,110 +592,146 @@ export function MissionBrief() {
 
         {/* contract dossier */}
         <aside className="mb-dossier">
-          <Panel title="CONTRACT DOSSIER" className="mb-dossier-panel" bodyClassName="mb-dossier-body scroll">
-            <div className="mb-idrow">
-              <div className="mb-fields">
-                <div className="field">
-                  <label>OPERATION:</label>
-                  <div className="value big">{m.codename}</div>
+          <Panel title="CONTRACT DOSSIER" className="mb-dossier-panel" bodyClassName="mb-dossier-body">
+            <div className="mb-dossier-scroll scroll" ref={dossierRef}>
+              <div className="mb-idrow">
+                <div className="mb-fields">
+                  <div className="field">
+                    <label>OPERATION:</label>
+                    <div className="value big">{m.codename}</div>
+                  </div>
+                  <div className="field">
+                    <label>LOCATION:</label>
+                    <div className="value">{m.city}</div>
+                  </div>
+                  <div className="field">
+                    <label>MISSION TYPE:</label>
+                    <div className="value">{m.type}</div>
+                  </div>
+                  <div className="field">
+                    <label>CLIENT:</label>
+                    <div className="value">{m.client}</div>
+                  </div>
                 </div>
-                <div className="field">
-                  <label>LOCATION:</label>
-                  <div className="value">{m.city}</div>
-                </div>
-                <div className="field">
-                  <label>MISSION TYPE:</label>
-                  <div className="value">{m.type}</div>
-                </div>
-                <div className="field">
-                  <label>CLIENT:</label>
-                  <div className="value">{m.client}</div>
+                <div className="mb-sil corners">
+                  <svg viewBox="0 0 118 176" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="mb-sil-bg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#0d1a17" />
+                        <stop offset="100%" stopColor="#050b0a" />
+                      </linearGradient>
+                      <linearGradient id="mb-sil-rim" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#7ef0d4" stopOpacity="0.5" />
+                        <stop offset="45%" stopColor="#7ef0d4" stopOpacity="0.06" />
+                        <stop offset="100%" stopColor="#f0b445" stopOpacity="0.22" />
+                      </linearGradient>
+                      <pattern id="mb-sil-s" width="4" height="3" patternUnits="userSpaceOnUse">
+                        <rect width="4" height="1.1" fill="rgba(0,0,0,0.4)" />
+                      </pattern>
+                    </defs>
+                    <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-bg)" />
+                    <g stroke="rgba(126,240,212,0.07)" strokeWidth="0.8">
+                      {[30, 60, 90, 120, 150].map((y) => (
+                        <line key={y} x1="0" y1={y} x2="118" y2={y} />
+                      ))}
+                      {[30, 59, 88].map((x) => (
+                        <line key={x} x1={x} y1="0" x2={x} y2="176" />
+                      ))}
+                    </g>
+                    {/* head, shoulders and torso, filling the frame */}
+                    <path
+                      d="M59 22c14 0 23 11 23 26 0 11-3 19-9 25 19 6 31 19 34 41v62H11v-62c3-22 15-35 34-41-6-6-9-14-9-25 0-15 9-26 23-26Z"
+                      fill="#070d0c"
+                      stroke="url(#mb-sil-rim)"
+                      strokeWidth="1.6"
+                    />
+                    <path
+                      d="M59 22c-14 0-23 11-23 26 0 11 3 19 9 25-19 6-31 19-34 41v62"
+                      fill="none"
+                      stroke="rgba(126,240,212,0.34)"
+                      strokeWidth="1.4"
+                    />
+                    <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-s)" />
+                    <g stroke="var(--amber)" strokeWidth="1.6" fill="none">
+                      <path d="M5 16V5h11" />
+                      <path d="M102 5h11v11" />
+                      <path d="M113 160v11h-11" />
+                      <path d="M16 171H5v-11" />
+                    </g>
+                  </svg>
+                  <span className="mb-sil-scan" aria-hidden="true" />
+                  <span className="mb-sil-id">ID: {initials}-77</span>
                 </div>
               </div>
-              <div className="mb-sil corners">
-                <svg viewBox="0 0 90 100" aria-hidden="true">
-                  <defs>
-                    <pattern id="mb-sil-s" width="4" height="3" patternUnits="userSpaceOnUse">
-                      <rect width="4" height="1" fill="rgba(0,0,0,0.35)" />
-                    </pattern>
-                  </defs>
-                  <rect x="0" y="0" width="90" height="100" fill="#0a0f0d" />
-                  <path
-                    d="M45 16c9 0 15 7 15 17 0 7-2 12-6 16 12 4 20 12 22 26v25H14V75c2-14 10-22 22-26-4-4-6-9-6-16 0-10 6-17 15-17Z"
-                    fill="#060a09"
-                    stroke="rgba(126,240,212,0.12)"
-                  />
-                  <rect x="0" y="0" width="90" height="100" fill="url(#mb-sil-s)" />
-                  <g stroke="rgba(240,180,69,0.7)" strokeWidth="1.2" fill="none">
-                    <path d="M4 12V4h8" />
-                    <path d="M78 4h8v8" />
-                    <path d="M86 88v8h-8" />
-                    <path d="M12 96H4v-8" />
-                  </g>
-                </svg>
-                <span className="mb-sil-id">ID: {initials}-77</span>
-              </div>
-            </div>
 
-            <div className="mb-threat corners">
-              <span className="mb-skull">
-                <SkullGlyph size={26} />
-              </span>
-              <span className="mb-threat-main">
-                <label>THREAT RATING</label>
-                <b>{m.threat}</b>
-              </span>
-              <span className="mb-threat-side">
-                <span className="mb-threat-blocks">
-                  {Array.from({ length: 9 }, (_, i) => (
-                    <i key={i} className={i < THREAT_BLOCKS[m.threat] ? 'on' : undefined} />
-                  ))}
+              <div className="mb-threat corners">
+                <span className="mb-skull">
+                  <SkullGlyph size={24} />
                 </span>
-                <span className="mb-threat-eta">ETA RESPONSE: &lt; 06:00</span>
-              </span>
-            </div>
-
-            <div className="mb-reward corners">
-              <label>REWARD:</label>
-              <b>{fmt(m.reward)} CR</b>
-              <span className="dim">CORP CREDITS</span>
-            </div>
-
-            <div className="mb-box">
-              <label>OBJECTIVES:</label>
-              {m.objectives.map((o, i) => (
-                <div key={o.id} className="mb-obj">
-                  <span className="mb-obj-glyph" />
-                  <span>
-                    <b>{OBJECTIVE_TIER[Math.min(i, 2)]}:</b> {o.label}
+                <span className="mb-threat-main">
+                  <label>THREAT RATING</label>
+                  <b>{m.threat}</b>
+                </span>
+                <span className="mb-threat-side">
+                  <span className="mb-threat-blocks">
+                    {Array.from({ length: 9 }, (_, i) => (
+                      <i key={i} className={i < THREAT_BLOCKS[m.threat] ? 'on' : undefined} />
+                    ))}
                   </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mb-box">
-              <label>
-                COLLATERAL TOLERANCE: <b className="red">LOW (10%)</b>
-              </label>
-              <div className="mb-meter">
-                <i style={{ left: '10%' }} />
+                  <span className="mb-threat-eta">ETA RESPONSE: &lt; 06:00</span>
+                </span>
               </div>
-              <div className="axis">
-                <span>0%</span>
-                <span>25%</span>
-                <span>50%</span>
-                <span>75%</span>
-                <span>100%</span>
+
+              <div className="mb-reward corners">
+                <label>REWARD:</label>
+                <div className="mb-reward-line">
+                  <b>
+                    {fmt(m.reward)}
+                    <i>CR</i>
+                  </b>
+                  <span className="dim">CORP CREDITS</span>
+                </div>
+              </div>
+
+              <div className="mb-box">
+                <label>OBJECTIVES:</label>
+                {m.objectives.map((o, i) => (
+                  <div key={o.id} className="mb-obj">
+                    <span className="mb-obj-glyph" />
+                    <span>
+                      <b>{OBJECTIVE_TIER[Math.min(i, 2)]}:</b> {o.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mb-box">
+                <label>
+                  COLLATERAL TOLERANCE: <b className="red">LOW (10%)</b>
+                </label>
+                <div className="mb-meter">
+                  <i style={{ left: '10%' }} />
+                </div>
+                <div className="axis">
+                  <span>0%</span>
+                  <span>25%</span>
+                  <span>50%</span>
+                  <span>75%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+
+              <div className="mb-box">
+                <label>MISSION NOTES:</label>
+                {m.notes.map((n, i) => (
+                  <div key={i} className="mb-note dim">
+                    {n}
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div className="mb-box">
-              <label>MISSION NOTES:</label>
-              {m.notes.map((n, i) => (
-                <div key={i} className="mb-note dim">
-                  {n}
-                </div>
-              ))}
+            <div className={'mb-dossier-cue' + (dossierMore ? ' on' : '')} aria-hidden="true">
+              <span>MORE BELOW</span>
             </div>
           </Panel>
         </aside>
@@ -477,9 +744,11 @@ export function MissionBrief() {
         </button>
         <div className="mb-comms corners">
           <b>COMMS LOG // CH 7A</b>
-          <span className="dim">[23:40:12] INTEL: INCREASED SECURITY PATROLS DETECTED.</span>
-          <span className="dim">[23:40:45] WEATHER: HEAVY RAIN. VISIBILITY REDUCED.</span>
-          <span className="dim">[23:41:02] LOCAL: CORPSEC TASKFORCE ONSITE.</span>
+          {COMMS_LOG.map(([t, msg]) => (
+            <span key={t} className="dim" title={'[' + t + '] ' + msg}>
+              <i>[{t}]</i> {msg}
+            </span>
+          ))}
         </div>
         <button type="button" className="cta big mb-accept" onClick={act(() => goto('team'))}>
           <span className="cta-inner">&lt;&lt; ACCEPT CONTRACT &gt;&gt;</span>
