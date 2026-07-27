@@ -216,6 +216,14 @@ export default function Hud() {
                       <span className="amber blink">RELOADING</span>
                     ) : null}
                   </span>
+                  <span className="hud-agent-orders">
+                    <span className={'hud-order' + (r.holdGround ? ' hold' : '')}>
+                      {r.holdGround ? 'HOLD' : 'MOVE'}
+                    </span>
+                    <span className={'hud-order' + (r.holdFire ? ' tight' : '')}>
+                      {r.holdFire ? 'TIGHT' : 'FREE'}
+                    </span>
+                  </span>
                 </span>
               </div>
             )

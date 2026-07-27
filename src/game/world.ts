@@ -49,6 +49,7 @@ const CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
 
 const MOVE_LINES = ['Moving up.', 'Copy that.', 'On my way.', 'Repositioning.', 'Advancing.']
 const ATTACK_LINES = ['Engaging.', 'Target acquired.', 'Weapons free.', 'Taking the shot.']
+const STOP_LINES = ['All stop.', 'Standing by.', 'Cutting the move.', 'Waiting on you.']
 const HIT_LINES = ['Taking fire!', 'Under fire, holding.', 'They have us marked.']
 
 type Cls = 'sys' | 'alert' | 'ok'
@@ -129,6 +130,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       magazine: w.magazine,
       reloading: 0,
       alerted: false,
+      holdGround: false,
+      holdFire: false,
       agentSlot: i + 1,
       operative: op,
     })
@@ -154,6 +157,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       magazine: w.magazine,
       reloading: 0,
       alerted: false,
+      holdGround: false,
+      holdFire: false,
       patrol: sp.patrol.map((p) => ({ x: p.x, z: p.z })),
       patrolIndex: 0,
       tag: sp.tag,
@@ -182,6 +187,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       magazine: 0,
       reloading: 0,
       alerted: false,
+      holdGround: false,
+      holdFire: false,
       wanderT: rng() * 3,
     })
   })
@@ -415,10 +422,26 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     return best
   }
 
+  // Free fire agents take up whatever walks into range, on a slow cadence.
+  // Hold fire agents never pick a target up on their own, so only an explicit
+  // attack order gives them one.
+  function refreshAutoTarget(u: SimUnit): void {
+    if (u.holdFire) {
+      u.targetId = null
+      return
+    }
+    if (world.time < (u.acquireT ?? 0)) return
+    u.acquireT = world.time + ACQUIRE_INTERVAL
+    const w = u.weapon
+    const t = w ? nearestVisibleEnemy(u, w.range) : null
+    u.targetId = t ? t.id : null
+  }
+
   function updateAgents(dt: number): void {
     for (const u of units) {
       if (u.kind !== 'agent' || u.stance === 'dead') continue
       tickWeapon(u, dt)
+      // An ordered shot outranks hold fire, so this branch never checks it.
       if (u.explicitTarget && u.targetId !== null) {
         const t = byId.get(u.targetId)
         if (!t || t.stance === 'dead') {
@@ -433,6 +456,12 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
             u.stance = 'attacking'
             faceToward(u, t.pos, dt)
             tryFire(u, t, 1)
+          } else if (u.holdGround) {
+            // Holding ground keeps the order pending instead of chasing: face
+            // the target and wait for it to walk into the lane.
+            u.path.length = 0
+            u.stance = 'idle'
+            faceToward(u, t.pos, dt)
           } else {
             u.stance = 'moving'
             if (world.time >= (u.repathT ?? 0)) {
@@ -446,12 +475,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       if (u.path.length > 0) {
         // Attack-move: agents hold mid-path to engage anything in range and
         // resume the route once the lane is clear.
-        if (world.time >= (u.acquireT ?? 0)) {
-          u.acquireT = world.time + ACQUIRE_INTERVAL
-          const w = u.weapon
-          const t = w ? nearestVisibleEnemy(u, w.range) : null
-          u.targetId = t ? t.id : null
-        }
+        refreshAutoTarget(u)
         const t = u.targetId !== null ? byId.get(u.targetId) : undefined
         const w = u.weapon
         if (t && w && t.stance !== 'dead' && dist(u.pos, t.pos) <= w.range && hasLos(city, u.pos, t.pos)) {
@@ -464,12 +488,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
         }
         continue
       }
-      if (world.time >= (u.acquireT ?? 0)) {
-        u.acquireT = world.time + ACQUIRE_INTERVAL
-        const w = u.weapon
-        const t = w ? nearestVisibleEnemy(u, w.range) : null
-        u.targetId = t ? t.id : null
-      }
+      refreshAutoTarget(u)
       const t = u.targetId !== null ? byId.get(u.targetId) : undefined
       const w = u.weapon
       if (t && w && t.stance !== 'dead' && dist(u.pos, t.pos) <= w.range && hasLos(city, u.pos, t.pos)) {
@@ -803,6 +822,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
         reloading: u.reloading > 0,
         weaponName: u.weapon ? u.weapon.name : '-',
         sidearmName: WEAPONS[op.sidearm].name,
+        holdGround: u.holdGround,
+        holdFire: u.holdFire,
         dead: u.stance === 'dead',
       })
     }
@@ -884,12 +905,26 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     return { x: Math.sin(ang) * r, z: Math.cos(ang) * r }
   }
 
-  function orderMove(agentIds: string[], dest: Vec2): void {
-    const movers: SimUnit[] = []
+  // Order recipients: the living agents among the ids the player selected.
+  function ordered(agentIds: string[]): SimUnit[] {
+    const out: SimUnit[] = []
     for (const id of agentIds) {
       const u = byId.get(id)
-      if (u && u.kind === 'agent' && u.stance !== 'dead') movers.push(u)
+      if (u && u.kind === 'agent' && u.stance !== 'dead') out.push(u)
     }
+    return out
+  }
+
+  // One acknowledgement per order burst, so a flurry of clicks stays readable.
+  function orderChatter(crew: SimUnit[], lines: string[]): void {
+    if (world.time - lastOrderChatterT < MOVE_CHATTER_GAP) return
+    lastOrderChatterT = world.time
+    const u = crew[Math.floor(rng() * crew.length)]
+    pushLog(u.name, pick(lines))
+  }
+
+  function orderMove(agentIds: string[], dest: Vec2): void {
+    const movers = ordered(agentIds)
     if (movers.length === 0) return
     const base = isWalkable(city, dest.x, dest.z)
       ? { x: dest.x, z: dest.z }
@@ -901,35 +936,69 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       u.path = findPath(city, u.pos, target)
       u.targetId = null
       u.explicitTarget = false
+      // A move outranks hold ground, the way an attack outranks hold fire.
+      u.holdGround = false
       u.stance = u.path.length > 0 ? 'moving' : 'idle'
     })
     sfx.confirmBlip()
-    if (world.time - lastOrderChatterT >= MOVE_CHATTER_GAP) {
-      lastOrderChatterT = world.time
-      const u = movers[Math.floor(rng() * movers.length)]
-      pushLog(u.name, pick(MOVE_LINES))
-    }
+    orderChatter(movers, MOVE_LINES)
   }
 
   function orderAttack(agentIds: string[], targetId: string): void {
     const t = byId.get(targetId)
     if (!t || t.kind !== 'enemy' || t.stance === 'dead') return
-    const shooters: SimUnit[] = []
-    for (const id of agentIds) {
-      const u = byId.get(id)
-      if (!u || u.kind !== 'agent' || u.stance === 'dead') continue
+    const shooters = ordered(agentIds)
+    if (shooters.length === 0) return
+    for (const u of shooters) {
       u.targetId = targetId
       u.explicitTarget = true
       u.repathT = 0
-      shooters.push(u)
     }
-    if (shooters.length === 0) return
     sfx.confirmBlip()
-    if (world.time - lastOrderChatterT >= MOVE_CHATTER_GAP) {
-      lastOrderChatterT = world.time
-      const u = shooters[Math.floor(rng() * shooters.length)]
-      pushLog(u.name, pick(ATTACK_LINES))
+    orderChatter(shooters, ATTACK_LINES)
+  }
+
+  function orderStop(agentIds: string[]): void {
+    const crew = ordered(agentIds)
+    if (crew.length === 0) return
+    for (const u of crew) {
+      u.path.length = 0
+      u.targetId = null
+      u.explicitTarget = false
+      u.stance = 'idle'
     }
+    sfx.confirmBlip()
+    orderChatter(crew, STOP_LINES)
+  }
+
+  function orderHold(agentIds: string[], hold: boolean): void {
+    const crew = ordered(agentIds)
+    if (crew.length === 0) return
+    for (const u of crew) {
+      u.holdGround = hold
+      if (!hold) continue
+      // Pin to the current cell: drop the route but keep the target, so the
+      // agent still shoots what comes to it.
+      u.path.length = 0
+      if (u.stance === 'moving') u.stance = 'idle'
+    }
+    sfx.confirmBlip()
+    pushLog('SYS', hold ? 'Holding position.' : 'Free to move.')
+  }
+
+  function orderHoldFire(agentIds: string[], hold: boolean): void {
+    const crew = ordered(agentIds)
+    if (crew.length === 0) return
+    for (const u of crew) {
+      u.holdFire = hold
+      // Dropping the standing auto target stops the shooting this tick rather
+      // than one acquire interval later. An ordered shot is left alone.
+      if (!hold || u.explicitTarget) continue
+      u.targetId = null
+      if (u.stance === 'attacking') u.stance = 'idle'
+    }
+    sfx.confirmBlip()
+    pushLog('SYS', hold ? 'Weapons tight.' : 'Weapons free.')
   }
 
   const world: WorldApi = {
@@ -942,6 +1011,9 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     tick,
     orderMove,
     orderAttack,
+    orderStop,
+    orderHold,
+    orderHoldFire,
     unit: (id: string) => byId.get(id),
   }
 

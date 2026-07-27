@@ -1,6 +1,6 @@
 // Player input surface: an invisible ground plane for move orders, invisible
 // pick cylinders over enemies for attack orders, and window-level hotkeys for
-// slot selection and pause.
+// slot selection, pause and the stop and stance orders.
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
@@ -34,6 +34,12 @@ function resolveSelection(w: WorldApi): string[] {
   return all
 }
 
+// A stance key moves the whole selection together: it releases the flag only
+// when every selected agent already carries it, otherwise it sets it on all.
+function allSet(w: WorldApi, ids: string[], key: 'holdGround' | 'holdFire'): boolean {
+  return ids.every((id) => w.unit(id)?.[key] === true)
+}
+
 export default function Input() {
   const world = getWorld()
   const size = world ? world.city.size : 96
@@ -44,13 +50,15 @@ export default function Input() {
   const proxies = useRef<Map<string, THREE.Mesh>>(new Map())
 
   // Hotkeys: 1..4 select slots, 0 or backquote select all, Escape clears,
-  // Space pauses.
+  // Space pauses, X stops, H toggles hold ground, C toggles hold fire.
+  // Modified presses are left to the browser, so Cmd+C still copies.
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.repeat) return
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return
       const w = getWorld()
       if (!w) return
       const ms = useMissionStore.getState()
+      const k = e.key.toLowerCase()
       if (e.key >= '1' && e.key <= '4') {
         const id = 'a' + e.key
         const u = w.unit(id)
@@ -62,6 +70,12 @@ export default function Input() {
       } else if (e.key === ' ') {
         e.preventDefault()
         ms.setPaused(!ms.paused)
+      } else if (k === 'x' || k === 'h' || k === 'c') {
+        const ids = resolveSelection(w)
+        if (ids.length === 0) return
+        if (k === 'x') w.orderStop(ids)
+        else if (k === 'h') w.orderHold(ids, !allSet(w, ids, 'holdGround'))
+        else w.orderHoldFire(ids, !allSet(w, ids, 'holdFire'))
       }
     }
     window.addEventListener('keydown', onKey)
