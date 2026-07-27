@@ -369,7 +369,9 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     // Collateral is counted per bystander struck, not per body: the client
     // charges for the wounded too, and one round rarely drops anyone. Full hp
     // marks the first round to reach them, so nobody is billed for twice.
-    if (t.kind === 'civilian' && t.hp >= t.maxHp) {
+    // Only the crew's own fire is billed. CorpSec misses a lot, and the crew
+    // does not pay for what CorpSec puts through a crowd.
+    if (t.kind === 'civilian' && t.hp >= t.maxHp && by.kind === 'agent') {
       civiliansHit += 1
       pushLog('SYS', 'CIVILIAN HIT. COLLATERAL COUNT ' + civiliansHit + '.', 'alert')
     }
@@ -400,18 +402,23 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     const len2 = dx * dx + dz * dz
     if (len2 < 1e-6) return null
     let best: SimUnit | null = null
-    let bestK = Infinity
+    let bestEntry = Infinity
     for (const o of units) {
       if (o === shooter || o === aimed || o.stance === 'dead') continue
       const ox = o.pos.x - from.x
       const oz = o.pos.z - from.z
       const k = (ox * dx + oz * dz) / len2
-      if (k <= 0 || k >= 1 || k >= bestK) continue
+      if (k <= 0 || k >= 1) continue
       const px = ox - dx * k
       const pz = oz - dz * k
-      if (px * px + pz * pz > STRAY_R * STRAY_R) continue
+      const perp2 = px * px + pz * pz
+      if (perp2 > STRAY_R * STRAY_R) continue
+      // Rank by where the round enters the body, not by where the centre sits
+      // on the lane: an offset body can be crossed first yet project later.
+      const entry = k - Math.sqrt((STRAY_R * STRAY_R - perp2) / len2)
+      if (entry >= bestEntry) continue
       best = o
-      bestK = k
+      bestEntry = entry
     }
     // Nearest on the line is also the first thing cover can hide, so a blocked
     // sight line means the round struck the wall rather than the body.
@@ -449,7 +456,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       const mx = tx - u.pos.x
       const mz = tz - u.pos.z
       const ml = Math.max(Math.sqrt(mx * mx + mz * mz), 0.001)
-      const reach = Math.max(w.range, ml)
+      const reach = w.range
       const stray = strayVictim(u.pos, u.pos.x + (mx / ml) * reach, u.pos.z + (mz / ml) * reach, u, t)
       if (stray) {
         tx = stray.pos.x
