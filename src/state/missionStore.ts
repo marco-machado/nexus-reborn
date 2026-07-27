@@ -18,6 +18,9 @@ export interface SquadMemberUi {
   reloading: boolean
   weaponName: string
   sidearmName: string
+  // Order state, mirrored from the unit so the squad card can show it.
+  holdGround: boolean
+  holdFire: boolean
   dead: boolean
 }
 
