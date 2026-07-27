@@ -30,6 +30,8 @@ const SYNC_INTERVAL = 0.2
 const TRACER_LIFE = 0.09
 const BOOM_LIFE = 0.4
 const SEPARATION_R = 0.7
+// Body radius a missed round has to cross to catch whoever is standing there.
+const STRAY_R = 0.5
 const ENEMY_VISION = 14
 const PROPAGATE_R = 9
 const DISENGAGE_T = 6
@@ -88,6 +90,11 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   let started = false
   let kills = 0
   let casualties = 0
+  let civiliansHit = 0
+  // Ids of the bystanders already on the bill. Hit points cannot stand in for
+  // this: CorpSec wounds civilians too, and the crew is charged for its own
+  // first round whether or not somebody else got there first.
+  const billed = new Set<string>()
   let result: 'none' | 'won' | 'lost' = 'none'
   let resultAt = 0
   let outcomeSent = false
@@ -356,15 +363,30 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     } else if (t.kind === 'agent') {
       casualties += 1
       pushLog('SYS', 'AGENT DOWN. ' + t.name + ' flatlined.', 'alert')
+    } else {
+      pushLog('SYS', 'CIVILIAN DOWN. KILLED BY STRAY FIRE.', 'alert')
     }
   }
 
   function applyDamage(t: SimUnit, dmg: number, by: SimUnit): void {
-    if (t.stance === 'dead' || t.kind === 'civilian') return
+    if (t.stance === 'dead') return
+    // Collateral is counted per bystander struck, not per body: the client
+    // charges for the wounded too, and one round rarely drops anyone. Only the
+    // crew's own fire is billed, and each bystander only once.
+    if (t.kind === 'civilian' && by.kind === 'agent' && !billed.has(t.id)) {
+      billed.add(t.id)
+      civiliansHit += 1
+      pushLog('SYS', 'CIVILIAN HIT. COLLATERAL COUNT ' + civiliansHit + '.', 'alert')
+    }
     t.hp -= by.kind === 'enemy' ? dmg * ENEMY_DMG_MUL : dmg
     if (t.kind === 'enemy') {
       t.lastSeenT = world.time
       if (t.aiState !== 'combat') enterCombat(t)
+    } else if (t.kind === 'civilian') {
+      // Being hit overrides the gunfire timer: run from whoever fired.
+      t.fleeFrom = { x: by.pos.x, z: by.pos.z }
+      t.fleeUntil = world.time + CIV_FLEE_T
+      t.path.length = 0
     }
     if (t.hp <= 0) {
       killUnit(t, by)
@@ -372,6 +394,39 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       lastFlavorT = world.time
       pushLog(t.name, pick(HIT_LINES), 'alert')
     }
+  }
+
+  // A missed round keeps travelling. Returns the first living body the segment
+  // crosses, skipping the shooter and the unit aimed at, since the shot has
+  // already missed that one.
+  function strayVictim(from: Vec2, tx: number, tz: number, shooter: SimUnit, aimed: SimUnit): SimUnit | null {
+    const dx = tx - from.x
+    const dz = tz - from.z
+    const len2 = dx * dx + dz * dz
+    if (len2 < 1e-6) return null
+    let best: SimUnit | null = null
+    let bestEntry = Infinity
+    for (const o of units) {
+      if (o === shooter || o === aimed || o.stance === 'dead') continue
+      const ox = o.pos.x - from.x
+      const oz = o.pos.z - from.z
+      const k = (ox * dx + oz * dz) / len2
+      if (k <= 0 || k >= 1) continue
+      const px = ox - dx * k
+      const pz = oz - dz * k
+      const perp2 = px * px + pz * pz
+      if (perp2 > STRAY_R * STRAY_R) continue
+      // Rank by where the round enters the body, not by where the centre sits
+      // on the lane: an offset body can be crossed first yet project later.
+      const entry = k - Math.sqrt((STRAY_R * STRAY_R - perp2) / len2)
+      if (entry >= bestEntry) continue
+      best = o
+      bestEntry = entry
+    }
+    // Nearest on the line is also the first thing cover can hide, so a blocked
+    // sight line means the round struck the wall rather than the body.
+    if (best && !hasLos(city, from, best.pos)) return null
+    return best
   }
 
   function tryFire(u: SimUnit, t: SimUnit, accMul: number): void {
@@ -398,6 +453,19 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       const side = (rng() - 0.5) * (0.7 + w.spread * 8) * (0.5 + d * 0.08)
       tx = t.pos.x + nx * over - nz * side
       tz = t.pos.z + nz * over + nx * side
+      // The round does not stop where the aim landed. It carries on down the
+      // same lane to the weapon's reach, and whoever stands in that lane wears
+      // it: the tracer then ends on the body rather than on empty street.
+      const mx = tx - u.pos.x
+      const mz = tz - u.pos.z
+      const ml = Math.max(Math.sqrt(mx * mx + mz * mz), 0.001)
+      const reach = w.range
+      const stray = strayVictim(u.pos, u.pos.x + (mx / ml) * reach, u.pos.z + (mz / ml) * reach, u, t)
+      if (stray) {
+        tx = stray.pos.x
+        tz = stray.pos.z
+        applyDamage(stray, w.damage, u)
+      }
     }
     tracers.push({
       from: { x: u.pos.x, z: u.pos.z },
@@ -791,7 +859,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       kills,
       casualties,
       timeSec: world.time,
-      civiliansHit: 0,
+      civiliansHit,
       reward: result === 'won' ? mission.reward : 0,
     })
   }
