@@ -2496,6 +2496,16 @@
 .hud-agent-sub { display: flex; gap: 8px; font-size: 9px; letter-spacing: 0.1em; }
 .hud-flatline { letter-spacing: 0.16em; }
 
+/* stance line: hold ground on the left, fire discipline on the right */
+.hud-agent-orders { display: flex; gap: 4px; }
+
+.hud-agent-orders .chip {
+  padding: 0 3px;
+  font-size: 7.5px;
+  line-height: 11px;
+  letter-spacing: 0.16em;
+}
+
 /* objectives */
 .hud-objectives { top: 44px; right: 10px; width: 288px; }
 .hud-objectives-body { display: flex; flex-direction: column; gap: 6px; padding: 8px; }

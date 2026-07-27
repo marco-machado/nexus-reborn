@@ -1,6 +1,6 @@
 // Player input surface: an invisible ground plane for move orders, invisible
 // pick cylinders over enemies for attack orders, and window-level hotkeys for
-// slot selection and pause.
+// slot selection, pause and the stop and stance orders.
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
@@ -20,18 +20,34 @@ function livingAgents(w: WorldApi): string[] {
   return out
 }
 
-// Current selection filtered to living agents; falls back to selecting the
-// whole living squad when nothing valid is selected.
-function resolveSelection(w: WorldApi): string[] {
-  const ms = useMissionStore.getState()
-  const ids = ms.selected.filter((id) => {
+// Current selection filtered to living agents. Read-only.
+function selectedAgents(w: WorldApi): string[] {
+  return useMissionStore.getState().selected.filter((id) => {
     const u = w.unit(id)
     return !!u && u.kind === 'agent' && u.stance !== 'dead' && u.hp > 0
   })
+}
+
+// Click orders fall back to the whole living squad when nothing valid is
+// selected. Only a click may do this: it carries a destination, so reviving an
+// empty selection is a convenience rather than a surprise.
+function resolveSelection(w: WorldApi): string[] {
+  const ids = selectedAgents(w)
   if (ids.length > 0) return ids
   const all = livingAgents(w)
-  if (all.length > 0) ms.setSelected(all)
+  if (all.length > 0) useMissionStore.getState().setSelected(all)
   return all
+}
+
+// Physical key codes for the order keys, so they survive a non-Latin layout.
+// Some environments deliver synthetic events with an empty code, hence the
+// fallback to the produced character.
+const ORDER_CODES: Record<string, 'x' | 'h' | 'c'> = { KeyX: 'x', KeyH: 'h', KeyC: 'c' }
+
+// A stance key moves the whole selection together: it releases the flag only
+// when every selected agent already carries it, otherwise it sets it on all.
+function allSet(w: WorldApi, ids: string[], key: 'holdGround' | 'holdFire'): boolean {
+  return ids.every((id) => w.unit(id)?.[key] === true)
 }
 
 export default function Input() {
@@ -44,13 +60,16 @@ export default function Input() {
   const proxies = useRef<Map<string, THREE.Mesh>>(new Map())
 
   // Hotkeys: 1..4 select slots, 0 or backquote select all, Escape clears,
-  // Space pauses.
+  // Space pauses, X stops, H toggles hold ground, C toggles hold fire.
+  // Modified presses are left to the browser, so Cmd+C still copies and
+  // Shift held for additive card selection issues no orders.
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.repeat) return
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
       const w = getWorld()
       if (!w) return
       const ms = useMissionStore.getState()
+      const k = ORDER_CODES[e.code] ?? e.key.toLowerCase()
       if (e.key >= '1' && e.key <= '4') {
         const id = 'a' + e.key
         const u = w.unit(id)
@@ -62,6 +81,14 @@ export default function Input() {
       } else if (e.key === ' ') {
         e.preventDefault()
         ms.setPaused(!ms.paused)
+      } else if (k === 'x' || k === 'h' || k === 'c') {
+        // No fallback to the whole squad here: a bare key carries no target,
+        // so an empty selection must stay empty and order nobody.
+        const ids = selectedAgents(w)
+        if (ids.length === 0) return
+        if (k === 'x') w.orderStop(ids)
+        else if (k === 'h') w.orderHold(ids, !allSet(w, ids, 'holdGround'))
+        else w.orderHoldFire(ids, !allSet(w, ids, 'holdFire'))
       }
     }
     window.addEventListener('keydown', onKey)

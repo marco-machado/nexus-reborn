@@ -11,7 +11,7 @@ import { squadWeapon } from '../game/research'
 import type { WeaponId } from '../game/types'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import { Portrait } from './portrait'
-import { AbilityGlyph, GunSilhouette, ItemGlyph, LockGlyph } from './bits'
+import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph } from './bits'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
 
@@ -216,6 +216,16 @@ export default function Hud() {
                       <span className="amber blink">RELOADING</span>
                     ) : null}
                   </span>
+                  {!r.dead && (
+                    <span className="hud-agent-orders">
+                      <Chip tone={r.holdGround ? 'amber' : 'dim'}>
+                        {r.holdGround ? 'HOLD' : 'MOVE'}
+                      </Chip>
+                      <Chip tone={r.holdFire ? 'red' : 'dim'}>
+                        {r.holdFire ? 'TIGHT' : 'FREE'}
+                      </Chip>
+                    </span>
+                  )}
                 </span>
               </div>
             )
