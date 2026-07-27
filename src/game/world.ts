@@ -91,6 +91,10 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   let kills = 0
   let casualties = 0
   let civiliansHit = 0
+  // Ids of the bystanders already on the bill. Hit points cannot stand in for
+  // this: CorpSec wounds civilians too, and the crew is charged for its own
+  // first round whether or not somebody else got there first.
+  const billed = new Set<string>()
   let result: 'none' | 'won' | 'lost' = 'none'
   let resultAt = 0
   let outcomeSent = false
@@ -367,11 +371,10 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   function applyDamage(t: SimUnit, dmg: number, by: SimUnit): void {
     if (t.stance === 'dead') return
     // Collateral is counted per bystander struck, not per body: the client
-    // charges for the wounded too, and one round rarely drops anyone. Full hp
-    // marks the first round to reach them, so nobody is billed for twice.
-    // Only the crew's own fire is billed. CorpSec misses a lot, and the crew
-    // does not pay for what CorpSec puts through a crowd.
-    if (t.kind === 'civilian' && t.hp >= t.maxHp && by.kind === 'agent') {
+    // charges for the wounded too, and one round rarely drops anyone. Only the
+    // crew's own fire is billed, and each bystander only once.
+    if (t.kind === 'civilian' && by.kind === 'agent' && !billed.has(t.id)) {
+      billed.add(t.id)
       civiliansHit += 1
       pushLog('SYS', 'CIVILIAN HIT. COLLATERAL COUNT ' + civiliansHit + '.', 'alert')
     }
