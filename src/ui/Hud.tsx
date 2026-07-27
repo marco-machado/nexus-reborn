@@ -8,6 +8,7 @@ import type { SquadMemberUi } from '../state/missionStore'
 import { useResearchStore } from '../state/researchStore'
 import { ROSTER, WEAPONS, missionById } from '../game/data'
 import { squadWeapon } from '../game/research'
+import { getWorld, panCameraTo } from '../game/runtime'
 import type { WeaponId } from '../game/types'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import { Portrait } from './portrait'
@@ -178,6 +179,7 @@ export default function Hud() {
               <div
                 key={r.unitId}
                 className={'hud-agent' + (isSel ? ' sel' : '') + (r.dead ? ' dead' : '')}
+                title={r.dead ? undefined : 'Double click to center the camera'}
                 onClick={(e) => {
                   if (r.dead) return
                   uiClick()
@@ -188,6 +190,11 @@ export default function Hud() {
                   } else {
                     setSelected([r.unitId])
                   }
+                }}
+                onDoubleClick={() => {
+                  if (r.dead) return
+                  const u = getWorld()?.unit(r.unitId)
+                  if (u) panCameraTo(u.pos.x, u.pos.z)
                 }}
               >
                 {isActive && <span className="hud-agent-active">ACTIVE</span>}
