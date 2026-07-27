@@ -42,9 +42,11 @@ const SIGHT_NEAR_T = 0.45
 const SIGHT_FAR_T = 1.7
 // Certainty bled off per second with nothing seen or heard.
 const AWARE_DECAY = 0.22
-// Floor a guard is held at when it starts investigating, so the shortest
-// glimpse still buys a walk to the spot rather than a shrug.
-const SUSPECT_FLOOR = 0.6
+// Shortest look a guard commits to once something puts it on alert, so the
+// briefest glimpse still buys a walk to the spot rather than a shrug. Held
+// apart from certainty: this keeps a guard investigating, it never brings the
+// moment it opens fire any closer.
+const INVESTIGATE_T = 2.7
 // Sound alone never reaches certainty, so a guard investigates a shot rather
 // than opening fire on the noise.
 const HEARD_MAX = 0.85
@@ -95,6 +97,7 @@ interface SimUnit extends Unit {
   lastSeenPos?: Vec2
   // How sure the guard is that there is an intruder, 0 to 1. 1 opens fire.
   awareness?: number
+  investigateUntil?: number
   heardId?: number
   scanT?: number
   scanYaw?: number
@@ -650,7 +653,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     const fromPatrol = e.aiState === 'patrol'
     e.aiState = 'suspicious'
     e.alerted = false
-    e.awareness = Math.max(e.awareness ?? 0, SUSPECT_FLOOR)
+    e.investigateUntil = world.time + INVESTIGATE_T
     e.targetId = null
     e.path.length = 0
     e.repathT = 0
@@ -743,7 +746,9 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       if (aware < HEARD_MAX) aware = Math.min(HEARD_MAX, aware + gain)
       if (!target) markLastSeen(e, noise.pos)
     }
-    if (!target && !noise) aware -= elapsed * AWARE_DECAY
+    // Fresh evidence restarts the look, whether or not it moves certainty.
+    if (target || noise) e.investigateUntil = world.time + INVESTIGATE_T
+    else aware -= elapsed * AWARE_DECAY
     if (aware < 1) {
       const ally = allyInCombat(e)
       if (ally) {
@@ -754,7 +759,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     e.awareness = Math.max(0, Math.min(1, aware))
     if (e.awareness >= 1) enterCombat(e)
     else if (e.awareness > 0) enterSuspicious(e)
-    else if (e.aiState === 'suspicious') leaveSuspicious(e)
+    else if (e.aiState === 'suspicious' && world.time >= (e.investigateUntil ?? 0)) leaveSuspicious(e)
   }
 
   function patrolStep(e: SimUnit): void {
