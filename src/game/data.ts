@@ -65,6 +65,13 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
   },
 }
 
+// How far one shot carries, in meters. Derived from the round the weapon
+// fires, so the longrifle is heard across the plaza and the pistol only down
+// the block. Enemies hear through walls; sound gives a bearing, not a target.
+export function weaponNoise(w: WeaponDef): number {
+  return 6 + w.range * 0.6 + w.damage * 0.35
+}
+
 export const ROSTER: OperativeDef[] = [
   { id: 'op1', name: 'D. TORRES', codename: 'MARA', role: 'assault', maxHp: 124, speed: 4.6, weapon: 'assault', sidearm: 'pistol', accent: '#f0b445', status: 'READY', bio: 'Frontline combat. Breach and clear.' },
   { id: 'op2', name: 'L. FERNANDEZ', codename: 'GHOST', role: 'recon', maxHp: 110, speed: 5.2, weapon: 'smg', sidearm: 'pistol', accent: '#7ef0d4', status: 'READY', bio: 'Intel gathering. Long range ops.' },

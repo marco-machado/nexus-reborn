@@ -1,12 +1,20 @@
 // Canvas minimap, and a camera control. Reads the live world via getWorld() at
-// ~10fps; renders building footprints, road bands, mission zones, the camera
-// viewport and unit blips. The map is turned by the camera yaw, so up on the
-// panel is up on screen and the viewport reads as an upright cone. Clicking
-// and dragging run the same transform backwards to steer the camera. Canvas
-// colors are hardcoded hexes matching the tokens in src/index.css.
+// ~10fps; renders building footprints, road bands, mission zones, enemy sight
+// cones, the camera viewport and unit blips. The map is turned by the camera
+// yaw, so up on the panel is up on screen and the viewport reads as an upright
+// cone. Clicking and dragging run the same transform backwards to steer the
+// camera. Canvas colors are hardcoded hexes matching the tokens in
+// src/index.css.
 import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import { getCameraFocus, getCameraFootprint, getWorld, panCameraTo } from '../game/runtime'
-import { CAMERA_YAW, type CameraFootprint, type Vec2, type WorldApi } from '../game/types'
+import {
+  CAMERA_YAW,
+  ENEMY_VISION,
+  VISION_HALF_ANGLE,
+  type CameraFootprint,
+  type Vec2,
+  type WorldApi,
+} from '../game/types'
 import { useMissionStore } from '../state/missionStore'
 import { uiClick } from './sound'
 
@@ -111,7 +119,10 @@ const COLOR = {
   checkpointDim: 'rgba(240,180,69,0.35)',
   agent: '#7ef0d4',
   enemyHot: '#ff6b55',
+  enemySuspect: '#f0b445',
   enemyCalm: 'rgba(224,75,60,0.45)',
+  coneHot: 'rgba(255,107,85,0.13)',
+  coneSuspect: 'rgba(240,180,69,0.11)',
   civilian: 'rgba(184,216,207,0.26)',
   viewport: 'rgba(184,216,207,0.5)',
   viewportFill: 'rgba(184,216,207,0.045)',
@@ -265,11 +276,35 @@ export default function Minimap({
         ctx.fillStyle = COLOR.civilian
         ctx.fillRect(u.pos.x * s - 0.8, u.pos.z * s - 0.8, 1.6, 1.6)
       }
+      // Sight cone of every guard that has something to look for. World heading
+      // is atan2(dx, dz), so the canvas bearing is a quarter turn less.
       for (const u of units) {
         if (u.kind !== 'enemy' || u.stance === 'dead' || u.hp <= 0) continue
-        ctx.fillStyle = u.alerted ? COLOR.enemyHot : COLOR.enemyCalm
+        if (u.aiState !== 'combat' && u.aiState !== 'suspicious') continue
+        const a = Math.PI / 2 - u.heading
+        ctx.fillStyle = u.aiState === 'combat' ? COLOR.coneHot : COLOR.coneSuspect
         ctx.beginPath()
-        ctx.arc(u.pos.x * s, u.pos.z * s, u.alerted ? 2.2 : 1.8, 0, Math.PI * 2)
+        ctx.moveTo(u.pos.x * s, u.pos.z * s)
+        ctx.arc(
+          u.pos.x * s,
+          u.pos.z * s,
+          ENEMY_VISION * s,
+          a - VISION_HALF_ANGLE,
+          a + VISION_HALF_ANGLE,
+        )
+        ctx.closePath()
+        ctx.fill()
+      }
+      for (const u of units) {
+        if (u.kind !== 'enemy' || u.stance === 'dead' || u.hp <= 0) continue
+        const hot = u.aiState === 'combat'
+        ctx.fillStyle = hot
+          ? COLOR.enemyHot
+          : u.aiState === 'suspicious'
+            ? COLOR.enemySuspect
+            : COLOR.enemyCalm
+        ctx.beginPath()
+        ctx.arc(u.pos.x * s, u.pos.z * s, hot ? 2.2 : 1.8, 0, Math.PI * 2)
         ctx.fill()
       }
       for (const u of units) {
