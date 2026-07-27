@@ -18,6 +18,9 @@ const PATH_PERIOD = 0.9
 const PATH_DASH = 0.34
 const PATH_Y = 0.07
 const DEST_FADE = 0.8
+// How close an agent must stand to its destination for the ring to count the
+// route as walked, squared. Wide enough for the squad spread and separation.
+const DEST_ARRIVE_R2 = 2.25
 const MAX_SQUAD = 4
 
 // The sim owns tracer/boom timestamps; accept either an age counter or a
@@ -330,7 +333,11 @@ export default function Fx() {
       const alive = u.stance !== 'dead' && u.hp > 0
       if (!alive || u.path.length === 0) {
         if (d.state === 1) {
-          d.state = alive ? 2 : 0
+          // Only an arrival blooms. A route cut short by stop, hold or an
+          // attack order clears the ring instead of celebrating it.
+          const dx = u.pos.x - d.x
+          const dz = u.pos.z - d.z
+          d.state = alive && dx * dx + dz * dz < DEST_ARRIVE_R2 ? 2 : 0
           d.age = 0
         }
         continue

@@ -64,7 +64,8 @@ export interface Unit {
   reloading: number
   alerted: boolean
   // Agent order state, false for enemies and civilians. holdGround pins the
-  // unit to its cell so it never walks to a target; holdFire withholds
+  // unit to its cell: the movement step and separation both skip it, and any
+  // route it holds is parked until the hold lifts. holdFire withholds
   // auto-engagement so only an explicit attack order fires.
   holdGround: boolean
   holdFire: boolean
@@ -210,7 +211,9 @@ export interface WorldApi {
   tick(dt: number): void
   orderMove(agentIds: string[], dest: Vec2): void
   orderAttack(agentIds: string[], targetId: string): void
-  // Cancels the route and the target. Leaves holdGround and holdFire alone.
+  // Cancels the route and the target. Leaves holdGround and holdFire alone, so
+  // a free fire agent may pick a new target up on its own; the cease-fire is
+  // orderHoldFire.
   orderStop(agentIds: string[]): void
   orderHold(agentIds: string[], hold: boolean): void
   orderHoldFire(agentIds: string[], hold: boolean): void
