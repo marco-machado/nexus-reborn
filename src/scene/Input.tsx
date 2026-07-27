@@ -1,42 +1,86 @@
-// Player input surface: an invisible ground plane for move orders, invisible
-// pick cylinders over enemies for attack orders, and window-level hotkeys for
-// slot selection, pause and the stop and stance orders.
+// Player input surface, split by mouse button.
+//
+// Left selects: a click takes the operative under the pointer, a drag takes
+// every living operative inside the marquee, shift adds instead of replacing,
+// and a click on bare ground clears. Right commands: move on the ground,
+// attack on an enemy. Invisible pick cylinders ride every agent and enemy; an
+// invisible ground plane catches everything else. Window level hotkeys cover
+// slot selection, select all, clear, pause and the stop and stance orders.
+//
+// An empty selection is a real state: nothing re-selects the squad behind your
+// back, so an order given with no one selected does nothing.
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
 import { useMissionStore } from '../state/missionStore'
-import type { WorldApi } from '../game/types'
+import type { Unit, WorldApi } from '../game/types'
 import { pushClickMarker } from './clickMarkers'
+import { setMarquee } from './marquee'
 
 const pickGeom = new THREE.CylinderGeometry(0.55, 0.55, 1.9, 8)
 const invisibleMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+// Pointer travel in pixels that turns a click into a marquee drag.
+const DRAG_MIN = 5
+// Chest height: the point the box test drops onto the screen.
+const PICK_Y = 0.95
+const PROJ = new THREE.Vector3()
+
+// A unit under the pointer. Agents are selection targets, enemies are not, but
+// both count as something rather than bare ground.
+interface Pick {
+  id: string
+  agent: boolean
+}
+
+// Screen space box in canvas pixels, plus the canvas size it was measured in.
+interface Box {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+  width: number
+  height: number
+}
+
+function alive(u: Unit | undefined): boolean {
+  return !!u && u.stance !== 'dead' && u.hp > 0
+}
 
 function livingAgents(w: WorldApi): string[] {
   const out: string[] = []
   for (const u of w.units) {
-    if (u.kind === 'agent' && u.stance !== 'dead' && u.hp > 0) out.push(u.id)
+    if (u.kind === 'agent' && alive(u)) out.push(u.id)
   }
   return out
 }
 
-// Current selection filtered to living agents. Read-only.
+// The selection minus anyone who has died since it was made.
 function selectedAgents(w: WorldApi): string[] {
   return useMissionStore.getState().selected.filter((id) => {
     const u = w.unit(id)
-    return !!u && u.kind === 'agent' && u.stance !== 'dead' && u.hp > 0
+    return !!u && u.kind === 'agent' && alive(u)
   })
 }
 
-// Click orders fall back to the whole living squad when nothing valid is
-// selected. Only a click may do this: it carries a destination, so reviving an
-// empty selection is a convenience rather than a surprise.
-function resolveSelection(w: WorldApi): string[] {
-  const ids = selectedAgents(w)
-  if (ids.length > 0) return ids
-  const all = livingAgents(w)
-  if (all.length > 0) useMissionStore.getState().setSelected(all)
-  return all
+function toggle(ids: string[], id: string): string[] {
+  return ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]
+}
+
+// Living agents whose chest point projects inside the box, squad order. One
+// point and no occlusion test: an operative behind a building still boxes, and
+// one standing half out of the rectangle does not.
+function agentsInBox(w: WorldApi, camera: THREE.Camera, b: Box): string[] {
+  const out: string[] = []
+  for (const u of w.units) {
+    if (u.kind !== 'agent' || !alive(u)) continue
+    PROJ.set(u.pos.x, PICK_Y, u.pos.z).project(camera)
+    if (PROJ.z > 1) continue
+    const sx = (PROJ.x * 0.5 + 0.5) * b.width
+    const sy = (0.5 - PROJ.y * 0.5) * b.height
+    if (sx >= b.x0 && sx <= b.x1 && sy >= b.y0 && sy <= b.y1) out.push(u.id)
+  }
+  return out
 }
 
 // Physical key codes for the order keys, so they survive a non-Latin layout.
@@ -52,12 +96,34 @@ function allSet(w: WorldApi, ids: string[], key: 'holdGround' | 'holdFire'): boo
 
 export default function Input() {
   const world = getWorld()
+  const camera = useThree((s) => s.camera)
+  const gl = useThree((s) => s.gl)
   const size = world ? world.city.size : 96
-  const enemyIds = useMemo(() => {
+  const picks = useMemo(() => {
     if (!world) return []
-    return world.units.filter((u) => u.kind === 'enemy').map((u) => u.id)
+    return world.units
+      .filter((u) => u.kind === 'agent' || u.kind === 'enemy')
+      .map((u): Pick => ({ id: u.id, agent: u.kind === 'agent' }))
   }, [world])
   const proxies = useRef<Map<string, THREE.Mesh>>(new Map())
+  // Written by the pick handlers, read by the window pointerdown below: r3f
+  // runs the canvas handlers before the same event reaches the window.
+  const hitPick = useRef<Pick | null>(null)
+  const drag = useRef({
+    on: false,
+    moved: false,
+    add: false,
+    pick: null as Pick | null,
+    pointerId: -1,
+    x0: 0,
+    y0: 0,
+    x1: 0,
+    y1: 0,
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  })
 
   // Hotkeys: 1..4 select slots, 0 or backquote select all, Escape clears,
   // Space pauses, X stops, H toggles hold ground, C toggles hold fire.
@@ -72,8 +138,7 @@ export default function Input() {
       const k = ORDER_CODES[e.code] ?? e.key.toLowerCase()
       if (e.key >= '1' && e.key <= '4') {
         const id = 'a' + e.key
-        const u = w.unit(id)
-        if (u && u.stance !== 'dead' && u.hp > 0) ms.setSelected([id])
+        if (alive(w.unit(id))) ms.setSelected([id])
       } else if (e.key === '0' || e.key === '`') {
         ms.setSelected(livingAgents(w))
       } else if (e.key === 'Escape') {
@@ -106,24 +171,123 @@ export default function Input() {
     }
   }, [])
 
-  // Keep enemy pick proxies glued to their units; sink dead ones.
+  // Left button select, on window listeners so a drag survives leaving the
+  // canvas and so the pick recorded by the r3f handlers is already in.
+  useEffect(() => {
+    const canvas = gl.domElement
+    const d = drag.current
+
+    // Ends the drag from every exit: pointerup, cancel, blur, a fresh press
+    // and unmount. Owns the capture release, so no path can leave the canvas
+    // holding the pointer.
+    const stop = (): void => {
+      d.on = false
+      d.moved = false
+      if (d.pointerId >= 0) {
+        if (canvas.hasPointerCapture(d.pointerId)) canvas.releasePointerCapture(d.pointerId)
+        d.pointerId = -1
+      }
+      setMarquee(null)
+    }
+
+    const down = (e: PointerEvent): void => {
+      const hit = hitPick.current
+      hitPick.current = null
+      if (d.on) stop()
+      if (e.button !== 0 || e.target !== canvas) return
+      const r = canvas.getBoundingClientRect()
+      d.on = true
+      d.moved = false
+      d.add = e.shiftKey
+      d.pick = hit
+      d.pointerId = e.pointerId
+      d.x0 = d.x1 = e.clientX
+      d.y0 = d.y1 = e.clientY
+      d.left = r.left
+      d.top = r.top
+      d.width = r.width
+      d.height = r.height
+      canvas.setPointerCapture(e.pointerId)
+    }
+
+    const move = (e: PointerEvent): void => {
+      if (!d.on) return
+      d.x1 = e.clientX
+      d.y1 = e.clientY
+      if (!d.moved && Math.abs(d.x1 - d.x0) + Math.abs(d.y1 - d.y0) >= DRAG_MIN) d.moved = true
+      if (!d.moved) return
+      setMarquee({
+        x: Math.min(d.x0, d.x1) - d.left,
+        y: Math.min(d.y0, d.y1) - d.top,
+        w: Math.abs(d.x1 - d.x0),
+        h: Math.abs(d.y1 - d.y0),
+      })
+    }
+
+    const up = (e: PointerEvent): void => {
+      if (!d.on || e.button !== 0) return
+      const moved = d.moved
+      const add = d.add
+      const pick = d.pick
+      stop()
+      const w = getWorld()
+      if (!w) return
+      const ms = useMissionStore.getState()
+      // Both additive paths build on the filtered selection, so nobody who has
+      // fallen since the last click rides back into the array.
+      const base = selectedAgents(w)
+      if (moved) {
+        const box = agentsInBox(w, camera, {
+          x0: Math.min(d.x0, d.x1) - d.left,
+          y0: Math.min(d.y0, d.y1) - d.top,
+          x1: Math.max(d.x0, d.x1) - d.left,
+          y1: Math.max(d.y0, d.y1) - d.top,
+          width: d.width,
+          height: d.height,
+        })
+        ms.setSelected(add ? [...base, ...box.filter((id) => !base.includes(id))] : box)
+      } else if (pick) {
+        // An enemy is not a selection target, but it is not bare ground
+        // either: clicking one leaves the squad selected to be ordered onto it.
+        if (pick.agent) ms.setSelected(add ? toggle(base, pick.id) : [pick.id])
+      } else if (!add) {
+        ms.setSelected([])
+      }
+    }
+
+    window.addEventListener('pointerdown', down)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', stop)
+    window.addEventListener('blur', stop)
+    return () => {
+      window.removeEventListener('pointerdown', down)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', stop)
+      window.removeEventListener('blur', stop)
+      stop()
+    }
+  }, [camera, gl])
+
+  // Keep the pick proxies glued to their units; sink the dead ones.
   useFrame(() => {
     const w = getWorld()
     if (!w) return
-    for (const id of enemyIds) {
-      const mesh = proxies.current.get(id)
-      const u = w.unit(id)
+    for (const p of picks) {
+      const mesh = proxies.current.get(p.id)
+      const u = w.unit(p.id)
       if (!mesh || !u) continue
       if (u.stance === 'dead' || u.hp <= 0) mesh.position.set(u.pos.x, -60, u.pos.z)
-      else mesh.position.set(u.pos.x, 0.95, u.pos.z)
+      else mesh.position.set(u.pos.x, PICK_Y, u.pos.z)
     }
   }, 0)
 
   const onGround = (e: ThreeEvent<PointerEvent>): void => {
-    if (e.button !== 0 && e.button !== 2) return
+    if (e.button !== 2 || drag.current.on) return
     const w = getWorld()
     if (!w) return
-    const ids = resolveSelection(w)
+    const ids = selectedAgents(w)
     if (ids.length === 0) return
     const x = Math.max(2, Math.min(w.city.size - 2, e.point.x))
     const z = Math.max(2, Math.min(w.city.size - 2, e.point.z))
@@ -131,24 +295,36 @@ export default function Input() {
     pushClickMarker(x, z)
   }
 
+  // Left records the unit under the pointer for the window pointerup above;
+  // right falls through to the move order on the ground plane behind.
+  const onAgentDown = (id: string) => (e: ThreeEvent<PointerEvent>): void => {
+    if (e.button !== 0) return
+    const w = getWorld()
+    if (!w || !alive(w.unit(id))) return
+    e.stopPropagation()
+    hitPick.current = { id, agent: true }
+  }
+
   const onEnemyDown = (id: string) => (e: ThreeEvent<PointerEvent>): void => {
     const w = getWorld()
-    if (!w) return
-    const u = w.unit(id)
-    if (!u || u.stance === 'dead' || u.hp <= 0) return
-    e.stopPropagation()
-    if (e.button !== 0 && e.button !== 2) return
-    const ids = resolveSelection(w)
-    if (ids.length > 0) w.orderAttack(ids, id)
+    if (!w || !alive(w.unit(id))) return
+    if (e.button === 0) {
+      e.stopPropagation()
+      hitPick.current = { id, agent: false }
+    } else if (e.button === 2 && !drag.current.on) {
+      e.stopPropagation()
+      const ids = selectedAgents(w)
+      if (ids.length > 0) w.orderAttack(ids, id)
+    }
   }
 
-  const onEnemyOver = (e: ThreeEvent<PointerEvent>): void => {
+  const onPickOver = (cursor: string) => (e: ThreeEvent<PointerEvent>): void => {
     const w = getWorld()
     const u = w ? w.unit((e.object as THREE.Mesh).name) : undefined
-    if (u && u.stance !== 'dead' && u.hp > 0) document.body.style.cursor = 'crosshair'
+    if (alive(u)) document.body.style.cursor = cursor
   }
 
-  const onEnemyOut = (): void => {
+  const onPickOut = (): void => {
     document.body.style.cursor = ''
   }
 
@@ -162,20 +338,20 @@ export default function Input() {
       >
         <planeGeometry args={[size, size]} />
       </mesh>
-      {enemyIds.map((id) => (
+      {picks.map((p) => (
         <mesh
-          key={id}
-          name={id}
+          key={p.id}
+          name={p.id}
           geometry={pickGeom}
           material={invisibleMat}
           position={[0, -60, 0]}
           ref={(mesh: THREE.Mesh | null) => {
-            if (mesh) proxies.current.set(id, mesh)
-            else proxies.current.delete(id)
+            if (mesh) proxies.current.set(p.id, mesh)
+            else proxies.current.delete(p.id)
           }}
-          onPointerDown={onEnemyDown(id)}
-          onPointerOver={onEnemyOver}
-          onPointerOut={onEnemyOut}
+          onPointerDown={p.agent ? onAgentDown(p.id) : onEnemyDown(p.id)}
+          onPointerOver={onPickOver(p.agent ? 'pointer' : 'crosshair')}
+          onPointerOut={onPickOut}
         />
       ))}
     </>
