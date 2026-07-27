@@ -13,6 +13,18 @@ export interface MissionOutcome {
   reward: number
 }
 
+// Every contract carries a collateral clause. Each bystander caught by a round
+// costs this much off the fee; it can zero the payment, never run up a debt.
+export const COLLATERAL_FINE = 5000
+
+export function collateralFine(o: MissionOutcome): number {
+  return Math.min(o.reward, o.civiliansHit * COLLATERAL_FINE)
+}
+
+export function netPayout(o: MissionOutcome): number {
+  return o.won ? o.reward - collateralFine(o) : 0
+}
+
 interface AppState {
   phase: Phase
   missionId: string | null
@@ -49,7 +61,7 @@ export const useAppStore = create<AppState>((set) => ({
   setOutcome: (o) =>
     set((s) => ({
       outcome: o,
-      credits: s.credits + (o.won ? o.reward : 0),
+      credits: s.credits + netPayout(o),
       phase: 'debrief',
     })),
 }))

@@ -5,7 +5,7 @@
 import './ui.css'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useAppStore } from '../state/appStore'
+import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { ROSTER, missionById, operativeById } from '../game/data'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
@@ -1144,11 +1144,41 @@ export function Debrief() {
   const missionId = useAppStore((s) => s.missionId)
   const m = missionId ? missionById(missionId) : null
   const won = outcome?.won ?? false
+  const fine = outcome ? collateralFine(outcome) : 0
+  const paid = outcome ? netPayout(outcome) : 0
 
   const mmss = (sec: number) => {
     const s = Math.max(0, Math.floor(sec))
     return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60)
   }
+
+  // Built as a list because the deduction only takes a line when a round caught
+  // a bystander, and the row stagger has to stay even either way.
+  const rows: { label: string; value: ReactNode; tone?: string }[] = [
+    { label: 'TARGET', value: m ? m.district + ' // ' + m.city : '--' },
+    { label: 'ELIMINATIONS', value: outcome ? outcome.kills : '--' },
+    {
+      label: 'SQUAD CASUALTIES',
+      value: outcome ? outcome.casualties : '--',
+      tone: outcome && outcome.casualties > 0 ? 'red' : 'teal',
+    },
+    {
+      label: 'COLLATERAL',
+      value: outcome ? outcome.civiliansHit : '--',
+      tone: outcome && outcome.civiliansHit > 0 ? 'red' : undefined,
+    },
+    { label: 'MISSION TIME', value: outcome ? mmss(outcome.timeSec) : '--:--' },
+  ]
+  if (outcome && won && fine > 0) {
+    rows.push({ label: 'CONTRACT VALUE', value: fmt(outcome.reward) + ' CR' })
+    rows.push({ label: 'COLLATERAL PENALTY', value: '-' + fmt(fine) + ' CR', tone: 'red' })
+  }
+  rows.push({
+    label: 'PAYOUT',
+    value: won && paid > 0 ? '+' + fmt(paid) + ' CR' : '0 CR',
+    tone: won && paid > 0 ? 'teal' : 'red',
+  })
+  rows.push({ label: 'ACCOUNT BALANCE', value: fmt(credits) + ' CR', tone: 'amber' })
 
   return (
     <div className="screen db">
@@ -1158,31 +1188,16 @@ export function Debrief() {
           {won ? 'CONTRACT FULFILLED' : 'CONTRACT TERMINATED'}
         </h1>
         <div className="db-subtitle">
-          {won ? 'EXTRACTION CONFIRMED // PAYMENT RELEASED' : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
+          {won
+            ? fine > 0
+              ? 'EXTRACTION CONFIRMED // PAYMENT ADJUSTED'
+              : 'EXTRACTION CONFIRMED // PAYMENT RELEASED'
+            : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
         </div>
         <div className="db-rows">
-          <DebriefRow index={0} label="TARGET" value={m ? m.district + ' // ' + m.city : '--'} />
-          <DebriefRow index={1} label="ELIMINATIONS" value={outcome ? outcome.kills : '--'} />
-          <DebriefRow
-            index={2}
-            label="SQUAD CASUALTIES"
-            value={outcome ? outcome.casualties : '--'}
-            tone={outcome && outcome.casualties > 0 ? 'red' : 'teal'}
-          />
-          <DebriefRow
-            index={3}
-            label="COLLATERAL"
-            value={outcome ? outcome.civiliansHit : '--'}
-            tone={outcome && outcome.civiliansHit > 0 ? 'red' : undefined}
-          />
-          <DebriefRow index={4} label="MISSION TIME" value={outcome ? mmss(outcome.timeSec) : '--:--'} />
-          <DebriefRow
-            index={5}
-            label="PAYOUT"
-            value={outcome && won ? '+' + fmt(outcome.reward) + ' CR' : '0 CR'}
-            tone={won ? 'teal' : 'red'}
-          />
-          <DebriefRow index={6} label="ACCOUNT BALANCE" value={fmt(credits) + ' CR'} tone="amber" />
+          {rows.map((r, i) => (
+            <DebriefRow key={r.label} index={i} label={r.label} value={r.value} tone={r.tone} />
+          ))}
         </div>
         <div className="db-actions">
           <button type="button" className="btn" onClick={act(() => goto('world'))}>
