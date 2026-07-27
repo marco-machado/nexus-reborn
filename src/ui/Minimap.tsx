@@ -1,12 +1,14 @@
-// Canvas minimap. Reads the live world via getWorld() at ~10fps; renders
-// building footprints, road bands, mission zones, the camera viewport and unit
-// blips. The map is turned by the camera yaw, so up on the panel is up on
-// screen and the viewport reads as an upright cone. Canvas colors are
-// hardcoded hexes matching the tokens in src/index.css.
-import { useEffect, useRef } from 'react'
-import { getCameraFootprint, getWorld } from '../game/runtime'
-import { CAMERA_YAW } from '../game/types'
+// Canvas minimap, and a camera control. Reads the live world via getWorld() at
+// ~10fps; renders building footprints, road bands, mission zones, the camera
+// viewport and unit blips. The map is turned by the camera yaw, so up on the
+// panel is up on screen and the viewport reads as an upright cone. Clicking
+// and dragging run the same transform backwards to steer the camera. Canvas
+// colors are hardcoded hexes matching the tokens in src/index.css.
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { getCameraFocus, getCameraFootprint, getWorld, panCameraTo } from '../game/runtime'
+import { CAMERA_YAW, type CameraFootprint, type Vec2, type WorldApi } from '../game/types'
 import { useMissionStore } from '../state/missionStore'
+import { uiClick } from './sound'
 
 const ZOOM = [1, 1.7, 2.8]
 export const MM_ZOOM_MAX = ZOOM.length - 1
@@ -28,6 +30,74 @@ function turnZ(x: number, z: number): number {
 function panOffset(view: number, mapPx: number, focusPx: number): number {
   if (mapPx <= view) return (view - mapPx) / 2
   return Math.min(0, Math.max(view - mapPx, view / 2 - focusPx))
+}
+
+// Where the map sits on the canvas: scale in pixels per world unit, the pan
+// offset in pixels, and the west corner of the turned square in world units.
+interface MapLayout {
+  s: number
+  ox: number
+  oy: number
+  originX: number
+}
+
+// Pure, so the draw pass and the pointer handlers agree on the frame without
+// one of them keeping stale numbers for the other.
+function layout(world: WorldApi, width: number, height: number, zoom: number): MapLayout {
+  const size = world.city.size
+  // A turned square needs its diagonal to fit, not its side. The west corner
+  // sits left of the world origin; these hold for a yaw inside the first
+  // quarter turn, which the fixed camera yaw is.
+  const span = size * (YAW_SIN + YAW_COS)
+  const originX = -size * YAW_SIN
+  const s = (Math.min(width, height) / span) * (ZOOM[zoom] ?? 1)
+
+  // When zoomed, pan toward the living agents' centroid.
+  let fx = size / 2
+  let fz = size / 2
+  let n = 0
+  let sx = 0
+  let sz = 0
+  for (const u of world.units) {
+    if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
+    sx += u.pos.x
+    sz += u.pos.z
+    n += 1
+  }
+  if (n > 0) {
+    fx = sx / n
+    fz = sz / n
+  }
+  return {
+    s,
+    ox: panOffset(width, span * s, (turnX(fx, fz) - originX) * s),
+    oy: panOffset(height, span * s, turnZ(fx, fz) * s),
+    originX,
+  }
+}
+
+// Canvas pixel back to world XZ: undo the pan translate, then the yaw, then
+// the scale. The inverse of the translate/rotate the draw pass sets up.
+function toWorld(l: MapLayout, px: number, py: number): Vec2 {
+  const u = px - l.ox + l.originX * l.s
+  const v = py - l.oy
+  return { x: (u * YAW_COS + v * YAW_SIN) / l.s, z: (v * YAW_COS - u * YAW_SIN) / l.s }
+}
+
+// Hit test for the camera footprint, a convex quad of unknown winding: inside
+// means every edge turns the same way toward the point.
+function insideQuad(q: CameraFootprint, x: number, z: number): boolean {
+  let neg = false
+  let pos = false
+  for (let i = 0; i < 4; i++) {
+    const a = q[i]
+    const b = q[(i + 1) % 4]
+    const c = (b.x - a.x) * (z - a.z) - (b.z - a.z) * (x - a.x)
+    if (c < 0) neg = true
+    else if (c > 0) pos = true
+    if (neg && pos) return false
+  }
+  return true
 }
 
 const COLOR = {
@@ -58,6 +128,10 @@ export default function Minimap({
   zoom?: number
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null)
+  // Live drag. The offset is what the grab point owes the camera focus, so
+  // grabbing the viewport keeps the spot under the cursor; a press on bare map
+  // starts at zero and centers the camera on the cursor instead.
+  const drag = useRef<{ id: number; dx: number; dz: number } | null>(null)
 
   useEffect(() => {
     const canvas = ref.current
@@ -93,31 +167,7 @@ export default function Minimap({
 
       const { city, units } = world
       const size = city.size
-      // A turned square needs its diagonal to fit, not its side. The west
-      // corner sits left of the world origin; these hold for a yaw inside the
-      // first quarter turn, which the fixed camera yaw is.
-      const span = size * (YAW_SIN + YAW_COS)
-      const originX = -size * YAW_SIN
-      const s = (Math.min(width, height) / span) * (ZOOM[zoom] ?? 1)
-
-      // When zoomed, pan toward the living agents' centroid.
-      let fx = size / 2
-      let fz = size / 2
-      let n = 0
-      let sx = 0
-      let sz = 0
-      for (const u of units) {
-        if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
-        sx += u.pos.x
-        sz += u.pos.z
-        n += 1
-      }
-      if (n > 0) {
-        fx = sx / n
-        fz = sz / n
-      }
-      const ox = panOffset(width, span * s, (turnX(fx, fz) - originX) * s)
-      const oy = panOffset(height, span * s, turnZ(fx, fz) * s)
+      const { s, ox, oy, originX } = layout(world, width, height, zoom)
       ctx.save()
       ctx.translate(ox - originX * s, oy)
       ctx.rotate(CAMERA_YAW)
@@ -242,5 +292,73 @@ export default function Minimap({
     return () => window.clearInterval(id)
   }, [width, height, zoom])
 
-  return <canvas ref={ref} className="minimap-canvas" style={{ width, height }} />
+  // World point under the pointer, or null while no world is running.
+  const pointAt = (e: ReactPointerEvent<HTMLCanvasElement>): Vec2 | null => {
+    const world = getWorld()
+    if (!world) return null
+    const r = e.currentTarget.getBoundingClientRect()
+    return toWorld(layout(world, width, height, zoom), e.clientX - r.left, e.clientY - r.top)
+  }
+
+  // Cursor says what a press would do here: pick the view up, or send it.
+  const hover = (el: HTMLCanvasElement, p: Vec2): void => {
+    const view = getCameraFootprint()
+    el.style.cursor = view && insideQuad(view, p.x, p.z) ? 'grab' : ''
+  }
+
+  const onDown = (e: ReactPointerEvent<HTMLCanvasElement>): void => {
+    if (e.button !== 0) return
+    const p = pointAt(e)
+    if (!p) return
+    e.preventDefault()
+    const view = getCameraFootprint()
+    const focus = getCameraFocus()
+    if (view && focus && insideQuad(view, p.x, p.z)) {
+      drag.current = { id: e.pointerId, dx: focus.x - p.x, dz: focus.z - p.z }
+    } else {
+      drag.current = { id: e.pointerId, dx: 0, dz: 0 }
+      panCameraTo(p.x, p.z)
+    }
+    e.currentTarget.setPointerCapture(e.pointerId)
+    e.currentTarget.style.cursor = 'grabbing'
+    uiClick()
+  }
+
+  const onMove = (e: ReactPointerEvent<HTMLCanvasElement>): void => {
+    const p = pointAt(e)
+    if (!p) return
+    const d = drag.current
+    if (d && d.id === e.pointerId) panCameraTo(p.x + d.dx, p.z + d.dz)
+    else hover(e.currentTarget, p)
+  }
+
+  const onUp = (e: ReactPointerEvent<HTMLCanvasElement>): void => {
+    const d = drag.current
+    if (!d || d.id !== e.pointerId) return
+    drag.current = null
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+    const p = pointAt(e)
+    if (p) hover(e.currentTarget, p)
+    else e.currentTarget.style.cursor = ''
+  }
+
+  return (
+    <canvas
+      ref={ref}
+      className="minimap-canvas"
+      style={{ width, height }}
+      role="application"
+      tabIndex={0}
+      aria-label="Tactical map. Click or drag to move the camera, arrow keys to pan."
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      onPointerCancel={onUp}
+      onPointerLeave={(e) => {
+        if (!drag.current) e.currentTarget.style.cursor = ''
+      }}
+    />
+  )
 }
