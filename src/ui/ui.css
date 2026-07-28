@@ -2376,6 +2376,8 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--line);
   cursor: pointer;
+  /* double click centers the camera, so it must not select the row's text */
+  user-select: none;
   transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
 }
 
@@ -2593,7 +2595,16 @@
 .hud-minimap { right: 10px; bottom: 10px; }
 .hud-mm-body { position: relative; padding: 5px; }
 
-.minimap-canvas { display: block; border: 1px solid rgba(126, 240, 212, 0.15); }
+/* the map is a control: crosshair to send the camera, grab over the viewport */
+.minimap-canvas {
+  display: block;
+  border: 1px solid rgba(126, 240, 212, 0.15);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.minimap-canvas:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
 
 .hud-mm-zoom {
   position: absolute;

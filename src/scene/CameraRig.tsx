@@ -1,10 +1,11 @@
 // Fixed-angle isometric-style camera. Yaw 45 deg, elevation 55 deg so the eye
 // clears the tallest towers at default zoom. WASD/arrows pan in screen-aligned
-// ground axes, +/- and the wheel zoom, F recenters on the squad centroid.
+// ground axes, +/- and the wheel zoom, F recenters on the squad centroid. The
+// HUD steers it from the minimap through the pan request in game/runtime.
 import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
-import { getWorld, setCameraFootprint } from '../game/runtime'
+import { getWorld, setCameraFocus, setCameraFootprint, takeCameraPan } from '../game/runtime'
 import { CAMERA_YAW, type CameraFootprint } from '../game/types'
 
 const ELEV = (55 * Math.PI) / 180
@@ -87,9 +88,15 @@ export default function CameraRig() {
     }
   }, [])
 
-  // The rig publishes the footprint from the frame loop; drop it on unmount so
-  // the HUD stops drawing a view that no longer exists.
-  useEffect(() => () => setCameraFootprint(null), [])
+  // The rig publishes the pose from the frame loop; drop it on unmount so the
+  // HUD stops drawing a view that no longer exists.
+  useEffect(
+    () => () => {
+      setCameraFootprint(null)
+      setCameraFocus(null)
+    },
+    [],
+  )
 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera
@@ -165,6 +172,13 @@ export default function CameraRig() {
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.05)
+    // A pan request overrides the keys for this frame; holding a key after it
+    // just carries on from the new spot.
+    const pan = takeCameraPan()
+    if (pan) {
+      state.target.x = pan.x
+      state.target.z = pan.z
+    }
     const k = state.keys
     let u = 0
     let v = 0
@@ -177,9 +191,10 @@ export default function CameraRig() {
       const speed = state.dist * 0.6 * dt * inv
       state.target.x += (FWD.x * u + RIGHT.x * v) * speed
       state.target.z += (FWD.z * u + RIGHT.z * v) * speed
-      state.target.x = Math.max(4, Math.min(92, state.target.x))
-      state.target.z = Math.max(4, Math.min(92, state.target.z))
     }
+    // Every route to the target lands here, keys, F and the minimap alike.
+    state.target.x = Math.max(4, Math.min(92, state.target.x))
+    state.target.z = Math.max(4, Math.min(92, state.target.z))
     const damp = 1 - Math.exp(-8 * dt)
     state.focus.lerp(state.target, damp)
     state.dist += (state.targetDist - state.dist) * damp
@@ -194,6 +209,7 @@ export default function CameraRig() {
     camera.updateMatrixWorld()
     groundFootprint(camera, state.ray, state.footprint)
     setCameraFootprint(state.footprint)
+    setCameraFocus(state.focus)
   }, 0)
 
   return null
