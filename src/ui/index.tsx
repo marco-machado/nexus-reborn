@@ -3,7 +3,7 @@
 // Flow: menu -> world -> brief -> team -> mission -> debrief -> world, with
 // research reachable from the world map nav.
 import './ui.css'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -14,6 +14,7 @@ import type { AgentRole, MissionDef } from '../game/types'
 import {
   Panel,
   Chip,
+  ScrollBox,
   SegBar,
   GunSilhouette,
   RoleGlyph,
@@ -37,24 +38,19 @@ import { fmt, pad2, hashOf } from './util'
 import { Portrait } from './portrait'
 import { Figure } from './figure'
 import { uiClick, unlockAudio } from './sound'
-
 export { WorldMap } from './WorldMap'
 export { Research } from './Research'
-
 /* -------------------------------- helpers -------------------------------- */
-
 function act(fn: () => void): () => void {
   return () => {
     uiClick()
     fn()
   }
 }
-
 function utcNow(): string {
   const d = new Date()
   return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds())
 }
-
 function useUtcClock(): string {
   const [t, setT] = useState(() => utcNow())
   useEffect(() => {
@@ -63,7 +59,6 @@ function useUtcClock(): string {
   }, [])
   return t
 }
-
 const ROLE_LABEL: Record<AgentRole, string> = {
   assault: 'ASSAULT',
   recon: 'RECON',
@@ -74,13 +69,11 @@ const ROLE_LABEL: Record<AgentRole, string> = {
   support: 'SUPPORT',
   medic: 'MEDIC',
 }
-
 function statusTone(status: 'READY' | 'INJURED' | 'ON MISSION'): string {
   if (status === 'READY') return 'teal'
   if (status === 'INJURED') return 'red'
   return 'amber'
 }
-
 // Role-card copy: each sentence of the bio becomes its own short line so the
 // card shows them whole instead of clipping mid-word.
 function bioLines(bio: string): string[] {
@@ -89,26 +82,21 @@ function bioLines(bio: string): string[] {
     .map((s) => s.trim())
     .filter(Boolean)
 }
-
 // What an installed augmentation does, in the same words the research screen
 // prints for it.
 function augLine(node: ResearchNode): string {
   const e = node.effects[0]
   return e ? benefitOf(e).line : ''
 }
-
 /* ================================ MAIN MENU =============================== */
-
 export function MainMenu() {
   const goto = useAppStore((s) => s.goto)
   const clock = useUtcClock()
-
   useEffect(() => {
     const unlock = () => unlockAudio()
     document.addEventListener('click', unlock, { once: true })
     return () => document.removeEventListener('click', unlock)
   }, [])
-
   return (
     <div className="screen menu">
       <div className="menu-gridbg" aria-hidden="true" />
@@ -128,7 +116,12 @@ export function MainMenu() {
         <h1 className="menu-wordmark">SYNDICATE</h1>
         <div className="menu-tagline">CORPORATE GEOSTRATEGIC COMMAND INTERFACE</div>
         <div className="menu-rule" aria-hidden="true" />
-        <button type="button" className="cta menu-cta" onClick={act(() => goto('world'))}>
+        <button
+          type="button"
+          className="cta menu-cta"
+          aria-label="INITIATE // OPEN THE WORLD NETWORK"
+          onClick={act(() => goto('world'))}
+        >
           <span className="cta-inner">&lt;&lt; INITIATE &gt;&gt;</span>
         </button>
       </div>
@@ -140,17 +133,13 @@ export function MainMenu() {
     </div>
   )
 }
-
 /* =============================== MISSION BRIEF ============================ */
-
 const THREAT_BLOCKS: Record<MissionDef['threat'], number> = {
   MODERATE: 4,
   HIGH: 6,
   SEVERE: 8,
 }
-
 const OBJECTIVE_TIER = ['PRIMARY', 'SECONDARY', 'TERTIARY']
-
 // Recon callout, sized from its own text so the frame always holds the label.
 // The stack sits below the readouts on the right, clear of both.
 const CALLOUT_LINES = [
@@ -164,13 +153,11 @@ const CALLOUT_W =
 const CALLOUT_H = 52
 const CALLOUT_X = RECON_W - 16 - CALLOUT_W
 const CALLOUT_Y = 104
-
 const COMMS_LOG = [
   ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
   ['23:40:45', 'WEATHER: HEAVY RAIN. VISIBILITY LOW.'],
   ['23:41:02', 'LOCAL: CORPSEC TASKFORCE ONSITE.'],
 ]
-
 function LegendRow(props: { label: string; children: ReactNode }) {
   return (
     <div className="mb-legend-row">
@@ -179,7 +166,6 @@ function LegendRow(props: { label: string; children: ReactNode }) {
     </div>
   )
 }
-
 function TacStat(props: { label: string; value: ReactNode; tone?: string }) {
   return (
     <div className="mb-tac-stat">
@@ -188,44 +174,6 @@ function TacStat(props: { label: string; value: ReactNode; tone?: string }) {
     </div>
   )
 }
-
-// True while the element has content past its bottom edge, so a panel can say
-// so instead of hiding the overflow behind a 5px scrollbar.
-function useScrollCue(): [(el: HTMLDivElement | null) => void, boolean] {
-  const [more, setMore] = useState(false)
-  const node = useRef<HTMLDivElement | null>(null)
-
-  const measure = useCallback(() => {
-    const el = node.current
-    if (!el) return
-    setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 4)
-  }, [])
-
-  const ref = useCallback(
-    (el: HTMLDivElement | null) => {
-      node.current = el
-      measure()
-    },
-    [measure],
-  )
-
-  useLayoutEffect(() => {
-    const el = node.current
-    if (!el) return
-    measure()
-    el.addEventListener('scroll', measure, { passive: true })
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    for (const child of el.children) ro.observe(child)
-    return () => {
-      el.removeEventListener('scroll', measure)
-      ro.disconnect()
-    }
-  }, [measure])
-
-  return [ref, more]
-}
-
 export function MissionBrief() {
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
@@ -234,16 +182,13 @@ export function MissionBrief() {
   const blocks = useMemo(() => buildReconBlocks(m ? m.seed : 1), [m])
   const targetLights = useMemo(() => targetWindows(m ? m.seed : 1), [m])
   const tac = useMemo(() => (m ? buildTacticalMap(m) : null), [m])
-  const [dossierRef, dossierMore] = useScrollCue()
   if (!m || !tac) return null
-
   const initials = m.codename
     .split(' ')
     .map((w) => w.charAt(0))
     .join('')
   const contractId = '77A-' + m.codename.replace(/\s+/g, '') + '-2087'
   const lz = tac.extraction
-
   return (
     <div className="screen mb">
       <header className="mb-head">
@@ -255,7 +200,6 @@ export function MissionBrief() {
           <Chip tone="teal">SECURE CH 7A</Chip>
         </div>
       </header>
-
       <div className="mb-main">
         <section className="mb-left">
           {/* orbital recon feed */}
@@ -293,7 +237,6 @@ export function MissionBrief() {
                   <line key={'v' + x} x1={x} y1="0" x2={x} y2={RECON_H} />
                 ))}
               </g>
-
               {blocks.map((b, i) => (
                 <g key={i} className="mb-block">
                   <polygon className="side" points={sidePoints(b)} />
@@ -304,7 +247,6 @@ export function MissionBrief() {
                   <polygon className="roof" points={roofPoints(b)} />
                 </g>
               ))}
-
               {/* target building */}
               <ellipse
                 cx={RECON_TARGET.x + RECON_TARGET.w / 2}
@@ -347,7 +289,6 @@ export function MissionBrief() {
                   />
                 ))}
               </g>
-
               {/* insertion route from the south west */}
               <polyline
                 className="mb-route ins"
@@ -363,7 +304,6 @@ export function MissionBrief() {
                   ROUTE ALPHA
                 </text>
               </g>
-
               {/* extraction route to the south east */}
               <polyline className="mb-route ext" points="544,176 640,228 726,276 806,318" />
               <polygon className="mb-tri ext" points="806,310 813,324 799,324" />
@@ -376,7 +316,6 @@ export function MissionBrief() {
                   ROUTE OMEGA
                 </text>
               </g>
-
               {/* readouts and briefing, on a scrim so type stays crisp */}
               <rect x="0" y="0" width={RECON_W} height="98" fill="url(#mb-recon-scrim)" />
               <g className="mb-readout">
@@ -399,7 +338,6 @@ export function MissionBrief() {
                   </text>
                 ))}
               </g>
-
               {/* target callout, anchored clear of the readouts above */}
               <polyline
                 className="mb-callout"
@@ -421,7 +359,6 @@ export function MissionBrief() {
               </g>
             </svg>
           </Panel>
-
           {/* tactical map, projected from the district the mission builds */}
           <Panel
             title={'TACTICAL MAP // ' + m.city + ' - ' + m.district}
@@ -438,7 +375,6 @@ export function MissionBrief() {
               <TacStat label="ROUTE ALPHA" value={tac.counts.alphaMetres + ' M'} tone="teal" />
               <TacStat label="ROUTE OMEGA" value={tac.counts.omegaMetres + ' M'} tone="red" />
             </div>
-
             <div className="mb-tac-plate">
               <svg
                 viewBox={'0 0 ' + tac.size + ' ' + tac.size}
@@ -481,7 +417,6 @@ export function MissionBrief() {
                     <line key={'v' + v} x1={v} y1="0" x2={v} y2={tac.size} />
                   ))}
                 </g>
-
                 {tac.roads.map((r, i) => (
                   <rect key={i} className="mb-tac-road" x={r.x} y={r.y} width={r.w} height={r.h} />
                 ))}
@@ -496,13 +431,11 @@ export function MissionBrief() {
                     opacity={0.42 + b.lit * 0.58}
                   />
                 ))}
-
                 <polygon
                   className="mb-hostile"
                   points={pointsAttr(tac.hostile)}
                   fill="url(#mb-hatch-r)"
                 />
-
                 {tac.patrols.map((p, i) => (
                   <g key={i} className="mb-patrol">
                     <polyline points={pointsAttr(p)} />
@@ -511,10 +444,8 @@ export function MissionBrief() {
                     ))}
                   </g>
                 ))}
-
                 <polyline className="mb-route ins" points={pointsAttr(tac.routeAlpha)} />
                 <polyline className="mb-route ext" points={pointsAttr(tac.routeOmega)} />
-
                 {/* target zone */}
                 <rect
                   className="mb-tac-target"
@@ -538,7 +469,6 @@ export function MissionBrief() {
                 >
                   TARGET CP-07
                 </text>
-
                 {/* landing zone: the squad inserts and extracts on the same pad */}
                 <circle className="mb-tac-ring teal" cx={lz.x} cy={lz.z} r="4.4" />
                 <polygon
@@ -552,7 +482,6 @@ export function MissionBrief() {
                 <text className="mb-tac-label teal" x={lz.x + 6.4} y={lz.z + 1.6}>
                   INS / EXT
                 </text>
-
                 {/* scale bar and north rose */}
                 <g className="mb-tac-scale">
                   <line x1="6" y1="91" x2="26" y2="91" />
@@ -572,7 +501,6 @@ export function MissionBrief() {
                 </g>
               </svg>
             </div>
-
             <div className="mb-legend">
               <LegendRow label="INSERTION POINT">
                 <polygon points="10,2 16,10 4,10" fill="none" stroke="#7ef0d4" strokeWidth="1.2" />
@@ -601,157 +529,152 @@ export function MissionBrief() {
             </div>
           </Panel>
         </section>
-
         {/* contract dossier */}
         <aside className="mb-dossier">
           <Panel title="CONTRACT DOSSIER" className="mb-dossier-panel" bodyClassName="mb-dossier-body">
-            <div className="mb-dossier-scroll scroll" ref={dossierRef}>
-              <div className="mb-idrow">
-                <div className="mb-fields">
-                  <div className="field">
-                    <label>OPERATION:</label>
-                    <div className="value big">{m.codename}</div>
+            <ScrollBox className="mb-dossier-scroll">
+                <div className="mb-idrow">
+                  <div className="mb-fields">
+                    <div className="field">
+                      <label>OPERATION:</label>
+                      <div className="value big">{m.codename}</div>
+                    </div>
+                    <div className="field">
+                      <label>LOCATION:</label>
+                      <div className="value">{m.city}</div>
+                    </div>
+                    <div className="field">
+                      <label>MISSION TYPE:</label>
+                      <div className="value">{m.type}</div>
+                    </div>
+                    <div className="field">
+                      <label>CLIENT:</label>
+                      <div className="value">{m.client}</div>
+                    </div>
                   </div>
-                  <div className="field">
-                    <label>LOCATION:</label>
-                    <div className="value">{m.city}</div>
-                  </div>
-                  <div className="field">
-                    <label>MISSION TYPE:</label>
-                    <div className="value">{m.type}</div>
-                  </div>
-                  <div className="field">
-                    <label>CLIENT:</label>
-                    <div className="value">{m.client}</div>
+                  <div className="mb-sil corners">
+                    <svg viewBox="0 0 118 176" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="mb-sil-bg" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#0d1a17" />
+                          <stop offset="100%" stopColor="#050b0a" />
+                        </linearGradient>
+                        <linearGradient id="mb-sil-rim" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#7ef0d4" stopOpacity="0.5" />
+                          <stop offset="45%" stopColor="#7ef0d4" stopOpacity="0.06" />
+                          <stop offset="100%" stopColor="#f0b445" stopOpacity="0.22" />
+                        </linearGradient>
+                        <pattern id="mb-sil-s" width="4" height="3" patternUnits="userSpaceOnUse">
+                          <rect width="4" height="1.1" fill="rgba(0,0,0,0.4)" />
+                        </pattern>
+                      </defs>
+                      <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-bg)" />
+                      <g stroke="rgba(126,240,212,0.07)" strokeWidth="0.8">
+                        {[30, 60, 90, 120, 150].map((y) => (
+                          <line key={y} x1="0" y1={y} x2="118" y2={y} />
+                        ))}
+                        {[30, 59, 88].map((x) => (
+                          <line key={x} x1={x} y1="0" x2={x} y2="176" />
+                        ))}
+                      </g>
+                      {/* head, shoulders and torso, filling the frame */}
+                      <path
+                        d="M59 22c14 0 23 11 23 26 0 11-3 19-9 25 19 6 31 19 34 41v62H11v-62c3-22 15-35 34-41-6-6-9-14-9-25 0-15 9-26 23-26Z"
+                        fill="#070d0c"
+                        stroke="url(#mb-sil-rim)"
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M59 22c-14 0-23 11-23 26 0 11 3 19 9 25-19 6-31 19-34 41v62"
+                        fill="none"
+                        stroke="rgba(126,240,212,0.34)"
+                        strokeWidth="1.4"
+                      />
+                      <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-s)" />
+                      <g stroke="var(--amber)" strokeWidth="1.6" fill="none">
+                        <path d="M5 16V5h11" />
+                        <path d="M102 5h11v11" />
+                        <path d="M113 160v11h-11" />
+                        <path d="M16 171H5v-11" />
+                      </g>
+                    </svg>
+                    <span className="mb-sil-scan" aria-hidden="true" />
+                    <span className="mb-sil-id">ID: {initials}-77</span>
                   </div>
                 </div>
-                <div className="mb-sil corners">
-                  <svg viewBox="0 0 118 176" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="mb-sil-bg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#0d1a17" />
-                        <stop offset="100%" stopColor="#050b0a" />
-                      </linearGradient>
-                      <linearGradient id="mb-sil-rim" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#7ef0d4" stopOpacity="0.5" />
-                        <stop offset="45%" stopColor="#7ef0d4" stopOpacity="0.06" />
-                        <stop offset="100%" stopColor="#f0b445" stopOpacity="0.22" />
-                      </linearGradient>
-                      <pattern id="mb-sil-s" width="4" height="3" patternUnits="userSpaceOnUse">
-                        <rect width="4" height="1.1" fill="rgba(0,0,0,0.4)" />
-                      </pattern>
-                    </defs>
-                    <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-bg)" />
-                    <g stroke="rgba(126,240,212,0.07)" strokeWidth="0.8">
-                      {[30, 60, 90, 120, 150].map((y) => (
-                        <line key={y} x1="0" y1={y} x2="118" y2={y} />
-                      ))}
-                      {[30, 59, 88].map((x) => (
-                        <line key={x} x1={x} y1="0" x2={x} y2="176" />
-                      ))}
-                    </g>
-                    {/* head, shoulders and torso, filling the frame */}
-                    <path
-                      d="M59 22c14 0 23 11 23 26 0 11-3 19-9 25 19 6 31 19 34 41v62H11v-62c3-22 15-35 34-41-6-6-9-14-9-25 0-15 9-26 23-26Z"
-                      fill="#070d0c"
-                      stroke="url(#mb-sil-rim)"
-                      strokeWidth="1.6"
-                    />
-                    <path
-                      d="M59 22c-14 0-23 11-23 26 0 11 3 19 9 25-19 6-31 19-34 41v62"
-                      fill="none"
-                      stroke="rgba(126,240,212,0.34)"
-                      strokeWidth="1.4"
-                    />
-                    <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-s)" />
-                    <g stroke="var(--amber)" strokeWidth="1.6" fill="none">
-                      <path d="M5 16V5h11" />
-                      <path d="M102 5h11v11" />
-                      <path d="M113 160v11h-11" />
-                      <path d="M16 171H5v-11" />
-                    </g>
-                  </svg>
-                  <span className="mb-sil-scan" aria-hidden="true" />
-                  <span className="mb-sil-id">ID: {initials}-77</span>
-                </div>
-              </div>
-
-              <div className="mb-threat corners">
-                <span className="mb-skull">
-                  <SkullGlyph size={24} />
-                </span>
-                <span className="mb-threat-main">
-                  <label>THREAT RATING</label>
-                  <b>{m.threat}</b>
-                </span>
-                <span className="mb-threat-side">
-                  <span className="mb-threat-blocks">
-                    {Array.from({ length: 9 }, (_, i) => (
-                      <i key={i} className={i < THREAT_BLOCKS[m.threat] ? 'on' : undefined} />
-                    ))}
+                <div className="mb-threat corners">
+                  <span className="mb-skull">
+                    <SkullGlyph size={24} />
                   </span>
-                  <span className="mb-threat-eta">ETA RESPONSE: &lt; 06:00</span>
-                </span>
-              </div>
-
-              <div className="mb-reward corners">
-                <label>REWARD:</label>
-                <div className="mb-reward-line">
-                  <b>
-                    {fmt(m.reward)}
-                    <i>CR</i>
-                  </b>
-                  <span className="dim">CORP CREDITS</span>
-                </div>
-              </div>
-
-              <div className="mb-box">
-                <label>OBJECTIVES:</label>
-                {m.objectives.map((o, i) => (
-                  <div key={o.id} className="mb-obj">
-                    <span className="mb-obj-glyph" />
-                    <span>
-                      <b>{OBJECTIVE_TIER[Math.min(i, 2)]}:</b> {o.label}
+                  <span className="mb-threat-main">
+                    <label>THREAT RATING</label>
+                    <b>{m.threat}</b>
+                  </span>
+                  <span className="mb-threat-side">
+                    <span className="mb-threat-blocks">
+                      {Array.from({ length: 9 }, (_, i) => (
+                        <i key={i} className={i < THREAT_BLOCKS[m.threat] ? 'on' : undefined} />
+                      ))}
                     </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mb-box">
-                <label>
-                  COLLATERAL TOLERANCE: <b className="red">LOW (10%)</b>
-                </label>
-                <div className="mb-meter">
-                  <i style={{ left: '10%' }} />
+                    <span className="mb-threat-eta">ETA RESPONSE: &lt; 06:00</span>
+                  </span>
                 </div>
-                <div className="axis">
-                  <span>0%</span>
-                  <span>25%</span>
-                  <span>50%</span>
-                  <span>75%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
-              <div className="mb-box">
-                <label>MISSION NOTES:</label>
-                {m.notes.map((n, i) => (
-                  <div key={i} className="mb-note dim">
-                    {n}
+                <div className="mb-reward corners">
+                  <label>REWARD:</label>
+                  <div className="mb-reward-line">
+                    <b>
+                      {fmt(m.reward)}
+                      <i>CR</i>
+                    </b>
+                    <span className="dim">CORP CREDITS</span>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className={'mb-dossier-cue' + (dossierMore ? ' on' : '')} aria-hidden="true">
-              <span>MORE BELOW</span>
-            </div>
+                </div>
+                <div className="mb-box">
+                  <label>OBJECTIVES:</label>
+                  {m.objectives.map((o, i) => (
+                    <div key={o.id} className="mb-obj">
+                      <span className="mb-obj-glyph" />
+                      <span>
+                        <b>{OBJECTIVE_TIER[Math.min(i, 2)]}:</b> {o.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mb-box">
+                  <label>
+                    COLLATERAL TOLERANCE: <b className="red">LOW (10%)</b>
+                  </label>
+                  <div className="mb-meter">
+                    <i style={{ left: '10%' }} />
+                  </div>
+                  <div className="axis">
+                    <span>0%</span>
+                    <span>25%</span>
+                    <span>50%</span>
+                    <span>75%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+                <div className="mb-box">
+                  <label>MISSION NOTES:</label>
+                  {m.notes.map((n, i) => (
+                    <div key={i} className="mb-note dim">
+                      {n}
+                    </div>
+                  ))}
+                </div>
+            </ScrollBox>
           </Panel>
         </aside>
       </div>
-
       {/* bottom action bar */}
       <footer className="mb-foot">
-        <button type="button" className="btn mb-return" onClick={act(() => goto('world'))}>
+        <button
+          type="button"
+          className="btn mb-return"
+          aria-label="RETURN TO THE WORLD NETWORK"
+          onClick={act(() => goto('world'))}
+        >
           &lt; RETURN
         </button>
         <div className="mb-comms corners">
@@ -762,7 +685,12 @@ export function MissionBrief() {
             </span>
           ))}
         </div>
-        <button type="button" className="cta big mb-accept" onClick={act(() => goto('team'))}>
+        <button
+          type="button"
+          className="cta big mb-accept"
+          aria-label={'ACCEPT CONTRACT ' + m.codename + ' // ' + fmt(m.reward) + ' CR'}
+          onClick={act(() => goto('team'))}
+        >
           <span className="cta-inner">&lt;&lt; ACCEPT CONTRACT &gt;&gt;</span>
         </button>
         <div className="mb-contract corners">
@@ -778,9 +706,7 @@ export function MissionBrief() {
     </div>
   )
 }
-
 /* =============================== TEAM SELECT ============================== */
-
 export function TeamSelect() {
   const goto = useAppStore((s) => s.goto)
   const squad = useAppStore((s) => s.squad)
@@ -788,12 +714,10 @@ export function TeamSelect() {
   const missionId = useAppStore((s) => s.missionId)
   const [focusId, setFocusId] = useState<string | null>(null)
   const mission = missionId ? missionById(missionId) : null
-
   const focus = useMemo(() => {
     const id = focusId ?? squad[0] ?? ROSTER[0].id
     return ROSTER.find((o) => o.id === id) ?? ROSTER[0]
   }, [focusId, squad])
-
   // Completed research rides with the operative: the same numbers the mission
   // builds units from.
   const done = useResearchStore((s) => s.done)
@@ -814,10 +738,8 @@ export function TeamSelect() {
     return a + o.maxHp * 0.48 + o.speed * 5.2
   }, 18.3)
   const ready = squad.length === 4
-
   const augs = installedAugs(done)
   const invKinds = ['med', 'cell', 'frag', 'chip'] as const
-
   return (
     <div className="screen ts">
       <header className="ts-head">
@@ -841,7 +763,6 @@ export function TeamSelect() {
           )}
         </div>
       </header>
-
       <div className="ts-main">
         {/* roster */}
         <aside className="ts-roster">
@@ -849,60 +770,69 @@ export function TeamSelect() {
             title="ROSTER DATABASE"
             right={<span className="dim">{ROSTER.length} ON FILE</span>}
             className="ts-roster-panel"
-            bodyClassName="ts-roster-body scroll"
+            bodyClassName="ts-roster-body"
           >
-            {ROSTER.map((o, i) => {
-              const inSquad = squad.includes(o.id)
-              // reading up on an operative must not move them in or out of the
-              // squad, so the row body focuses and the trailing key assigns
-              const blocked = inSquad ? squad.length <= 1 : squad.length >= 4
-              return (
-                <div
-                  key={o.id}
-                  className={
-                    'ts-row' + (inSquad ? ' sel' : '') + (focus.id === o.id ? ' focus' : '')
-                  }
-                >
-                  <button
-                    type="button"
-                    className="ts-row-main"
-                    onClick={act(() => setFocusId(o.id))}
-                  >
-                    <span className="ts-row-idx">{pad2(i + 1)}</span>
-                    <span className="ts-row-name">{o.codename}</span>
-                    <span className="ts-row-role">{ROLE_LABEL[o.role]}</span>
-                    <span className={'ts-row-status ' + statusTone(o.status)}>{o.status}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="ts-row-assign"
-                    disabled={blocked}
-                    aria-label={
-                      (inSquad ? 'UNASSIGN ' : 'ASSIGN ') + o.codename + ' // STRIKE TEAM 04'
+            <ScrollBox className="ts-roster-list" dep={squad}>
+              {ROSTER.map((o, i) => {
+                const inSquad = squad.includes(o.id)
+                // reading up on an operative must not move them in or out of the
+                // squad, so the row body focuses and the trailing key assigns
+                const blocked = inSquad ? squad.length <= 1 : squad.length >= 4
+                return (
+                  <div
+                    key={o.id}
+                    className={
+                      'ts-row' + (inSquad ? ' sel' : '') + (focus.id === o.id ? ' focus' : '')
                     }
-                    title={
-                      blocked
-                        ? inSquad
-                          ? 'STRIKE TEAM 04 NEEDS AT LEAST ONE OPERATIVE'
-                          : 'STRIKE TEAM 04 IS FULL'
-                        : inSquad
-                          ? 'UNASSIGN'
-                          : 'ASSIGN'
-                    }
-                    onClick={act(() => toggle(o.id))}
                   >
-                    {inSquad ? '−' : '+'}
-                  </button>
-                </div>
-              )
-            })}
-            <div className="ts-roster-foot">
-              <span className="dim">ROSTER SYNC</span>
-              <span className="dim">00:12:44 AGO</span>
-            </div>
+                    <button
+                      type="button"
+                      className="ts-row-main"
+                      aria-label={
+                        'READ THE DOSSIER ON ' +
+                        o.codename +
+                        ' // ' +
+                        ROLE_LABEL[o.role] +
+                        ' // ' +
+                        o.status
+                      }
+                      onClick={act(() => setFocusId(o.id))}
+                    >
+                      <span className="ts-row-idx">{pad2(i + 1)}</span>
+                      <span className="ts-row-name">{o.codename}</span>
+                      <span className="ts-row-role">{ROLE_LABEL[o.role]}</span>
+                      <span className={'ts-row-status ' + statusTone(o.status)}>{o.status}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="ts-row-assign"
+                      disabled={blocked}
+                      aria-label={
+                        (inSquad ? 'UNASSIGN ' : 'ASSIGN ') + o.codename + ' // STRIKE TEAM 04'
+                      }
+                      title={
+                        blocked
+                          ? inSquad
+                            ? 'STRIKE TEAM 04 NEEDS AT LEAST ONE OPERATIVE'
+                            : 'STRIKE TEAM 04 IS FULL'
+                          : inSquad
+                            ? 'UNASSIGN'
+                            : 'ASSIGN'
+                      }
+                      onClick={act(() => toggle(o.id))}
+                    >
+                      {inSquad ? '−' : '+'}
+                    </button>
+                  </div>
+                )
+              })}
+              <div className="ts-roster-foot">
+                <span className="dim">ROSTER SYNC</span>
+                <span className="dim">00:12:44 AGO</span>
+              </div>
+            </ScrollBox>
           </Panel>
         </aside>
-
         {/* glass bays */}
         <section className="ts-bays">
           {[0, 1, 2, 3].map((slot) => {
@@ -923,6 +853,9 @@ export function TeamSelect() {
                 key={id}
                 type="button"
                 className={'ts-bay corners' + (focus.id === id ? ' focus' : '')}
+                aria-label={
+                  'BAY ' + pad2(slot + 1) + ' // ' + o.codename + ' // READ THE DOSSIER'
+                }
                 onClick={act(() => setFocusId(id))}
               >
                 <div className="ts-bay-top">
@@ -962,7 +895,6 @@ export function TeamSelect() {
             )
           })}
         </section>
-
         {/* operative detail */}
         <aside className="ts-detail">
           <Panel
@@ -978,97 +910,95 @@ export function TeamSelect() {
               </>
             }
             className="ts-detail-panel"
-            bodyClassName="ts-detail-body scroll"
+            bodyClassName="ts-detail-body"
           >
-            <div className="ts-id">
-              <span className="ts-id-portrait">
-                <Portrait op={focus} size={64} />
-              </span>
-              <span className="ts-id-main">
-                <b>{focus.name}</b>
-                <i className="dim">{focus.bio}</i>
-              </span>
-            </div>
-            <div className="ts-stats">
-              <div>
-                <label>HLTH</label>
-                <b>{stats.hlth}%</b>
+            <ScrollBox className="ts-detail-list" dep={focus.id}>
+              <div className="ts-id">
+                <span className="ts-id-portrait">
+                  <Portrait op={focus} size={64} />
+                </span>
+                <span className="ts-id-main">
+                  <b>{focus.name}</b>
+                  <i className="dim">{focus.bio}</i>
+                </span>
               </div>
-              <div>
-                <label>STAMINA</label>
-                <b>{stats.stamina}%</b>
-              </div>
-              <div>
-                <label>FOCUS</label>
-                <b>{stats.focus}%</b>
-              </div>
-              <div>
-                <label>MOBILITY</label>
-                <b>{stats.mobility}%</b>
-              </div>
-            </div>
-
-            <div className="ts-box">
-              <label>AUGMENTATIONS</label>
-              {augs.map(({ slot, node }) => (
-                <div key={slot} className={'ts-aug' + (node ? '' : ' stock')}>
-                  <span className="ts-aug-slot">{slot}</span>
-                  <span className="ts-aug-glyph">
-                    <HexGlyph size={13} />
-                  </span>
-                  <span className="ts-aug-main">
-                    <b>{node ? nodeTitle(node) : 'STOCK ISSUE'}</b>
-                    <i className="dim">{node ? augLine(node) : 'NO PROJECT RESEARCHED'}</i>
-                  </span>
+              <div className="ts-stats">
+                <div>
+                  <label>HLTH</label>
+                  <b>{stats.hlth}%</b>
                 </div>
-              ))}
-            </div>
-
-            {/* loadout and inventory sit side by side: stacked they push the
-                sidearm and the whole grid past the fold at 1280x720 */}
-            <div className="ts-kit">
+                <div>
+                  <label>STAMINA</label>
+                  <b>{stats.stamina}%</b>
+                </div>
+                <div>
+                  <label>FOCUS</label>
+                  <b>{stats.focus}%</b>
+                </div>
+                <div>
+                  <label>MOBILITY</label>
+                  <b>{stats.mobility}%</b>
+                </div>
+              </div>
               <div className="ts-box">
-                <label>LOADOUT</label>
-                <div className="ts-weapon corners">
-                  <div className="ts-weapon-head">
-                    <span>PRIMARY</span>
-                    <span className="dim">
-                      {primary.magazine}/120
+                <label>AUGMENTATIONS</label>
+                {augs.map(({ slot, node }) => (
+                  <div key={slot} className={'ts-aug' + (node ? '' : ' stock')}>
+                    <span className="ts-aug-slot">{slot}</span>
+                    <span className="ts-aug-glyph">
+                      <HexGlyph size={13} />
+                    </span>
+                    <span className="ts-aug-main">
+                      <b>{node ? nodeTitle(node) : 'STOCK ISSUE'}</b>
+                      <i className="dim">{node ? augLine(node) : 'NO PROJECT RESEARCHED'}</i>
                     </span>
                   </div>
-                  <GunSilhouette weapon={focus.weapon} className="lg" />
-                  <div className="ts-weapon-name">{primary.name}</div>
-                </div>
-                <div className="ts-weapon corners secondary">
-                  <div className="ts-weapon-head">
-                    <span>SECONDARY</span>
-                    <span className="dim">
-                      {sidearm.magazine}/48
-                    </span>
+                ))}
+              </div>
+              {/* loadout and inventory sit side by side: stacked they push the
+                  sidearm and the whole grid past the fold at 1280x720 */}
+              <div className="ts-kit">
+                <div className="ts-box">
+                  <label>LOADOUT</label>
+                  <div className="ts-weapon corners">
+                    <div className="ts-weapon-head">
+                      <span>PRIMARY</span>
+                      <span className="dim">
+                        {primary.magazine}/120
+                      </span>
+                    </div>
+                    <GunSilhouette weapon={focus.weapon} className="lg" />
+                    <div className="ts-weapon-name">{primary.name}</div>
                   </div>
-                  <GunSilhouette weapon={focus.sidearm} className="sm" />
-                  <div className="ts-weapon-name">{sidearm.name}</div>
+                  <div className="ts-weapon corners secondary">
+                    <div className="ts-weapon-head">
+                      <span>SECONDARY</span>
+                      <span className="dim">
+                        {sidearm.magazine}/48
+                      </span>
+                    </div>
+                    <GunSilhouette weapon={focus.sidearm} className="sm" />
+                    <div className="ts-weapon-name">{sidearm.name}</div>
+                  </div>
+                </div>
+                <div className="ts-box">
+                  <label>
+                    INVENTORY <span className="dim">12/16</span>
+                  </label>
+                  <div className="ts-inv">
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <span key={i} className="ts-inv-tile">
+                        <ItemGlyph kind={invKinds[(i + (fh % 4)) % 4]} />
+                        <i>{pad2(((fh >>> i) % 3) + 1)}</i>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-
-              <div className="ts-box">
-                <label>
-                  INVENTORY <span className="dim">12/16</span>
-                </label>
-                <div className="ts-inv">
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <span key={i} className="ts-inv-tile">
-                      <ItemGlyph kind={invKinds[(i + (fh % 4)) % 4]} />
-                      <i>{pad2(((fh >>> i) % 3) + 1)}</i>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            </ScrollBox>
           </Panel>
         </aside>
       </div>
-
       {/* bottom deploy strip */}
       <footer className="ts-foot">
         <div className="ts-roles">
@@ -1110,6 +1040,11 @@ export function TeamSelect() {
             type="button"
             className="cta big"
             disabled={!ready}
+            aria-label={
+              ready
+                ? 'DEPLOY STRIKE TEAM 04'
+                : 'DEPLOY TEAM // ASSIGN ' + (4 - squad.length) + ' MORE'
+            }
             onClick={act(() => goto('mission'))}
           >
             <span className="cta-inner">DEPLOY TEAM &gt;&gt;</span>
@@ -1124,9 +1059,7 @@ export function TeamSelect() {
     </div>
   )
 }
-
 /* ================================= DEBRIEF ================================ */
-
 function DebriefRow(props: { label: string; value: ReactNode; index: number; tone?: string }) {
   return (
     <div className="db-row" style={{ animationDelay: props.index * 110 + 'ms' }}>
@@ -1136,7 +1069,6 @@ function DebriefRow(props: { label: string; value: ReactNode; index: number; ton
     </div>
   )
 }
-
 export function Debrief() {
   const goto = useAppStore((s) => s.goto)
   const outcome = useAppStore((s) => s.outcome)
@@ -1146,12 +1078,10 @@ export function Debrief() {
   const won = outcome?.won ?? false
   const fine = outcome ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
-
   const mmss = (sec: number) => {
     const s = Math.max(0, Math.floor(sec))
     return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60)
   }
-
   // Built as a list because the deduction only takes a line when a round caught
   // a bystander, and the row stagger has to stay even either way.
   const rows: { label: string; value: ReactNode; tone?: string }[] = [
@@ -1179,7 +1109,6 @@ export function Debrief() {
     tone: won && paid > 0 ? 'teal' : 'red',
   })
   rows.push({ label: 'ACCOUNT BALANCE', value: fmt(credits) + ' CR', tone: 'amber' })
-
   return (
     <div className="screen db">
       <div className="db-card corners">

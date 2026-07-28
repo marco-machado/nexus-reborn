@@ -401,14 +401,65 @@
 .gun-svg.lg { height: 48px; }
 .gun-svg.sm { height: 30px; width: 62%; }
 
-/* scrollbars */
-.screen ::-webkit-scrollbar,
-.hud-root ::-webkit-scrollbar { width: 5px; height: 5px; }
-.screen ::-webkit-scrollbar-track,
-.hud-root ::-webkit-scrollbar-track { background: transparent; }
-.screen ::-webkit-scrollbar-thumb,
-.hud-root ::-webkit-scrollbar-thumb { background: rgba(126, 240, 212, 0.22); }
-.scroll { scrollbar-width: thin; scrollbar-color: rgba(126, 240, 212, 0.28) transparent; }
+/* Scroll affordances. One treatment for every panel that scrolls, worn by
+   ScrollBox in bits.tsx: a faint bar that comes up under the pointer, and a
+   fade over the bottom edge while content sits below it. Chrome ignores the
+   ::-webkit-scrollbar pseudo elements once scrollbar-color is set, so the
+   standard properties are the whole story here. */
+.scroll-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 240, 212, 0.2) transparent;
+  transition: scrollbar-color 0.15s linear;
+}
+
+.scroll-wrap:hover .scroll,
+.scroll:hover,
+.scroll:focus-within {
+  scrollbar-color: rgba(126, 240, 212, 0.66) rgba(126, 240, 212, 0.08);
+}
+
+.scroll-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 20px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: linear-gradient(180deg, rgba(7, 16, 15, 0), rgba(6, 14, 13, 0.97));
+}
+
+.scroll-fade.on { opacity: 1; }
+
+.scroll-fade::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  margin-left: -4px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--cyan);
+  opacity: 0.8;
+}
 
 /* keyframes */
 @keyframes blink { 50% { opacity: 0.25; } }
@@ -621,56 +672,7 @@
 .corp-contested { --corp: #e04b3c; --corp-fill: #2c1512; }
 .corp-unknown { --corp: #35504a; --corp-fill: #0d1514; }
 
-/* scrollable lists announce their cut edge instead of hiding it */
-.wm-scroll-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.wm-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-right: 3px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(126, 240, 212, 0.42) rgba(126, 240, 212, 0.07);
-}
-
-.wm-scroll::-webkit-scrollbar { width: 8px; }
-.wm-scroll::-webkit-scrollbar-track { background: rgba(126, 240, 212, 0.07); }
-.wm-scroll::-webkit-scrollbar-thumb {
-  background: rgba(126, 240, 212, 0.42);
-  border: 1px solid rgba(4, 10, 9, 0.9);
-}
-.wm-scroll::-webkit-scrollbar-thumb:hover { background: rgba(126, 240, 212, 0.66); }
-
-.wm-scroll-more {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 20px;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(7, 16, 15, 0), rgba(6, 14, 13, 0.97));
-}
-
-.wm-scroll-more::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 2px;
-  margin-left: -4px;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid var(--cyan);
-  opacity: 0.8;
-}
+.wm-sector-list { gap: 3px; padding-right: 3px; }
 
 .wm-empty {
   display: flex;
@@ -744,7 +746,7 @@
 
 .wm-sector.sel .wm-sector-name { color: var(--amber-hot); }
 
-.wm-sector-pct { font-size: 14px; color: var(--teal); letter-spacing: 0.04em; flex: none; }
+.wm-sector-pct { font-size: 16px; color: var(--teal); letter-spacing: 0.04em; flex: none; }
 .wm-sector.sel .wm-sector-pct { color: var(--amber-hot); }
 .wm-sector-lock { color: var(--ink-dim); display: flex; }
 
@@ -976,7 +978,7 @@
 .wm-ov.bl { bottom: 8px; left: 8px; }
 .wm-ov.br { bottom: 8px; right: 8px; }
 
-.wm-threat-val { font-size: 11px; letter-spacing: 0.2em; }
+.wm-threat-val { font-size: 13px; letter-spacing: 0.2em; }
 .wm-ov.threat-nominal { border-color: rgba(125, 224, 138, 0.45); }
 .wm-ov.threat-nominal .wm-threat-val { color: var(--green); }
 .wm-ov.threat-guarded { border-color: rgba(126, 240, 212, 0.45); }
@@ -1067,7 +1069,7 @@
 .wm-cu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .wm-cu > div { display: flex; flex-direction: column; gap: 3px; }
 .wm-cu label { font-size: 8.5px; color: var(--ink-dim); letter-spacing: 0.2em; }
-.wm-cu b { font-size: clamp(15px, 1.4vw, 21px); letter-spacing: 0.06em; }
+.wm-cu b { font-size: clamp(18px, 1.7vw, 26px); letter-spacing: 0.06em; }
 
 .wm-sector-panel-body { padding: 8px 10px; gap: 6px; }
 
@@ -1076,7 +1078,7 @@
 /* operations list */
 .wm-ops { flex: 1; }
 .wm-ops-body { padding: 8px; gap: 8px; }
-.wm-ops-list { gap: 6px; }
+.wm-ops-list { gap: 6px; padding-right: 3px; }
 
 .wm-op {
   display: grid;
@@ -1308,10 +1310,12 @@
 
 .wm-unread:hover { color: #ff9986; }
 
-/* resource pool */
+/* resource pool: the figures carry the panel, so they sit a class above their
+   labels rather than level with them */
 .wm-pool .panel-body { gap: 5px; justify-content: center; }
+.wm-pool .kv b { font-size: 13px; }
 .wm-intel-val { display: inline-flex; align-items: center; gap: 8px; }
-.wm-intel-val b { font-size: 13px; color: var(--teal); }
+.wm-intel-val b { font-size: 15px; color: var(--teal); }
 .wm-intel { width: 66px; }
 
 @keyframes wm-arc-flow {
@@ -1463,7 +1467,7 @@
 }
 
 .mb-tac-stat label { font-size: 8px; letter-spacing: 0.14em; color: var(--ink-dim); }
-.mb-tac-stat b { font-size: 11px; letter-spacing: 0.06em; white-space: nowrap; }
+.mb-tac-stat b { font-size: 13px; letter-spacing: 0.06em; white-space: nowrap; }
 
 .mb-tac-plate { flex: none; display: flex; justify-content: center; }
 
@@ -1546,53 +1550,7 @@
 .mb-dossier-panel { flex: 1; }
 .mb-dossier-body { padding: 0; overflow: hidden; position: relative; }
 
-.mb-dossier-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(126, 240, 212, 0.4) transparent;
-}
-
-.mb-dossier-scroll::-webkit-scrollbar { width: 7px; }
-.mb-dossier-scroll::-webkit-scrollbar-thumb { background: rgba(126, 240, 212, 0.4); }
-
-/* Says so when the dossier runs past its frame, so the notes at the foot of
-   it never sit behind a scrollbar nobody can see. */
-.mb-dossier-cue {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 32px;
-  z-index: 2;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 3px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  background: linear-gradient(rgba(7, 16, 15, 0), rgba(7, 16, 15, 0.96));
-}
-
-.mb-dossier-cue.on { opacity: 1; }
-
-.mb-dossier-cue span {
-  font-size: 7.5px;
-  letter-spacing: 0.28em;
-  color: var(--amber);
-  animation: mb-cue-pulse 2.2s ease-in-out infinite;
-}
-
-@keyframes mb-cue-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+.mb-dossier-scroll { gap: 6px; padding: 8px; }
 
 .mb-idrow {
   display: grid;
@@ -1668,7 +1626,7 @@
 .mb-skull { color: var(--red); display: grid; place-items: center; }
 
 .mb-threat-main label { display: block; font-size: 8.5px; letter-spacing: 0.22em; color: rgba(255, 107, 85, 0.8); }
-.mb-threat-main b { font-size: clamp(15px, 1.35vw, 20px); color: var(--red-hot); letter-spacing: 0.14em; }
+.mb-threat-main b { font-size: clamp(17px, 1.6vw, 24px); color: var(--red-hot); letter-spacing: 0.14em; }
 
 .mb-threat-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .mb-threat-blocks { display: flex; gap: 3px; }
@@ -1692,7 +1650,7 @@
 
 .mb-reward label { font-size: 8.5px; letter-spacing: 0.22em; color: var(--ink-dim); }
 .mb-reward-line { display: flex; align-items: baseline; gap: 10px; }
-.mb-reward b { font-size: clamp(20px, 1.9vw, 28px); color: #f2fff9; letter-spacing: 0.06em; white-space: nowrap; }
+.mb-reward b { font-size: clamp(24px, 2.3vw, 34px); color: #f2fff9; letter-spacing: 0.06em; white-space: nowrap; }
 .mb-reward b i { font-size: 0.42em; letter-spacing: 0.16em; color: var(--amber); margin-left: 5px; }
 .mb-reward-line span { margin-left: auto; font-size: 8.5px; letter-spacing: 0.18em; white-space: nowrap; }
 
@@ -1835,7 +1793,8 @@
 /* roster list */
 .ts-roster { display: flex; min-height: 0; min-width: 0; }
 .ts-roster-panel { flex: 1; }
-.ts-roster-body { overflow-y: auto; gap: 4px; padding: 8px; }
+.ts-roster-body { padding: 8px; gap: 0; }
+.ts-roster-list { gap: 4px; padding-right: 3px; }
 
 .ts-row {
   position: relative;
@@ -2021,6 +1980,7 @@
 }
 
 .ts-bay-stats .kv { font-size: 9px; gap: 4px; }
+.ts-bay-stats .kv b { font-size: 11px; }
 
 .ts-bay-tag {
   position: absolute;
@@ -2033,16 +1993,12 @@
   white-space: nowrap;
 }
 
-/* detail column. Everything here is sized to clear the fold at 1280x720; the
-   scrollbar stays visible so a shorter window still announces the cut. */
+/* detail column. Everything here is sized to clear the fold at 1280x720; a
+   shorter window scrolls and the fade says so. */
 .ts-detail { display: flex; min-height: 0; min-width: 0; }
 .ts-detail-panel { flex: 1; }
-.ts-detail-body { overflow-y: auto; gap: 7px; }
-
-.ts-detail-body { scrollbar-color: rgba(126, 240, 212, 0.5) rgba(126, 240, 212, 0.07); }
-.ts-detail-body::-webkit-scrollbar { width: 8px; }
-.ts-detail-body::-webkit-scrollbar-track { background: rgba(126, 240, 212, 0.07); }
-.ts-detail-body::-webkit-scrollbar-thumb { background: rgba(126, 240, 212, 0.5); }
+.ts-detail-body { padding: 0; gap: 0; }
+.ts-detail-list { gap: 7px; padding: 10px; }
 
 .ts-id { display: flex; gap: 10px; align-items: center; }
 .ts-id-portrait { flex: none; }
@@ -2063,7 +2019,7 @@
 }
 
 .ts-stats label { font-size: 8px; color: var(--ink-dim); letter-spacing: 0.14em; }
-.ts-stats b { font-size: clamp(12px, 1.15vw, 16px); line-height: 1.25; color: var(--teal); }
+.ts-stats b { font-size: clamp(15px, 1.4vw, 20px); line-height: 1.2; color: var(--teal); }
 
 .ts-box { display: flex; flex-direction: column; gap: 5px; }
 
@@ -2207,7 +2163,7 @@
 
 /* the value and its unit never break apart; the limit gets its own line */
 .ts-mass-num { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
-.ts-mass-num b { font-size: clamp(16px, 1.5vw, 21px); color: #e8fbf2; letter-spacing: 0.06em; }
+.ts-mass-num b { font-size: clamp(19px, 1.8vw, 26px); color: #e8fbf2; letter-spacing: 0.06em; }
 .ts-mass-unit { font-size: 10px; letter-spacing: 0.14em; color: var(--ink); }
 .ts-mass-limit { font-size: 8.5px; letter-spacing: 0.12em; white-space: nowrap; }
 
@@ -2267,7 +2223,7 @@
 
 .db-row-label { color: var(--ink-dim); flex: none; }
 .db-dots { flex: 1; border-bottom: 1px dotted rgba(126, 240, 212, 0.2); transform: translateY(-3px); }
-.db-row b { color: #e8fbf2; }
+.db-row b { color: #e8fbf2; font-size: 15px; }
 .db-row b.red { color: var(--red-hot); }
 .db-row b.teal { color: var(--teal); }
 .db-row b.amber { color: var(--amber-hot); }
@@ -2376,7 +2332,7 @@
   animation: blink 0.8s steps(2) infinite;
 }
 
-.hud-credits { color: #e8fbf2; letter-spacing: 0.1em; font-size: 13px; }
+.hud-credits { color: #e8fbf2; letter-spacing: 0.1em; font-size: 15px; }
 
 .hud-btn {
   font: inherit;
@@ -2547,16 +2503,10 @@
 }
 
 .hud-comms-body {
-  flex: 1;
-  overflow-y: auto;
   padding: 6px 8px;
-  display: flex;
-  flex-direction: column;
   gap: 3px;
   font-size: 9.5px;
   letter-spacing: 0.06em;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(126, 240, 212, 0.28) transparent;
 }
 
 /* hanging indent: 9 monospace chars incl tracking keeps wraps past the clock */
@@ -2618,9 +2568,9 @@
 }
 
 .hud-ammo { white-space: nowrap; }
-.hud-ammo b { font-size: 19px; color: #e8fbf2; letter-spacing: 0.04em; }
+.hud-ammo b { font-size: 23px; color: #e8fbf2; letter-spacing: 0.04em; }
 .hud-ammo i { font-size: 11px; color: var(--ink-dim); }
-.hud-ammo.sm b { font-size: 15px; }
+.hud-ammo.sm b { font-size: 18px; }
 
 .hud-slots { display: flex; gap: 6px; padding: 7px 8px; }
 
@@ -2776,7 +2726,7 @@
 
 .rs-level-label { font-size: 8.5px; letter-spacing: 0.2em; color: var(--ink-dim); white-space: nowrap; }
 .rs-level .segbar { flex: 1; }
-.rs-level-n { font-size: 12.5px; letter-spacing: 0.1em; color: var(--green); white-space: nowrap; }
+.rs-level-n { font-size: 15px; letter-spacing: 0.1em; color: var(--green); white-space: nowrap; }
 
 .rs-main {
   display: grid;
@@ -2786,9 +2736,11 @@
   min-height: 0;
 }
 
-/* division overview: the figures keep their line at every supported width */
+/* division overview: the figures keep their line at every supported width, and
+   sit a class above the labels beside them */
 .rs-overview .kv > span:first-child,
 .rs-overview .kv b { white-space: nowrap; }
+.rs-overview .kv b { font-size: 13px; }
 
 .rs-left,
 .rs-right {
@@ -2950,9 +2902,11 @@
 .rs-legend-item.locked { color: var(--ink-faint); }
 .rs-legend-note { margin-left: auto; }
 
-/* project detail */
+/* project detail: the spec scrolls, the authorize button stays put at the foot
+   of the panel where the eye left it */
 .rs-detail { flex: 1; }
-.rs-detail-body { gap: 9px; overflow-y: auto; }
+.rs-detail-body { gap: 9px; }
+.rs-detail-list { gap: 9px; padding-right: 4px; }
 
 .rs-schematic { display: grid; grid-template-columns: 98px minmax(0, 1fr); gap: 9px; flex: none; }
 
@@ -3000,7 +2954,7 @@
 .rs-prog { gap: 6px; }
 .rs-prog-top { display: flex; align-items: baseline; gap: 8px; }
 .rs-prog-top label { font-size: 8.5px; letter-spacing: 0.2em; color: var(--cyan); }
-.rs-prog-pct { font-size: 16px; letter-spacing: 0.08em; color: var(--amber-hot); }
+.rs-prog-pct { font-size: 19px; letter-spacing: 0.08em; color: var(--amber-hot); }
 .rs-prog-top .dim { margin-left: auto; font-size: 9px; letter-spacing: 0.14em; }
 
 .rs-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 8px; }

@@ -24,15 +24,13 @@ import {
   nodesOfBranch,
 } from '../game/research'
 import type { Branch, ResearchNode } from '../game/research'
-import { Chip, LockGlyph, Panel, SegBar } from './bits'
+import { Chip, LockGlyph, Panel, ScrollBox, SegBar } from './bits'
 import { researchShape } from './researchGlyphs'
 import { NavTabs } from './Nav'
 import { useWorldClock } from './clock'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
-
 /* ------------------------------- geometry --------------------------------- */
-
 // One branch column is drawn as a single scaled SVG, so the hexes and the
 // links between them stay aligned at any panel width.
 const VIEW_W = 200
@@ -43,11 +41,9 @@ const HEX_H = 32
 const VIEW_PAD = 8
 const COL_X = [50, 150, 100]
 const ROW_Y = [40, 146, 252, 358]
-
 function nodeXY(n: ResearchNode): { x: number; y: number } {
   return { x: COL_X[n.col], y: ROW_Y[n.row] }
 }
-
 function hexPoints(cx: number, cy: number, grow = 0): string {
   const w = HEX_W + grow
   const h = HEX_H + grow
@@ -61,7 +57,6 @@ function hexPoints(cx: number, cy: number, grow = 0): string {
   ]
   return pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')
 }
-
 function linkPath(from: ResearchNode, to: ResearchNode): string {
   const a = nodeXY(from)
   const b = nodeXY(to)
@@ -71,39 +66,32 @@ function linkPath(from: ResearchNode, to: ResearchNode): string {
   const mid = (y0 + y1) / 2
   return 'M' + a.x + ' ' + y0 + 'V' + mid + 'H' + b.x + 'V' + y1
 }
-
 /* -------------------------------- helpers --------------------------------- */
-
 function act(fn: () => void): () => void {
   return () => {
     uiClick()
     fn()
   }
 }
-
 function spanLabel(sec: number): string {
   const s = Math.max(0, Math.round(sec))
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   return h > 0 ? h + 'H ' + pad2(m) + 'M' : m + 'M'
 }
-
 const STATE_LABEL: Record<NodeState, string> = {
   researched: 'RESEARCHED',
   active: 'IN PROGRESS',
   available: 'AVAILABLE',
   locked: 'LOCKED',
 }
-
 const STATE_TONE: Record<NodeState, 'green' | 'amber' | 'teal' | 'dim'> = {
   researched: 'green',
   active: 'amber',
   available: 'teal',
   locked: 'dim',
 }
-
 /* --------------------------------- tree ----------------------------------- */
-
 // The rising fill of a running project. Subscribes to world time on its own so
 // the rest of the tree repaints only when a project state changes.
 function HexFill(props: { node: ResearchNode; run: LabRun }) {
@@ -127,7 +115,6 @@ function HexFill(props: { node: ResearchNode; run: LabRun }) {
     </>
   )
 }
-
 function HexNode(props: {
   node: ResearchNode
   state: NodeState
@@ -172,7 +159,6 @@ function HexNode(props: {
     </g>
   )
 }
-
 function BranchColumn(props: {
   branch: Branch
   done: string[]
@@ -223,9 +209,7 @@ function BranchColumn(props: {
     </div>
   )
 }
-
 /* -------------------------------- side panels ----------------------------- */
-
 function TimeChips() {
   const t = useWorldStore((s) => s.t)
   const s = stamp(t)
@@ -236,7 +220,6 @@ function TimeChips() {
     </>
   )
 }
-
 function LabRow(props: { branch: Branch; run: LabRun | null; onSelect: (id: string) => void }) {
   const t = useWorldStore((s) => s.t)
   const run = props.run
@@ -270,7 +253,6 @@ function LabRow(props: { branch: Branch; run: LabRun | null; onSelect: (id: stri
     </button>
   )
 }
-
 function ProgressBlock(props: { run: LabRun }) {
   const t = useWorldStore((s) => s.t)
   const p = runProgress(props.run, t)
@@ -285,7 +267,6 @@ function ProgressBlock(props: { run: LabRun }) {
     </div>
   )
 }
-
 function ReqRow(props: { id: string; met: boolean }) {
   return (
     <div className={'rs-req' + (props.met ? ' met' : '')}>
@@ -302,7 +283,6 @@ function ReqRow(props: { id: string; met: boolean }) {
     </div>
   )
 }
-
 function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) {
   const credits = useAppStore((s) => s.credits)
   const spendCredits = useAppStore((s) => s.spendCredits)
@@ -314,94 +294,90 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
   const labBusy = run !== null && run.id !== n.id
   const short = credits < n.cost
   const can = state === 'available' && !labBusy && !short
-
   let sub = 'COMMITS ' + fmt(n.cost) + ' CR // ' + n.hours + 'H IN ' + branch.lab
   if (state === 'researched') sub = 'PROJECT COMPLETE // APPLIED ON EVERY DEPLOYMENT'
   else if (state === 'active') sub = 'RUNNING IN ' + branch.lab
   else if (state === 'locked') sub = 'PREREQUISITES NOT MET'
   else if (labBusy) sub = branch.lab + ' ENGAGED // ONE PROJECT PER LAB'
   else if (short) sub = 'INSUFFICIENT FUNDS // ' + fmt(n.cost - credits) + ' CR SHORT'
-
   return (
     <Panel
       title={nodeTitle(n)}
       right={<Chip tone={STATE_TONE[state]}>{STATE_LABEL[state]}</Chip>}
       className="rs-detail"
-      bodyClassName="rs-detail-body scroll"
+      bodyClassName="rs-detail-body"
     >
-      <div className="rs-schematic">
-        <span className={'rs-schematic-art corners ' + state}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            {researchShape(n.glyph)}
-          </svg>
-        </span>
-        <span className="rs-spec">
-          <span className="kv mini">
-            <span>BRANCH</span>
-            <b>{branch.name}</b>
+      <ScrollBox className="rs-detail-list" dep={n.id}>
+        <div className="rs-schematic">
+          <span className={'rs-schematic-art corners ' + state}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {researchShape(n.glyph)}
+            </svg>
           </span>
-          <span className="kv mini">
-            <span>LABORATORY</span>
-            <b>{branch.lab}</b>
-          </span>
-          <span className="kv mini">
-            <span>TIER</span>
-            <b>{n.row + 1}</b>
-          </span>
-          <span className="kv mini">
-            <span>RUN TIME</span>
-            <b>{n.hours}H</b>
-          </span>
-          <span className="kv mini">
-            <span>FUNDING</span>
-            <b className="amber">{fmt(n.cost)} CR</b>
-          </span>
-          {n.augSlot && (
+          <span className="rs-spec">
             <span className="kv mini">
-              <span>AUG BAY</span>
-              <b>{n.augSlot}</b>
+              <span>BRANCH</span>
+              <b>{branch.name}</b>
             </span>
-          )}
-        </span>
-      </div>
-
-      <div className="rs-box">
-        <label>DESCRIPTION</label>
-        <p className="rs-blurb">{n.blurb}</p>
-      </div>
-
-      {state === 'active' && run && <ProgressBlock run={run} />}
-
-      <div className="rs-cols">
-        <div className="rs-box">
-          <label>PREREQUISITES</label>
-          {n.needs.length === 0 ? (
-            <div className="rs-req met">
-              <span className="rs-req-mark" aria-hidden="true">
-                <svg viewBox="0 0 12 12">
-                  <path d="M2 6.4 4.8 9.2 10 3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
+            <span className="kv mini">
+              <span>LABORATORY</span>
+              <b>{branch.lab}</b>
+            </span>
+            <span className="kv mini">
+              <span>TIER</span>
+              <b>{n.row + 1}</b>
+            </span>
+            <span className="kv mini">
+              <span>RUN TIME</span>
+              <b>{n.hours}H</b>
+            </span>
+            <span className="kv mini">
+              <span>FUNDING</span>
+              <b className="amber">{fmt(n.cost)} CR</b>
+            </span>
+            {n.augSlot && (
+              <span className="kv mini">
+                <span>AUG BAY</span>
+                <b>{n.augSlot}</b>
               </span>
-              <span>NONE</span>
-            </div>
-          ) : (
-            n.needs.map((id) => <ReqRow key={id} id={id} met={props.done.includes(id)} />)
-          )}
+            )}
+          </span>
         </div>
         <div className="rs-box">
-          <label>PROJECTED BENEFIT</label>
-          {n.effects.map((e, i) => {
-            const b = benefitOf(e)
-            return (
-              <div key={i} className="rs-benefit">
-                <b className={benefitIsGain(e) ? 'teal' : 'red'}>{b.line}</b>
-                <i className="dim">{b.scope}</i>
-              </div>
-            )
-          })}
+          <label>DESCRIPTION</label>
+          <p className="rs-blurb">{n.blurb}</p>
         </div>
-      </div>
-
+        {state === 'active' && run && <ProgressBlock run={run} />}
+        <div className="rs-cols">
+          <div className="rs-box">
+            <label>PREREQUISITES</label>
+            {n.needs.length === 0 ? (
+              <div className="rs-req met">
+                <span className="rs-req-mark" aria-hidden="true">
+                  <svg viewBox="0 0 12 12">
+                    <path d="M2 6.4 4.8 9.2 10 3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                  </svg>
+                </span>
+                <span>NONE</span>
+              </div>
+            ) : (
+              n.needs.map((id) => <ReqRow key={id} id={id} met={props.done.includes(id)} />)
+            )}
+          </div>
+          <div className="rs-box">
+            <label>PROJECTED BENEFIT</label>
+            {n.effects.map((e, i) => {
+              const b = benefitOf(e)
+              return (
+                <div key={i} className="rs-benefit">
+                  <b className={benefitIsGain(e) ? 'teal' : 'red'}>{b.line}</b>
+                  <i className="dim">{b.scope}</i>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </ScrollBox>
       <button
         type="button"
         className="cta rs-auth"
@@ -420,16 +396,13 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
     </Panel>
   )
 }
-
 /* -------------------------------- the screen ------------------------------ */
-
 export function Research() {
   const credits = useAppStore((s) => s.credits)
   const done = useResearchStore((s) => s.done)
   const labs = useResearchStore((s) => s.labs)
   const [selected, setSelected] = useState(NODES[0].id)
   useWorldClock()
-
   const node = nodeById(selected)
   const open = useMemo(
     () => NODES.filter((n) => nodeState(n, done, labs) === 'available').length,
@@ -437,7 +410,6 @@ export function Research() {
   )
   const running = labsRunning(labs)
   const committed = committedFunds(labs)
-
   return (
     <div className="screen rs">
       <header className="rs-head">
@@ -460,7 +432,6 @@ export function Research() {
           </div>
         </div>
       </header>
-
       <div className="rs-main">
         <aside className="rs-left">
           <Panel title="DIVISION OVERVIEW" className="rs-overview">
@@ -491,7 +462,6 @@ export function Research() {
             ))}
           </Panel>
         </aside>
-
         <section className="rs-tree corners">
           <div className="rs-branches">
             {BRANCHES.map((b) => (
@@ -527,12 +497,10 @@ export function Research() {
             </span>
           </div>
         </section>
-
         <aside className="rs-right">
           <DetailPanel node={node} done={done} labs={labs} />
         </aside>
       </div>
-
       <NavTabs current="research" />
     </div>
   )

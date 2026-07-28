@@ -13,7 +13,7 @@ import type { WeaponId } from '../game/types'
 import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import { Portrait } from './portrait'
-import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph } from './bits'
+import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph, ScrollBox } from './bits'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
 
@@ -296,14 +296,14 @@ export default function Hud() {
           <span>COMM LOG</span>
           <span className="dim">{clock}</span>
         </div>
-        <div className="hud-comms-body" ref={logRef}>
+        <ScrollBox className="hud-comms-body" dep={log.length} boxRef={logRef}>
           {log.slice(-7).map((e, i) => (
             <div key={i + '-' + e.t} className={'hud-log ' + (e.cls ?? 'sys')}>
               {e.t} {e.who}: {e.msg}
             </div>
           ))}
           {log.length === 0 && <div className="hud-log sys">-- CHANNEL OPEN --</div>}
-        </div>
+        </ScrollBox>
       </div>
 
       {/* ----------------------------- weapon bar --------------------------- */}
