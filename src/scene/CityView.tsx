@@ -1,20 +1,26 @@
 // Static city rendering: ground, instanced buildings with lit-window facades,
 // neon banners, streetlights, props and the checkpoint dressing. Everything is
 // built once per city into a single Group; the per-frame cost is instanced
-// draw calls plus a camera-occlusion pass that ghosts buildings hiding the
-// squad: the solid instance collapses while a transparent twin fades in.
+// draw calls plus an occlusion pass that ghosts buildings hiding either an
+// operative or the street the camera is over: the solid instance collapses
+// while a transparent twin fades in.
 import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { float, instancedBufferAttribute, texture } from 'three/tsl'
-import { getWorld } from '../game/runtime'
+import { getCameraFootprint, getWorld } from '../game/runtime'
+import { isWalkable } from '../game/types'
 import type { BuildingData, CityData, PropData, WorldApi } from '../game/types'
 import { makeBuildingGeometry, makeFacadeMaps, makeGlowTexture, makeGroundMaps } from './textures'
 
 const UP = new THREE.Vector3(0, 1, 0)
 
-// Occluder ghosting: faded shell opacity and per-second easing rates.
+// Occluder ghosting: faded shell opacity and per-second easing rates. A
+// building hiding an operative drops to GHOST_OPACITY; one merely hiding
+// pavement the camera is over stops at the milder CAMERA_GHOST_OPACITY, so a
+// dense probe grid opens the streets without dissolving the whole skyline.
 const GHOST_OPACITY = 0.16
+const CAMERA_GHOST_OPACITY = 0.45
 const GHOST_IN_RATE = 10
 const GHOST_OUT_RATE = 5
 
@@ -86,7 +92,8 @@ function buildCity(city: CityData): Built {
   // geometry and facade maps, transparent, per-instance opacity from fadeAttr
   // with the window emissive dimmed by fade squared so glass dies out first.
   // Ghost instance matrices start zeroed (collapsed) and only carry buildings
-  // currently faded, so the extra passes rasterize almost nothing.
+  // currently faded. The camera probes fade whole blocks at once, so over dense
+  // ground these passes do rasterize real overdraw.
   const variantOf = (b: BuildingData): number => (b.h >= 18 ? 0 : b.h >= 10 ? 1 : 2)
   const lists: BuildingData[][] = [[], [], []]
   for (const b of city.buildings) lists[variantOf(b)].push(b)
@@ -549,22 +556,64 @@ function swapInstance(built: Built, bi: number, i: number, toGhost: boolean): vo
   }
 }
 
-// Scratch sightline endpoints; the whole pass allocates nothing per frame.
-const agentX = new Float32Array(8)
-const agentZ = new Float32Array(8)
+// Sightline endpoints, at eye height on the ground. Squad probes fill the
+// front of the arrays, the camera grid the rest; the tier decides how far the
+// buildings they cross fade, and a stronger tier already on a building lets a
+// weaker probe skip it. The whole pass allocates nothing per frame.
+const PROBE_Y = 1.4
+const MAX_SQUAD_PROBES = 8
+const PROBE_GRID = 6
+const TIER_CLEAR = 0
+const TIER_CAMERA = 1
+const TIER_SQUAD = 2
+const probeX = new Float32Array(MAX_SQUAD_PROBES + PROBE_GRID * PROBE_GRID)
+const probeZ = new Float32Array(probeX.length)
+const probeTier = new Uint8Array(probeX.length)
 
-// Fades every building whose box crosses a camera-to-agent sightline and
-// restores it once clear. Cost per frame: agents x buildings slab tests
-// (about 1000 for a full squad) plus attribute uploads while fades move.
-function updateOcclusion(built: Built, camera: THREE.Camera, w: WorldApi, dt: number): void {
+// Living operatives, then a grid over the camera ground footprint. The grid
+// samples the footprint quad by corner interpolation, so it spreads evenly
+// over the world rather than over the screen, where the far half of a tilted
+// view would take most of the points. Probes off the walk grid are dropped:
+// one standing inside a building trivially hits it and fades it for nothing.
+function collectProbes(w: WorldApi): number {
   let n = 0
   for (const u of w.units) {
     if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
-    if (n >= agentX.length) break
-    agentX[n] = u.pos.x
-    agentZ[n] = u.pos.z
+    if (n >= MAX_SQUAD_PROBES) break
+    probeX[n] = u.pos.x
+    probeZ[n] = u.pos.z
+    probeTier[n] = TIER_SQUAD
     n++
   }
+  const view = getCameraFootprint()
+  if (!view) return n
+  for (let r = 0; r < PROBE_GRID; r++) {
+    const fr = (r + 0.5) / PROBE_GRID
+    const ax = view[0].x + (view[3].x - view[0].x) * fr
+    const az = view[0].z + (view[3].z - view[0].z) * fr
+    const bx = view[1].x + (view[2].x - view[1].x) * fr
+    const bz = view[1].z + (view[2].z - view[1].z) * fr
+    for (let c = 0; c < PROBE_GRID; c++) {
+      const fc = (c + 0.5) / PROBE_GRID
+      const x = ax + (bx - ax) * fc
+      const z = az + (bz - az) * fc
+      if (!isWalkable(w.city, x, z)) continue
+      probeX[n] = x
+      probeZ[n] = z
+      probeTier[n] = TIER_CAMERA
+      n++
+    }
+  }
+  return n
+}
+
+// Fades every building whose box crosses a sightline from the camera to a
+// probe and restores it once clear. Cost per frame: probes x buildings slab
+// tests, several times the squad-only pass it grew out of, though the tier
+// skip drops much of the grid's share once a building is already ghosted.
+// Flat typed-array maths, well under a tenth of a millisecond over a city.
+function updateOcclusion(built: Built, camera: THREE.Camera, w: WorldApi, dt: number): void {
+  const n = collectProbes(w)
   const px = camera.position.x
   const py = camera.position.y
   const pz = camera.position.z
@@ -574,17 +623,18 @@ function updateOcclusion(built: Built, camera: THREE.Camera, w: WorldApi, dt: nu
     const batch = built.batches[bi]
     const count = batch.fade.length
     const occ = batch.occluded
-    occ.fill(0)
+    occ.fill(TIER_CLEAR)
     const boxes = batch.boxes
     for (let a = 0; a < n; a++) {
-      const dx = agentX[a] - px
-      const dy = 1.4 - py
-      const dz = agentZ[a] - pz
+      const tier = probeTier[a]
+      const dx = probeX[a] - px
+      const dy = PROBE_Y - py
+      const dz = probeZ[a] - pz
       for (let i = 0; i < count; i++) {
-        if (occ[i] === 1) continue
+        if (occ[i] >= tier) continue
         const o = i * 5
         if (segmentHitsBox(px, py, pz, dx, dy, dz, boxes[o], boxes[o + 1], boxes[o + 2], boxes[o + 3], boxes[o + 4])) {
-          occ[i] = 1
+          occ[i] = tier
         }
       }
     }
@@ -592,7 +642,7 @@ function updateOcclusion(built: Built, camera: THREE.Camera, w: WorldApi, dt: nu
     let swapped = false
     let ghostCount = 0
     for (let i = 0; i < count; i++) {
-      const target = occ[i] === 1 ? GHOST_OPACITY : 1
+      const target = occ[i] === TIER_SQUAD ? GHOST_OPACITY : occ[i] === TIER_CAMERA ? CAMERA_GHOST_OPACITY : 1
       let f = batch.fade[i]
       if (f !== target) {
         f += (target - f) * (target < f ? kIn : kOut)
