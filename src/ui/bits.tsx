@@ -1,7 +1,7 @@
 // Shared UI atoms (panel chrome, chips, bars) and small SVG glyphs used by
 // the screens and the HUD. Everything is drawn in code; no external assets.
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import type { AgentRole, WeaponId } from '../game/types'
 
 /* --------------------------------- atoms --------------------------------- */
@@ -68,12 +68,26 @@ function useScrollEdge(dep: unknown): [(el: HTMLDivElement | null) => void, bool
 
 // Every panel that scrolls goes through here, so the affordance reads the same
 // on all of them: a scrollbar that comes up on hover and a fade over the cut
-// edge while there is content below it.
-export function ScrollBox(props: { className?: string; dep?: unknown; children: ReactNode }) {
+// edge while there is content below it. boxRef hands the scroller back to a
+// caller that drives the scroll position itself, as the comm log does.
+export function ScrollBox(props: {
+  className?: string
+  dep?: unknown
+  boxRef?: RefObject<HTMLDivElement | null>
+  children: ReactNode
+}) {
   const [ref, more] = useScrollEdge(props.dep)
+  const outer = props.boxRef
+  const setRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      ref(el)
+      if (outer) outer.current = el
+    },
+    [ref, outer],
+  )
   return (
     <div className="scroll-wrap">
-      <div ref={ref} className={'scroll' + (props.className ? ' ' + props.className : '')}>
+      <div ref={setRef} className={'scroll' + (props.className ? ' ' + props.className : '')}>
         {props.children}
       </div>
       <span className={'scroll-fade' + (more ? ' on' : '')} aria-hidden="true" />
