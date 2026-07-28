@@ -114,12 +114,10 @@ export default function CameraRig() {
     const down = (e: KeyboardEvent): void => {
       const b = bindingFor(codeOf(e))
       if (!b || b.group !== 'camera') return
-      // A paused mission takes no camera input, and a key held across the
-      // pause must not resume panning when the menu closes.
-      if (useMissionStore.getState().paused) {
-        state.keys.clear()
-        return
-      }
+      // A paused mission takes no camera input. The recenter and zoom presses
+      // have to stop here: the frame loop below never sees them, so without
+      // this they would bank and apply the moment the menu closes.
+      if (useMissionStore.getState().paused) return
       e.preventDefault()
       switch (b.id) {
         case 'panForward':
@@ -171,33 +169,45 @@ export default function CameraRig() {
   }, [gl, state])
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.05)
-    // A pan request overrides the keys for this frame; holding a key after it
-    // just carries on from the new spot.
-    const pan = takeCameraPan()
-    if (pan) {
-      state.target.x = pan.x
-      state.target.z = pan.z
+    // The pause is honoured here rather than in the key handlers alone. A key
+    // held from before the pause is already in the set, and no handler runs
+    // again until it is released, so this is the only place that can drop it.
+    // Nothing else moves either: no pan request is taken, so one queued just
+    // before the pause still lands on resume, and no damping runs, so the view
+    // cannot drift out from under a frozen scene.
+    if (useMissionStore.getState().paused) {
+      state.keys.clear()
+    } else {
+      const dt = Math.min(rawDt, 0.05)
+      // A pan request overrides the keys for this frame; holding a key after
+      // it just carries on from the new spot.
+      const pan = takeCameraPan()
+      if (pan) {
+        state.target.x = pan.x
+        state.target.z = pan.z
+      }
+      const k = state.keys
+      let u = 0
+      let v = 0
+      if (k.has('panForward')) u += 1
+      if (k.has('panBack')) u -= 1
+      if (k.has('panRight')) v += 1
+      if (k.has('panLeft')) v -= 1
+      if (u !== 0 || v !== 0) {
+        const inv = u !== 0 && v !== 0 ? Math.SQRT1_2 : 1
+        const speed = state.dist * 0.6 * dt * inv
+        state.target.x += (FWD.x * u + RIGHT.x * v) * speed
+        state.target.z += (FWD.z * u + RIGHT.z * v) * speed
+      }
+      // Every route to the target lands here, keys, F and the minimap alike.
+      state.target.x = Math.max(4, Math.min(92, state.target.x))
+      state.target.z = Math.max(4, Math.min(92, state.target.z))
+      const damp = 1 - Math.exp(-8 * dt)
+      state.focus.lerp(state.target, damp)
+      state.dist += (state.targetDist - state.dist) * damp
     }
-    const k = state.keys
-    let u = 0
-    let v = 0
-    if (k.has('panForward')) u += 1
-    if (k.has('panBack')) u -= 1
-    if (k.has('panRight')) v += 1
-    if (k.has('panLeft')) v -= 1
-    if (u !== 0 || v !== 0) {
-      const inv = u !== 0 && v !== 0 ? Math.SQRT1_2 : 1
-      const speed = state.dist * 0.6 * dt * inv
-      state.target.x += (FWD.x * u + RIGHT.x * v) * speed
-      state.target.z += (FWD.z * u + RIGHT.z * v) * speed
-    }
-    // Every route to the target lands here, keys, F and the minimap alike.
-    state.target.x = Math.max(4, Math.min(92, state.target.x))
-    state.target.z = Math.max(4, Math.min(92, state.target.z))
-    const damp = 1 - Math.exp(-8 * dt)
-    state.focus.lerp(state.target, damp)
-    state.dist += (state.targetDist - state.dist) * damp
+    // The pose is published every frame, paused or not, so the minimap keeps
+    // drawing a viewport instead of dropping it while the menu is up.
     const cosE = Math.cos(ELEV)
     state.tmp.set(
       state.focus.x + SIN_Y * cosE * state.dist,
