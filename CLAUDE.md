@@ -21,14 +21,14 @@ A browser remake of Syndicate: React 19 + Vite for the DOM screens, react-three-
 
 Four layers, and the boundaries are load-bearing:
 
-- `src/game/` simulation and static data. Pure TypeScript, no React, no three.js. `world.ts` is the whole mission sim (units, movement, combat, enemy FSM, civilians, objectives).
+- `src/game/` simulation and static data. Pure TypeScript, no React, no three.js. `world.ts` is the whole mission sim (units, movement, combat, enemy FSM, civilians, objectives). Routing lives in `pathfind.ts` (A* on the walk grid, DDA line of sight, straightening); `atlas.ts` holds the world map plate.
 - `src/world/citygen.ts` procedural city, deterministic from `mission.seed`. Owns road geometry and the walk grid.
 - `src/scene/` three.js rendering under r3f. Reads the world imperatively every frame.
 - `src/ui/` DOM screens and the mission HUD. Reads the world through stores, at a low rate.
 
-`src/App.tsx` routes on `appStore.phase`: menu -> world -> brief -> team -> mission -> debrief.
+`src/App.tsx` routes on `appStore.phase`: menu -> world -> research -> brief -> team -> mission -> debrief.
 
-Files whose header comment starts `CONTRACT FILE` carry cross-layer agreements (types, stores, the runtime holder, the screen router). Read the header before changing one.
+Files whose header comment starts `CONTRACT FILE` carry cross-layer agreements (types, static data, the research tree, the world atlas, key bindings, the four stores, the runtime holder, the screen router, the mission screen). Read the header before changing one.
 
 ## How the scene reaches the world
 
@@ -41,11 +41,19 @@ The two-tier rule:
 
 `missionStore` is reset by `MissionScreen` right after `createWorld`, so `world.ts` defers every store write to the first tick (`startup()`).
 
-Three stores: `appStore` (screen flow, squad, credits), `missionStore` (in-mission HUD), `worldStore` (strategic layer clock, sector control, events feed; only the world map screen writes it).
+Four stores: `appStore` (screen flow, squad, credits), `missionStore` (in-mission HUD), `worldStore` (strategic clock, sector control, events feed; the world map and research screens write it through `ui/clock.ts`), `researchStore` (completed projects, what each lab is running).
 
 ## Simulation timing
 
-`world.tick(rawDt)` clamps to `MAX_CATCHUP` and then runs whole `MAX_DT` (0.25s) steps until the delta is spent, rather than dropping the remainder. Frames arrive seconds apart while WebGPU pipelines compile, and discarding the excess froze the mission clock. During the first world second it takes one step per frame so the opening is not simulated off screen. Keep both behaviours if you touch `tick`.
+`world.tick(rawDt)` clamps to `MAX_CATCHUP` (5s) and then runs whole `MAX_DT` (0.05s) steps until the delta is spent, rather than dropping the remainder. `worldStore` exports its own `MAX_DT` (0.25s) for the strategy clock; the two names are unrelated. Frames arrive seconds apart while WebGPU pipelines compile, and discarding the excess froze the mission clock. During the first world second it takes one step per frame so the opening is not simulated off screen. Keep both behaviours if you touch `tick`.
+
+## Research and the strategy clock
+
+`ui/clock.ts` (`useWorldClock`) is the only thing that advances world time. Both the world map and research screens mount it; it runs on rAF batched to 20Hz and calls `researchStore.sync`, so labs finish on the same clock that moves the world.
+
+`game/research.ts` carries each node's effects as data, so the screen's benefit lines and the change the mission applies come from one place.
+
+`world.ts` reads `useResearchStore.getState().done` once inside `createWorld` (`crewBonus`, `squadWeapon`). This is the only store `src/game/` reads, and research never changes a mission already running.
 
 ## three.js conventions
 
@@ -59,6 +67,7 @@ Three stores: `appStore` (screen flow, squad, credits), `missionStore` (in-missi
 - Ground plane is XZ, +Y up, 1 unit = 1 meter. The city is `CITY_SIZE` (96) square, cell `(cx,cz)` spans `[cx, cx+1)`, cell centers sit at `+0.5`. Helpers: `cellIndex`, `isWalkable` in `game/types.ts`.
 - `CAMERA_YAW` (PI/4) is fixed and shared: the camera rig orbits at it and the minimap turns by it, so up on the panel is up on screen.
 - `citygen.ts` is the single source of road geometry. `scene/textures.ts` and `ui/Minimap.tsx` paint from `city.roadRects`; do not re-derive widths.
+- `game/bindings.ts` is the only place a key string appears. Handlers ask `bindingFor` for an action and switch on its id; the pause menu prints the same list, so the table cannot drift from the handlers.
 - Randomness is always seeded. `mulberry32` from `game/rng.ts` for world and city, `hashOf`/`rngFrom` in `ui/util.ts` for portraits and figures, so an operative always renders the same face.
 
 ## No external assets
