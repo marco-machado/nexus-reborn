@@ -266,15 +266,16 @@ export function makeSlotTexture(slot: number): THREE.CanvasTexture {
   return tex
 }
 
-// White exclamation mark on transparent background, tinted by the material.
-export function makeAlertTexture(): THREE.CanvasTexture {
+// White glyph on transparent background, tinted by the material. '!' marks a
+// guard in combat, '?' one that is still working out what it saw.
+export function makeAlertTexture(glyph = '!'): THREE.CanvasTexture {
   const [canvas, ctx] = makeCanvas(64, 64)
   ctx.clearRect(0, 0, 64, 64)
   ctx.fillStyle = '#ffffff'
   ctx.font = 'bold 52px monospace'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('!', 32, 34)
+  ctx.fillText(glyph, 32, 34)
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
   return tex

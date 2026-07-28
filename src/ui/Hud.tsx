@@ -10,6 +10,7 @@ import { ROSTER, WEAPONS, missionById } from '../game/data'
 import { squadWeapon } from '../game/research'
 import { getWorld, panCameraTo } from '../game/runtime'
 import type { WeaponId } from '../game/types'
+import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import { Portrait } from './portrait'
 import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph, ScrollBox } from './bits'
@@ -64,6 +65,31 @@ function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
   )
 }
 
+// Drag select box. The scene input surface owns the rectangle and this only
+// pushes it into styles, so dragging costs no render and no scene pass. First
+// child of the root, so the panels paint over it.
+function Marquee() {
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const paint = (): void => {
+      const el = ref.current
+      if (!el) return
+      const r = getMarquee()
+      if (!r) {
+        el.style.display = 'none'
+        return
+      }
+      el.style.display = 'block'
+      el.style.transform = 'translate(' + r.x + 'px,' + r.y + 'px)'
+      el.style.width = r.w + 'px'
+      el.style.height = r.h + 'px'
+    }
+    paint()
+    return onMarquee(paint)
+  }, [])
+  return <div className="hud-marquee" ref={ref} />
+}
+
 export default function Hud() {
   const squad = useMissionStore((s) => s.squad)
   const selected = useMissionStore((s) => s.selected)
@@ -108,6 +134,7 @@ export default function Hud() {
 
   return (
     <div className="hud-root">
+      <Marquee />
       {/* ------------------------------ top bar ----------------------------- */}
       <div className="hud-top">
         <div className="hud-top-left">

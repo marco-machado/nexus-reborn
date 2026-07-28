@@ -46,6 +46,10 @@ export interface OperativeDef {
 export type UnitKind = 'agent' | 'enemy' | 'civilian'
 export type UnitStance = 'idle' | 'moving' | 'attacking' | 'fleeing' | 'dead'
 
+// Enemy awareness. Patrol has seen nothing, suspicious is walking to something
+// it half saw or heard, combat is engaging. Enemies only.
+export type EnemyAiState = 'patrol' | 'suspicious' | 'combat'
+
 export interface Unit {
   id: string
   kind: UnitKind
@@ -69,6 +73,7 @@ export interface Unit {
   // auto-engagement so only an explicit attack order fires.
   holdGround: boolean
   holdFire: boolean
+  aiState?: EnemyAiState
   patrol?: Vec2[]
   patrolIndex?: number
   agentSlot?: number
@@ -225,6 +230,13 @@ export const CITY_SIZE = 96
 // Fixed camera yaw. The scene rig orbits at this angle and the HUD minimap
 // turns by it, so up on the map is up on screen.
 export const CAMERA_YAW = Math.PI / 4
+
+// Enemy sight. An agent is seen inside the facing cone out to ENEMY_VISION, or
+// from any direction inside NOTICE_RADIUS. The minimap draws the same cone, so
+// both the simulation and the panel read these.
+export const ENEMY_VISION = 14
+export const VISION_HALF_ANGLE = (55 * Math.PI) / 180
+export const NOTICE_RADIUS = 4.5
 
 export function cellIndex(size: number, x: number, z: number): number {
   const cx = Math.floor(x)

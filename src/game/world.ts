@@ -12,8 +12,8 @@ import type {
   Vec2,
   WorldApi,
 } from './types'
-import { isWalkable } from './types'
-import { WEAPONS } from './data'
+import { ENEMY_VISION, NOTICE_RADIUS, VISION_HALF_ANGLE, isWalkable } from './types'
+import { WEAPONS, weaponNoise } from './data'
 import { crewBonus, squadWeapon } from './research'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
@@ -32,7 +32,28 @@ const BOOM_LIFE = 0.4
 const SEPARATION_R = 0.7
 // Body radius a missed round has to cross to catch whoever is standing there.
 const STRAY_R = 0.5
-const ENEMY_VISION = 14
+const VISION2 = ENEMY_VISION * ENEMY_VISION
+const NOTICE2 = NOTICE_RADIUS * NOTICE_RADIUS
+const VISION_COS = Math.cos(VISION_HALF_ANGLE)
+// Seconds of unbroken sight before a guard is certain, at arm's length and at
+// the far edge of the cone. Anything shorter is a half sighting the squad can
+// still break off from.
+const SIGHT_NEAR_T = 0.45
+const SIGHT_FAR_T = 1.7
+// Certainty bled off per second with nothing seen or heard.
+const AWARE_DECAY = 0.22
+// Shortest look a guard commits to once something puts it on alert, so the
+// briefest glimpse still buys a walk to the spot rather than a shrug. Held
+// apart from certainty: this keeps a guard investigating, it never brings the
+// moment it opens fire any closer.
+const INVESTIGATE_T = 2.7
+// Sound alone never reaches certainty, so a guard investigates a shot rather
+// than opening fire on the noise.
+const HEARD_MAX = 0.85
+const NOISE_LIFE = 0.3
+const INVESTIGATE_R = 1.2
+const SCAN_GAP = 1.1
+const SUSPECT_LOG_GAP = 10
 const PROPAGATE_R = 9
 const DISENGAGE_T = 6
 const ENEMY_ACC = 0.45
@@ -58,12 +79,28 @@ const HIT_LINES = ['Taking fire!', 'Under fire, holding.', 'They have us marked.
 
 type Cls = 'sys' | 'alert' | 'ok'
 
+// One gunshot, heard by anything inside r. Ids run up so a guard can process
+// each event exactly once whatever order the units are stepped in.
+interface Noise {
+  id: number
+  pos: Vec2
+  r: number
+  t: number
+}
+
 interface SimUnit extends Unit {
   // Internal simulation fields; the renderer only reads the Unit surface.
-  aiState?: 'patrol' | 'combat'
   senseT?: number
+  senseAt?: number
   repathT?: number
   lastSeenT?: number
+  lastSeenPos?: Vec2
+  // How sure the guard is that there is an intruder, 0 to 1. 1 opens fire.
+  awareness?: number
+  investigateUntil?: number
+  heardId?: number
+  scanT?: number
+  scanYaw?: number
   acquireT?: number
   explicitTarget?: boolean
   // Waypoints parked by hold ground, restored when the hold lifts.
@@ -85,7 +122,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   const byId = new Map<string, SimUnit>()
   const tracers: Tracer[] = []
   const booms: Boom[] = []
-  const shots: Vec2[] = []
+  const noises: Noise[] = []
+  let noiseSeq = 0
 
   let started = false
   let kills = 0
@@ -103,6 +141,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   let firstContact = false
   let lastOrderChatterT = -MOVE_CHATTER_GAP
   let lastFlavorT = -FLAVOR_GAP
+  let lastSuspectLogT = -SUSPECT_LOG_GAP
   let activeObjective = 0
   const objectivesDone: boolean[] = mission.objectives.map(() => false)
 
@@ -175,8 +214,11 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       tag: sp.tag,
       aiState: 'patrol',
       senseT: rng() * SENSE_INTERVAL,
+      senseAt: 0,
       repathT: 0,
       lastSeenT: -100,
+      awareness: 0,
+      heardId: 0,
     })
   })
 
@@ -241,6 +283,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   }
 
   function effSpeed(u: SimUnit): number {
+    if (u.kind === 'enemy' && u.aiState === 'suspicious') return u.speed * 0.85
     if (u.kind === 'enemy' && u.aiState !== 'combat') return u.speed * 0.6
     if (u.kind === 'civilian' && (u.fleeUntil ?? 0) > world.time) return u.speed * 1.5
     return u.speed
@@ -381,6 +424,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     t.hp -= by.kind === 'enemy' ? dmg * ENEMY_DMG_MUL : dmg
     if (t.kind === 'enemy') {
       t.lastSeenT = world.time
+      markLastSeen(t, by.pos)
       if (t.aiState !== 'combat') enterCombat(t)
     } else if (t.kind === 'civilian') {
       // Being hit overrides the gunfire timer: run from whoever fired.
@@ -481,7 +525,13 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       r: 0.22,
       color: w.tracer,
     })
-    shots.push({ x: u.pos.x, z: u.pos.z })
+    noiseSeq += 1
+    noises.push({
+      id: noiseSeq,
+      pos: { x: u.pos.x, z: u.pos.z },
+      r: weaponNoise(w),
+      t: world.time,
+    })
     sfx.gunshot(w.id)
     if (u.magazine <= 0) startReload(u)
   }
@@ -575,10 +625,20 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
   }
 
+  function markLastSeen(e: SimUnit, p: Vec2): void {
+    if (e.lastSeenPos) {
+      e.lastSeenPos.x = p.x
+      e.lastSeenPos.z = p.z
+    } else {
+      e.lastSeenPos = { x: p.x, z: p.z }
+    }
+  }
+
   function enterCombat(e: SimUnit): void {
     if (e.stance === 'dead') return
     e.aiState = 'combat'
     e.alerted = true
+    e.awareness = 1
     e.lastSeenT = world.time
     e.repathT = 0
     if (!firstContact) {
@@ -588,22 +648,118 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
   }
 
-  function perceive(e: SimUnit): boolean {
-    const v2 = ENEMY_VISION * ENEMY_VISION
+  function enterSuspicious(e: SimUnit): void {
+    if (e.stance === 'dead' || e.aiState === 'suspicious') return
+    const fromPatrol = e.aiState === 'patrol'
+    e.aiState = 'suspicious'
+    e.alerted = false
+    e.investigateUntil = world.time + INVESTIGATE_T
+    e.targetId = null
+    e.path.length = 0
+    e.repathT = 0
+    e.scanT = 0
+    e.senseAt = world.time
+    if (fromPatrol && world.time - lastSuspectLogT >= SUSPECT_LOG_GAP) {
+      lastSuspectLogT = world.time
+      pushLog('SYS', 'Hostile patrol investigating.', 'alert')
+    }
+  }
+
+  function leaveSuspicious(e: SimUnit): void {
+    e.aiState = 'patrol'
+    e.awareness = 0
+    e.path.length = 0
+    e.repathT = 0
+    e.stance = 'idle'
+  }
+
+  // Nearest agent this guard can make out: inside the facing cone out to
+  // ENEMY_VISION, or anywhere inside NOTICE_RADIUS, and never through a wall.
+  function seen(e: SimUnit): SimUnit | null {
+    let best: SimUnit | null = null
+    let bestD2 = Infinity
+    const fx = Math.sin(e.heading)
+    const fz = Math.cos(e.heading)
     for (const a of units) {
       if (a.kind !== 'agent' || a.stance === 'dead') continue
       const dx = a.pos.x - e.pos.x
       const dz = a.pos.z - e.pos.z
-      if (dx * dx + dz * dz <= v2 && hasLos(city, e.pos, a.pos)) return true
+      const d2 = dx * dx + dz * dz
+      if (d2 > VISION2 || d2 >= bestD2) continue
+      if (d2 > NOTICE2 && (fx * dx + fz * dz) / Math.sqrt(d2) < VISION_COS) continue
+      if (!hasLos(city, e.pos, a.pos)) continue
+      best = a
+      bestD2 = d2
     }
+    return best
+  }
+
+  // Loudest unprocessed gunshot within earshot, taken as the nearest one.
+  // Sound carries through walls; it gives a bearing, never a target.
+  function heard(e: SimUnit): Noise | null {
+    let best: Noise | null = null
+    let bestD2 = Infinity
+    for (const n of noises) {
+      if (n.id <= (e.heardId ?? 0)) continue
+      const dx = n.pos.x - e.pos.x
+      const dz = n.pos.z - e.pos.z
+      const d2 = dx * dx + dz * dz
+      if (d2 > n.r * n.r || d2 >= bestD2) continue
+      best = n
+      bestD2 = d2
+    }
+    return best
+  }
+
+  // Alert spreads by sight of a guard already fighting, not through walls.
+  function allyInCombat(e: SimUnit): SimUnit | null {
     const p2 = PROPAGATE_R * PROPAGATE_R
     for (const o of units) {
-      if (o.kind !== 'enemy' || o === e || o.stance === 'dead' || !o.alerted) continue
+      if (o.kind !== 'enemy' || o === e || o.stance === 'dead' || o.aiState !== 'combat') continue
       const dx = o.pos.x - e.pos.x
       const dz = o.pos.z - e.pos.z
-      if (dx * dx + dz * dz <= p2) return true
+      if (dx * dx + dz * dz <= p2 && hasLos(city, e.pos, o.pos)) return o
     }
-    return false
+    return null
+  }
+
+  // Certainty gained per second of clear sight; a close agent registers in a
+  // fraction of the time one at the edge of the cone does.
+  function sightGain(d: number): number {
+    const k = Math.min(1, d / ENEMY_VISION)
+    return 1 / (SIGHT_NEAR_T + (SIGHT_FAR_T - SIGHT_NEAR_T) * k)
+  }
+
+  function sense(e: SimUnit, elapsed: number): void {
+    let aware = e.awareness ?? 0
+    const target = seen(e)
+    if (target) {
+      aware += elapsed * sightGain(dist(e.pos, target.pos))
+      e.lastSeenT = world.time
+      markLastSeen(e, target.pos)
+    }
+    const noise = heard(e)
+    e.heardId = noiseSeq
+    if (noise) {
+      const d = dist(e.pos, noise.pos)
+      const gain = 0.3 + 0.4 * (1 - Math.min(1, d / noise.r))
+      if (aware < HEARD_MAX) aware = Math.min(HEARD_MAX, aware + gain)
+      if (!target) markLastSeen(e, noise.pos)
+    }
+    // Fresh evidence restarts the look, whether or not it moves certainty.
+    if (target || noise) e.investigateUntil = world.time + INVESTIGATE_T
+    else aware -= elapsed * AWARE_DECAY
+    if (aware < 1) {
+      const ally = allyInCombat(e)
+      if (ally) {
+        aware = 1
+        markLastSeen(e, ally.lastSeenPos ?? ally.pos)
+      }
+    }
+    e.awareness = Math.max(0, Math.min(1, aware))
+    if (e.awareness >= 1) enterCombat(e)
+    else if (e.awareness > 0) enterSuspicious(e)
+    else if (e.aiState === 'suspicious' && world.time >= (e.investigateUntil ?? 0)) leaveSuspicious(e)
   }
 
   function patrolStep(e: SimUnit): void {
@@ -625,6 +781,27 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
   }
 
+  // Walks to whatever was seen or heard, then sweeps the spot. Certainty bleeds
+  // off in sense(), which drops the guard back to its patrol once it runs out.
+  function suspiciousStep(e: SimUnit, dt: number): void {
+    const at = e.lastSeenPos
+    if (at && dist(e.pos, at) > INVESTIGATE_R) {
+      if (world.time >= (e.repathT ?? 0)) {
+        e.repathT = world.time + ENEMY_REPATH
+        e.path = findPath(city, e.pos, at)
+      }
+      e.stance = e.path.length > 0 ? 'moving' : 'idle'
+      return
+    }
+    e.path.length = 0
+    e.stance = 'idle'
+    if (world.time >= (e.scanT ?? 0)) {
+      e.scanT = world.time + SCAN_GAP
+      e.scanYaw = e.heading + (rng() < 0.5 ? -1 : 1) * (0.6 + rng() * 1.2)
+    }
+    if (e.scanYaw !== undefined) turnToward(e, e.scanYaw, dt)
+  }
+
   function combatStep(e: SimUnit, dt: number): void {
     const w = e.weapon
     const seeR = Math.max(ENEMY_VISION, w ? w.range : 0)
@@ -640,6 +817,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
     if (tgt && w) {
       e.lastSeenT = world.time
+      markLastSeen(e, tgt.pos)
       e.targetId = tgt.id
       if (bestD <= Math.max(1.5, w.range - 1)) {
         e.path.length = 0
@@ -657,27 +835,17 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
     e.targetId = null
     if (world.time - (e.lastSeenT ?? -100) > DISENGAGE_T) {
-      e.aiState = 'patrol'
-      e.alerted = false
-      e.path.length = 0
-      e.stance = 'idle'
-      e.repathT = 0
+      // Gives up the chase but stays on edge, sweeping where the squad was.
+      e.awareness = HEARD_MAX
+      enterSuspicious(e)
       return
     }
-    // Lost sight recently: hunt toward the nearest living agent's position.
-    let near: SimUnit | null = null
-    let nd = Infinity
-    for (const a of units) {
-      if (a.kind !== 'agent' || a.stance === 'dead') continue
-      const d = dist(e.pos, a.pos)
-      if (d < nd) {
-        nd = d
-        near = a
-      }
-    }
-    if (near && world.time >= (e.repathT ?? 0)) {
+    // Lost sight recently: push to the last place the squad was actually seen,
+    // rather than tracking a target the guard can no longer make out.
+    const at = e.lastSeenPos
+    if (at && dist(e.pos, at) > INVESTIGATE_R && world.time >= (e.repathT ?? 0)) {
       e.repathT = world.time + ENEMY_REPATH
-      e.path = findPath(city, e.pos, near.pos)
+      e.path = findPath(city, e.pos, at)
     }
     e.stance = e.path.length > 0 ? 'moving' : 'idle'
   }
@@ -686,20 +854,17 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     for (const e of units) {
       if (e.kind !== 'enemy' || e.stance === 'dead') continue
       tickWeapon(e, dt)
-      if (e.aiState !== 'combat') {
-        let engaged = false
-        if (world.time >= (e.senseT ?? 0)) {
-          e.senseT = world.time + SENSE_INTERVAL
-          if (perceive(e)) {
-            enterCombat(e)
-            engaged = true
-          }
-        }
-        if (engaged) combatStep(e, dt)
-        else patrolStep(e)
-      } else {
-        combatStep(e, dt)
+      if (e.aiState !== 'combat' && world.time >= (e.senseT ?? 0)) {
+        // Clamped because sense() is skipped while fighting, so the gap since
+        // the last look can be far longer than the interval.
+        const elapsed = Math.min(SENSE_INTERVAL * 2, world.time - (e.senseAt ?? world.time))
+        e.senseAt = world.time
+        e.senseT = world.time + SENSE_INTERVAL
+        sense(e, elapsed)
       }
+      if (e.aiState === 'combat') combatStep(e, dt)
+      else if (e.aiState === 'suspicious') suspiciousStep(e, dt)
+      else patrolStep(e)
     }
   }
 
@@ -707,18 +872,16 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     const flee2 = CIV_FLEE_R * CIV_FLEE_R
     for (const c of units) {
       if (c.kind !== 'civilian' || c.stance === 'dead') continue
-      if (shots.length > 0) {
-        for (const s of shots) {
-          const dx = s.x - c.pos.x
-          const dz = s.z - c.pos.z
-          if (dx * dx + dz * dz <= flee2) {
-            if ((c.fleeUntil ?? 0) <= world.time) {
-              c.fleeFrom = { x: s.x, z: s.z }
-              c.path.length = 0
-            }
-            c.fleeUntil = world.time + CIV_FLEE_T
-            break
+      for (const n of noises) {
+        const dx = n.pos.x - c.pos.x
+        const dz = n.pos.z - c.pos.z
+        if (dx * dx + dz * dz <= flee2) {
+          if ((c.fleeUntil ?? 0) <= world.time) {
+            c.fleeFrom = { x: n.pos.x, z: n.pos.z }
+            c.path.length = 0
           }
+          c.fleeUntil = world.time + CIV_FLEE_T
+          break
         }
       }
       const fleeing = (c.fleeUntil ?? 0) > world.time
@@ -770,6 +933,13 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       if (world.time - booms[i].t < BOOM_LIFE) booms[w++] = booms[i]
     }
     booms.length = w
+    // Held a little longer than the sense interval so every guard gets one
+    // look at each shot, whatever order the units are stepped in.
+    w = 0
+    for (let i = 0; i < noises.length; i++) {
+      if (world.time - noises[i].t < NOISE_LIFE) noises[w++] = noises[i]
+    }
+    noises.length = w
   }
 
   function zoneFor(def: ObjectiveDef): { x: number; z: number; r: number } {
@@ -944,7 +1114,6 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
 
   function step(dt: number): void {
     world.time += dt
-    shots.length = 0
     updateAgents(dt)
     updateEnemies(dt)
     updateCivilians()

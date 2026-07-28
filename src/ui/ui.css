@@ -2250,6 +2250,16 @@
   pointer-events: auto;
 }
 
+/* drag select box, sized by the scene input surface */
+.hud-marquee {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  border: 1px solid var(--line-strong);
+  background: rgba(126, 240, 212, 0.07);
+}
+
 .hud-panel {
   position: absolute;
   background: rgba(5, 12, 10, 0.85);
