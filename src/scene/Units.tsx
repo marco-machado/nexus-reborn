@@ -21,6 +21,7 @@ interface Shared {
   chestGeom: THREE.BoxGeometry
   gunGeom: THREE.BoxGeometry
   ringGeom: THREE.RingGeometry
+  factionRingGeom: THREE.RingGeometry
   glowGeom: THREE.PlaneGeometry
   barBgGeom: THREE.PlaneGeometry
   barFgGeom: THREE.PlaneGeometry
@@ -42,10 +43,14 @@ interface Shared {
   agentBarMat: THREE.MeshBasicMaterial
   alertMat: THREE.MeshBasicMaterial
   suspectMat: THREE.MeshBasicMaterial
+  enemyRingIdle: THREE.MeshBasicMaterial
+  enemyRingHot: THREE.MeshBasicMaterial
+  civRingMat: THREE.MeshBasicMaterial
   civMats: THREE.MeshStandardMaterial[]
   civHead: THREE.MeshStandardMaterial
   accentMats: Map<string, THREE.MeshStandardMaterial>
   slotMats: Map<number, THREE.MeshBasicMaterial>
+  factionMats: Map<string, THREE.MeshBasicMaterial>
 }
 
 let shared: Shared | null = null
@@ -66,6 +71,7 @@ function getShared(): Shared {
     chestGeom: new THREE.BoxGeometry(0.05, 0.12, 0.12),
     gunGeom: new THREE.BoxGeometry(0.6, 0.07, 0.07),
     ringGeom: new THREE.RingGeometry(0.55, 0.76, 28).rotateX(-Math.PI / 2) as THREE.RingGeometry,
+    factionRingGeom: new THREE.RingGeometry(0.4, 0.5, 24).rotateX(-Math.PI / 2) as THREE.RingGeometry,
     glowGeom: new THREE.PlaneGeometry(2.3, 2.3).rotateX(-Math.PI / 2) as THREE.PlaneGeometry,
     barBgGeom: new THREE.PlaneGeometry(0.76, 0.1),
     barFgGeom: new THREE.PlaneGeometry(0.7, 0.055).translate(0.35, 0, 0) as THREE.PlaneGeometry,
@@ -119,10 +125,32 @@ function getShared(): Shared {
       opacity: 0.85,
       depthWrite: false,
     }),
+    enemyRingIdle: new THREE.MeshBasicMaterial({
+      color: '#ff4a3c',
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+    enemyRingHot: new THREE.MeshBasicMaterial({
+      color: '#ffb3a0',
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+    civRingMat: new THREE.MeshBasicMaterial({
+      color: '#8a8f96',
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
     civMats: ['#4a4238', '#3d4650', '#55483a', '#414a41', '#5a5044', '#38404b'].map((c) => std(c, 0.95)),
     civHead: std('#5c5348', 0.9),
     accentMats: new Map(),
     slotMats: new Map(),
+    factionMats: new Map(),
   }
   return shared
 }
@@ -136,6 +164,21 @@ function accentMat(s: Shared, hex: string): THREE.MeshStandardMaterial {
       emissiveIntensity: 2.2,
     })
     s.accentMats.set(hex, mat)
+  }
+  return mat
+}
+
+function factionMat(s: Shared, hex: string): THREE.MeshBasicMaterial {
+  let mat = s.factionMats.get(hex)
+  if (!mat) {
+    mat = new THREE.MeshBasicMaterial({
+      color: hex,
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    })
+    s.factionMats.set(hex, mat)
   }
   return mat
 }
@@ -155,6 +198,8 @@ interface View {
   legL: THREE.Mesh
   legR: THREE.Mesh
   ring: THREE.Mesh | null
+  faction: THREE.Mesh
+  factionHot: boolean
   glow: THREE.Mesh | null
   tag: THREE.Group | null
   tagFg: THREE.Mesh | null
@@ -229,6 +274,17 @@ function buildView(u: Unit, s: Shared): View {
     rig.add(gun)
   }
 
+  // Every unit gets a dim faction ring on the ground so sides read at a
+  // glance: agent accent, enemy red, civilian gray. Enemies swap theirs to a
+  // hot material while firing.
+  let factionRingMat: THREE.MeshBasicMaterial = s.civRingMat
+  if (u.kind === 'agent') factionRingMat = factionMat(s, u.operative ? u.operative.accent : '#7ef0d4')
+  else if (u.kind === 'enemy') factionRingMat = s.enemyRingIdle
+  const faction = new THREE.Mesh(s.factionRingGeom, factionRingMat)
+  faction.position.y = 0.04
+  faction.renderOrder = 3
+  root.add(faction)
+
   // Agents carry the selection ring, a soft teal underglow while selected and
   // a billboarded overhead tag: slot number plaque above a health pip bar.
   let ring: THREE.Mesh | null = null
@@ -287,6 +343,8 @@ function buildView(u: Unit, s: Shared): View {
     legL,
     legR,
     ring,
+    faction,
+    factionHot: false,
     glow,
     tag,
     tagFg,
@@ -301,6 +359,9 @@ function buildView(u: Unit, s: Shared): View {
 }
 
 const TMP_Q = new THREE.Quaternion()
+
+// How long an enemy's ground ring stays hot and swollen after a shot.
+const FIRE_PULSE = 0.15
 
 export default function Units() {
   const camera = useThree((st) => st.camera)
@@ -323,7 +384,7 @@ export default function Units() {
     const dt = Math.min(rawDt, 0.05)
     const t = w.time
     const selected = useMissionStore.getState().selected
-    s.ringMat.opacity = 0.66 + 0.24 * Math.sin(t * 4.5)
+    s.ringMat.opacity = 0.74 + 0.24 * Math.sin(t * 4.5)
     const turn = 1 - Math.exp(-14 * dt)
 
     for (const u of w.units) {
@@ -343,6 +404,7 @@ export default function Units() {
         view.legL.rotation.z = 0
         view.legR.rotation.z = 0
         if (view.ring) view.ring.visible = false
+        view.faction.visible = false
         if (view.glow) view.glow.visible = false
         if (view.tag) view.tag.visible = false
         if (view.bar) view.bar.visible = false
@@ -375,6 +437,19 @@ export default function Units() {
         view.rig.position.y *= 0.8
       }
 
+      view.faction.visible = true
+      if (u.kind === 'enemy') {
+        // Fire pulse: the ring flares to the hot material and swells, then
+        // eases back over FIRE_PULSE seconds.
+        const since = u.lastFireT !== undefined ? t - u.lastFireT : Infinity
+        const hot = since < FIRE_PULSE
+        if (hot !== view.factionHot) {
+          view.factionHot = hot
+          view.faction.material = hot ? s.enemyRingHot : s.enemyRingIdle
+        }
+        const k = hot ? 1 - since / FIRE_PULSE : 0
+        view.faction.scale.setScalar(1 + 0.4 * k)
+      }
       if (view.ring) {
         const sel = selected.includes(u.id)
         view.ring.visible = sel
