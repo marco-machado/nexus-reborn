@@ -508,8 +508,19 @@ function EventsFeed() {
     return list.slice(-14).reverse()
   }, [events, review])
 
+  // Rows arrive at the head, so browser scroll anchoring is what keeps the line
+  // a reader is on from sliding down as traffic comes in. It is left on: it
+  // already handles rows leaving the tail on a scrub, which is more than a hand
+  // rolled offset correction covers.
+  //
+  // A primitive the fade can key on: it moves whenever a row enters or leaves,
+  // and holds its identity across commits that leave the list alone. The row
+  // count alone will not do, since it stops changing at the cap and the fade
+  // would then measure children that are no longer there.
+  const dep = `${shown.length}:${shown[0]?.id ?? -1}`
+
   return (
-    <ScrollBox className="wm-feed-list" dep={shown.length}>
+    <ScrollBox className="wm-feed-list" dep={dep}>
       {shown.length === 0 ? (
         <div className="wm-empty">NO TRAFFIC IN THIS WINDOW</div>
       ) : (
