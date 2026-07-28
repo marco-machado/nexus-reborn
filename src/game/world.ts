@@ -482,6 +482,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
     u.cooldown = w.cooldown * (u.kind === 'enemy' ? ENEMY_CD_MUL : 1)
     u.magazine -= 1
+    u.lastFireT = world.time
     const d = dist(u.pos, t.pos)
     const chance = Math.min(0.95, Math.max(0.05, (0.78 - (d / w.range) * 0.28 + (rng() - 0.5) * 0.1) * accMul))
     const hit = rng() < chance

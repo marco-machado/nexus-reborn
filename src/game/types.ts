@@ -80,6 +80,7 @@ export interface Unit {
   operative?: OperativeDef
   tag?: string
   deathT?: number
+  lastFireT?: number
 }
 
 export interface Tracer {
