@@ -1,5 +1,6 @@
 // Shared UI atoms (panel chrome, chips, bars) and small SVG glyphs used by
 // the screens and the HUD. Everything is drawn in code; no external assets.
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { AgentRole, WeaponId } from '../game/types'
 
@@ -24,6 +25,59 @@ export function Panel(props: {
         {props.children}
       </div>
     </section>
+  )
+}
+
+// True while the box has content past its bottom edge. Re-measures on scroll,
+// when the box or any of its children resize, and whenever dep changes, which
+// is what a list swapping its rows out looks like from here.
+function useScrollEdge(dep: unknown): [(el: HTMLDivElement | null) => void, boolean] {
+  const [more, setMore] = useState(false)
+  const node = useRef<HTMLDivElement | null>(null)
+
+  const measure = useCallback(() => {
+    const el = node.current
+    if (!el) return
+    setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 4)
+  }, [])
+
+  const ref = useCallback(
+    (el: HTMLDivElement | null) => {
+      node.current = el
+      measure()
+    },
+    [measure],
+  )
+
+  useLayoutEffect(() => {
+    const el = node.current
+    if (!el) return
+    measure()
+    el.addEventListener('scroll', measure, { passive: true })
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    for (const child of el.children) ro.observe(child)
+    return () => {
+      el.removeEventListener('scroll', measure)
+      ro.disconnect()
+    }
+  }, [measure, dep])
+
+  return [ref, more]
+}
+
+// Every panel that scrolls goes through here, so the affordance reads the same
+// on all of them: a scrollbar that comes up on hover and a fade over the cut
+// edge while there is content below it.
+export function ScrollBox(props: { className?: string; dep?: unknown; children: ReactNode }) {
+  const [ref, more] = useScrollEdge(props.dep)
+  return (
+    <div className="scroll-wrap">
+      <div ref={ref} className={'scroll' + (props.className ? ' ' + props.className : '')}>
+        {props.children}
+      </div>
+      <span className={'scroll-fade' + (more ? ' on' : '')} aria-hidden="true" />
+    </div>
   )
 }
 

@@ -1,8 +1,7 @@
 // World Network screen. The sector list, the strategic plate, the sector
 // readout and the operations list all read the same world state, and the
 // transport under the map is what moves it.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { useAppStore } from '../state/appStore'
 import {
   DAY,
@@ -38,7 +37,7 @@ import {
   yOfLat,
 } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
-import { Chip, LockGlyph, Panel, SegBar, TargetGlyph } from './bits'
+import { Chip, LockGlyph, Panel, ScrollBox, SegBar, TargetGlyph } from './bits'
 import { NavTabs } from './Nav'
 import { useWorldClock } from './clock'
 import { fmt } from './util'
@@ -58,41 +57,6 @@ function clamp01(v: number): number {
 function agoLabel(sec: number): string {
   const m = Math.round(sec / 60)
   return m < 90 ? m + 'M' : (m / 60).toFixed(1) + 'H'
-}
-
-/* --------------------------------- hooks ---------------------------------- */
-
-// True while the list has content below the fold, so the panel can show the
-// cut edge instead of hiding it behind a hairline scrollbar.
-function useOverflow<T extends HTMLElement>(dep: unknown): [RefObject<T | null>, boolean] {
-  const ref = useRef<T>(null)
-  const [more, setMore] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const check = () => setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 2)
-    check()
-    const ro = new ResizeObserver(check)
-    ro.observe(el)
-    el.addEventListener('scroll', check)
-    return () => {
-      ro.disconnect()
-      el.removeEventListener('scroll', check)
-    }
-  }, [dep])
-  return [ref, more]
-}
-
-function ScrollList(props: { className?: string; dep: unknown; children: ReactNode }) {
-  const [ref, more] = useOverflow<HTMLDivElement>(props.dep)
-  return (
-    <div className="wm-scroll-wrap">
-      <div ref={ref} className={'wm-scroll' + (props.className ? ' ' + props.className : '')}>
-        {props.children}
-      </div>
-      {more && <span className="wm-scroll-more" aria-hidden="true" />}
-    </div>
-  )
 }
 
 /* ------------------------------- map plate -------------------------------- */
@@ -545,13 +509,13 @@ function EventsFeed() {
   }, [events, review])
 
   return (
-    <ScrollList className="wm-feed-list" dep={shown.length}>
+    <ScrollBox className="wm-feed-list" dep={shown.length}>
       {shown.length === 0 ? (
         <div className="wm-empty">NO TRAFFIC IN THIS WINDOW</div>
       ) : (
         shown.map((e) => <FeedRow key={e.id} event={e} />)
       )}
-    </ScrollList>
+    </ScrollBox>
   )
 }
 
@@ -624,7 +588,7 @@ export function WorldMap() {
             className="wm-sectors"
             bodyClassName="wm-sectors-body"
           >
-            <ScrollList className="wm-sector-list" dep={selected}>
+            <ScrollBox className="wm-sector-list" dep={selected}>
               {SECTORS.map((sec) => {
                 const st = sectors[sec.id]
                 const sel = sec.id === selected
@@ -678,7 +642,7 @@ export function WorldMap() {
                   </button>
                 )
               })}
-            </ScrollList>
+            </ScrollBox>
           </Panel>
         </aside>
 
@@ -746,7 +710,7 @@ export function WorldMap() {
             className="wm-ops"
             bodyClassName="wm-ops-body"
           >
-            <ScrollList className="wm-ops-list" dep={selected}>
+            <ScrollBox className="wm-ops-list" dep={selected}>
               {ops.length === 0 ? (
                 <div className="wm-empty">
                   NO CONTRACTS POSTED IN {def.name}
@@ -784,8 +748,14 @@ export function WorldMap() {
                   </button>
                 ))
               )}
-            </ScrollList>
-            <button type="button" className="btn wide" disabled title="REQUIRES A SECTOR INTEL LINK">
+            </ScrollBox>
+            <button
+              type="button"
+              className="btn wide"
+              disabled
+              aria-label="VIEW SECTOR INTEL // REQUIRES A SECTOR INTEL LINK"
+              title="REQUIRES A SECTOR INTEL LINK"
+            >
               VIEW SECTOR INTEL &gt;
             </button>
           </Panel>

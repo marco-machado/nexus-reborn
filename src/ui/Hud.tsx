@@ -262,7 +262,7 @@ export default function Hud() {
           <span>COMM LOG</span>
           <span className="dim">{clock}</span>
         </div>
-        <div className="hud-comms-body" ref={logRef}>
+        <div className="hud-comms-body scroll" ref={logRef}>
           {log.slice(-7).map((e, i) => (
             <div key={i + '-' + e.t} className={'hud-log ' + (e.cls ?? 'sys')}>
               {e.t} {e.who}: {e.msg}
