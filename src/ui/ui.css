@@ -1120,7 +1120,18 @@
 .wm-op-meta { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
 .wm-op-meta .chip { font-size: 8px; padding: 1px 5px; }
 
-/* bottom strip */
+/* bottom strip. The height is fixed so the events feed cannot drag the rest of
+   the screen down as traffic comes in: grid stretch hands the same box to all
+   four panels, and the feed then overflows into its own scroller instead of
+   growing. Measured at 1280x720, the natural heights are 99px for the time
+   code, 111px for the time control, 91px for the feed and 121px for the
+   resource pool, so 124px clears the tallest and leaves the feed an 86px
+   scroller. Every pixel added here comes off .wm-main and the map with it.
+
+   Without the auto height nothing absorbs a panel that outgrows the box, so
+   the bodies clip rather than paint over the nav below. The clip goes on the
+   body and not the panel, which would take the corner accents with it: they
+   are drawn at inset -1px, out in the border ring. */
 .wm-bottom {
   display: grid;
   grid-template-columns:
@@ -1130,7 +1141,10 @@
     clamp(206px, 19vw, 268px);
   gap: 10px;
   flex: none;
+  height: 124px;
 }
+
+.wm-bottom > .panel > .panel-body { overflow: clip; }
 
 .wm-time .panel-body { justify-content: center; gap: 3px; }
 .wm-date { font-size: clamp(15px, 1.5vw, 22px); color: #e8fbf2; letter-spacing: 0.1em; }
