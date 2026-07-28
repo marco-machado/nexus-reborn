@@ -57,19 +57,19 @@ export const BINDINGS: Binding[] = [
   { id: 'zoomWheel', group: 'camera', codes: [], keys: ['Wheel'], label: 'Zoom' },
 
   /* squad, handled in src/scene/Input.tsx */
-  // The slot is the position of the pressed code inside codes, so the four
-  // digits stay one action and one printed row.
+  // The slot is the digit the pressed code ends in, so the number row and the
+  // keypad stay one action and one printed row.
   {
     id: 'selectSlot',
     group: 'squad',
-    codes: ['Digit1', 'Digit2', 'Digit3', 'Digit4'],
+    codes: ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'],
     keys: ['1-4'],
     label: 'Select that operative',
   },
   {
     id: 'selectAll',
     group: 'squad',
-    codes: ['Digit0', 'Backquote'],
+    codes: ['Digit0', 'Backquote', 'Numpad0'],
     keys: ['0', '`'],
     label: 'Select the living squad',
   },

@@ -114,6 +114,10 @@ export default function CameraRig() {
     const down = (e: KeyboardEvent): void => {
       const b = bindingFor(codeOf(e))
       if (!b || b.group !== 'camera') return
+      // A modified press belongs to the browser, not the camera: Cmd+F finds,
+      // Ctrl+S saves, Cmd+minus zooms the page. Left alone here so the default
+      // still runs, the same guard the squad keys carry.
+      if (e.ctrlKey || e.metaKey || e.altKey) return
       // A paused mission takes no camera input. The recenter and zoom presses
       // have to stop here: the frame loop below never sees them, so without
       // this they would bank and apply the moment the menu closes.

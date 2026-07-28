@@ -136,11 +136,17 @@ export default function Input() {
       if (!w) return
       const ms = useMissionStore.getState()
       if (ms.paused && b.id !== 'pause') return
+      // A focused dialog button owns Space: cancelling the press here would
+      // stop it activating, so the menu would close instead of the button
+      // under focus firing. Escape still closes the menu from anywhere.
+      const focused = document.activeElement
+      if (code === 'Space' && focused instanceof HTMLButtonElement && focused.closest('[role="dialog"]')) return
       e.preventDefault()
       switch (b.id) {
         case 'selectSlot': {
-          // Slot n is the nth code in the binding, so the row stays one entry.
-          const id = 'a' + (b.codes.indexOf(code) + 1)
+          // Slot n is the digit the code ends in, so the number row and the
+          // keypad stay one entry.
+          const id = 'a' + code.slice(-1)
           if (alive(w.unit(id))) ms.setSelected([id])
           break
         }

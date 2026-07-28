@@ -153,11 +153,15 @@ export default function Hud() {
         <div className="hud-top-right">
           <span className="dim">CREDITS</span>
           <b className="hud-credits">{fmt(credits)}</b>
+          {/* The menu backdrop covers the top bar, so while the menu is up
+              this reads out the state and is not a control. Disabled says so,
+              rather than offering a click that cannot land. */}
           <button
             type="button"
             className={'hud-btn pause' + (paused ? ' on' : '')}
             ref={pauseBtnRef}
-            aria-label={paused ? 'Close the pause menu' : 'Pause and open the menu'}
+            disabled={paused}
+            aria-label={paused ? 'Mission paused' : 'Pause and open the menu'}
             onClick={() => {
               uiClick()
               setPaused(!paused)
