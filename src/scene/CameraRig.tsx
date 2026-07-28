@@ -124,7 +124,11 @@ export default function CameraRig() {
         case 'panBack':
         case 'panLeft':
         case 'panRight':
-          state.keys.add(b.id)
+          // Only the first press of a hold arms a pan. The auto-repeat that
+          // follows is dropped, or a key held across the pause would re-add
+          // itself the moment the menu closed and pan a view the player never
+          // asked to move. Re-arming takes a release and a fresh press.
+          if (!e.repeat) state.keys.add(b.id)
           break
         case 'recenter':
           squadCentroid(state.target)
@@ -170,8 +174,8 @@ export default function CameraRig() {
 
   useFrame((_, rawDt) => {
     // The pause is honoured here rather than in the key handlers alone. A key
-    // held from before the pause is already in the set, and no handler runs
-    // again until it is released, so this is the only place that can drop it.
+    // held from before the pause is already in the set, and its repeats are
+    // dropped above, so this is the only place that can take it back out.
     // Nothing else moves either: no pan request is taken, so one queued just
     // before the pause still lands on resume, and no damping runs, so the view
     // cannot drift out from under a frozen scene.
