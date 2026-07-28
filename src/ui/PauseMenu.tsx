@@ -4,7 +4,7 @@
 //
 // The backdrop takes pointer events, which is what keeps a click meant for the
 // menu from reaching the canvas and ordering the squad across the map.
-import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { BINDINGS, BINDING_GROUPS } from '../game/bindings'
 import { Chip, Panel } from './bits'
 import { uiClick } from './sound'
@@ -39,37 +39,34 @@ export default function PauseMenu(props: {
   )
 
   // Tab is browser focus behaviour rather than a mission binding, so it is
-  // read here and not through game/bindings. Wraps both ways, and hauls focus
-  // back inside if anything managed to leave.
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
-    if (e.key !== 'Tab') return
-    const root = panelRef.current
-    if (!root) return
-    const stops = Array.from(root.querySelectorAll<HTMLElement>('button:not([disabled])'))
-    if (stops.length === 0) return
-    const first = stops[0]
-    const last = stops[stops.length - 1]
-    const here = document.activeElement
-    if (!root.contains(here)) {
+  // read here and not through game/bindings. On the document because a click
+  // on the backdrop drops focus to the body, and a handler mounted inside the
+  // panel would never see the Tab that followed.
+  useEffect(() => {
+    const onTab = (e: globalThis.KeyboardEvent): void => {
+      if (e.key !== 'Tab') return
+      const root = panelRef.current
+      if (!root) return
+      const stops = Array.from(root.querySelectorAll<HTMLElement>('button:not([disabled])'))
+      if (stops.length === 0) return
+      const first = stops[0]
+      const last = stops[stops.length - 1]
+      // Wrap at both ends, and haul focus back in from anywhere outside.
+      const here = document.activeElement
+      let to: HTMLElement | null = null
+      if (!root.contains(here)) to = first
+      else if (e.shiftKey && here === first) to = last
+      else if (!e.shiftKey && here === last) to = first
+      if (!to) return
       e.preventDefault()
-      first.focus()
-    } else if (e.shiftKey && here === first) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && here === last) {
-      e.preventDefault()
-      first.focus()
+      to.focus()
     }
-  }
+    document.addEventListener('keydown', onTab)
+    return () => document.removeEventListener('keydown', onTab)
+  }, [])
 
   return (
-    <div
-      className="hud-menu-wrap"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Mission paused"
-      onKeyDown={onKeyDown}
-    >
+    <div className="hud-menu-wrap" role="dialog" aria-modal="true" aria-label="Mission paused">
       <div className="hud-menu-panel" ref={panelRef}>
         <Panel title="MISSION PAUSED" right={<span className="dim">SIM HALTED</span>}>
           <div className="hud-menu-grid">
