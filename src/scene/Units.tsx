@@ -41,6 +41,7 @@ interface Shared {
   barFgMat: THREE.MeshBasicMaterial
   agentBarMat: THREE.MeshBasicMaterial
   alertMat: THREE.MeshBasicMaterial
+  suspectMat: THREE.MeshBasicMaterial
   civMats: THREE.MeshStandardMaterial[]
   civHead: THREE.MeshStandardMaterial
   accentMats: Map<string, THREE.MeshStandardMaterial>
@@ -111,6 +112,13 @@ function getShared(): Shared {
       transparent: true,
       depthWrite: false,
     }),
+    suspectMat: new THREE.MeshBasicMaterial({
+      map: makeAlertTexture('?'),
+      color: '#f0b445',
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    }),
     civMats: ['#4a4238', '#3d4650', '#55483a', '#414a41', '#5a5044', '#38404b'].map((c) => std(c, 0.95)),
     civHead: std('#5c5348', 0.9),
     accentMats: new Map(),
@@ -154,6 +162,7 @@ interface View {
   bar: THREE.Group | null
   barFg: THREE.Mesh | null
   alert: THREE.Mesh | null
+  alertHot: boolean
   yaw: number
   phase: number
 }
@@ -285,6 +294,7 @@ function buildView(u: Unit, s: Shared): View {
     bar,
     barFg,
     alert,
+    alertHot: true,
     yaw: 0,
     phase: hashId(u.id) * Math.PI * 2,
   }
@@ -391,9 +401,16 @@ export default function Units() {
           view.bar.quaternion.copy(TMP_Q)
         }
       }
+      // Red '!' over a guard in combat, amber '?' over one investigating.
       if (view.alert) {
-        view.alert.visible = u.alerted
-        if (u.alerted) {
+        const hot = u.aiState === 'combat'
+        const show = hot || u.aiState === 'suspicious'
+        view.alert.visible = show
+        if (show) {
+          if (hot !== view.alertHot) {
+            view.alertHot = hot
+            view.alert.material = hot ? s.alertMat : s.suspectMat
+          }
           TMP_Q.copy(view.root.quaternion).invert().multiply(camera.quaternion)
           view.alert.quaternion.copy(TMP_Q)
         }
