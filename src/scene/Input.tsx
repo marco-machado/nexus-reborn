@@ -4,14 +4,16 @@
 // every living operative inside the marquee, shift adds instead of replacing,
 // and a click on bare ground clears. Right commands: move on the ground,
 // attack on an enemy. Invisible pick cylinders ride every agent and enemy; an
-// invisible ground plane catches everything else. Window level hotkeys cover
-// slot selection, select all, clear, pause and the stop and stance orders.
+// invisible ground plane catches everything else. The window level hotkeys are
+// the squad group of game/bindings, matched by action id and never by a key
+// literal.
 //
 // An empty selection is a real state: nothing re-selects the squad behind your
 // back, so an order given with no one selected does nothing.
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
+import { bindingFor, codeOf } from '../game/bindings'
 import { getWorld } from '../game/runtime'
 import { useMissionStore } from '../state/missionStore'
 import type { Unit, WorldApi } from '../game/types'
@@ -83,11 +85,6 @@ function agentsInBox(w: WorldApi, camera: THREE.Camera, b: Box): string[] {
   return out
 }
 
-// Physical key codes for the order keys, so they survive a non-Latin layout.
-// Some environments deliver synthetic events with an empty code, hence the
-// fallback to the produced character.
-const ORDER_CODES: Record<string, 'x' | 'h' | 'c'> = { KeyX: 'x', KeyH: 'h', KeyC: 'c' }
-
 // A stance key moves the whole selection together: it releases the flag only
 // when every selected agent already carries it, otherwise it sets it on all.
 function allSet(w: WorldApi, ids: string[], key: 'holdGround' | 'holdFire'): boolean {
@@ -125,35 +122,57 @@ export default function Input() {
     height: 0,
   })
 
-  // Hotkeys: 1..4 select slots, 0 or backquote select all, Escape clears,
-  // Space pauses, X stops, H toggles hold ground, C toggles hold fire.
-  // Modified presses are left to the browser, so Cmd+C still copies and
-  // Shift held for additive card selection issues no orders.
+  // Modified presses are left to the browser, so Cmd+C still copies and Shift
+  // held for additive card selection issues no orders. While the pause menu is
+  // up only the pause key answers: every other action would land on a squad
+  // the player cannot see behind the panel.
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
+      const code = codeOf(e)
+      const b = bindingFor(code)
+      if (!b || b.group !== 'squad') return
       const w = getWorld()
       if (!w) return
       const ms = useMissionStore.getState()
-      const k = ORDER_CODES[e.code] ?? e.key.toLowerCase()
-      if (e.key >= '1' && e.key <= '4') {
-        const id = 'a' + e.key
-        if (alive(w.unit(id))) ms.setSelected([id])
-      } else if (e.key === '0' || e.key === '`') {
-        ms.setSelected(livingAgents(w))
-      } else if (e.key === 'Escape') {
-        ms.setSelected([])
-      } else if (e.key === ' ') {
-        e.preventDefault()
-        ms.setPaused(!ms.paused)
-      } else if (k === 'x' || k === 'h' || k === 'c') {
-        // No fallback to the whole squad here: a bare key carries no target,
-        // so an empty selection must stay empty and order nobody.
-        const ids = selectedAgents(w)
-        if (ids.length === 0) return
-        if (k === 'x') w.orderStop(ids)
-        else if (k === 'h') w.orderHold(ids, !allSet(w, ids, 'holdGround'))
-        else w.orderHoldFire(ids, !allSet(w, ids, 'holdFire'))
+      if (ms.paused && b.id !== 'pause') return
+      // A focused dialog button owns Space: cancelling the press here would
+      // stop it activating, so the menu would close instead of the button
+      // under focus firing. Escape still closes the menu from anywhere.
+      const focused = document.activeElement
+      if (code === 'Space' && focused instanceof HTMLButtonElement && focused.closest('[role="dialog"]')) return
+      e.preventDefault()
+      switch (b.id) {
+        case 'selectSlot': {
+          // Slot n is the digit the code ends in, so the number row and the
+          // keypad stay one entry.
+          const id = 'a' + code.slice(-1)
+          if (alive(w.unit(id))) ms.setSelected([id])
+          break
+        }
+        case 'selectAll':
+          ms.setSelected(livingAgents(w))
+          break
+        case 'clearSelection':
+          ms.setSelected([])
+          break
+        case 'pause':
+          ms.setPaused(!ms.paused)
+          break
+        case 'stop':
+        case 'holdGround':
+        case 'holdFire': {
+          // No fallback to the whole squad here: a bare key carries no target,
+          // so an empty selection must stay empty and order nobody.
+          const ids = selectedAgents(w)
+          if (ids.length === 0) return
+          if (b.id === 'stop') w.orderStop(ids)
+          else if (b.id === 'holdGround') w.orderHold(ids, !allSet(w, ids, 'holdGround'))
+          else w.orderHoldFire(ids, !allSet(w, ids, 'holdFire'))
+          break
+        }
+        default:
+          break
       }
     }
     window.addEventListener('keydown', onKey)

@@ -463,6 +463,7 @@
 
 /* keyframes */
 @keyframes blink { 50% { opacity: 0.25; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cursor-blink { 50% { opacity: 0; } }
 @keyframes marker-pulse {
   0% { transform: rotate(45deg) scale(0.45); opacity: 0.95; }
@@ -2674,18 +2675,99 @@
 .hud-banner-title { font-size: clamp(28px, 3.4vw, 44px); letter-spacing: 0.3em; }
 .hud-banner-sub { font-size: 11px; letter-spacing: 0.4em; margin-top: 8px; color: var(--ink); }
 
-.hud-paused-tag {
+/* pause menu: centered over the frozen scene. The backdrop takes pointer
+   events, so nothing under it hears the clicks meant for the menu. */
+.hud-menu-wrap {
   position: absolute;
-  left: 50%;
-  top: 40%;
-  transform: translate(-50%, -50%);
-  padding: 8px 24px;
-  border: 1px solid var(--line-amber);
-  color: var(--amber);
-  letter-spacing: 0.4em;
-  background: rgba(4, 10, 9, 0.82);
-  pointer-events: none;
-  animation: blink 1.8s steps(2) infinite;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  background: rgba(2, 6, 8, 0.72);
+  animation: fade-in 0.16s ease-out both;
+}
+
+.hud-menu-panel {
+  width: 780px;
+  max-width: calc(100vw - 64px);
+  max-height: calc(100vh - 64px);
+  display: flex;
+  box-shadow: 0 0 70px rgba(0, 0, 0, 0.65);
+}
+
+.hud-menu-panel .panel {
+  flex: 1;
+  background: var(--bg-panel-solid);
+  min-height: 0;
+}
+
+.hud-menu-panel .panel-body { gap: 12px; overflow: hidden; }
+
+.hud-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  align-items: start;
+  min-height: 0;
+  overflow: auto;
+}
+
+.hud-menu-group-head {
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--cyan);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.hud-menu-rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hud-menu-row {
+  display: grid;
+  grid-template-columns: 124px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.hud-menu-row dt {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.hud-menu-row dd {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.hud-menu-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  flex: none;
+}
+
+.hud-menu-actions .hud-btn { padding: 6px 28px; }
+
+.hud-menu-actions .hud-btn.pause {
+  color: var(--amber-hot);
+  border-color: var(--line-amber);
+}
+
+.hud-menu-actions .hud-btn:focus-visible {
+  outline: 1px solid var(--teal);
+  outline-offset: 2px;
 }
 
 /* narrow-width safety tweaks */
