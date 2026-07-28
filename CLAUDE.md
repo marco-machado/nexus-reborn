@@ -53,7 +53,7 @@ Four stores: `appStore` (screen flow, squad, credits), `missionStore` (in-missio
 
 `game/research.ts` carries each node's effects as data, so the screen's benefit lines and the change the mission applies come from one place.
 
-`world.ts` reads `useResearchStore.getState().done` once inside `createWorld` (`crewBonus`, `squadWeapon`). This is the only store `src/game/` reads, and research never changes a mission already running.
+`world.ts` reads `useResearchStore.getState().done` once inside `createWorld` (`crewBonus`, `squadWeapon`), so research never changes a mission already running. It is the only store state the sim reads: `world.ts` also writes `missionStore` (log, squad, objectives, alert, clock, result) and `appStore` (the debrief outcome), but reads nothing back from either.
 
 ## three.js conventions
 
@@ -67,7 +67,7 @@ Four stores: `appStore` (screen flow, squad, credits), `missionStore` (in-missio
 - Ground plane is XZ, +Y up, 1 unit = 1 meter. The city is `CITY_SIZE` (96) square, cell `(cx,cz)` spans `[cx, cx+1)`, cell centers sit at `+0.5`. Helpers: `cellIndex`, `isWalkable` in `game/types.ts`.
 - `CAMERA_YAW` (PI/4) is fixed and shared: the camera rig orbits at it and the minimap turns by it, so up on the panel is up on screen.
 - `citygen.ts` is the single source of road geometry. `scene/textures.ts` and `ui/Minimap.tsx` paint from `city.roadRects`; do not re-derive widths.
-- `game/bindings.ts` is the only place a key string appears. Handlers ask `bindingFor` for an action and switch on its id; the pause menu prints the same list, so the table cannot drift from the handlers.
+- `game/bindings.ts` is the only place a mission key string appears. Scene handlers ask `bindingFor` for an action and switch on its id; the pause menu prints the same list, so the table cannot drift from the handlers. DOM screens keep their own keyboard handling outside it (Enter and Space on research nodes, Tab in the pause menu, arrows and Home/End on the world map timeline); those keys do not belong in the mission table.
 - Randomness is always seeded. `mulberry32` from `game/rng.ts` for world and city, `hashOf`/`rngFrom` in `ui/util.ts` for portraits and figures, so an operative always renders the same face.
 
 ## No external assets
