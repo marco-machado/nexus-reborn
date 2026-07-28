@@ -1,12 +1,15 @@
 // Fixed-angle isometric-style camera. Yaw 45 deg, elevation 55 deg so the eye
-// clears the tallest towers at default zoom. WASD/arrows pan in screen-aligned
-// ground axes, +/- and the wheel zoom, F recenters on the squad centroid. The
-// HUD steers it from the minimap through the pan request in game/runtime.
+// clears the tallest towers at default zoom. The pan, zoom and recenter keys
+// come from game/bindings; the wheel zooms; the HUD steers it from the minimap
+// through the pan request in game/runtime. Nothing moves while the mission is
+// paused, so the pause menu sits over a scene that holds still.
 import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
+import { bindingFor, codeOf, type BindingId } from '../game/bindings'
 import { getWorld, setCameraFocus, setCameraFootprint, takeCameraPan } from '../game/runtime'
 import { CAMERA_YAW, type CameraFootprint } from '../game/types'
+import { useMissionStore } from '../state/missionStore'
 
 const ELEV = (55 * Math.PI) / 180
 // Keep the eye above the mid-rise roofline even at full zoom-in.
@@ -76,7 +79,8 @@ export default function CameraRig() {
       target,
       dist: 72,
       targetDist: 72,
-      keys: new Set<string>(),
+      // Holds action ids, not codes, so W and Up are one entry.
+      keys: new Set<BindingId>(),
       tmp: new THREE.Vector3(),
       ray: new THREE.Vector3(),
       footprint: [
@@ -107,45 +111,40 @@ export default function CameraRig() {
   }, [camera])
 
   useEffect(() => {
-    // Some environments deliver synthetic key events with an empty code;
-    // fall back to mapping e.key so the rig works everywhere.
-    const KEY_TO_CODE: Record<string, string> = {
-      w: 'KeyW', a: 'KeyA', s: 'KeyS', d: 'KeyD', f: 'KeyF',
-      W: 'KeyW', A: 'KeyA', S: 'KeyS', D: 'KeyD', F: 'KeyF',
-      '=': 'Equal', '+': 'Equal', '-': 'Minus', '_': 'Minus',
-      ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight',
-    }
-    const codeOf = (e: KeyboardEvent): string => e.code || KEY_TO_CODE[e.key] || ''
     const down = (e: KeyboardEvent): void => {
-      switch (codeOf(e)) {
-        case 'KeyW':
-        case 'ArrowUp':
-        case 'KeyS':
-        case 'ArrowDown':
-        case 'KeyA':
-        case 'ArrowLeft':
-        case 'KeyD':
-        case 'ArrowRight':
-          if (e.code.startsWith('Arrow')) e.preventDefault()
-          state.keys.add(e.code)
+      const b = bindingFor(codeOf(e))
+      if (!b || b.group !== 'camera') return
+      // A paused mission takes no camera input, and a key held across the
+      // pause must not resume panning when the menu closes.
+      if (useMissionStore.getState().paused) {
+        state.keys.clear()
+        return
+      }
+      e.preventDefault()
+      switch (b.id) {
+        case 'panForward':
+        case 'panBack':
+        case 'panLeft':
+        case 'panRight':
+          state.keys.add(b.id)
           break
-        case 'KeyF':
+        case 'recenter':
           squadCentroid(state.target)
           break
-        case 'Equal':
-        case 'NumpadAdd':
+        case 'zoomIn':
           state.targetDist = Math.max(MIN_DIST, state.targetDist * 0.86)
           break
-        case 'Minus':
-        case 'NumpadSubtract':
+        case 'zoomOut':
           state.targetDist = Math.min(MAX_DIST, state.targetDist * 1.16)
           break
         default:
           break
       }
     }
+    // Releases are never gated: whatever the pause state, letting go stops.
     const up = (e: KeyboardEvent): void => {
-      state.keys.delete(codeOf(e))
+      const b = bindingFor(codeOf(e))
+      if (b) state.keys.delete(b.id)
     }
     const blur = (): void => {
       state.keys.clear()
@@ -164,6 +163,7 @@ export default function CameraRig() {
     const el = gl.domElement
     const wheel = (e: WheelEvent): void => {
       e.preventDefault()
+      if (useMissionStore.getState().paused) return
       state.targetDist = Math.min(MAX_DIST, Math.max(MIN_DIST, state.targetDist * Math.exp(e.deltaY * 0.0012)))
     }
     el.addEventListener('wheel', wheel, { passive: false })
@@ -182,10 +182,10 @@ export default function CameraRig() {
     const k = state.keys
     let u = 0
     let v = 0
-    if (k.has('KeyW') || k.has('ArrowUp')) u += 1
-    if (k.has('KeyS') || k.has('ArrowDown')) u -= 1
-    if (k.has('KeyD') || k.has('ArrowRight')) v += 1
-    if (k.has('KeyA') || k.has('ArrowLeft')) v -= 1
+    if (k.has('panForward')) u += 1
+    if (k.has('panBack')) u -= 1
+    if (k.has('panRight')) v += 1
+    if (k.has('panLeft')) v -= 1
     if (u !== 0 || v !== 0) {
       const inv = u !== 0 && v !== 0 ? Math.SQRT1_2 : 1
       const speed = state.dist * 0.6 * dt * inv

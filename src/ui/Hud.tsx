@@ -12,6 +12,7 @@ import { getWorld, panCameraTo } from '../game/runtime'
 import type { WeaponId } from '../game/types'
 import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
+import PauseMenu from './PauseMenu'
 import { Portrait } from './portrait'
 import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph, ScrollBox } from './bits'
 import { fmt, pad2 } from './util'
@@ -114,13 +115,9 @@ export default function Hud() {
     if (el) el.scrollTop = el.scrollHeight
   }, [log])
 
-  // Two step abort: first click arms, second confirms, auto resets after 3s.
-  const [abortArmed, setAbortArmed] = useState(false)
-  useEffect(() => {
-    if (!abortArmed) return
-    const id = window.setTimeout(() => setAbortArmed(false), 3000)
-    return () => window.clearTimeout(id)
-  }, [abortArmed])
+  // Abort lives in the pause menu now; the top bar keeps the one control that
+  // opens it, and takes focus back when the menu closes.
+  const pauseBtnRef = useRef<HTMLButtonElement | null>(null)
 
   const [mmZoom, setMmZoom] = useState(0)
 
@@ -159,28 +156,14 @@ export default function Hud() {
           <button
             type="button"
             className={'hud-btn pause' + (paused ? ' on' : '')}
-            aria-label={paused ? 'Resume mission' : 'Pause mission'}
+            ref={pauseBtnRef}
+            aria-label={paused ? 'Close the pause menu' : 'Pause and open the menu'}
             onClick={() => {
               uiClick()
               setPaused(!paused)
             }}
           >
             {paused ? 'PAUSED' : 'PAUSE'}
-          </button>
-          <button
-            type="button"
-            className={'hud-btn abort' + (abortArmed ? ' armed' : '')}
-            aria-label={abortArmed ? 'Confirm abort mission' : 'Abort mission'}
-            onClick={() => {
-              uiClick()
-              if (abortArmed) {
-                goto('world')
-              } else {
-                setAbortArmed(true)
-              }
-            }}
-          >
-            {abortArmed ? 'CONFIRM?' : 'ABORT'}
           </button>
         </div>
       </div>
@@ -422,7 +405,13 @@ export default function Hud() {
           </div>
         </div>
       )}
-      {paused && result === 'none' && <div className="hud-paused-tag">PAUSED</div>}
+      {paused && result === 'none' && (
+        <PauseMenu
+          returnRef={pauseBtnRef}
+          onResume={() => setPaused(false)}
+          onAbort={() => goto('world')}
+        />
+      )}
     </div>
   )
 }
