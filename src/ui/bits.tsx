@@ -305,7 +305,7 @@ function roleShape(role: AgentRole): ReactNode {
   }
 }
 
-export type AbilityKind = 'grenade' | 'shield' | 'dash' | 'scan' | 'flame'
+export type AbilityKind = 'grenade' | 'medstim' | 'shield' | 'dash' | 'scan' | 'flame'
 
 export function AbilityGlyph(props: { kind: AbilityKind; size?: number }) {
   const size = props.size ?? 18
@@ -325,6 +325,13 @@ function abilityShape(kind: AbilityKind): ReactNode {
           <rect x="8" y="4" width="4" height="3" />
           <circle cx="14.4" cy="4.2" r="2" fill="none" stroke="currentColor" strokeWidth="1.2" />
           <rect x="8.8" y="9" width="2.4" height="1" fill="#07100e" />
+        </g>
+      )
+    case 'medstim':
+      return (
+        <g>
+          <rect x="4.2" y="2.4" width="11.6" height="15.2" rx="1.8" fill="none" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M8.4 5.4h3.2v3h3v3.2h-3v3H8.4v-3h-3V8.4h3Z" fill="currentColor" />
         </g>
       )
     case 'shield':

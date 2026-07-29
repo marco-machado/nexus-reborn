@@ -6,7 +6,7 @@
 // backtick are a single row. And no key string is written outside this file:
 // handlers ask bindingFor for the action and switch on its id.
 
-export type BindingGroup = 'camera' | 'squad' | 'mouse'
+export type BindingGroup = 'camera' | 'squad' | 'abilities' | 'mouse'
 
 // Stable ids the handlers switch on. A union rather than a bare string so a
 // typo in a handler is a type error instead of a case that never fires.
@@ -25,6 +25,8 @@ export type BindingId =
   | 'stop'
   | 'holdGround'
   | 'holdFire'
+  | 'medStim'
+  | 'grenade'
   | 'pause'
   | 'pickSelect'
   | 'boxSelect'
@@ -82,6 +84,10 @@ export const BINDINGS: Binding[] = [
   // the menu is what the paused state looks like.
   { id: 'pause', group: 'squad', codes: ['Space', 'Escape'], keys: ['Space', 'Esc'], label: 'Pause menu' },
 
+  /* abilities, handled in src/scene/Input.tsx */
+  { id: 'medStim', group: 'abilities', codes: ['KeyM'], keys: ['M'], label: 'Use med stim' },
+  { id: 'grenade', group: 'abilities', codes: ['KeyG'], keys: ['G'], label: 'Arm / cancel grenade' },
+
   /* mouse, handled in src/scene/Input.tsx and src/ui/Minimap.tsx */
   { id: 'pickSelect', group: 'mouse', codes: [], keys: ['Left click'], label: 'Select an operative' },
   { id: 'boxSelect', group: 'mouse', codes: [], keys: ['Left drag'], label: 'Box select operatives' },
@@ -97,6 +103,7 @@ export const BINDINGS: Binding[] = [
 export const BINDING_GROUPS: ReadonlyArray<{ group: BindingGroup; title: string }> = [
   { group: 'camera', title: 'CAMERA' },
   { group: 'squad', title: 'SQUAD' },
+  { group: 'abilities', title: 'ABILITIES' },
   { group: 'mouse', title: 'MOUSE' },
 ]
 

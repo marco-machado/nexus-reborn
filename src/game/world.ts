@@ -18,9 +18,15 @@ import { crewBonus, squadWeapon } from './research'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
-import { sfx } from './audio'
+import { missionSfx as sfx } from './audioBridge'
 import { useMissionStore } from '../state/missionStore'
-import type { ObjectiveUi, SquadMemberUi } from '../state/missionStore'
+import type {
+  AbilityAvailability,
+  MissionAbilities,
+  MissionInventory,
+  ObjectiveUi,
+  SquadMemberUi,
+} from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 
@@ -69,6 +75,17 @@ const OUTCOME_DELAY = 2.5
 const MOVE_CHATTER_GAP = 4
 const FLAVOR_GAP = 6
 const CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
+const MED_STIM_HEAL = 45
+const MED_STIM_COOLDOWN = 2
+const GRENADE_COOLDOWN = 4
+const GRENADE_RANGE = 18
+const GRENADE_RADIUS = 3.5
+const GRENADE_DAMAGE_CENTER = 70
+const GRENADE_DAMAGE_EDGE = 35
+const GRENADE_NOISE_RADIUS = 24
+// A click may land just inside a wall or prop proxy. Snap it to adjacent
+// pavement, but reject a click buried deep inside inaccessible geometry.
+const GRENADE_TARGET_SNAP = 2.5
 
 const MOVE_LINES = ['Moving up.', 'Copy that.', 'On my way.', 'Repositioning.', 'Advancing.']
 // No 'Weapons free.' here: an ordered shot fires through hold fire, so that
@@ -144,6 +161,14 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   let lastSuspectLogT = -SUSPECT_LOG_GAP
   let activeObjective = 0
   const objectivesDone: boolean[] = mission.objectives.map(() => false)
+  const inventory: MissionInventory = { med: 2, cell: 1 }
+  for (const op of operatives) {
+    if (op.role === 'medic') inventory.med += 2
+    else if (op.role === 'support') inventory.med += 1
+    else if (op.role === 'tech') inventory.cell += 1
+  }
+  let medStimReadyAt = 0
+  let grenadeReadyAt = 0
 
   function addUnit(u: SimUnit): void {
     units.push(u)
@@ -1074,6 +1099,30 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     useMissionStore.getState().setSquad(rows)
   }
 
+  function availability(stock: number, readyAt: number): AbilityAvailability {
+    if (stock <= 0) return 'out-of-stock'
+    if (world.time < readyAt) return 'cooldown'
+    return 'usable'
+  }
+
+  function syncMissionResources(): void {
+    const abilities: MissionAbilities = {
+      medStim: {
+        availability: availability(inventory.med, medStimReadyAt),
+        cooldownRemaining: Math.max(0, medStimReadyAt - world.time),
+        cooldownDuration: MED_STIM_COOLDOWN,
+      },
+      grenade: {
+        availability: availability(inventory.cell, grenadeReadyAt),
+        cooldownRemaining: Math.max(0, grenadeReadyAt - world.time),
+        cooldownDuration: GRENADE_COOLDOWN,
+      },
+    }
+    const ms = useMissionStore.getState()
+    ms.setInventory({ med: inventory.med, cell: inventory.cell })
+    ms.setAbilities(abilities)
+  }
+
   function startup(): void {
     pushLog('SYS', 'SQUAD LINK ESTABLISHED. ' + livingAgents().length + ' ONLINE.')
     const first = mission.objectives[0]
@@ -1086,6 +1135,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     }
     syncSquad()
     syncObjectives()
+    syncMissionResources()
     useMissionStore.getState().setClock(clockStr())
   }
 
@@ -1136,6 +1186,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     if (syncT >= SYNC_INTERVAL) {
       syncT -= SYNC_INTERVAL
       syncSquad()
+      syncMissionResources()
       useMissionStore.getState().setClock(clockStr())
     }
   }
@@ -1275,6 +1326,70 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     stanceAck(changed, hold ? 'Weapons tight.' : 'Weapons free.')
   }
 
+  function canUseAbility(agentId: string): SimUnit | null {
+    const ms = useMissionStore.getState()
+    if (!ms.live || ms.paused || ms.result !== 'none' || result !== 'none') return null
+    const u = byId.get(agentId)
+    if (!u || u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) return null
+    return u
+  }
+
+  function orderMedStim(agentId: string): boolean {
+    const u = canUseAbility(agentId)
+    if (!u) return false
+    // Stock has precedence over cooldown, matching the HUD snapshot.
+    if (inventory.med <= 0 || world.time < medStimReadyAt || u.hp >= u.maxHp) return false
+    const healed = Math.min(MED_STIM_HEAL, u.maxHp - u.hp)
+    if (healed <= 0) return false
+    u.hp += healed
+    inventory.med -= 1
+    medStimReadyAt = world.time + MED_STIM_COOLDOWN
+    sfx.confirmBlip()
+    pushLog('SYS', 'MED STIM APPLIED TO ' + (u.operative?.codename ?? u.name) + '. +' + Math.ceil(healed) + ' HP.', 'ok')
+    return true
+  }
+
+  function orderGrenade(agentId: string, target: Vec2): boolean {
+    const u = canUseAbility(agentId)
+    if (!u || inventory.cell <= 0 || world.time < grenadeReadyAt) return false
+    if (!Number.isFinite(target.x) || !Number.isFinite(target.z)) return false
+    if (target.x < 0 || target.z < 0 || target.x >= city.size || target.z >= city.size) return false
+    const resolved = isWalkable(city, target.x, target.z)
+      ? { x: target.x, z: target.z }
+      : nearestWalkable(city, target)
+    if (!resolved || dist(target, resolved) > GRENADE_TARGET_SNAP) return false
+    if (dist(u.pos, resolved) > GRENADE_RANGE) return false
+
+    inventory.cell -= 1
+    grenadeReadyAt = world.time + GRENADE_COOLDOWN
+    noiseSeq += 1
+    noises.push({
+      id: noiseSeq,
+      pos: { x: resolved.x, z: resolved.z },
+      r: GRENADE_NOISE_RADIUS,
+      t: world.time,
+    })
+    booms.push({
+      pos: { x: resolved.x, z: resolved.z },
+      t: world.time,
+      r: GRENADE_RADIUS,
+      color: '#ff9b52',
+    })
+
+    for (const t of units) {
+      if (t.stance === 'dead') continue
+      const d = dist(resolved, t.pos)
+      if (d > GRENADE_RADIUS || !hasLos(city, resolved, t.pos)) continue
+      const k = Math.min(1, d / GRENADE_RADIUS)
+      const damage = GRENADE_DAMAGE_CENTER + (GRENADE_DAMAGE_EDGE - GRENADE_DAMAGE_CENTER) * k
+      applyDamage(t, damage, u)
+    }
+    sfx.blast()
+    sfx.confirmBlip()
+    pushLog('SYS', 'GRENADE DETONATED. CELL EXPENDED.', 'ok')
+    return true
+  }
+
   const world: WorldApi = {
     city,
     mission,
@@ -1288,6 +1403,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     orderStop,
     orderHold,
     orderHoldFire,
+    orderMedStim,
+    orderGrenade,
     unit: (id: string) => byId.get(id),
   }
 

@@ -18,26 +18,13 @@ import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph, ScrollBox } fr
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
 
-const ABILITIES = ['grenade', 'shield', 'dash', 'scan', 'flame'] as const
+const LOCKED_ABILITIES = ['shield', 'dash', 'scan'] as const
 
 function weaponIdByName(name: string): WeaponId {
   for (const w of Object.values(WEAPONS)) {
     if (w.name === name) return w.id
   }
   return 'assault'
-}
-
-// One baseline kit of each, plus role bonuses from the deployed roster.
-function itemCounts(squad: SquadMemberUi[]): { med: number; cell: number } {
-  let med = 1
-  let cell = 1
-  for (const r of squad) {
-    const role = ROSTER.find((o) => o.codename === r.codename)?.role
-    if (role === 'medic') med += 2
-    else if (role === 'support') med += 1
-    else if (role === 'tech') cell += 1
-  }
-  return { med, cell }
 }
 
 function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
@@ -100,8 +87,12 @@ export default function Hud() {
   const paused = useMissionStore((s) => s.paused)
   const result = useMissionStore((s) => s.result)
   const clock = useMissionStore((s) => s.clock)
+  const inventory = useMissionStore((s) => s.inventory)
+  const abilities = useMissionStore((s) => s.abilities)
+  const grenadeTargeting = useMissionStore((s) => s.grenadeTargeting)
   const setPaused = useMissionStore((s) => s.setPaused)
   const setSelected = useMissionStore((s) => s.setSelected)
+  const setGrenadeTargeting = useMissionStore((s) => s.setGrenadeTargeting)
   const credits = useAppStore((s) => s.credits)
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
@@ -127,7 +118,43 @@ export default function Hud() {
   const sidearmId = active ? weaponIdByName(active.sidearmName) : 'pistol'
   // Same weapon the squad deployed with, research included.
   const sidearm = squadWeapon(sidearmId, researched)
-  const items = itemCounts(squad)
+  const abilityTarget = selected
+    .map((id) => squad.find((r) => r.unitId === id))
+    .find((r): r is SquadMemberUi => !!r && !r.dead)
+  const medTargetReady = !!abilityTarget && abilityTarget.hp < abilityTarget.maxHp
+  const grenadeTargetReady = !!abilityTarget
+  const medState =
+    abilities.medStim.availability !== 'usable'
+      ? abilities.medStim.availability
+      : medTargetReady
+        ? 'usable'
+        : 'disabled-target'
+  const grenadeState =
+    abilities.grenade.availability !== 'usable'
+      ? abilities.grenade.availability
+      : !grenadeTargetReady
+        ? 'disabled-target'
+        : grenadeTargeting
+          ? 'armed'
+          : 'usable'
+  const medLabel =
+    medState === 'out-of-stock'
+      ? 'Med stim unavailable: out of MED'
+      : medState === 'cooldown'
+        ? 'Med stim cooling down'
+        : medState === 'disabled-target'
+          ? 'Med stim unavailable: select an injured living operative'
+          : 'Use med stim on selected operative'
+  const grenadeLabel =
+    grenadeState === 'out-of-stock'
+      ? 'Grenade unavailable: out of CELL'
+      : grenadeState === 'cooldown'
+        ? 'Grenade cooling down'
+        : grenadeState === 'disabled-target'
+          ? 'Grenade unavailable: select a living operative'
+          : grenadeState === 'armed'
+            ? 'Cancel grenade targeting'
+            : 'Arm grenade targeting'
 
   return (
     <div className="hud-root">
@@ -330,16 +357,61 @@ export default function Hud() {
           <div className="hud-panel hud-abilities corners">
             <div className="hud-panel-head">
               <span>ABILITIES</span>
-              <span className="dim">LOCKED</span>
+              <span className={grenadeTargeting ? 'amber' : 'dim'}>
+                {grenadeTargeting ? 'TARGETING' : '2 LIVE'}
+              </span>
             </div>
             <div className="hud-slots">
-              {ABILITIES.map((k) => (
-                <span key={k} className="hud-slot locked" title="LOCKED">
+              <button
+                type="button"
+                className={'hud-slot ability ' + grenadeState}
+                aria-label={grenadeLabel}
+                aria-pressed={grenadeTargeting}
+                disabled={grenadeState !== 'usable' && grenadeState !== 'armed'}
+                title={grenadeLabel}
+                onClick={() => {
+                  uiClick()
+                  setGrenadeTargeting(!grenadeTargeting)
+                }}
+              >
+                <AbilityGlyph kind="grenade" />
+                <span className="hud-slot-key">G</span>
+                {grenadeState === 'cooldown' && (
+                  <span className="hud-slot-cd">{abilities.grenade.cooldownRemaining.toFixed(1)}</span>
+                )}
+                {grenadeState === 'out-of-stock' && <span className="hud-slot-cd">00</span>}
+              </button>
+              <button
+                type="button"
+                className={'hud-slot ability ' + medState}
+                aria-label={medLabel}
+                disabled={medState !== 'usable'}
+                title={medLabel}
+                onClick={() => {
+                  if (abilityTarget) getWorld()?.orderMedStim(abilityTarget.unitId)
+                }}
+              >
+                <AbilityGlyph kind="medstim" />
+                <span className="hud-slot-key">M</span>
+                {medState === 'cooldown' && (
+                  <span className="hud-slot-cd">{abilities.medStim.cooldownRemaining.toFixed(1)}</span>
+                )}
+                {medState === 'out-of-stock' && <span className="hud-slot-cd">00</span>}
+              </button>
+              {LOCKED_ABILITIES.map((k) => (
+                <button
+                  type="button"
+                  key={k}
+                  className="hud-slot ability locked"
+                  aria-label={k.toUpperCase() + ' ability locked'}
+                  title="LOCKED"
+                  disabled
+                >
                   <AbilityGlyph kind={k} />
                   <span className="hud-slot-lock">
                     <LockGlyph size={7} />
                   </span>
-                </span>
+                </button>
               ))}
             </div>
           </div>
@@ -348,13 +420,13 @@ export default function Hud() {
               <span>ITEMS</span>
             </div>
             <div className="hud-slots">
-              <span className="hud-slot">
+              <span className={'hud-slot item' + (inventory.med <= 0 ? ' spent' : '')}>
                 <ItemGlyph kind="med" size={16} />
-                <i>{pad2(items.med)}</i>
+                <i>{pad2(inventory.med)}</i>
               </span>
-              <span className="hud-slot">
+              <span className={'hud-slot item' + (inventory.cell <= 0 ? ' spent' : '')}>
                 <ItemGlyph kind="cell" size={16} />
-                <i>{pad2(items.cell)}</i>
+                <i>{pad2(inventory.cell)}</i>
               </span>
             </div>
           </div>

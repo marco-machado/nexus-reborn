@@ -201,6 +201,14 @@ export const sfx = {
     burst(live, { dur: 0.12, type: 'lowpass', freq: 260, q: 0.7, gain: 0.3 })
   },
 
+  blast(): void {
+    const live = gate('blast', 0.12)
+    if (!live) return
+    burst(live, { dur: 0.42, type: 'lowpass', freq: 620, q: 0.55, gain: 1, freqEnd: 80 })
+    tone(live, { dur: 0.45, type: 'sine', f0: 105, f1: 28, gain: 0.62 })
+    burst(live, { dur: 0.12, type: 'bandpass', freq: 1800, q: 0.8, gain: 0.34, at: 0.025 })
+  },
+
   uiClick(): void {
     const live = gate('ui', 0.03)
     if (!live) return

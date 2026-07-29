@@ -5,6 +5,24 @@
 import { create } from 'zustand'
 import type { CommEntry } from '../game/types'
 
+export interface MissionInventory {
+  med: number
+  cell: number
+}
+
+export type AbilityAvailability = 'out-of-stock' | 'cooldown' | 'usable'
+
+export interface AbilitySnapshot {
+  availability: AbilityAvailability
+  cooldownRemaining: number
+  cooldownDuration: number
+}
+
+export interface MissionAbilities {
+  medStim: AbilitySnapshot
+  grenade: AbilitySnapshot
+}
+
 export interface SquadMemberUi {
   unitId: string
   slot: number
@@ -31,7 +49,7 @@ export interface ObjectiveUi {
   active: boolean
 }
 
-interface MissionUiState {
+export interface MissionUiState {
   live: boolean
   paused: boolean
   selected: string[]
@@ -41,6 +59,9 @@ interface MissionUiState {
   alert: number
   result: 'none' | 'won' | 'lost'
   clock: string
+  inventory: MissionInventory
+  abilities: MissionAbilities
+  grenadeTargeting: boolean
   setLive: (v: boolean) => void
   setPaused: (v: boolean) => void
   setSelected: (ids: string[]) => void
@@ -50,8 +71,17 @@ interface MissionUiState {
   setAlert: (n: number) => void
   setResult: (r: 'none' | 'won' | 'lost') => void
   setClock: (c: string) => void
+  setInventory: (inventory: MissionInventory) => void
+  setAbilities: (abilities: MissionAbilities) => void
+  setGrenadeTargeting: (v: boolean) => void
   reset: () => void
 }
+
+const emptyAbility = (duration: number): AbilitySnapshot => ({
+  availability: 'out-of-stock',
+  cooldownRemaining: 0,
+  cooldownDuration: duration,
+})
 
 const initial = {
   live: false,
@@ -63,18 +93,38 @@ const initial = {
   alert: 0,
   result: 'none' as const,
   clock: '22:00:00',
+  inventory: { med: 0, cell: 0 } as MissionInventory,
+  abilities: {
+    medStim: emptyAbility(2),
+    grenade: emptyAbility(4),
+  } as MissionAbilities,
+  grenadeTargeting: false,
 }
 
 export const useMissionStore = create<MissionUiState>((set) => ({
   ...initial,
-  setLive: (v) => set({ live: v }),
-  setPaused: (v) => set({ paused: v }),
+  setLive: (v) => set({ live: v, ...(!v ? { grenadeTargeting: false } : {}) }),
+  setPaused: (v) => set({ paused: v, ...(v ? { grenadeTargeting: false } : {}) }),
   setSelected: (ids) => set({ selected: ids }),
-  setSquad: (rows) => set({ squad: rows }),
+  setSquad: (rows) =>
+    set((s) => ({
+      squad: rows,
+      ...(s.grenadeTargeting &&
+      !s.selected.some((id) => rows.some((row) => row.unitId === id && !row.dead))
+        ? { grenadeTargeting: false }
+        : {}),
+    })),
   setObjectives: (rows) => set({ objectives: rows }),
   addLog: (e) => set((s) => ({ log: [...s.log.slice(-60), e] })),
   setAlert: (n) => set({ alert: n }),
-  setResult: (r) => set({ result: r }),
+  setResult: (r) => set({ result: r, ...(r !== 'none' ? { grenadeTargeting: false } : {}) }),
   setClock: (c) => set({ clock: c }),
+  setInventory: (inventory) => set({ inventory }),
+  setAbilities: (abilities) =>
+    set({
+      abilities,
+      ...(abilities.grenade.availability !== 'usable' ? { grenadeTargeting: false } : {}),
+    }),
+  setGrenadeTargeting: (v) => set({ grenadeTargeting: v }),
   reset: () => set({ ...initial }),
 }))

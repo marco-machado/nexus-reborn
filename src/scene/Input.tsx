@@ -95,6 +95,7 @@ export default function Input() {
   const world = getWorld()
   const camera = useThree((s) => s.camera)
   const gl = useThree((s) => s.gl)
+  const grenadeTargeting = useMissionStore((s) => s.grenadeTargeting)
   const size = world ? world.city.size : 96
   const picks = useMemo(() => {
     if (!world) return []
@@ -106,6 +107,7 @@ export default function Input() {
   // Written by the pick handlers, read by the window pointerdown below: r3f
   // runs the canvas handlers before the same event reaches the window.
   const hitPick = useRef<Pick | null>(null)
+  const abilityClick = useRef(false)
   const drag = useRef({
     on: false,
     moved: false,
@@ -131,11 +133,12 @@ export default function Input() {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
       const code = codeOf(e)
       const b = bindingFor(code)
-      if (!b || b.group !== 'squad') return
+      if (!b || (b.group !== 'squad' && b.group !== 'abilities')) return
       const w = getWorld()
       if (!w) return
       const ms = useMissionStore.getState()
       if (ms.paused && b.id !== 'pause') return
+      if (ms.result !== 'none' && b.id !== 'pause') return
       // A focused dialog button owns Space: cancelling the press here would
       // stop it activating, so the menu would close instead of the button
       // under focus firing. Escape still closes the menu from anywhere.
@@ -159,6 +162,22 @@ export default function Input() {
         case 'pause':
           ms.setPaused(!ms.paused)
           break
+        case 'medStim': {
+          const id = selectedAgents(w)[0]
+          if (id) w.orderMedStim(id)
+          break
+        }
+        case 'grenade': {
+          if (ms.grenadeTargeting) {
+            ms.setGrenadeTargeting(false)
+            break
+          }
+          const id = selectedAgents(w)[0]
+          if (id && ms.abilities.grenade.availability === 'usable') {
+            ms.setGrenadeTargeting(true)
+          }
+          break
+        }
         case 'stop':
         case 'holdGround':
         case 'holdFire': {
@@ -178,6 +197,13 @@ export default function Input() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  useEffect(() => {
+    document.body.style.cursor = grenadeTargeting ? 'crosshair' : ''
+    return () => {
+      document.body.style.cursor = ''
+    }
+  }, [grenadeTargeting])
 
   // Default-select the living squad once on mission start.
   useEffect(() => {
@@ -214,6 +240,12 @@ export default function Input() {
       hitPick.current = null
       if (d.on) stop()
       if (e.button !== 0 || e.target !== canvas) return
+      // R3F's ground/unit handler ran first. An armed grenade click is an
+      // ability target, never the start of a select click or marquee.
+      if (abilityClick.current || useMissionStore.getState().grenadeTargeting) {
+        abilityClick.current = false
+        return
+      }
       const r = canvas.getBoundingClientRect()
       d.on = true
       d.moved = false
@@ -302,7 +334,24 @@ export default function Input() {
     }
   }, 0)
 
+  const throwGrenade = (point: THREE.Vector3): void => {
+    const w = getWorld()
+    if (!w) return
+    const ids = selectedAgents(w)
+    if (ids.length === 0) return
+    abilityClick.current = true
+    if (w.orderGrenade(ids[0], { x: point.x, z: point.z })) {
+      useMissionStore.getState().setGrenadeTargeting(false)
+      pushClickMarker(point.x, point.z)
+    }
+  }
+
   const onGround = (e: ThreeEvent<PointerEvent>): void => {
+    if (e.button === 0 && useMissionStore.getState().grenadeTargeting) {
+      e.stopPropagation()
+      throwGrenade(e.point)
+      return
+    }
     if (e.button !== 2 || drag.current.on) return
     const w = getWorld()
     if (!w) return
@@ -318,6 +367,11 @@ export default function Input() {
   // right falls through to the move order on the ground plane behind.
   const onAgentDown = (id: string) => (e: ThreeEvent<PointerEvent>): void => {
     if (e.button !== 0) return
+    if (useMissionStore.getState().grenadeTargeting) {
+      e.stopPropagation()
+      throwGrenade(e.point)
+      return
+    }
     const w = getWorld()
     if (!w || !alive(w.unit(id))) return
     e.stopPropagation()
@@ -329,6 +383,10 @@ export default function Input() {
     if (!w || !alive(w.unit(id))) return
     if (e.button === 0) {
       e.stopPropagation()
+      if (useMissionStore.getState().grenadeTargeting) {
+        throwGrenade(e.point)
+        return
+      }
       hitPick.current = { id, agent: false }
     } else if (e.button === 2 && !drag.current.on) {
       e.stopPropagation()
@@ -340,11 +398,11 @@ export default function Input() {
   const onPickOver = (cursor: string) => (e: ThreeEvent<PointerEvent>): void => {
     const w = getWorld()
     const u = w ? w.unit((e.object as THREE.Mesh).name) : undefined
-    if (alive(u)) document.body.style.cursor = cursor
+    if (alive(u)) document.body.style.cursor = grenadeTargeting ? 'crosshair' : cursor
   }
 
   const onPickOut = (): void => {
-    document.body.style.cursor = ''
+    document.body.style.cursor = grenadeTargeting ? 'crosshair' : ''
   }
 
   return (

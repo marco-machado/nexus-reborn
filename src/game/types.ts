@@ -223,6 +223,8 @@ export interface WorldApi {
   orderStop(agentIds: string[]): void
   orderHold(agentIds: string[], hold: boolean): void
   orderHoldFire(agentIds: string[], hold: boolean): void
+  orderMedStim(agentId: string): boolean
+  orderGrenade(agentId: string, target: Vec2): boolean
   unit(id: string): Unit | undefined
 }
 
