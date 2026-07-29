@@ -1,8 +1,8 @@
 # Nexus Reborn — Game Design Document
 
 **Document type:** Codebase-derived design specification  
-**Project version reviewed:** `727f17e`  
-**Review date:** 2026-07-28  
+**Project version reviewed:** `e270e41` plus the milestone 1 validation fixes  
+**Review date:** 2026-07-29  
 **Primary platform:** Desktop web browser  
 **Current implementation:** React 19, TypeScript, React Three Fiber, Three.js WebGPU/WebGL2, Zustand  
 
@@ -29,7 +29,7 @@ Where code and decorative UI disagree, the simulation code is treated as authori
 
 **Nexus Reborn** is a cyberpunk corporate strategy and real-time tactics game in which the player acts as an executive operations director. From a global command network, the player monitors a changing corporate world, funds weapons and augmentation research, selects contracts, assembles a four-operative strike team, and commands that team through dangerous rain-soaked city districts.
 
-The current build delivers one complete tactical contract inside a broader strategic shell. Its most distinctive qualities are:
+The current build delivers a persistent three-contract campaign inside a broader strategic shell; one contract has a full authored design and two run on placeholder objective sets. Its most distinctive qualities are:
 
 - A dense, diegetic corporate command interface.
 - A four-operative real-time tactical control model.
@@ -37,6 +37,7 @@ The current build delivers one complete tactical contract inside a broader strat
 - Civilian collateral as both a tactical risk and an economic penalty.
 - A strategic clock shared by world events and a 21-project research program.
 - A deterministic, procedural city and a no-external-assets production approach.
+- A saved campaign loop: outcomes move the world, intel opens contracts, injuries gate the roster.
 
 ### Product definition
 
@@ -50,10 +51,10 @@ The current build delivers one complete tactical contract inside a broader strat
 | Input | Keyboard and mouse |
 | Target display | Desktop, minimum 1280×720 |
 | Session structure | Strategic planning → briefing → squad assembly → tactical mission → debrief |
-| Current content | One playable mission, two locked mission concepts, eight operatives, five weapons, 21 research projects |
+| Current content | Three playable contracts (two on placeholder objective sets), eight operatives, five weapons, 21 research projects |
 | Monetization | None represented in the codebase |
 | Networking | Single-player; no multiplayer systems represented |
-| Persistence | None; state currently lives in memory only |
+| Persistence | Versioned localStorage autosave; tactical mission state stays memory-only |
 
 ### Player promise
 
@@ -79,7 +80,7 @@ Combat is fast and noisy. Missed shots continue downrange and can strike other b
 
 Contract rewards fund research. Completed research changes deployed weapon and operative statistics. The world clock advances both the corporate world and the labs.
 
-The current build completes the economy-to-research-to-mission direction. Mission outcomes do not yet change sector control, unrest, ownership, intel, or future contract availability.
+The loop now runs in both directions. Mission outcomes change sector control and unrest, post feed events, award intel, and unlock further contracts. City ownership is the one strategic value missions do not yet move.
 
 ### 3.5 A cohesive corporate-terminal fantasy
 
@@ -161,14 +162,15 @@ flowchart LR
 
 ### Current flow rules
 
-1. The player initiates the command interface.
+1. The menu offers CONTINUE when a valid save exists, and NEW OPERATION behind a two-step erase confirm.
 2. The World Network opens with Europe selected.
 3. The player may inspect sectors, run the strategic clock, review world events, or enter Research.
-4. Selecting the one unlocked contract opens its briefing.
+4. Selecting an unlocked contract opens its briefing; contracts unlock at their required intel level.
 5. Accepting the contract opens Operative Assembly.
 6. Exactly four operatives must be assigned before deployment.
 7. The player completes sequential objectives or loses the squad.
-8. A debrief applies the payout and returns the player to the World Network or briefing.
+8. A debrief applies the payout, the sector effects, intel, and roster changes, then returns the player onward.
+9. Strategy screens autosave; the mission and debrief never write a save.
 
 ### Core loops
 
@@ -220,7 +222,7 @@ flowchart LR
 - The tactical mission uses its own independent clock, beginning at **22:14:08**.
 - The player can scrub and keyboard-navigate a rolling 24-hour event timeline without changing the live world state.
 
-This clock is the shared authority for world events and research completion.
+This clock is the shared authority for world events, research completion, and operative injury recovery.
 
 ### 6.2 Continental sectors
 
@@ -273,19 +275,20 @@ Event categories:
 
 Events occur every **15–45 world minutes** and favor high-unrest sectors. The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events.
 
-**Current limitation:** The event simulation runs independently of player missions. Contract success or failure does not create events or change sector values.
+Mission results feed this system. A win raises the mission sector's control and lowers its unrest; a loss does the opposite. Each result posts its own feed event, green for a win and red for a loss, and civilian hits add unrest.
 
 ### 6.5 Intel and contract access
 
-**Scaffolded**
+**Implemented**
 
-- Initial intel level: **1**.
-- Displayed progress to the next level: **25%**.
-- Two contracts require intel level 2.
-- Intel never increases in the current build.
-- Antarctica and several navigation surfaces remain locked or unavailable.
+- Initial intel level: **1**, with 25/100 progress.
+- A contract win awards **+40** progress; a clean win (zero civilians hit by the squad) awards **+15** more.
+- A lost contract awards nothing.
+- Each 100 progress rolls into the next level.
+- Every contract carries a required intel level. Hollow Crown and Rust Haven need level 2.
+- Antarctica and the unbuilt navigation tabs stay locked at every intel level.
 
-**Recommended:** Award intel from successful objectives, optional reconnaissance, low-alert completion, or city control. Intel should unlock contracts and strategic capabilities rather than function as a decorative progress bar.
+**Deferred:** Intel's second strategic use, beyond contract unlocks, lands with the Milestone 4 screens.
 
 ---
 
@@ -315,23 +318,20 @@ Rules:
 
 ### 7.3 Progression model
 
-The implemented progression is entirely research-driven:
+Tactical progression is research-driven:
 
 - Weapon projects modify damage, range, magazine, reload time, spread, or fire delay.
 - Crew projects add maximum health or movement speed to every deployed operative.
 - Effects stack in project-completion order.
 - Completed research is sampled when the mission is created and cannot alter an active deployment.
 
-There is currently no:
+Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5). There is currently no:
 
-- Save data.
 - Account level.
 - Operative experience.
-- Persistent injury or death.
+- Permanent operative death.
 - Equipment ownership.
 - Consumable inventory economy.
-- Intel progression.
-- Sector reward for mission outcomes.
 
 ---
 
@@ -416,7 +416,11 @@ The latest completed project associated with each bay is displayed as the instal
 - At least one operative must remain assigned while editing the squad.
 - Deployment is disabled until all four bays are filled.
 
-**Current limitation:** An `INJURED` operative can still be assigned and deployed. Status is not enforced by gameplay.
+Injury is enforced:
+
+- An `INJURED` operative cannot be assigned; the team screen disables the control and names the reason.
+- Operatives who die in a mission leave the squad and return as `INJURED` for 36 world hours.
+- Recovery runs on the world clock; Raven starts `INJURED` and recovers after 24 world hours.
 
 ### 9.2 Operative roster
 
@@ -731,8 +735,8 @@ The debrief reports:
 | Codename | Location | Type | Client | Threat | Reward | Chance | ETA | Status |
 |---|---|---|---|---|---:|---:|---:|---|
 | Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | 78% | 2 days | Playable |
-| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | 64% | 4 days | Locked; no objectives authored |
-| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | 82% | 3 days | Locked; no objectives authored |
+| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | 64% | 4 days | Intel level 2; placeholder objective set |
+| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | 82% | 3 days | Intel level 2; placeholder objective set |
 
 Displayed chance and ETA are authored presentation values. They do not affect simulation outcomes or strategic time.
 
@@ -792,7 +796,8 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 
 - Establishes the secure-system fiction.
 - Unlocks browser audio on the first user gesture.
-- Offers one action: initiate the World Network.
+- Offers CONTINUE when a valid save exists.
+- Offers NEW OPERATION behind a two-step erase confirm.
 
 #### World Network
 
@@ -801,6 +806,7 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - World time controls and 24-hour review timeline.
 - Dynamic events feed.
 - Credits, influence, operative count, and intel display.
+- Campaign-complete banner after all three contracts are won.
 - Navigation to Research.
 
 #### Research Division
@@ -842,6 +848,7 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 #### Debrief
 
 - Outcome, combat, collateral, timing, and economy.
+- Applies the sector, intel, and roster consequences exactly once per outcome.
 - Return to World Network or replay.
 
 ### 13.3 Minimap
@@ -1101,7 +1108,8 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Mission UI is synchronized at approximately 5 Hz.
 - The minimap redraws at approximately 10 Hz.
 - The strategic clock batches updates at approximately 20 Hz.
-- App, world, research, and mission UI have separate stores.
+- App, world, research, campaign, and mission UI have separate stores.
+- A save module writes the app, world, research, and campaign stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes.
 
 ### 18.3 Simulation timing
 
@@ -1126,7 +1134,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 - Missions and cities use the mission seed.
 - Portraits and UI figures use stable hashes.
-- Strategic event generation uses a seeded random stream.
+- Strategic event generation steps an explicit, serializable rng state, so a reload continues the same sequence.
 - Procedural rain and WebAudio noise use unseeded randomness because they do not affect gameplay.
 
 ### 18.6 Browser and layout
@@ -1138,10 +1146,10 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ### 18.7 Build and quality
 
-- Intended checks: `npm run lint` and `npm run build`.
-- No automated test suite exists.
-- No gameplay simulation tests exist.
-- No save migration or content validation tools exist.
+- The checks are `npm run lint`, `npm run test`, and `npm run build`.
+- A vitest suite (15 files, 215 tests) covers the pure layers: `src/game/`, `src/world/`, `src/state/`.
+- Saves are versioned; the loader validates a blob and discards it on any mismatch.
+- Scene and DOM screens rely on the manual click-through.
 
 ---
 
@@ -1166,12 +1174,15 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Sequential objectives, win/loss, and debrief.
 - Functional minimap, camera controls, pause menu, and abort confirmation.
 - Procedural visuals and audio.
+- Versioned save/load with autosave, boot validation, CONTINUE, and NEW OPERATION.
+- Mission outcomes that move sector control and unrest and post feed events.
+- Intel earned from wins and clean wins; intel-gated contract unlocks.
+- Campaign completion state after all three contracts.
+- Injury enforcement with timed recovery on the world clock.
 
 ### 19.2 Scaffolded or presentation-only
 
-- Intel level and locked-contract progression.
-- Two additional mission definitions.
-- Operative injury status.
+- Hollow Crown and Rust Haven placeholder objective sets; Milestone 2 owns their full designs.
 - Roles beyond authored stats and HUD item counts.
 - Sidearms.
 - Inventory.
@@ -1187,34 +1198,34 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ### 19.3 Missing for a complete campaign
 
-- Persistent saves.
-- Mission outcome effects on world control, unrest, ownership, and intel.
+- Mission outcome effects on city ownership.
 - New contract generation or a larger authored mission set.
-- Progression unlock rules.
-- Persistent operative injury, death, recovery, recruitment, or experience.
+- Permanent operative death, recruitment, and experience.
 - Loadout customization.
 - Usable items, sidearms, and abilities.
 - Mission types beyond reach/eliminate/extract.
-- Strategic fail state or campaign victory condition.
+- A strategic fail state; the campaign has victory and recoverable pressure only.
 - Tutorials and onboarding.
 - Settings and control remapping.
 - Difficulty modes.
 - Music and ambient sound.
-- Automated tests and telemetry.
+- Telemetry.
 
 ---
 
 ## 20. Recommended product roadmap
 
-The recommendations below complete the promise already made by the UI and data. They are not current behavior.
+Milestone 1 is complete. The later milestones remain recommendations, not current behavior.
 
-### Milestone 1 — Close the campaign loop
+### Milestone 1 — Close the campaign loop (complete 2026-07-29)
 
-1. Add save/load for credits, world time, sectors, city ownership, research, intel, and operative state.
-2. Make mission outcomes change the strategic world.
-3. Award intel and unlock Hollow Crown and Rust Haven.
-4. Give the campaign an explicit success condition and recoverable failure pressure.
-5. Prevent injured operatives from deploying or add an accepted-risk rule.
+1. Add save/load for credits, world time, sectors, city ownership, research, intel, and operative state. Done.
+2. Make mission outcomes change the strategic world. Done for sector control, unrest, and the event feed.
+3. Award intel and unlock Hollow Crown and Rust Haven. Done, with placeholder objective sets.
+4. Give the campaign an explicit success condition and recoverable failure pressure. Done.
+5. Prevent injured operatives from deploying. Done.
+
+Known limits: missions do not flip city ownership (Glass Veil's client holds no cities); intel's second use waits for Milestone 4; Milestone 2 owns the true Hollow Crown and Rust Haven designs.
 
 ### Milestone 2 — Reach a minimum viable content set
 
@@ -1259,10 +1270,10 @@ The recommendations below complete the promise already made by the UI and data. 
 
 ### Campaign loop
 
-- A successful mission visibly changes at least two strategic values.
-- A failed mission produces a meaningful but recoverable consequence.
-- Intel has at least two earn sources and at least two unlock uses.
-- Saving and reloading reproduces all strategic and roster state.
+- A successful mission visibly changes at least two strategic values. Met.
+- A failed mission produces a meaningful but recoverable consequence. Met.
+- Intel has at least two earn sources and at least two unlock uses. Half met: two earn sources, one unlock use.
+- Saving and reloading reproduces all strategic and roster state. Met.
 
 ### Mission content
 
@@ -1329,6 +1340,8 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 | Strategic world simulation | `src/state/worldStore.ts` |
 | Research progression | `src/state/researchStore.ts` |
 | Credits, squad, outcomes | `src/state/appStore.ts` |
+| Intel, roster condition, campaign result | `src/state/campaignStore.ts` |
+| Save, load, autosave | `src/state/save.ts` |
 | City generation | `src/world/citygen.ts` |
 | Mission input | `src/scene/Input.tsx` |
 | Mission controls table | `src/game/bindings.ts` |
@@ -1353,7 +1366,7 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 | Explicit target | A hostile assigned by right-click attack order |
 | Hold Fire / Tight | Prevent automatic target acquisition |
 | Hold Ground | Pin an operative in place while preserving their parked route |
-| Intel | Scaffolded progression gate for contracts and strategic access |
+| Intel | Earned progression level that gates contract access |
 | Operative | A player-controlled squad member |
 | Review time | A historical point in the 24-hour strategic event timeline |
 | Strategic time | World-map and research clock |
@@ -1366,4 +1379,4 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 
 The codebase already establishes a coherent identity: a corporate geostrategy interface wrapped around an unusually readable real-time squad simulation. The tactical game’s strongest authored tension is not simple survival; it is moving four powerful operatives through a populated city while managing information, detection, fire lanes, and financial liability.
 
-The highest-value next step is not additional visual surface area. It is connecting the systems that already exist: mission outcomes to the world, intel to contract access, operative status to deployment, and role/loadout presentation to tactical mechanics. Once those links are complete, the current vertical slice can become a campaign rather than a highly polished standalone contract.
+Milestone 1 connected the systems that already existed: mission outcomes move the world, intel opens contracts, operative status gates deployment, and the campaign survives a reload. The highest-value next step is content and mechanics: true Hollow Crown and Rust Haven designs, new objective primitives, and roles that change tactical decisions.

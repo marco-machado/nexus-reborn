@@ -86,7 +86,9 @@ export const useCampaignStore = create<CampaignState>((set) => ({
 
   reportMission: (missionId, outcome, worldT) =>
     set((state) => {
-      const intelAward = (outcome.won ? MISSION_INTEL : 0) + (outcome.civiliansHit === 0 ? CLEAN_INTEL : 0)
+      const intelAward = outcome.won
+        ? MISSION_INTEL + (outcome.civiliansHit === 0 ? CLEAN_INTEL : 0)
+        : 0
       const [intelLevel, intelProgress] = addIntel(
         state.intelLevel,
         state.intelProgress,

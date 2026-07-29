@@ -1,8 +1,8 @@
 // Bottom nav strip shared by the strategy screens. Two destinations are built;
-// the rest carry the intel lock and say what would open them.
+// the rest stay locked until their screens exist.
 import { useAppStore } from '../state/appStore'
 import type { Phase } from '../state/appStore'
-import { INTEL_GATE } from '../game/data'
+import { NAV_LOCK } from '../game/data'
 import { LockGlyph, NavGlyph } from './bits'
 import type { NavKind } from './bits'
 import { uiClick } from './sound'
@@ -24,13 +24,13 @@ export function NavTabs(props: { current: NavKind }) {
         const open = tab.phase !== undefined
         const cls = 'navtab' + (here ? ' active' : open ? '' : ' locked')
         return (
-          <span key={tab.key} className="navtab-wrap" title={open ? undefined : INTEL_GATE}>
+          <span key={tab.key} className="navtab-wrap" title={open ? undefined : NAV_LOCK}>
             <button
               type="button"
               className={cls}
               aria-current={here ? 'page' : undefined}
               aria-disabled={open ? undefined : true}
-              aria-label={open ? tab.label : tab.label + ' // LOCKED // ' + INTEL_GATE}
+              aria-label={open ? tab.label : tab.label + ' // LOCKED // ' + NAV_LOCK}
               onClick={
                 open && !here
                   ? () => {
@@ -48,7 +48,7 @@ export function NavTabs(props: { current: NavKind }) {
                 </span>
               )}
             </button>
-            {!open && <span className="tip nav">{INTEL_GATE}</span>}
+            {!open && <span className="tip nav">{NAV_LOCK}</span>}
           </span>
         )
       })}
