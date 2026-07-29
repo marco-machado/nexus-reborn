@@ -8,10 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev       # vite dev server on :5173
 npm run build     # tsc -b && vite build
 npm run lint      # eslint (flat config, typescript-eslint + react-hooks)
+npm run test      # vitest, colocated src/**/*.test.ts
 npm run preview   # serve dist/
 ```
 
-There is no test suite. `npm run lint` and `npm run build` are the checks; run both before calling work done.
+`npm run lint`, `npm run test` and `npm run build` are the checks; run all three before calling work done. Tests sit next to their module (`src/game/world.test.ts` tests `src/game/world.ts`) and cover the pure layers: `src/game/`, `src/world/`, `src/state/`. Scene and DOM screens are unchecked; the click-through covers them.
 
 ## What this is
 
