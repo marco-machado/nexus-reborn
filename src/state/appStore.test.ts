@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { COLLATERAL_FINE, collateralFine, netPayout, useAppStore } from './appStore'
 import type { MissionOutcome } from './appStore'
 import { DEFAULT_SQUAD } from '../game/data'
+import { initialCampaignData, useCampaignStore } from './campaignStore'
 
 // Captured at module load, before any test mutates the singleton.
 const bootState = useAppStore.getState()
@@ -16,7 +17,16 @@ const boot = {
 const START_CREDITS = 128450
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
-  return { won: true, kills: 6, casualties: 1, timeSec: 412, civiliansHit: 0, reward: 85000, ...over }
+  return {
+    won: true,
+    kills: 6,
+    casualties: 1,
+    timeSec: 412,
+    civiliansHit: 0,
+    reward: 85000,
+    deadIds: [],
+    ...over,
+  }
 }
 
 beforeEach(() => {
@@ -26,7 +36,9 @@ beforeEach(() => {
     squad: [...DEFAULT_SQUAD],
     credits: START_CREDITS,
     outcome: null,
+    outcomeSerial: 0,
   })
+  useCampaignStore.setState(initialCampaignData())
 })
 
 describe('initial state', () => {
@@ -61,6 +73,17 @@ describe('screen flow', () => {
     expect(s.missionId).toBe('m01')
     expect(s.phase).toBe('brief')
   })
+
+  it('refuses an intel-locked mission until the campaign reaches its requirement', () => {
+    useAppStore.getState().selectMission('m02')
+    expect(useAppStore.getState().missionId).toBeNull()
+    expect(useAppStore.getState().phase).toBe('menu')
+
+    useCampaignStore.setState({ intelLevel: 2 })
+    useAppStore.getState().selectMission('m02')
+    expect(useAppStore.getState().missionId).toBe('m02')
+    expect(useAppStore.getState().phase).toBe('brief')
+  })
 })
 
 describe('squad selection', () => {
@@ -77,8 +100,14 @@ describe('squad selection', () => {
 
   it('adds an operative while the squad is below four', () => {
     useAppStore.setState({ squad: ['op1', 'op2', 'op3'] })
+    useAppStore.getState().toggleOperative('op6')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3', 'op6'])
+  })
+
+  it('refuses to assign an injured operative', () => {
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3'] })
     useAppStore.getState().toggleOperative('op5')
-    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3', 'op5'])
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3'])
   })
 
   it('refuses a fifth operative', () => {
@@ -128,6 +157,7 @@ describe('mission outcome payout', () => {
     expect(s.credits).toBe(START_CREDITS + 85000 - 2 * COLLATERAL_FINE)
     expect(s.outcome).toBe(o)
     expect(s.phase).toBe('debrief')
+    expect(s.outcomeSerial).toBe(1)
   })
 
   it('a win drowned in collateral pays zero, never a debt', () => {

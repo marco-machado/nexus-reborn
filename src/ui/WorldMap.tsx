@@ -14,7 +14,8 @@ import {
   useWorldStore,
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
-import { INTEL_GATE, INTEL_LEVEL, INTEL_PROGRESS, MISSIONS, ROSTER } from '../game/data'
+import { MISSIONS, ROSTER } from '../game/data'
+import { missionLocked, useCampaignStore } from '../state/campaignStore'
 import type { SectorId } from '../game/types'
 import {
   ARCS,
@@ -59,6 +60,10 @@ function agoLabel(sec: number): string {
   return m < 90 ? m + 'M' : (m / 60).toFixed(1) + 'H'
 }
 
+function intelGate(level: number): string {
+  return 'REQUIRES INTEL LVL ' + level
+}
+
 /* ------------------------------- map plate -------------------------------- */
 
 function WorldPlate() {
@@ -66,6 +71,7 @@ function WorldPlate() {
   const owner = useWorldStore((s) => s.owner)
   const selected = useWorldStore((s) => s.selected)
   const selectMission = useAppStore((s) => s.selectMission)
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -161,61 +167,64 @@ function WorldPlate() {
         <span className="wm-sweep" />
       </span>
 
-      {MISSIONS.map((m) => (
-        <button
-          key={m.id}
-          type="button"
-          className={'wm-marker' + (m.locked ? ' locked' : ' live')}
-          style={{ left: m.mapPos.x + '%', top: m.mapPos.y + '%' }}
-          aria-disabled={m.locked || undefined}
-          aria-label={
-            m.locked
-              ? m.codename + ' // LOCKED // ' + INTEL_GATE
-              : 'OPEN CONTRACT ' + m.codename + ' // ' + m.type + ' // ' + m.city
-          }
-          onClick={m.locked ? undefined : act(() => selectMission(m.id))}
-        >
-          {!m.locked && (
-            <>
-              <span className="wm-marker-ring" aria-hidden="true" />
-              <span className="wm-marker-ring d2" aria-hidden="true" />
-            </>
-          )}
-          <span className="wm-marker-core" aria-hidden="true" />
-          <span className="wm-marker-label">
-            {m.locked && <LockGlyph size={8} />}
-            {m.codename}
-          </span>
-          <span className="tip" aria-hidden="true">
-            <b>{m.codename}</b>
-            {m.locked ? (
+      {MISSIONS.map((m) => {
+        const locked = missionLocked(m, intelLevel)
+        return (
+          <button
+            key={m.id}
+            type="button"
+            className={'wm-marker' + (locked ? ' locked' : ' live')}
+            style={{ left: m.mapPos.x + '%', top: m.mapPos.y + '%' }}
+            aria-disabled={locked || undefined}
+            aria-label={
+              locked
+                ? m.codename + ' // LOCKED // ' + intelGate(m.intelReq)
+                : 'OPEN CONTRACT ' + m.codename + ' // ' + m.type + ' // ' + m.city
+            }
+            onClick={locked ? undefined : act(() => selectMission(m.id))}
+          >
+            {!locked && (
               <>
-                <i className="red">LOCKED</i>
-                <i className="dim">{INTEL_GATE}</i>
-              </>
-            ) : (
-              <>
-                <i>
-                  <span>TYPE</span>
-                  {m.type}
-                </i>
-                <i>
-                  <span>CHANCE</span>
-                  {m.chance}%
-                </i>
-                <i>
-                  <span>ETA</span>
-                  {m.etaDays}D
-                </i>
-                <i>
-                  <span>THREAT</span>
-                  {m.threat}
-                </i>
+                <span className="wm-marker-ring" aria-hidden="true" />
+                <span className="wm-marker-ring d2" aria-hidden="true" />
               </>
             )}
-          </span>
-        </button>
-      ))}
+            <span className="wm-marker-core" aria-hidden="true" />
+            <span className="wm-marker-label">
+              {locked && <LockGlyph size={8} />}
+              {m.codename}
+            </span>
+            <span className="tip" aria-hidden="true">
+              <b>{m.codename}</b>
+              {locked ? (
+                <>
+                  <i className="red">LOCKED</i>
+                  <i className="dim">{intelGate(m.intelReq)}</i>
+                </>
+              ) : (
+                <>
+                  <i>
+                    <span>TYPE</span>
+                    {m.type}
+                  </i>
+                  <i>
+                    <span>CHANCE</span>
+                    {m.chance}%
+                  </i>
+                  <i>
+                    <span>ETA</span>
+                    {m.etaDays}D
+                  </i>
+                  <i>
+                    <span>THREAT</span>
+                    {m.threat}
+                  </i>
+                </>
+              )}
+            </span>
+          </button>
+        )
+      })}
 
       <div className="wm-ov tl">
         <b>ORBITAL SCAN</b>
@@ -249,6 +258,7 @@ function WorldPlate() {
 function SectorInset(props: { id: SectorId }) {
   const owner = useWorldStore((s) => s.owner)
   const step = useWorldStore((s) => s.stepSector)
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
   const def = sectorDef(props.id)
   const corp = sectorCorp(props.id, owner)
   const cities = CITIES_BY_SECTOR[props.id] ?? []
@@ -280,7 +290,7 @@ function SectorInset(props: { id: SectorId }) {
             <circle cx={c.x} cy={c.y} r="1.4" className="core" />
           </g>
         ))}
-        {mission && !mission.locked && (
+        {mission && !missionLocked(mission, intelLevel) && (
           <g className="wm-inset-target">
             <circle cx={(mission.mapPos.x / 100) * PLATE_W} cy={(mission.mapPos.y / 100) * PLATE_H} r="7" />
             <circle
@@ -554,13 +564,17 @@ export function WorldMap() {
   const sectors = useWorldStore((s) => s.sectors)
   const selected = useWorldStore((s) => s.selected)
   const select = useWorldStore((s) => s.select)
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
+  const intelProgress = useCampaignStore((s) => s.intelProgress)
+  const campaignWon = useCampaignStore((s) => s.campaignWon)
+  const contractsWon = useCampaignStore((s) => s.contractsWon)
   useWorldClock()
 
   const def = sectorDef(selected)
   const read = sectorReadout(selected, sectors[selected])
   const influence = globalInfluence(sectors)
   const ops = useMemo(() => MISSIONS.filter((m) => m.sector === selected), [selected])
-  const openOps = ops.filter((m) => !m.locked).length
+  const openOps = ops.filter((m) => !missionLocked(m, intelLevel)).length
 
   return (
     <div className="screen wm">
@@ -577,6 +591,17 @@ export function WorldMap() {
           <Chip tone="dim">COORD {SECTOR_COORD[selected]}</Chip>
         </div>
       </header>
+
+      {campaignWon && (
+        <div className="wm-campaign-win corners" role="status">
+          <span className="wm-campaign-sigil" aria-hidden="true">◆</span>
+          <span>
+            <b>CAMPAIGN DIRECTIVE COMPLETE</b>
+            <i>ALL THREE AUTHORIZED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE</i>
+          </span>
+          <strong>{contractsWon.length} / {MISSIONS.length}</strong>
+        </div>
+      )}
 
       <div className="wm-main">
         {/* left: influence + sectors */}
@@ -728,36 +753,39 @@ export function WorldMap() {
                   <i className="dim">SECTOR UNDER PASSIVE MONITORING</i>
                 </div>
               ) : (
-                ops.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    className={'wm-op' + (m.locked ? ' locked' : '')}
-                    aria-disabled={m.locked || undefined}
-                    aria-label={
-                      m.locked
-                        ? m.codename + ' // LOCKED // ' + INTEL_GATE
-                        : 'OPEN CONTRACT ' + m.codename + ' // ' + m.type + ' // ' + m.city
-                    }
-                    onClick={m.locked ? undefined : act(() => selectMission(m.id))}
-                  >
-                    <span className="wm-op-glyph">{m.locked ? <LockGlyph /> : <TargetGlyph />}</span>
-                    <span className="wm-op-main">
-                      <b>{m.codename}</b>
-                      {m.locked ? (
-                        <i className="red-dim">{INTEL_GATE}</i>
-                      ) : (
-                        <i className="dim">
-                          {m.type} // {m.city}
-                        </i>
-                      )}
-                    </span>
-                    <span className="wm-op-meta">
-                      <span className="chip dim">CHANCE {m.chance}%</span>
-                      <span className="chip dim">ETA {m.etaDays}D</span>
-                    </span>
-                  </button>
-                ))
+                ops.map((m) => {
+                  const locked = missionLocked(m, intelLevel)
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={'wm-op' + (locked ? ' locked' : '')}
+                      aria-disabled={locked || undefined}
+                      aria-label={
+                        locked
+                          ? m.codename + ' // LOCKED // ' + intelGate(m.intelReq)
+                          : 'OPEN CONTRACT ' + m.codename + ' // ' + m.type + ' // ' + m.city
+                      }
+                      onClick={locked ? undefined : act(() => selectMission(m.id))}
+                    >
+                      <span className="wm-op-glyph">{locked ? <LockGlyph /> : <TargetGlyph />}</span>
+                      <span className="wm-op-main">
+                        <b>{m.codename}</b>
+                        {locked ? (
+                          <i className="red-dim">{intelGate(m.intelReq)}</i>
+                        ) : (
+                          <i className="dim">
+                            {m.type} // {m.city}
+                          </i>
+                        )}
+                      </span>
+                      <span className="wm-op-meta">
+                        <span className="chip dim">CHANCE {m.chance}%</span>
+                        <span className="chip dim">ETA {m.etaDays}D</span>
+                      </span>
+                    </button>
+                  )
+                })
               )}
             </ScrollBox>
             <button
@@ -801,8 +829,8 @@ export function WorldMap() {
           <div className="kv">
             <span>INTEL LEVEL</span>
             <span className="wm-intel-val">
-              <b>{INTEL_LEVEL}</b>
-              <SegBar value={INTEL_PROGRESS} mini className="wm-intel" />
+              <b>{intelLevel}</b>
+              <SegBar value={intelProgress} mini className="wm-intel" />
             </span>
           </div>
         </Panel>

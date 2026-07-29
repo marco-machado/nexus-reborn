@@ -1,8 +1,7 @@
 // CONTRACT FILE. Static game data: weapons, operative roster, missions.
 import type { MissionDef, OperativeDef, WeaponDef, WeaponId } from './types'
 
-// Intel gates the locked missions and the unbuilt screens. It never rises yet,
-// so it is one fixed level with the survey progress that unlocks the next.
+// Campaign state owns the live values. These are only new-operation seeds.
 export const INTEL_LEVEL = 1
 export const INTEL_PROGRESS = 25
 export const INTEL_GATE = 'REQUIRES INTEL LVL 2'
@@ -115,7 +114,7 @@ export const MISSIONS: MissionDef[] = [
       { id: 'ob2', label: 'ELIMINATE THE CORPSEC GARRISON', kind: 'eliminate-tag', tag: 'garrison' },
       { id: 'ob3', label: 'EXTRACT THE SQUAD', kind: 'extract' },
     ],
-    locked: false,
+    intelReq: 1,
     mapPos: { x: 48, y: 30 },
   },
   {
@@ -131,10 +130,23 @@ export const MISSIONS: MissionDef[] = [
     chance: 64,
     etaDays: 4,
     seed: 20870601,
-    briefing: ['INTEL LEVEL INSUFFICIENT.'],
-    notes: ['DEPLOY OPERATIVE REQUIRES INTEL LVL 2.'],
-    objectives: [],
-    locked: true,
+    briefing: [
+      'A Helix neurochem architect is trapped inside a Shingang transit control annex.',
+      'CorpSec intends to transfer the asset before the next maglev window.',
+      'Cross the district cordon, break the annex garrison, and escort the asset route open.',
+      'The current field protocol uses the checkpoint as the extraction handoff.',
+    ],
+    notes: [
+      'PLACEHOLDER EXTRACTION PROTOCOL // FULL ASSET ESCORT ARRIVES IN MILESTONE 2.',
+      'CIVILIAN DENSITY HIGH. FIRE DISCIPLINE ADVISED.',
+      'EXTRACTION WINDOW OPENS WHEN THE ANNEX GARRISON FALLS.',
+    ],
+    objectives: [
+      { id: 'hc1', label: 'REACH THE TRANSIT CONTROL ANNEX', kind: 'reach-zone' },
+      { id: 'hc2', label: 'ELIMINATE THE TRANSFER DETAIL', kind: 'eliminate-tag', tag: 'garrison' },
+      { id: 'hc3', label: 'SECURE THE EXTRACTION CORRIDOR', kind: 'extract' },
+    ],
+    intelReq: 2,
     mapPos: { x: 74, y: 38 },
   },
   {
@@ -150,10 +162,23 @@ export const MISSIONS: MissionDef[] = [
     chance: 82,
     etaDays: 3,
     seed: 20870618,
-    briefing: ['INTEL LEVEL INSUFFICIENT.'],
-    notes: ['DEPLOY OPERATIVE REQUIRES INTEL LVL 2.'],
-    objectives: [],
-    locked: true,
+    briefing: [
+      'Stratos has located an Omnicorp relay hub feeding the Detroit Sprawl security grid.',
+      'The relay sits behind a fortified maintenance checkpoint in District 03.',
+      'Enter through the south industrial band and collapse the on-site response team.',
+      'Field demolition telemetry will be simulated through the checkpoint breach protocol.',
+    ],
+    notes: [
+      'PLACEHOLDER SABOTAGE PROTOCOL // DEVICE PLACEMENT ARRIVES IN MILESTONE 2.',
+      'INDUSTRIAL INTERFERENCE REDUCES SENSOR RELIABILITY.',
+      'WITHDRAW TO THE INSERTION ZONE AFTER THE RELAY GUARD IS NEUTRALIZED.',
+    ],
+    objectives: [
+      { id: 'rh1', label: 'REACH THE RELAY SERVICE GATE', kind: 'reach-zone' },
+      { id: 'rh2', label: 'NEUTRALIZE THE RELAY GUARD', kind: 'eliminate-tag', tag: 'garrison' },
+      { id: 'rh3', label: 'EXTRACT BEFORE GRID RECOVERY', kind: 'extract' },
+    ],
+    intelReq: 2,
     mapPos: { x: 22, y: 34 },
   },
 ]

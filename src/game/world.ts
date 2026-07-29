@@ -145,6 +145,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   let started = false
   let kills = 0
   let casualties = 0
+  const deadIds: string[] = []
   let civiliansHit = 0
   // Ids of the bystanders already on the bill. Hit points cannot stand in for
   // this: CorpSec wounds civilians too, and the crew is charged for its own
@@ -430,6 +431,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       pushLog('SYS', 'Hostile neutralized.')
     } else if (t.kind === 'agent') {
       casualties += 1
+      if (t.operative) deadIds.push(t.operative.id)
       pushLog('SYS', 'AGENT DOWN. ' + t.name + ' flatlined.', 'alert')
     } else {
       pushLog('SYS', 'CIVILIAN DOWN. KILLED BY STRAY FIRE.', 'alert')
@@ -1057,6 +1059,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       timeSec: world.time,
       civiliansHit,
       reward: result === 'won' ? mission.reward : 0,
+      deadIds: deadIds.slice(),
     })
   }
 

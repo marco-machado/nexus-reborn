@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mulberry32 } from './rng'
+import { mulberry32, mulberryStep } from './rng'
 
 function seq(seed: number, n: number): number[] {
   const rng = mulberry32(seed)
@@ -7,6 +7,22 @@ function seq(seed: number, n: number): number[] {
 }
 
 describe('mulberry32', () => {
+  it('can resume the factory sequence from explicit serialized state', () => {
+    const seed = 0x2087051
+    const expected = seq(seed, 8)
+    let state = seed
+    const stepped: number[] = []
+    for (let i = 0; i < 8; i++) {
+      const [value, nextState] = mulberryStep(state)
+      stepped.push(value)
+      state = nextState
+    }
+    expect(stepped).toEqual(expected)
+
+    const [ninth] = mulberryStep(state)
+    expect(ninth).toBe(seq(seed, 9)[8])
+  })
+
   it('produces the same sequence for the same seed', () => {
     expect(seq(1, 50)).toEqual(seq(1, 50))
     expect(seq(0xdeadbeef, 50)).toEqual(seq(0xdeadbeef, 50))

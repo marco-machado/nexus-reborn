@@ -129,7 +129,7 @@ export interface MissionDef {
   briefing: string[]
   notes: string[]
   objectives: ObjectiveDef[]
-  locked: boolean
+  intelReq: number
   mapPos: { x: number; y: number }
 }
 

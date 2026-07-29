@@ -615,6 +615,22 @@
 
 .menu-cta { margin-top: clamp(10px, 3vh, 30px); }
 
+.menu-actions {
+  width: min(360px, 78vw);
+  margin-top: clamp(10px, 3vh, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.menu-actions .menu-cta { width: 100%; margin-top: 0; }
+.menu-new { width: 100%; }
+.menu-new.armed {
+  color: var(--red-hot);
+  border-color: rgba(224, 75, 60, 0.72);
+  background: rgba(224, 75, 60, 0.09);
+}
+
 .menu-foot {
   display: flex;
   justify-content: space-between;
@@ -653,6 +669,54 @@
   gap: 10px;
   flex: 1;
   min-height: 0;
+}
+
+.wm-campaign-win {
+  --corner-c: rgba(125, 224, 138, 0.7);
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+  min-height: 42px;
+  padding: 7px 12px;
+  border: 1px solid rgba(125, 224, 138, 0.42);
+  background:
+    linear-gradient(90deg, rgba(125, 224, 138, 0.12), rgba(5, 17, 14, 0.92) 38%),
+    var(--bg-panel);
+  box-shadow: inset 0 0 18px rgba(125, 224, 138, 0.06);
+}
+
+.wm-campaign-sigil {
+  color: var(--green);
+  font-size: 18px;
+  text-shadow: 0 0 12px rgba(125, 224, 138, 0.45);
+}
+
+.wm-campaign-win > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wm-campaign-win b {
+  color: var(--green);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+.wm-campaign-win i {
+  color: var(--ink-dim);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  font-style: normal;
+}
+
+.wm-campaign-win strong {
+  color: var(--green);
+  font-size: 17px;
+  letter-spacing: 0.08em;
 }
 
 .wm-left,
@@ -1898,6 +1962,9 @@
 .ts-row-status.teal { color: var(--teal); }
 .ts-row-status.red { color: var(--red-hot); }
 .ts-row-status.amber { color: var(--amber); }
+.ts-row.injured { background: rgba(224, 75, 60, 0.035); }
+.ts-row.injured .ts-row-name { color: var(--ink-dim); }
+.ts-row.injured .ts-row-assign { border-left-color: rgba(224, 75, 60, 0.25); }
 
 .ts-roster-foot {
   display: flex;

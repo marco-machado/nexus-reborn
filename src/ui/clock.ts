@@ -4,12 +4,14 @@
 import { useEffect } from 'react'
 import { MAX_DT, useWorldStore } from '../state/worldStore'
 import { useResearchStore } from '../state/researchStore'
+import { useCampaignStore } from '../state/campaignStore'
 
 // Batched to 20Hz so the clock, the timeline and the lab bars repaint smoothly
 // without a render every frame.
 export function useWorldClock(): void {
   const tick = useWorldStore((s) => s.tick)
-  const sync = useResearchStore((s) => s.sync)
+  const syncResearch = useResearchStore((s) => s.sync)
+  const syncCampaign = useCampaignStore((s) => s.sync)
   useEffect(() => {
     let raf = 0
     let last = performance.now()
@@ -21,9 +23,11 @@ export function useWorldClock(): void {
       if (acc < 0.05) return
       tick(acc)
       acc = 0
-      sync(useWorldStore.getState().t)
+      const t = useWorldStore.getState().t
+      syncResearch(t)
+      syncCampaign(t)
     }
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
-  }, [tick, sync])
+  }, [tick, syncCampaign, syncResearch])
 }
