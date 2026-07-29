@@ -20,7 +20,7 @@ function makeMission(seed: number): MissionDef {
     briefing: [],
     notes: [],
     objectives: [],
-    locked: false,
+    intelReq: 1,
     mapPos: { x: 0, y: 0 },
   }
 }

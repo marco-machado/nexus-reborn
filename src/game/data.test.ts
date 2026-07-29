@@ -109,10 +109,18 @@ describe('MISSIONS', () => {
     }
   })
 
-  it('leaves at least one mission unlocked with objectives', () => {
-    const open = MISSIONS.filter((m) => !m.locked)
+  it('gates missions with positive intel requirements and makes every contract playable', () => {
+    for (const m of MISSIONS) {
+      expect(Number.isInteger(m.intelReq)).toBe(true)
+      expect(m.intelReq).toBeGreaterThan(0)
+      expect(m.objectives.map((objective) => objective.kind)).toEqual([
+        'reach-zone',
+        'eliminate-tag',
+        'extract',
+      ])
+    }
+    const open = MISSIONS.filter((m) => m.intelReq <= 1)
     expect(open.length).toBeGreaterThan(0)
-    for (const m of open) expect(m.objectives.length).toBeGreaterThan(0)
   })
 })
 

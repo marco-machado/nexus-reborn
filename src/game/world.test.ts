@@ -63,6 +63,7 @@ beforeEach(() => {
     squad: [...DEFAULT_SQUAD],
     credits: 128450,
     outcome: null,
+    outcomeSerial: 0,
   })
   useResearchStore.setState({
     done: [],
@@ -71,6 +72,37 @@ beforeEach(() => {
 })
 
 describe('createWorld', () => {
+  it.each(MISSIONS.slice(1))(
+    'builds a connected, completable placeholder objective route for $codename',
+    (mission) => {
+      const w = createWorld(mission, ops(DEFAULT_SQUAD))
+      deployReset()
+      w.tick(STEP)
+      expect(w.city.walk.length).toBe(w.city.size * w.city.size)
+      expect(w.units.some((unit) => unit.kind === 'enemy' && unit.tag === 'garrison')).toBe(true)
+
+      const a1 = w.unit('a1')
+      expect(a1).toBeDefined()
+      if (!a1) return
+      a1.pos.x = w.city.checkpoint.x
+      a1.pos.z = w.city.checkpoint.z
+      a1.path.length = 0
+      w.tick(STEP)
+      for (const unit of w.units) if (unit.kind === 'enemy') unit.stance = 'dead'
+      w.tick(STEP)
+      for (const unit of w.units) {
+        if (unit.kind === 'agent' && unit.stance !== 'dead') {
+          unit.pos.x = w.city.extraction.x
+          unit.pos.z = w.city.extraction.z
+          unit.path.length = 0
+        }
+      }
+      w.tick(STEP)
+      expect(useMissionStore.getState().result).toBe('won')
+      expect(useMissionStore.getState().objectives.every((objective) => objective.done)).toBe(true)
+    },
+  )
+
   it('returns a working WorldApi with one agent per operative def', () => {
     const squadOps = ops(DEFAULT_SQUAD)
     const w = createWorld(MISSION, squadOps)

@@ -1,6 +1,7 @@
 // CONTRACT FILE. App level state: screen flow, mission choice, squad, credits.
 import { create } from 'zustand'
-import { DEFAULT_SQUAD } from '../game/data'
+import { DEFAULT_SQUAD, missionById } from '../game/data'
+import { missionLocked, useCampaignStore } from './campaignStore'
 
 export type Phase = 'menu' | 'world' | 'research' | 'brief' | 'team' | 'mission' | 'debrief'
 
@@ -11,6 +12,7 @@ export interface MissionOutcome {
   timeSec: number
   civiliansHit: number
   reward: number
+  deadIds: string[]
 }
 
 // Every contract carries a collateral clause. Each bystander caught by a round
@@ -25,12 +27,15 @@ export function netPayout(o: MissionOutcome): number {
   return o.won ? o.reward - collateralFine(o) : 0
 }
 
-interface AppState {
+export const INITIAL_CREDITS = 128450
+
+export interface AppState {
   phase: Phase
   missionId: string | null
   squad: string[]
   credits: number
   outcome: MissionOutcome | null
+  outcomeSerial: number
   goto: (phase: Phase) => void
   selectMission: (id: string) => void
   toggleOperative: (id: string) => void
@@ -42,16 +47,22 @@ export const useAppStore = create<AppState>((set) => ({
   phase: 'menu',
   missionId: null,
   squad: [...DEFAULT_SQUAD],
-  credits: 128450,
+  credits: INITIAL_CREDITS,
   outcome: null,
+  outcomeSerial: 0,
   goto: (phase) => set({ phase }),
-  selectMission: (id) => set({ missionId: id, phase: 'brief' }),
+  selectMission: (id) => {
+    const mission = missionById(id)
+    if (missionLocked(mission, useCampaignStore.getState().intelLevel)) return
+    set({ missionId: id, phase: 'brief' })
+  },
   toggleOperative: (id) =>
     set((s) => {
       if (s.squad.includes(id)) {
         if (s.squad.length <= 1) return s
         return { squad: s.squad.filter((x) => x !== id) }
       }
+      if (useCampaignStore.getState().roster[id]?.status !== 'READY') return s
       if (s.squad.length >= 4) return s
       return { squad: [...s.squad, id] }
     }),
@@ -63,5 +74,6 @@ export const useAppStore = create<AppState>((set) => ({
       outcome: o,
       credits: s.credits + netPayout(o),
       phase: 'debrief',
+      outcomeSerial: s.outcomeSerial + 1,
     })),
 }))

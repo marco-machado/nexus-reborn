@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DAY, MAX_DT, TIME_SCALE, hhmm, stamp, useWorldStore } from './worldStore'
 import { CITIES, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
+import type { MissionOutcome } from './appStore'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
 // Event pacing constants mirrored from the source: next event lands between
@@ -23,6 +24,7 @@ const snapshot = structuredClone({
   selected: s0.selected,
   review: s0.review,
   nextEventT: s0.nextEventT,
+  rngState: s0.rngState,
 })
 
 beforeEach(() => {
@@ -93,6 +95,26 @@ describe('clock advance', () => {
 })
 
 describe('events feed', () => {
+  it('replays the same event exactly when state and rngState are restored', () => {
+    forceEvent()
+    const firstState = useWorldStore.getState()
+    const first = structuredClone({
+      events: firstState.events,
+      sectors: firstState.sectors,
+      owner: firstState.owner,
+      nextEventT: firstState.nextEventT,
+      rngState: firstState.rngState,
+    })
+    useWorldStore.setState(structuredClone(snapshot))
+    forceEvent()
+    const second = useWorldStore.getState()
+    expect(second.events[3]).toEqual(first.events[3])
+    expect(second.sectors).toEqual(first.sectors)
+    expect(second.owner).toEqual(first.owner)
+    expect(second.nextEventT).toBe(first.nextEventT)
+    expect(second.rngState).toBe(first.rngState)
+  })
+
   it('crossing nextEventT appends one event and reschedules the next', () => {
     const before = useWorldStore.getState()
     const eventT = before.nextEventT
@@ -149,6 +171,52 @@ describe('events feed', () => {
     expect(useWorldStore.getState().unread).toBe(4)
     useWorldStore.getState().markRead()
     expect(useWorldStore.getState().unread).toBe(0)
+  })
+})
+
+describe('mission results', () => {
+  function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
+    return {
+      won: true,
+      kills: 7,
+      casualties: 0,
+      timeSec: 300,
+      civiliansHit: 0,
+      reward: 85000,
+      deadIds: [],
+      ...over,
+    }
+  }
+
+  it('a Glass Veil win raises control, lowers unrest, and posts a green event', () => {
+    const state = useWorldStore.getState()
+    const before = structuredClone({
+      sectors: state.sectors,
+      owner: state.owner,
+      unread: state.unread,
+    })
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    const after = useWorldStore.getState()
+    expect(after.sectors.eu.control).toBe(before.sectors.eu.control + 4)
+    expect(after.sectors.eu.unrest).toBe(before.sectors.eu.unrest - 4)
+    expect(after.owner).toEqual(before.owner)
+    expect(after.events.at(-1)).toMatchObject({
+      sector: 'eu',
+      tone: 'green',
+      text: 'STRIKE TEAM 04 OPENS DISTRICT 07 IN NEW CARTHAGE',
+    })
+    expect(after.unread).toBe(before.unread + 1)
+  })
+
+  it('a loss raises unrest and civilian hits add at most five more unrest', () => {
+    const before = useWorldStore.getState().sectors.eu
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ won: false, reward: 0, civiliansHit: 99 }))
+    const after = useWorldStore.getState()
+    expect(after.sectors.eu.control).toBe(before.control - 1)
+    expect(after.sectors.eu.unrest).toBe(before.unrest + 4 + 5)
+    expect(after.events.at(-1)?.tone).toBe('red')
   })
 })
 

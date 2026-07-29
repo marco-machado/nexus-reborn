@@ -7,6 +7,13 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
+import { useCampaignStore } from '../state/campaignStore'
+import { useWorldStore } from '../state/worldStore'
+import {
+  continueOperation,
+  hasValidSave,
+  startNewOperation,
+} from '../state/save'
 import { ROSTER, missionById, operativeById } from '../game/data'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
 import type { ResearchNode } from '../game/research'
@@ -90,13 +97,28 @@ function augLine(node: ResearchNode): string {
 }
 /* ================================ MAIN MENU =============================== */
 export function MainMenu() {
-  const goto = useAppStore((s) => s.goto)
   const clock = useUtcClock()
+  const [canContinue] = useState(() => hasValidSave())
+  const [newOperationArmed, setNewOperationArmed] = useState(false)
   useEffect(() => {
     const unlock = () => unlockAudio()
     document.addEventListener('click', unlock, { once: true })
     return () => document.removeEventListener('click', unlock)
   }, [])
+  useEffect(() => {
+    if (!newOperationArmed) return
+    const id = window.setTimeout(() => setNewOperationArmed(false), 3000)
+    return () => window.clearTimeout(id)
+  }, [newOperationArmed])
+
+  const beginNewOperation = () => {
+    if (canContinue && !newOperationArmed) {
+      setNewOperationArmed(true)
+      return
+    }
+    startNewOperation()
+  }
+
   return (
     <div className="screen menu">
       <div className="menu-gridbg" aria-hidden="true" />
@@ -116,14 +138,37 @@ export function MainMenu() {
         <h1 className="menu-wordmark">SYNDICATE</h1>
         <div className="menu-tagline">CORPORATE GEOSTRATEGIC COMMAND INTERFACE</div>
         <div className="menu-rule" aria-hidden="true" />
-        <button
-          type="button"
-          className="cta menu-cta"
-          aria-label="INITIATE // OPEN THE WORLD NETWORK"
-          onClick={act(() => goto('world'))}
-        >
-          <span className="cta-inner">&lt;&lt; INITIATE &gt;&gt;</span>
-        </button>
+        <div className="menu-actions">
+          {canContinue && (
+            <button
+              type="button"
+              className="cta menu-cta"
+              aria-label="CONTINUE SAVED OPERATION // OPEN THE WORLD NETWORK"
+              onClick={act(continueOperation)}
+            >
+              <span className="cta-inner">&lt;&lt; CONTINUE &gt;&gt;</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className={
+              (canContinue ? 'btn amber menu-new' : 'cta menu-cta') +
+              (newOperationArmed ? ' armed' : '')
+            }
+            aria-label={
+              newOperationArmed
+                ? 'CONFIRM NEW OPERATION // ERASE SAVED CAMPAIGN'
+                : 'BEGIN NEW OPERATION'
+            }
+            onClick={act(beginNewOperation)}
+          >
+            {canContinue ? (
+              newOperationArmed ? 'CONFIRM // ERASE SAVE?' : 'NEW OPERATION'
+            ) : (
+              <span className="cta-inner">&lt;&lt; NEW OPERATION &gt;&gt;</span>
+            )}
+          </button>
+        </div>
       </div>
       <footer className="menu-foot">
         <span>VER 7.2.1 // BUILD 2087.05.14</span>
@@ -712,6 +757,7 @@ export function TeamSelect() {
   const squad = useAppStore((s) => s.squad)
   const toggle = useAppStore((s) => s.toggleOperative)
   const missionId = useAppStore((s) => s.missionId)
+  const roster = useCampaignStore((s) => s.roster)
   const [focusId, setFocusId] = useState<string | null>(null)
   const mission = missionId ? missionById(missionId) : null
   const focus = useMemo(() => {
@@ -737,7 +783,8 @@ export function TeamSelect() {
     const o = operativeById(id)
     return a + o.maxHp * 0.48 + o.speed * 5.2
   }, 18.3)
-  const ready = squad.length === 4
+  const ready =
+    squad.length === 4 && squad.every((id) => roster[id]?.status === 'READY')
   const augs = installedAugs(done)
   const invKinds = ['med', 'cell', 'frag', 'chip'] as const
   return (
@@ -775,14 +822,20 @@ export function TeamSelect() {
             <ScrollBox className="ts-roster-list" dep={squad}>
               {ROSTER.map((o, i) => {
                 const inSquad = squad.includes(o.id)
+                const condition = roster[o.id]?.status ?? 'INJURED'
                 // reading up on an operative must not move them in or out of the
                 // squad, so the row body focuses and the trailing key assigns
-                const blocked = inSquad ? squad.length <= 1 : squad.length >= 4
+                const blocked =
+                  condition === 'INJURED' ||
+                  (inSquad ? squad.length <= 1 : squad.length >= 4)
                 return (
                   <div
                     key={o.id}
                     className={
-                      'ts-row' + (inSquad ? ' sel' : '') + (focus.id === o.id ? ' focus' : '')
+                      'ts-row' +
+                      (inSquad ? ' sel' : '') +
+                      (focus.id === o.id ? ' focus' : '') +
+                      (condition === 'INJURED' ? ' injured' : '')
                     }
                   >
                     <button
@@ -794,14 +847,14 @@ export function TeamSelect() {
                         ' // ' +
                         ROLE_LABEL[o.role] +
                         ' // ' +
-                        o.status
+                        condition
                       }
                       onClick={act(() => setFocusId(o.id))}
                     >
                       <span className="ts-row-idx">{pad2(i + 1)}</span>
                       <span className="ts-row-name">{o.codename}</span>
                       <span className="ts-row-role">{ROLE_LABEL[o.role]}</span>
-                      <span className={'ts-row-status ' + statusTone(o.status)}>{o.status}</span>
+                      <span className={'ts-row-status ' + statusTone(condition)}>{condition}</span>
                     </button>
                     <button
                       type="button"
@@ -812,9 +865,11 @@ export function TeamSelect() {
                       }
                       title={
                         blocked
-                          ? inSquad
-                            ? 'STRIKE TEAM 04 NEEDS AT LEAST ONE OPERATIVE'
-                            : 'STRIKE TEAM 04 IS FULL'
+                          ? condition === 'INJURED'
+                            ? 'OPERATIVE INJURED // ADVANCE WORLD TIME TO RECOVER'
+                            : inSquad
+                              ? 'STRIKE TEAM 04 NEEDS AT LEAST ONE OPERATIVE'
+                              : 'STRIKE TEAM 04 IS FULL'
                           : inSquad
                             ? 'UNASSIGN'
                             : 'ASSIGN'
@@ -847,6 +902,7 @@ export function TeamSelect() {
               )
             }
             const o = operativeById(id)
+            const condition = roster[id]?.status ?? 'INJURED'
             const h = hashOf(o.id + o.codename)
             return (
               <button
@@ -869,7 +925,7 @@ export function TeamSelect() {
                   <div className="ts-bay-name">{o.codename}</div>
                   <div className="kv mini">
                     <span>CONDITION</span>
-                    <b className={statusTone(o.status)}>{o.status}</b>
+                    <b className={statusTone(condition)}>{condition}</b>
                   </div>
                   <div className="ts-bay-stats">
                     <span className="kv mini">
@@ -906,7 +962,10 @@ export function TeamSelect() {
             }
             right={
               <>
-                CONDITION: <b className={statusTone(focus.status)}>{focus.status}</b>
+                CONDITION:{' '}
+                <b className={statusTone(roster[focus.id]?.status ?? 'INJURED')}>
+                  {roster[focus.id]?.status ?? 'INJURED'}
+                </b>
               </>
             }
             className="ts-detail-panel"
@@ -1043,7 +1102,9 @@ export function TeamSelect() {
             aria-label={
               ready
                 ? 'DEPLOY STRIKE TEAM 04'
-                : 'DEPLOY TEAM // ASSIGN ' + (4 - squad.length) + ' MORE'
+                : squad.length < 4
+                  ? 'DEPLOY TEAM // ASSIGN ' + (4 - squad.length) + ' MORE'
+                  : 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
             }
             onClick={act(() => goto('mission'))}
           >
@@ -1052,7 +1113,12 @@ export function TeamSelect() {
           <div className="dim mini ts-deploy-sub">
             {ready
               ? 'CONFIRM AND DEPLOY STRIKE TEAM 04'
-              : 'ASSIGN ' + (4 - squad.length) + ' MORE OPERATIVE' + (4 - squad.length === 1 ? '' : 'S')}
+              : squad.length < 4
+                ? 'ASSIGN ' +
+                  (4 - squad.length) +
+                  ' MORE OPERATIVE' +
+                  (4 - squad.length === 1 ? '' : 'S')
+                : 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'}
           </div>
         </div>
       </footer>
@@ -1074,10 +1140,24 @@ export function Debrief() {
   const outcome = useAppStore((s) => s.outcome)
   const credits = useAppStore((s) => s.credits)
   const missionId = useAppStore((s) => s.missionId)
+  const outcomeSerial = useAppStore((s) => s.outcomeSerial)
   const m = missionId ? missionById(missionId) : null
   const won = outcome?.won ?? false
   const fine = outcome ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
+  useEffect(() => {
+    if (!outcome || !missionId) return
+    if (useCampaignStore.getState().outcomeApplied >= outcomeSerial) return
+    const worldT = useWorldStore.getState().t
+    useCampaignStore.getState().reportMission(missionId, outcome, worldT)
+    useWorldStore.getState().applyMissionResult(missionId, outcome)
+    if (outcome.deadIds.length > 0) {
+      const dead = new Set(outcome.deadIds)
+      useAppStore.setState((state) => ({
+        squad: state.squad.filter((id) => !dead.has(id)),
+      }))
+    }
+  }, [missionId, outcome, outcomeSerial])
   const mmss = (sec: number) => {
     const s = Math.max(0, Math.floor(sec))
     return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60)
