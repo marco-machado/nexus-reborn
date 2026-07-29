@@ -218,7 +218,7 @@ From GDD section 21, mission content, plus milestone specifics:
 
 ## Verification
 
-`npm run lint`, `npm run build`, then this click-through:
+`npm run lint`, `npm run build`, `npm test`, then this click-through:
 
 1. Glass Veil regression: unchanged layout, objectives, payout. The brief now shows derived chance and heavy-rain modifiers.
 2. Hollow Crown, both variants: breach via the gate on one run and the side entry on another; let the vip die once and confirm the loss; complete the optional server pull and confirm +9,000 in the debrief.

@@ -164,7 +164,7 @@ From GDD section 21, campaign loop, plus milestone specifics:
 
 ## Verification
 
-No test suite exists, so the checks are `npm run lint`, `npm run build`, and this click-through:
+The checks are `npm run lint`, `npm run build`, `npm test`, and this click-through:
 
 1. New operation. Win Glass Veil with one civilian hit. Confirm the payout, the Europe control/unrest change, the feed event, and +40 intel.
 2. Reload the page. Confirm `CONTINUE` restores everything from step 1, including a lab left running.
