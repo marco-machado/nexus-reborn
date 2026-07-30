@@ -2,10 +2,14 @@
 // drives both the city generator and the in-world rng, and the tests drive
 // tick() by hand, so no timers or real clocks are involved.
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { MissionDef, OperativeDef, Vec2, WorldApi } from './types'
+import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
+import { isWalkable } from './types'
 import { createWorld } from './world'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, WEAPONS, operativeById } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
+import { contractMission } from './contracts'
+import type { ContractType, GeneratedContract } from './contracts'
+import { findPath, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -38,6 +42,28 @@ function dist(a: Vec2, b: Vec2): number {
   const dx = b.x - a.x
   const dz = b.z - a.z
   return Math.sqrt(dx * dx + dz * dz)
+}
+
+// Drives the sim until `cond` holds or `maxSec` of world time is spent.
+// `drive` re-issues orders on a cadence, the way a player would keep clicking.
+function runUntil(
+  w: WorldApi,
+  cond: () => boolean,
+  maxSec: number,
+  drive?: () => void,
+  driveEvery = 1,
+): boolean {
+  const until = w.time + maxSec
+  let nextDrive = -Infinity
+  while (w.time < until) {
+    if (cond()) return true
+    if (drive && w.time >= nextDrive) {
+      drive()
+      nextDrive = w.time + driveEvery
+    }
+    w.tick(STEP)
+  }
+  return cond()
 }
 
 beforeEach(() => {
@@ -1147,6 +1173,217 @@ describe('milestone 2 missions', () => {
       for (const key of ['insertion', 'extraction', 'target']) {
         expect(a.city.landmarks[key]).toBeDefined()
         expect(b.city.landmarks[key]).toBeDefined()
+      }
+    }
+  })
+})
+
+describe('scripted playthrough', () => {
+  const ALL = ['a1', 'a2', 'a3', 'a4']
+
+  function objectiveDone(index: number): boolean {
+    return useMissionStore.getState().objectives[index]?.done === true
+  }
+
+  function livingIds(w: WorldApi): string[] {
+    return w.units
+      .filter((u) => u.kind === 'agent' && u.stance !== 'dead')
+      .map((u) => u.id)
+  }
+
+  it('wins Glass Veil on orders alone: advance, clear the garrison, extract', () => {
+    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+
+    // Phase 1: drive move orders at the checkpoint gate until an operative
+    // reaches the zone. Attack-move engages whatever steps into the lane.
+    const gate = w.city.checkpoint
+    const reached = runUntil(
+      w,
+      () => objectiveDone(0),
+      180,
+      () => w.orderMove(livingIds(w), { x: gate.x, z: gate.z }),
+      2,
+    )
+    expect(reached).toBe(true)
+
+    // Phase 2: focus fire on the garrison, nearest tagged guard first. The
+    // elimination runs through real weapon fire, not state mutation.
+    const nextGarrison = () =>
+      w.units.find((u) => u.kind === 'enemy' && u.tag === 'garrison' && u.stance !== 'dead')
+    const cleared = runUntil(
+      w,
+      () => objectiveDone(1),
+      420,
+      () => {
+        const target = nextGarrison()
+        if (target) w.orderAttack(livingIds(w), target.id)
+      },
+      0.5,
+    )
+    expect(cleared).toBe(true)
+
+    // Phase 3: walk every survivor back onto the insertion pad.
+    const pad = w.city.extraction
+    const won = runUntil(
+      w,
+      () => useMissionStore.getState().result === 'won',
+      240,
+      () => w.orderMove(livingIds(w), { x: pad.x, z: pad.z }),
+      2,
+    )
+    expect(won).toBe(true)
+
+    // The outcome lands after the debrief delay with the net payout applied.
+    warm(w, 3)
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('debrief')
+    expect(app.outcome?.won).toBe(true)
+    expect(app.outcome?.kills).toBeGreaterThanOrEqual(7)
+    const fine = Math.min(MISSION.reward, (app.outcome?.civiliansHit ?? 0) * 5000)
+    expect(app.credits).toBe(128450 + MISSION.reward - fine)
+    expect(app.credits).toBeGreaterThanOrEqual(0)
+  })
+
+  it('loses to CorpSec fire: a wipe driven by enemy rounds, not state edits', () => {
+    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+
+    // Park the wounded squad in the garrison plaza, weapons tight, holding
+    // ground: the guards must see them, close in, and shoot them down.
+    const gate = w.city.checkpoint
+    const spots: Vec2[] = [
+      { x: gate.x, z: gate.z },
+      { x: gate.x + 1, z: gate.z },
+      { x: gate.x, z: gate.z + 1 },
+      { x: gate.x + 1, z: gate.z + 1 },
+    ]
+    ALL.forEach((id, i) => {
+      const u = w.unit(id)
+      expect(u).toBeDefined()
+      if (!u) return
+      const at = nearestWalkable(w.city, spots[i]) ?? spots[i]
+      u.pos.x = at.x
+      u.pos.z = at.z
+      u.path.length = 0
+      u.hp = 1
+    })
+    w.orderHoldFire(ALL, true)
+    w.orderHold(ALL, true)
+
+    const lost = runUntil(w, () => useMissionStore.getState().result === 'lost', 90)
+    expect(lost).toBe(true)
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('SQUAD ELIMINATED'))).toBe(
+      true,
+    )
+
+    warm(w, 3)
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('debrief')
+    expect(app.outcome?.won).toBe(false)
+    expect(app.outcome?.casualties).toBe(4)
+    expect(app.outcome?.deadIds?.slice().sort()).toEqual([...DEFAULT_SQUAD].sort())
+    expect(app.credits).toBe(128450)
+  })
+})
+
+describe('objective completability', () => {
+  // One record per generated-contract type, on a fixed seed, so the four
+  // procedural archetype pipelines are checked beside the authored three.
+  function record(type: ContractType): GeneratedContract {
+    return {
+      id: 'gc-test-' + type.toLowerCase(),
+      createdT: 0,
+      expiresAtT: 86400,
+      sector: 'eu',
+      cityId: 'ln',
+      district: 7,
+      type,
+      client: 'omni',
+      threat: 'HIGH',
+      reward: 50000,
+      seed: 12345,
+      priority: type === 'SUPPRESSION',
+      expedited: false,
+    }
+  }
+
+  const GENERATED_TYPES: ContractType[] = ['SEIZURE', 'SUPPRESSION', 'EXTRACTION', 'SABOTAGE']
+  const CASES: Array<[string, MissionDef]> = [
+    ...MISSIONS.map((m): [string, MissionDef] => [m.id + ' ' + m.codename, m]),
+    ...GENERATED_TYPES.map((t): [string, MissionDef] => [
+      'generated ' + t,
+      contractMission(record(t)),
+    ]),
+  ]
+
+  // Mirrors world.ts zoneFor: explicit zone, then landmark, then checkpoint.
+  function zoneOf(w: WorldApi, def: ObjectiveDef): Zone {
+    if (def.zone) return def.zone
+    if (def.landmark && w.city.landmarks[def.landmark]) return w.city.landmarks[def.landmark]
+    return w.city.checkpoint
+  }
+
+  function walkableInZone(w: WorldApi, zone: Zone): boolean {
+    for (let cx = Math.floor(zone.x - zone.r); cx <= Math.floor(zone.x + zone.r); cx++) {
+      for (let cz = Math.floor(zone.z - zone.r); cz <= Math.floor(zone.z + zone.r); cz++) {
+        const p = { x: cx + 0.5, z: cz + 0.5 }
+        if (dist(p, zone) <= zone.r && isWalkable(w.city, p.x, p.z)) return true
+      }
+    }
+    return false
+  }
+
+  function reachable(w: WorldApi, zone: Zone): boolean {
+    const start = w.city.spawnAgents[0]
+    const goal = isWalkable(w.city, zone.x, zone.z)
+      ? { x: zone.x, z: zone.z }
+      : nearestWalkable(w.city, zone)
+    if (!goal) return false
+    if (dist(start, goal) < 1) return true
+    return findPath(w.city, start, goal).length > 0
+  }
+
+  it.each(CASES)('%s builds a chain completable in principle', (_name, mission) => {
+    const w = createWorld(mission, ops(['op1']))
+    const required = mission.objectives.filter((d) => !d.optional)
+    expect(required.length).toBeGreaterThan(0)
+    // The chain always closes on extraction, never strands the squad.
+    expect(required[required.length - 1].kind).toBe('extract')
+    expect(required.slice(0, -1).every((d) => d.kind !== 'extract')).toBe(true)
+
+    for (const def of mission.objectives) {
+      switch (def.kind) {
+        case 'reach-zone':
+        case 'interact':
+        case 'escort':
+        case 'defend': {
+          const zone = zoneOf(w, def)
+          expect(walkableInZone(w, zone), def.id + ' zone has no walkable cell').toBe(true)
+          expect(reachable(w, zone), def.id + ' zone unreachable from insertion').toBe(true)
+          if (def.kind === 'escort') {
+            expect(w.units.some((u) => u.kind === 'vip')).toBe(true)
+          }
+          break
+        }
+        case 'eliminate-tag':
+          expect(
+            w.units.filter((u) => u.kind === 'enemy' && u.tag === def.tag).length,
+            def.id + ' tagged set empty',
+          ).toBeGreaterThan(0)
+          break
+        case 'destroy':
+          expect(
+            w.units.filter((u) => u.kind === 'device' && u.tag === def.tag).length,
+            def.id + ' device set empty',
+          ).toBeGreaterThan(0)
+          break
+        case 'extract':
+          expect(walkableInZone(w, w.city.extraction)).toBe(true)
+          expect(reachable(w, w.city.extraction)).toBe(true)
+          break
       }
     }
   })

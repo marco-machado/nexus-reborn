@@ -245,3 +245,85 @@ describe('installedAugs', () => {
     expect(reversed.find((a) => a.slot === 'LEGS')?.node).toBeNull()
   })
 })
+
+describe('authored program sums', () => {
+  // The design document's authored totals: 248,000 + 261,000 + 270,000 CR.
+  const BRANCH_TOTALS: Record<string, number> = {
+    ballistics: 248000,
+    cybernetics: 261000,
+    control: 270000,
+  }
+
+  it('sums each branch and the whole program to the authored figures', () => {
+    let total = 0
+    for (const b of BRANCH_IDS) {
+      const sum = nodesOfBranch(b).reduce((acc, n) => acc + n.cost, 0)
+      expect(sum, b + ' branch total').toBe(BRANCH_TOTALS[b])
+      total += sum
+    }
+    expect(total).toBe(779000)
+  })
+
+  it('runs every tier on the authored hour ladder: 2h, 4h, 8h, 14h by row', () => {
+    const HOURS_BY_ROW: Record<number, number> = { 0: 2, 1: 4, 2: 8, 3: 14 }
+    for (const n of NODES) {
+      expect(n.hours, n.id + ' hours').toBe(HOURS_BY_ROW[n.row])
+    }
+  })
+
+  it('keeps every prerequisite inside the branch and strictly above its tier', () => {
+    for (const n of NODES) {
+      for (const need of n.needs) {
+        const p = byId.get(need)
+        expect(p, n.id + ' needs unknown ' + need).toBeDefined()
+        if (!p) continue
+        expect(p.branch, n.id + ' crosses branches').toBe(n.branch)
+        expect(p.row, n.id + ' prerequisite not in an earlier tier').toBeLessThan(n.row)
+      }
+    }
+  })
+
+  it('caps each branch with one node requiring both tier-3 projects', () => {
+    for (const b of BRANCH_IDS) {
+      const caps = nodesOfBranch(b).filter((n) => n.row === 3)
+      expect(caps).toHaveLength(1)
+      const tier3 = nodesOfBranch(b)
+        .filter((n) => n.row === 2)
+        .map((n) => n.id)
+        .sort()
+      expect([...caps[0].needs].sort()).toEqual(tier3)
+    }
+  })
+})
+
+describe('effect stacking order', () => {
+  it('folds same-stat weapon projects in completion order', () => {
+    // Three projects all shrink spread. The fold runs left to right down the
+    // done list, so the expectation is the explicit sequential product.
+    const done = ['b-coating', 'b-rail', 'k-targeting']
+    let expected = WEAPONS.assault.spread
+    for (const mul of [0.9, 0.85, 0.88]) expected *= mul
+    expect(squadWeapon('assault', done).spread).toBeCloseTo(expected, 12)
+  })
+
+  it('yields the same stats when pure multipliers complete in another order', () => {
+    // Every shipped same-field pair is multiplicative, so completion order
+    // changes the fold sequence but never the deployed number.
+    const done = ['b-coating', 'b-rail', 'k-targeting', 'b-propellants', 'b-sabot']
+    const reversed = [...done].reverse()
+    const a = squadWeapon('assault', done)
+    const b = squadWeapon('assault', reversed)
+    expect(b.spread).toBeCloseTo(a.spread, 12)
+    expect(b.damage).toBeCloseTo(a.damage, 12)
+    expect(b.reload).toBeCloseTo(a.reload, 12)
+  })
+
+  it('sums crew projects identically in either completion order', () => {
+    const done = ['c-synaptic', 'k-swarm', 'c-pain', 'k-threat']
+    const a = crewBonus(done)
+    const b = crewBonus([...done].reverse())
+    expect(a).toEqual(b)
+    expect(a.speed).toBeCloseTo(0.2 + 0.25, 12)
+    expect(a.maxHp).toBe(14 + 12)
+  })
+})

@@ -1,8 +1,38 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { COLLATERAL_FINE, collateralFine, netPayout, useAppStore } from './appStore'
 import type { MissionOutcome } from './appStore'
-import { DEFAULT_SQUAD } from '../game/data'
+import { DEFAULT_SQUAD, MISSIONS } from '../game/data'
+import { nodeById } from '../game/research'
+import { INFLUENCE_ACTIONS } from '../game/influence'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
+import { useResearchStore } from './researchStore'
+import { useWorldStore } from './worldStore'
+
+// World-store boot snapshot for the economy integration suite, captured at
+// module load before any test moves the singleton.
+const w0 = useWorldStore.getState()
+const worldBoot = structuredClone({
+  t: w0.t,
+  speed: w0.speed,
+  paused: w0.paused,
+  sectors: w0.sectors,
+  owner: w0.owner,
+  events: w0.events,
+  unread: w0.unread,
+  selected: w0.selected,
+  review: w0.review,
+  nextEventT: w0.nextEventT,
+  rngState: w0.rngState,
+  contracts: w0.contracts,
+  contractRngState: w0.contractRngState,
+  nextContractT: w0.nextContractT,
+  influence: w0.influence,
+  nextTrickleT: w0.nextTrickleT,
+  spends: w0.spends,
+  cooldowns: w0.cooldowns,
+  crisis: w0.crisis,
+  pressure: w0.pressure,
+})
 
 // Captured at module load, before any test mutates the singleton.
 const bootState = useAppStore.getState()
@@ -243,5 +273,102 @@ describe('mission outcome payout', () => {
     expect(s.credits).toBe(START_CREDITS)
     expect(s.outcome).toBe(o)
     expect(s.phase).toBe('debrief')
+  })
+})
+
+describe('economy integration', () => {
+  beforeEach(() => {
+    useWorldStore.setState(structuredClone(worldBoot))
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  })
+
+  function assertSolvent(): void {
+    expect(useAppStore.getState().credits).toBeGreaterThanOrEqual(0)
+    expect(useWorldStore.getState().influence).toBeGreaterThanOrEqual(0)
+  }
+
+  it('runs one campaign beat across the stores without the balance going negative', () => {
+    const m01 = MISSIONS[0]
+    useAppStore.getState().selectMission(m01.id)
+    expect(useAppStore.getState().phase).toBe('brief')
+
+    // Win 1, two bystanders on the bill: the fee lands minus the fines.
+    const first = outcome({ civiliansHit: 2, reward: m01.reward })
+    useAppStore.getState().setOutcome(first)
+    expect(netPayout(first)).toBe(m01.reward - 2 * COLLATERAL_FINE)
+    expect(useAppStore.getState().credits).toBe(
+      START_CREDITS + m01.reward - 2 * COLLATERAL_FINE,
+    )
+    assertSolvent()
+
+    // The debrief boundary: campaign intel, then the world consequences.
+    useCampaignStore.getState().reportMission(m01.id, first, 0)
+    expect(useCampaignStore.getState().intelProgress).toBe(25 + 40)
+    useWorldStore.getState().applyMissionResult(m01.id, first, [])
+    const eu = useWorldStore.getState().sectors.eu
+    expect(eu.control).toBe(worldBoot.sectors.eu.control + 4)
+    expect(eu.unrest).toBe(worldBoot.sectors.eu.unrest - 2)
+    expect(useWorldStore.getState().influence).toBe(6)
+
+    // Win 2 is clean but costs an operative, freeing a roster bay.
+    const second = outcome({ civiliansHit: 0, reward: m01.reward, deadIds: ['op5'] })
+    useAppStore.getState().setOutcome(second)
+    useCampaignStore.getState().reportMission(m01.id, second, 0)
+    useWorldStore.getState().applyMissionResult(m01.id, second, ['RAVEN'])
+    expect(useWorldStore.getState().influence).toBe(6 + 8)
+    expect(useCampaignStore.getState().operatives.some((o) => o.id === 'op5')).toBe(false)
+    assertSolvent()
+
+    // Research: the screen clears the fee first, then the lab takes the job.
+    const node = nodeById('b-propellants')
+    const beforeResearch = useAppStore.getState().credits
+    useAppStore.getState().spendCredits(node.cost)
+    expect(useAppStore.getState().credits).toBe(beforeResearch - node.cost)
+    expect(useResearchStore.getState().start(node, 0)).toBe(true)
+    assertSolvent()
+
+    // Hire: the vacated bay is refilled for the candidate fee.
+    const candidate = useCampaignStore.getState().candidates[0]
+    const beforeHire = useAppStore.getState().credits
+    useAppStore.getState().hireOperative(candidate.id)
+    expect(useAppStore.getState().credits).toBe(beforeHire - candidate.cost)
+    expect(useCampaignStore.getState().operatives.some((o) => o.id === candidate.id)).toBe(true)
+    assertSolvent()
+
+    // Influence spend: stabilize costs its points and arms the cooldown.
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    expect(useWorldStore.getState().influence).toBe(14 - INFLUENCE_ACTIONS.stabilize.cost)
+    assertSolvent()
+  })
+
+  it('refuses every unaffordable spend without touching a balance', () => {
+    useAppStore.setState({ credits: 10000 })
+    useWorldStore.setState({ influence: INFLUENCE_ACTIONS.stabilize.cost - 1 })
+
+    // Research past the balance: the guard in spendCredits holds the line.
+    useAppStore.getState().spendCredits(nodeById('b-propellants').cost)
+    expect(useAppStore.getState().credits).toBe(10000)
+
+    // Every candidate fee starts above 10,000 CR: the hire is refused whole.
+    const rosterBefore = useCampaignStore.getState().operatives.length
+    for (const c of useCampaignStore.getState().candidates) {
+      expect(c.cost).toBeGreaterThan(10000)
+      useAppStore.getState().hireOperative(c.id)
+    }
+    expect(useAppStore.getState().credits).toBe(10000)
+    expect(useCampaignStore.getState().operatives).toHaveLength(rosterBefore)
+
+    // One point short of stabilize: the spend is a no-op.
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    expect(useWorldStore.getState().influence).toBe(INFLUENCE_ACTIONS.stabilize.cost - 1)
+    expect(useWorldStore.getState().spends).toHaveLength(0)
+
+    // A lost contract pays nothing and cannot pull the account down.
+    useAppStore.getState().setOutcome(outcome({ won: false, reward: 0 }))
+    expect(useAppStore.getState().credits).toBe(10000)
+    assertSolvent()
   })
 })
