@@ -28,6 +28,25 @@
   --line-amber: rgba(240, 180, 69, 0.55);
   --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, 'Cascadia Mono',
     'Roboto Mono', monospace;
+  /* Text-scale accessibility setting: every font-size in the UI multiplies by
+     this, so the s-text-* classes below resize all type at once. Layouts
+     absorb the growth or scroll; they must not clip at 1280x720. */
+  --text-scale: 1;
+}
+
+:root.s-text-90 { --text-scale: 0.9; }
+:root.s-text-110 { --text-scale: 1.1; }
+:root.s-text-125 { --text-scale: 1.25; }
+
+/* High-contrast accessibility setting: brighter ink tiers and stronger frame
+   lines on the same near-black ground. */
+:root.s-high-contrast {
+  --ink: #e2f6ee;
+  --ink-dim: #9dc3b8;
+  --ink-faint: #6d938a;
+  --line: rgba(126, 240, 212, 0.42);
+  --line-strong: rgba(126, 240, 212, 0.72);
+  --line-amber: rgba(240, 180, 69, 0.8);
 }
 
 * {
@@ -45,7 +64,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale));
   letter-spacing: 0.04em;
   -webkit-font-smoothing: antialiased;
 }

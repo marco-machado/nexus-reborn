@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { BINDINGS, BINDING_GROUPS } from '../game/bindings'
 import { Chip, Panel } from './bits'
+import SettingsPanel from './Settings'
 import { uiClick } from './sound'
 
 export default function PauseMenu(props: {
@@ -18,6 +19,9 @@ export default function PauseMenu(props: {
   const panelRef = useRef<HTMLDivElement | null>(null)
   const resumeRef = useRef<HTMLButtonElement | null>(null)
   const [abortArmed, setAbortArmed] = useState(false)
+  // Settings swaps the panel content; the sim stays frozen (paused untouched)
+  // and closing lands back on this menu.
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Two step abort: first click arms, second confirms, auto resets after 3s.
   useEffect(() => {
@@ -27,8 +31,8 @@ export default function PauseMenu(props: {
   }, [abortArmed])
 
   useEffect(() => {
-    resumeRef.current?.focus()
-  }, [])
+    if (!settingsOpen) resumeRef.current?.focus()
+  }, [settingsOpen])
 
   const returnRef = props.returnRef
   useEffect(
@@ -64,6 +68,14 @@ export default function PauseMenu(props: {
     document.addEventListener('keydown', onTab)
     return () => document.removeEventListener('keydown', onTab)
   }, [])
+
+  if (settingsOpen) {
+    return (
+      <div className="hud-menu-wrap" role="dialog" aria-modal="true" aria-label="Settings">
+        <SettingsPanel onClose={() => setSettingsOpen(false)} />
+      </div>
+    )
+  }
 
   return (
     <div className="hud-menu-wrap" role="dialog" aria-modal="true" aria-label="Mission paused">
@@ -105,6 +117,17 @@ export default function PauseMenu(props: {
               }}
             >
               RESUME
+            </button>
+            <button
+              type="button"
+              className="hud-btn"
+              aria-label="Open settings"
+              onClick={() => {
+                uiClick()
+                setSettingsOpen(true)
+              }}
+            >
+              SETTINGS
             </button>
             <button
               type="button"

@@ -1,5 +1,15 @@
-import { describe, it, expect } from 'vitest'
-import { BINDINGS, BINDING_GROUPS, bindingFor, codeOf } from './bindings'
+import { afterEach, describe, it, expect } from 'vitest'
+import {
+  BINDINGS,
+  BINDING_GROUPS,
+  applyOverrides,
+  bindingFor,
+  codeOf,
+  defaultCodes,
+  keyLabel,
+  remappable,
+  sanitizeOverrides,
+} from './bindings'
 
 function fakeKey(code: string, key: string): KeyboardEvent {
   return { code, key } as unknown as KeyboardEvent
@@ -97,5 +107,89 @@ describe('codeOf', () => {
   it('returns an empty string for a character it cannot spell', () => {
     expect(codeOf(fakeKey('', '@'))).toBe('')
     expect(codeOf(fakeKey('', '!'))).toBe('')
+  })
+})
+
+describe('overrides', () => {
+  afterEach(() => {
+    applyOverrides({})
+  })
+
+  it('keeps pause, selectSlot and the mouse rows out of remapping', () => {
+    for (const b of BINDINGS) {
+      if (b.id === 'pause' || b.id === 'selectSlot' || b.codes.length === 0) {
+        expect(remappable(b)).toBe(false)
+      } else {
+        expect(remappable(b)).toBe(true)
+      }
+    }
+  })
+
+  it('applies an override to the lookup and the printed keys', () => {
+    applyOverrides({ holdGround: ['KeyJ'] })
+    expect(bindingFor('KeyJ')?.id).toBe('holdGround')
+    expect(bindingFor('KeyH')).toBeUndefined()
+    const row = BINDINGS.find((b) => b.id === 'holdGround')
+    expect(row?.codes).toEqual(['KeyJ'])
+    expect(row?.keys).toEqual(['J'])
+  })
+
+  it('resets to the authored defaults, per action and globally', () => {
+    applyOverrides({ holdGround: ['KeyJ'], stop: ['KeyT'] })
+    // Per action: dropping one override keeps the other.
+    applyOverrides({ stop: ['KeyT'] })
+    expect(bindingFor('KeyH')?.id).toBe('holdGround')
+    expect(bindingFor('KeyT')?.id).toBe('stop')
+    // Global reset restores every default code and key.
+    applyOverrides({})
+    for (const b of BINDINGS) {
+      expect(b.codes).toEqual(defaultCodes(b.id))
+      for (const code of b.codes) expect(bindingFor(code)?.id).toBe(b.id)
+    }
+  })
+
+  it('rejects overrides on fixed actions and reserved codes', () => {
+    expect(sanitizeOverrides({ pause: ['KeyP'] })).toEqual({})
+    expect(sanitizeOverrides({ selectSlot: ['KeyT'] })).toEqual({})
+    // Space and Escape belong to pause forever; the digits to selectSlot.
+    expect(sanitizeOverrides({ holdGround: ['Space'] })).toEqual({})
+    expect(sanitizeOverrides({ holdGround: ['Digit1'] })).toEqual({})
+  })
+
+  it('rejects an override that collides with a live default', () => {
+    // KeyH still belongs to holdGround, so stop cannot take it.
+    expect(sanitizeOverrides({ stop: ['KeyH'] })).toEqual({})
+    // Once holdGround moves away, KeyH is free.
+    expect(sanitizeOverrides({ holdGround: ['KeyJ'], stop: ['KeyH'] })).toEqual({
+      holdGround: ['KeyJ'],
+      stop: ['KeyH'],
+    })
+  })
+
+  it('rejects the later claim when two overrides collide', () => {
+    const clean = sanitizeOverrides({ stop: ['KeyT'], holdGround: ['KeyT'] })
+    expect(clean).toEqual({ stop: ['KeyT'] })
+  })
+
+  it('drops malformed entries and keeps the good ones', () => {
+    const clean = sanitizeOverrides({
+      holdGround: ['KeyJ'],
+      holdFire: [],
+      swapWeapon: 'KeyZ',
+      useAbility: [7],
+      unknown: ['KeyL'],
+    })
+    expect(clean).toEqual({ holdGround: ['KeyJ'] })
+    expect(sanitizeOverrides(null)).toEqual({})
+    expect(sanitizeOverrides([['stop', ['KeyT']]])).toEqual({})
+  })
+
+  it('prints readable labels for captured codes', () => {
+    expect(keyLabel('KeyJ')).toBe('J')
+    expect(keyLabel('Digit7')).toBe('7')
+    expect(keyLabel('Numpad5')).toBe('Num 5')
+    expect(keyLabel('ArrowUp')).toBe('Up')
+    expect(keyLabel('Backquote')).toBe('`')
+    expect(keyLabel('F13')).toBe('F13')
   })
 })

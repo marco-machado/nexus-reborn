@@ -6,6 +6,7 @@ import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
+import { useSettingsStore } from '../state/settingsStore'
 
 const BOX = 70
 const HALF = BOX / 2
@@ -66,17 +67,22 @@ export default function Rain() {
 
 function RainLayers({ heavy }: { heavy: boolean }) {
   const scene = useThree((s) => s.scene)
+  // Reduced motion drops the storm to one sparse layer regardless of the
+  // mission weather; subscribing here rebuilds it when the toggle moves.
+  const reduced = useSettingsStore((s) => s.reducedMotion)
   // Layers and group must come from ONE memo: StrictMode re-invokes memo
   // creators, and a second creator re-running against a cached layers value
   // would reparent the segments into a discarded group.
   const { layers, group } = useMemo(() => {
-    const built = heavy
-      ? [buildLayer(1100, 0.55, 0.22, 15), buildLayer(700, 0.85, 0.13, 10)]
-      : [buildLayer(480, 0.45, 0.15, 13), buildLayer(300, 0.7, 0.09, 9)]
+    const built = reduced
+      ? [buildLayer(240, 0.45, 0.1, 12)]
+      : heavy
+        ? [buildLayer(1100, 0.55, 0.22, 15), buildLayer(700, 0.85, 0.13, 10)]
+        : [buildLayer(480, 0.45, 0.15, 13), buildLayer(300, 0.7, 0.09, 9)]
     const g = new THREE.Group()
     for (const l of built) g.add(l.lines)
     return { layers: built, group: g }
-  }, [heavy])
+  }, [heavy, reduced])
 
   useEffect(() => {
     scene.add(group)

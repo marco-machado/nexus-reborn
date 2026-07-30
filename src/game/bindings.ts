@@ -5,6 +5,13 @@
 // Two rules keep it that way. One entry per action, never one per key: 0 and
 // backtick are a single row. And no key string is written outside this file:
 // handlers ask bindingFor for the action and switch on its id.
+//
+// The settings screen may remap most keyboard rows: applyOverrides swaps the
+// codes and printed keys in place and rebuilds the code lookup, so every
+// consumer of this table (handlers, pause menu, tutorial) follows the player's
+// keys with no edit of its own. Two rows stay fixed: pause, because
+// scene/Input.tsx guards on the Space literal for focused dialog buttons, and
+// selectSlot, because the slot is the digit the pressed code ends in.
 
 export type BindingGroup = 'camera' | 'squad' | 'abilities' | 'mouse'
 
@@ -115,22 +122,145 @@ export const BINDING_GROUPS: ReadonlyArray<{ group: BindingGroup; title: string 
   { group: 'mouse', title: 'MOUSE' },
 ]
 
+/* ------------------------------ remapping ------------------------------- */
+
+// User overrides, keyed by action id. A listed action runs on exactly the
+// codes given; an absent action keeps its authored defaults.
+export type BindingOverrides = Partial<Record<BindingId, string[]>>
+
+// The authored table, snapshotted before any override lands.
+const DEFAULTS = new Map<BindingId, { codes: string[]; keys: string[] }>(
+  BINDINGS.map((b) => [b.id, { codes: [...b.codes], keys: [...b.keys] }]),
+)
+
+// Pause and selectSlot stay fixed (see the header); mouse rows and the wheel
+// carry no codes to replace.
+export function remappable(b: Binding): boolean {
+  return b.codes.length > 0 && b.id !== 'pause' && b.id !== 'selectSlot'
+}
+
+export function defaultCodes(id: BindingId): string[] {
+  return [...(DEFAULTS.get(id)?.codes ?? [])]
+}
+
+// Codes no override may claim: the fixed rows keep them forever.
+const RESERVED_CODES = new Set(
+  BINDINGS.filter((b) => !remappable(b)).flatMap((b) => b.codes),
+)
+
+// What the menus print for a captured code.
+const CODE_LABEL: Record<string, string> = {
+  Space: 'Space',
+  Escape: 'Esc',
+  Backspace: 'Backspace',
+  Backquote: '`',
+  Equal: '=',
+  Minus: '-',
+  ArrowUp: 'Up',
+  ArrowDown: 'Down',
+  ArrowLeft: 'Left',
+  ArrowRight: 'Right',
+  NumpadAdd: 'Num +',
+  NumpadSubtract: 'Num -',
+  Tab: 'Tab',
+  Enter: 'Enter',
+}
+
+export function keyLabel(code: string): string {
+  if (code.startsWith('Key')) return code.slice(3)
+  if (code.startsWith('Digit')) return code.slice(5)
+  if (code.startsWith('Numpad')) return 'Num ' + code.slice(6)
+  return CODE_LABEL[code] ?? code
+}
+
+// Structural filter plus conflict rejection. An entry survives only when it
+// names a remappable action, holds 1..4 unique non-empty codes, claims no
+// reserved code, and collides with neither another surviving override nor the
+// still-standing default of an action it does not replace. Dropping an entry
+// restores that action's defaults, so the check runs to a fixpoint.
+export function sanitizeOverrides(raw: unknown): BindingOverrides {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {}
+  const record = raw as Record<string, unknown>
+  const out: BindingOverrides = {}
+  for (const b of BINDINGS) {
+    if (!remappable(b)) continue
+    const codes = record[b.id]
+    if (!Array.isArray(codes) || codes.length === 0 || codes.length > 4) continue
+    if (!codes.every((c): c is string => typeof c === 'string' && c.length > 0 && c.length <= 32)) {
+      continue
+    }
+    if (new Set(codes).size !== codes.length) continue
+    if (codes.some((c) => RESERVED_CODES.has(c))) continue
+    out[b.id] = [...codes]
+  }
+  for (let pass = 0; pass < BINDINGS.length; pass++) {
+    // Standing defaults claim first: an override never steals a key an
+    // un-overridden action still runs on. Then the overrides claim in table
+    // order, and the first one that collides is dropped, which restores its
+    // own defaults for the next pass.
+    const claimed = new Set(RESERVED_CODES)
+    for (const b of BINDINGS) {
+      if (out[b.id]) continue
+      for (const c of DEFAULTS.get(b.id)?.codes ?? []) claimed.add(c)
+    }
+    let dropped: BindingId | null = null
+    for (const b of BINDINGS) {
+      const codes = out[b.id]
+      if (!codes) continue
+      if (codes.some((c) => claimed.has(c))) {
+        dropped = b.id
+        break
+      }
+      for (const c of codes) claimed.add(c)
+    }
+    if (!dropped) break
+    delete out[dropped]
+  }
+  return out
+}
+
 // First claim on a code wins. Two actions on one key is the bug this module
 // exists to stop, so dev builds say which pair collided instead of leaving one
 // of them silently dead.
 const BY_CODE = new Map<string, Binding>()
-for (const b of BINDINGS) {
-  for (const code of b.codes) {
-    const prev = BY_CODE.get(code)
-    if (prev) {
-      if (import.meta.env.DEV) {
-        console.error('[bindings] ' + code + ' is claimed by both ' + prev.id + ' and ' + b.id)
+
+function rebuildByCode(): void {
+  BY_CODE.clear()
+  for (const b of BINDINGS) {
+    for (const code of b.codes) {
+      const prev = BY_CODE.get(code)
+      if (prev) {
+        if (import.meta.env.DEV) {
+          console.error('[bindings] ' + code + ' is claimed by both ' + prev.id + ' and ' + b.id)
+        }
+        continue
       }
-      continue
+      BY_CODE.set(code, b)
     }
-    BY_CODE.set(code, b)
   }
 }
+
+// Swaps the live table onto the given overrides (sanitized first) and returns
+// what survived. Passing an empty object restores every authored default.
+export function applyOverrides(raw: unknown): BindingOverrides {
+  const clean = sanitizeOverrides(raw)
+  for (const b of BINDINGS) {
+    const d = DEFAULTS.get(b.id)
+    if (!d) continue
+    const codes = clean[b.id]
+    if (codes) {
+      b.codes = [...codes]
+      b.keys = codes.map(keyLabel)
+    } else {
+      b.codes = [...d.codes]
+      b.keys = [...d.keys]
+    }
+  }
+  rebuildByCode()
+  return clean
+}
+
+rebuildByCode()
 
 // Some environments deliver synthetic key events with an empty code. These are
 // the characters whose code cannot be spelled from the character itself.

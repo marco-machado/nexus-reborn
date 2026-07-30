@@ -65,6 +65,7 @@ import {
 import { fmt, pad2, hashOf } from './util'
 import { Portrait } from './portrait'
 import { Figure } from './figure'
+import SettingsPanel from './Settings'
 import { uiClick, unlockAudio } from './sound'
 export { WorldMap } from './WorldMap'
 export { Research } from './Research'
@@ -113,6 +114,7 @@ export function MainMenu() {
   const clock = useUtcClock()
   const [canContinue] = useState(() => hasValidSave())
   const [newOperationArmed, setNewOperationArmed] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   useEffect(() => {
     const unlock = () => unlockAudio()
     document.addEventListener('click', unlock, { once: true })
@@ -181,8 +183,21 @@ export function MainMenu() {
               <span className="cta-inner">&lt;&lt; NEW OPERATION &gt;&gt;</span>
             )}
           </button>
+          <button
+            type="button"
+            className="btn menu-settings-btn"
+            aria-label="OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"
+            onClick={act(() => setSettingsOpen(true))}
+          >
+            SETTINGS
+          </button>
         </div>
       </div>
+      {settingsOpen && (
+        <div className="hud-menu-wrap" role="dialog" aria-modal="true" aria-label="Settings">
+          <SettingsPanel onClose={() => setSettingsOpen(false)} />
+        </div>
+      )}
       <footer className="menu-foot">
         <span>VER 7.2.1 // BUILD 2087.05.14</span>
         <span className="dim">UNAUTHORIZED ACCESS IS A CLASS-1 CORPORATE OFFENSE</span>

@@ -17,6 +17,7 @@ import {
 } from '../game/types'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { useMissionStore } from '../state/missionStore'
+import { useSettingsStore } from '../state/settingsStore'
 import { uiClick } from './sound'
 
 const ZOOM = [1, 1.7, 2.8]
@@ -244,13 +245,21 @@ export default function Minimap({
             : (def.zone ??
               (def.landmark ? city.landmarks[def.landmark] : undefined) ??
               city.checkpoint)
-        const phase = (Date.now() % 1400) / 1400
+        // Reduced motion swaps the expanding pulse for a steady ring.
+        const reduced = useSettingsStore.getState().reducedMotion
+        const phase = reduced ? 0 : (Date.now() % 1400) / 1400
         ctx.save()
-        ctx.globalAlpha = 0.85 * (1 - phase)
+        ctx.globalAlpha = reduced ? 0.7 : 0.85 * (1 - phase)
         ctx.strokeStyle = COLOR.checkpoint
         ctx.lineWidth = 1.2
         ctx.beginPath()
-        ctx.arc(zone.x * s, zone.z * s, Math.max(4, zone.r * s) * (0.55 + phase), 0, Math.PI * 2)
+        ctx.arc(
+          zone.x * s,
+          zone.z * s,
+          Math.max(4, zone.r * s) * (reduced ? 1 : 0.55 + phase),
+          0,
+          Math.PI * 2,
+        )
         ctx.stroke()
         ctx.restore()
         if (def.kind === 'defend' && activeObj?.progress !== undefined) {
