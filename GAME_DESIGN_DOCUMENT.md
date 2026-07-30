@@ -439,19 +439,29 @@ Speed is measured in world meters per second. Research bonuses are added at depl
 
 ### 9.3 Role implementation status
 
-**Scaffolded**
+**Implemented**
 
-Roles currently affect:
+Every role carries one active ability and one always-on passive, both defined as data in `src/game/abilities.ts`. Q triggers the actives of the current selection; the HUD ability bar carries one per-operative button. Actives cool down for 25–45 seconds; a targeted active that finds no target reports on the comm log and keeps its cooldown.
 
-- Flavor text and iconography.
-- Baseline HP, speed, and primary weapon through the authored roster.
-- Informational HUD item counts:
-  - Base squad: one med item and one cell.
-  - Medic: +2 med.
-  - Support: +1 med.
-  - Tech: +1 cell.
+| Role | Active (cooldown) | Active effect | Passive |
+|---|---|---|---|
+| Assault | Overdrive (30 s) | Fire delay halved for 6 s | +10% weapon damage on both slots |
+| Recon | Pulse Scan (35 s) | All enemies and their sight cones on the minimap for 8 s | Enemies within 16 m are marked on the minimap even when calm |
+| Infiltrator | Ghost Veil (35 s) | Enemies cannot gain vision awareness of this operative for 6 s; hearing still works | Enemy vision certainty builds 25% slower against this operative |
+| Demolitions | Frag Charge (40 s) | Thrown under the nearest enemy within 10 m; after 1 s deals 60 damage in a 3 m radius, with a large noise and an impact flash | Takes 15% less damage |
+| Sniper | Deadeye (30 s) | The next shot within 10 s cannot miss and deals double damage | +15% weapon range on both slots |
+| Tech | EM Burst (35 s) | Enemies within 8 m drop to suspicious, lose their target and cannot fire for 4 s | Squad ability cooldowns run 15% faster while this operative lives |
+| Support | Suppression Sweep (30 s) | For 6 s, enemies within 12 m and line of sight move at half speed | Operatives within 6 m reload 20% faster |
+| Medic | Field Stim (25 s) | Heals the most wounded living operative within 8 m by 40 HP, never above max | Living operatives within 6 m regenerate 1 HP/s up to half their maximum |
 
-Roles do not currently grant usable abilities, passive skills, AI behaviors, or mission interactions. HUD items and team-screen inventory tiles are non-functional displays.
+Roles also feed the usable item stock:
+
+- Base squad: two med items and one cell.
+- Medic: +2 med.
+- Support: +1 med.
+- Tech: +1 cell.
+
+Stat passives (assault damage, sniper range) are applied to the weapon copies at deployment, after research, so both slots carry them; the rest are checked live in the simulation. Team-screen inventory tiles remain non-functional displays.
 
 ### 9.4 Deployment mass
 
@@ -840,7 +850,7 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - Objective list.
 - Comm log.
 - Active operative’s primary and sidearm readout.
-- Locked ability bar.
+- Live ability bar: one role-ability button per squad member with ready, cooldown-fill, and running-duration states, plus the grenade and med stim controls.
 - Informational item counts.
 - Interactive, zoomable minimap.
 - Pause menu and mission result banner.
@@ -929,6 +939,14 @@ Abort returns to the World Network and discards the current mission state withou
 | C | Toggle Hold Fire |
 | V | Swap weapon |
 | Space / Escape | Pause menu |
+
+### Abilities
+
+| Input | Action |
+|---|---|
+| Q | Use the selected operatives' role ability |
+| M | Use med stim |
+| G | Arm / cancel grenade targeting |
 
 ### Mouse
 
@@ -1243,7 +1261,7 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 ### Milestone 3 — Make squad composition a real strategy
 
-1. Give every role one active ability and one passive.
+1. Give every role one active ability and one passive. Done 2026-07-30.
 2. Implement sidearm switching. Done 2026-07-30.
 3. Convert inventory display into usable items with finite quantities.
 4. Add loadout and deployment-mass tradeoffs.
@@ -1370,6 +1388,7 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 | Intel | Earned progression level that gates contract access |
 | Operative | A player-controlled squad member |
 | Review time | A historical point in the 24-hour strategic event timeline |
+| Role ability | A role's active (triggered on Q, per-role cooldown) or always-on passive, defined in `src/game/abilities.ts` |
 | Strategic time | World-map and research clock |
 | Tactical time | Independent mission clock and simulation time |
 | Tagged enemy | An enemy associated with an eliminate objective, such as `garrison` |

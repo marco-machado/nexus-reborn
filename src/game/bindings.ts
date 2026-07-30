@@ -26,6 +26,7 @@ export type BindingId =
   | 'holdGround'
   | 'holdFire'
   | 'swapWeapon'
+  | 'useAbility'
   | 'medStim'
   | 'grenade'
   | 'pause'
@@ -87,6 +88,7 @@ export const BINDINGS: Binding[] = [
   { id: 'pause', group: 'squad', codes: ['Space', 'Escape'], keys: ['Space', 'Esc'], label: 'Pause menu' },
 
   /* abilities, handled in src/scene/Input.tsx */
+  { id: 'useAbility', group: 'abilities', codes: ['KeyQ'], keys: ['Q'], label: 'Use role ability' },
   { id: 'medStim', group: 'abilities', codes: ['KeyM'], keys: ['M'], label: 'Use med stim' },
   { id: 'grenade', group: 'abilities', codes: ['KeyG'], keys: ['G'], label: 'Arm / cancel grenade' },
 

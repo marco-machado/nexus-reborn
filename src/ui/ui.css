@@ -2784,6 +2784,29 @@ button.hud-slot:focus-visible {
 
 .hud-slot.item.spent i { color: var(--red); }
 
+/* role ability slots: red while recharging or with the operative down, with a
+   rising red fill that empties as the cooldown burns */
+.hud-slot.ability.recharging {
+  color: rgba(224, 75, 60, 0.55);
+  border-color: rgba(224, 75, 60, 0.3);
+  background: var(--bg-inset);
+}
+
+.hud-slot.ability.offline {
+  color: rgba(224, 75, 60, 0.22);
+  border-color: rgba(224, 75, 60, 0.18);
+  background: rgba(45, 10, 9, 0.28);
+}
+
+.hud-slot-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(224, 75, 60, 0.16);
+  pointer-events: none;
+}
+
 /* locked progression slots: dim glyph, corner padlock, no hover affordance */
 .hud-slot.locked { color: rgba(126, 240, 212, 0.18); cursor: default; }
 .hud-slot.locked:hover { border-color: var(--line); }

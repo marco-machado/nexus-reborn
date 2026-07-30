@@ -209,6 +209,15 @@ export const sfx = {
     burst(live, { dur: 0.12, type: 'bandpass', freq: 1800, q: 0.8, gain: 0.34, at: 0.025 })
   },
 
+  // Role ability activation: a short rising double blip, brighter than the
+  // order confirm so an ability firing reads as its own event.
+  abilityCue(): void {
+    const live = gate('ability', 0.12)
+    if (!live) return
+    tone(live, { dur: 0.09, type: 'square', f0: 620, f1: 990, gain: 0.16 })
+    tone(live, { dur: 0.12, type: 'sine', f0: 1240, f1: 1560, gain: 0.12, at: 0.06 })
+  },
+
   uiClick(): void {
     const live = gate('ui', 0.03)
     if (!live) return

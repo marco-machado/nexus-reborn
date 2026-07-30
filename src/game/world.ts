@@ -3,6 +3,7 @@
 // Note: MissionScreen resets the mission store right after createWorld, so
 // every store write is deferred to the first tick (startup()).
 import type {
+  AgentRole,
   Boom,
   DistrictSpec,
   MissionDef,
@@ -11,11 +12,13 @@ import type {
   Tracer,
   Unit,
   Vec2,
+  WeaponDef,
   WorldApi,
   Zone,
 } from './types'
 import { ENEMY_VISION, NOTICE_RADIUS, VISION_HALF_ANGLE, isWalkable } from './types'
 import { WEAPONS, weaponNoise } from './data'
+import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
 import { missionMods } from './missionParams'
 import type { MissionMods } from './missionParams'
 import { crewBonus, squadWeapon } from './research'
@@ -88,6 +91,7 @@ const GRENADE_RADIUS = 3.5
 const GRENADE_DAMAGE_CENTER = 70
 const GRENADE_DAMAGE_EDGE = 35
 const GRENADE_NOISE_RADIUS = 24
+const FRAG_NOISE_RADIUS = 24
 // A click may land just inside a wall or prop proxy. Snap it to adjacent
 // pavement, but reject a click buried deep inside inaccessible geometry.
 const GRENADE_TARGET_SNAP = 2.5
@@ -103,6 +107,26 @@ const MOVE_LINES = ['Moving up.', 'Copy that.', 'On my way.', 'Repositioning.', 
 const ATTACK_LINES = ['Engaging.', 'Target acquired.', 'Taking the shot.']
 const STOP_LINES = ['All stop.', 'Standing by.', 'Cutting the move.', 'Waiting on you.']
 const HIT_LINES = ['Taking fire!', 'Under fire, holding.', 'They have us marked.']
+
+// Role ability acknowledgements. The medic pushes a per-target line instead of
+// a table entry; roles whose effect announces its own end carry no expiry line.
+const ABILITY_USE_LINES: Partial<Record<AgentRole, string>> = {
+  assault: 'Overdrive engaged.',
+  recon: 'Pulse scan out.',
+  infiltrator: 'Ghost veil up.',
+  demolitions: 'Charge out. Heads down.',
+  sniper: 'Deadeye armed.',
+  tech: 'EM burst away.',
+  support: 'Suppression sweep running.',
+}
+const ABILITY_EXPIRE_LINES: Partial<Record<AgentRole, string>> = {
+  assault: 'Overdrive spent.',
+  recon: 'Scan feed lost.',
+  infiltrator: 'Veil down.',
+  sniper: 'Deadeye window closed.',
+  tech: 'EM effect faded.',
+  support: 'Sweep complete.',
+}
 
 type Cls = 'sys' | 'alert' | 'ok'
 
@@ -130,6 +154,9 @@ interface SimUnit extends Unit {
   scanYaw?: number
   acquireT?: number
   explicitTarget?: boolean
+  // The cooldown length the last activation was charged, tech passive
+  // applied, so the HUD fill runs against the real total.
+  abilityCdTotal?: number
   // Waypoints parked by hold ground, restored when the hold lifts.
   suspended?: Vec2[]
   wanderT?: number
@@ -219,6 +246,14 @@ export function createWorld(
   let medStimReadyAt = 0
   let grenadeReadyAt = 0
 
+  // Thrown frag charges waiting on their fuse.
+  interface Charge {
+    pos: Vec2
+    at: number
+    by: SimUnit
+  }
+  const charges: Charge[] = []
+
   function addUnit(u: SimUnit): void {
     units.push(u)
     byId.set(u.id, u)
@@ -234,11 +269,21 @@ export function createWorld(
   const researched = useResearchStore.getState().done
   const bonus = crewBonus(researched)
 
+  // Stat passives land on the weapon copies at deployment, after research:
+  // assault damage and sniper range reach both slots the same way research
+  // does, so the HUD and the sim read one number.
+  function roleTuneWeapon(w: WeaponDef, role: AgentRole): WeaponDef {
+    const p = ROLE_ABILITIES[role].passive
+    if (role === 'assault') return { ...w, damage: w.damage * p.magnitude }
+    if (role === 'sniper') return { ...w, range: w.range * p.magnitude }
+    return w
+  }
+
   operatives.forEach((op, i) => {
     // Research applies to both slots the same way: each is built through
     // squadWeapon, so a sidearm carries every completed weapon project.
-    const w = squadWeapon(op.weapon, researched)
-    const sw = squadWeapon(op.sidearm, researched)
+    const w = roleTuneWeapon(squadWeapon(op.weapon, researched), op.role)
+    const sw = roleTuneWeapon(squadWeapon(op.sidearm, researched), op.role)
     const hp = op.maxHp + bonus.maxHp
     addUnit({
       id: 'a' + (i + 1),
@@ -265,6 +310,8 @@ export function createWorld(
       stowedWeapon: sw,
       stowedMagazine: sw.magazine,
       swapReadyAt: 0,
+      abilityReadyAt: 0,
+      abilityUntil: 0,
     })
   })
 
@@ -417,10 +464,38 @@ export function createWorld(
   }
 
   function effSpeed(u: SimUnit): number {
-    if (u.kind === 'enemy' && u.aiState === 'suspicious') return u.speed * 0.85
-    if (u.kind === 'enemy' && u.aiState !== 'combat') return u.speed * 0.6
-    if (u.kind === 'civilian' && (u.fleeUntil ?? 0) > world.time) return u.speed * 1.5
-    return u.speed
+    let s = u.speed
+    if (u.kind === 'enemy') {
+      if (u.aiState === 'suspicious') s *= 0.85
+      else if (u.aiState !== 'combat') s *= 0.6
+      // A suppression sweep pins whoever it marked to half pace.
+      if ((u.suppressedUntil ?? 0) > world.time) s *= ROLE_ABILITIES.support.active.magnitude
+    } else if (u.kind === 'civilian' && (u.fleeUntil ?? 0) > world.time) {
+      s *= 1.5
+    }
+    return s
+  }
+
+  // True while the agent's timed role effect is running and it holds `role`.
+  function roleActive(u: SimUnit, role: AgentRole): boolean {
+    return u.kind === 'agent' && u.operative?.role === role && (u.abilityUntil ?? 0) > world.time
+  }
+
+  // Tech passive: the whole squad's cooldowns run faster while a tech lives.
+  function techAlive(): boolean {
+    return units.some(
+      (u) => u.kind === 'agent' && u.stance !== 'dead' && u.operative?.role === 'tech',
+    )
+  }
+
+  // Support passive: any living support operative within its aura radius.
+  function supportNear(u: SimUnit): boolean {
+    const p = ROLE_ABILITIES.support.passive
+    for (const a of units) {
+      if (a.kind !== 'agent' || a.stance === 'dead' || a.operative?.role !== 'support') continue
+      if (dist(a.pos, u.pos) <= p.radius) return true
+    }
+    return false
   }
 
   // Applies a movement step; on a blocked cell, slides along one axis so
@@ -517,7 +592,9 @@ export function createWorld(
 
   function startReload(u: SimUnit): void {
     if (!u.weapon || u.reloading > 0) return
-    u.reloading = u.weapon.reload
+    const mul =
+      u.kind === 'agent' && supportNear(u) ? ROLE_ABILITIES.support.passive.magnitude : 1
+    u.reloading = u.weapon.reload * mul
     if (u.kind === 'agent') sfx.reload()
   }
 
@@ -532,6 +609,8 @@ export function createWorld(
     // A flatlined agent takes no orders, so it must not keep advertising them.
     t.holdGround = false
     t.holdFire = false
+    // A running role effect dies with its operative, without an expiry line.
+    t.abilityUntil = 0
     if (t.kind === 'device') {
       // A device goes up, not down: blast boom and a noise event, no thud.
       booms.push({ pos: { x: t.pos.x, z: t.pos.z }, t: world.time, r: 2.4, color: '#ff9b52' })
@@ -569,7 +648,12 @@ export function createWorld(
       civiliansHit += 1
       pushLog('SYS', 'CIVILIAN HIT. COLLATERAL COUNT ' + civiliansHit + '.', 'alert')
     }
-    t.hp -= by.kind === 'enemy' ? dmg * ENEMY_DMG_MUL : dmg
+    let dealt = by.kind === 'enemy' ? dmg * ENEMY_DMG_MUL : dmg
+    // Demolitions passive: the hardened frame shrugs part of every hit off.
+    if (t.kind === 'agent' && t.operative?.role === 'demolitions') {
+      dealt *= ROLE_ABILITIES.demolitions.passive.magnitude
+    }
+    t.hp -= dealt
     if (t.kind === 'enemy') {
       t.lastSeenT = world.time
       markLastSeen(t, by.pos)
@@ -626,23 +710,32 @@ export function createWorld(
     if (!w || u.reloading > 0 || u.cooldown > 0) return
     // A freshly drawn weapon is not on target yet. Enemies never swap.
     if (world.time < (u.swapReadyAt ?? 0)) return
+    // An EM burst locks the trigger without touching the magazine or reload.
+    if (u.kind === 'enemy' && (u.jammedUntil ?? 0) > world.time) return
     if (u.magazine <= 0) {
       startReload(u)
       return
     }
-    u.cooldown = w.cooldown * (u.kind === 'enemy' ? ENEMY_CD_MUL : 1)
+    let cd = w.cooldown * (u.kind === 'enemy' ? ENEMY_CD_MUL : 1)
+    if (roleActive(u, 'assault')) cd *= ROLE_ABILITIES.assault.active.magnitude
+    u.cooldown = cd
     u.magazine -= 1
     u.lastFireT = world.time
+    // Deadeye: the armed window is spent on this shot, which cannot miss and
+    // carries the damage multiplier.
+    const deadeye = roleActive(u, 'sniper')
+    if (deadeye) u.abilityUntil = 0
+    const dmg = deadeye ? w.damage * ROLE_ABILITIES.sniper.active.magnitude : w.damage
     const d = dist(u.pos, t.pos)
     const chance = Math.min(0.95, Math.max(0.05, (0.78 - (d / w.range) * 0.28 + (rng() - 0.5) * 0.1) * accMul))
-    const hit = rng() < chance
+    const hit = deadeye || rng() < chance
     const len = Math.max(d, 0.001)
     const nx = (t.pos.x - u.pos.x) / len
     const nz = (t.pos.z - u.pos.z) / len
     let tx = t.pos.x
     let tz = t.pos.z
     if (hit) {
-      applyDamage(t, w.damage, u)
+      applyDamage(t, dmg, u)
     } else {
       const over = 1 + rng() * 1.8
       const side = (rng() - 0.5) * (0.7 + w.spread * 8) * (0.5 + d * 0.08)
@@ -659,7 +752,7 @@ export function createWorld(
       if (stray) {
         tx = stray.pos.x
         tz = stray.pos.z
-        applyDamage(stray, w.damage, u)
+        applyDamage(stray, dmg, u)
       }
     }
     tracers.push({
@@ -826,9 +919,13 @@ export function createWorld(
 
   // Whether a guard treats this body as an intruder: any living agent, and a
   // vip that has broken escort (following). A captive vip alarms nobody.
+  // A veiled infiltrator is invisible to guard eyes everywhere sight is
+  // resolved: awareness, targeting and combat scans all come through here.
+  // Hearing runs through heard(), which this never touches.
   function hostileToGuards(a: SimUnit): boolean {
     if (a.stance === 'dead') return false
-    return a.kind === 'agent' || (a.kind === 'vip' && a.alerted)
+    if (a.kind === 'agent') return !roleActive(a, 'infiltrator')
+    return a.kind === 'vip' && a.alerted
   }
 
   // Nearest intruder this guard can make out: inside the facing cone out to
@@ -893,7 +990,12 @@ export function createWorld(
     let aware = e.awareness ?? 0
     const target = seen(e)
     if (target) {
-      aware += elapsed * sightGain(dist(e.pos, target.pos))
+      let gain = elapsed * sightGain(dist(e.pos, target.pos))
+      // Infiltrator passive: certainty builds slower against this operative.
+      if (target.kind === 'agent' && target.operative?.role === 'infiltrator') {
+        gain *= ROLE_ABILITIES.infiltrator.passive.magnitude
+      }
+      aware += gain
       e.lastSeenT = world.time
       markLastSeen(e, target.pos)
     }
@@ -1138,6 +1240,64 @@ export function createWorld(
       if (world.time - noises[i].t < NOISE_LIFE) noises[w++] = noises[i]
     }
     noises.length = w
+  }
+
+  function detonateCharge(ch: Charge): void {
+    const spec = ROLE_ABILITIES.demolitions.active
+    booms.push({ pos: { x: ch.pos.x, z: ch.pos.z }, t: world.time, r: spec.radius, color: '#ff9b52' })
+    noiseSeq += 1
+    noises.push({
+      id: noiseSeq,
+      pos: { x: ch.pos.x, z: ch.pos.z },
+      r: FRAG_NOISE_RADIUS,
+      t: world.time,
+    })
+    for (const t of units) {
+      if (t.stance === 'dead') continue
+      if (dist(ch.pos, t.pos) > spec.radius || !hasLos(city, ch.pos, t.pos)) continue
+      applyDamage(t, spec.magnitude, ch.by)
+    }
+    sfx.blast()
+    pushLog('SYS', 'FRAG CHARGE DETONATED.', 'ok')
+  }
+
+  // Role ability upkeep: fuse timers, effect expiry, the suppression sweep
+  // marking pass and the medic regeneration aura.
+  function updateAbilities(dt: number): void {
+    let w = 0
+    for (const ch of charges) {
+      if (world.time < ch.at) charges[w++] = ch
+      else detonateCharge(ch)
+    }
+    charges.length = w
+    for (const u of units) {
+      if (u.kind !== 'agent') continue
+      // Expiry fires once: the timer is zeroed with the comm line. A consumed
+      // deadeye and a dead operative both zero it first, so neither logs.
+      if ((u.abilityUntil ?? 0) > 0 && (u.abilityUntil ?? 0) <= world.time) {
+        u.abilityUntil = 0
+        const line = u.operative ? ABILITY_EXPIRE_LINES[u.operative.role] : undefined
+        if (line && u.stance !== 'dead') pushLog(u.name, line)
+      }
+      if (u.stance === 'dead') continue
+      const role = u.operative?.role
+      if (role === 'support' && roleActive(u, 'support')) {
+        const spec = ROLE_ABILITIES.support.active
+        for (const e of units) {
+          if (e.kind !== 'enemy' || e.stance === 'dead') continue
+          if (dist(u.pos, e.pos) > spec.radius || !hasLos(city, u.pos, e.pos)) continue
+          e.suppressedUntil = world.time + SUPPRESS_LINGER
+        }
+      } else if (role === 'medic') {
+        const p = ROLE_ABILITIES.medic.passive
+        for (const a of units) {
+          if (a.kind !== 'agent' || a.stance === 'dead') continue
+          if (dist(u.pos, a.pos) > p.radius) continue
+          const cap = a.maxHp * MEDIC_REGEN_CAP
+          if (a.hp < cap) a.hp = Math.min(cap, a.hp + p.magnitude * dt)
+        }
+      }
+    }
   }
 
   function zoneFor(def: ObjectiveDef): Zone {
@@ -1421,6 +1581,7 @@ export function createWorld(
       if (u.kind !== 'agent') continue
       const op = u.operative
       if (!op) continue
+      const kit = ROLE_ABILITIES[op.role]
       rows.push({
         unitId: u.id,
         slot: u.agentSlot ?? 0,
@@ -1440,6 +1601,11 @@ export function createWorld(
         stowedMagazineSize: u.stowedWeapon ? u.stowedWeapon.magazine : 0,
         holdGround: u.holdGround,
         holdFire: u.holdFire,
+        abilityName: kit.active.name,
+        abilityCooldownRemaining: Math.max(0, (u.abilityReadyAt ?? 0) - world.time),
+        abilityCooldownDuration: u.abilityCdTotal ?? kit.active.cooldown,
+        abilityActiveRemaining: Math.max(0, (u.abilityUntil ?? 0) - world.time),
+        abilityActiveDuration: kit.active.duration,
         dead: u.stance === 'dead',
       })
     }
@@ -1514,6 +1680,7 @@ export function createWorld(
 
   function step(dt: number): void {
     world.time += dt
+    updateAbilities(dt)
     updateAgents(dt)
     updateEnemies(dt)
     updateVips(dt)
@@ -1707,6 +1874,109 @@ export function createWorld(
     stanceAck(changed, hold ? 'Weapons tight.' : 'Weapons free.')
   }
 
+  // Nearest living enemy within `range` of the operative, walls ignored: the
+  // charge is thrown over cover, the blast itself respects line of sight.
+  function nearestEnemyTo(u: SimUnit, range: number): SimUnit | null {
+    let best: SimUnit | null = null
+    let bestD = range
+    for (const e of units) {
+      if (e.kind !== 'enemy' || e.stance === 'dead') continue
+      const d = dist(u.pos, e.pos)
+      if (d <= bestD) {
+        best = e
+        bestD = d
+      }
+    }
+    return best
+  }
+
+  // One agent's role active. Cooldown and an already-running effect skip
+  // silently; a targeted ability with no target pushes a fail line and keeps
+  // its cooldown, so the retry costs nothing.
+  function fireAbility(u: SimUnit): void {
+    const role = u.operative?.role
+    if (!role) return
+    const spec = ROLE_ABILITIES[role].active
+    if (world.time < (u.abilityReadyAt ?? 0) || (u.abilityUntil ?? 0) > world.time) return
+    switch (role) {
+      case 'demolitions': {
+        const target = nearestEnemyTo(u, spec.range)
+        if (!target) {
+          pushLog(u.name, 'No target for the charge.', 'alert')
+          return
+        }
+        charges.push({
+          pos: { x: target.pos.x, z: target.pos.z },
+          at: world.time + spec.duration,
+          by: u,
+        })
+        break
+      }
+      case 'medic': {
+        let best: SimUnit | null = null
+        let worst = 1
+        for (const a of units) {
+          if (a.kind !== 'agent' || a.stance === 'dead') continue
+          if (a.hp >= a.maxHp || dist(u.pos, a.pos) > spec.range) continue
+          const frac = a.hp / a.maxHp
+          if (frac < worst) {
+            worst = frac
+            best = a
+          }
+        }
+        if (!best) {
+          pushLog(u.name, 'Nobody needs the stim.', 'alert')
+          return
+        }
+        const healed = Math.min(spec.magnitude, best.maxHp - best.hp)
+        best.hp += healed
+        pushLog(
+          u.name,
+          'Stim on ' + (best.operative?.codename ?? best.name) + '. +' + Math.ceil(healed) + ' HP.',
+          'ok',
+        )
+        break
+      }
+      case 'tech': {
+        for (const e of units) {
+          if (e.kind !== 'enemy' || e.stance === 'dead') continue
+          if (dist(u.pos, e.pos) > spec.radius) continue
+          e.jammedUntil = world.time + spec.duration
+          if (e.aiState === 'combat') {
+            // Down to suspicious: certainty capped below the firing threshold,
+            // the burst itself is what they walk toward.
+            e.awareness = HEARD_MAX
+            markLastSeen(e, u.pos)
+            enterSuspicious(e)
+          } else {
+            if ((e.awareness ?? 0) > HEARD_MAX) e.awareness = HEARD_MAX
+            e.targetId = null
+          }
+        }
+        break
+      }
+      case 'recon':
+        world.scanUntil = Math.max(world.scanUntil, world.time + spec.duration)
+        break
+      default:
+        // assault, infiltrator, sniper, support: the timer below is the effect.
+        break
+    }
+    if (spec.duration > 0) u.abilityUntil = world.time + spec.duration
+    u.abilityCdTotal = spec.cooldown * (techAlive() ? ROLE_ABILITIES.tech.passive.magnitude : 1)
+    u.abilityReadyAt = world.time + u.abilityCdTotal
+    const line = ABILITY_USE_LINES[role]
+    if (line) pushLog(u.name, line)
+    sfx.abilityCue()
+  }
+
+  function orderAbility(agentIds: string[]): void {
+    const ms = useMissionStore.getState()
+    if (!ms.live || ms.paused || ms.result !== 'none' || result !== 'none') return
+    for (const u of ordered(agentIds)) fireAbility(u)
+    syncSquad()
+  }
+
   function canUseAbility(agentId: string): SimUnit | null {
     const ms = useMissionStore.getState()
     if (!ms.live || ms.paused || ms.result !== 'none' || result !== 'none') return null
@@ -1779,6 +2049,7 @@ export function createWorld(
     booms,
     time: 0,
     vision,
+    scanUntil: 0,
     tick,
     orderMove,
     orderAttack,
@@ -1786,6 +2057,7 @@ export function createWorld(
     orderHold,
     orderHoldFire,
     orderSwapWeapon,
+    orderAbility,
     orderMedStim,
     orderGrenade,
     unit: (id: string) => byId.get(id),

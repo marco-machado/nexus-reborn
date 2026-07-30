@@ -58,10 +58,11 @@ describe('bindingFor', () => {
     expect(bindingFor('Digit1')?.id).toBe('selectSlot')
     expect(bindingFor('Numpad4')?.id).toBe('selectSlot')
     expect(bindingFor('Backquote')?.id).toBe('selectAll')
+    expect(bindingFor('KeyQ')?.id).toBe('useAbility')
   })
 
   it('returns undefined for an unclaimed code', () => {
-    expect(bindingFor('KeyQ')).toBeUndefined()
+    expect(bindingFor('KeyZ')).toBeUndefined()
     expect(bindingFor('')).toBeUndefined()
   })
 })

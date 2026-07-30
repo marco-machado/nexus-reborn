@@ -11,9 +11,11 @@ import {
   CAMERA_YAW,
   VISION_HALF_ANGLE,
   type CameraFootprint,
+  type Unit,
   type Vec2,
   type WorldApi,
 } from '../game/types'
+import { ROLE_ABILITIES } from '../game/abilities'
 import { useMissionStore } from '../state/missionStore'
 import { uiClick } from './sound'
 
@@ -112,8 +114,10 @@ const COLOR = {
   enemyHot: '#ff6b55',
   enemySuspect: '#f0b445',
   enemyCalm: 'rgba(224,75,60,0.45)',
+  enemyRevealed: 'rgba(224,75,60,0.8)',
   coneHot: 'rgba(255,107,85,0.13)',
   coneSuspect: 'rgba(240,180,69,0.11)',
+  coneCalm: 'rgba(224,75,60,0.08)',
   civilian: 'rgba(184,216,207,0.26)',
   device: '#ffb300',
   deviceDead: 'rgba(255,179,0,0.25)',
@@ -307,13 +311,36 @@ export default function Minimap({
         ctx.arc(u.pos.x * s, u.pos.z * s, 2.6, 0, Math.PI * 2)
         ctx.stroke()
       }
-      // Sight cone of every guard that has something to look for. World heading
-      // is atan2(dx, dz), so the canvas bearing is a quarter turn less.
+      // Pulse Scan paints every guard; the recon passive reveals the ones
+      // inside its mesh radius. Both draw calm guards with cone and full
+      // marker; neither allocates, the checks run inline per guard.
+      const scanOn = world.scanUntil > world.time
+      const reveal2 =
+        ROLE_ABILITIES.recon.passive.radius * ROLE_ABILITIES.recon.passive.radius
+      const nearRecon = (e: Unit): boolean => {
+        for (const a of units) {
+          if (a.kind !== 'agent' || a.stance === 'dead' || a.hp <= 0) continue
+          if (a.operative?.role !== 'recon') continue
+          const dx = a.pos.x - e.pos.x
+          const dz = a.pos.z - e.pos.z
+          if (dx * dx + dz * dz <= reveal2) return true
+        }
+        return false
+      }
+      // Sight cone of every guard that has something to look for, plus every
+      // revealed calm guard. World heading is atan2(dx, dz), so the canvas
+      // bearing is a quarter turn less.
       for (const u of units) {
         if (u.kind !== 'enemy' || u.stance === 'dead' || u.hp <= 0) continue
-        if (u.aiState !== 'combat' && u.aiState !== 'suspicious') continue
+        const calm = u.aiState !== 'combat' && u.aiState !== 'suspicious'
+        if (calm && !scanOn && !nearRecon(u)) continue
         const a = Math.PI / 2 - u.heading
-        ctx.fillStyle = u.aiState === 'combat' ? COLOR.coneHot : COLOR.coneSuspect
+        ctx.fillStyle =
+          u.aiState === 'combat'
+            ? COLOR.coneHot
+            : u.aiState === 'suspicious'
+              ? COLOR.coneSuspect
+              : COLOR.coneCalm
         ctx.beginPath()
         ctx.moveTo(u.pos.x * s, u.pos.z * s)
         ctx.arc(
@@ -333,7 +360,9 @@ export default function Minimap({
           ? COLOR.enemyHot
           : u.aiState === 'suspicious'
             ? COLOR.enemySuspect
-            : COLOR.enemyCalm
+            : scanOn || nearRecon(u)
+              ? COLOR.enemyRevealed
+              : COLOR.enemyCalm
         ctx.beginPath()
         ctx.arc(u.pos.x * s, u.pos.z * s, hot ? 2.2 : 1.8, 0, Math.PI * 2)
         ctx.fill()

@@ -15,6 +15,7 @@ import {
   startNewOperation,
 } from '../state/save'
 import { ROSTER, missionById, operativeById } from '../game/data'
+import { ROLE_ABILITIES } from '../game/abilities'
 import {
   WEATHER_LABEL,
   missionChance,
@@ -86,14 +87,6 @@ function statusTone(status: 'READY' | 'INJURED' | 'ON MISSION'): string {
   if (status === 'READY') return 'teal'
   if (status === 'INJURED') return 'red'
   return 'amber'
-}
-// Role-card copy: each sentence of the bio becomes its own short line so the
-// card shows them whole instead of clipping mid-word.
-function bioLines(bio: string): string[] {
-  return bio
-    .split(/\.(?=\s|$)/)
-    .map((s) => s.trim())
-    .filter(Boolean)
 }
 // What an installed augmentation does, in the same words the research screen
 // prints for it.
@@ -1072,6 +1065,29 @@ export function TeamSelect() {
                 </div>
               </div>
               <div className="ts-box">
+                <label>ROLE PROTOCOL</label>
+                <div className="ts-aug">
+                  <span className="ts-aug-slot">ACT</span>
+                  <span className="ts-aug-glyph">
+                    <RoleGlyph role={focus.role} size={13} />
+                  </span>
+                  <span className="ts-aug-main">
+                    <b>{ROLE_ABILITIES[focus.role].active.name}</b>
+                    <i className="dim">{ROLE_ABILITIES[focus.role].active.description}</i>
+                  </span>
+                </div>
+                <div className="ts-aug">
+                  <span className="ts-aug-slot">PSV</span>
+                  <span className="ts-aug-glyph">
+                    <HexGlyph size={13} />
+                  </span>
+                  <span className="ts-aug-main">
+                    <b>{ROLE_ABILITIES[focus.role].passive.name}</b>
+                    <i className="dim">{ROLE_ABILITIES[focus.role].passive.description}</i>
+                  </span>
+                </div>
+              </div>
+              <div className="ts-box">
                 <label>AUGMENTATIONS</label>
                 {augs.map(({ slot, node }) => (
                   <div key={slot} className={'ts-aug' + (node ? '' : ' stock')}>
@@ -1142,11 +1158,8 @@ export function TeamSelect() {
                 </span>
                 <span className="ts-role-main">
                   <b>{ROLE_LABEL[o.role]}</b>
-                  {bioLines(o.bio).map((line, li) => (
-                    <i key={li} className="dim">
-                      {line}
-                    </i>
-                  ))}
+                  <i className="dim">{ROLE_ABILITIES[o.role].active.name}</i>
+                  <i className="dim">{ROLE_ABILITIES[o.role].passive.name}</i>
                 </span>
               </div>
             )

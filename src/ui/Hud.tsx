@@ -13,11 +13,9 @@ import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import PauseMenu from './PauseMenu'
 import { Portrait } from './portrait'
-import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, LockGlyph, ScrollBox } from './bits'
+import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox } from './bits'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
-
-const LOCKED_ABILITIES = ['shield', 'dash', 'scan'] as const
 
 function weaponIdByName(name: string): WeaponId {
   for (const w of Object.values(WEAPONS)) {
@@ -385,7 +383,7 @@ export default function Hud() {
             <div className="hud-panel-head">
               <span>ABILITIES</span>
               <span className={grenadeTargeting ? 'amber' : 'dim'}>
-                {grenadeTargeting ? 'TARGETING' : '2 LIVE'}
+                {grenadeTargeting ? 'TARGETING' : 'Q / M / G'}
               </span>
             </div>
             <div className="hud-slots">
@@ -425,21 +423,57 @@ export default function Hud() {
                 )}
                 {medState === 'out-of-stock' && <span className="hud-slot-cd">00</span>}
               </button>
-              {LOCKED_ABILITIES.map((k) => (
-                <button
-                  type="button"
-                  key={k}
-                  className="hud-slot ability locked"
-                  aria-label={k.toUpperCase() + ' ability locked'}
-                  title="LOCKED"
-                  disabled
-                >
-                  <AbilityGlyph kind={k} />
-                  <span className="hud-slot-lock">
-                    <LockGlyph size={7} />
-                  </span>
-                </button>
-              ))}
+              {/* One role-ability slot per squad member, keyed to the same
+                  slot digits as selection. Q fires the selection's abilities;
+                  the button fires this member's alone. Teal ready, amber
+                  running, red cooling or offline. */}
+              {squad.map((r) => {
+                const role = ROSTER.find((o) => o.codename === r.codename)?.role
+                const cd = r.abilityCooldownRemaining
+                const state = r.dead
+                  ? 'offline'
+                  : r.abilityActiveRemaining > 0
+                    ? 'armed'
+                    : cd > 0
+                      ? 'recharging'
+                      : 'usable'
+                const label =
+                  state === 'offline'
+                    ? r.abilityName + ' offline: ' + r.codename + ' flatlined'
+                    : state === 'armed'
+                      ? r.abilityName + ' running on ' + r.codename
+                      : state === 'recharging'
+                        ? r.abilityName + ' recharging'
+                        : 'Trigger ' + r.abilityName + ' on ' + r.codename
+                const fill =
+                  state === 'recharging' && r.abilityCooldownDuration > 0
+                    ? Math.min(100, Math.round((cd / r.abilityCooldownDuration) * 100))
+                    : 0
+                return (
+                  <button
+                    type="button"
+                    key={r.unitId}
+                    className={'hud-slot ability ' + state}
+                    aria-label={label}
+                    title={label}
+                    disabled={state !== 'usable'}
+                    onClick={() => {
+                      uiClick()
+                      getWorld()?.orderAbility([r.unitId])
+                    }}
+                  >
+                    {fill > 0 && <span className="hud-slot-fill" style={{ height: fill + '%' }} />}
+                    {role && <RoleGlyph role={role} size={16} />}
+                    <span className="hud-slot-key">{r.slot}</span>
+                    {state === 'recharging' && (
+                      <span className="hud-slot-cd">{Math.ceil(cd)}</span>
+                    )}
+                    {state === 'armed' && (
+                      <span className="hud-slot-cd">{r.abilityActiveRemaining.toFixed(1)}</span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div className="hud-panel hud-items corners">

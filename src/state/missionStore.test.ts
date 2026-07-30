@@ -67,6 +67,11 @@ function member(unitId: string, dead = false): SquadMemberUi {
     stowedMagazineSize: 12,
     holdGround: false,
     holdFire: false,
+    abilityName: 'OVERDRIVE',
+    abilityCooldownRemaining: 0,
+    abilityCooldownDuration: 30,
+    abilityActiveRemaining: 0,
+    abilityActiveDuration: 6,
     dead,
   }
 }

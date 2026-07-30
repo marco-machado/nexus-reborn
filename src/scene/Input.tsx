@@ -185,7 +185,8 @@ export default function Input() {
         case 'stop':
         case 'holdGround':
         case 'holdFire':
-        case 'swapWeapon': {
+        case 'swapWeapon':
+        case 'useAbility': {
           // No fallback to the whole squad here: a bare key carries no target,
           // so an empty selection must stay empty and order nobody.
           const ids = selectedAgents(w)
@@ -193,6 +194,7 @@ export default function Input() {
           if (b.id === 'stop') w.orderStop(ids)
           else if (b.id === 'holdGround') w.orderHold(ids, !allSet(w, ids, 'holdGround'))
           else if (b.id === 'holdFire') w.orderHoldFire(ids, !allSet(w, ids, 'holdFire'))
+          else if (b.id === 'useAbility') w.orderAbility(ids)
           else w.orderSwapWeapon(ids)
           break
         }

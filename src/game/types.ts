@@ -86,6 +86,15 @@ export interface Unit {
   stowedWeapon?: WeaponDef
   stowedMagazine?: number
   swapReadyAt?: number
+  // Role ability state, agents only (game/abilities.ts). `abilityReadyAt` is
+  // the world time the active may fire again; `abilityUntil` is when the
+  // running timed effect ends, 0 while none runs.
+  abilityReadyAt?: number
+  abilityUntil?: number
+  // Ability effects landed on enemies: EM Burst holds fire until
+  // `jammedUntil`, Suppression Sweep halves speed until `suppressedUntil`.
+  jammedUntil?: number
+  suppressedUntil?: number
   tag?: string
   deathT?: number
   lastFireT?: number
@@ -275,6 +284,9 @@ export interface WorldApi {
   // Effective guard sight range for this mission: ENEMY_VISION scaled by the
   // weather modifier. The minimap cones must draw from this, not the const.
   vision: number
+  // Pulse Scan window: while time < scanUntil the minimap draws every living
+  // enemy with its sight cone regardless of state. The sim owns the value.
+  scanUntil: number
   tick(dt: number): void
   orderMove(agentIds: string[], dest: Vec2): void
   orderAttack(agentIds: string[], targetId: string): void
@@ -288,6 +300,11 @@ export interface WorldApi {
   // cannot fire for a short readiness delay; an in-progress reload of the
   // stowed weapon is cancelled and its magazine persists as-is.
   orderSwapWeapon(agentIds: string[]): void
+  // Triggers each selected agent's role active (game/abilities.ts). Agents
+  // still cooling down or with the effect already running are skipped
+  // silently; a targeted ability that finds no target pushes a comm line and
+  // keeps its cooldown.
+  orderAbility(agentIds: string[]): void
   orderMedStim(agentId: string): boolean
   orderGrenade(agentId: string, target: Vec2): boolean
   unit(id: string): Unit | undefined

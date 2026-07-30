@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { MissionDef, OperativeDef, Vec2, WorldApi } from './types'
 import { createWorld } from './world'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, WEAPONS, operativeById } from './data'
+import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
 import { useMissionStore } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -245,13 +246,14 @@ describe('research', () => {
     expect(a1?.maxHp).toBe(base.maxHp + 14)
     expect(a1?.hp).toBe(base.maxHp + 14)
     expect(a1?.speed).toBeCloseTo(base.speed + 0.2, 10)
-    expect(a1?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.12, 10)
+    // Research first, then the assault role passive (x1.1) on top.
+    expect(a1?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.12 * 1.1, 10)
 
     // Research completed after deployment never reaches a running mission.
     useResearchStore.setState({ done: [] })
     warm(w, 0.5)
     expect(a1?.maxHp).toBe(base.maxHp + 14)
-    expect(a1?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.12, 10)
+    expect(a1?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.12 * 1.1, 10)
   })
 
   it('reads the research store fresh for each new world', () => {
@@ -263,7 +265,8 @@ describe('research', () => {
     useResearchStore.setState({ done: [] })
     const plain = createWorld(BARE_MISSION, [base])
     expect(plain.unit('a1')?.maxHp).toBe(base.maxHp)
-    expect(plain.unit('a1')?.weapon?.damage).toBe(WEAPONS.assault.damage)
+    // No research leaves only the assault role passive on the weapon.
+    expect(plain.unit('a1')?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.1, 10)
   })
 })
 
@@ -551,12 +554,352 @@ describe('weapon swap', () => {
     const a1 = w.unit('a1')
     expect(a1).toBeDefined()
     if (!a1) return
+    // op1 is assault, so the role passive (x1.1 damage) rides on both slots.
     expect(a1.stowedWeapon?.reload).toBeCloseTo(WEAPONS.pistol.reload * 0.88, 10)
-    expect(a1.stowedWeapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.15, 10)
+    expect(a1.stowedWeapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.15 * 1.1, 10)
     w.orderSwapWeapon(['a1'])
     expect(a1.weapon?.reload).toBeCloseTo(WEAPONS.pistol.reload * 0.88, 10)
-    expect(a1.weapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.15, 10)
-    expect(a1.stowedWeapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.15, 10)
+    expect(a1.weapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.15 * 1.1, 10)
+    expect(a1.stowedWeapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.15 * 1.1, 10)
+  })
+})
+
+describe('role abilities', () => {
+  function killEnemies(w: WorldApi): void {
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+  }
+
+  // Parks one live enemy near the first agent with the rest of the garrison
+  // dead: pinned in place, patrol cleared, unable to fire while `muzzled`.
+  function isolateEnemy(w: WorldApi, at: Vec2, muzzled: boolean) {
+    const enemy = w.units.find((u) => u.kind === 'enemy')!
+    for (const u of w.units) if (u.kind === 'enemy' && u !== enemy) u.stance = 'dead'
+    enemy.pos.x = at.x
+    enemy.pos.z = at.z
+    enemy.path.length = 0
+    enemy.patrol!.length = 0
+    enemy.holdGround = true
+    if (muzzled) enemy.reloading = 999
+    return enemy
+  }
+
+  it('applies the assault and sniper weapon passives to both slots at deployment', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1', 'op5']))
+    expect(w.unit('a1')?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.1, 10)
+    expect(w.unit('a1')?.stowedWeapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.1, 10)
+    expect(w.unit('a2')?.weapon?.range).toBeCloseTo(WEAPONS.longrifle.range * 1.15, 10)
+    expect(w.unit('a2')?.stowedWeapon?.range).toBeCloseTo(WEAPONS.pistol.range * 1.15, 10)
+  })
+
+  it('overdrive halves the fire delay and expires after its duration', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 2 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+
+    w.orderAbility(['a1'])
+    expect(a1.abilityUntil ?? 0).toBeGreaterThan(w.time)
+    expect(a1.abilityReadyAt).toBeCloseTo(w.time + ROLE_ABILITIES.assault.active.cooldown, 5)
+
+    w.orderAttack(['a1'], enemy.id)
+    const before = a1.magazine
+    let guard = 0
+    while (a1.magazine === before && guard++ < 100) w.tick(STEP)
+    // The shot just fired charged half the stock delay.
+    expect(a1.cooldown).toBeCloseTo(WEAPONS.assault.cooldown * 0.5, 5)
+
+    // Past the duration the effect is gone and the delay is back to stock.
+    warm(w, 6.5)
+    expect(a1.abilityUntil).toBe(0)
+    const tAfter = w.time
+    guard = 0
+    while ((a1.lastFireT ?? 0) <= tAfter && guard++ < 400) w.tick(STEP)
+    expect(a1.cooldown).toBeCloseTo(WEAPONS.assault.cooldown, 5)
+  })
+
+  it('frag charge blasts the cluster after its fuse: enemy and civilian both pay', () => {
+    const w = createWorld(BARE_MISSION, ops(['op4']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    w.orderHoldFire(['a1'], true)
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 6 }, true)
+    enemy.hp = 200
+    enemy.maxHp = 200
+    const civ = w.units.find((u) => u.kind === 'civilian')!
+    civ.pos.x = enemy.pos.x
+    civ.pos.z = enemy.pos.z
+    civ.path.length = 0
+    civ.holdGround = true
+
+    w.orderAbility(['a1'])
+    expect(a1.abilityReadyAt ?? 0).toBeGreaterThan(w.time)
+    // The fuse is still burning: nothing hurt yet.
+    w.tick(STEP)
+    expect(enemy.hp).toBe(200)
+
+    warm(w, 1.2)
+    expect(enemy.hp).toBeCloseTo(200 - ROLE_ABILITIES.demolitions.active.magnitude, 5)
+    expect(civ.stance).toBe('dead')
+    const log = useMissionStore.getState().log
+    expect(log.some((e) => e.msg.includes('FRAG CHARGE DETONATED'))).toBe(true)
+    expect(log.some((e) => e.msg.includes('CIVILIAN'))).toBe(true)
+  })
+
+  it('frag charge with no target in range fails with a comm line and keeps no cooldown', () => {
+    const w = createWorld(BARE_MISSION, ops(['op4']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    w.orderAbility(['a1'])
+    expect(w.unit('a1')?.abilityReadyAt ?? 0).toBe(0)
+    expect(
+      useMissionStore.getState().log.some((e) => e.msg.includes('No target for the charge')),
+    ).toBe(true)
+  })
+
+  it('field stim heals the most wounded operative in range and respects max', () => {
+    const w = createWorld(BARE_MISSION, ops(['op8', 'op1']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    const medic = w.unit('a1')!
+    const mara = w.unit('a2')!
+    mara.pos.x = medic.pos.x + 1
+    mara.pos.z = medic.pos.z
+    mara.path.length = 0
+    medic.hp = medic.maxHp - 10
+    mara.hp = mara.maxHp - 60
+
+    // The stim lands on the proportionally worse-off target, not the medic.
+    w.orderAbility(['a1'])
+    expect(mara.hp).toBeCloseTo(mara.maxHp - 20, 5)
+    expect(medic.hp).toBeCloseTo(medic.maxHp - 10, 5)
+
+    // Past the cooldown, the heal caps at the missing health.
+    warm(w, ROLE_ABILITIES.medic.active.cooldown + 0.2)
+    mara.hp = mara.maxHp - 15
+    w.orderAbility(['a1'])
+    expect(mara.hp).toBeCloseTo(mara.maxHp, 5)
+  })
+
+  it('field stim with nobody wounded in range fails with a comm line', () => {
+    const w = createWorld(BARE_MISSION, ops(['op8']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    w.orderAbility(['a1'])
+    expect(w.unit('a1')?.abilityReadyAt ?? 0).toBe(0)
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('Nobody needs the stim'))).toBe(
+      true,
+    )
+  })
+
+  it('em burst drops nearby guards to suspicious and silences their fire for the duration', () => {
+    const w = createWorld(BARE_MISSION, ops(['op6']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    w.orderHoldFire(['a1'], true)
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 2 }, false)
+    enemy.aiState = 'combat'
+    enemy.alerted = true
+    enemy.targetId = a1.id
+
+    w.orderAbility(['a1'])
+    expect(enemy.aiState).toBe('suspicious')
+    expect(enemy.targetId).toBeNull()
+    expect(enemy.jammedUntil).toBeCloseTo(w.time + ROLE_ABILITIES.tech.active.duration, 5)
+
+    // Jammed: the guard reacquires but cannot fire, so no round lands.
+    const hp0 = a1.hp
+    warm(w, 3.5)
+    expect(a1.hp).toBe(hp0)
+
+    // The jam lifts and fire lands again.
+    warm(w, 6)
+    expect(a1.hp).toBeLessThan(hp0)
+  })
+
+  it('deadeye guarantees the next shot at double damage and is spent by it', () => {
+    const w = createWorld(BARE_MISSION, ops(['op5']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 2 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+
+    w.orderAbility(['a1'])
+    w.orderAttack(['a1'], enemy.id)
+    const hp0 = enemy.hp
+    let guard = 0
+    while (enemy.hp === hp0 && guard++ < 100) w.tick(STEP)
+    expect(enemy.hp).toBeCloseTo(hp0 - WEAPONS.longrifle.damage * 2, 5)
+    expect(a1.abilityUntil).toBe(0)
+  })
+
+  it('suppression sweep marks enemies in range and line of sight as slowed', () => {
+    const w = createWorld(BARE_MISSION, ops(['op7']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    w.orderHoldFire(['a1'], true)
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 5 }, true)
+
+    w.orderAbility(['a1'])
+    w.tick(STEP)
+    expect(enemy.suppressedUntil ?? 0).toBeGreaterThan(w.time)
+
+    // After the sweep ends the mark stops being refreshed.
+    warm(w, 7)
+    expect(enemy.suppressedUntil ?? 0).toBeLessThan(w.time)
+  })
+
+  it('ghost veil hides the infiltrator from guard vision until it expires', () => {
+    const w = createWorld(BARE_MISSION, ops(['op3']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    w.orderHoldFire(['a1'], true)
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 3 }, true)
+
+    // Three meters is inside NOTICE_RADIUS: without the veil this guard is
+    // certain in about a second. Veiled, it stays on patrol.
+    w.orderAbility(['a1'])
+    warm(w, 2)
+    expect(enemy.aiState).toBe('patrol')
+
+    // Veil down at 6 s: the guard wakes up fast.
+    warm(w, 5)
+    expect(enemy.aiState).not.toBe('patrol')
+  })
+
+  it('pulse scan opens the minimap reveal window on the world', () => {
+    const w = createWorld(BARE_MISSION, ops(['op2']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    expect(w.scanUntil).toBe(0)
+    w.orderAbility(['a1'])
+    expect(w.scanUntil).toBeCloseTo(w.time + ROLE_ABILITIES.recon.active.duration, 5)
+    warm(w, 9)
+    expect(w.scanUntil).toBeLessThan(w.time)
+  })
+
+  it('medic aura regenerates nearby operatives at 1 hp per second up to half max', () => {
+    const w = createWorld(BARE_MISSION, ops(['op8', 'op1']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    const medic = w.unit('a1')!
+    const mara = w.unit('a2')!
+    mara.pos.x = medic.pos.x + 1
+    mara.pos.z = medic.pos.z
+    mara.path.length = 0
+    mara.hp = 20
+
+    warm(w, 10)
+    expect(mara.hp).toBeCloseTo(30, 0)
+    warm(w, 50)
+    expect(mara.hp).toBeCloseTo(mara.maxHp * MEDIC_REGEN_CAP, 5)
+
+    // Out of the aura the regeneration stops.
+    mara.pos.x = medic.pos.x + 15
+    mara.hp = 20
+    warm(w, 3)
+    expect(mara.hp).toBeCloseTo(20, 5)
+  })
+
+  it('demolitions passive shaves incoming damage', () => {
+    const w = createWorld(BARE_MISSION, ops(['op4', 'op1']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    const torq = w.unit('a1')!
+    const mara = w.unit('a2')!
+    mara.pos.x = torq.pos.x
+    mara.pos.z = torq.pos.z
+    mara.path.length = 0
+    // One grenade at both their feet: same 70-damage center hit, and only the
+    // demolitions frame takes 15% less.
+    expect(w.orderGrenade('a1', { x: torq.pos.x, z: torq.pos.z })).toBe(true)
+    expect(torq.hp).toBeCloseTo(torq.maxHp - 70 * 0.85, 5)
+    expect(mara.hp).toBeCloseTo(mara.maxHp - 70, 5)
+  })
+
+  it('gates a retrigger on the cooldown', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    const a1 = w.unit('a1')!
+
+    w.orderAbility(['a1'])
+    const readyAt = a1.abilityReadyAt ?? 0
+    expect(readyAt).toBeCloseTo(w.time + ROLE_ABILITIES.assault.active.cooldown, 5)
+    expect(a1.abilityUntil ?? 0).toBeGreaterThan(w.time)
+
+    // Mid-effect and mid-cooldown: both refuse a retrigger.
+    w.orderAbility(['a1'])
+    expect(a1.abilityReadyAt).toBe(readyAt)
+    warm(w, 8)
+    expect(a1.abilityUntil).toBe(0)
+    w.orderAbility(['a1'])
+    expect(a1.abilityReadyAt).toBe(readyAt)
+    expect(a1.abilityUntil).toBe(0)
+
+    // Past the cooldown the ability fires again.
+    warm(w, 23)
+    w.orderAbility(['a1'])
+    expect(a1.abilityUntil ?? 0).toBeGreaterThan(w.time)
+  })
+
+  it('tech passive shortens squad ability cooldowns while the tech lives', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1', 'op6']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    const a1 = w.unit('a1')!
+    w.orderAbility(['a1'])
+    expect(a1.abilityReadyAt).toBeCloseTo(
+      w.time + ROLE_ABILITIES.assault.active.cooldown * ROLE_ABILITIES.tech.passive.magnitude,
+      5,
+    )
+
+    // Without a living tech the same activation charges the full cooldown.
+    const w2 = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w2.tick(STEP)
+    killEnemies(w2)
+    const b1 = w2.unit('a1')!
+    w2.orderAbility(['a1'])
+    expect(b1.abilityReadyAt).toBeCloseTo(w2.time + ROLE_ABILITIES.assault.active.cooldown, 5)
+  })
+
+  it('pushes ability state into the squad rows', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    killEnemies(w)
+    let row = useMissionStore.getState().squad[0]
+    expect(row.abilityName).toBe(ROLE_ABILITIES.assault.active.name)
+    expect(row.abilityCooldownRemaining).toBe(0)
+    expect(row.abilityActiveRemaining).toBe(0)
+
+    // orderAbility syncs at once; the row carries the fresh cooldown.
+    w.orderAbility(['a1'])
+    row = useMissionStore.getState().squad[0]
+    expect(row.abilityCooldownRemaining).toBeGreaterThan(29)
+    expect(row.abilityActiveRemaining).toBeGreaterThan(0)
+
+    // And the regular sync keeps it counting down.
+    const before = row.abilityCooldownRemaining
+    warm(w, 1)
+    expect(useMissionStore.getState().squad[0].abilityCooldownRemaining).toBeLessThan(before)
   })
 })
 

@@ -46,6 +46,14 @@ export interface SquadMemberUi {
   // Order state, mirrored from the unit so the squad card can show it.
   holdGround: boolean
   holdFire: boolean
+  // Role ability snapshot (game/abilities.ts): the active's name, cooldown
+  // remaining against the total it was charged, and how long the running
+  // effect still has (0 while none runs).
+  abilityName: string
+  abilityCooldownRemaining: number
+  abilityCooldownDuration: number
+  abilityActiveRemaining: number
+  abilityActiveDuration: number
   dead: boolean
 }
 
