@@ -6,22 +6,39 @@ import {
   hhmm,
   initialOwner,
   resolveMission,
+  sectorReadout,
   stamp,
   useWorldStore,
 } from './worldStore'
 import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
 import {
   CONTRACT_EXPIRY_MIN_SEC,
+  CONTRACT_INTEL_REQ,
   CONTRACT_MIN_SEC,
   CONTRACT_SPAN_SEC,
   CONTRACT_TARGET,
   PRIORITY_EXPIRY_MIN_SEC,
   PRIORITY_EXPIRY_SPAN_SEC,
+  contractMission,
   sectorClient,
 } from '../game/contracts'
-import type { GeneratedContract } from '../game/contracts'
+import type { ContractThreat, GeneratedContract } from '../game/contracts'
+import {
+  EXPEDITE_EXTENSION_SEC,
+  INFLUENCE_ACTIONS,
+  INFLUENCE_CLEAN_PTS,
+  INFLUENCE_WIN_PTS,
+  PRESSURE_CONTROL_DROP_MAX,
+  PRESSURE_CONTROL_DROP_MIN,
+  PRESSURE_INTERVAL_SEC,
+  TRICKLE_INTERVAL_SEC,
+  UNREST_MAX,
+  cooldownKey,
+} from '../game/influence'
+import { FORECAST_KINDS, kindWeights } from '../game/forecast'
 import type { SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
+import type { SectorState } from './worldStore'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
 // Event pacing constants mirrored from the source: next event lands between
@@ -48,11 +65,54 @@ const snapshot = structuredClone({
   contracts: s0.contracts,
   contractRngState: s0.contractRngState,
   nextContractT: s0.nextContractT,
+  influence: s0.influence,
+  nextTrickleT: s0.nextTrickleT,
+  spends: s0.spends,
+  cooldowns: s0.cooldowns,
+  crisis: s0.crisis,
+  pressure: s0.pressure,
 })
 
 beforeEach(() => {
   useWorldStore.setState(structuredClone(snapshot))
 })
+
+// Every field the timed flow moves, for jump-vs-continuous parity checks.
+function flowSnapshot() {
+  const s = useWorldStore.getState()
+  return structuredClone({
+    t: s.t,
+    sectors: s.sectors,
+    owner: s.owner,
+    events: s.events,
+    nextEventT: s.nextEventT,
+    rngState: s.rngState,
+    contracts: s.contracts,
+    contractRngState: s.contractRngState,
+    nextContractT: s.nextContractT,
+    influence: s.influence,
+    nextTrickleT: s.nextTrickleT,
+    spends: s.spends,
+    cooldowns: s.cooldowns,
+    crisis: s.crisis,
+    pressure: s.pressure,
+  })
+}
+
+// Pins every timed flow except the one under test far off the clock.
+function pinFlows(): void {
+  useWorldStore.setState({
+    nextEventT: 1e12,
+    nextContractT: 1e12,
+    nextTrickleT: 1e12,
+  })
+}
+
+// Crosses the strategic clock to `t` in one small tick.
+function crossTo(t: number): void {
+  useWorldStore.setState({ t: t - 1 })
+  useWorldStore.getState().tick(0.01)
+}
 
 // Forces one event: pins t onto the pending event time, then ticks past it.
 function forceEvent(): void {
@@ -178,7 +238,7 @@ describe('events feed', () => {
       expect(sectors[id].control).toBeGreaterThanOrEqual(4)
       expect(sectors[id].control).toBeLessThanOrEqual(96)
       expect(sectors[id].unrest).toBeGreaterThanOrEqual(2)
-      expect(sectors[id].unrest).toBeLessThanOrEqual(74)
+      expect(sectors[id].unrest).toBeLessThanOrEqual(UNREST_MAX)
     }
     // The feed moved at least one sector off its atlas start.
     const moved = SECTORS.some(
@@ -217,26 +277,31 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
   }
 }
 
-describe('generated contracts', () => {
-  // A hand-built record for hook tests: far expiry, client matching the
-  // sector's dominant holder, so only the code under test moves it.
-  function craft(sector: SectorId, seed: number): GeneratedContract {
-    return {
-      id: 'gc' + seed.toString(16).padStart(8, '0'),
-      createdT: 0,
-      expiresAtT: 1e9,
-      sector,
-      cityId: CITIES_BY_SECTOR[sector][0].id,
-      district: 5,
-      type: 'SEIZURE',
-      client: sectorClient(sector, initialOwner()),
-      threat: 'HIGH',
-      reward: 50000,
-      seed,
-      priority: false,
-    }
+// A hand-built record for hook tests: far expiry, client matching the
+// sector's dominant holder, so only the code under test moves it.
+function craft(
+  sector: SectorId,
+  seed: number,
+  threat: ContractThreat = 'HIGH',
+): GeneratedContract {
+  return {
+    id: 'gc' + seed.toString(16).padStart(8, '0'),
+    createdT: 0,
+    expiresAtT: 1e9,
+    sector,
+    cityId: CITIES_BY_SECTOR[sector][0].id,
+    district: 5,
+    type: 'SEIZURE',
+    client: sectorClient(sector, initialOwner()),
+    threat,
+    reward: 50000,
+    seed,
+    priority: false,
+    expedited: false,
   }
+}
 
+describe('generated contracts', () => {
   // Crosses the pending generation check with events pinned off.
   function forceGeneration(): void {
     const s = useWorldStore.getState()
@@ -377,31 +442,39 @@ describe('generated contracts', () => {
 
   it('advanceDays lands exactly where continuous ticking would', () => {
     useWorldStore.getState().advanceDays(2)
-    const jump = structuredClone({
-      t: useWorldStore.getState().t,
-      sectors: useWorldStore.getState().sectors,
-      owner: useWorldStore.getState().owner,
-      events: useWorldStore.getState().events,
-      nextEventT: useWorldStore.getState().nextEventT,
-      rngState: useWorldStore.getState().rngState,
-      contracts: useWorldStore.getState().contracts,
-      contractRngState: useWorldStore.getState().contractRngState,
-      nextContractT: useWorldStore.getState().nextContractT,
-    })
+    const jump = flowSnapshot()
 
     useWorldStore.setState(structuredClone(snapshot))
     // 0.25s frames at speed 2 advance exactly 30 world seconds each.
     for (let i = 0; i < (2 * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
-    const cont = useWorldStore.getState()
-    expect(cont.t).toBe(jump.t)
-    expect(cont.sectors).toEqual(jump.sectors)
-    expect(cont.owner).toEqual(jump.owner)
-    expect(cont.events).toEqual(jump.events)
-    expect(cont.nextEventT).toBe(jump.nextEventT)
-    expect(cont.rngState).toBe(jump.rngState)
-    expect(cont.contracts).toEqual(jump.contracts)
-    expect(cont.contractRngState).toBe(jump.contractRngState)
-    expect(cont.nextContractT).toBe(jump.nextContractT)
+    expect(flowSnapshot()).toEqual(jump)
+  })
+
+  it('day jumps replay staged spends, pressure, crisis and the trickle identically', () => {
+    // High unrest arms decay and can cross into crisis; the pending spend
+    // steps hourly; the trickle checks every 12 hours: all of it must land
+    // identically whether the two days pass in one jump or in frames.
+    const staged = () => {
+      useWorldStore.setState(structuredClone(snapshot))
+      useWorldStore.setState({
+        influence: 30,
+        sectors: {
+          ...useWorldStore.getState().sectors,
+          af: { control: 30, unrest: 82 },
+        },
+      })
+      useWorldStore.getState().spendInfluence('eu', 'stabilize')
+      useWorldStore.getState().spendInfluence('sa', 'lobby')
+    }
+
+    staged()
+    useWorldStore.getState().advanceDays(2)
+    const jump = flowSnapshot()
+    expect(jump.spends).toEqual([])
+
+    staged()
+    for (let i = 0; i < (2 * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
+    expect(flowSnapshot()).toEqual(jump)
   })
 })
 
@@ -468,6 +541,279 @@ describe('mission results', () => {
     expect(after.sectors.eu.control).toBe(before.control - 1)
     expect(after.sectors.eu.unrest).toBe(before.unrest + 4 + 5)
     expect(after.events.at(-1)?.tone).toBe('red')
+  })
+})
+
+describe('influence economy', () => {
+  it('a contract win pays +6 points, +2 more for clean work, a loss nothing', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 0 }))
+    expect(useWorldStore.getState().influence).toBe(
+      INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS,
+    )
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 2 }))
+    expect(useWorldStore.getState().influence).toBe(
+      2 * INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS,
+    )
+    const before = useWorldStore.getState().influence
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    expect(useWorldStore.getState().influence).toBe(before)
+  })
+
+  it('trickles one point per 12 world hours only while the index holds above 55', () => {
+    pinFlows()
+    useWorldStore.setState({ nextTrickleT: TRICKLE_INTERVAL_SEC })
+    // The atlas start sits just above the threshold.
+    crossTo(TRICKLE_INTERVAL_SEC)
+    let s = useWorldStore.getState()
+    expect(s.influence).toBe(1)
+    expect(s.nextTrickleT).toBe(2 * TRICKLE_INTERVAL_SEC)
+    // Collapse the index below the threshold: the check still advances, the
+    // point is withheld.
+    const low: Record<string, SectorState> = {}
+    for (const sec of SECTORS) low[sec.id] = { control: 10, unrest: 10 }
+    useWorldStore.setState({ sectors: low })
+    crossTo(2 * TRICKLE_INTERVAL_SEC)
+    s = useWorldStore.getState()
+    expect(s.influence).toBe(1)
+    expect(s.nextTrickleT).toBe(3 * TRICKLE_INTERVAL_SEC)
+  })
+
+  it('stabilize costs 8 points, arms the sector cooldown, and posts a feed line', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 20 })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    const s = useWorldStore.getState()
+    expect(s.influence).toBe(20 - INFLUENCE_ACTIONS.stabilize.cost)
+    expect(s.cooldowns[cooldownKey('eu', 'stabilize')]).toBe(
+      s.t + INFLUENCE_ACTIONS.stabilize.cooldownSec,
+    )
+    expect(s.spends).toEqual([
+      {
+        action: 'stabilize',
+        sector: 'eu',
+        nextT: s.t + INFLUENCE_ACTIONS.stabilize.stepSec,
+        remaining: INFLUENCE_ACTIONS.stabilize.steps,
+      },
+    ])
+    expect(s.events.at(-1)).toMatchObject({ kind: 'influence', sector: 'eu', tone: 'amber' })
+  })
+
+  it('stabilize applies -12 unrest staged over six world hours', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 20 })
+    const unrest0 = useWorldStore.getState().sectors.eu.unrest
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    // Two hours in: two steps landed, four remain.
+    crossTo(2 * 3600)
+    let s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).toBe(unrest0 - 4)
+    expect(s.spends[0].remaining).toBe(4)
+    // Past the sixth hour the spend is spent in full and retired.
+    crossTo(7 * 3600)
+    s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).toBe(unrest0 - 12)
+    expect(s.spends).toEqual([])
+  })
+
+  it('lobby applies +8 control staged over twelve world hours', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 20 })
+    const control0 = useWorldStore.getState().sectors.sa.control
+    useWorldStore.getState().spendInfluence('sa', 'lobby')
+    expect(useWorldStore.getState().influence).toBe(20 - INFLUENCE_ACTIONS.lobby.cost)
+    crossTo(13 * 3600)
+    const s = useWorldStore.getState()
+    expect(s.sectors.sa.control).toBe(control0 + 8)
+    expect(s.spends).toEqual([])
+  })
+
+  it('refuses a spend when unaffordable and while the sector action cools down', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 5 })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    expect(useWorldStore.getState().spends).toEqual([])
+    expect(useWorldStore.getState().influence).toBe(5)
+    // Fund it, spend it, refund it: the cooldown alone must block the rerun.
+    useWorldStore.setState({ influence: 20 })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    useWorldStore.setState({ influence: 20 })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    const s = useWorldStore.getState()
+    expect(s.influence).toBe(20)
+    expect(s.spends).toHaveLength(1)
+    // A different sector is its own cooldown track.
+    useWorldStore.getState().spendInfluence('af', 'stabilize')
+    expect(useWorldStore.getState().spends).toHaveLength(2)
+  })
+
+  it('expedite waives the lowest intel gate, extends expiry 24h, then retargets', () => {
+    pinFlows()
+    const low = craft('eu', 31, 'MODERATE')
+    const high = craft('eu', 32, 'SEVERE')
+    const elsewhere = craft('af', 33, 'MODERATE')
+    useWorldStore.setState({ influence: 30, contracts: [high, low, elsewhere] })
+    useWorldStore.getState().spendInfluence('eu', 'expedite')
+    let s = useWorldStore.getState()
+    expect(s.influence).toBe(30 - INFLUENCE_ACTIONS.expedite.cost)
+    const first = s.contracts.find((c) => c.id === low.id)
+    expect(first).toMatchObject({
+      expedited: true,
+      expiresAtT: low.expiresAtT + EXPEDITE_EXTENSION_SEC,
+    })
+    expect(s.contracts.find((c) => c.id === high.id)?.expedited).toBe(false)
+    expect(s.contracts.find((c) => c.id === elsewhere.id)?.expedited).toBe(false)
+    if (first) expect(contractMission(first).intelReq).toBe(1)
+    expect(CONTRACT_INTEL_REQ[high.threat]).toBe(3)
+    // Off cooldown, the next spend targets the remaining gated offer.
+    useWorldStore.setState({ cooldowns: {} })
+    useWorldStore.getState().spendInfluence('eu', 'expedite')
+    s = useWorldStore.getState()
+    const second = s.contracts.find((c) => c.id === high.id)
+    expect(second?.expedited).toBe(true)
+    if (second) expect(contractMission(second).intelReq).toBe(1)
+    // Nothing left to expedite in the sector: the spend is refused.
+    useWorldStore.setState({ cooldowns: {}, influence: 30 })
+    useWorldStore.getState().spendInfluence('eu', 'expedite')
+    expect(useWorldStore.getState().influence).toBe(30)
+  })
+})
+
+describe('unrest pressure and crisis', () => {
+  it('a sector pushed above 60 unrest arms a decay timer through a mission result', () => {
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, eu: { control: 60, unrest: 58 } },
+    })
+    // A dirty loss adds 4 + up-to-5 unrest in eu: 58 -> 67, over the mark.
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ won: false, reward: 0, civiliansHit: 9 }))
+    const s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).toBe(67)
+    expect(s.pressure.eu).toBe(s.t + PRESSURE_INTERVAL_SEC)
+  })
+
+  it('decays 1-2 control every 6 world hours while unrest holds high', () => {
+    pinFlows()
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, eu: { control: 60, unrest: 70 } },
+      pressure: { eu: 3600 },
+    })
+    crossTo(3600)
+    let s = useWorldStore.getState()
+    const drop = 60 - s.sectors.eu.control
+    expect(drop).toBeGreaterThanOrEqual(PRESSURE_CONTROL_DROP_MIN)
+    expect(drop).toBeLessThanOrEqual(PRESSURE_CONTROL_DROP_MAX)
+    expect(s.pressure.eu).toBe(3600 + PRESSURE_INTERVAL_SEC)
+    // The next interval decays again off the rearmed timer.
+    crossTo(3600 + PRESSURE_INTERVAL_SEC)
+    s = useWorldStore.getState()
+    expect(60 - s.sectors.eu.control).toBeGreaterThanOrEqual(2 * PRESSURE_CONTROL_DROP_MIN)
+    expect(60 - s.sectors.eu.control).toBeLessThanOrEqual(2 * PRESSURE_CONTROL_DROP_MAX)
+  })
+
+  it('unrest pressure lowers the tax yield readout', () => {
+    const calm = sectorReadout('eu', { control: 60, unrest: 40 })
+    const strained = sectorReadout('eu', { control: 60, unrest: 75 })
+    expect(strained.taxYield).toBeLessThan(calm.taxYield)
+  })
+
+  it('crisis enters at 85+, posts a red event, and tags open contracts priority', () => {
+    const open = craft('eu', 41)
+    useWorldStore.setState({
+      contracts: [open],
+      sectors: { ...useWorldStore.getState().sectors, eu: { control: 40, unrest: 80 } },
+    })
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ won: false, reward: 0, civiliansHit: 9 }))
+    const s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).toBe(89)
+    expect(s.crisis).toContain('eu')
+    expect(s.contracts[0].priority).toBe(true)
+    const line = s.events.find((e) => e.kind === 'crisis')
+    expect(line).toMatchObject({ sector: 'eu', tone: 'red' })
+    expect(line?.text).toContain('CRISIS')
+  })
+
+  it('crisis clears with a green event once unrest falls under 70', () => {
+    pinFlows()
+    useWorldStore.setState({
+      influence: 20,
+      crisis: ['eu'],
+      sectors: { ...useWorldStore.getState().sectors, eu: { control: 40, unrest: 71 } },
+      pressure: { eu: 1e12 },
+    })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    crossTo(7 * 3600)
+    const s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).toBe(59)
+    expect(s.crisis).toEqual([])
+    expect(s.events.at(-1)).toMatchObject({ kind: 'crisis', sector: 'eu', tone: 'green' })
+    // Back under the pressure mark too: the decay timer disarmed.
+    expect(s.pressure.eu).toBeUndefined()
+  })
+
+  it('a sector in crisis draws events at roughly double weight', () => {
+    const even: Record<string, SectorState> = {}
+    for (const sec of SECTORS) even[sec.id] = { control: 50, unrest: 40 }
+    useWorldStore.setState({ nextContractT: 1e12, nextTrickleT: 1e12 })
+    const share = (crisis: SectorId[]): number => {
+      let eu = 0
+      let total = 0
+      for (let i = 0; i < 400; i++) {
+        // Refreeze the sector state so the weights stay fixed while the rng
+        // cursor advances; crisis is pinned rather than derived.
+        useWorldStore.setState({ sectors: structuredClone(even), crisis: [...crisis] })
+        const before = useWorldStore.getState().events.at(-1)?.id ?? 0
+        forceEvent()
+        for (const e of useWorldStore.getState().events) {
+          if (e.id <= before) continue
+          if (!(FORECAST_KINDS as readonly string[]).includes(e.kind)) continue
+          total++
+          if (e.sector === 'eu') eu++
+        }
+      }
+      return eu / total
+    }
+    useWorldStore.setState({ rngState: 0x1234 })
+    const flat = share([])
+    useWorldStore.setState(structuredClone(snapshot))
+    useWorldStore.setState({ nextContractT: 1e12, nextTrickleT: 1e12, rngState: 0x1234 })
+    const doubled = share(['eu'])
+    // Equal weights put eu at 1/6 of events; a doubled eu takes 2/7.
+    expect(flat).toBeGreaterThan(1 / 6 - 0.05)
+    expect(flat).toBeLessThan(1 / 6 + 0.05)
+    expect(doubled).toBeGreaterThan(2 / 7 - 0.05)
+    expect(doubled).toBeLessThan(2 / 7 + 0.05)
+  })
+})
+
+describe('forecast weights match the generator', () => {
+  it('rolled kind frequencies track kindWeights at pinned unrest', () => {
+    const pinned: Record<string, SectorState> = {}
+    for (const sec of SECTORS) pinned[sec.id] = { control: 50, unrest: 40 }
+    useWorldStore.setState({ nextContractT: 1e12, nextTrickleT: 1e12 })
+    const counts: Record<string, number> = {}
+    let total = 0
+    for (let i = 0; i < 600; i++) {
+      useWorldStore.setState({ sectors: structuredClone(pinned), crisis: [] })
+      const before = useWorldStore.getState().events.at(-1)?.id ?? 0
+      forceEvent()
+      for (const e of useWorldStore.getState().events) {
+        if (e.id <= before) continue
+        if (!(FORECAST_KINDS as readonly string[]).includes(e.kind)) continue
+        counts[e.kind] = (counts[e.kind] ?? 0) + 1
+        total++
+      }
+    }
+    const table = kindWeights(40)
+    let weightTotal = 0
+    for (const [, w] of table) weightTotal += w
+    for (const [kind, w] of table) {
+      const expected = w / weightTotal
+      const observed = (counts[kind] ?? 0) / total
+      expect(Math.abs(observed - expected)).toBeLessThan(0.05)
+    }
   })
 })
 

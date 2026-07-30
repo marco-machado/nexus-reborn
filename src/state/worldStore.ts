@@ -1,7 +1,8 @@
 // CONTRACT FILE. Strategic layer state: the world clock, per sector control
-// and unrest, city ownership, the events feed that moves them, and the
-// generated contract market the feed feeds. The world map screen drives tick()
-// while it is mounted; nothing else writes here.
+// and unrest, city ownership, the events feed that moves them, the generated
+// contract market the feed feeds, the spendable influence resource, and the
+// unrest pressure/crisis flow. The world map screen drives tick() while it is
+// mounted; nothing else writes here.
 import { create } from 'zustand'
 import { mulberryStep } from '../game/rng'
 import { MISSIONS } from '../game/data'
@@ -33,6 +34,35 @@ import type {
   GeneratedContract,
   RolledContract,
 } from '../game/contracts'
+import { expediteTarget } from '../game/contracts'
+import {
+  CONTROL_MAX,
+  CONTROL_MIN,
+  CRISIS_UNREST_ENTER,
+  CRISIS_UNREST_EXIT,
+  EXPEDITE_EXTENSION_SEC,
+  INFLUENCE_ACTIONS,
+  INFLUENCE_CLEAN_PTS,
+  INFLUENCE_WIN_PTS,
+  PRESSURE_CONTROL_DROP_MAX,
+  PRESSURE_CONTROL_DROP_MIN,
+  PRESSURE_INTERVAL_SEC,
+  PRESSURE_UNREST_MIN,
+  TRICKLE_INDEX_MIN,
+  TRICKLE_INTERVAL_SEC,
+  TRICKLE_PTS,
+  UNREST_MAX,
+  UNREST_MIN,
+  cooldownKey,
+  taxStrain,
+} from '../game/influence'
+import type { InfluenceActionId, PendingSpend } from '../game/influence'
+import {
+  EVENT_MIN_SEC,
+  EVENT_SPAN_SEC,
+  kindWeights,
+  sectorEventWeight,
+} from '../game/forecast'
 import type { MissionDef, SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 
@@ -49,8 +79,10 @@ export const SPEEDS = [1, 2, 4, 8]
 // fast forward the world on return.
 export const MAX_DT = 0.25
 
-const EVENT_MIN = 900
-const EVENT_SPAN = 1800
+// Event pacing lives in game/forecast.ts beside the weights, so the intel
+// forecast reads the same numbers the generator rolls from.
+const EVENT_MIN = EVENT_MIN_SEC
+const EVENT_SPAN = EVENT_SPAN_SEC
 const MAX_EVENTS = 40
 export const INITIAL_WORLD_RNG = 0x2087051
 // First contract-generation check, one minimum interval after world start.
@@ -84,7 +116,9 @@ export function hhmm(t: number): string {
 
 /* --------------------------------- events --------------------------------- */
 
-export type EventKind = 'riot' | 'seizure' | 'trade' | 'raid' | 'blackout' | 'kia' | 'contract'
+export type EventKind =
+  | 'riot' | 'seizure' | 'trade' | 'raid' | 'blackout' | 'kia' | 'contract'
+  | 'crisis' | 'influence'
 export type EventTone = 'red' | 'green' | 'amber' | 'dim'
 
 export interface WorldEvent {
@@ -136,6 +170,8 @@ const TONE: Record<EventKind, EventTone> = {
   blackout: 'dim',
   kia: 'red',
   contract: 'green',
+  crisis: 'red',
+  influence: 'amber',
 }
 
 // Odds that a rolled world event touches the contract market, kept beside the
@@ -167,11 +203,17 @@ function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v
 }
 
-// Unrest pulls events toward a sector and toward the violent kinds.
-function rollSector(sectors: Record<string, SectorState>, rng: RngCursor): SectorId {
+// Unrest pulls events toward a sector and toward the violent kinds; a sector
+// in crisis draws at double weight. Both weight tables live in game/forecast
+// so the intel forecast derives from exactly what is rolled here.
+function rollSector(
+  sectors: Record<string, SectorState>,
+  crisis: SectorId[],
+  rng: RngCursor,
+): SectorId {
   let total = 0
   const weights = OPEN_SECTORS.map((id) => {
-    const w = 1 + sectors[id].unrest / 8
+    const w = sectorEventWeight(sectors[id].unrest, crisis.includes(id))
     total += w
     return w
   })
@@ -184,19 +226,12 @@ function rollSector(sectors: Record<string, SectorState>, rng: RngCursor): Secto
 }
 
 function rollKind(state: SectorState, rng: RngCursor): EventKind {
-  const heat = state.unrest / 40
-  const table: Array<[EventKind, number]> = [
-    ['riot', 0.1 + heat],
-    ['blackout', 0.12 + heat * 0.4],
-    ['raid', 0.18 + heat * 0.5],
-    ['trade', 0.3 - heat * 0.3],
-    ['seizure', 0.22 - heat * 0.1],
-  ]
+  const table = kindWeights(state.unrest)
   let total = 0
-  for (const [, w] of table) total += Math.max(0.02, w)
+  for (const [, w] of table) total += w
   let r = nextRandom(rng) * total
   for (const [kind, w] of table) {
-    r -= Math.max(0.02, w)
+    r -= w
     if (r <= 0) return kind
   }
   return 'trade'
@@ -215,10 +250,13 @@ const LINES: Record<EventKind, string[]> = {
   raid: ['CORPSEC RAID SWEEPS ', 'CURFEW ENFORCED IN ', 'CORPSEC RETAKES THE DOCKS IN '],
   trade: [' SECURES TRADE AGREEMENT IN ', ' OPENS A FREE PORT IN ', ' BUYS THE UTILITY GRID IN '],
   seizure: [' TAKES CONTROL OF ', ' SEIZES THE COUNCIL IN ', ' ANNEXES THE HOLDINGS OF '],
-  // Never rolled: KIA events are posted by applyMissionResult alone, and
-  // contract events by the market flow alone.
+  // Never rolled: KIA events are posted by applyMissionResult alone, contract
+  // events by the market flow, crisis lines by the pressure flow, and
+  // influence lines by the spend actions.
   kia: [],
   contract: [],
+  crisis: [],
+  influence: [],
 }
 
 function rollEvent(
@@ -226,10 +264,11 @@ function rollEvent(
   t: number,
   sectors: Record<string, SectorState>,
   owner: Record<string, CorpId>,
+  crisis: SectorId[],
   rngState: number,
 ): Rolled {
   const rng = { state: rngState }
-  const sector = rollSector(sectors, rng)
+  const sector = rollSector(sectors, crisis, rng)
   const prev = sectors[sector]
   const kind = rollKind(prev, rng)
   const cities = CITIES_BY_SECTOR[sector] ?? []
@@ -279,7 +318,10 @@ function rollEvent(
 
   return {
     event: { id, t, sector, kind, tone: TONE[kind], text },
-    state: { control: clamp(control, 4, 96), unrest: clamp(unrest, 2, 74) },
+    state: {
+      control: clamp(control, CONTROL_MIN, CONTROL_MAX),
+      unrest: clamp(unrest, UNREST_MIN, UNREST_MAX),
+    },
     flip,
     rngState: rng.state,
   }
@@ -300,6 +342,13 @@ interface WorldFlow {
   contracts: GeneratedContract[]
   contractRngState: number
   nextContractT: number
+  influence: number
+  nextTrickleT: number
+  spends: PendingSpend[]
+  crisis: SectorId[]
+  // Next decay check per sector holding above the pressure threshold; a
+  // sector at or under it carries no entry.
+  pressure: Record<string, number>
 }
 
 function flowOf(s: WorldStoreState): WorldFlow {
@@ -313,6 +362,11 @@ function flowOf(s: WorldStoreState): WorldFlow {
     contracts: s.contracts,
     contractRngState: s.contractRngState,
     nextContractT: s.nextContractT,
+    influence: s.influence,
+    nextTrickleT: s.nextTrickleT,
+    spends: s.spends,
+    crisis: s.crisis,
+    pressure: s.pressure,
   }
 }
 
@@ -430,14 +484,105 @@ function applyContractHooks(f: WorldFlow, event: WorldEvent, flipped: boolean): 
   }
 }
 
+// Re-checks pressure timers and crisis state after anything moved a sector's
+// unrest, at time t: a sector over the threshold gets a decay timer, a sector
+// back under loses it; the crisis marks post their own feed lines, and a
+// sector entering crisis promotes its open generated contracts to priority.
+function settlePressure(f: WorldFlow, t: number): void {
+  for (const id of OPEN_SECTORS) {
+    const unrest = f.sectors[id].unrest
+    const timed = f.pressure[id] !== undefined
+    if (unrest > PRESSURE_UNREST_MIN && !timed) {
+      f.pressure = { ...f.pressure, [id]: t + PRESSURE_INTERVAL_SEC }
+    } else if (unrest <= PRESSURE_UNREST_MIN && timed) {
+      const pressure = { ...f.pressure }
+      delete pressure[id]
+      f.pressure = pressure
+    }
+    const inCrisis = f.crisis.includes(id)
+    if (!inCrisis && unrest >= CRISIS_UNREST_ENTER) {
+      f.crisis = [...f.crisis, id]
+      f.contracts = f.contracts.map((c) =>
+        c.sector === id && !c.priority ? { ...c, priority: true } : c,
+      )
+      appendEvent(f, {
+        id: nextEventId(f), t, sector: id, kind: 'crisis', tone: 'red',
+        text: sectorDef(id).name + ' ENTERS CRISIS // GARRISONS OVERWHELMED',
+      })
+    } else if (inCrisis && unrest < CRISIS_UNREST_EXIT) {
+      f.crisis = f.crisis.filter((s) => s !== id)
+      appendEvent(f, {
+        id: nextEventId(f), t, sector: id, kind: 'crisis', tone: 'green',
+        text: sectorDef(id).name + ' CRISIS CONTAINED // UNREST SUBSIDING',
+      })
+    }
+  }
+}
+
+// Applies every staged influence spend step due at t and drops finished ones.
+function applySpendSteps(f: WorldFlow, t: number): void {
+  const spends: PendingSpend[] = []
+  for (const s of f.spends) {
+    if (s.nextT > t) {
+      spends.push(s)
+      continue
+    }
+    const def = INFLUENCE_ACTIONS[s.action]
+    const prev = f.sectors[s.sector]
+    f.sectors = {
+      ...f.sectors,
+      [s.sector]: {
+        control: clamp(prev.control + def.controlDelta, CONTROL_MIN, CONTROL_MAX),
+        unrest: clamp(prev.unrest + def.unrestDelta, UNREST_MIN, UNREST_MAX),
+      },
+    }
+    if (s.remaining > 1) {
+      spends.push({ ...s, nextT: s.nextT + def.stepSec, remaining: s.remaining - 1 })
+    }
+  }
+  f.spends = spends
+}
+
+// One decay step for every sector whose pressure timer is due at t: control
+// drops 1-2 off the main event rng cursor and the timer rearms.
+function applyPressure(f: WorldFlow, t: number): void {
+  for (const id of OPEN_SECTORS) {
+    const at = f.pressure[id]
+    if (at === undefined || at > t) continue
+    const rng = { state: f.rngState }
+    const drop =
+      PRESSURE_CONTROL_DROP_MIN +
+      Math.floor(
+        nextRandom(rng) * (PRESSURE_CONTROL_DROP_MAX - PRESSURE_CONTROL_DROP_MIN + 1),
+      )
+    f.rngState = rng.state
+    const prev = f.sectors[id]
+    f.sectors = {
+      ...f.sectors,
+      [id]: { ...prev, control: clamp(prev.control - drop, CONTROL_MIN, CONTROL_MAX) },
+    }
+    f.pressure = { ...f.pressure, [id]: at + PRESSURE_INTERVAL_SEC }
+  }
+}
+
 // Advances every timed world process (event rolls, contract expiry, contract
-// generation) to time t in timestamp order. Returns whether anything moved.
+// generation, staged influence spends, unrest decay, the influence trickle)
+// to time t in timestamp order. Returns whether anything moved.
 function advanceFlow(f: WorldFlow, t: number): boolean {
   let changed = false
   for (;;) {
     let expireT = Infinity
     for (const c of f.contracts) if (c.expiresAtT < expireT) expireT = c.expiresAtT
-    const stepT = Math.min(f.nextEventT, f.nextContractT, expireT)
+    let spendT = Infinity
+    for (const s of f.spends) if (s.nextT < spendT) spendT = s.nextT
+    let pressT = Infinity
+    for (const id of OPEN_SECTORS) {
+      const at = f.pressure[id]
+      if (at !== undefined && at < pressT) pressT = at
+    }
+    const stepT = Math.min(
+      f.nextEventT, f.nextContractT, expireT, spendT, pressT, f.nextTrickleT,
+    )
     if (stepT > t) return changed
     changed = true
     if (expireT === stepT) {
@@ -453,7 +598,9 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
         )
       }
     } else if (f.nextEventT === stepT) {
-      const rolled = rollEvent(nextEventId(f), f.nextEventT, f.sectors, f.owner, f.rngState)
+      const rolled = rollEvent(
+        nextEventId(f), f.nextEventT, f.sectors, f.owner, f.crisis, f.rngState,
+      )
       f.sectors = { ...f.sectors, [rolled.event.sector]: rolled.state }
       if (rolled.flip) f.owner = { ...f.owner, [rolled.flip.city]: rolled.flip.corp }
       appendEvent(f, rolled.event)
@@ -461,7 +608,8 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
       f.nextEventT += EVENT_MIN + nextRandom(scheduleRng) * EVENT_SPAN
       f.rngState = scheduleRng.state
       applyContractHooks(f, rolled.event, rolled.flip !== null)
-    } else {
+      settlePressure(f, stepT)
+    } else if (f.nextContractT === stepT) {
       // Generation checkpoint: below target, roll one contract; either way,
       // schedule the next check 2-6 world hours out.
       const rng = { state: f.contractRngState }
@@ -485,6 +633,15 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
       }
       f.nextContractT += CONTRACT_MIN_SEC + nextRandom(rng) * CONTRACT_SPAN_SEC
       f.contractRngState = rng.state
+    } else if (spendT === stepT) {
+      applySpendSteps(f, stepT)
+      settlePressure(f, stepT)
+    } else if (pressT === stepT) {
+      applyPressure(f, stepT)
+    } else {
+      // Influence trickle: the network pays while the index holds high.
+      if (globalInfluence(f.sectors) > TRICKLE_INDEX_MIN) f.influence += TRICKLE_PTS
+      f.nextTrickleT += TRICKLE_INTERVAL_SEC
     }
   }
 }
@@ -509,11 +666,26 @@ export interface WorldStoreState {
   contracts: GeneratedContract[]
   contractRngState: number
   nextContractT: number
+  // The spendable influence resource: the point balance, the next trickle
+  // check, staged spends still applying, and per-sector action cooldowns
+  // (readyAtT keyed by cooldownKey). The influence index shown beside it is
+  // always derived (globalInfluence), never stored.
+  influence: number
+  nextTrickleT: number
+  spends: PendingSpend[]
+  cooldowns: Record<string, number>
+  // Unrest pressure: sectors in crisis, and the next decay check for each
+  // sector holding above the pressure threshold.
+  crisis: SectorId[]
+  pressure: Record<string, number>
   tick: (dt: number) => void
   advanceDays: (days: number) => void
   // `kia` carries the codenames of operatives lost in the mission; the feed
   // posts a red loss line for them alongside the result event.
   applyMissionResult: (missionId: string, outcome: MissionOutcome, kia?: string[]) => void
+  // Spends influence points on a numbered sector action. A blocked spend
+  // (unaffordable, cooling down, or expedite without a target) is a no-op.
+  spendInfluence: (sector: SectorId, action: InfluenceActionId) => void
   setSpeed: (speed: number) => void
   togglePause: () => void
   select: (id: SectorId) => void
@@ -549,6 +721,12 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
   contracts: [],
   contractRngState: INITIAL_CONTRACT_RNG,
   nextContractT: INITIAL_NEXT_CONTRACT_T,
+  influence: 0,
+  nextTrickleT: TRICKLE_INTERVAL_SEC,
+  spends: [],
+  cooldowns: {},
+  crisis: [],
+  pressure: {},
 
   tick: (dt) => {
     const s = get()
@@ -597,8 +775,8 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
         ? -(3 + ((missionIndex + 1) % 3)) + collateral
         : 4 + (missionIndex % 4) + collateral
       const sector = {
-        control: clamp(previous.control + controlDelta, 4, 96),
-        unrest: clamp(previous.unrest + unrestDelta, 2, 74),
+        control: clamp(previous.control + controlDelta, CONTROL_MIN, CONTROL_MAX),
+        unrest: clamp(previous.unrest + unrestDelta, UNREST_MIN, UNREST_MAX),
       }
       // Authored Milestone 1 missions change sector pressure only. Glass Veil's
       // client, Sable Enterprises, is not a city holder, so there is no valid
@@ -632,15 +810,61 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
         ]
         added += 1
       }
-      return {
-        sectors: { ...state.sectors, [mission.sector]: sector },
-        events: events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events,
-        unread: state.unread + added,
-        // A generated contract is spent by its debrief, won or lost.
-        contracts: record
-          ? state.contracts.filter((c) => c.id !== missionId)
-          : state.contracts,
+      // A win pays influence points beside the fee, clean work a premium; and
+      // the unrest move may arm or clear pressure timers or flip crisis, so
+      // the result settles through the same helper the timed flow uses. The
+      // fulfilled generated contract leaves the market first, won or lost.
+      const f = flowOf(state)
+      f.sectors = { ...state.sectors, [mission.sector]: sector }
+      f.events = events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events
+      f.unread = state.unread + added
+      f.contracts = record
+        ? state.contracts.filter((c) => c.id !== missionId)
+        : state.contracts
+      f.influence = outcome.won
+        ? state.influence +
+          INFLUENCE_WIN_PTS +
+          (outcome.civiliansHit === 0 ? INFLUENCE_CLEAN_PTS : 0)
+        : state.influence
+      settlePressure(f, state.t)
+      return { ...f }
+    }),
+
+  spendInfluence: (sector, action) =>
+    set((s) => {
+      const def = INFLUENCE_ACTIONS[action]
+      if (s.influence < def.cost) return s
+      const key = cooldownKey(sector, action)
+      if ((s.cooldowns[key] ?? -Infinity) > s.t) return s
+      const f = flowOf(s)
+      if (action === 'expedite') {
+        const target = expediteTarget(s.contracts, sector)
+        if (!target) return s
+        f.contracts = s.contracts.map((c) =>
+          c.id === target.id
+            ? { ...c, expedited: true, expiresAtT: c.expiresAtT + EXPEDITE_EXTENSION_SEC }
+            : c,
+        )
+        appendEvent(f, {
+          id: nextEventId(f), t: s.t, sector, kind: 'influence', tone: 'amber',
+          text:
+            'CONTRACT ' + contractMission(target).codename + ' EXPEDITED // INTEL GATE WAIVED',
+        })
+      } else {
+        f.spends = [
+          ...s.spends,
+          { action, sector, nextT: s.t + def.stepSec, remaining: def.steps },
+        ]
+        appendEvent(f, {
+          id: nextEventId(f), t: s.t, sector, kind: 'influence', tone: 'amber',
+          text:
+            action === 'stabilize'
+              ? 'STABILIZATION ASSETS DEPLOYED IN ' + sectorDef(sector).name
+              : 'LOBBYING CAMPAIGN OPENED IN ' + sectorDef(sector).name,
+        })
       }
+      f.influence = s.influence - def.cost
+      return { ...f, cooldowns: { ...s.cooldowns, [key]: s.t + def.cooldownSec } }
     }),
 
   setSpeed: (speed) => set({ speed, paused: false }),
@@ -715,7 +939,9 @@ export function sectorReadout(id: SectorId, state: SectorState): SectorReadout {
   return {
     control,
     unrest,
-    taxYield: (def.yieldBase * control) / 100,
+    // Unrest pressure strains the yield: past the threshold the readout falls
+    // with every point of unrest (game/influence.ts).
+    taxYield: ((def.yieldBase * control) / 100) * taxStrain(unrest),
     influenceIncome: control * 0.0198,
     blackMarket: -unrest * 0.01,
     garrison: control >= 55 ? 'SECURE' : control >= 35 ? 'STRAINED' : 'CRITICAL',

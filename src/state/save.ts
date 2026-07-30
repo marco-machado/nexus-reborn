@@ -1,6 +1,6 @@
 // Versioned campaign persistence. Tactical mission state is intentionally not
 // serializable: autosave only commits stable strategy/debrief transitions.
-import { CITIES, HOLDERS, SECTORS } from '../game/atlas'
+import { CITIES, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { BRANCH_IDS, NODES } from '../game/research'
 import { DEFAULT_SQUAD, MISSIONS, WEAPONS } from '../game/data'
@@ -22,6 +22,14 @@ import {
   CONTRACT_TARGET,
   INITIAL_CONTRACT_RNG,
 } from '../game/contracts'
+import {
+  INFLUENCE_ACTIONS,
+  PRESSURE_INTERVAL_SEC,
+  PRESSURE_UNREST_MIN,
+  TRICKLE_INTERVAL_SEC,
+  UNREST_MAX,
+} from '../game/influence'
+import type { InfluenceActionId, PendingSpend } from '../game/influence'
 import type { ContractThreat, ContractType, GeneratedContract } from '../game/contracts'
 import type { AgentRole, OperativeDef, SectorId } from '../game/types'
 import { INITIAL_CREDITS, useAppStore } from './appStore'
@@ -42,7 +50,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 4 as const
+const SAVE_VERSION = 5 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -50,8 +58,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV4 {
-  version: 4
+export interface SaveV5 {
+  version: 5
   app: {
     credits: number
     squad: string[]
@@ -70,6 +78,12 @@ export interface SaveV4 {
     contracts: GeneratedContract[]
     contractRngState: number
     nextContractT: number
+    influence: number
+    nextTrickleT: number
+    spends: PendingSpend[]
+    cooldowns: Record<string, number>
+    crisis: SectorId[]
+    pressure: Record<string, number>
   }
   research: {
     done: string[]
@@ -158,7 +172,49 @@ function validSectors(value: unknown): value is Record<string, SectorState> {
       state.control <= 96 &&
       finite(state.unrest) &&
       state.unrest >= 0 &&
-      state.unrest <= 74,
+      state.unrest <= UNREST_MAX,
+  )
+}
+
+const OPEN_SECTOR_IDS = new Set<string>(OPEN_SECTORS)
+const ACTION_IDS = Object.keys(INFLUENCE_ACTIONS) as InfluenceActionId[]
+const COOLDOWN_KEYS = new Set(
+  OPEN_SECTORS.flatMap((sector) => ACTION_IDS.map((action) => sector + ':' + action)),
+)
+
+function validSpends(value: unknown): value is PendingSpend[] {
+  if (!Array.isArray(value) || value.length > OPEN_SECTORS.length * 2) return false
+  return value.every(
+    (spend) =>
+      isObject(spend) &&
+      hasExactKeys(spend, ['action', 'sector', 'nextT', 'remaining']) &&
+      (spend.action === 'stabilize' || spend.action === 'lobby') &&
+      typeof spend.sector === 'string' &&
+      OPEN_SECTOR_IDS.has(spend.sector) &&
+      finite(spend.nextT) &&
+      integer(spend.remaining) &&
+      spend.remaining >= 1 &&
+      spend.remaining <= INFLUENCE_ACTIONS[spend.action as InfluenceActionId].steps,
+  )
+}
+
+function validCooldowns(value: unknown): value is Record<string, number> {
+  if (!isObject(value)) return false
+  return Object.entries(value).every(
+    ([key, at]) => COOLDOWN_KEYS.has(key) && finite(at) && at >= 0,
+  )
+}
+
+function validCrisis(value: unknown): value is SectorId[] {
+  if (!Array.isArray(value)) return false
+  if (!value.every((id) => typeof id === 'string' && OPEN_SECTOR_IDS.has(id))) return false
+  return new Set(value).size === value.length
+}
+
+function validPressure(value: unknown): value is Record<string, number> {
+  if (!isObject(value)) return false
+  return Object.entries(value).every(
+    ([id, at]) => OPEN_SECTOR_IDS.has(id) && finite(at),
   )
 }
 
@@ -325,7 +381,7 @@ function validRoster(
   })
 }
 
-export function validateSave(value: unknown): value is SaveV4 {
+export function validateSave(value: unknown): value is SaveV5 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -368,6 +424,13 @@ export function validateSave(value: unknown): value is SaveV4 {
     world.contractRngState < 0 ||
     world.contractRngState > 0xffffffff ||
     !finite(world.nextContractT) ||
+    !integer(world.influence) ||
+    world.influence < 0 ||
+    !finite(world.nextTrickleT) ||
+    !validSpends(world.spends) ||
+    !validCooldowns(world.cooldowns) ||
+    !validCrisis(world.crisis) ||
+    !validPressure(world.pressure) ||
     !validIdList(research.done, RESEARCH_IDS) ||
     !validLabs(research.labs) ||
     !integer(campaign.intelLevel) ||
@@ -394,7 +457,7 @@ export function validateSave(value: unknown): value is SaveV4 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV4 {
+export function captureSave(): SaveV5 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -419,6 +482,12 @@ export function captureSave(): SaveV4 {
       contracts: structuredClone(world.contracts),
       contractRngState: world.contractRngState,
       nextContractT: world.nextContractT,
+      influence: world.influence,
+      nextTrickleT: world.nextTrickleT,
+      spends: structuredClone(world.spends),
+      cooldowns: { ...world.cooldowns },
+      crisis: [...world.crisis],
+      pressure: { ...world.pressure },
     },
     research: {
       done: [...research.done],
@@ -455,7 +524,10 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
 // candidate pool, and a first market refresh one interval after the saved
 // world time. A v3 blob is a v4 blob without the generated contract market:
 // the upgrade starts an empty market on the initial cursor with the first
-// generation check one interval after the saved world time.
+// generation check one interval after the saved world time. A v4 blob is a
+// v5 blob without the influence economy or unrest pressure: the upgrade
+// starts at zero points, marks open contracts unexpedited, and arms a decay
+// timer for any sector already above the pressure threshold.
 function upgraded(value: unknown): unknown {
   let v = value
   if (isObject(v) && v.version === 1 && isObject(v.app) && !('loadout' in v.app)) {
@@ -499,10 +571,44 @@ function upgraded(value: unknown): unknown {
       },
     }
   }
+  if (
+    isObject(v) &&
+    v.version === 4 &&
+    isObject(v.world) &&
+    !('influence' in v.world)
+  ) {
+    const worldT = finite(v.world.t) ? v.world.t : 0
+    const pressure: Record<string, number> = {}
+    if (isObject(v.world.sectors)) {
+      for (const id of OPEN_SECTORS) {
+        const state = v.world.sectors[id]
+        if (isObject(state) && finite(state.unrest) && state.unrest > PRESSURE_UNREST_MIN) {
+          pressure[id] = worldT + PRESSURE_INTERVAL_SEC
+        }
+      }
+    }
+    const contracts = Array.isArray(v.world.contracts)
+      ? v.world.contracts.map((c) => (isObject(c) ? { ...c, expedited: false } : c))
+      : v.world.contracts
+    v = {
+      ...v,
+      version: 5,
+      world: {
+        ...v.world,
+        contracts,
+        influence: 0,
+        nextTrickleT: worldT + TRICKLE_INTERVAL_SEC,
+        spends: [],
+        cooldowns: {},
+        crisis: [],
+        pressure,
+      },
+    }
+  }
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV4 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV5 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -521,7 +627,7 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV4
   return null
 }
 
-export function hydrateSave(save: SaveV4): void {
+export function hydrateSave(save: SaveV5): void {
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
     intelProgress: save.campaign.intelProgress,
@@ -642,6 +748,12 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     contracts: [],
     contractRngState: INITIAL_CONTRACT_RNG,
     nextContractT: INITIAL_NEXT_CONTRACT_T,
+    influence: 0,
+    nextTrickleT: TRICKLE_INTERVAL_SEC,
+    spends: [],
+    cooldowns: {},
+    crisis: [],
+    pressure: {},
   })
   useResearchStore.setState({
     done: [],

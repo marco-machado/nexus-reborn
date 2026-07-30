@@ -35,6 +35,7 @@ import {
   missionMods,
   missionVariant,
 } from '../game/missionParams'
+import { missionRisk } from '../game/forecast'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
 import type { ResearchNode } from '../game/research'
 import type { AgentRole, DistrictArchetype, MissionDef, OperativeDef, Weather } from '../game/types'
@@ -251,6 +252,7 @@ export function MissionBrief() {
   const clock = useUtcClock()
   const sectors = useWorldStore((s) => s.sectors)
   const contractsWon = useCampaignStore((s) => s.contractsWon)
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
   const researched = useResearchStore((s) => s.done)
   const m = missionId ? resolveMission(missionId) : null
   const blocks = useMemo(() => buildReconBlocks(m ? m.seed : 1), [m])
@@ -470,7 +472,23 @@ export function MissionBrief() {
               <TacStat label="ROUTE ALPHA" value={tac.counts.alphaMetres + ' M'} tone="teal" />
               <TacStat label="ROUTE OMEGA" value={tac.counts.omegaMetres + ' M'} tone="red" />
               <TacStat label="WEATHER" value={WEATHER_LABEL[m.weather]} />
-              <TacStat label="PROJECTED SUCCESS" value={chance + '%'} tone="teal" />
+              {/* At intel 2+ the readout is the computed risk index, derived
+                  from the same deployment build as the counts above; it
+                  replaces the legacy chance estimate. */}
+              {intelLevel >= 2 ? (
+                (() => {
+                  const risk = missionRisk(tac.counts, mods)
+                  return (
+                    <TacStat
+                      label="RISK INDEX"
+                      value={risk.index + ' // ' + risk.band}
+                      tone={risk.band === 'HIGH' || risk.band === 'SEVERE' ? 'red' : 'teal'}
+                    />
+                  )
+                })()
+              ) : (
+                <TacStat label="PROJECTED SUCCESS" value={chance + '%'} tone="teal" />
+              )}
             </div>
             <div className="mb-tac-plate">
               <svg

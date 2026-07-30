@@ -249,7 +249,15 @@ Each open sector exposes:
 
 The simulation also calculates an asset count for each sector, but the current sector panel does not display it.
 
-Global influence is the weighted average control of all open sectors.
+The **influence index** is the weighted average control of all open sectors, shown as a percentage. Beside it the player holds a spendable **influence points** balance (section 7.4). The sector panel exposes three numbered actions per sector, each with a point cost and a per-sector cooldown, disabled when unaffordable:
+
+1. **STABILIZE** (8 pts): −12 unrest applied over 6 world hours in hourly steps. 24-hour cooldown.
+2. **LOBBY** (10 pts): +8 control applied over 12 world hours in eight steps. 36-hour cooldown.
+3. **EXPEDITE** (12 pts): the sector's lowest-intel-gate open generated contract loses its intel requirement and gains 24 world hours of expiry. 24-hour cooldown.
+
+Staged spends run on the strategic clock through the same time-ordered catch-up as events, so a contract ETA jump applies them exactly as continuous ticking would. Balance numbers live as data in `src/game/influence.ts`.
+
+A sector that holds above **60 unrest** decays: every 6 world hours it loses 1–2 control, and its tax yield readout falls with the strain (2% per unrest point above the threshold, floored at 25%). At **85+ unrest** the sector enters **CRISIS**: it reads red on the plate and the sector list, a red feed event posts, its event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is reachable.
 
 ### 6.3 City ownership
 
@@ -273,9 +281,11 @@ Event categories:
 | Trade agreement | Improves control and may reduce unrest | — |
 | Seizure | May change city ownership and alter control/unrest | A city flip re-clients the sector's open generated contracts |
 
-Events occur every **15–45 world minutes** and favor high-unrest sectors. The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events. The market probabilities live as data beside the event tables in `src/state/worldStore.ts` (`EVENT_CONTRACT_FX`).
+Events occur every **15–45 world minutes** and favor high-unrest sectors; a sector in crisis draws events at **double weight** (section 6.2). The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events. The market probabilities live as data beside the event tables in `src/state/worldStore.ts` (`EVENT_CONTRACT_FX`); the sector and kind weight tables themselves live in `src/game/forecast.ts`, where the intel event forecast reads the same rows the generator rolls from.
 
-Events also share the feed with the generated contract market: new offers, priority offers, expiries, withdrawals, and re-clienting all post `contract` events. Contract generation runs on the same strategic clock and the same catch-up path as events, so a contract ETA jump lands exactly where continuous ticking would have.
+Events also share the feed with the generated contract market: new offers, priority offers, expiries, withdrawals, and re-clienting all post `contract` events. Crisis entries and exits post `crisis` events, and influence spends post `influence` events. Contract generation, staged influence spends, unrest decay, and the influence trickle all run on the same strategic clock and the same time-ordered catch-up path as events, so a contract ETA jump lands exactly where continuous ticking would have.
+
+At intel level 2+ the sector panel shows an **event forecast**: the chance of each event category landing in the focused sector over the next 6 world hours, derived from the shared weight tables rather than a duplicate set of constants.
 
 Mission results feed this system. A win raises the mission sector's control and lowers its unrest; a loss does the opposite. Each result posts its own feed event, green for a win and red for a loss, and civilian hits add unrest.
 
@@ -290,7 +300,12 @@ Mission results feed this system. A win raises the mission sector's control and 
 - Every contract carries a required intel level. Hollow Crown and Rust Haven need level 2.
 - Antarctica and the unbuilt navigation tabs stay locked at every intel level.
 
-**Deferred:** Intel's second strategic use, beyond contract unlocks, lands with the Milestone 4 screens.
+Intel's second strategic use is forecasting. At intel level 2+:
+
+- The World Network sector panel shows the next-6-hours event risk per category for the focused sector (section 6.4).
+- The mission brief replaces the legacy projected-success percentage with a computed **risk index** (LOW / GUARDED / HIGH / SEVERE), derived in `src/game/forecast.ts` from the actual deployment build: the same patrol, garrison, and civilian counts the tactical rail lists, weighted by enemy toughness and weather.
+
+The EXPEDITE influence action (section 6.2) can waive a generated contract's intel gate.
 
 ---
 
@@ -305,6 +320,8 @@ Mission results feed this system. A win raises the mission sector's control and 
 - Successful contracts add their net payout.
 - Failed contracts pay nothing.
 - The balance cannot be overdrawn by research authorization.
+
+Influence points are the second resource, earned and spent on the strategic layer alone (section 7.4).
 
 ### 7.2 Collateral penalty
 
@@ -333,6 +350,18 @@ Beyond research, wins raise intel and mission results move sector values (sectio
 - Operative experience.
 - Equipment ownership.
 - Consumable inventory economy.
+
+### 7.4 Influence economy
+
+**Implemented**
+
+Influence points are earned three ways and spent on the three sector actions (section 6.2):
+
+- **+6** points per contract win, generated or authored.
+- **+2** more for a clean win (zero civilians hit by the squad).
+- **+1** per 12 world hours while the influence index holds above **55** (the trickle).
+
+Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v5). Every balance number lives in `src/game/influence.ts`.
 
 ---
 
@@ -1243,11 +1272,10 @@ Avoid increasing difficulty by removing minimap information without offering com
 ### 19.2 Scaffolded or presentation-only
 
 - Hollow Crown and Rust Haven placeholder objective sets; Milestone 2 owns their full designs.
-- Contract chance and ETA.
+- Contract ETA, and the projected-success chance below intel level 2 (at 2+ the brief shows the computed risk index instead).
 - Weather effects on gameplay.
-- Influence as a spendable resource.
-- Sector assets, tax, and black-market values as decision systems. Defense rating and garrison condition now feed generated contract threat; the rest stays presentation.
-- Sector-intel view.
+- Sector assets and black-market values as decision systems. Defense rating and garrison condition feed generated contract threat, and tax yield now falls under unrest pressure; assets and black market stay presentation.
+- Sector-intel view (the dead button; the sector panel's event forecast covers the intel readout).
 - Archives and additional navigation tabs.
 
 ### 19.3 Missing for a complete campaign
@@ -1255,7 +1283,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Mission outcome effects on city ownership.
 - Operative experience.
 - Mission types beyond reach/eliminate/extract.
-- A strategic fail state; the campaign has victory and recoverable pressure only.
+- A strategic fail state; the campaign has victory and recoverable pressure only, even through sector crisis.
 - Tutorials and onboarding.
 - Settings and control remapping.
 - Difficulty modes.
@@ -1266,7 +1294,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ## 20. Recommended product roadmap
 
-Milestones 1 and 3 are complete and Milestone 4 items 1 and 3 have landed; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining items are recommendations, not current behavior.
+Milestones 1, 3 and 4 are complete; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining items are recommendations, not current behavior.
 
 ### Milestone 1 — Close the campaign loop (complete 2026-07-29)
 
@@ -1299,13 +1327,13 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 4. Add loadout and deployment-mass tradeoffs. Done 2026-07-30.
 5. Add recovery, injury, recruitment, and persistent operative consequences. Done 2026-07-30.
 
-### Milestone 4 — Deepen the strategic game
+### Milestone 4 — Deepen the strategic game (complete 2026-07-30)
 
 1. Connect control, unrest, defense, garrisons, and ownership to contract supply. Done 2026-07-30: the generated contract market rolls from sector state (sections 6.3, 6.4, 12.1).
-2. Let the player spend influence.
+2. Let the player spend influence. Done 2026-07-30: influence points with three numbered sector actions, costs, cooldowns, and staged application (sections 6.2, 7.4).
 3. Make world events create or modify operations. Done 2026-07-30: riots can spawn priority suppression contracts, raids can withdraw offers, seizures re-client them.
-4. Add consequences for ignoring high-unrest sectors.
-5. Add research or intel tools that forecast event and mission risk.
+4. Add consequences for ignoring high-unrest sectors. Done 2026-07-30: control decay above 60 unrest, tax yield strain, and the crisis state with doubled events and priority contracts (section 6.2).
+5. Add research or intel tools that forecast event and mission risk. Done 2026-07-30: the intel level 2+ sector event forecast and the brief's computed mission risk index (sections 6.4, 6.5).
 
 ### Milestone 5 — Release readiness
 
@@ -1323,7 +1351,7 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 - A successful mission visibly changes at least two strategic values. Met.
 - A failed mission produces a meaningful but recoverable consequence. Met.
-- Intel has at least two earn sources and at least two unlock uses. Half met: two earn sources, one unlock use.
+- Intel has at least two earn sources and at least two unlock uses. Met: two earn sources; contract gating and the level 2+ forecasts.
 - Saving and reloading reproduces all strategic and roster state. Met.
 
 ### Mission content

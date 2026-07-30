@@ -15,8 +15,17 @@ import {
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
 import { MISSIONS } from '../game/data'
-import { contractMission } from '../game/contracts'
+import { contractMission, expediteTarget } from '../game/contracts'
 import type { GeneratedContract } from '../game/contracts'
+import {
+  EXPEDITE_EXTENSION_SEC,
+  INFLUENCE_ACTIONS,
+  INFLUENCE_ACTION_ORDER,
+  cooldownKey,
+} from '../game/influence'
+import type { InfluenceActionId } from '../game/influence'
+import { eventForecast } from '../game/forecast'
+import type { ForecastKind } from '../game/forecast'
 import { ROSTER_CAP } from '../game/recruits'
 import { missionChance, missionMods } from '../game/missionParams'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
@@ -106,6 +115,125 @@ function ExpiryHours(props: { at: number }) {
   return <>{hours}H</>
 }
 
+/* ---------------------------- influence actions ---------------------------- */
+
+// What each numbered action does, printed from the same data worldStore
+// applies (game/influence.ts).
+function actionEffect(id: InfluenceActionId): string {
+  const def = INFLUENCE_ACTIONS[id]
+  if (id === 'expedite') {
+    return 'WAIVE INTEL GATE // +' + EXPEDITE_EXTENSION_SEC / 3600 + 'H EXPIRY'
+  }
+  const total = def.steps * (def.unrestDelta !== 0 ? def.unrestDelta : def.controlDelta)
+  const stat = def.unrestDelta !== 0 ? 'UNREST' : 'CONTROL'
+  const hours = (def.steps * def.stepSec) / 3600
+  return (total > 0 ? '+' : '') + total + ' ' + stat + ' OVER ' + hours + 'H'
+}
+
+function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId }) {
+  const def = INFLUENCE_ACTIONS[props.action]
+  const points = useWorldStore((s) => s.influence)
+  const spend = useWorldStore((s) => s.spendInfluence)
+  // Hour-resolution selectors, so the rows never re-render at clock rate.
+  const coolHours = useWorldStore((s) =>
+    Math.max(0, Math.ceil(((s.cooldowns[cooldownKey(props.sector, props.action)] ?? 0) - s.t) / 3600)),
+  )
+  const active = useWorldStore((s) =>
+    s.spends.some((p) => p.sector === props.sector && p.action === props.action),
+  )
+  const hasTarget = useWorldStore(
+    (s) => props.action !== 'expedite' || expediteTarget(s.contracts, props.sector) !== null,
+  )
+  const short = points < def.cost
+  const blocked = short || coolHours > 0 || !hasTarget
+  const status = active
+    ? 'ACTIVE'
+    : coolHours > 0
+      ? 'CD ' + coolHours + 'H'
+      : !hasTarget
+        ? 'NO TARGET'
+        : short
+          ? 'LOW PTS'
+          : 'READY'
+  return (
+    <button
+      type="button"
+      className={'wm-act' + (active ? ' active' : '')}
+      disabled={blocked}
+      aria-label={
+        def.num + ' ' + def.name + ' // ' + def.cost + ' PTS // ' +
+        actionEffect(props.action) + ' // ' + status
+      }
+      title={actionEffect(props.action)}
+      onClick={act(() => spend(props.sector, props.action))}
+    >
+      <span className="wm-act-name">
+        <b className="wm-act-num">{def.num}</b> {def.name}
+      </span>
+      <span className="wm-act-sub">
+        <b className="wm-act-cost">{def.cost}P</b>
+        <i
+          className={
+            'wm-act-status ' +
+            (status === 'READY' ? 'teal' : status === 'ACTIVE' ? 'amber' : 'dim')
+          }
+        >
+          {status}
+        </i>
+      </span>
+    </button>
+  )
+}
+
+/* ------------------------------ event forecast ----------------------------- */
+
+const FORECAST_LABEL: Record<ForecastKind, string> = {
+  riot: 'RIOT',
+  blackout: 'BLKOUT',
+  raid: 'RAID',
+  trade: 'TRADE',
+  seizure: 'SEIZE',
+}
+
+// Next-6-world-hours event risk for the focused sector, derived from the same
+// weights the generator rolls from. The second strategic use of intel: the
+// readout needs level 2.
+function SectorForecast(props: { id: SectorId }) {
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
+  const sectors = useWorldStore((s) => s.sectors)
+  const crisis = useWorldStore((s) => s.crisis)
+  if (intelLevel < 2) {
+    return (
+      <div className="wm-fc" title="EVENT FORECAST // NEXT 6 WORLD HOURS">
+        <label>FORECAST 6H</label>
+        <span className="wm-fc-lock dim">{intelGate(2)}</span>
+      </div>
+    )
+  }
+  const rows = eventForecast(
+    OPEN_SECTORS.map((sec) => ({
+      sector: sec,
+      unrest: sectors[sec].unrest,
+      crisis: crisis.includes(sec),
+    })),
+    props.id,
+  )
+  return (
+    <div
+      className="wm-fc"
+      title="EVENT FORECAST // CHANCE PER CATEGORY OVER THE NEXT 6 WORLD HOURS"
+    >
+      <label>FORECAST 6H</label>
+      {rows.map((r) => (
+        <span key={r.kind} className="wm-fc-chip">
+          <i>{FORECAST_LABEL[r.kind]}</i>
+          <b>{r.chance}%</b>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 /* ------------------------------- map plate -------------------------------- */
 
 function WorldPlate() {
@@ -113,6 +241,7 @@ function WorldPlate() {
   const owner = useWorldStore((s) => s.owner)
   const selected = useWorldStore((s) => s.selected)
   const contracts = useWorldStore((s) => s.contracts)
+  const crisis = useWorldStore((s) => s.crisis)
   const selectMission = useAppStore((s) => s.selectMission)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const researched = useResearchStore((s) => s.done)
@@ -177,7 +306,10 @@ function WorldPlate() {
             <polygon
               key={t.id}
               className={
-                'wm-land corp-' + corpOf(t.sector) + (t.sector === selected ? ' focus' : '')
+                'wm-land corp-' +
+                corpOf(t.sector) +
+                (t.sector === selected ? ' focus' : '') +
+                (t.sector !== null && crisis.includes(t.sector) ? ' crisis' : '')
               }
               points={t.pts}
             />
@@ -626,6 +758,8 @@ export function WorldMap() {
   const operativeCount = useCampaignStore((s) => s.operatives.length)
   const researched = useResearchStore((s) => s.done)
   const contracts = useWorldStore((s) => s.contracts)
+  const points = useWorldStore((s) => s.influence)
+  const crisis = useWorldStore((s) => s.crisis)
   useWorldClock()
 
   const def = sectorDef(selected)
@@ -664,12 +798,16 @@ export function WorldMap() {
       <div className="wm-main">
         {/* left: influence + sectors */}
         <aside className="wm-left">
-          <Panel title="GLOBAL INFLUENCE" right={<b className="teal">{influence.toFixed(1)}%</b>}>
+          <Panel title="INFLUENCE INDEX" right={<b className="teal">{influence.toFixed(1)}%</b>}>
             <SegBar value={influence} />
             <div className="axis">
               <span>0%</span>
               <span>50%</span>
               <span>100%</span>
+            </div>
+            <div className="kv">
+              <span>INFLUENCE POINTS</span>
+              <b className="amber">{points} PTS</b>
             </div>
           </Panel>
           <Panel
@@ -686,11 +824,17 @@ export function WorldMap() {
               {SECTORS.map((sec) => {
                 const st = sectors[sec.id]
                 const sel = sec.id === selected
+                const inCrisis = crisis.includes(sec.id)
                 return (
                   <button
                     key={sec.id}
                     type="button"
-                    className={'wm-sector' + (sel ? ' sel' : '') + (sec.locked ? ' locked' : '')}
+                    className={
+                      'wm-sector' +
+                      (sel ? ' sel' : '') +
+                      (sec.locked ? ' locked' : '') +
+                      (inCrisis ? ' crisis' : '')
+                    }
                     aria-pressed={sel}
                     aria-disabled={sec.locked || undefined}
                     aria-label={
@@ -701,7 +845,8 @@ export function WorldMap() {
                           Math.round(st.control) +
                           '% // UNREST ' +
                           Math.round(st.unrest) +
-                          '%'
+                          '%' +
+                          (inCrisis ? ' // CRISIS' : '')
                     }
                     onClick={sec.locked ? undefined : act(() => select(sec.id))}
                   >
@@ -728,6 +873,7 @@ export function WorldMap() {
                           <>
                             <i className="dim">CTRL {Math.round(st.control)}</i>
                             <i className="dim">UNREST {Math.round(st.unrest)}</i>
+                            {inCrisis && <i className="wm-sector-crisis">CRISIS</i>}
                             <SegBar value={st.unrest * 2.4} tone="red" mini className="wm-unrest" />
                           </>
                         )}
@@ -751,7 +897,13 @@ export function WorldMap() {
         <aside className="wm-right">
           <Panel
             title={def.title}
-            right={<Chip tone="amber">FOCUS</Chip>}
+            right={
+              crisis.includes(selected) ? (
+                <Chip tone="red">CRISIS</Chip>
+              ) : (
+                <Chip tone="amber">FOCUS</Chip>
+              )
+            }
             bodyClassName="wm-sector-panel-body"
           >
             <SectorInset id={selected} />
@@ -793,6 +945,12 @@ export function WorldMap() {
               <span>DEFENSE RATING</span>
               <SegBar value={read.defense} tone="green" mini className="wm-defense" />
             </div>
+            <div className="wm-actions">
+              {INFLUENCE_ACTION_ORDER.map((action) => (
+                <InfluenceAction key={action} sector={selected} action={action} />
+              ))}
+            </div>
+            <SectorForecast id={selected} />
           </Panel>
           <Panel
             title="AVAILABLE OPERATIONS"
@@ -895,8 +1053,8 @@ export function WorldMap() {
             <b className="teal">{fmt(credits)} CR</b>
           </div>
           <div className="kv">
-            <span>INFLUENCE</span>
-            <b>{fmt(Math.round(influence * 45))}</b>
+            <span>INFLUENCE PTS</span>
+            <b className="amber">{points}</b>
           </div>
           <div className="kv">
             <span>OPERATIVES</span>

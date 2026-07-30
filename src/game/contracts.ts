@@ -55,11 +55,14 @@ export interface GeneratedContract {
   reward: number
   seed: number
   priority: boolean
+  // Set by the EXPEDITE influence spend: the intel gate is waived and the
+  // offer stands 24 more world hours.
+  expedited: boolean
 }
 
 export const CONTRACT_KEYS = [
   'id', 'createdT', 'expiresAtT', 'sector', 'cityId', 'district',
-  'type', 'client', 'threat', 'reward', 'seed', 'priority',
+  'type', 'client', 'threat', 'reward', 'seed', 'priority', 'expedited',
 ] as const
 
 // Sector snapshot the caller derives from live world state (worldStore's
@@ -216,6 +219,7 @@ function finishContract(
       reward,
       seed,
       priority,
+      expedited: false,
     },
     state: rng.state,
   }
@@ -231,6 +235,29 @@ export function rollContract(
   const rng: RngCursor = { state }
   const input = pickSector(inputs, rng)
   return finishContract(input, t, false, rng)
+}
+
+// The record an EXPEDITE spend targets: the lowest-intel-gate open generated
+// contract in the sector that is not already expedited. Ties break toward the
+// oldest offer, then by id, so the target is deterministic.
+export function expediteTarget(
+  contracts: GeneratedContract[],
+  sector: SectorId,
+): GeneratedContract | null {
+  let best: GeneratedContract | null = null
+  for (const c of contracts) {
+    if (c.sector !== sector || c.expedited) continue
+    if (
+      best === null ||
+      CONTRACT_INTEL_REQ[c.threat] < CONTRACT_INTEL_REQ[best.threat] ||
+      (CONTRACT_INTEL_REQ[c.threat] === CONTRACT_INTEL_REQ[best.threat] &&
+        (c.createdT < best.createdT ||
+          (c.createdT === best.createdT && c.id < best.id)))
+    ) {
+      best = c
+    }
+  }
+  return best
 }
 
 // A riot-linked suppression contract: sector fixed by the event, premium
@@ -316,13 +343,15 @@ function briefingFor(c: GeneratedContract, city: string, district: string): stri
 }
 
 function notesFor(c: GeneratedContract, weather: Weather): string[] {
-  return [
+  const notes = [
     WEATHER_NOTE[weather],
     DENSITY_NOTE[CONTRACT_ARCHETYPE[c.type]],
     c.priority
       ? 'PRIORITY CONTRACT // PREMIUM FEE. OFFER EXPIRES EARLY.'
       : 'GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED.',
   ]
+  if (c.expedited) notes.push('EXPEDITED CONTRACT // INTEL GATE WAIVED.')
+  return notes
 }
 
 function objectivesFor(c: GeneratedContract): ObjectiveDef[] {
@@ -401,7 +430,7 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     briefing: briefingFor(contract, city.name, district),
     notes: notesFor(contract, weather),
     objectives: objectivesFor(contract),
-    intelReq: CONTRACT_INTEL_REQ[contract.threat],
+    intelReq: contract.expedited ? 1 : CONTRACT_INTEL_REQ[contract.threat],
     mapPos,
   }
   missionCache.set(contract, def)

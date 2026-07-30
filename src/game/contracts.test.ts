@@ -11,6 +11,7 @@ import {
   PRIORITY_EXPIRY_SPAN_SEC,
   contractMission,
   contractThreat,
+  expediteTarget,
   isGeneratedMissionId,
   rollContract,
   rollSuppressionContract,
@@ -74,6 +75,7 @@ describe('rolling', () => {
       expect(c.seed).toBeGreaterThanOrEqual(0)
       expect(c.seed).toBeLessThanOrEqual(0xffffffff)
       expect(c.priority).toBe(false)
+      expect(c.expedited).toBe(false)
       expect(isGeneratedMissionId(c.id)).toBe(true)
     }
   })
@@ -126,6 +128,58 @@ describe('threat and client derivation', () => {
   })
 })
 
+describe('expedite targeting', () => {
+  function stub(
+    id: string,
+    sector: string,
+    threat: GeneratedContract['threat'],
+    over: Partial<GeneratedContract> = {},
+  ): GeneratedContract {
+    return {
+      id,
+      createdT: 100,
+      expiresAtT: 5000,
+      sector: sector as GeneratedContract['sector'],
+      cityId: CITIES_BY_SECTOR[sector][0].id,
+      district: 5,
+      type: 'SEIZURE',
+      client: 'helix',
+      threat,
+      reward: 50000,
+      seed: 1,
+      priority: false,
+      expedited: false,
+      ...over,
+    }
+  }
+
+  it('picks the lowest intel gate in the sector, ignoring other sectors', () => {
+    const contracts = [
+      stub('gc-a', 'eu', 'SEVERE'),
+      stub('gc-b', 'eu', 'HIGH'),
+      stub('gc-c', 'af', 'MODERATE'),
+    ]
+    expect(expediteTarget(contracts, 'eu')?.id).toBe('gc-b')
+    expect(expediteTarget(contracts, 'af')?.id).toBe('gc-c')
+    expect(expediteTarget(contracts, 'oc')).toBeNull()
+  })
+
+  it('skips already-expedited records and breaks ties toward the oldest offer', () => {
+    const contracts = [
+      stub('gc-a', 'eu', 'HIGH', { createdT: 200 }),
+      stub('gc-b', 'eu', 'HIGH', { createdT: 50 }),
+      stub('gc-c', 'eu', 'MODERATE', { expedited: true }),
+    ]
+    expect(expediteTarget(contracts, 'eu')?.id).toBe('gc-b')
+    expect(
+      expediteTarget(
+        contracts.map((c) => ({ ...c, expedited: true })),
+        'eu',
+      ),
+    ).toBeNull()
+  })
+})
+
 describe('derived missions', () => {
   it('derives identical missions from equal records', () => {
     const a = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
@@ -142,6 +196,16 @@ describe('derived missions', () => {
     for (const c of rollMany(60)) {
       expect(contractMission(c).intelReq).toBe(CONTRACT_INTEL_REQ[c.threat])
     }
+  })
+
+  it('an expedited record loses its intel gate and notes the waiver', () => {
+    const record = rollMany(60).find((c) => c.threat !== 'MODERATE')
+    expect(record).toBeDefined()
+    if (!record) return
+    const expedited = { ...record, expedited: true }
+    expect(contractMission(record).intelReq).toBeGreaterThan(1)
+    expect(contractMission(expedited).intelReq).toBe(1)
+    expect(contractMission(expedited).notes.at(-1)).toContain('INTEL GATE WAIVED')
   })
 
   it('builds a playable mission for every contract type', () => {
