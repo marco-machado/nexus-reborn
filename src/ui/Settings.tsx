@@ -10,10 +10,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { BINDINGS, BINDING_GROUPS, bindingFor, codeOf, keyLabel } from '../game/bindings'
 import type { Binding, BindingId } from '../game/bindings'
+import { QUALITY_SETTINGS } from '../game/quality'
 import { TEXT_SCALES, useSettingsStore } from '../state/settingsStore'
 import type { VolumeChannel } from '../state/settingsStore'
+import { useMissionStore } from '../state/missionStore'
 import { Chip, Panel } from './bits'
 import { uiClick } from './sound'
+
+const QUALITY_LABEL: Record<string, string> = {
+  auto: 'AUTO',
+  high: 'HIGH',
+  medium: 'MED',
+  low: 'LOW',
+}
 
 const VOLUME_ROWS: Array<{ channel: VolumeChannel; label: string }> = [
   { channel: 'master', label: 'MASTER' },
@@ -76,7 +85,11 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   const reducedMotion = useSettingsStore((s) => s.reducedMotion)
   const highContrast = useSettingsStore((s) => s.highContrast)
   const textScale = useSettingsStore((s) => s.textScale)
+  const quality = useSettingsStore((s) => s.quality)
   const overrides = useSettingsStore((s) => s.overrides)
+  // A quality change during a mission cannot rebuild the live pipeline; the
+  // row says so instead of pretending it applied.
+  const missionLive = useMissionStore((s) => s.live)
   const store = useSettingsStore
 
   const [capture, setCapture] = useState<BindingId | null>(null)
@@ -216,6 +229,36 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                       }}
                     >
                       {scale}%
+                    </button>
+                  ))}
+                </span>
+              </div>
+            </div>
+            <div className="set-section">
+              <div className="hud-menu-group-head">PERFORMANCE</div>
+              <div className="set-toggle">
+                <span className="set-toggle-main">
+                  <b>QUALITY</b>
+                  <i className="dim">
+                    {missionLive
+                      ? 'Applies from the next mission'
+                      : 'AUTO probes the renderer and steps down under load'}
+                  </i>
+                </span>
+                <span className="set-scale">
+                  {QUALITY_SETTINGS.map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      className={'btn set-scale-btn' + (quality === q ? ' amber' : '')}
+                      aria-pressed={quality === q}
+                      aria-label={'Render quality ' + q}
+                      onClick={() => {
+                        uiClick()
+                        store.getState().setQuality(q)
+                      }}
+                    >
+                      {QUALITY_LABEL[q]}
                     </button>
                   ))}
                 </span>

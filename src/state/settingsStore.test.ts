@@ -155,3 +155,22 @@ describe('binding overrides through the store', () => {
     expect(bindingFor('KeyT')).toBeUndefined()
   })
 })
+
+describe('render quality setting', () => {
+  it('defaults to AUTO, persists a change, and sanitizes garbage', () => {
+    expect(defaultSettings().quality).toBe('auto')
+    useSettingsStore.getState().setQuality('low')
+    expect(stored()).toMatchObject({ quality: 'low' })
+    expect(loadSettings(storage).quality).toBe('low')
+
+    storage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ version: SETTINGS_VERSION, quality: 'ultra' }),
+    )
+    expect(loadSettings(storage).quality).toBe('auto')
+
+    // An invalid runtime value is refused without touching the stored choice.
+    useSettingsStore.getState().setQuality('ultra' as never)
+    expect(useSettingsStore.getState().quality).toBe('low')
+  })
+})

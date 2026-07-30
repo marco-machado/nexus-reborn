@@ -9,6 +9,8 @@
 import { create } from 'zustand'
 import { applyOverrides, sanitizeOverrides } from '../game/bindings'
 import type { BindingId, BindingOverrides } from '../game/bindings'
+import { QUALITY_SETTINGS } from '../game/quality'
+import type { QualitySetting } from '../game/quality'
 
 export const SETTINGS_KEY = 'nexus-settings-v1'
 export const SETTINGS_VERSION = 1 as const
@@ -25,6 +27,10 @@ export interface SettingsData {
   reducedMotion: boolean
   highContrast: boolean
   textScale: TextScale
+  // Renderer quality tier, applied at mission mount (game/quality.ts). AUTO
+  // resolves against the renderer backend and may be stepped down by the
+  // frame-time governor, which persists the concrete tier here.
+  quality: QualitySetting
   overrides: BindingOverrides
 }
 
@@ -37,6 +43,7 @@ export function defaultSettings(): SettingsData {
     reducedMotion: false,
     highContrast: false,
     textScale: 100,
+    quality: 'auto',
     overrides: {},
   }
 }
@@ -84,6 +91,9 @@ function sanitizeSettings(raw: unknown): SettingsData {
     textScale: TEXT_SCALES.includes(v.textScale as TextScale)
       ? (v.textScale as TextScale)
       : d.textScale,
+    quality: QUALITY_SETTINGS.includes(v.quality as QualitySetting)
+      ? (v.quality as QualitySetting)
+      : d.quality,
     overrides: sanitizeOverrides(v.overrides),
   }
 }
@@ -156,6 +166,7 @@ function dataOf(s: SettingsData): SettingsData {
     reducedMotion: s.reducedMotion,
     highContrast: s.highContrast,
     textScale: s.textScale,
+    quality: s.quality,
     overrides: s.overrides,
   }
 }
@@ -168,6 +179,7 @@ export interface SettingsState extends SettingsData {
   setReducedMotion: (on: boolean) => void
   setHighContrast: (on: boolean) => void
   setTextScale: (scale: TextScale) => void
+  setQuality: (quality: QualitySetting) => void
   setBindingOverride: (id: BindingId, codes: string[]) => void
   clearBindingOverride: (id: BindingId) => void
   resetBindings: () => void
@@ -199,6 +211,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setHighContrast: (on) => commit({ highContrast: on }),
     setTextScale: (scale) => {
       if (TEXT_SCALES.includes(scale)) commit({ textScale: scale })
+    },
+    setQuality: (quality) => {
+      if (QUALITY_SETTINGS.includes(quality)) commit({ quality })
     },
     setBindingOverride: (id, codes) => commitOverrides({ ...get().overrides, [id]: codes }),
     clearBindingOverride: (id) => {

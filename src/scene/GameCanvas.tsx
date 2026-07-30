@@ -13,7 +13,17 @@ import { StrictMode, useEffect, useRef } from 'react'
 import * as THREE from 'three/webgpu'
 import { createRoot, events, extend, useFrame, type ThreeToJSXElements } from '@react-three/fiber'
 import { getWorld } from '../game/runtime'
+import {
+  TIER_PARAMS,
+  createFrameProbe,
+  getMissionTier,
+  resolveTier,
+  setMissionTier,
+  stepDownTier,
+} from '../game/quality'
+import type { FrameProbe } from '../game/quality'
 import { useMissionStore } from '../state/missionStore'
+import { useSettingsStore } from '../state/settingsStore'
 import Atmosphere from './Atmosphere'
 import CameraRig from './CameraRig'
 import CityView from './CityView'
@@ -36,8 +46,50 @@ const glFactory = async (props: { canvas: HTMLCanvasElement }): Promise<THREE.We
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.1
   const backend = renderer.backend as { isWebGPUBackend?: boolean }
-  console.info('[scene] renderer backend: ' + (backend.isWebGPUBackend ? 'WebGPU' : 'WebGL2'))
+  const webgpu = backend.isWebGPUBackend === true
+  // The quality tier is resolved once per mission mount, here, where the
+  // backend is finally known: AUTO reads it, an explicit setting passes
+  // through. Scene components read the resolved tier at their own mount.
+  const tier = resolveTier(useSettingsStore.getState().quality, webgpu)
+  setMissionTier(tier)
+  console.info(
+    '[scene] renderer backend: ' +
+      (webgpu ? 'WebGPU' : 'WebGL2') +
+      ', quality tier: ' +
+      tier.toUpperCase(),
+  )
   return renderer
+}
+
+// DPR bounds for the mounted tier; valid once the gl factory has resolved it.
+function tierDpr(): [number, number] {
+  return [1, TIER_PARAMS[getMissionTier()].dprMax]
+}
+
+// Steps a sustained-slow AUTO mission down one tier: persists the concrete
+// tier in settings and posts a comm-log notice. Rain, bloom and DPR are read
+// at mount, so the change lands on the next mission rather than tearing the
+// live pipeline down mid-fight (the manual r3f root makes that unsafe).
+function FrameGovernor() {
+  const probeRef = useRef<FrameProbe | null>(null)
+  useFrame((_, dt) => {
+    if (useSettingsStore.getState().quality !== 'auto') return
+    if (probeRef.current === null) probeRef.current = createFrameProbe()
+    if (!probeRef.current.sample(dt)) return
+    const next = stepDownTier(getMissionTier())
+    if (!next) return
+    useSettingsStore.getState().setQuality(next)
+    const ms = useMissionStore.getState()
+    ms.addLog({
+      t: ms.clock,
+      who: 'SYS',
+      msg:
+        'PERFORMANCE GOVERNOR: SUSTAINED FRAME LOAD. QUALITY SET TO ' +
+        next.toUpperCase() +
+        ' FROM THE NEXT MISSION.',
+    })
+  }, 0)
+  return null
 }
 
 // Advances the simulation before the priority-1 render pass in Effects.
@@ -56,6 +108,7 @@ function SceneTree() {
   return (
     <StrictMode>
       <WorldTicker />
+      <FrameGovernor />
       <CameraRig />
       <Atmosphere />
       <CityView />
@@ -105,12 +158,16 @@ export default function GameCanvas() {
     }
     const m = mount
     m.alive = true
-    void m.ready.then(() => {
+    void m.ready.then(async () => {
+      if (!m.alive) return
+      // The gl factory has resolved the tier by now; apply its DPR bound
+      // before the first render so no frame draws at the boot ratio.
+      await m.root.configure({ size: size(), dpr: tierDpr() })
       if (m.alive) m.root.render(<SceneTree />)
     })
     const ro = new ResizeObserver(() => {
       void m.ready.then(() => {
-        if (m.alive) void m.root.configure({ size: size(), dpr: [1, 1.75] })
+        if (m.alive) void m.root.configure({ size: size(), dpr: tierDpr() })
       })
     })
     ro.observe(wrap)

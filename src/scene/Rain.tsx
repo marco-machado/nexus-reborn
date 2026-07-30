@@ -6,6 +6,7 @@ import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
+import { TIER_PARAMS, getMissionTier } from '../game/quality'
 import { useSettingsStore } from '../state/settingsStore'
 
 const BOX = 70
@@ -74,11 +75,15 @@ function RainLayers({ heavy }: { heavy: boolean }) {
   // creators, and a second creator re-running against a cached layers value
   // would reparent the segments into a discarded group.
   const { layers, group } = useMemo(() => {
+    // The quality tier scales streak counts and is fixed for this mount: the
+    // canvas resolved it before the scene tree rendered (game/quality.ts).
+    const mul = TIER_PARAMS[getMissionTier()].rainMul
+    const n = (count: number) => Math.max(24, Math.round(count * mul))
     const built = reduced
-      ? [buildLayer(240, 0.45, 0.1, 12)]
+      ? [buildLayer(n(240), 0.45, 0.1, 12)]
       : heavy
-        ? [buildLayer(1100, 0.55, 0.22, 15), buildLayer(700, 0.85, 0.13, 10)]
-        : [buildLayer(480, 0.45, 0.15, 13), buildLayer(300, 0.7, 0.09, 9)]
+        ? [buildLayer(n(1100), 0.55, 0.22, 15), buildLayer(n(700), 0.85, 0.13, 10)]
+        : [buildLayer(n(480), 0.45, 0.15, 13), buildLayer(n(300), 0.7, 0.09, 9)]
     const g = new THREE.Group()
     for (const l of built) g.add(l.lines)
     return { layers: built, group: g }
