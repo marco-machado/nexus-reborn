@@ -856,7 +856,7 @@ export function TeamSelect() {
     return a + o.maxHp * 0.48 + o.speed * 5.2
   }, 18.3)
   const ready =
-    squad.length === 4 && squad.every((id) => roster[id]?.status === 'READY')
+    squad.length >= 1 && squad.every((id) => roster[id]?.status === 'READY')
   const augs = installedAugs(done)
   const invKinds = ['med', 'cell', 'frag', 'chip'] as const
   return (
@@ -866,7 +866,7 @@ export function TeamSelect() {
           <h1 className="screen-title">OPERATIVE ASSEMBLY</h1>
           <div className="ts-sub">
             <span className="ts-strike">STRIKE TEAM 04</span>
-            <Chip tone="amber">SELECT FOUR OPERATIVES</Chip>
+            <Chip tone="amber">SELECT UP TO FOUR OPERATIVES</Chip>
             <Chip tone="dim">{squad.length} / 4 ASSIGNED</Chip>
           </div>
         </div>
@@ -1169,14 +1169,20 @@ export function TeamSelect() {
         <div className="ts-deploy">
           <button
             type="button"
+            className="btn ts-return"
+            aria-label="RETURN TO THE WORLD NETWORK"
+            onClick={act(() => goto('world'))}
+          >
+            &lt; RETURN
+          </button>
+          <button
+            type="button"
             className="cta big"
             disabled={!ready}
             aria-label={
               ready
                 ? 'DEPLOY STRIKE TEAM 04'
-                : squad.length < 4
-                  ? 'DEPLOY TEAM // ASSIGN ' + (4 - squad.length) + ' MORE'
-                  : 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
+                : 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
             }
             onClick={act(() => goto('mission'))}
           >
@@ -1185,12 +1191,7 @@ export function TeamSelect() {
           <div className="dim mini ts-deploy-sub">
             {ready
               ? 'CONFIRM AND DEPLOY STRIKE TEAM 04'
-              : squad.length < 4
-                ? 'ASSIGN ' +
-                  (4 - squad.length) +
-                  ' MORE OPERATIVE' +
-                  (4 - squad.length === 1 ? '' : 'S')
-                : 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'}
+              : 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'}
           </div>
         </div>
       </footer>
