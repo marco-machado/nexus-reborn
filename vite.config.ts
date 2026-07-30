@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Node global, typed locally so the build needs no @types/node.
+declare const process: { env: Record<string, string | undefined> }
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -10,6 +13,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1800,
   },
   server: {
-    port: 4200,
+    // The harness assigns a port through PORT when 4200 is taken.
+    port: Number(process.env.PORT ?? 4200),
   },
 })
