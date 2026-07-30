@@ -2277,6 +2277,87 @@
 .ts-return { padding: 6px 12px; font-size: 10px; }
 .ts-deploy-sub { text-align: center; letter-spacing: 0.2em; }
 
+/* recruitment market: roster-panel entry button plus a modal overlay of
+   candidate cards, sized to hold three cards inside 1280x720 */
+.ts-recruit-btn { width: 100%; margin-top: 6px; letter-spacing: 0.2em; }
+
+.ts-recruit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 7, 8, 0.82);
+}
+
+.ts-recruit {
+  width: min(880px, calc(100vw - 80px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--panel, #060d0e);
+  border: 1px solid var(--line-strong);
+}
+
+.ts-recruit-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ts-recruit-head b { letter-spacing: 0.26em; color: var(--amber); font-size: 14px; }
+.ts-recruit-head span { flex: 1; letter-spacing: 0.14em; font-size: 10px; }
+
+.ts-rec-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.ts-rec-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(126, 240, 212, 0.02);
+}
+
+.ts-rec-id { display: flex; gap: 8px; align-items: center; }
+.ts-rec-portrait { flex: none; }
+
+.ts-rec-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ts-rec-main b { font-size: 13px; letter-spacing: 0.18em; color: #e8fbf2; }
+.ts-rec-main i { font-size: 9px; letter-spacing: 0.1em; font-style: normal; }
+
+.ts-rec-stats { display: flex; gap: 12px; }
+.ts-rec-stats .kv b { font-size: 11px; }
+.ts-rec-weapon { font-size: 9px; letter-spacing: 0.12em; }
+.ts-rec-hire { width: 100%; letter-spacing: 0.14em; }
+.ts-rec-none { grid-column: 1 / -1; text-align: center; padding: 22px 0; letter-spacing: 0.2em; }
+.ts-recruit-foot { font-size: 9px; letter-spacing: 0.16em; }
+
+/* empty-roster fallback: the market is the only way back */
+.ts-none {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.ts-none b { letter-spacing: 0.3em; color: var(--red-hot); font-size: 16px; }
+.ts-none span { letter-spacing: 0.18em; }
+
 /* ------------------------------------------------------------------ */
 /* 6. DEBRIEF                                                         */
 /* ------------------------------------------------------------------ */

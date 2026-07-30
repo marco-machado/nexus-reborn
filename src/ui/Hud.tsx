@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
-import { ROSTER, WEAPONS, missionById } from '../game/data'
+import { WEAPONS, missionById } from '../game/data'
+import { useCampaignStore } from '../state/campaignStore'
 import { WEATHER_LABEL } from '../game/missionParams'
 import { getWorld, panCameraTo } from '../game/runtime'
 import type { WeaponId } from '../game/types'
@@ -93,6 +94,7 @@ export default function Hud() {
   const credits = useAppStore((s) => s.credits)
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
+  const operatives = useCampaignStore((s) => s.operatives)
   const mission = missionId ? missionById(missionId) : null
   const district = mission ? mission.district : 'DISTRICT 07'
 
@@ -203,7 +205,7 @@ export default function Hud() {
         <div className="hud-squad-body">
           {squad.map((r) => {
             const op =
-              ROSTER.find((o) => o.codename === r.codename) ?? {
+              operatives.find((o) => o.codename === r.codename) ?? {
                 id: r.unitId,
                 codename: r.codename,
                 accent: r.accent,
@@ -406,7 +408,7 @@ export default function Hud() {
                   the button fires this member's alone. Teal ready, amber
                   running, red cooling or offline. */}
               {squad.map((r) => {
-                const role = ROSTER.find((o) => o.codename === r.codename)?.role
+                const role = operatives.find((o) => o.codename === r.codename)?.role
                 const cd = r.abilityCooldownRemaining
                 const state = r.dead
                   ? 'offline'

@@ -3,10 +3,18 @@
 import { CITIES, HOLDERS, SECTORS } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { BRANCH_IDS, NODES } from '../game/research'
-import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
+import { DEFAULT_SQUAD, MISSIONS, WEAPONS } from '../game/data'
 import { LOADOUT_SLOTS } from '../game/mass'
 import type { SquadLoadout } from '../game/mass'
-import type { SectorId } from '../game/types'
+import {
+  CANDIDATE_POOL,
+  CANDIDATE_REFRESH_SEC,
+  HIRE_MAX_COST,
+  HIRE_MIN_COST,
+  ROSTER_CAP,
+} from '../game/recruits'
+import type { Candidate } from '../game/recruits'
+import type { AgentRole, OperativeDef, SectorId } from '../game/types'
 import { INITIAL_CREDITS, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import type { CampaignRosterEntry } from './campaignStore'
@@ -24,7 +32,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 2 as const
+const SAVE_VERSION = 3 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -32,8 +40,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV2 {
-  version: 2
+export interface SaveV3 {
+  version: 3
   app: {
     credits: number
     squad: string[]
@@ -57,7 +65,11 @@ export interface SaveV2 {
   campaign: {
     intelLevel: number
     intelProgress: number
+    operatives: OperativeDef[]
     roster: Record<string, CampaignRosterEntry>
+    candidates: Candidate[]
+    recruitRngState: number
+    nextCandidateT: number
     contractsWon: string[]
     campaignWon: boolean
   }
@@ -96,12 +108,20 @@ function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]): 
 }
 
 const MISSION_IDS = new Set(MISSIONS.map((mission) => mission.id))
-const ROSTER_IDS = new Set(ROSTER.map((operative) => operative.id))
 const RESEARCH_IDS = new Set(NODES.map((node) => node.id))
 const SECTOR_IDS = new Set<string>(SECTORS.map((sector) => sector.id))
 const CITY_IDS = new Set(CITIES.map((city) => city.id))
-const EVENT_KINDS = new Set<EventKind>(['riot', 'seizure', 'trade', 'raid', 'blackout'])
+const EVENT_KINDS = new Set<EventKind>(['riot', 'seizure', 'trade', 'raid', 'blackout', 'kia'])
 const EVENT_TONES = new Set<EventTone>(['red', 'green', 'amber', 'dim'])
+const WEAPON_IDS = new Set(Object.keys(WEAPONS))
+const ROLES = new Set<AgentRole>([
+  'assault', 'recon', 'infiltrator', 'demolitions', 'sniper', 'tech', 'support', 'medic',
+])
+const OPERATIVE_KEYS = [
+  'id', 'name', 'codename', 'role', 'maxHp', 'speed',
+  'weapon', 'sidearm', 'accent', 'status', 'bio',
+] as const
+const CANDIDATE_KEYS = [...OPERATIVE_KEYS, 'cost'] as const
 
 function validIdList(value: unknown, allowed: Set<string>, max = allowed.size): value is string[] {
   if (!Array.isArray(value) || value.length > max) return false
@@ -166,19 +186,79 @@ function validLabs(value: unknown): value is Labs {
   return true
 }
 
-function validLoadout(value: unknown): value is SquadLoadout {
+function validLoadout(value: unknown, rosterIds: Set<string>): value is SquadLoadout {
   if (!isObject(value)) return false
   return Object.entries(value).every(
     ([id, items]) =>
-      ROSTER_IDS.has(id) &&
+      rosterIds.has(id) &&
       Array.isArray(items) &&
       items.length === LOADOUT_SLOTS &&
       items.every((item) => item === null || item === 'med' || item === 'cell'),
   )
 }
 
-function validRoster(value: unknown): value is Record<string, CampaignRosterEntry> {
-  if (!isObject(value) || !hasExactKeys(value, [...ROSTER_IDS])) return false
+function validOperativeCore(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.id === 'string' &&
+    value.id.length > 0 &&
+    typeof value.name === 'string' &&
+    value.name.length > 0 &&
+    typeof value.codename === 'string' &&
+    value.codename.length > 0 &&
+    typeof value.role === 'string' &&
+    ROLES.has(value.role as AgentRole) &&
+    finite(value.maxHp) &&
+    value.maxHp > 0 &&
+    finite(value.speed) &&
+    value.speed > 0 &&
+    typeof value.weapon === 'string' &&
+    WEAPON_IDS.has(value.weapon) &&
+    typeof value.sidearm === 'string' &&
+    WEAPON_IDS.has(value.sidearm) &&
+    typeof value.accent === 'string' &&
+    value.accent.length > 0 &&
+    (value.status === 'READY' || value.status === 'INJURED' || value.status === 'ON MISSION') &&
+    typeof value.bio === 'string'
+  )
+}
+
+// A fully wiped campaign is a legal save: the market can rebuild the roster.
+function validOperatives(value: unknown): value is OperativeDef[] {
+  if (!Array.isArray(value) || value.length > ROSTER_CAP) return false
+  if (
+    !value.every(
+      (op) => isObject(op) && hasExactKeys(op, OPERATIVE_KEYS) && validOperativeCore(op),
+    )
+  ) {
+    return false
+  }
+  return new Set(value.map((op) => (op as OperativeDef).id)).size === value.length
+}
+
+function validCandidates(value: unknown, rosterIds: Set<string>): value is Candidate[] {
+  if (!Array.isArray(value) || value.length > CANDIDATE_POOL) return false
+  if (
+    !value.every(
+      (c) =>
+        isObject(c) &&
+        hasExactKeys(c, CANDIDATE_KEYS) &&
+        validOperativeCore(c) &&
+        finite(c.cost) &&
+        c.cost >= HIRE_MIN_COST &&
+        c.cost <= HIRE_MAX_COST,
+    )
+  ) {
+    return false
+  }
+  const ids = value.map((c) => (c as Candidate).id)
+  return new Set(ids).size === ids.length && ids.every((id) => !rosterIds.has(id))
+}
+
+function validRoster(
+  value: unknown,
+  rosterIds: Set<string>,
+): value is Record<string, CampaignRosterEntry> {
+  if (!isObject(value) || !hasExactKeys(value, [...rosterIds])) return false
   return Object.values(value).every((entry) => {
     if (!isObject(entry) || (entry.status !== 'READY' && entry.status !== 'INJURED')) return false
     if (entry.recoverAtT !== null && !finite(entry.recoverAtT)) return false
@@ -186,7 +266,7 @@ function validRoster(value: unknown): value is Record<string, CampaignRosterEntr
   })
 }
 
-export function validateSave(value: unknown): value is SaveV2 {
+export function validateSave(value: unknown): value is SaveV3 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -196,11 +276,17 @@ export function validateSave(value: unknown): value is SaveV2 {
     return false
   }
 
+  // The live roster carries hires, so every roster-keyed check below runs
+  // against the ids the blob itself declares, not static data.
+  const operatives = campaign.operatives
+  if (!validOperatives(operatives)) return false
+  const rosterIds = new Set(operatives.map((operative) => operative.id))
+
   if (
     !finite(app.credits) ||
     app.credits < 0 ||
-    !validIdList(app.squad, ROSTER_IDS, 4) ||
-    !validLoadout(app.loadout) ||
+    !validIdList(app.squad, rosterIds, 4) ||
+    !validLoadout(app.loadout, rosterIds) ||
     !finite(world.t) ||
     world.t < 0 ||
     !finite(world.speed) ||
@@ -225,7 +311,12 @@ export function validateSave(value: unknown): value is SaveV2 {
     !integer(campaign.intelProgress) ||
     campaign.intelProgress < 0 ||
     campaign.intelProgress >= 100 ||
-    !validRoster(campaign.roster) ||
+    !validRoster(campaign.roster, rosterIds) ||
+    !validCandidates(campaign.candidates, rosterIds) ||
+    !integer(campaign.recruitRngState) ||
+    campaign.recruitRngState < 0 ||
+    campaign.recruitRngState > 0xffffffff ||
+    !finite(campaign.nextCandidateT) ||
     !validIdList(campaign.contractsWon, MISSION_IDS) ||
     typeof campaign.campaignWon !== 'boolean'
   ) {
@@ -239,7 +330,7 @@ export function validateSave(value: unknown): value is SaveV2 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV2 {
+export function captureSave(): SaveV3 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -269,7 +360,11 @@ export function captureSave(): SaveV2 {
     campaign: {
       intelLevel: campaign.intelLevel,
       intelProgress: campaign.intelProgress,
+      operatives: structuredClone(campaign.operatives),
       roster: structuredClone(campaign.roster),
+      candidates: structuredClone(campaign.candidates),
+      recruitRngState: campaign.recruitRngState,
+      nextCandidateT: campaign.nextCandidateT,
       contractsWon: [...campaign.contractsWon],
       campaignWon: campaign.campaignWon,
     },
@@ -286,21 +381,41 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
   }
 }
 
-// A v1 blob is a v2 blob without app.loadout. Upgrading before validation
-// keeps old campaigns loading instead of discarding them on the version check.
+// Version chain, applied before validation so old campaigns upgrade in place
+// instead of being discarded on the version check. A v1 blob is a v2 blob
+// without app.loadout; a v2 blob is a v3 blob without the live roster, which
+// v2 kept as static data: the upgrade seeds the default roster, the initial
+// candidate pool, and a first market refresh one interval after the saved
+// world time.
 function upgraded(value: unknown): unknown {
-  if (
-    isObject(value) &&
-    value.version === 1 &&
-    isObject(value.app) &&
-    !('loadout' in value.app)
-  ) {
-    return { ...value, version: SAVE_VERSION, app: { ...value.app, loadout: {} } }
+  let v = value
+  if (isObject(v) && v.version === 1 && isObject(v.app) && !('loadout' in v.app)) {
+    v = { ...v, version: 2, app: { ...v.app, loadout: {} } }
   }
-  return value
+  if (
+    isObject(v) &&
+    v.version === 2 &&
+    isObject(v.campaign) &&
+    !('operatives' in v.campaign)
+  ) {
+    const seeded = initialCampaignData()
+    const worldT = isObject(v.world) && finite(v.world.t) ? v.world.t : 0
+    v = {
+      ...v,
+      version: 3,
+      campaign: {
+        ...v.campaign,
+        operatives: seeded.operatives,
+        candidates: seeded.candidates,
+        recruitRngState: seeded.recruitRngState,
+        nextCandidateT: worldT + CANDIDATE_REFRESH_SEC,
+      },
+    }
+  }
+  return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV2 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV3 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -319,14 +434,19 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV2
   return null
 }
 
-export function hydrateSave(save: SaveV2): void {
+export function hydrateSave(save: SaveV3): void {
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
     intelProgress: save.campaign.intelProgress,
+    operatives: structuredClone(save.campaign.operatives),
     roster: structuredClone(save.campaign.roster),
+    candidates: structuredClone(save.campaign.candidates),
+    recruitRngState: save.campaign.recruitRngState,
+    nextCandidateT: save.campaign.nextCandidateT,
     contractsWon: [...save.campaign.contractsWon],
     outcomeApplied: 0,
     campaignWon: save.campaign.campaignWon,
+    lastReport: null,
   })
   useWorldStore.setState({
     ...structuredClone(save.world),

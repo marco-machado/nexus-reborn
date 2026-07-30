@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SQUAD } from '../game/data'
+import { DEFAULT_SQUAD, ROSTER } from '../game/data'
+import { CANDIDATE_REFRESH_SEC } from '../game/recruits'
 import { nodeById } from '../game/research'
 import { useAppStore } from './appStore'
-import { useCampaignStore } from './campaignStore'
+import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import {
   SAVE_KEY,
@@ -14,7 +15,7 @@ import {
   validateSave,
   writeSave,
 } from './save'
-import type { SaveStorage, SaveV2 } from './save'
+import type { SaveStorage, SaveV3 } from './save'
 import { useWorldStore } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
@@ -47,21 +48,59 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+// Older blobs never carried the live roster: strip the v3 campaign fields so
+// the synthetic downgrade matches what a real v1/v2 save held.
+function downgradeToV2(save: SaveV3): Record<string, unknown> {
+  const blob = structuredClone(save) as unknown as Record<string, unknown>
+  blob.version = 2
+  const campaign = blob.campaign as Record<string, unknown>
+  delete campaign.operatives
+  delete campaign.candidates
+  delete campaign.recruitRngState
+  delete campaign.nextCandidateT
+  return blob
+}
+
 describe('save validation', () => {
-  it('accepts a captured V2 campaign and rejects unknown ids', () => {
+  it('accepts a captured V3 campaign and rejects unknown ids', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const invalid = structuredClone(save) as SaveV2
+    const invalid = structuredClone(save) as SaveV3
     invalid.campaign.contractsWon = ['unknown']
     expect(validateSave(invalid)).toBe(false)
+  })
+
+  it('rejects roster tampering: unknown squad ids, roster/operative mismatch', () => {
+    const save = captureSave()
+
+    const badSquad = structuredClone(save) as SaveV3
+    badSquad.app.squad = ['op99']
+    expect(validateSave(badSquad)).toBe(false)
+
+    const badRoster = structuredClone(save) as SaveV3
+    delete badRoster.campaign.roster.op1
+    expect(validateSave(badRoster)).toBe(false)
+
+    const badCandidate = structuredClone(save) as SaveV3
+    badCandidate.campaign.candidates[0].cost = 1
+    expect(validateSave(badCandidate)).toBe(false)
+  })
+
+  it('accepts a fully wiped roster so a lost campaign can rebuild', () => {
+    const wiped = structuredClone(captureSave()) as SaveV3
+    wiped.campaign.operatives = []
+    wiped.campaign.roster = {}
+    wiped.app.squad = []
+    wiped.app.loadout = {}
+    expect(validateSave(wiped)).toBe(true)
   })
 
   it('rejects malformed loadouts: unknown ids, wrong lengths, unknown items', () => {
     const save = captureSave()
 
-    const badOp = structuredClone(save) as SaveV2
-    badOp.app.loadout = { op99: ['med', null] } as SaveV2['app']['loadout']
+    const badOp = structuredClone(save) as SaveV3
+    badOp.app.loadout = { op99: ['med', null] } as SaveV3['app']['loadout']
     expect(validateSave(badOp)).toBe(false)
 
     const badLength = structuredClone(save)
@@ -73,17 +112,33 @@ describe('save validation', () => {
     expect(validateSave(badItem)).toBe(false)
   })
 
-  it('upgrades a v1 blob by adding an empty loadout', () => {
-    const save = captureSave()
-    const v1 = structuredClone(save) as unknown as Record<string, unknown>
+  it('upgrades a v1 blob through the whole chain', () => {
+    const v1 = downgradeToV2(captureSave())
     v1.version = 1
     delete (v1.app as Record<string, unknown>).loadout
     storage.setItem(SAVE_KEY, JSON.stringify(v1))
 
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
-    expect(loaded?.version).toBe(2)
+    expect(loaded?.version).toBe(3)
     expect(loaded?.app.loadout).toEqual({})
+    expect(loaded?.campaign.operatives).toEqual(initialCampaignData().operatives)
+  })
+
+  it('upgrades a v2 blob by seeding the default roster and candidate market', () => {
+    useWorldStore.setState({ t: 5000 })
+    const v2 = downgradeToV2(captureSave())
+    storage.setItem(SAVE_KEY, JSON.stringify(v2))
+
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    const seeded = initialCampaignData()
+    expect(loaded.version).toBe(3)
+    expect(loaded.campaign.operatives.map((o) => o.id)).toEqual(ROSTER.map((o) => o.id))
+    expect(loaded.campaign.candidates).toEqual(seeded.candidates)
+    expect(loaded.campaign.recruitRngState).toBe(seeded.recruitRngState)
+    expect(loaded.campaign.nextCandidateT).toBe(5000 + CANDIDATE_REFRESH_SEC)
   })
 
   it('discards malformed JSON and schema mismatches from storage', () => {
@@ -114,6 +169,7 @@ describe('save round trip', () => {
       reward: 85000,
       bonus: 0,
       deadIds: [],
+      survivorHp: {},
     })
     useResearchStore.getState().start(nodeById('b-propellants'), 1000)
     useCampaignStore.setState({
@@ -164,11 +220,59 @@ describe('save round trip', () => {
     expect(campaign).toMatchObject({
       intelLevel: expected.campaign.intelLevel,
       intelProgress: expected.campaign.intelProgress,
+      operatives: expected.campaign.operatives,
       roster: expected.campaign.roster,
+      candidates: expected.campaign.candidates,
+      recruitRngState: expected.campaign.recruitRngState,
+      nextCandidateT: expected.campaign.nextCandidateT,
       contractsWon: expected.campaign.contractsWon,
       campaignWon: expected.campaign.campaignWon,
       outcomeApplied: 0,
+      lastReport: null,
     })
+  })
+
+  it('reproduces a lived-in roster exactly: a loss, an injury, and a hire', () => {
+    // One KIA opens a bay, one survivor comes back hurt, and a candidate signs.
+    useCampaignStore.getState().reportMission(
+      'm01',
+      {
+        won: true,
+        kills: 5,
+        casualties: 1,
+        timeSec: 500,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: ['op4'],
+        survivorHp: { op1: 0.1, op2: 0.8, op3: 0.9 },
+      },
+      2000,
+    )
+    useAppStore.setState({ squad: ['op2', 'op3'] })
+    const hired = useCampaignStore.getState().candidates[1]
+    useAppStore.getState().hireOperative(hired.id)
+
+    const expected = captureSave()
+    expect(validateSave(expected)).toBe(true)
+    expect(writeSave(storage)).toBe(true)
+    startNewOperation()
+
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    hydrateSave(loaded)
+
+    const campaign = useCampaignStore.getState()
+    expect(campaign.operatives).toEqual(expected.campaign.operatives)
+    expect(campaign.operatives.some((o) => o.id === 'op4')).toBe(false)
+    expect(campaign.operatives.at(-1)?.id).toBe(hired.id)
+    expect(campaign.roster).toEqual(expected.campaign.roster)
+    expect(campaign.roster.op1.status).toBe('INJURED')
+    expect(campaign.candidates).toEqual(expected.campaign.candidates)
+    expect(campaign.recruitRngState).toBe(expected.campaign.recruitRngState)
+    expect(campaign.nextCandidateT).toBe(expected.campaign.nextCandidateT)
+    expect(useAppStore.getState().credits).toBe(expected.app.credits)
   })
 
   it('new operation clears the prior blob and restores campaign defaults', () => {

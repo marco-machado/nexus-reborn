@@ -325,11 +325,10 @@ Tactical progression is research-driven:
 - Effects stack in project-completion order.
 - Completed research is sampled when the mission is created and cannot alter an active deployment.
 
-Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5). There is currently no:
+Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). There is currently no:
 
 - Account level.
 - Operative experience.
-- Permanent operative death.
 - Equipment ownership.
 - Consumable inventory economy.
 
@@ -408,21 +407,32 @@ The latest completed project associated with each bay is displayed as the instal
 
 **Implemented**
 
-- Roster size: eight.
+- Roster cap: eight. The campaign starts at the cap with the authored roster.
 - Deployment size: exactly four.
 - Default squad: Mara, Ghost, Dart, Torq.
 - The player may inspect an operative without assigning them.
 - Assignment and inspection are separate controls.
 - At least one operative must remain assigned while editing the squad.
 - Deployment is disabled until all four bays are filled.
+- The assembly screen shows the live roster count (for example `6 / 8 ON FILE`); the world screen's OPERATIVES readout follows the same live roster.
 
-Injury is enforced:
+Death and injury are enforced:
 
-- An `INJURED` operative cannot be assigned; the team screen disables the control and names the reason.
-- Operatives who die in a mission leave the squad and return as `INJURED` for 36 world hours.
+- An operative killed in a mission is lost for good: the debrief removes them from the roster, lists them under KILLED IN ACTION, and the world feed posts a red loss event naming them. Their bay empties and must be refilled on the assembly screen before the next deployment.
+- A survivor who ends a mission below 35% of maximum health returns `INJURED`. Downtime scales with the missing health: 12 world hours just under the threshold, up to 48 world hours at near-death. Survivors at or above 35% stay `READY`. The debrief lists each new injury with its recovery time.
+- An `INJURED` operative cannot be assigned; the team screen disables the control and names the reason. Newly injured operatives leave the squad at debrief.
 - Recovery runs on the world clock; Raven starts `INJURED` and recovers after 24 world hours.
 
+Recruitment replaces losses:
+
+- The assembly screen's RECRUIT control opens the recruitment market: three procedural candidates at a time, refreshed one new candidate every 24 world hours on the same strategic clock injuries recover on.
+- A candidate carries a procedural name and codename, one of the eight roles, health and speed inside the authored roster's ranges, and the role's authored primary weapon. Portraits derive from stable hashes, so a candidate keeps one face.
+- Hiring costs 16,000–34,000 CR by candidate quality, paid from the credit account; an overdraw is refused, as is a hire past the roster cap.
+- The candidate rng is seeded and serialized with the save, so a reload continues the exact candidate sequence.
+
 ### 9.2 Operative roster
+
+The authored eight are a starting roster, not a fixed cast: deaths remove operatives permanently, and hires from the recruitment market fill the vacated bays (section 9.1). The live roster is store state covered by the versioned save.
 
 | Codename | Name | Role | HP | Speed | Primary | Sidearm | Status | Intended specialty |
 |---|---|---|---:|---:|---|---|---|---|
@@ -1194,7 +1204,10 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Dynamic world events and city ownership changes.
 - Credit economy.
 - Full 21-node research tree with real gameplay effects.
-- Eight-operative roster and four-person assembly.
+- A live operative roster (cap eight) and four-person assembly.
+- Permanent operative death with KIA reporting in the debrief and the world feed.
+- Graded injury recovery scaled by end-of-mission health.
+- A seeded, save-persistent recruitment market with quality-priced hires.
 - Code-derived mission briefing map.
 - One deterministic procedural tactical district.
 - Real-time selection, formation movement, attack, stop, Hold Ground, and Hold Fire.
@@ -1221,7 +1234,6 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Weather effects on gameplay.
 - Influence as a spendable resource.
 - Sector assets, tax, forces, and black-market values as decision systems.
-- Operative capacity `/120`.
 - Sector-intel view.
 - Archives and additional navigation tabs.
 
@@ -1229,7 +1241,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 - Mission outcome effects on city ownership.
 - New contract generation or a larger authored mission set.
-- Permanent operative death, recruitment, and experience.
+- Operative experience.
 - Mission types beyond reach/eliminate/extract.
 - A strategic fail state; the campaign has victory and recoverable pressure only.
 - Tutorials and onboarding.
@@ -1242,7 +1254,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ## 20. Recommended product roadmap
 
-Milestone 1 is complete. The later milestones remain recommendations, not current behavior.
+Milestones 1 and 3 are complete; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining milestones are recommendations, not current behavior.
 
 ### Milestone 1 — Close the campaign loop (complete 2026-07-29)
 
@@ -1267,13 +1279,13 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 4. Author at least two tactical layouts or district archetypes per mission type.
 5. Connect threat, chance, ETA, weather, and sector state to actual mission parameters.
 
-### Milestone 3 — Make squad composition a real strategy
+### Milestone 3 — Make squad composition a real strategy (complete 2026-07-30)
 
 1. Give every role one active ability and one passive. Done 2026-07-30.
 2. Implement sidearm switching. Done 2026-07-30.
 3. Convert inventory display into usable items with finite quantities. Done 2026-07-30.
 4. Add loadout and deployment-mass tradeoffs. Done 2026-07-30.
-5. Add recovery, injury, recruitment, and persistent operative consequences.
+5. Add recovery, injury, recruitment, and persistent operative consequences. Done 2026-07-30.
 
 ### Milestone 4 — Deepen the strategic game
 
@@ -1389,7 +1401,9 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 |---|---|
 | Alert | HUD level derived from the number of living enemies in combat |
 | Awareness | Per-enemy certainty value from 0 to 1 |
+| Candidate | A procedural operative offered by the recruitment market, hired for credits |
 | CorpSec | Armed corporate security enemies |
+| KIA | An operative killed in a mission, removed from the roster permanently |
 | Explicit target | A hostile assigned by right-click attack order |
 | Hold Fire / Tight | Prevent automatic target acquisition |
 | Hold Ground | Pin an operative in place while preserving their parked route |

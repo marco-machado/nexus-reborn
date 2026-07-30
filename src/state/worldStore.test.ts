@@ -185,6 +185,7 @@ describe('mission results', () => {
       reward: 85000,
       bonus: 0,
       deadIds: [],
+      survivorHp: {},
       ...over,
     }
   }
@@ -207,6 +208,38 @@ describe('mission results', () => {
       text: 'STRIKE TEAM 04 OPENS DISTRICT 07 IN NEW CARTHAGE',
     })
     expect(after.unread).toBe(before.unread + 1)
+  })
+
+  it('posts a red KIA feed event naming the operatives lost', () => {
+    const before = useWorldStore.getState()
+    const unread = before.unread
+    const lastId = before.events.at(-1)?.id ?? 0
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ casualties: 2, deadIds: ['op1', 'op2'] }), [
+        'MARA',
+        'GHOST',
+      ])
+    const after = useWorldStore.getState()
+    expect(after.events.at(-1)).toMatchObject({
+      id: lastId + 2,
+      sector: 'eu',
+      kind: 'kia',
+      tone: 'red',
+      text: 'OPERATIVES MARA, GHOST KIA IN NEW CARTHAGE',
+    })
+    // The result event still lands right before the loss line.
+    expect(after.events.at(-2)?.tone).toBe('green')
+    expect(after.unread).toBe(unread + 2)
+  })
+
+  it('a single loss reads as one operative', () => {
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ casualties: 1, deadIds: ['op1'] }), ['MARA'])
+    expect(useWorldStore.getState().events.at(-1)?.text).toBe(
+      'OPERATIVE MARA KIA IN NEW CARTHAGE',
+    )
   })
 
   it('a loss raises unrest and civilian hits add at most five more unrest', () => {

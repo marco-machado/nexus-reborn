@@ -1563,6 +1563,12 @@ export function createWorld(
   function maybeOutcome(): void {
     if (result === 'none' || outcomeSent || world.time - resultAt < OUTCOME_DELAY) return
     outcomeSent = true
+    // End-of-mission health fractions for the debrief injury grading.
+    const survivorHp: Record<string, number> = {}
+    for (const u of units) {
+      if (u.kind !== 'agent' || u.stance === 'dead' || !u.operative) continue
+      survivorHp[u.operative.id] = Math.max(0, Math.min(1, u.hp / u.maxHp))
+    }
     useAppStore.getState().setOutcome({
       won: result === 'won',
       kills,
@@ -1572,6 +1578,7 @@ export function createWorld(
       reward: result === 'won' ? mission.reward : 0,
       bonus: result === 'won' ? bonusEarned : 0,
       deadIds: deadIds.slice(),
+      survivorHp,
     })
   }
 

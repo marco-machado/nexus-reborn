@@ -14,8 +14,9 @@ import {
   hasValidSave,
   startNewOperation,
 } from '../state/save'
-import { ROSTER, missionById, operativeById } from '../game/data'
+import { WEAPONS, missionById } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
+import { ROSTER_CAP } from '../game/recruits'
 import {
   ITEM_LABEL,
   ITEM_MASS_KG,
@@ -35,7 +36,7 @@ import {
 } from '../game/missionParams'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
 import type { ResearchNode } from '../game/research'
-import type { AgentRole, DistrictArchetype, MissionDef, Weather } from '../game/types'
+import type { AgentRole, DistrictArchetype, MissionDef, OperativeDef, Weather } from '../game/types'
 import {
   Panel,
   Chip,
@@ -828,6 +829,92 @@ export function MissionBrief() {
   )
 }
 /* =============================== TEAM SELECT ============================== */
+// Recruitment market overlay: three seeded candidates, one fresh candidate
+// every 24 world hours on the strategic clock. Hiring goes through
+// appStore.hireOperative so the fee and the roster move together.
+function RecruitPanel(props: { onClose: () => void }) {
+  const operatives = useCampaignStore((s) => s.operatives)
+  const candidates = useCampaignStore((s) => s.candidates)
+  const nextCandidateT = useCampaignStore((s) => s.nextCandidateT)
+  const credits = useAppStore((s) => s.credits)
+  const hire = useAppStore((s) => s.hireOperative)
+  const worldT = useWorldStore((s) => s.t)
+  const full = operatives.length >= ROSTER_CAP
+  const hoursToNext = Math.max(1, Math.ceil((nextCandidateT - worldT) / 3600))
+  return (
+    <div className="ts-recruit-overlay">
+      <div className="ts-recruit corners" role="dialog" aria-label="RECRUITMENT MARKET">
+        <header className="ts-recruit-head">
+          <b>RECRUITMENT MARKET</b>
+          <span className="dim">
+            ROSTER {operatives.length} / {ROSTER_CAP} // FUNDS {fmt(credits)} CR
+          </span>
+          <button
+            type="button"
+            className="btn"
+            aria-label="CLOSE THE RECRUITMENT MARKET"
+            onClick={act(props.onClose)}
+          >
+            CLOSE
+          </button>
+        </header>
+        <div className="ts-rec-cards">
+          {candidates.map((c) => {
+            const short = credits < c.cost
+            const blocked = full || short
+            return (
+              <div key={c.id} className="ts-rec-card corners">
+                <div className="ts-rec-id">
+                  <span className="ts-rec-portrait">
+                    <Portrait op={c} size={46} />
+                  </span>
+                  <span className="ts-rec-main">
+                    <b>{c.codename}</b>
+                    <i className="dim">{c.name}</i>
+                    <i className="dim">{ROLE_LABEL[c.role]}</i>
+                  </span>
+                </div>
+                <div className="ts-rec-stats">
+                  <span className="kv mini">
+                    <span>MAX HP</span>
+                    <b>{c.maxHp}</b>
+                  </span>
+                  <span className="kv mini">
+                    <span>SPEED</span>
+                    <b>{c.speed.toFixed(1)} M/S</b>
+                  </span>
+                </div>
+                <div className="ts-rec-weapon dim">{WEAPONS[c.weapon].name}</div>
+                <button
+                  type="button"
+                  className="btn amber ts-rec-hire"
+                  disabled={blocked}
+                  aria-label={'HIRE ' + c.codename + ' // ' + fmt(c.cost) + ' CR'}
+                  title={
+                    full
+                      ? 'ROSTER AT CAPACITY'
+                      : short
+                        ? 'INSUFFICIENT CREDITS'
+                        : 'SIGN ' + c.codename + ' TO THE ROSTER'
+                  }
+                  onClick={act(() => hire(c.id))}
+                >
+                  HIRE // {fmt(c.cost)} CR
+                </button>
+              </div>
+            )
+          })}
+          {candidates.length === 0 && (
+            <div className="ts-rec-none dim">NO CANDIDATES ON FILE</div>
+          )}
+        </div>
+        <div className="ts-recruit-foot dim">
+          ONE NEW CANDIDATE EVERY 24 WORLD HOURS // NEXT IN ~{hoursToNext}H WORLD TIME
+        </div>
+      </div>
+    </div>
+  )
+}
 export function TeamSelect() {
   const goto = useAppStore((s) => s.goto)
   const squad = useAppStore((s) => s.squad)
@@ -836,16 +923,57 @@ export function TeamSelect() {
   const setLoadout = useAppStore((s) => s.setLoadout)
   const missionId = useAppStore((s) => s.missionId)
   const roster = useCampaignStore((s) => s.roster)
+  const operatives = useCampaignStore((s) => s.operatives)
   const [focusId, setFocusId] = useState<string | null>(null)
+  const [recruitOpen, setRecruitOpen] = useState(false)
   const mission = missionId ? missionById(missionId) : null
   const focus = useMemo(() => {
-    const id = focusId ?? squad[0] ?? ROSTER[0].id
-    return ROSTER.find((o) => o.id === id) ?? ROSTER[0]
-  }, [focusId, squad])
+    const id = focusId ?? squad[0] ?? operatives[0]?.id
+    return operatives.find((o) => o.id === id) ?? operatives[0] ?? null
+  }, [focusId, squad, operatives])
   // Completed research rides with the operative: the same numbers the mission
   // builds units from.
   const done = useResearchStore((s) => s.done)
   const bonus = crewBonus(done)
+
+  // A campaign can lose its whole roster. The screen stays up so the market
+  // can rebuild it; everything roster-bound waits for the first hire.
+  if (!focus) {
+    return (
+      <div className="screen ts">
+        <header className="ts-head">
+          <div>
+            <h1 className="screen-title">OPERATIVE ASSEMBLY</h1>
+            <div className="ts-sub">
+              <span className="ts-strike">STRIKE TEAM 04</span>
+              <Chip tone="red">NO OPERATIVES ON FILE</Chip>
+            </div>
+          </div>
+        </header>
+        <div className="ts-none">
+          <b>ROSTER EMPTY</b>
+          <span className="dim">RECRUIT REPLACEMENTS TO REBUILD STRIKE TEAM 04</span>
+          <button
+            type="button"
+            className="cta"
+            aria-label="OPEN THE RECRUITMENT MARKET"
+            onClick={act(() => setRecruitOpen(true))}
+          >
+            <span className="cta-inner">RECRUIT &gt;&gt;</span>
+          </button>
+          <button
+            type="button"
+            className="btn"
+            aria-label="RETURN TO THE WORLD NETWORK"
+            onClick={act(() => goto('world'))}
+          >
+            &lt; RETURN
+          </button>
+        </div>
+        {recruitOpen && <RecruitPanel onClose={() => setRecruitOpen(false)} />}
+      </div>
+    )
+  }
   const maxHp = focus.maxHp + bonus.maxHp
   const speed = focus.speed + bonus.speed
   const fh = hashOf(focus.id + focus.name)
@@ -857,8 +985,11 @@ export function TeamSelect() {
   }
   const primary = squadWeapon(focus.weapon, done)
   const sidearm = squadWeapon(focus.sidearm, done)
+  const squadOps = squad
+    .map((id) => operatives.find((o) => o.id === id))
+    .filter((o): o is OperativeDef => o !== undefined)
   // The same model createWorld applies: research max HP counts, items count.
-  const mass = squadMassKg(squad.map(operativeById), bonus.maxHp, loadout)
+  const mass = squadMassKg(squadOps, bonus.maxHp, loadout)
   const tier = massTier(mass)
   const overKg = mass - MASS_LIMIT_KG
   const ready =
@@ -900,12 +1031,16 @@ export function TeamSelect() {
         <aside className="ts-roster">
           <Panel
             title="ROSTER DATABASE"
-            right={<span className="dim">{ROSTER.length} ON FILE</span>}
+            right={
+              <span className="dim">
+                {operatives.length} / {ROSTER_CAP} ON FILE
+              </span>
+            }
             className="ts-roster-panel"
             bodyClassName="ts-roster-body"
           >
             <ScrollBox className="ts-roster-list" dep={squad}>
-              {ROSTER.map((o, i) => {
+              {operatives.map((o, i) => {
                 const inSquad = squad.includes(o.id)
                 const condition = roster[o.id]?.status ?? 'INJURED'
                 // reading up on an operative must not move them in or out of the
@@ -966,6 +1101,19 @@ export function TeamSelect() {
                   </div>
                 )
               })}
+              <button
+                type="button"
+                className="btn amber ts-recruit-btn"
+                aria-label={
+                  'OPEN THE RECRUITMENT MARKET // ROSTER ' +
+                  operatives.length +
+                  ' OF ' +
+                  ROSTER_CAP
+                }
+                onClick={act(() => setRecruitOpen(true))}
+              >
+                RECRUIT + ({operatives.length}/{ROSTER_CAP})
+              </button>
               <div className="ts-roster-foot">
                 <span className="dim">ROSTER SYNC</span>
                 <span className="dim">00:12:44 AGO</span>
@@ -986,7 +1134,8 @@ export function TeamSelect() {
                 </div>
               )
             }
-            const o = operativeById(id)
+            const o = operatives.find((x) => x.id === id)
+            if (!o) return null
             const condition = roster[id]?.status ?? 'INJURED'
             const h = hashOf(o.id + o.codename)
             return (
@@ -1201,10 +1350,9 @@ export function TeamSelect() {
       {/* bottom deploy strip */}
       <footer className="ts-foot">
         <div className="ts-roles">
-          {squad.map((id) => {
-            const o = operativeById(id)
+          {squadOps.map((o) => {
             return (
-              <div key={id} className="ts-role corners">
+              <div key={o.id} className="ts-role corners">
                 <span className="ts-role-glyph">
                   <RoleGlyph role={o.role} size={18} />
                 </span>
@@ -1271,6 +1419,7 @@ export function TeamSelect() {
           </div>
         </div>
       </footer>
+      {recruitOpen && <RecruitPanel onClose={() => setRecruitOpen(false)} />}
     </div>
   )
 }
@@ -1291,6 +1440,7 @@ export function Debrief() {
   const missionId = useAppStore((s) => s.missionId)
   const outcomeSerial = useAppStore((s) => s.outcomeSerial)
   const m = missionId ? missionById(missionId) : null
+  const report = useCampaignStore((s) => s.lastReport)
   const won = outcome?.won ?? false
   const fine = outcome ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
@@ -1299,12 +1449,24 @@ export function Debrief() {
     if (useCampaignStore.getState().outcomeApplied >= outcomeSerial) return
     const worldT = useWorldStore.getState().t
     useCampaignStore.getState().reportMission(missionId, outcome, worldT)
-    useWorldStore.getState().applyMissionResult(missionId, outcome)
-    if (outcome.deadIds.length > 0) {
+    // The campaign report resolved codenames before the KIA left the roster;
+    // the world feed prints them, and dead or newly injured operatives leave
+    // the squad so the bays are refilled before the next deployment.
+    const debrief = useCampaignStore.getState().lastReport
+    useWorldStore
+      .getState()
+      .applyMissionResult(missionId, outcome, debrief?.kia.map((k) => k.codename) ?? [])
+    const out = new Set([
+      ...outcome.deadIds,
+      ...(debrief?.injured.map((i) => i.id) ?? []),
+    ])
+    if (out.size > 0) {
       const dead = new Set(outcome.deadIds)
-      useAppStore.setState((state) => ({
-        squad: state.squad.filter((id) => !dead.has(id)),
-      }))
+      useAppStore.setState((state) => {
+        const loadout = { ...state.loadout }
+        for (const id of dead) delete loadout[id]
+        return { squad: state.squad.filter((id) => !out.has(id)), loadout }
+      })
     }
     // A completed contract costs its ETA in world days. Labs and recovery
     // clocks run across the jump: their sync sees the advanced time at once.
@@ -1329,6 +1491,22 @@ export function Debrief() {
       value: outcome ? outcome.casualties : '--',
       tone: outcome && outcome.casualties > 0 ? 'red' : 'teal',
     },
+    ...(outcome && report && report.kia.length > 0
+      ? [
+          {
+            label: 'KILLED IN ACTION',
+            value: report.kia.map((k) => k.codename).join(', '),
+            tone: 'red',
+          },
+        ]
+      : []),
+    ...(outcome && report
+      ? report.injured.map((inj) => ({
+          label: 'INJURED // ' + inj.codename,
+          value: Math.ceil(inj.downtimeSec / 3600) + 'H RECOVERY',
+          tone: 'amber',
+        }))
+      : []),
     {
       label: 'COLLATERAL',
       value: outcome ? outcome.civiliansHit : '--',

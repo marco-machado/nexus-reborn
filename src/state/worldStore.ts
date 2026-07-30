@@ -56,7 +56,7 @@ export function hhmm(t: number): string {
 
 /* --------------------------------- events --------------------------------- */
 
-export type EventKind = 'riot' | 'seizure' | 'trade' | 'raid' | 'blackout'
+export type EventKind = 'riot' | 'seizure' | 'trade' | 'raid' | 'blackout' | 'kia'
 export type EventTone = 'red' | 'green' | 'amber' | 'dim'
 
 export interface WorldEvent {
@@ -106,6 +106,7 @@ const TONE: Record<EventKind, EventTone> = {
   trade: 'dim',
   raid: 'amber',
   blackout: 'dim',
+  kia: 'red',
 }
 
 interface RngCursor {
@@ -178,6 +179,8 @@ const LINES: Record<EventKind, string[]> = {
   raid: ['CORPSEC RAID SWEEPS ', 'CURFEW ENFORCED IN ', 'CORPSEC RETAKES THE DOCKS IN '],
   trade: [' SECURES TRADE AGREEMENT IN ', ' OPENS A FREE PORT IN ', ' BUYS THE UTILITY GRID IN '],
   seizure: [' TAKES CONTROL OF ', ' SEIZES THE COUNCIL IN ', ' ANNEXES THE HOLDINGS OF '],
+  // Never rolled: KIA events are posted by applyMissionResult alone.
+  kia: [],
 }
 
 function rollEvent(
@@ -261,7 +264,9 @@ export interface WorldStoreState {
   rngState: number
   tick: (dt: number) => void
   advanceDays: (days: number) => void
-  applyMissionResult: (missionId: string, outcome: MissionOutcome) => void
+  // `kia` carries the codenames of operatives lost in the mission; the feed
+  // posts a red loss line for them alongside the result event.
+  applyMissionResult: (missionId: string, outcome: MissionOutcome, kia?: string[]) => void
   setSpeed: (speed: number) => void
   togglePause: () => void
   select: (id: SectorId) => void
@@ -371,7 +376,7 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       }
     }),
 
-  applyMissionResult: (missionId, outcome) =>
+  applyMissionResult: (missionId, outcome, kia) =>
     set((state) => {
       const mission = missionById(missionId)
       const missionIndex = Math.max(0, Number.parseInt(mission.id.slice(1), 10) - 1)
@@ -398,11 +403,29 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
           ? `STRIKE TEAM 04 OPENS ${mission.district} IN ${mission.city}`
           : `STRIKE TEAM 04 WITHDRAWS FROM ${mission.district} IN ${mission.city}`,
       }
-      const events = [...state.events, event]
+      let events = [...state.events, event]
+      let added = 1
+      if (kia && kia.length > 0) {
+        events = [
+          ...events,
+          {
+            id: event.id + 1,
+            t: state.t,
+            sector: mission.sector,
+            kind: 'kia' as const,
+            tone: TONE.kia,
+            text:
+              (kia.length === 1 ? 'OPERATIVE ' : 'OPERATIVES ') +
+              kia.join(', ') +
+              ` KIA IN ${mission.city}`,
+          },
+        ]
+        added += 1
+      }
       return {
         sectors: { ...state.sectors, [mission.sector]: sector },
         events: events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events,
-        unread: state.unread + 1,
+        unread: state.unread + added,
       }
     }),
 

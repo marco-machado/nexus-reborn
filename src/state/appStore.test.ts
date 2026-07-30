@@ -26,6 +26,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     reward: 85000,
     bonus: 0,
     deadIds: [],
+    survivorHp: {},
     ...over,
   }
 }
@@ -162,6 +163,49 @@ describe('credits', () => {
   it('ignores zero and negative amounts', () => {
     useAppStore.getState().spendCredits(0)
     useAppStore.getState().spendCredits(-500)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+})
+
+describe('hireOperative', () => {
+  function openBay(): void {
+    // The campaign starts at the cap; a loss opens the bay a hire fills.
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'] }), 0)
+  }
+
+  it('deducts the candidate fee and signs the candidate', () => {
+    openBay()
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.getState().hireOperative(candidate.id)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS - candidate.cost)
+    expect(
+      useCampaignStore.getState().operatives.some((o) => o.id === candidate.id),
+    ).toBe(true)
+  })
+
+  it('blocks the hire at the roster cap without charging', () => {
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.getState().hireOperative(candidate.id)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(useCampaignStore.getState().candidates[0]).toEqual(candidate)
+  })
+
+  it('blocks an overdraw without touching the roster', () => {
+    openBay()
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.setState({ credits: candidate.cost - 1 })
+    useAppStore.getState().hireOperative(candidate.id)
+    expect(useAppStore.getState().credits).toBe(candidate.cost - 1)
+    expect(
+      useCampaignStore.getState().operatives.some((o) => o.id === candidate.id),
+    ).toBe(false)
+  })
+
+  it('ignores an unknown candidate id', () => {
+    openBay()
+    useAppStore.getState().hireOperative('ghost-id')
     expect(useAppStore.getState().credits).toBe(START_CREDITS)
   })
 })

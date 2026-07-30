@@ -1201,6 +1201,14 @@ describe('objectives and outcome', () => {
       casualties: 0,
       civiliansHit: 0,
     })
+    // Every survivor reports an end-of-mission health fraction for the
+    // debrief injury grading.
+    const survivorHp = app.outcome?.survivorHp ?? {}
+    expect(Object.keys(survivorHp).sort()).toEqual([...DEFAULT_SQUAD].sort())
+    for (const frac of Object.values(survivorHp)) {
+      expect(frac).toBeGreaterThan(0)
+      expect(frac).toBeLessThanOrEqual(1)
+    }
     expect(app.credits).toBe(128450 + MISSION.reward)
   })
 

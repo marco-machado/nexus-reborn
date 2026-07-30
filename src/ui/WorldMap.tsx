@@ -14,7 +14,8 @@ import {
   useWorldStore,
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
-import { MISSIONS, ROSTER } from '../game/data'
+import { MISSIONS } from '../game/data'
+import { ROSTER_CAP } from '../game/recruits'
 import { missionChance, missionMods } from '../game/missionParams'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
@@ -582,6 +583,7 @@ export function WorldMap() {
   const intelProgress = useCampaignStore((s) => s.intelProgress)
   const campaignWon = useCampaignStore((s) => s.campaignWon)
   const contractsWon = useCampaignStore((s) => s.contractsWon)
+  const operativeCount = useCampaignStore((s) => s.operatives.length)
   const researched = useResearchStore((s) => s.done)
   useWorldClock()
 
@@ -841,7 +843,7 @@ export function WorldMap() {
           </div>
           <div className="kv">
             <span>OPERATIVES</span>
-            <b>{ROSTER.length} / 120</b>
+            <b>{operativeCount} / {ROSTER_CAP}</b>
           </div>
           <div className="kv">
             <span>INTEL LEVEL</span>

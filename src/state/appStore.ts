@@ -17,6 +17,9 @@ export interface MissionOutcome {
   // Optional-objective pay, on top of the contract fee. Zero on a loss.
   bonus: number
   deadIds: string[]
+  // End-of-mission health of each surviving deployed operative, as a fraction
+  // of max HP. The debrief grades injuries from it (campaignStore).
+  survivorHp: Record<string, number>
 }
 
 // Every contract carries a collateral clause. Each bystander caught by a round
@@ -48,10 +51,11 @@ export interface AppState {
   toggleOperative: (id: string) => void
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
   spendCredits: (amount: number) => void
+  hireOperative: (candidateId: string) => void
   setOutcome: (o: MissionOutcome) => void
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   phase: 'menu',
   missionId: null,
   squad: [...DEFAULT_SQUAD],
@@ -85,6 +89,16 @@ export const useAppStore = create<AppState>((set) => ({
   // Funds research. Guarded here so no caller can overdraw the account.
   spendCredits: (amount) =>
     set((s) => (amount > 0 && s.credits >= amount ? { credits: s.credits - amount } : s)),
+  // Signs a recruitment candidate. The fee clears here first, so a blocked
+  // hire (unknown candidate, roster at cap, overdraw) costs nothing.
+  hireOperative: (candidateId) => {
+    const candidate = useCampaignStore
+      .getState()
+      .candidates.find((c) => c.id === candidateId)
+    if (!candidate || get().credits < candidate.cost) return
+    if (!useCampaignStore.getState().acceptHire(candidateId)) return
+    set((s) => ({ credits: s.credits - candidate.cost }))
+  },
   setOutcome: (o) =>
     set((s) => ({
       outcome: o,
