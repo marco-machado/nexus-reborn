@@ -1,8 +1,8 @@
 # Nexus Reborn — Game Design Document
 
 **Document type:** Codebase-derived design specification  
-**Project version reviewed:** `e270e41` plus the milestone 1 validation fixes  
-**Review date:** 2026-07-29  
+**Project version reviewed:** `c248aa2`  
+**Review date:** 2026-07-30  
 **Primary platform:** Desktop web browser  
 **Current implementation:** React 19, TypeScript, React Three Fiber, Three.js WebGPU/WebGL2, Zustand  
 
@@ -29,7 +29,7 @@ Where code and decorative UI disagree, the simulation code is treated as authori
 
 **Nexus Reborn** is a cyberpunk corporate strategy and real-time tactics game in which the player acts as an executive operations director. From a global command network, the player monitors a changing corporate world, funds weapons and augmentation research, selects contracts, assembles a four-operative strike team, and commands that team through dangerous rain-soaked city districts.
 
-The current build delivers a persistent three-contract campaign inside a broader strategic shell; one contract has a full authored design and two run on placeholder objective sets. Its most distinctive qualities are:
+The current build delivers a persistent three-contract campaign inside a broader strategic shell; all three contracts carry a full authored design across three district archetypes. Its most distinctive qualities are:
 
 - A dense, diegetic corporate command interface.
 - A four-operative real-time tactical control model.
@@ -51,7 +51,7 @@ The current build delivers a persistent three-contract campaign inside a broader
 | Input | Keyboard and mouse |
 | Target display | Desktop, minimum 1280×720 |
 | Session structure | Strategic planning → briefing → squad assembly → tactical mission → debrief |
-| Current content | Three playable contracts (two on placeholder objective sets), eight operatives, five weapons, 21 research projects |
+| Current content | Three authored contracts plus a generated market, eight operatives, five weapons, 21 research projects |
 | Monetization | None represented in the codebase |
 | Networking | Single-player; no multiplayer systems represented |
 | Persistence | Versioned localStorage autosave; tactical mission state stays memory-only |
@@ -203,6 +203,12 @@ flowchart LR
 4. Complete the project.
 5. Unlock dependent projects.
 6. Apply completed effects to future deployments.
+
+#### Campaign arc
+
+The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it.
+
+There is no matching fail state. A lost mission costs its payout, drops the source sector's control, raises its unrest, and can cost operatives permanently, but the campaign continues and every one of those values can be recovered. Sector crisis (section 6.2) is the strongest pressure the strategic layer applies, and it too clears.
 
 ---
 
@@ -361,7 +367,7 @@ Influence points are earned three ways and spent on the three sector actions (se
 - **+2** more for a clean win (zero civilians hit by the squad).
 - **+1** per 12 world hours while the influence index holds above **55** (the trickle).
 
-Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v5). Every balance number lives in `src/game/influence.ts`.
+Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v6). Every balance number lives in `src/game/influence.ts`.
 
 ---
 
@@ -658,9 +664,9 @@ Enemy behavior uses three states:
 
 #### Vision
 
-- Maximum vision range: **14 m**.
+- Maximum vision range: **14 m** in clear weather, **12.6 m** under light rain, **11.2 m** under heavy rain.
 - Vision cone: **110° total**.
-- Omnidirectional notice radius: **4.5 m**.
+- Omnidirectional notice radius: **4.5 m**. Weather does not change it.
 - Vision requires clear grid line of sight.
 - Continuous sight required for certainty:
   - Approximately 0.45 seconds at close range.
@@ -754,23 +760,29 @@ This is a central expression of the collateral pillar and should remain highly l
 
 ### 11.10 Objectives
 
-Supported objective types:
+Seven objective kinds, defined as `ObjectiveKind` in `game/types.ts` and driven by data alone:
 
-- Reach a zone.
-- Eliminate all living enemies with a specified tag.
-- Extract every surviving operative.
+| Kind | Completes when |
+|---|---|
+| `reach-zone` | Any living operative enters the radius |
+| `eliminate-tag` | No living enemy with the tag remains |
+| `extract` | Every surviving operative is inside the extraction radius |
+| `interact` | The channel at the point reaches `durationSec` |
+| `escort` | Every vip is alive and inside the target zone |
+| `destroy` | No device with the tag is left alive |
+| `defend` | The hold timer at the zone reaches zero |
 
-Objectives are strictly sequential. A later objective cannot complete early.
+An objective names its zone directly or resolves one from `CityData.landmarks`, so authored data never carries coordinates the generator owns. A `defend` objective also carries a `WaveSpec`: a unit count, a weapon list, and named entry landmarks. The wave spawns when the objective activates.
 
-Completion rules:
+`interact` and `defend` share one timing rule: the channel or the hold advances only while a living operative stands in the zone, and an empty zone pauses it where it stands rather than resetting it. A dead vip voids every unfinished `escort`. An optional `destroy` whose device dies to non-squad fire fails rather than completing.
 
-- Reach Zone completes when any living operative enters the radius.
-- Eliminate Tag completes when no living enemy with the tag remains.
-- Extract completes when every surviving operative is inside the extraction radius.
+Required objectives are strictly sequential. A later required objective cannot complete early.
+
+Optional objectives are the exception. An optional objective activates with the required objective it precedes in the list, never blocks the sequence, and pays `bonusReward` on top of the contract when it completes. A failed or ignored optional objective costs nothing.
 
 ### 11.11 Win and loss
 
-**Win:** All mission objectives complete.  
+**Win:** Every required objective completes. Optional objectives do not gate the win.  
 **Loss:** No living operatives remain.
 
 The HUD presents the result immediately. After a 2.5-second delay, the game enters the debrief.
@@ -783,7 +795,9 @@ The debrief reports:
 - Civilian collateral count.
 - Mission time.
 - Contract value when relevant.
+- Optional bonus when an optional objective completed.
 - Collateral penalty when relevant.
+- Contract ETA spent as world time.
 - Net payout.
 - New account balance.
 
@@ -795,13 +809,15 @@ The debrief reports:
 
 Contract supply is the authored three plus a procedural stream.
 
-| Codename | Location | Type | Client | Threat | Reward | Chance | ETA | Status |
-|---|---|---|---|---|---:|---:|---:|---|
-| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | 78% | 2 days | Playable |
-| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | 64% | 4 days | Intel level 2; placeholder objective set |
-| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | 82% | 3 days | Intel level 2; placeholder objective set |
+| Codename | Location | Type | Client | Threat | Reward | Archetype | Chance | ETA | Status |
+|---|---|---|---|---|---:|---|---:|---:|---|
+| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | 41% | 2 days | Playable |
+| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | 59% | 4 days | Playable; intel level 2 |
+| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | 79% | 3 days | Playable; intel level 2 |
 
-Displayed chance and ETA are authored presentation values. They do not affect simulation outcomes or strategic time.
+Reward and ETA are authored. Chance is not: `missionChance` in `game/missionParams.ts` derives it from threat, weather, the source sector's control and unrest, and the count of completed research, then clamps it to 35–95. The percentages above are the campaign-start figures, with no research done and the sectors at their opening values; they move as the campaign moves. At intel level 2+ the brief hides the percentage and shows the computed risk index instead (section 6.5).
+
+ETA is spent, not displayed: the debrief advances the strategic clock by the contract's `etaDays`, so a long contract costs world time that research and injury recovery run through.
 
 **Generated contracts** (`src/game/contracts.ts`) keep the market stocked beside the authored three:
 
@@ -810,7 +826,7 @@ Displayed chance and ETA are authored presentation values. They do not affect si
 - Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.
 - Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.
 - Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.
-- The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v4), so a reload reproduces the same open contracts.
+- The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v6), so a reload reproduces the same open contracts.
 
 ### 12.2 Glass Veil
 
@@ -820,13 +836,12 @@ CorpSec has sealed District 07 behind an Omnicorp checkpoint. Sable Enterprises 
 
 #### Conditions
 
-- Heavy rain.
-- Reduced-visibility framing.
-- Moderate civilian density.
+- Heavy rain: guard sight scales to 0.8 and weapon noise to 0.85.
+- Moderate civilian density: 22 bystanders, 28 when the source sector holds above 20 unrest.
 - Low collateral tolerance.
-- Severe threat rating.
+- Severe threat rating: three extra street patrols on top of the five base ones, four where unrest is high; enemy health scales to 1.2, or 1.25 where the sector holds above 60 control.
 
-Rain is visual. It does not currently change sight distance, accuracy, movement, or sound.
+Heavy rain is the squad's ally here: it is the largest sight penalty in the game, and it is why a Severe contract still reads at a workable chance. It does not change accuracy or movement.
 
 #### Objective sequence
 
@@ -834,18 +849,90 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
    - Any living operative enters the checkpoint zone.
 2. **Eliminate the CorpSec garrison.**
    - Kill the seven checkpoint enemies tagged `garrison`.
-   - Five untagged street patrols are optional unless they threaten the squad.
+   - The eight untagged street patrols are optional unless they threaten the squad.
 3. **Extract the squad.**
    - Move every surviving operative back to the southern insertion zone.
 
 #### Tactical arc
 
 - Approach from the comparatively low-rise southern edge.
-- Read and bypass or engage five street patrols.
+- Read and bypass or engage eight street patrols.
 - Manage civilians who flee across fire lanes.
 - Breach the guarded northern plaza.
 - Eliminate a six-unit mixed rifle/SMG garrison and one 80-HP longrifle guard.
 - Return south with all survivors.
+
+### 12.3 Hollow Crown
+
+#### Premise
+
+CorpSec holds a Helix neurochem architect in a detention compound in District 21, and intends to move the asset before the next maglev window. Helix Corp pays for the architect alive and nothing for a body. The squad inserts on the south perimeter and works east to the compound under light rain.
+
+#### Conditions
+
+- Light rain: guard sight scales to 0.9 and weapon noise to 0.95.
+- Low civilian density: 14 bystanders, 20 when the source sector holds above 20 unrest.
+- High threat rating: two extra street patrols on top of the four base ones, three where unrest is high; enemy health scales to 1.1, or 1.15 where the sector holds above 60 control.
+- The compound garrison can be bypassed. Engagement is optional.
+
+The compound archetype walls a detention block into the eastern half, between the first two cross streets. It has one gated south entry and one breachable side entry; the side flank comes from seed parity, so the two authored variants mirror each other. Cell blocks line the north wall, with a records hut at the server corner.
+
+#### Objective sequence
+
+1. **Reach the compound gate.**
+   - Any living operative enters the gate zone.
+2. **Pull the detention server.** *(Optional, +9,000 CR)*
+   - Channel four seconds at the records hut. Activates with objective 1 and never blocks the sequence.
+3. **Override the cell block locks.**
+   - Channel five seconds at the cell block console.
+4. **Extract the Helix asset.**
+   - Walk the freed vip to the extraction pad alive.
+5. **Extract the squad.**
+   - Move every surviving operative into the extraction zone.
+
+#### Tactical arc
+
+- Cross the southern blocks past six street patrols.
+- Choose the gate or the breachable side wall; the side entry skips most of the interior garrison.
+- Hold the console position for the full channel while a six-unit garrison patrols inside the walls.
+- Escort a fragile vip out through whatever the squad has already stirred up.
+- The optional server sits away from the console, so the bonus costs exposure time.
+
+### 12.4 Rust Haven
+
+#### Premise
+
+Stratos Industries has located an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates in District 03. The squad drops the relays, then holds the yard while the burn takes the grid down.
+
+#### Conditions
+
+- Clear night: guards see and hear at full range.
+- Sparse civilian density: 8 bystanders, 14 where unrest is high. The industrial band is mostly empty.
+- Moderate threat rating: three base street patrols and no threat bonus, one more where unrest is high; enemy health scales to 1.0, or 1.05 where the sector holds above 60 control.
+- Demolition cells are the fast tool against the devices. Gunfire works, slowly.
+
+The industrial archetype fences a relay yard into the eastern half, between the first two cross streets, with two gates and an inner fence splitting it into two sub-yards. The split axis comes from seed parity. Streets run wider than the other archetypes: 8 m cross streets against 7 m.
+
+#### Objective sequence
+
+1. **Reach the relay yard.**
+   - Any living operative enters the first sub-yard.
+2. **Drop the backup transformer.** *(Optional, +6,000 CR)*
+   - Destroy the device tagged `transformer` in the second sub-yard.
+3. **Destroy the three fuel relays.**
+   - Two sit in the first sub-yard, one in the second.
+4. **Hold the yard for the burn.**
+   - Keep the squad in the yard for 45 seconds against a five-unit CorpSec wave entering through both gate approaches.
+5. **Extract the squad.**
+   - Move every surviving operative into the extraction zone.
+
+#### Tactical arc
+
+- Bypass three street patrols on a quiet approach; the yard guard can be walked past on the way in.
+- Clear or avoid four yard guards before touching the devices.
+- Spend grenades on the relays or accept a long, loud small-arms burn.
+- The defend objective inverts the mission: the squad has been the aggressor until the wave arrives, then holds ground it just made noisy.
+- The optional transformer sits in the far sub-yard, so taking it commits the squad deeper before the wave.
 
 ---
 
@@ -1219,10 +1306,23 @@ Avoid increasing difficulty by removing minimap information without offering com
 - WebGL2 fallback occurs through renderer initialization.
 - ACES filmic tone mapping.
 - Emissive MRT bloom pipeline.
-- Device pixel ratio constrained to 1–1.75.
 - Static city geometry uses instancing.
 - Units and effects use pooled geometry and preallocated buffers.
 - Per-frame hot paths are designed to avoid allocation.
+
+#### Quality tiers
+
+Three tiers set the renderer's cost, resolved once at mission mount and never read per frame. The table is data in `game/quality.ts`:
+
+| Tier | Device pixel ratio | Rain density | Bloom |
+|---|---:|---:|---|
+| HIGH | 1.75 max | 100% | On |
+| MEDIUM | 1.25 max | 50% | On |
+| LOW | 1.0 max | 15% | Off |
+
+The settings panel offers AUTO, HIGH, MED, and LOW, and AUTO is the default. AUTO probes the renderer backend at mount: a WebGPU context runs HIGH, the WebGL2 fallback MEDIUM. Building ghosting is tactical readability, so it survives every tier.
+
+A frame-time governor guards the setting. It ignores the first 8 seconds, because WebGPU pipeline compiles distort the opening frames. After that, a moving average that holds above **28 ms** for a continuous 6 seconds steps the persisted setting down one tier, and the comm log posts the change. LOW has nowhere further to fall, and the player can always set a tier by hand.
 
 ### 18.5 Determinism
 
@@ -1285,8 +1385,8 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ### 19.2 Scaffolded or presentation-only
 
-- Contract ETA, and the projected-success chance below intel level 2 (at 2+ the brief shows the computed risk index instead).
-- Weather effects on gameplay.
+- Nothing on the contract card. Chance is derived and ETA is spent as world time at the debrief (section 12.1); at intel level 2+ the brief replaces the chance readout with the computed risk index.
+- Weather beyond guard sight and weapon noise. Rain does not change accuracy, movement speed, or the omnidirectional notice radius, and there is no in-mission weather change.
 - Sector assets and black-market values as decision systems. Defense rating and garrison condition feed generated contract threat, and tax yield now falls under unrest pressure; assets and black market stay presentation.
 - Sector-intel view (the dead button; the sector panel's event forecast covers the intel readout).
 - Archives and additional navigation tabs.
@@ -1301,67 +1401,14 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ---
 
-## 20. Recommended product roadmap
-
-Every milestone is complete: Milestone 2 shipped with the objective-engine work (the full Hollow Crown and Rust Haven designs, section 12), and Milestone 5 items 3-5 closed on 2026-07-30. The roadmap below is a record, not a backlog.
-
-### Milestone 1 — Close the campaign loop (complete 2026-07-29)
-
-1. Add save/load for credits, world time, sectors, city ownership, research, intel, and operative state. Done.
-2. Make mission outcomes change the strategic world. Done for sector control, unrest, and the event feed.
-3. Award intel and unlock Hollow Crown and Rust Haven. Done, with placeholder objective sets.
-4. Give the campaign an explicit success condition and recoverable failure pressure. Done.
-5. Prevent injured operatives from deploying. Done.
-
-Known limits: missions do not flip city ownership (Glass Veil's client holds no cities); intel's second use waits for Milestone 4; Milestone 2 owns the true Hollow Crown and Rust Haven designs.
-
-### Milestone 2 — Reach a minimum viable content set
-
-1. Implement Hollow Crown as an extraction/rescue mission.
-2. Implement Rust Haven as a sabotage mission.
-3. Add objective primitives:
-   - Interact/hack.
-   - Escort/rescue.
-   - Destroy/sabotage.
-   - Defend for time.
-   - Optional objective.
-4. Author at least two tactical layouts or district archetypes per mission type.
-5. Connect threat, chance, ETA, weather, and sector state to actual mission parameters.
-
-### Milestone 3 — Make squad composition a real strategy (complete 2026-07-30)
-
-1. Give every role one active ability and one passive. Done 2026-07-30.
-2. Implement sidearm switching. Done 2026-07-30.
-3. Convert inventory display into usable items with finite quantities. Done 2026-07-30.
-4. Add loadout and deployment-mass tradeoffs. Done 2026-07-30.
-5. Add recovery, injury, recruitment, and persistent operative consequences. Done 2026-07-30.
-
-### Milestone 4 — Deepen the strategic game (complete 2026-07-30)
-
-1. Connect control, unrest, defense, garrisons, and ownership to contract supply. Done 2026-07-30: the generated contract market rolls from sector state (sections 6.3, 6.4, 12.1).
-2. Let the player spend influence. Done 2026-07-30: influence points with three numbered sector actions, costs, cooldowns, and staged application (sections 6.2, 7.4).
-3. Make world events create or modify operations. Done 2026-07-30: riots can spawn priority suppression contracts, raids can withdraw offers, seizures re-client them.
-4. Add consequences for ignoring high-unrest sectors. Done 2026-07-30: control decay above 60 unrest, tax yield strain, and the crisis state with doubled events and priority contracts (section 6.2).
-5. Add research or intel tools that forecast event and mission risk. Done 2026-07-30: the intel level 2+ sector event forecast and the brief's computed mission risk index (sections 6.4, 6.5).
-
-### Milestone 5 — Release readiness (complete 2026-07-30)
-
-1. Add tutorialization and contextual control prompts. Done 2026-07-30: the first-mission toast sequence, once-per-campaign advisories, and the World Network onboarding overlay, all save-persistent (sections 13.2, 13.4).
-2. Add settings, remapping, audio controls, and accessibility modes. Done 2026-07-30: the SETTINGS panel from the main menu and pause with channel volumes, capture-style remapping, reduced motion, high contrast, and text scaling (sections 13.5, 14, 16).
-3. Add automated simulation, economy, research, and objective tests. Done 2026-07-30: the scripted playthrough and squad-wipe suites, the cross-store economy integration test, the research sums and stacking-order tests, and the objective-completability sweep (section 18.7).
-4. Add browser/device performance tiers. Done 2026-07-30: AUTO/HIGH/MEDIUM/LOW quality tiers applied at mission mount, with AUTO probing the renderer backend and a sustained-frame-time governor that steps the persisted setting down one tier and posts a comm-log notice (section 18.4).
-5. Add campaign telemetry and balance dashboards. Done 2026-07-30: opt-in, local-only mission records and the BALANCE dashboard reachable from settings and the debrief (section 22).
-
----
-
-## 21. Recommended design acceptance criteria
+## 20. Design acceptance criteria
 
 ### Campaign loop
 
-- A successful mission visibly changes at least two strategic values. Met.
-- A failed mission produces a meaningful but recoverable consequence. Met.
-- Intel has at least two earn sources and at least two unlock uses. Met: two earn sources; contract gating and the level 2+ forecasts.
-- Saving and reloading reproduces all strategic and roster state. Met.
+- A successful mission visibly changes at least two strategic values.
+- A failed mission produces a meaningful but recoverable consequence.
+- Intel has at least two earn sources and at least two unlock uses.
+- Saving and reloading reproduces all strategic and roster state.
 
 ### Mission content
 
@@ -1392,7 +1439,7 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 ---
 
-## 22. Telemetry
+## 21. Telemetry
 
 **Implemented, local-only**
 
@@ -1433,7 +1480,7 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 
 ---
 
-## 23. Source-of-truth map
+## 22. Source-of-truth map
 
 | Design area | Primary implementation |
 |---|---|
@@ -1462,7 +1509,7 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 
 ---
 
-## 24. Glossary
+## 23. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -1484,8 +1531,10 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 
 ---
 
-## 25. Final design statement
+## 24. Final design statement
 
 The codebase already establishes a coherent identity: a corporate geostrategy interface wrapped around an unusually readable real-time squad simulation. The tactical game’s strongest authored tension is not simple survival; it is moving four powerful operatives through a populated city while managing information, detection, fire lanes, and financial liability.
 
-Milestone 1 connected the systems that already existed: mission outcomes move the world, intel opens contracts, operative status gates deployment, and the campaign survives a reload. The highest-value next step is content and mechanics: true Hollow Crown and Rust Haven designs, new objective primitives, and roles that change tactical decisions.
+The two layers feed each other rather than sitting side by side. Mission outcomes move sector control and unrest, intel earned in the field opens contracts, injuries and deaths gate the next deployment, and the whole campaign survives a reload. Content matches that shell: three authored contracts across three district archetypes, an objective engine of seven kinds, eight roles that each change a tactical decision, and a strategic economy where influence and unrest have consequences.
+
+What the design does not yet have is listed in section 19.3. The largest gaps are city ownership that missions can flip, operative experience, and a strategic fail state to sit opposite the campaign victory.
