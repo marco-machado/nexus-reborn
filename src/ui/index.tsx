@@ -23,7 +23,7 @@ import {
 } from '../game/missionParams'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
 import type { ResearchNode } from '../game/research'
-import type { AgentRole, DistrictArchetype, MissionDef } from '../game/types'
+import type { AgentRole, DistrictArchetype, MissionDef, Weather } from '../game/types'
 import {
   Panel,
   Chip,
@@ -211,11 +211,18 @@ function calloutFor(arch: DistrictArchetype, district: string) {
   const w = Math.max(...lines.map((l) => textWidth(l.text, l.size, l.track))) + CALLOUT_PAD * 2
   return { lines, w, x: RECON_W - 16 - w }
 }
-const COMMS_LOG = [
-  ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
-  ['23:40:45', 'WEATHER: HEAVY RAIN. VISIBILITY LOW.'],
-  ['23:41:02', 'LOCAL: CORPSEC TASKFORCE ONSITE.'],
-]
+const COMMS_WEATHER: Record<Weather, string> = {
+  heavy: 'WEATHER: HEAVY RAIN. VISIBILITY LOW.',
+  light: 'WEATHER: LIGHT RAIN. VISIBILITY REDUCED.',
+  none: 'WEATHER: CLEAR NIGHT. VISIBILITY FULL.',
+}
+function commsLog(weather: Weather): Array<[string, string]> {
+  return [
+    ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
+    ['23:40:45', COMMS_WEATHER[weather]],
+    ['23:41:02', 'LOCAL: CORPSEC TASKFORCE ONSITE.'],
+  ]
+}
 function LegendRow(props: { label: string; children: ReactNode }) {
   return (
     <div className="mb-legend-row">
@@ -789,7 +796,7 @@ export function MissionBrief() {
         </button>
         <div className="mb-comms corners">
           <b>COMMS LOG // CH 7A</b>
-          {COMMS_LOG.map(([t, msg]) => (
+          {commsLog(m.weather).map(([t, msg]) => (
             <span key={t} className="dim" title={'[' + t + '] ' + msg}>
               <i>[{t}]</i> {msg}
             </span>
