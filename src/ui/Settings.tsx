@@ -14,6 +14,7 @@ import { QUALITY_SETTINGS } from '../game/quality'
 import { TEXT_SCALES, useSettingsStore } from '../state/settingsStore'
 import type { VolumeChannel } from '../state/settingsStore'
 import { useMissionStore } from '../state/missionStore'
+import BalancePanel from './Balance'
 import { Chip, Panel } from './bits'
 import { uiClick } from './sound'
 
@@ -86,6 +87,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   const highContrast = useSettingsStore((s) => s.highContrast)
   const textScale = useSettingsStore((s) => s.textScale)
   const quality = useSettingsStore((s) => s.quality)
+  const telemetry = useSettingsStore((s) => s.telemetry)
   const overrides = useSettingsStore((s) => s.overrides)
   // A quality change during a mission cannot rebuild the live pipeline; the
   // row says so instead of pretending it applied.
@@ -94,6 +96,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
 
   const [capture, setCapture] = useState<BindingId | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [balanceOpen, setBalanceOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement | null>(null)
   const closeRef = useRef<HTMLButtonElement | null>(null)
 
@@ -163,12 +166,14 @@ export default function SettingsPanel(props: { onClose: () => void }) {
       if (e.key === 'Escape') {
         e.preventDefault()
         e.stopPropagation()
-        onClose()
+        // The balance dashboard sits over the panel; Escape peels it first.
+        if (balanceOpen) setBalanceOpen(false)
+        else onClose()
       }
     }
     document.addEventListener('keydown', onKey, true)
     return () => document.removeEventListener('keydown', onKey, true)
-  }, [capture, onClose, store])
+  }, [capture, onClose, store, balanceOpen])
 
   const fixedNote = (b: Binding): string | null => {
     if (b.group === 'mouse' || b.codes.length === 0) return 'MOUSE'
@@ -178,6 +183,8 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   }
 
   const anyOverride = Object.keys(overrides).length > 0
+
+  if (balanceOpen) return <BalancePanel onClose={() => setBalanceOpen(false)} />
 
   return (
     <div className="hud-menu-panel settings-panel" ref={panelRef}>
@@ -262,6 +269,32 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                     </button>
                   ))}
                 </span>
+              </div>
+            </div>
+            <div className="set-section">
+              <div className="hud-menu-group-head">DATA</div>
+              <ToggleRow
+                label="TELEMETRY: LOCAL ONLY"
+                sub="Logs mission records on this terminal; nothing is transmitted"
+                on={telemetry}
+                onToggle={(next) => store.getState().setTelemetry(next)}
+              />
+              <div className="set-toggle">
+                <span className="set-toggle-main">
+                  <b>BALANCE DATA</b>
+                  <i className="dim">Aggregates over the local mission log</i>
+                </span>
+                <button
+                  type="button"
+                  className="btn set-toggle-btn"
+                  aria-label="Open the balance dashboard"
+                  onClick={() => {
+                    uiClick()
+                    setBalanceOpen(true)
+                  }}
+                >
+                  OPEN
+                </button>
               </div>
             </div>
           </div>

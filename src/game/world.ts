@@ -29,6 +29,7 @@ import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
 import { missionSfx as sfx } from './audioBridge'
 import { fireTutorialHint, noteTutorial } from '../state/tutorialStore'
+import type { MissionTelemetry } from '../state/telemetry'
 import { useMissionStore } from '../state/missionStore'
 import type {
   AbilityAvailability,
@@ -218,6 +219,26 @@ export function createWorld(
   let result: 'none' | 'won' | 'lost' = 'none'
   let resultAt = 0
   let outcomeSent = false
+  // Telemetry counters: plain numeric fields on preallocated tables, bumped
+  // in place so the per-frame path allocates nothing. They leave the sim once,
+  // inside the outcome maybeOutcome() already pushes.
+  let firstContactT = -1
+  let damageDealt = 0
+  let damageTaken = 0
+  let civHitsSquad = 0
+  let civHitsCorpsec = 0
+  let medUsed = 0
+  let cellUsed = 0
+  const shotsByWeapon: Record<string, number> = {
+    assault: 0, smg: 0, pistol: 0, longrifle: 0, shotgun: 0,
+  }
+  const damageByWeapon: Record<string, number> = {
+    assault: 0, smg: 0, pistol: 0, longrifle: 0, shotgun: 0,
+  }
+  const abilityUsesByRole: Record<AgentRole, number> = {
+    assault: 0, recon: 0, infiltrator: 0, demolitions: 0,
+    sniper: 0, tech: 0, support: 0, medic: 0,
+  }
   let syncT = 0
   let alertLevel = 0
   let firstContact = false
@@ -242,6 +263,8 @@ export function createWorld(
   const interactT: number[] = objectives.map(() => 0)
   const interactStarted: boolean[] = objectives.map(() => false)
   const defendLeft: number[] = objectives.map((d) => d.durationSec ?? 0)
+  // Completion time of each objective, -1 while unfinished (telemetry).
+  const objDoneT: number[] = objectives.map(() => -1)
   // Tags whose device died to non-squad fire: an optional destroy over such a
   // tag is failed, not completed.
   const deviceLostTags = new Set<string>()
@@ -673,11 +696,17 @@ export function createWorld(
       civiliansHit += 1
       pushLog('SYS', 'CIVILIAN HIT. COLLATERAL COUNT ' + civiliansHit + '.', 'alert')
     }
+    if (t.kind === 'civilian') {
+      if (by.kind === 'agent') civHitsSquad += 1
+      else if (by.kind === 'enemy') civHitsCorpsec += 1
+    }
     let dealt = by.kind === 'enemy' ? dmg * ENEMY_DMG_MUL : dmg
     // Demolitions passive: the hardened frame shrugs part of every hit off.
     if (t.kind === 'agent' && t.operative?.role === 'demolitions') {
       dealt *= ROLE_ABILITIES.demolitions.passive.magnitude
     }
+    if (by.kind === 'agent' && (t.kind === 'enemy' || t.kind === 'device')) damageDealt += dealt
+    if (t.kind === 'agent') damageTaken += dealt
     t.hp -= dealt
     if (t.kind === 'enemy') {
       t.lastSeenT = world.time
@@ -746,6 +775,7 @@ export function createWorld(
     u.cooldown = cd
     u.magazine -= 1
     u.lastFireT = world.time
+    if (u.kind === 'agent') shotsByWeapon[w.id] += 1
     // Deadeye: the armed window is spent on this shot, which cannot miss and
     // carries the damage multiplier.
     const deadeye = roleActive(u, 'sniper')
@@ -760,6 +790,7 @@ export function createWorld(
     let tx = t.pos.x
     let tz = t.pos.z
     if (hit) {
+      if (u.kind === 'agent') damageByWeapon[w.id] += dmg
       applyDamage(t, dmg, u)
     } else {
       const over = 1 + rng() * 1.8
@@ -777,6 +808,7 @@ export function createWorld(
       if (stray) {
         tx = stray.pos.x
         tz = stray.pos.z
+        if (u.kind === 'agent') damageByWeapon[w.id] += dmg
         applyDamage(stray, dmg, u)
       }
     }
@@ -912,6 +944,7 @@ export function createWorld(
     e.repathT = 0
     if (!firstContact) {
       firstContact = true
+      firstContactT = world.time
       pushLog('SYS', 'Threat level elevated.', 'alert')
       sfx.alertSting()
       fireTutorialHint('hint-alert')
@@ -1499,6 +1532,7 @@ export function createWorld(
   function completeObjective(i: number): void {
     const def = objectives[i]
     objState[i] = 'done'
+    objDoneT[i] = world.time
     sfx.objectiveChime()
     noteTutorial('objective')
     pushLog('SYS', 'OBJECTIVE COMPLETE: ' + def.label, 'ok')
@@ -1585,6 +1619,25 @@ export function createWorld(
       if (u.kind !== 'agent' || u.stance === 'dead' || !u.operative) continue
       survivorHp[u.operative.id] = Math.max(0, Math.min(1, u.hp / u.maxHp))
     }
+    // The counters leave the sim exactly once, here, on the outcome the app
+    // store already carries; recording them is the debrief boundary's call.
+    const telemetry: MissionTelemetry = {
+      seed: mission.seed,
+      firstContactSec: firstContactT >= 0 ? firstContactT : null,
+      objectiveTimes: objectives
+        .map((d, i) => ({ id: d.id, atSec: objDoneT[i] }))
+        .filter((o) => o.atSec >= 0),
+      shotsByWeapon: { ...shotsByWeapon },
+      damageByWeapon: { ...damageByWeapon },
+      damageDealt,
+      damageTaken,
+      civilianHitsBySquad: civHitsSquad,
+      civilianHitsByCorpsec: civHitsCorpsec,
+      medUsed,
+      cellUsed,
+      abilityUsesByRole: { ...abilityUsesByRole },
+      squadRoles: operatives.map((op) => op.role),
+    }
     useAppStore.getState().setOutcome({
       won: result === 'won',
       kills,
@@ -1595,6 +1648,7 @@ export function createWorld(
       bonus: result === 'won' ? bonusEarned : 0,
       deadIds: deadIds.slice(),
       survivorHp,
+      telemetry,
     })
   }
 
@@ -2033,6 +2087,7 @@ export function createWorld(
         break
     }
     if (spec.duration > 0) u.abilityUntil = world.time + spec.duration
+    abilityUsesByRole[role] += 1
     u.abilityCdTotal = spec.cooldown * (techAlive() ? ROLE_ABILITIES.tech.passive.magnitude : 1)
     u.abilityReadyAt = world.time + u.abilityCdTotal
     const line = ABILITY_USE_LINES[role]
@@ -2086,6 +2141,7 @@ export function createWorld(
     const healed = Math.min(MED_KIT_HEAL, best.maxHp - best.hp)
     best.hp += healed
     inventory.med -= 1
+    medUsed += 1
     noteTutorial('item')
     sfx.confirmBlip()
     pushLog('SYS', 'MED KIT APPLIED TO ' + (best.operative?.codename ?? best.name) + '. +' + Math.ceil(healed) + ' HP.', 'ok')
@@ -2107,6 +2163,7 @@ export function createWorld(
     }
     target.abilityReadyAt = world.time
     inventory.cell -= 1
+    cellUsed += 1
     noteTutorial('item')
     sfx.confirmBlip()
     pushLog('SYS', 'POWER CELL SPENT. ' + (target.operative?.codename ?? target.name) + ' ABILITY CHARGED.', 'ok')
@@ -2125,6 +2182,7 @@ export function createWorld(
     if (dist(u.pos, resolved) > GRENADE_RANGE) return false
 
     inventory.cell -= 1
+    cellUsed += 1
     grenadeReadyAt = world.time + GRENADE_COOLDOWN
     noiseSeq += 1
     noises.push({

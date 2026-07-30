@@ -31,6 +31,10 @@ export interface SettingsData {
   // resolves against the renderer backend and may be stepped down by the
   // frame-time governor, which persists the concrete tier here.
   quality: QualitySetting
+  // Local-only mission telemetry (state/telemetry.ts). Off by default; when
+  // on, the debrief appends a record to its own localStorage key. Nothing is
+  // ever transmitted.
+  telemetry: boolean
   overrides: BindingOverrides
 }
 
@@ -44,6 +48,7 @@ export function defaultSettings(): SettingsData {
     highContrast: false,
     textScale: 100,
     quality: 'auto',
+    telemetry: false,
     overrides: {},
   }
 }
@@ -94,6 +99,7 @@ function sanitizeSettings(raw: unknown): SettingsData {
     quality: QUALITY_SETTINGS.includes(v.quality as QualitySetting)
       ? (v.quality as QualitySetting)
       : d.quality,
+    telemetry: v.telemetry === true,
     overrides: sanitizeOverrides(v.overrides),
   }
 }
@@ -167,6 +173,7 @@ function dataOf(s: SettingsData): SettingsData {
     highContrast: s.highContrast,
     textScale: s.textScale,
     quality: s.quality,
+    telemetry: s.telemetry,
     overrides: s.overrides,
   }
 }
@@ -180,6 +187,7 @@ export interface SettingsState extends SettingsData {
   setHighContrast: (on: boolean) => void
   setTextScale: (scale: TextScale) => void
   setQuality: (quality: QualitySetting) => void
+  setTelemetry: (on: boolean) => void
   setBindingOverride: (id: BindingId, codes: string[]) => void
   clearBindingOverride: (id: BindingId) => void
   resetBindings: () => void
@@ -215,6 +223,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setQuality: (quality) => {
       if (QUALITY_SETTINGS.includes(quality)) commit({ quality })
     },
+    setTelemetry: (on) => commit({ telemetry: on === true }),
     setBindingOverride: (id, codes) => commitOverrides({ ...get().overrides, [id]: codes }),
     clearBindingOverride: (id) => {
       const next = { ...get().overrides }

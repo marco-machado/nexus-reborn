@@ -1244,6 +1244,21 @@ describe('scripted playthrough', () => {
     const fine = Math.min(MISSION.reward, (app.outcome?.civiliansHit ?? 0) * 5000)
     expect(app.credits).toBe(128450 + MISSION.reward - fine)
     expect(app.credits).toBeGreaterThanOrEqual(0)
+
+    // The outcome carries the mission counters for the local telemetry log.
+    const t = app.outcome?.telemetry
+    expect(t).toBeDefined()
+    if (!t) return
+    expect(t.seed).toBe(MISSION.seed)
+    expect(t.firstContactSec).not.toBeNull()
+    expect(t.firstContactSec ?? 0).toBeGreaterThan(0)
+    expect(Object.values(t.shotsByWeapon).reduce((a, b) => a + b, 0)).toBeGreaterThan(0)
+    expect(Object.values(t.damageByWeapon).reduce((a, b) => a + b, 0)).toBeGreaterThan(0)
+    expect(t.damageDealt).toBeGreaterThan(0)
+    expect(t.objectiveTimes.map((o) => o.id)).toEqual(['ob1', 'ob2', 'ob3'])
+    const times = t.objectiveTimes.map((o) => o.atSec)
+    expect([...times].sort((a, b) => a - b)).toEqual(times)
+    expect(t.squadRoles).toEqual(['assault', 'recon', 'infiltrator', 'demolitions'])
   })
 
   it('loses to CorpSec fire: a wipe driven by enemy rounds, not state edits', () => {
@@ -1286,6 +1301,59 @@ describe('scripted playthrough', () => {
     expect(app.outcome?.casualties).toBe(4)
     expect(app.outcome?.deadIds?.slice().sort()).toEqual([...DEFAULT_SQUAD].sort())
     expect(app.credits).toBe(128450)
+    // The wipe reads in the counters: every point of squad damage was taken.
+    expect(app.outcome?.telemetry?.damageTaken).toBeGreaterThan(0)
+    expect(app.outcome?.telemetry?.firstContactSec).not.toBeNull()
+  })
+
+  it('carries item, ability, and collateral counters through the outcome telemetry', () => {
+    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+
+    // One med kit, one role ability, one grenade dropped beside a bystander.
+    a1.hp -= 30
+    expect(w.orderUseMed(['a1'])).toBe(true)
+    w.orderAbility(['a1'])
+    const civ = w.units.find((u) => u.kind === 'civilian')
+    expect(civ).toBeDefined()
+    if (!civ) return
+    civ.pos.x = a1.pos.x
+    civ.pos.z = a1.pos.z - 2
+    civ.path.length = 0
+    expect(w.orderGrenade('a1', { x: civ.pos.x, z: civ.pos.z })).toBe(true)
+
+    // Teleport-complete the mission so the counters reach the outcome.
+    a1.pos.x = w.city.checkpoint.x
+    a1.pos.z = w.city.checkpoint.z
+    a1.path.length = 0
+    w.tick(STEP)
+    for (const u of w.units) {
+      if (u.kind === 'agent' && u.stance !== 'dead') {
+        u.pos.x = w.city.extraction.x
+        u.pos.z = w.city.extraction.z
+        u.path.length = 0
+      }
+    }
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('won')
+    warm(w, 3)
+
+    const t = useAppStore.getState().outcome?.telemetry
+    expect(t).toBeDefined()
+    if (!t) return
+    expect(t.medUsed).toBe(1)
+    expect(t.cellUsed).toBe(1)
+    expect(t.abilityUsesByRole.assault).toBe(1)
+    expect(t.civilianHitsBySquad).toBeGreaterThanOrEqual(1)
+    expect(t.damageTaken).toBeGreaterThan(0)
+    // No shots were fired and no guard ever woke up.
+    expect(Object.values(t.shotsByWeapon).reduce((a, b) => a + b, 0)).toBe(0)
+    expect(t.firstContactSec).toBeNull()
   })
 })
 

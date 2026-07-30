@@ -3851,3 +3851,108 @@ button.hud-slot:focus-visible {
   color: var(--ink);
   text-transform: none;
 }
+
+/* ------------------------------ balance panel ------------------------------ */
+
+.balance-panel {
+  width: 860px;
+}
+
+.balance-panel .panel {
+  flex: 1;
+  background: var(--bg-panel-solid);
+  min-height: 0;
+}
+
+.balance-panel .panel-body {
+  gap: 12px;
+  overflow: hidden;
+}
+
+.bal-grid {
+  display: grid;
+  grid-template-columns: 5fr 6fr;
+  gap: 12px 24px;
+  align-items: start;
+  min-height: 0;
+  overflow: auto;
+}
+
+.bal-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.bal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bal-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 18px;
+}
+
+.bal-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--ink-faint);
+  padding: 3px 0;
+}
+
+.bal-stat label {
+  font-size: calc(10px * var(--text-scale, 1));
+  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+}
+
+.bal-stat b {
+  font-size: calc(12px * var(--text-scale, 1));
+}
+
+.bal-bar-row {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.bal-bar-label {
+  font-size: calc(10px * var(--text-scale, 1));
+  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bal-bar-track {
+  display: block;
+  height: 8px;
+  border: 1px solid var(--ink-faint);
+  background: rgba(126, 240, 212, 0.06);
+}
+
+.bal-bar-track i {
+  display: block;
+  height: 100%;
+  background: var(--teal);
+  opacity: 0.75;
+}
+
+.bal-bar-val {
+  font-size: calc(10px * var(--text-scale, 1));
+  white-space: nowrap;
+}
+
+.bal-empty {
+  padding: 24px 0;
+  text-align: center;
+  letter-spacing: 0.08em;
+}

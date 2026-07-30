@@ -14,6 +14,7 @@ import {
   hasValidSave,
   startNewOperation,
 } from '../state/save'
+import { recordMissionOutcome } from '../state/telemetry'
 import { WEAPONS } from '../game/data'
 import { isGeneratedMissionId } from '../game/contracts'
 import { ROLE_ABILITIES } from '../game/abilities'
@@ -66,6 +67,7 @@ import { fmt, pad2, hashOf } from './util'
 import { Portrait } from './portrait'
 import { Figure } from './figure'
 import SettingsPanel from './Settings'
+import BalancePanel from './Balance'
 import { uiClick, unlockAudio } from './sound'
 export { WorldMap } from './WorldMap'
 export { Research } from './Research'
@@ -1478,10 +1480,14 @@ export function Debrief() {
   const won = outcome?.won ?? false
   const fine = outcome ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
+  const [balanceOpen, setBalanceOpen] = useState(false)
   useEffect(() => {
     if (!outcome || !missionId) return
     if (useCampaignStore.getState().outcomeApplied >= outcomeSerial) return
     const worldT = useWorldStore.getState().t
+    // Local telemetry rides the same once-per-outcome boundary; a no-op
+    // unless the TELEMETRY setting is on.
+    recordMissionOutcome(missionId, outcome)
     useCampaignStore.getState().reportMission(missionId, outcome, worldT)
     // The campaign report resolved codenames before the KIA left the roster;
     // the world feed prints them, and dead or newly injured operatives leave
@@ -1594,9 +1600,22 @@ export function Debrief() {
               REPLAY MISSION
             </button>
           )}
+          <button
+            type="button"
+            className="btn"
+            aria-label="Open the balance dashboard over the local mission log"
+            onClick={act(() => setBalanceOpen(true))}
+          >
+            BALANCE DATA
+          </button>
         </div>
         <div className="db-barcode" aria-hidden="true" />
       </div>
+      {balanceOpen && (
+        <div className="hud-menu-wrap" role="dialog" aria-modal="true" aria-label="Balance data">
+          <BalancePanel onClose={() => setBalanceOpen(false)} />
+        </div>
+      )}
     </div>
   )
 }

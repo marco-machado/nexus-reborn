@@ -1241,8 +1241,9 @@ Avoid increasing difficulty by removing minimap information without offering com
 ### 18.7 Build and quality
 
 - The checks are `npm run lint`, `npm run test`, and `npm run build`.
-- A vitest suite (15 files, 215 tests) covers the pure layers: `src/game/`, `src/world/`, `src/state/`.
-- Saves are versioned; the loader validates a blob and discards it on any mismatch.
+- A vitest suite (26 files, 424 tests) covers the pure layers: `src/game/`, `src/world/`, `src/state/`.
+- Beyond unit coverage, the suite carries scenario tests: an orders-driven Glass Veil playthrough (advance, clear the garrison by weapon fire, extract, net payout) and a squad wipe driven by CorpSec fire; a cross-store economy integration test (payout minus fines, intel and influence awards, research spend gating, hiring, influence spends) holding a credits-never-negative invariant; research program sums against the authored tables and effect-stacking order; and an objective-completability sweep over the three authored missions plus all four generated-contract types (zones walkable and reachable from insertion, tagged and device sets nonempty, extraction last).
+- Saves are versioned; the loader validates a blob and discards it on any mismatch. The settings and telemetry blobs live under their own keys with their own version guards.
 - Scene and DOM screens rely on the manual click-through.
 
 ---
@@ -1284,7 +1285,6 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ### 19.2 Scaffolded or presentation-only
 
-- Hollow Crown and Rust Haven placeholder objective sets; Milestone 2 owns their full designs.
 - Contract ETA, and the projected-success chance below intel level 2 (at 2+ the brief shows the computed risk index instead).
 - Weather effects on gameplay.
 - Sector assets and black-market values as decision systems. Defense rating and garrison condition feed generated contract threat, and tax yield now falls under unrest pressure; assets and black market stay presentation.
@@ -1295,17 +1295,15 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 - Mission outcome effects on city ownership.
 - Operative experience.
-- Mission types beyond reach/eliminate/extract.
 - A strategic fail state; the campaign has victory and recoverable pressure only, even through sector crisis.
 - Difficulty modes.
 - Music and ambient sound.
-- Telemetry.
 
 ---
 
 ## 20. Recommended product roadmap
 
-Milestones 1, 3 and 4 are complete, and Milestone 5 items 1 and 2 are done; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining items are recommendations, not current behavior.
+Every milestone is complete: Milestone 2 shipped with the objective-engine work (the full Hollow Crown and Rust Haven designs, section 12), and Milestone 5 items 3-5 closed on 2026-07-30. The roadmap below is a record, not a backlog.
 
 ### Milestone 1 — Close the campaign loop (complete 2026-07-29)
 
@@ -1346,13 +1344,13 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 4. Add consequences for ignoring high-unrest sectors. Done 2026-07-30: control decay above 60 unrest, tax yield strain, and the crisis state with doubled events and priority contracts (section 6.2).
 5. Add research or intel tools that forecast event and mission risk. Done 2026-07-30: the intel level 2+ sector event forecast and the brief's computed mission risk index (sections 6.4, 6.5).
 
-### Milestone 5 — Release readiness
+### Milestone 5 — Release readiness (complete 2026-07-30)
 
 1. Add tutorialization and contextual control prompts. Done 2026-07-30: the first-mission toast sequence, once-per-campaign advisories, and the World Network onboarding overlay, all save-persistent (sections 13.2, 13.4).
 2. Add settings, remapping, audio controls, and accessibility modes. Done 2026-07-30: the SETTINGS panel from the main menu and pause with channel volumes, capture-style remapping, reduced motion, high contrast, and text scaling (sections 13.5, 14, 16).
-3. Add automated simulation, economy, research, and objective tests.
-4. Add browser/device performance tiers.
-5. Add campaign telemetry and balance dashboards.
+3. Add automated simulation, economy, research, and objective tests. Done 2026-07-30: the scripted playthrough and squad-wipe suites, the cross-store economy integration test, the research sums and stacking-order tests, and the objective-completability sweep (section 18.7).
+4. Add browser/device performance tiers. Done 2026-07-30: AUTO/HIGH/MEDIUM/LOW quality tiers applied at mission mount, with AUTO probing the renderer backend and a sustained-frame-time governor that steps the persisted setting down one tier and posts a comm-log notice (section 18.4).
+5. Add campaign telemetry and balance dashboards. Done 2026-07-30: opt-in, local-only mission records and the BALANCE dashboard reachable from settings and the debrief (section 22).
 
 ---
 
@@ -1394,23 +1392,41 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 ---
 
-## 22. Telemetry recommendations
+## 22. Telemetry
 
-If analytics are added, capture:
+**Implemented, local-only**
+
+Telemetry is opt-in and never leaves the machine. The SETTINGS panel carries a `TELEMETRY: LOCAL ONLY` toggle, off by default; nothing records until the player turns it on, and no network transmission exists anywhere in the pipeline.
+
+When enabled, the debrief boundary appends one record per mission outcome to a versioned localStorage blob under its own key (`state/telemetry.ts`), capped at 60 records FIFO. The counters ride the outcome the simulation already pushes: `world.ts` keeps plain numeric fields during the mission (the hot path allocates nothing) and hands them over once, inside `MissionOutcome.telemetry`.
+
+Each record captures:
+
+- Mission id, seed, outcome, and duration.
+- Time to first contact.
+- Per-objective completion times.
+- Shots and damage by weapon (squad fire only).
+- Damage dealt to hostiles and damage taken by the squad.
+- Civilian hits by source (squad versus CorpSec).
+- Med kit and power cell uses.
+- Ability uses by role.
+- Operatives killed in action.
+- Payout, fines, reward, and bonus.
+- The deployed squad composition by role.
+
+The **BALANCE dashboard** (reachable from the SETTINGS panel and the debrief) aggregates the stored records in the terminal style: win rate, mean duration, mean time to first contact, collateral rate, civilian and KIA totals, item use, payout statistics, weapon damage share, and ability use by role, drawn with plain div bars. EXPORT downloads the records as JSON through a data URL; CLEAR erases the log behind a two-step confirm.
+
+**Still recommended, unmet**
 
 - Time spent on each strategic screen.
 - World speed usage.
-- Projects authorized and completion order.
-- Squad compositions.
-- Mission completion and failure rate.
-- Time to each objective.
-- First-contact time and alert-level duration.
+- Projects authorized and completion order; research spending.
+- Alert-level duration.
 - Number of explicit attacks versus automatic engagements.
 - Hold Ground and Hold Fire usage.
-- Damage, deaths, and reloads by weapon.
-- Civilian hits, their source, and the shot context.
+- Deaths and reloads by weapon.
+- The shot context of civilian hits.
 - Patrols bypassed versus killed.
-- Payout, deductions, and research spending.
 - Abort and replay rates.
 
 Telemetry must distinguish a deliberate tactical choice from a usability failure; for example, an unused Hold Fire command may indicate either a preferred aggressive play style or poor control discovery.

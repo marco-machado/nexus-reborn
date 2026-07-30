@@ -1,6 +1,7 @@
 // CONTRACT FILE. App level state: screen flow, mission choice, squad, credits.
 import { create } from 'zustand'
 import { DEFAULT_SQUAD } from '../game/data'
+import type { MissionTelemetry } from './telemetry'
 import { resolveMission } from './worldStore'
 import { LOADOUT_SLOTS, emptyLoadout } from '../game/mass'
 import type { LoadoutItemId, OperativeLoadout, SquadLoadout } from '../game/mass'
@@ -21,6 +22,10 @@ export interface MissionOutcome {
   // End-of-mission health of each surviving deployed operative, as a fraction
   // of max HP. The debrief grades injuries from it (campaignStore).
   survivorHp: Record<string, number>
+  // Mission counters for the local telemetry log (state/telemetry.ts). Rides
+  // the existing outcome push; the debrief boundary records it when the
+  // TELEMETRY setting is on. Optional so hand-built outcomes stay valid.
+  telemetry?: MissionTelemetry
 }
 
 // Every contract carries a collateral clause. Each bystander caught by a round
