@@ -31,11 +31,18 @@ export interface SquadMemberUi {
   accent: string
   hp: number
   maxHp: number
+  // The drawn weapon: name, live magazine and reload state.
   magazine: number
   magazineSize: number
   reloading: boolean
+  // True while the freshly drawn weapon is still coming up and cannot fire.
+  swapping: boolean
   weaponName: string
-  sidearmName: string
+  // Which authored slot is drawn, and the stowed slot's name and magazine.
+  activeSlot: 'primary' | 'sidearm'
+  stowedName: string
+  stowedMagazine: number
+  stowedMagazineSize: number
   // Order state, mirrored from the unit so the squad card can show it.
   holdGround: boolean
   holdFire: boolean

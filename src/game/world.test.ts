@@ -463,6 +463,103 @@ describe('orders', () => {
   })
 })
 
+describe('weapon swap', () => {
+  it('deploys with the sidearm stowed, its own full magazine ready', () => {
+    const op = operativeById('op1')
+    const w = createWorld(BARE_MISSION, [op])
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+    expect(a1.activeSlot).toBe('primary')
+    expect(a1.weapon?.id).toBe(op.weapon)
+    expect(a1.stowedWeapon?.id).toBe(op.sidearm)
+    expect(a1.stowedMagazine).toBe(WEAPONS[op.sidearm].magazine)
+  })
+
+  it('swaps to the sidearm and holds fire until the readiness delay passes', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')
+    const enemy = w.units.find((u) => u.kind === 'enemy')
+    expect(a1).toBeDefined()
+    expect(enemy).toBeDefined()
+    if (!a1 || !enemy) return
+
+    w.orderSwapWeapon(['a1'])
+    expect(a1.activeSlot).toBe('sidearm')
+    expect(a1.weapon?.id).toBe('pistol')
+    expect(a1.magazine).toBe(WEAPONS.pistol.magazine)
+    expect(useMissionStore.getState().squad[0].activeSlot).toBe('sidearm')
+    expect(useMissionStore.getState().squad[0].weaponName).toBe(WEAPONS.pistol.name)
+
+    // Park a muzzled enemy in pistol range with clear sight.
+    enemy.pos.x = a1.pos.x
+    enemy.pos.z = a1.pos.z - 2
+    enemy.path.length = 0
+    enemy.reloading = 999
+    w.orderAttack(['a1'], enemy.id)
+
+    // Inside SWAP_DELAY: the drawn pistol has not come up, no shot lands.
+    warm(w, 0.3)
+    expect(a1.magazine).toBe(WEAPONS.pistol.magazine)
+    expect(enemy.hp).toBe(enemy.maxHp)
+
+    // Past the delay the pistol fires on the standing order.
+    warm(w, 1.5)
+    expect(a1.magazine).toBeLessThan(WEAPONS.pistol.magazine)
+  })
+
+  it('keeps per-slot magazines across swaps and cancels the stowed reload', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+
+    // A part-spent primary mid-reload goes away as-is: the reload dies, the
+    // round count survives.
+    a1.magazine = 7
+    a1.reloading = 1.0
+    w.orderSwapWeapon(['a1'])
+    expect(a1.weapon?.id).toBe('pistol')
+    expect(a1.reloading).toBe(0)
+    expect(a1.magazine).toBe(WEAPONS.pistol.magazine)
+    expect(a1.stowedMagazine).toBe(7)
+
+    // Spend the sidearm, swap back: the primary returns with its 7 rounds and
+    // no reload running, the sidearm parks at 3.
+    a1.magazine = 3
+    w.orderSwapWeapon(['a1'])
+    expect(a1.weapon?.id).toBe('assault')
+    expect(a1.magazine).toBe(7)
+    expect(a1.reloading).toBe(0)
+    expect(a1.stowedMagazine).toBe(3)
+
+    w.orderSwapWeapon(['a1'])
+    expect(a1.weapon?.id).toBe('pistol')
+    expect(a1.magazine).toBe(3)
+  })
+
+  it('applies completed weapon research to the sidearm exactly as to the primary', () => {
+    // b-caseless: all weapons reload x0.88. b-sabot: all weapons damage x1.15.
+    useResearchStore.setState({ done: ['b-caseless', 'b-sabot'] })
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+    expect(a1.stowedWeapon?.reload).toBeCloseTo(WEAPONS.pistol.reload * 0.88, 10)
+    expect(a1.stowedWeapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.15, 10)
+    w.orderSwapWeapon(['a1'])
+    expect(a1.weapon?.reload).toBeCloseTo(WEAPONS.pistol.reload * 0.88, 10)
+    expect(a1.weapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.15, 10)
+    expect(a1.stowedWeapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.15, 10)
+  })
+})
+
 describe('milestone 2 missions', () => {
   const HOLLOW_CROWN = MISSIONS[1]
   const RUST_HAVEN = MISSIONS[2]

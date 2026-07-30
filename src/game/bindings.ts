@@ -25,6 +25,7 @@ export type BindingId =
   | 'stop'
   | 'holdGround'
   | 'holdFire'
+  | 'swapWeapon'
   | 'medStim'
   | 'grenade'
   | 'pause'
@@ -79,6 +80,7 @@ export const BINDINGS: Binding[] = [
   { id: 'stop', group: 'squad', codes: ['KeyX'], keys: ['X'], label: 'Stop and drop orders' },
   { id: 'holdGround', group: 'squad', codes: ['KeyH'], keys: ['H'], label: 'Hold position' },
   { id: 'holdFire', group: 'squad', codes: ['KeyC'], keys: ['C'], label: 'Hold fire' },
+  { id: 'swapWeapon', group: 'squad', codes: ['KeyV'], keys: ['V'], label: 'Swap weapon' },
   // Escape is the key players reach for to leave a game, so it opens the menu
   // and clearing the selection moved to Backspace. Both keys are one action:
   // the menu is what the paused state looks like.

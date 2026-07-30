@@ -5,10 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
-import { useResearchStore } from '../state/researchStore'
 import { ROSTER, WEAPONS, missionById } from '../game/data'
 import { WEATHER_LABEL } from '../game/missionParams'
-import { squadWeapon } from '../game/research'
 import { getWorld, panCameraTo } from '../game/runtime'
 import type { WeaponId } from '../game/types'
 import { getMarquee, onMarquee } from '../scene/marquee'
@@ -97,7 +95,6 @@ export default function Hud() {
   const credits = useAppStore((s) => s.credits)
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
-  const researched = useResearchStore((s) => s.done)
   const mission = missionId ? missionById(missionId) : null
   const district = mission ? mission.district : 'DISTRICT 07'
 
@@ -116,9 +113,13 @@ export default function Hud() {
   const online = squad.filter((r) => !r.dead).length
   const firstSelected = selected.length > 0 ? squad.find((r) => r.unitId === selected[0]) : undefined
   const active = firstSelected ?? squad.find((r) => !r.dead) ?? squad[0] ?? null
-  const sidearmId = active ? weaponIdByName(active.sidearmName) : 'pistol'
-  // Same weapon the squad deployed with, research included.
-  const sidearm = squadWeapon(sidearmId, researched)
+  // The row carries the drawn weapon in weaponName/magazine and the stowed one
+  // in stowedName/stowedMagazine; map both back onto the fixed panel slots.
+  const primaryDrawn = active !== null && active.activeSlot === 'primary'
+  const priName = active ? (primaryDrawn ? active.weaponName : active.stowedName) : ''
+  const priMag = active ? (primaryDrawn ? active.magazine : active.stowedMagazine) : 0
+  const secName = active ? (primaryDrawn ? active.stowedName : active.weaponName) : ''
+  const secMag = active ? (primaryDrawn ? active.stowedMagazine : active.magazine) : 0
   const abilityTarget = selected
     .map((id) => squad.find((r) => r.unitId === id))
     .find((r): r is SquadMemberUi => !!r && !r.dead)
@@ -257,12 +258,14 @@ export default function Hud() {
                       {Math.max(0, Math.ceil(r.hp))}/{r.maxHp}
                     </span>
                     <span className="dim">
-                      {r.magazine}/{r.magazineSize}
+                      {r.magazine}/{r.magazineSize} {r.activeSlot === 'primary' ? 'PRI' : 'SEC'}
                     </span>
                     {r.dead ? (
                       <span className="red hud-flatline">FLATLINED</span>
                     ) : r.reloading ? (
                       <span className="amber blink">RELOADING</span>
+                    ) : r.swapping ? (
+                      <span className="amber blink">DRAWING</span>
                     ) : null}
                   </span>
                   {!r.dead && (
@@ -342,29 +345,37 @@ export default function Hud() {
           <div className="hud-panel hud-wpn corners">
             <div className="hud-panel-head">
               <span>PRIMARY // {active.codename}</span>
+              {primaryDrawn && <span className="amber">DRAWN</span>}
             </div>
             <div className="hud-wpn-body">
-              <GunSilhouette weapon={weaponIdByName(active.weaponName)} className="hud-gun" />
+              <GunSilhouette weapon={weaponIdByName(priName)} className="hud-gun" />
               <div className="hud-wpn-info">
-                <span className="hud-wpn-name">{active.weaponName}</span>
+                <span className="hud-wpn-name">{priName}</span>
                 <span className="hud-ammo">
-                  <b>{active.magazine}</b>
+                  <b>{priMag}</b>
                   <i>/120</i>
                 </span>
-                {active.reloading && <span className="amber blink mini">RELOADING</span>}
+                {/* No DRAWING span: it squeezes the weapon name into an
+                    ellipsis; the squad card carries the swap state. */}
+                {primaryDrawn && active.reloading && (
+                  <span className="amber blink mini">RELOADING</span>
+                )}
               </div>
             </div>
           </div>
           <div className="hud-panel hud-wpn secondary corners">
             <div className="hud-panel-head">
               <span>SECONDARY</span>
+              {!primaryDrawn && <span className="amber">DRAWN</span>}
             </div>
             <div className="hud-wpn-body">
-              <GunSilhouette weapon={sidearmId} className="hud-gun sm" />
+              <GunSilhouette weapon={weaponIdByName(secName)} className="hud-gun sm" />
               <div className="hud-wpn-info">
-                <span className="hud-wpn-name">{active.sidearmName}</span>
+                <span className="hud-wpn-name">{secName}</span>
+                {/* No status spans here: the narrow panel clips the weapon
+                    name under them, and the squad card carries the state. */}
                 <span className="hud-ammo sm">
-                  <b>{sidearm.magazine}</b>
+                  <b>{secMag}</b>
                   <i>/48</i>
                 </span>
               </div>

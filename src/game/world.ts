@@ -78,6 +78,8 @@ const OUTCOME_DELAY = 2.5
 const MOVE_CHATTER_GAP = 4
 const FLAVOR_GAP = 6
 const CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
+// Seconds after a weapon swap before the drawn weapon can fire.
+const SWAP_DELAY = 0.5
 const MED_STIM_HEAL = 45
 const MED_STIM_COOLDOWN = 2
 const GRENADE_COOLDOWN = 4
@@ -233,7 +235,10 @@ export function createWorld(
   const bonus = crewBonus(researched)
 
   operatives.forEach((op, i) => {
+    // Research applies to both slots the same way: each is built through
+    // squadWeapon, so a sidearm carries every completed weapon project.
     const w = squadWeapon(op.weapon, researched)
+    const sw = squadWeapon(op.sidearm, researched)
     const hp = op.maxHp + bonus.maxHp
     addUnit({
       id: 'a' + (i + 1),
@@ -256,6 +261,10 @@ export function createWorld(
       holdFire: false,
       agentSlot: i + 1,
       operative: op,
+      activeSlot: 'primary',
+      stowedWeapon: sw,
+      stowedMagazine: sw.magazine,
+      swapReadyAt: 0,
     })
   })
 
@@ -615,6 +624,8 @@ export function createWorld(
   function tryFire(u: SimUnit, t: SimUnit, accMul: number): void {
     const w = u.weapon
     if (!w || u.reloading > 0 || u.cooldown > 0) return
+    // A freshly drawn weapon is not on target yet. Enemies never swap.
+    if (world.time < (u.swapReadyAt ?? 0)) return
     if (u.magazine <= 0) {
       startReload(u)
       return
@@ -1421,8 +1432,12 @@ export function createWorld(
         magazine: u.magazine,
         magazineSize: u.weapon ? u.weapon.magazine : 0,
         reloading: u.reloading > 0,
+        swapping: world.time < (u.swapReadyAt ?? 0),
         weaponName: u.weapon ? u.weapon.name : '-',
-        sidearmName: WEAPONS[op.sidearm].name,
+        activeSlot: u.activeSlot ?? 'primary',
+        stowedName: u.stowedWeapon ? u.stowedWeapon.name : '-',
+        stowedMagazine: u.stowedMagazine ?? 0,
+        stowedMagazineSize: u.stowedWeapon ? u.stowedWeapon.magazine : 0,
         holdGround: u.holdGround,
         holdFire: u.holdFire,
         dead: u.stance === 'dead',
@@ -1644,6 +1659,34 @@ export function createWorld(
     stanceAck(changed, hold ? 'Holding position.' : 'Free to move.')
   }
 
+  // Swaps each agent to its other slot. The stowed weapon keeps the magazine
+  // it went away with; a reload in progress dies with the stow, so the round
+  // count resumes as-is when the weapon comes back out. The drawn weapon
+  // holds fire until SWAP_DELAY passes.
+  function orderSwapWeapon(agentIds: string[]): void {
+    const crew = ordered(agentIds)
+    if (crew.length === 0) return
+    let changed = false
+    let toSidearm = false
+    for (const u of crew) {
+      if (!u.weapon || !u.stowedWeapon) continue
+      const w = u.weapon
+      const m = u.magazine
+      u.weapon = u.stowedWeapon
+      u.magazine = u.stowedMagazine ?? u.weapon.magazine
+      u.stowedWeapon = w
+      u.stowedMagazine = m
+      u.activeSlot = u.activeSlot === 'primary' ? 'sidearm' : 'primary'
+      u.reloading = 0
+      u.cooldown = 0
+      u.swapReadyAt = world.time + SWAP_DELAY
+      changed = true
+      if (u.activeSlot === 'sidearm') toSidearm = true
+    }
+    syncSquad()
+    stanceAck(changed, toSidearm ? 'Sidearms out.' : 'Back on primaries.')
+  }
+
   function orderHoldFire(agentIds: string[], hold: boolean): void {
     const crew = ordered(agentIds)
     if (crew.length === 0) return
@@ -1742,6 +1785,7 @@ export function createWorld(
     orderStop,
     orderHold,
     orderHoldFire,
+    orderSwapWeapon,
     orderMedStim,
     orderGrenade,
     unit: (id: string) => byId.get(id),

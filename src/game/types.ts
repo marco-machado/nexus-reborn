@@ -78,6 +78,14 @@ export interface Unit {
   patrolIndex?: number
   agentSlot?: number
   operative?: OperativeDef
+  // Agent weapon slots. `weapon` and `magazine` always describe the drawn
+  // weapon; the stowed slot keeps its own magazine and comes back exactly as
+  // it was left. `swapReadyAt` is the world time the drawn weapon may fire
+  // from, so a fresh draw cannot shoot instantly. Enemies never set these.
+  activeSlot?: 'primary' | 'sidearm'
+  stowedWeapon?: WeaponDef
+  stowedMagazine?: number
+  swapReadyAt?: number
   tag?: string
   deathT?: number
   lastFireT?: number
@@ -276,6 +284,10 @@ export interface WorldApi {
   orderStop(agentIds: string[]): void
   orderHold(agentIds: string[], hold: boolean): void
   orderHoldFire(agentIds: string[], hold: boolean): void
+  // Swaps every selected agent to its other weapon slot. The drawn weapon
+  // cannot fire for a short readiness delay; an in-progress reload of the
+  // stowed weapon is cancelled and its magazine persists as-is.
+  orderSwapWeapon(agentIds: string[]): void
   orderMedStim(agentId: string): boolean
   orderGrenade(agentId: string, target: Vec2): boolean
   unit(id: string): Unit | undefined

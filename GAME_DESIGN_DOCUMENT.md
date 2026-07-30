@@ -689,7 +689,7 @@ This is a central expression of the collateral pillar and should remain highly l
 | VK-88 Longrifle | 46 | 26 m | 1.60 s | 5 | 2.6 s | 0.008 | Precision long-range elimination |
 | M6 Breacher | 26 | 8 m | 0.90 s | 6 | 2.2 s | 0.120 | Short-range burst damage |
 
-**Current limitation:** Only the authored primary weapon is usable. Sidearms are displayed but cannot be selected or fired. Reserve-ammo values shown in the UI are informational and do not constrain the simulation.
+**Sidearm switching:** Every operative carries two live weapon slots, the authored primary and sidearm. `V` swaps every selected operative to its other slot. The drawn weapon cannot fire for a 0.5-second readiness delay, shown as DRAWING on the HUD. Each slot keeps its own magazine: swapping cancels an in-progress reload of the stowed weapon, its round count persists as-is and resumes when drawn again. Auto-fire, ordered attacks, engagement range, noise radius, tracers, and gunshot audio all follow the drawn weapon, and weapon research applies to sidearms exactly as to primaries. Enemies carry a single weapon and never swap. Reserve-ammo values shown in the UI are informational and do not constrain the simulation.
 
 ### 11.10 Objectives
 
@@ -927,6 +927,7 @@ Abort returns to the World Network and discards the current mission state withou
 | X | Stop and clear orders |
 | H | Toggle Hold Ground |
 | C | Toggle Hold Fire |
+| V | Swap weapon |
 | Space / Escape | Pause menu |
 
 ### Mouse
@@ -1243,7 +1244,7 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 ### Milestone 3 — Make squad composition a real strategy
 
 1. Give every role one active ability and one passive.
-2. Implement sidearm switching.
+2. Implement sidearm switching. Done 2026-07-30.
 3. Convert inventory display into usable items with finite quantities.
 4. Add loadout and deployment-mass tradeoffs.
 5. Add recovery, injury, recruitment, and persistent operative consequences.
