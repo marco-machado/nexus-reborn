@@ -10,10 +10,12 @@ import { resolveMission } from '../state/worldStore'
 import { useCampaignStore } from '../state/campaignStore'
 import { WEATHER_LABEL } from '../game/missionParams'
 import { getWorld, panCameraTo } from '../game/runtime'
+import { noteTutorial } from '../state/tutorialStore'
 import type { WeaponId } from '../game/types'
 import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import PauseMenu from './PauseMenu'
+import TutorialToasts from './TutorialToasts'
 import { Portrait } from './portrait'
 import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox } from './bits'
 import { fmt, pad2 } from './util'
@@ -222,6 +224,7 @@ export default function Hud() {
                 onClick={(e) => {
                   if (r.dead) return
                   uiClick()
+                  noteTutorial('select')
                   if (e.shiftKey) {
                     setSelected(
                       isSel ? selected.filter((x) => x !== r.unitId) : [...selected, r.unitId],
@@ -526,6 +529,9 @@ export default function Hud() {
           </div>
         </div>
       </div>
+
+      {/* ----------------------- tutorial and hint toasts -------------------- */}
+      {result === 'none' && <TutorialToasts />}
 
       {/* --------------------------- center overlays ------------------------- */}
       {result !== 'none' && (

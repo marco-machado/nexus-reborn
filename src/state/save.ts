@@ -31,10 +31,12 @@ import {
 } from '../game/influence'
 import type { InfluenceActionId, PendingSpend } from '../game/influence'
 import type { ContractThreat, ContractType, GeneratedContract } from '../game/contracts'
+import { SEEN_IDS } from '../game/tutorial'
 import type { AgentRole, OperativeDef, SectorId } from '../game/types'
 import { INITIAL_CREDITS, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import type { CampaignRosterEntry } from './campaignStore'
+import { useTutorialStore } from './tutorialStore'
 import { useResearchStore } from './researchStore'
 import type { Labs } from './researchStore'
 import {
@@ -50,7 +52,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 5 as const
+const SAVE_VERSION = 6 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -58,8 +60,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV5 {
-  version: 5
+export interface SaveV6 {
+  version: 6
   app: {
     credits: number
     squad: string[]
@@ -99,6 +101,11 @@ export interface SaveV5 {
     nextCandidateT: number
     contractsWon: string[]
     campaignWon: boolean
+  }
+  tutorial: {
+    // Tutorial steps, one-shot hints, and onboarding overlays already shown
+    // this campaign (state/tutorialStore.ts).
+    seen: string[]
   }
 }
 
@@ -381,13 +388,23 @@ function validRoster(
   })
 }
 
-export function validateSave(value: unknown): value is SaveV5 {
+const SEEN_ID_SET = new Set<string>(SEEN_IDS)
+
+export function validateSave(value: unknown): value is SaveV6 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
   const research = value.research
   const campaign = value.campaign
-  if (!isObject(app) || !isObject(world) || !isObject(research) || !isObject(campaign)) {
+  const tutorial = value.tutorial
+  if (
+    !isObject(app) ||
+    !isObject(world) ||
+    !isObject(research) ||
+    !isObject(campaign) ||
+    !isObject(tutorial) ||
+    !validIdList(tutorial.seen, SEEN_ID_SET)
+  ) {
     return false
   }
 
@@ -457,11 +474,12 @@ export function validateSave(value: unknown): value is SaveV5 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV5 {
+export function captureSave(): SaveV6 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
   const campaign = useCampaignStore.getState()
+  const tutorial = useTutorialStore.getState()
   return {
     version: SAVE_VERSION,
     app: {
@@ -504,6 +522,9 @@ export function captureSave(): SaveV5 {
       contractsWon: [...campaign.contractsWon],
       campaignWon: campaign.campaignWon,
     },
+    tutorial: {
+      seen: [...tutorial.seen],
+    },
   }
 }
 
@@ -527,7 +548,9 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
 // generation check one interval after the saved world time. A v4 blob is a
 // v5 blob without the influence economy or unrest pressure: the upgrade
 // starts at zero points, marks open contracts unexpedited, and arms a decay
-// timer for any sector already above the pressure threshold.
+// timer for any sector already above the pressure threshold. A v5 blob is a
+// v6 blob without the tutorial section: the upgrade starts with nothing seen,
+// so an upgraded campaign gets the prompts once like a new one.
 function upgraded(value: unknown): unknown {
   let v = value
   if (isObject(v) && v.version === 1 && isObject(v.app) && !('loadout' in v.app)) {
@@ -605,10 +628,13 @@ function upgraded(value: unknown): unknown {
       },
     }
   }
+  if (isObject(v) && v.version === 5 && !('tutorial' in v)) {
+    v = { ...v, version: 6, tutorial: { seen: [] } }
+  }
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV5 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV6 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -627,7 +653,8 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV5
   return null
 }
 
-export function hydrateSave(save: SaveV5): void {
+export function hydrateSave(save: SaveV6): void {
+  useTutorialStore.getState().hydrate(save.tutorial.seen)
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
     intelProgress: save.campaign.intelProgress,
@@ -700,6 +727,7 @@ export function startAutosave(
     useWorldStore.subscribe(scheduleAutosave),
     useResearchStore.subscribe(scheduleAutosave),
     useCampaignStore.subscribe(scheduleAutosave),
+    useTutorialStore.subscribe(scheduleAutosave),
   ]
   unsubscribeAutosave = () => {
     cancelPendingAutosave()
@@ -733,6 +761,7 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
 
   const campaign = initialCampaignData()
   useCampaignStore.setState(campaign)
+  useTutorialStore.getState().resetAll()
   useWorldStore.setState({
     t: 0,
     speed: 2,

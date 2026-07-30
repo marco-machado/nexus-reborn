@@ -28,6 +28,7 @@ import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
 import { missionSfx as sfx } from './audioBridge'
+import { fireTutorialHint, noteTutorial } from '../state/tutorialStore'
 import { useMissionStore } from '../state/missionStore'
 import type {
   AbilityAvailability,
@@ -86,6 +87,10 @@ const CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
 // Seconds after a weapon swap before the drawn weapon can fire.
 const SWAP_DELAY = 0.5
 const MED_KIT_HEAL = 50
+// A role ability sitting ready this long unused fires the one-shot hint.
+const ABILITY_IDLE_HINT_SEC = 60
+// Health fraction under which the med-kit hint fires while stock remains.
+const LOW_HP_HINT_FRAC = 0.35
 const GRENADE_COOLDOWN = 4
 const GRENADE_RANGE = 18
 const GRENADE_RADIUS = 3.5
@@ -251,6 +256,14 @@ export function createWorld(
   inventory.med += extraItems.med
   inventory.cell += extraItems.cell
   let grenadeReadyAt = 0
+
+  // Contextual hint tracking. The hints themselves are once per campaign
+  // (tutorialStore gates on the persisted seen set); these local flags only
+  // keep the sim from re-calling the store every step.
+  let abilityIdleT = 0
+  let abilityUsed = false
+  let abilityIdleHinted = false
+  let lowHpHinted = false
 
   // Thrown frag charges waiting on their fuse.
   interface Charge {
@@ -901,6 +914,7 @@ export function createWorld(
       firstContact = true
       pushLog('SYS', 'Threat level elevated.', 'alert')
       sfx.alertSting()
+      fireTutorialHint('hint-alert')
     }
   }
 
@@ -1486,6 +1500,7 @@ export function createWorld(
     const def = objectives[i]
     objState[i] = 'done'
     sfx.objectiveChime()
+    noteTutorial('objective')
     pushLog('SYS', 'OBJECTIVE COMPLETE: ' + def.label, 'ok')
     if (def.optional) {
       if (def.bonusReward) {
@@ -1556,6 +1571,7 @@ export function createWorld(
     }
     if (requiredOrder.length > 0 && reqPtr >= requiredOrder.length) {
       setResultNow('won')
+      noteTutorial('extract')
       pushLog('SYS', 'MISSION COMPLETE. EXTRACTION CONFIRMED.', 'ok')
     }
   }
@@ -1652,6 +1668,7 @@ export function createWorld(
 
   function startup(): void {
     pushLog('SYS', 'SQUAD LINK ESTABLISHED. ' + livingAgents().length + ' ONLINE.')
+    if (massDelta < 0) fireTutorialHint('hint-overweight')
     activateRequired(0)
     const firstIdx = requiredOrder[0]
     const first = firstIdx !== undefined ? objectives[firstIdx] : undefined
@@ -1721,6 +1738,40 @@ export function createWorld(
       // Channels and countdowns move every step; push their bars at sync rate.
       if (objectivesTicking()) syncObjectives()
       useMissionStore.getState().setClock(clockStr())
+      if (result === 'none') checkHints()
+    }
+  }
+
+  // Contextual one-shots, checked at sync rate: a wounded operative while med
+  // kits remain, and a role ability sitting ready unused. Sync-rate precision
+  // is plenty for a sixty second idle threshold.
+  function checkHints(): void {
+    if (!lowHpHinted && inventory.med > 0) {
+      for (const u of units) {
+        if (u.kind !== 'agent' || u.stance === 'dead') continue
+        if (u.hp < u.maxHp * LOW_HP_HINT_FRAC) {
+          lowHpHinted = true
+          fireTutorialHint('hint-lowhp')
+          break
+        }
+      }
+    }
+    if (!abilityUsed && !abilityIdleHinted) {
+      let ready = false
+      for (const u of units) {
+        if (u.kind !== 'agent' || u.stance === 'dead') continue
+        if ((u.abilityReadyAt ?? 0) <= world.time) {
+          ready = true
+          break
+        }
+      }
+      if (ready) {
+        abilityIdleT += SYNC_INTERVAL
+        if (abilityIdleT >= ABILITY_IDLE_HINT_SEC) {
+          abilityIdleHinted = true
+          fireTutorialHint('hint-ability-idle')
+        }
+      }
     }
   }
 
@@ -1766,6 +1817,7 @@ export function createWorld(
   function orderMove(agentIds: string[], dest: Vec2): void {
     const movers = ordered(agentIds)
     if (movers.length === 0) return
+    noteTutorial('move')
     const base = isWalkable(city, dest.x, dest.z)
       ? { x: dest.x, z: dest.z }
       : nearestWalkable(city, dest)
@@ -1791,6 +1843,7 @@ export function createWorld(
     if (!t || (t.kind !== 'enemy' && t.kind !== 'device') || t.stance === 'dead') return
     const shooters = ordered(agentIds)
     if (shooters.length === 0) return
+    noteTutorial('attack')
     for (const u of shooters) {
       u.targetId = targetId
       u.explicitTarget = true
@@ -1818,6 +1871,7 @@ export function createWorld(
   function orderHold(agentIds: string[], hold: boolean): void {
     const crew = ordered(agentIds)
     if (crew.length === 0) return
+    noteTutorial('hold')
     let changed = false
     for (const u of crew) {
       if (u.holdGround !== hold) changed = true
@@ -1847,6 +1901,7 @@ export function createWorld(
   function orderSwapWeapon(agentIds: string[]): void {
     const crew = ordered(agentIds)
     if (crew.length === 0) return
+    noteTutorial('swap')
     let changed = false
     let toSidearm = false
     for (const u of crew) {
@@ -1871,6 +1926,7 @@ export function createWorld(
   function orderHoldFire(agentIds: string[], hold: boolean): void {
     const crew = ordered(agentIds)
     if (crew.length === 0) return
+    noteTutorial('hold')
     let changed = false
     for (const u of crew) {
       if (u.holdFire !== hold) changed = true
@@ -1987,7 +2043,12 @@ export function createWorld(
   function orderAbility(agentIds: string[]): void {
     const ms = useMissionStore.getState()
     if (!ms.live || ms.paused || ms.result !== 'none' || result !== 'none') return
-    for (const u of ordered(agentIds)) fireAbility(u)
+    const crew = ordered(agentIds)
+    if (crew.length > 0) {
+      abilityUsed = true
+      noteTutorial('ability')
+    }
+    for (const u of crew) fireAbility(u)
     syncSquad()
   }
 
@@ -2025,6 +2086,7 @@ export function createWorld(
     const healed = Math.min(MED_KIT_HEAL, best.maxHp - best.hp)
     best.hp += healed
     inventory.med -= 1
+    noteTutorial('item')
     sfx.confirmBlip()
     pushLog('SYS', 'MED KIT APPLIED TO ' + (best.operative?.codename ?? best.name) + '. +' + Math.ceil(healed) + ' HP.', 'ok')
     return true
@@ -2045,6 +2107,7 @@ export function createWorld(
     }
     target.abilityReadyAt = world.time
     inventory.cell -= 1
+    noteTutorial('item')
     sfx.confirmBlip()
     pushLog('SYS', 'POWER CELL SPENT. ' + (target.operative?.codename ?? target.name) + ' ABILITY CHARGED.', 'ok')
     return true

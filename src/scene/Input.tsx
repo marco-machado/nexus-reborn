@@ -15,6 +15,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { bindingFor, codeOf } from '../game/bindings'
 import { getWorld } from '../game/runtime'
+import { noteTutorial } from '../state/tutorialStore'
 import { useMissionStore } from '../state/missionStore'
 import type { Unit, WorldApi } from '../game/types'
 import { pushClickMarker } from './clickMarkers'
@@ -154,11 +155,15 @@ export default function Input() {
           // Slot n is the digit the code ends in, so the number row and the
           // keypad stay one entry.
           const id = 'a' + code.slice(-1)
-          if (alive(w.unit(id))) ms.setSelected([id])
+          if (alive(w.unit(id))) {
+            ms.setSelected([id])
+            noteTutorial('select')
+          }
           break
         }
         case 'selectAll':
           ms.setSelected(livingAgents(w))
+          noteTutorial('select')
           break
         case 'clearSelection':
           ms.setSelected([])
@@ -308,10 +313,14 @@ export default function Input() {
           height: d.height,
         })
         ms.setSelected(add ? [...base, ...box.filter((id) => !base.includes(id))] : box)
+        if (box.length > 0) noteTutorial('select')
       } else if (pick) {
         // An enemy is not a selection target, but it is not bare ground
         // either: clicking one leaves the squad selected to be ordered onto it.
-        if (pick.agent) ms.setSelected(add ? toggle(base, pick.id) : [pick.id])
+        if (pick.agent) {
+          ms.setSelected(add ? toggle(base, pick.id) : [pick.id])
+          noteTutorial('select')
+        }
       } else if (!add) {
         ms.setSelected([])
       }

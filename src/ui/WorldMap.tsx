@@ -30,6 +30,8 @@ import { ROSTER_CAP } from '../game/recruits'
 import { missionChance, missionMods } from '../game/missionParams'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
+import { useTutorialStore } from '../state/tutorialStore'
+import { WORLD_ONBOARD_ID } from '../game/tutorial'
 import type { MissionDef, SectorId } from '../game/types'
 import type { SectorState } from '../state/worldStore'
 import {
@@ -745,6 +747,79 @@ function UnreadBadge() {
 
 /* -------------------------------- the screen ------------------------------ */
 
+// First-visit orientation: names the screen's four panel groups and the way
+// to Research. Shows once per campaign; the dismissal persists with the save
+// through the tutorial seen set.
+function WorldOnboard() {
+  const seen = useTutorialStore((s) => s.seen)
+  const markSeen = useTutorialStore((s) => s.markSeen)
+  if (seen.includes(WORLD_ONBOARD_ID)) return null
+  return (
+    <div
+      className="hud-menu-wrap wm-onboard-wrap"
+      role="dialog"
+      aria-modal="true"
+      aria-label="World Network orientation"
+    >
+      <div className="hud-menu-panel wm-onboard">
+        <Panel title="WORLD NETWORK // ORIENTATION" right={<span className="dim">FIRST UPLINK</span>}>
+          <div className="wm-onboard-rows">
+            <div className="wm-onboard-row">
+              <b>CONTINENTAL SECTORS</b>
+              <span>
+                The left column lists every sector; pick one to focus it on the plate. Crisis
+                states flag themselves in red.
+              </span>
+            </div>
+            <div className="wm-onboard-row">
+              <b>SECTOR COMMAND</b>
+              <span>
+                The right panel reads the focused sector: control, unrest, garrison, the numbered
+                influence actions, and the event forecast.
+              </span>
+            </div>
+            <div className="wm-onboard-row">
+              <b>AVAILABLE OPERATIONS</b>
+              <span>
+                Below it, the open contracts for that sector. Opening one moves to the mission
+                brief.
+              </span>
+            </div>
+            <div className="wm-onboard-row">
+              <b>TIME AND EVENTS</b>
+              <span>
+                The bottom strip runs the world clock, reviews the last 24 hours, and carries the
+                global events feed and your resource pool.
+              </span>
+            </div>
+            <div className="wm-onboard-row">
+              <b>RESEARCH</b>
+              <span>
+                The RESEARCH tab on the bottom navigation opens the lab programs; labs run on the
+                same world clock.
+              </span>
+            </div>
+          </div>
+          <div className="hud-menu-actions">
+            <button
+              type="button"
+              className="hud-btn pause"
+              aria-label="Dismiss the orientation"
+              autoFocus
+              onClick={() => {
+                uiClick()
+                markSeen(WORLD_ONBOARD_ID)
+              }}
+            >
+              UNDERSTOOD
+            </button>
+          </div>
+        </Panel>
+      </div>
+    </div>
+  )
+}
+
 export function WorldMap() {
   const selectMission = useAppStore((s) => s.selectMission)
   const credits = useAppStore((s) => s.credits)
@@ -1071,6 +1146,7 @@ export function WorldMap() {
       </div>
 
       <NavTabs current="world" />
+      <WorldOnboard />
     </div>
   )
 }

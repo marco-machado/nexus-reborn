@@ -23,7 +23,8 @@ import {
   validateSave,
   writeSave,
 } from './save'
-import type { SaveStorage, SaveV5 } from './save'
+import type { SaveStorage, SaveV6 } from './save'
+import { useTutorialStore } from './tutorialStore'
 import { useWorldStore } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
@@ -56,10 +57,18 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+// A v6 blob without the tutorial section, as a real v5 save held.
+function downgradeToV5(save: SaveV6): Record<string, unknown> {
+  const blob = structuredClone(save) as unknown as Record<string, unknown>
+  blob.version = 5
+  delete blob.tutorial
+  return blob
+}
+
 // A v5 blob without the influence economy or unrest pressure, as a real v4
 // save held: no world influence fields and no expedited flag on contracts.
-function downgradeToV4(save: SaveV5): Record<string, unknown> {
-  const blob = structuredClone(save) as unknown as Record<string, unknown>
+function downgradeToV4(save: SaveV6): Record<string, unknown> {
+  const blob = downgradeToV5(save)
   blob.version = 4
   const world = blob.world as Record<string, unknown>
   delete world.influence
@@ -77,7 +86,7 @@ function downgradeToV4(save: SaveV5): Record<string, unknown> {
 }
 
 // A v4 blob without the generated contract market, as a real v3 save held.
-function downgradeToV3(save: SaveV5): Record<string, unknown> {
+function downgradeToV3(save: SaveV6): Record<string, unknown> {
   const blob = downgradeToV4(save)
   blob.version = 3
   const world = blob.world as Record<string, unknown>
@@ -89,7 +98,7 @@ function downgradeToV3(save: SaveV5): Record<string, unknown> {
 
 // Older blobs never carried the live roster: strip the v3 campaign fields so
 // the synthetic downgrade matches what a real v1/v2 save held.
-function downgradeToV2(save: SaveV5): Record<string, unknown> {
+function downgradeToV2(save: SaveV6): Record<string, unknown> {
   const blob = downgradeToV3(save)
   blob.version = 2
   const campaign = blob.campaign as Record<string, unknown>
@@ -105,7 +114,7 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const invalid = structuredClone(save) as SaveV5
+    const invalid = structuredClone(save) as SaveV6
     invalid.campaign.contractsWon = ['unknown']
     expect(validateSave(invalid)).toBe(false)
   })
@@ -113,21 +122,21 @@ describe('save validation', () => {
   it('rejects roster tampering: unknown squad ids, roster/operative mismatch', () => {
     const save = captureSave()
 
-    const badSquad = structuredClone(save) as SaveV5
+    const badSquad = structuredClone(save) as SaveV6
     badSquad.app.squad = ['op99']
     expect(validateSave(badSquad)).toBe(false)
 
-    const badRoster = structuredClone(save) as SaveV5
+    const badRoster = structuredClone(save) as SaveV6
     delete badRoster.campaign.roster.op1
     expect(validateSave(badRoster)).toBe(false)
 
-    const badCandidate = structuredClone(save) as SaveV5
+    const badCandidate = structuredClone(save) as SaveV6
     badCandidate.campaign.candidates[0].cost = 1
     expect(validateSave(badCandidate)).toBe(false)
   })
 
   it('accepts a fully wiped roster so a lost campaign can rebuild', () => {
-    const wiped = structuredClone(captureSave()) as SaveV5
+    const wiped = structuredClone(captureSave()) as SaveV6
     wiped.campaign.operatives = []
     wiped.campaign.roster = {}
     wiped.app.squad = []
@@ -138,8 +147,8 @@ describe('save validation', () => {
   it('rejects malformed loadouts: unknown ids, wrong lengths, unknown items', () => {
     const save = captureSave()
 
-    const badOp = structuredClone(save) as SaveV5
-    badOp.app.loadout = { op99: ['med', null] } as SaveV5['app']['loadout']
+    const badOp = structuredClone(save) as SaveV6
+    badOp.app.loadout = { op99: ['med', null] } as SaveV6['app']['loadout']
     expect(validateSave(badOp)).toBe(false)
 
     const badLength = structuredClone(save)
@@ -159,7 +168,7 @@ describe('save validation', () => {
 
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
-    expect(loaded?.version).toBe(5)
+    expect(loaded?.version).toBe(6)
     expect(loaded?.app.loadout).toEqual({})
     expect(loaded?.campaign.operatives).toEqual(initialCampaignData().operatives)
     expect(loaded?.world.contracts).toEqual([])
@@ -177,7 +186,7 @@ describe('save validation', () => {
     expect(loaded).not.toBeNull()
     if (!loaded) return
     const seeded = initialCampaignData()
-    expect(loaded.version).toBe(5)
+    expect(loaded.version).toBe(6)
     expect(loaded.campaign.operatives.map((o) => o.id)).toEqual(ROSTER.map((o) => o.id))
     expect(loaded.campaign.candidates).toEqual(seeded.candidates)
     expect(loaded.campaign.recruitRngState).toBe(seeded.recruitRngState)
@@ -192,7 +201,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(5)
+    expect(loaded.version).toBe(6)
     expect(loaded.world.contracts).toEqual([])
     expect(loaded.world.contractRngState).toBe(INITIAL_CONTRACT_RNG)
     expect(loaded.world.nextContractT).toBe(9000 + CONTRACT_MIN_SEC)
@@ -216,7 +225,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(5)
+    expect(loaded.version).toBe(6)
     expect(loaded.world.influence).toBe(0)
     expect(loaded.world.nextTrickleT).toBe(loaded.world.t + TRICKLE_INTERVAL_SEC)
     expect(loaded.world.spends).toEqual([])
@@ -231,6 +240,40 @@ describe('save validation', () => {
     expect(loaded.world.contracts).toEqual(save.world.contracts)
   })
 
+  it('upgrades a v5 blob in place with an empty tutorial history', () => {
+    useTutorialStore.getState().skipTutorial()
+    const v5 = downgradeToV5(captureSave())
+    storage.setItem(SAVE_KEY, JSON.stringify(v5))
+
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    expect(loaded.version).toBe(6)
+    // The pre-tutorial campaign starts the prompts from scratch.
+    expect(loaded.tutorial.seen).toEqual([])
+  })
+
+  it('rejects tampered tutorial history', () => {
+    const save = captureSave()
+    expect(validateSave(save)).toBe(true)
+
+    const badId = structuredClone(save) as SaveV6
+    badId.tutorial.seen = ['tut-select', 'not-a-real-id']
+    expect(validateSave(badId)).toBe(false)
+
+    const duplicate = structuredClone(save) as SaveV6
+    duplicate.tutorial.seen = ['tut-select', 'tut-select']
+    expect(validateSave(duplicate)).toBe(false)
+
+    const missing = structuredClone(save) as unknown as Record<string, unknown>
+    delete missing.tutorial
+    expect(validateSave(missing)).toBe(false)
+
+    const good = structuredClone(save) as SaveV6
+    good.tutorial.seen = ['tut-select', 'hint-lowhp', 'hint-worldmap']
+    expect(validateSave(good)).toBe(true)
+  })
+
   it('rejects tampered generated contracts', () => {
     useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
     useWorldStore.getState().tick(1)
@@ -238,11 +281,11 @@ describe('save validation', () => {
     expect(save.world.contracts.length).toBeGreaterThan(0)
     expect(validateSave(save)).toBe(true)
 
-    const badReward = structuredClone(save) as SaveV5
+    const badReward = structuredClone(save) as SaveV6
     badReward.world.contracts[0].reward = 1
     expect(validateSave(badReward)).toBe(false)
 
-    const badClient = structuredClone(save) as SaveV5
+    const badClient = structuredClone(save) as SaveV6
     ;(badClient.world.contracts[0] as unknown as Record<string, unknown>).client = 'sable'
     expect(validateSave(badClient)).toBe(false)
   })
@@ -251,29 +294,29 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const badPoints = structuredClone(save) as SaveV5
+    const badPoints = structuredClone(save) as SaveV6
     badPoints.world.influence = -3
     expect(validateSave(badPoints)).toBe(false)
 
-    const badSpend = structuredClone(save) as SaveV5
+    const badSpend = structuredClone(save) as SaveV6
     badSpend.world.spends = [
       { action: 'stabilize', sector: 'eu', nextT: 100, remaining: 99 },
     ]
     expect(validateSave(badSpend)).toBe(false)
 
-    const badCooldown = structuredClone(save) as SaveV5
+    const badCooldown = structuredClone(save) as SaveV6
     badCooldown.world.cooldowns = { 'eu:bribe': 100 }
     expect(validateSave(badCooldown)).toBe(false)
 
-    const badCrisis = structuredClone(save) as SaveV5
-    badCrisis.world.crisis = ['an' as SaveV5['world']['crisis'][number]]
+    const badCrisis = structuredClone(save) as SaveV6
+    badCrisis.world.crisis = ['an' as SaveV6['world']['crisis'][number]]
     expect(validateSave(badCrisis)).toBe(false)
 
-    const badPressure = structuredClone(save) as SaveV5
+    const badPressure = structuredClone(save) as SaveV6
     badPressure.world.pressure = { zz: 100 }
     expect(validateSave(badPressure)).toBe(false)
 
-    const goodSpend = structuredClone(save) as SaveV5
+    const goodSpend = structuredClone(save) as SaveV6
     goodSpend.world.influence = 14
     goodSpend.world.spends = [
       { action: 'lobby', sector: 'sa', nextT: 6400, remaining: 3 },
@@ -431,6 +474,28 @@ describe('save round trip', () => {
     expect(useAppStore.getState().credits).toBe(expected.app.credits)
   })
 
+  it('round-trips the tutorial seen set and gates hints across the reload', () => {
+    useTutorialStore.getState().note('select')
+    useTutorialStore.getState().fireHint('hint-alert')
+    useTutorialStore.getState().markSeen('hint-worldmap')
+    const expected = captureSave()
+    expect(expected.tutorial.seen).toEqual(['tut-select', 'hint-alert', 'hint-worldmap'])
+    expect(writeSave(storage)).toBe(true)
+
+    startNewOperation()
+    expect(useTutorialStore.getState().seen).toEqual([])
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    hydrateSave(loaded)
+
+    expect(useTutorialStore.getState().seen).toEqual(expected.tutorial.seen)
+    expect(useTutorialStore.getState().hints).toEqual([])
+    // The reloaded campaign still refuses a second firing.
+    useTutorialStore.getState().fireHint('hint-alert')
+    expect(useTutorialStore.getState().hints).toEqual([])
+  })
+
   it('round-trips the open contract market so a reload reproduces it exactly', () => {
     // Generate two contracts on the strategic clock, then save and reload.
     useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
@@ -458,6 +523,7 @@ describe('save round trip', () => {
   it('new operation clears the prior blob and restores campaign defaults', () => {
     useAppStore.setState({ credits: 999999, squad: [] })
     useCampaignStore.setState({ intelLevel: 4, intelProgress: 88, contractsWon: ['m01'] })
+    useTutorialStore.getState().skipTutorial()
     expect(writeSave(storage)).toBe(true)
     expect(storage.getItem(SAVE_KEY)).not.toBeNull()
 
@@ -481,6 +547,8 @@ describe('save round trip', () => {
       paused: false,
     })
     expect(useResearchStore.getState().done).toEqual([])
+    // The prompts return with the fresh campaign.
+    expect(useTutorialStore.getState().seen).toEqual([])
   })
 })
 

@@ -870,6 +870,7 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - Unlocks browser audio on the first user gesture.
 - Offers CONTINUE when a valid save exists.
 - Offers NEW OPERATION behind a two-step erase confirm.
+- Opens the SETTINGS panel (audio, controls, accessibility).
 
 #### World Network
 
@@ -880,6 +881,7 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - Credits, influence, operative count, and intel display.
 - Campaign-complete banner after all three contracts are won.
 - Navigation to Research.
+- First-visit orientation overlay naming the panel groups and the Research tab; its dismissal persists with the save.
 
 #### Research Division
 
@@ -917,6 +919,7 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - Usable item buttons with live med kit and power cell counts, disabled at zero.
 - Interactive, zoomable minimap.
 - Pause menu and mission result banner.
+- First-mission tutorial toasts and one-shot contextual advisories, dismissible, never blocking input or pausing the sim; progress persists with the save.
 
 #### Debrief
 
@@ -944,37 +947,44 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 Space or Escape opens a modal pause menu. The menu:
 
 - Freezes simulation and camera motion.
-- Displays every mission binding from the same authoritative binding table used by input.
+- Displays every mission binding from the same authoritative binding table used by input, including any player remaps.
 - Supports focus trapping.
 - Offers Resume.
+- Opens the SETTINGS panel; the sim stays frozen and closing returns to the pause menu.
 - Uses a two-step, three-second confirmation window for Abort.
 
 Abort returns to the World Network and discards the current mission state without a debrief.
 
+Control discovery is also carried by the first-mission tutorial: a sequence of small dismissible HUD toasts (selection, move, attack, stances, ability, items, weapon swap, directives, extraction) that name the current bindings, advance when the player performs the action or dismisses them, and never block input. A SKIP TUTORIAL control marks all steps seen. One-shot contextual advisories fire at most once per campaign: an operative under 35% health with med kits in stock, the first combat alert, a role ability left ready for a minute, and an overweight deployment.
+
 ### 13.5 Accessibility status
 
-**Partially implemented**
+**Implemented**
 
 - Most major buttons have contextual accessible labels.
 - Research nodes support Enter and Space.
 - The timeline supports arrows, Home, and End.
-- Pause-menu focus is trapped and restored.
+- Pause-menu and settings-panel focus is trapped and restored.
 - The minimap is keyboard-focusable but its declared arrow-key behavior is actually handled by the global camera controls.
 - Color is often reinforced by labels, icons, or state text.
+- Remappable controls (settings panel; pause, operative slots, and mouse stay fixed).
+- Reduced-motion mode: decorative sweeps disappear, looping pulse and flow animations freeze, the minimap objective pulse holds a steady ring, and rain drops to minimum density.
+- High-contrast mode: brighter ink tiers and stronger frame lines.
+- Text scaling at 90/100/110/125%; screens scroll rather than clip at the larger sizes.
+- All of it persists in localStorage separate from the campaign save, so NEW OPERATION keeps the player's settings.
 
 **Recommended**
 
 - Full keyboard navigation for all screen panels.
-- Remappable controls.
-- Text scaling and reduced CRT/noise options.
-- Reduced-motion mode for sweeps, pulses, rain, and transitions.
-- High-contrast and color-vision presets.
+- Color-vision presets.
 - Captions or textual equivalents for all audio cues.
 - Screen-reader validation of the tactical HUD.
 
 ---
 
 ## 14. Controls
+
+The tables below list the default keys. Every keyboard action except the pause keys and the operative slots can be remapped from the SETTINGS panel; the pause menu, the tutorial prompts, and the input handlers all read the same binding table, so a remap renames itself everywhere at once.
 
 ### Camera
 
@@ -1107,6 +1117,8 @@ All audio is synthesized at runtime with Web Audio:
 
 Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense combat from stacking excessive simultaneous sounds.
 
+Every voice routes through one of two channel gains (UI cues and combat) under a master gain. The SETTINGS panel carries master, UI, and combat sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.
+
 ### Current limitations
 
 - No music.
@@ -1114,7 +1126,6 @@ Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense
 - No city ambience.
 - No spoken operative dialogue.
 - No spatial audio model.
-- No volume, mute, or accessibility settings.
 
 ### Recommended audio goals
 
@@ -1122,7 +1133,7 @@ Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense
 - Rain, distant traffic, electrical hum, and sirens in missions.
 - Clear perceptual separation among squad, CorpSec, UI, and objective sounds.
 - Optional synthetic radio voice treatment for operative acknowledgements.
-- Independent master, music, ambience, UI, and combat levels.
+- Independent music and ambience levels once those beds exist.
 
 ---
 
@@ -1268,6 +1279,8 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Intel earned from wins and clean wins; intel-gated contract unlocks.
 - Campaign completion state after all three contracts.
 - Injury enforcement with timed recovery on the world clock.
+- First-mission tutorial toasts, one-shot contextual advisories, and the World Network onboarding overlay, with save-persistent progress.
+- A settings panel (main menu and pause): audio channel sliders and mute, control remapping with conflict rejection, reduced-motion, high-contrast, and text scaling, persisted separately from the campaign save.
 
 ### 19.2 Scaffolded or presentation-only
 
@@ -1284,8 +1297,6 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Operative experience.
 - Mission types beyond reach/eliminate/extract.
 - A strategic fail state; the campaign has victory and recoverable pressure only, even through sector crisis.
-- Tutorials and onboarding.
-- Settings and control remapping.
 - Difficulty modes.
 - Music and ambient sound.
 - Telemetry.
@@ -1294,7 +1305,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ## 20. Recommended product roadmap
 
-Milestones 1, 3 and 4 are complete; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining items are recommendations, not current behavior.
+Milestones 1, 3 and 4 are complete, and Milestone 5 items 1 and 2 are done; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining items are recommendations, not current behavior.
 
 ### Milestone 1 — Close the campaign loop (complete 2026-07-29)
 
@@ -1337,8 +1348,8 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 ### Milestone 5 — Release readiness
 
-1. Add tutorialization and contextual control prompts.
-2. Add settings, remapping, audio controls, and accessibility modes.
+1. Add tutorialization and contextual control prompts. Done 2026-07-30: the first-mission toast sequence, once-per-campaign advisories, and the World Network onboarding overlay, all save-persistent (sections 13.2, 13.4).
+2. Add settings, remapping, audio controls, and accessibility modes. Done 2026-07-30: the SETTINGS panel from the main menu and pause with channel volumes, capture-style remapping, reduced motion, high contrast, and text scaling (sections 13.5, 14, 16).
 3. Add automated simulation, economy, research, and objective tests.
 4. Add browser/device performance tiers.
 5. Add campaign telemetry and balance dashboards.
