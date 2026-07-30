@@ -1,6 +1,26 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DAY, MAX_DT, TIME_SCALE, hhmm, stamp, useWorldStore } from './worldStore'
-import { CITIES, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
+import {
+  DAY,
+  MAX_DT,
+  TIME_SCALE,
+  hhmm,
+  initialOwner,
+  resolveMission,
+  stamp,
+  useWorldStore,
+} from './worldStore'
+import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
+import {
+  CONTRACT_EXPIRY_MIN_SEC,
+  CONTRACT_MIN_SEC,
+  CONTRACT_SPAN_SEC,
+  CONTRACT_TARGET,
+  PRIORITY_EXPIRY_MIN_SEC,
+  PRIORITY_EXPIRY_SPAN_SEC,
+  sectorClient,
+} from '../game/contracts'
+import type { GeneratedContract } from '../game/contracts'
+import type { SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
@@ -25,6 +45,9 @@ const snapshot = structuredClone({
   review: s0.review,
   nextEventT: s0.nextEventT,
   rngState: s0.rngState,
+  contracts: s0.contracts,
+  contractRngState: s0.contractRngState,
+  nextContractT: s0.nextContractT,
 })
 
 beforeEach(() => {
@@ -104,6 +127,8 @@ describe('events feed', () => {
       owner: firstState.owner,
       nextEventT: firstState.nextEventT,
       rngState: firstState.rngState,
+      contracts: firstState.contracts,
+      contractRngState: firstState.contractRngState,
     })
     useWorldStore.setState(structuredClone(snapshot))
     forceEvent()
@@ -113,33 +138,36 @@ describe('events feed', () => {
     expect(second.owner).toEqual(first.owner)
     expect(second.nextEventT).toBe(first.nextEventT)
     expect(second.rngState).toBe(first.rngState)
+    expect(second.contracts).toEqual(first.contracts)
+    expect(second.contractRngState).toBe(first.contractRngState)
   })
 
-  it('crossing nextEventT appends one event and reschedules the next', () => {
+  it('crossing nextEventT appends the rolled event and reschedules the next', () => {
     const before = useWorldStore.getState()
     const eventT = before.nextEventT
     useWorldStore.setState({ t: eventT - 1 })
     useWorldStore.getState().tick(0.2)
     const s = useWorldStore.getState()
-    expect(s.events).toHaveLength(4)
+    // A riot roll may append a linked contract line after the event itself.
+    expect(s.events.length).toBeGreaterThanOrEqual(4)
     const ev = s.events[3]
     expect(ev.id).toBe(4)
     expect(ev.t).toBe(eventT)
     expect(OPEN_SECTORS).toContain(ev.sector)
     expect(KINDS).toContain(ev.kind)
     expect(ev.text.length).toBeGreaterThan(0)
-    expect(s.unread).toBe(4)
+    expect(s.unread).toBeGreaterThanOrEqual(4)
     expect(s.nextEventT).toBeGreaterThanOrEqual(eventT + EVENT_MIN)
     expect(s.nextEventT).toBeLessThan(eventT + EVENT_MIN + EVENT_SPAN)
   })
 
-  it('the feed caps at 40 events and keeps the newest', () => {
+  it('the feed caps at 40 events and keeps the newest with consecutive ids', () => {
     for (let i = 0; i < 50; i++) forceEvent()
     const events = useWorldStore.getState().events
     expect(events).toHaveLength(40)
-    // 3 seed events + 50 rolls; ids run consecutively and end at 53.
-    expect(events[39].id).toBe(53)
-    expect(events[0].id).toBe(14)
+    // 3 seed events + 50 rolls plus interleaved contract lines; ids stay
+    // consecutive and only the newest 40 survive.
+    expect(events[39].id).toBeGreaterThanOrEqual(53)
     for (let i = 1; i < events.length; i++) expect(events[i].id).toBe(events[i - 1].id + 1)
   })
 
@@ -168,27 +196,216 @@ describe('events feed', () => {
 
   it('unread counts events until markRead clears it', () => {
     forceEvent()
-    expect(useWorldStore.getState().unread).toBe(4)
+    expect(useWorldStore.getState().unread).toBeGreaterThanOrEqual(4)
     useWorldStore.getState().markRead()
     expect(useWorldStore.getState().unread).toBe(0)
   })
 })
 
-describe('mission results', () => {
-  function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
+function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
+  return {
+    won: true,
+    kills: 7,
+    casualties: 0,
+    timeSec: 300,
+    civiliansHit: 0,
+    reward: 85000,
+    bonus: 0,
+    deadIds: [],
+    survivorHp: {},
+    ...over,
+  }
+}
+
+describe('generated contracts', () => {
+  // A hand-built record for hook tests: far expiry, client matching the
+  // sector's dominant holder, so only the code under test moves it.
+  function craft(sector: SectorId, seed: number): GeneratedContract {
     return {
-      won: true,
-      kills: 7,
-      casualties: 0,
-      timeSec: 300,
-      civiliansHit: 0,
-      reward: 85000,
-      bonus: 0,
-      deadIds: [],
-      survivorHp: {},
-      ...over,
+      id: 'gc' + seed.toString(16).padStart(8, '0'),
+      createdT: 0,
+      expiresAtT: 1e9,
+      sector,
+      cityId: CITIES_BY_SECTOR[sector][0].id,
+      district: 5,
+      type: 'SEIZURE',
+      client: sectorClient(sector, initialOwner()),
+      threat: 'HIGH',
+      reward: 50000,
+      seed,
+      priority: false,
     }
   }
+
+  // Crosses the pending generation check with events pinned off.
+  function forceGeneration(): void {
+    const s = useWorldStore.getState()
+    useWorldStore.setState({ nextEventT: 1e12, t: s.nextContractT - 1 })
+    useWorldStore.getState().tick(1)
+  }
+
+  it('rolls a contract when the clock crosses nextContractT and posts the offer', () => {
+    const checkT = useWorldStore.getState().nextContractT
+    forceGeneration()
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(1)
+    const c = s.contracts[0]
+    expect(c.createdT).toBe(checkT)
+    expect(OPEN_SECTORS).toContain(c.sector)
+    expect(CITIES_BY_SECTOR[c.sector].some((city) => city.id === c.cityId)).toBe(true)
+    expect(c.expiresAtT - c.createdT).toBeGreaterThanOrEqual(CONTRACT_EXPIRY_MIN_SEC)
+    expect(c.expiresAtT - c.createdT).toBeLessThanOrEqual(2 * CONTRACT_EXPIRY_MIN_SEC)
+    expect(c.priority).toBe(false)
+    expect(s.events.at(-1)).toMatchObject({ kind: 'contract', sector: c.sector })
+    expect(s.events.at(-1)?.text).toContain('POSTED')
+    expect(s.nextContractT).toBeGreaterThanOrEqual(checkT + CONTRACT_MIN_SEC)
+    expect(s.nextContractT).toBeLessThan(checkT + CONTRACT_MIN_SEC + CONTRACT_SPAN_SEC)
+  })
+
+  it('reproduces the same contract from a restored rng cursor', () => {
+    forceGeneration()
+    const first = structuredClone({
+      contracts: useWorldStore.getState().contracts,
+      contractRngState: useWorldStore.getState().contractRngState,
+      nextContractT: useWorldStore.getState().nextContractT,
+    })
+    useWorldStore.setState(structuredClone(snapshot))
+    forceGeneration()
+    const second = useWorldStore.getState()
+    expect(second.contracts).toEqual(first.contracts)
+    expect(second.contractRngState).toBe(first.contractRngState)
+    expect(second.nextContractT).toBe(first.nextContractT)
+  })
+
+  it('keeps at most three contracts open across repeated generation checks', () => {
+    for (let i = 0; i < 12; i++) forceGeneration()
+    const s = useWorldStore.getState()
+    expect(s.contracts.length).toBeGreaterThanOrEqual(1)
+    expect(s.contracts.length).toBeLessThanOrEqual(CONTRACT_TARGET)
+  })
+
+  it('expires an unaccepted offer and posts the rescission to the feed', () => {
+    forceGeneration()
+    const c = useWorldStore.getState().contracts[0]
+    useWorldStore.setState({
+      t: c.expiresAtT - 1,
+      nextEventT: 1e12,
+      nextContractT: 1e12,
+    })
+    useWorldStore.getState().tick(1)
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(0)
+    expect(s.events.at(-1)).toMatchObject({ kind: 'contract', sector: c.sector, tone: 'dim' })
+    expect(s.events.at(-1)?.text).toContain('EXPIRED')
+  })
+
+  it('a riot can spawn a linked priority suppression contract in its sector', () => {
+    useWorldStore.setState({ nextContractT: Number.MAX_SAFE_INTEGER })
+    let c: GeneratedContract | null = null
+    for (let i = 0; i < 400 && !c; i++) {
+      forceEvent()
+      c = useWorldStore.getState().contracts[0] ?? null
+    }
+    expect(c).not.toBeNull()
+    if (!c) return
+    expect(c.priority).toBe(true)
+    expect(c.type).toBe('SUPPRESSION')
+    expect(c.expiresAtT - c.createdT).toBeGreaterThanOrEqual(PRIORITY_EXPIRY_MIN_SEC)
+    expect(c.expiresAtT - c.createdT).toBeLessThanOrEqual(
+      PRIORITY_EXPIRY_MIN_SEC + PRIORITY_EXPIRY_SPAN_SEC,
+    )
+    const line = useWorldStore
+      .getState()
+      .events.find((e) => e.text.startsWith('PRIORITY CONTRACT'))
+    expect(line?.sector).toBe(c.sector)
+  })
+
+  it('a corpsec raid can withdraw an open contract from its sector', () => {
+    useWorldStore.setState({
+      nextContractT: Number.MAX_SAFE_INTEGER,
+      contracts: [craft('eu', 1), craft('af', 2), craft('as', 3)],
+    })
+    let withdrew = false
+    for (let i = 0; i < 600 && !withdrew; i++) {
+      forceEvent()
+      withdrew = useWorldStore.getState().contracts.length < 3
+    }
+    expect(withdrew).toBe(true)
+    expect(
+      useWorldStore.getState().events.some((e) => e.text.includes('WITHDRAWS CONTRACT')),
+    ).toBe(true)
+  })
+
+  it('open contracts always name the sector dominant holder as client', () => {
+    useWorldStore.setState({
+      nextContractT: Number.MAX_SAFE_INTEGER,
+      contracts: [craft('eu', 11), craft('af', 12), craft('as', 13)],
+    })
+    for (let i = 0; i < 200; i++) forceEvent()
+    const s = useWorldStore.getState()
+    for (const c of s.contracts) {
+      expect(c.client).toBe(sectorClient(c.sector, s.owner))
+    }
+  })
+
+  it('a generated debrief moves the sector like an authored one and spends the contract', () => {
+    const c = craft('eu', 21)
+    useWorldStore.setState({ contracts: [c], nextContractT: Number.MAX_SAFE_INTEGER })
+    const before = structuredClone(useWorldStore.getState().sectors.eu)
+    useWorldStore.getState().applyMissionResult(c.id, outcome())
+    const after = useWorldStore.getState()
+    expect(after.contracts).toHaveLength(0)
+    expect(after.sectors.eu.control).toBeGreaterThan(before.control)
+    expect(after.sectors.eu.unrest).toBeLessThan(before.unrest)
+    expect(after.events.at(-1)?.tone).toBe('green')
+    expect(after.events.at(-1)?.text).toContain('STRIKE TEAM 04 OPENS')
+  })
+
+  it('resolveMission finds authored, open generated, and just-fulfilled missions', () => {
+    expect(resolveMission('m01')?.codename).toBe('GLASS VEIL')
+    expect(resolveMission('zz')).toBeNull()
+    const c = craft('af', 22)
+    useWorldStore.setState({ contracts: [c], nextContractT: Number.MAX_SAFE_INTEGER })
+    const def = resolveMission(c.id)
+    expect(def?.id).toBe(c.id)
+    expect(def?.sector).toBe('af')
+    // Fulfilled: gone from the market, still resolvable for the debrief.
+    useWorldStore.getState().applyMissionResult(c.id, outcome())
+    expect(useWorldStore.getState().contracts).toHaveLength(0)
+    expect(resolveMission(c.id)?.id).toBe(c.id)
+  })
+
+  it('advanceDays lands exactly where continuous ticking would', () => {
+    useWorldStore.getState().advanceDays(2)
+    const jump = structuredClone({
+      t: useWorldStore.getState().t,
+      sectors: useWorldStore.getState().sectors,
+      owner: useWorldStore.getState().owner,
+      events: useWorldStore.getState().events,
+      nextEventT: useWorldStore.getState().nextEventT,
+      rngState: useWorldStore.getState().rngState,
+      contracts: useWorldStore.getState().contracts,
+      contractRngState: useWorldStore.getState().contractRngState,
+      nextContractT: useWorldStore.getState().nextContractT,
+    })
+
+    useWorldStore.setState(structuredClone(snapshot))
+    // 0.25s frames at speed 2 advance exactly 30 world seconds each.
+    for (let i = 0; i < (2 * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
+    const cont = useWorldStore.getState()
+    expect(cont.t).toBe(jump.t)
+    expect(cont.sectors).toEqual(jump.sectors)
+    expect(cont.owner).toEqual(jump.owner)
+    expect(cont.events).toEqual(jump.events)
+    expect(cont.nextEventT).toBe(jump.nextEventT)
+    expect(cont.rngState).toBe(jump.rngState)
+    expect(cont.contracts).toEqual(jump.contracts)
+    expect(cont.contractRngState).toBe(jump.contractRngState)
+    expect(cont.nextContractT).toBe(jump.nextContractT)
+  })
+})
+
+describe('mission results', () => {
 
   it('a Glass Veil win raises control, lowers unrest, and posts a green event', () => {
     const state = useWorldStore.getState()

@@ -14,6 +14,15 @@ import {
   ROSTER_CAP,
 } from '../game/recruits'
 import type { Candidate } from '../game/recruits'
+import {
+  CONTRACT_KEYS,
+  CONTRACT_MIN_SEC,
+  CONTRACT_REWARD_MAX,
+  CONTRACT_REWARD_MIN,
+  CONTRACT_TARGET,
+  INITIAL_CONTRACT_RNG,
+} from '../game/contracts'
+import type { ContractThreat, ContractType, GeneratedContract } from '../game/contracts'
 import type { AgentRole, OperativeDef, SectorId } from '../game/types'
 import { INITIAL_CREDITS, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
@@ -21,6 +30,7 @@ import type { CampaignRosterEntry } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import type { Labs } from './researchStore'
 import {
+  INITIAL_NEXT_CONTRACT_T,
   INITIAL_WORLD_RNG,
   SPEEDS,
   initialOwner,
@@ -32,7 +42,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 3 as const
+const SAVE_VERSION = 4 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -40,8 +50,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV3 {
-  version: 3
+export interface SaveV4 {
+  version: 4
   app: {
     credits: number
     squad: string[]
@@ -57,6 +67,9 @@ export interface SaveV3 {
     unread: number
     nextEventT: number
     rngState: number
+    contracts: GeneratedContract[]
+    contractRngState: number
+    nextContractT: number
   }
   research: {
     done: string[]
@@ -111,7 +124,13 @@ const MISSION_IDS = new Set(MISSIONS.map((mission) => mission.id))
 const RESEARCH_IDS = new Set(NODES.map((node) => node.id))
 const SECTOR_IDS = new Set<string>(SECTORS.map((sector) => sector.id))
 const CITY_IDS = new Set(CITIES.map((city) => city.id))
-const EVENT_KINDS = new Set<EventKind>(['riot', 'seizure', 'trade', 'raid', 'blackout', 'kia'])
+const EVENT_KINDS = new Set<EventKind>([
+  'riot', 'seizure', 'trade', 'raid', 'blackout', 'kia', 'contract',
+])
+const CONTRACT_TYPES = new Set<ContractType>([
+  'SEIZURE', 'EXTRACTION', 'SABOTAGE', 'SUPPRESSION',
+])
+const CONTRACT_THREATS = new Set<ContractThreat>(['MODERATE', 'HIGH', 'SEVERE'])
 const EVENT_TONES = new Set<EventTone>(['red', 'green', 'amber', 'dim'])
 const WEAPON_IDS = new Set(Object.keys(WEAPONS))
 const ROLES = new Set<AgentRole>([
@@ -164,6 +183,46 @@ function validEvent(value: unknown): value is WorldEvent {
     typeof value.text === 'string' &&
     value.text.length > 0
   )
+}
+
+function validContracts(value: unknown): value is GeneratedContract[] {
+  if (!Array.isArray(value) || value.length > CONTRACT_TARGET) return false
+  if (
+    !value.every(
+      (c) =>
+        isObject(c) &&
+        hasExactKeys(c, CONTRACT_KEYS) &&
+        typeof c.id === 'string' &&
+        c.id.startsWith('gc') &&
+        finite(c.createdT) &&
+        finite(c.expiresAtT) &&
+        c.expiresAtT > c.createdT &&
+        typeof c.sector === 'string' &&
+        SECTOR_IDS.has(c.sector) &&
+        typeof c.cityId === 'string' &&
+        CITY_IDS.has(c.cityId) &&
+        integer(c.district) &&
+        c.district >= 1 &&
+        c.district <= 40 &&
+        typeof c.type === 'string' &&
+        CONTRACT_TYPES.has(c.type as ContractType) &&
+        typeof c.client === 'string' &&
+        (HOLDERS as readonly string[]).includes(c.client) &&
+        typeof c.threat === 'string' &&
+        CONTRACT_THREATS.has(c.threat as ContractThreat) &&
+        finite(c.reward) &&
+        c.reward >= CONTRACT_REWARD_MIN &&
+        c.reward <= CONTRACT_REWARD_MAX &&
+        integer(c.seed) &&
+        c.seed >= 0 &&
+        c.seed <= 0xffffffff &&
+        typeof c.priority === 'boolean',
+    )
+  ) {
+    return false
+  }
+  const ids = value.map((c) => (c as GeneratedContract).id)
+  return new Set(ids).size === ids.length
 }
 
 function validLabs(value: unknown): value is Labs {
@@ -266,7 +325,7 @@ function validRoster(
   })
 }
 
-export function validateSave(value: unknown): value is SaveV3 {
+export function validateSave(value: unknown): value is SaveV4 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -304,6 +363,11 @@ export function validateSave(value: unknown): value is SaveV3 {
     !integer(world.rngState) ||
     world.rngState < 0 ||
     world.rngState > 0xffffffff ||
+    !validContracts(world.contracts) ||
+    !integer(world.contractRngState) ||
+    world.contractRngState < 0 ||
+    world.contractRngState > 0xffffffff ||
+    !finite(world.nextContractT) ||
     !validIdList(research.done, RESEARCH_IDS) ||
     !validLabs(research.labs) ||
     !integer(campaign.intelLevel) ||
@@ -330,7 +394,7 @@ export function validateSave(value: unknown): value is SaveV3 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV3 {
+export function captureSave(): SaveV4 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -352,6 +416,9 @@ export function captureSave(): SaveV3 {
       unread: world.unread,
       nextEventT: world.nextEventT,
       rngState: world.rngState,
+      contracts: structuredClone(world.contracts),
+      contractRngState: world.contractRngState,
+      nextContractT: world.nextContractT,
     },
     research: {
       done: [...research.done],
@@ -386,7 +453,9 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
 // without app.loadout; a v2 blob is a v3 blob without the live roster, which
 // v2 kept as static data: the upgrade seeds the default roster, the initial
 // candidate pool, and a first market refresh one interval after the saved
-// world time.
+// world time. A v3 blob is a v4 blob without the generated contract market:
+// the upgrade starts an empty market on the initial cursor with the first
+// generation check one interval after the saved world time.
 function upgraded(value: unknown): unknown {
   let v = value
   if (isObject(v) && v.version === 1 && isObject(v.app) && !('loadout' in v.app)) {
@@ -412,10 +481,28 @@ function upgraded(value: unknown): unknown {
       },
     }
   }
+  if (
+    isObject(v) &&
+    v.version === 3 &&
+    isObject(v.world) &&
+    !('contracts' in v.world)
+  ) {
+    const worldT = finite(v.world.t) ? v.world.t : 0
+    v = {
+      ...v,
+      version: 4,
+      world: {
+        ...v.world,
+        contracts: [],
+        contractRngState: INITIAL_CONTRACT_RNG,
+        nextContractT: worldT + CONTRACT_MIN_SEC,
+      },
+    }
+  }
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV3 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV4 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -434,7 +521,7 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV3
   return null
 }
 
-export function hydrateSave(save: SaveV3): void {
+export function hydrateSave(save: SaveV4): void {
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
     intelProgress: save.campaign.intelProgress,
@@ -552,6 +639,9 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     review: null,
     nextEventT: INITIAL_NEXT_EVENT_T,
     rngState: INITIAL_WORLD_RNG,
+    contracts: [],
+    contractRngState: INITIAL_CONTRACT_RNG,
+    nextContractT: INITIAL_NEXT_CONTRACT_T,
   })
   useResearchStore.setState({
     done: [],

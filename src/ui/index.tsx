@@ -8,13 +8,14 @@ import type { ReactNode } from 'react'
 import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { useCampaignStore } from '../state/campaignStore'
-import { useWorldStore } from '../state/worldStore'
+import { resolveMission, useWorldStore } from '../state/worldStore'
 import {
   continueOperation,
   hasValidSave,
   startNewOperation,
 } from '../state/save'
-import { WEAPONS, missionById } from '../game/data'
+import { WEAPONS } from '../game/data'
+import { isGeneratedMissionId } from '../game/contracts'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { ROSTER_CAP } from '../game/recruits'
 import {
@@ -251,7 +252,7 @@ export function MissionBrief() {
   const sectors = useWorldStore((s) => s.sectors)
   const contractsWon = useCampaignStore((s) => s.contractsWon)
   const researched = useResearchStore((s) => s.done)
-  const m = missionId ? missionById(missionId) : null
+  const m = missionId ? resolveMission(missionId) : null
   const blocks = useMemo(() => buildReconBlocks(m ? m.seed : 1), [m])
   const targetLights = useMemo(() => targetWindows(m ? m.seed : 1), [m])
   // The same variant and modifiers MissionScreen will deploy with, computed
@@ -926,7 +927,7 @@ export function TeamSelect() {
   const operatives = useCampaignStore((s) => s.operatives)
   const [focusId, setFocusId] = useState<string | null>(null)
   const [recruitOpen, setRecruitOpen] = useState(false)
-  const mission = missionId ? missionById(missionId) : null
+  const mission = missionId ? resolveMission(missionId) : null
   const focus = useMemo(() => {
     const id = focusId ?? squad[0] ?? operatives[0]?.id
     return operatives.find((o) => o.id === id) ?? operatives[0] ?? null
@@ -1439,7 +1440,7 @@ export function Debrief() {
   const credits = useAppStore((s) => s.credits)
   const missionId = useAppStore((s) => s.missionId)
   const outcomeSerial = useAppStore((s) => s.outcomeSerial)
-  const m = missionId ? missionById(missionId) : null
+  const m = missionId ? resolveMission(missionId) : null
   const report = useCampaignStore((s) => s.lastReport)
   const won = outcome?.won ?? false
   const fine = outcome ? collateralFine(outcome) : 0
@@ -1471,7 +1472,7 @@ export function Debrief() {
     // A completed contract costs its ETA in world days. Labs and recovery
     // clocks run across the jump: their sync sees the advanced time at once.
     if (outcome.won) {
-      useWorldStore.getState().advanceDays(missionById(missionId).etaDays)
+      useWorldStore.getState().advanceDays(resolveMission(missionId)?.etaDays ?? 0)
       const t = useWorldStore.getState().t
       useResearchStore.getState().sync(t)
       useCampaignStore.getState().sync(t)
@@ -1553,9 +1554,13 @@ export function Debrief() {
           <button type="button" className="btn" onClick={act(() => goto('world'))}>
             RETURN TO WORLD NETWORK
           </button>
-          <button type="button" className="btn amber" onClick={act(() => goto('brief'))}>
-            REPLAY MISSION
-          </button>
+          {/* A generated contract is spent by its debrief; only authored
+              contracts offer a replay. */}
+          {missionId && !isGeneratedMissionId(missionId) && (
+            <button type="button" className="btn amber" onClick={act(() => goto('brief'))}>
+              REPLAY MISSION
+            </button>
+          )}
         </div>
         <div className="db-barcode" aria-hidden="true" />
       </div>

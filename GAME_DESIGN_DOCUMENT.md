@@ -257,7 +257,7 @@ Global influence is the weighted average control of all open sectors.
 
 The world map contains 18 named cities. Each has a current corporate holder. A sector’s displayed corporate color is determined by which corporation holds the most cities in that sector; ties display as contested.
 
-Ownership can change through generated seizure events. This affects map color and corporate labels, but currently has no effect on contracts, research, prices, or tactical missions.
+Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Ownership still has no effect on research, prices, or tactical missions.
 
 ### 6.4 Dynamic world events
 
@@ -265,15 +265,17 @@ Ownership can change through generated seizure events. This affects map color an
 
 Event categories:
 
-| Event | Typical strategic effect |
-|---|---|
-| Riot | Raises unrest and reduces control |
-| Blackout | Raises unrest |
-| CorpSec raid | Reduces unrest and may improve control |
-| Trade agreement | Improves control and may reduce unrest |
-| Seizure | May change city ownership and alter control/unrest |
+| Event | Typical strategic effect | Contract market effect |
+|---|---|---|
+| Riot | Raises unrest and reduces control | 45% chance to spawn a linked priority suppression contract in the sector |
+| Blackout | Raises unrest | — |
+| CorpSec raid | Reduces unrest and may improve control | 35% chance to withdraw an open generated contract from the sector |
+| Trade agreement | Improves control and may reduce unrest | — |
+| Seizure | May change city ownership and alter control/unrest | A city flip re-clients the sector's open generated contracts |
 
-Events occur every **15–45 world minutes** and favor high-unrest sectors. The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events.
+Events occur every **15–45 world minutes** and favor high-unrest sectors. The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events. The market probabilities live as data beside the event tables in `src/state/worldStore.ts` (`EVENT_CONTRACT_FX`).
+
+Events also share the feed with the generated contract market: new offers, priority offers, expiries, withdrawals, and re-clienting all post `contract` events. Contract generation runs on the same strategic clock and the same catch-up path as events, so a contract ETA jump lands exactly where continuous ticking would have.
 
 Mission results feed this system. A win raises the mission sector's control and lowers its unrest; a loss does the opposite. Each result posts its own feed event, green for a win and red for a loss, and civilian hits add unrest.
 
@@ -762,6 +764,8 @@ The debrief reports:
 
 ### 12.1 Contracts
 
+Contract supply is the authored three plus a procedural stream.
+
 | Codename | Location | Type | Client | Threat | Reward | Chance | ETA | Status |
 |---|---|---|---|---|---:|---:|---:|---|
 | Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | 78% | 2 days | Playable |
@@ -769,6 +773,15 @@ The debrief reports:
 | Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | 82% | 3 days | Intel level 2; placeholder objective set |
 
 Displayed chance and ETA are authored presentation values. They do not affect simulation outcomes or strategic time.
+
+**Generated contracts** (`src/game/contracts.ts`) keep the market stocked beside the authored three:
+
+- The world keeps up to 3 generated contracts open; a new one rolls every 2–6 world hours when below target, weighted toward sectors with high unrest or low control.
+- Parameters derive from the source sector: threat from its defense rating and garrison condition, reward from threat and the sector's influence weight (30,000–95,000 CR on a 500 CR grid), client from city ownership, type from seizure / extraction / sabotage (plus riot-linked suppression).
+- Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.
+- Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.
+- Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.
+- The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v4), so a reload reproduces the same open contracts.
 
 ### 12.2 Glass Veil
 
@@ -1233,14 +1246,13 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Contract chance and ETA.
 - Weather effects on gameplay.
 - Influence as a spendable resource.
-- Sector assets, tax, forces, and black-market values as decision systems.
+- Sector assets, tax, and black-market values as decision systems. Defense rating and garrison condition now feed generated contract threat; the rest stays presentation.
 - Sector-intel view.
 - Archives and additional navigation tabs.
 
 ### 19.3 Missing for a complete campaign
 
 - Mission outcome effects on city ownership.
-- New contract generation or a larger authored mission set.
 - Operative experience.
 - Mission types beyond reach/eliminate/extract.
 - A strategic fail state; the campaign has victory and recoverable pressure only.
@@ -1254,7 +1266,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 
 ## 20. Recommended product roadmap
 
-Milestones 1 and 3 are complete; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining milestones are recommendations, not current behavior.
+Milestones 1 and 3 are complete and Milestone 4 items 1 and 3 have landed; Milestone 2 still owns the full Hollow Crown and Rust Haven designs. The remaining items are recommendations, not current behavior.
 
 ### Milestone 1 — Close the campaign loop (complete 2026-07-29)
 
@@ -1289,9 +1301,9 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 ### Milestone 4 — Deepen the strategic game
 
-1. Connect control, unrest, defense, garrisons, and ownership to contract supply.
+1. Connect control, unrest, defense, garrisons, and ownership to contract supply. Done 2026-07-30: the generated contract market rolls from sector state (sections 6.3, 6.4, 12.1).
 2. Let the player spend influence.
-3. Make world events create or modify operations.
+3. Make world events create or modify operations. Done 2026-07-30: riots can spawn priority suppression contracts, raids can withdraw offers, seizures re-client them.
 4. Add consequences for ignoring high-unrest sectors.
 5. Add research or intel tools that forecast event and mission risk.
 

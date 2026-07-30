@@ -192,7 +192,10 @@ export const useCampaignStore = create<CampaignState>((set) => ({
         intelAward,
       )
 
-      const won = outcome.won && !state.contractsWon.includes(missionId)
+      // Only authored contracts join the campaign record: a fulfilled
+      // generated contract pays and moves the world, then leaves the market.
+      const authored = MISSIONS.some((mission) => mission.id === missionId)
+      const won = outcome.won && authored && !state.contractsWon.includes(missionId)
         ? [...state.contractsWon, missionId]
         : state.contractsWon
 

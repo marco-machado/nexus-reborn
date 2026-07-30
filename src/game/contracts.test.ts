@@ -1,0 +1,216 @@
+// Tests for the procedural contract market. Rolls are pure functions of an
+// explicit rng state, so everything here is deterministic and clock-free.
+import { describe, expect, it } from 'vitest'
+import {
+  CONTRACT_EXPIRY_MIN_SEC,
+  CONTRACT_EXPIRY_SPAN_SEC,
+  CONTRACT_INTEL_REQ,
+  CONTRACT_REWARD_MAX,
+  CONTRACT_REWARD_MIN,
+  PRIORITY_EXPIRY_MIN_SEC,
+  PRIORITY_EXPIRY_SPAN_SEC,
+  contractMission,
+  contractThreat,
+  isGeneratedMissionId,
+  rollContract,
+  rollSuppressionContract,
+  sectorClient,
+} from './contracts'
+import type { ContractSectorInput, ContractType, GeneratedContract } from './contracts'
+import { CITIES, CITIES_BY_SECTOR, HOLDERS } from './atlas'
+import type { CorpId } from './atlas'
+import { operativeById } from './data'
+import { isWalkable } from './types'
+import { createWorld } from './world'
+
+const INPUTS: ContractSectorInput[] = [
+  { sector: 'eu', control: 62, unrest: 18, defense: 74, garrison: 'SECURE', weight: 1.2, client: 'helix' },
+  { sector: 'af', control: 37, unrest: 28, defense: 44, garrison: 'STRAINED', weight: 0.9, client: 'omni' },
+  { sector: 'oc', control: 20, unrest: 60, defense: 11, garrison: 'CRITICAL', weight: 0.55, client: 'stratos' },
+]
+
+function inputFor(sector: string): ContractSectorInput {
+  const input = INPUTS.find((i) => i.sector === sector)
+  expect(input).toBeDefined()
+  return input!
+}
+
+// A spread of contracts from a chained cursor, as the market would roll them.
+function rollMany(count: number, state = 0x1234): GeneratedContract[] {
+  const out: GeneratedContract[] = []
+  for (let i = 0; i < count; i++) {
+    const rolled = rollContract(INPUTS, 1000 + i, state)
+    out.push(rolled.contract)
+    state = rolled.state
+  }
+  return out
+}
+
+describe('rolling', () => {
+  it('is a pure function of the rng state', () => {
+    const a = rollContract(INPUTS, 5000, 0xbeef)
+    const b = rollContract(INPUTS, 5000, 0xbeef)
+    expect(b.contract).toEqual(a.contract)
+    expect(b.state).toBe(a.state)
+    expect(b.state).not.toBe(0xbeef)
+  })
+
+  it('derives every parameter from the source sector inside its bounds', () => {
+    for (const c of rollMany(200)) {
+      const input = inputFor(c.sector)
+      expect(c.type === 'SEIZURE' || c.type === 'EXTRACTION' || c.type === 'SABOTAGE').toBe(true)
+      expect(c.threat).toBe(contractThreat(input.defense, input.garrison))
+      expect(c.client).toBe(input.client)
+      expect(c.reward).toBeGreaterThanOrEqual(CONTRACT_REWARD_MIN)
+      expect(c.reward).toBeLessThanOrEqual(CONTRACT_REWARD_MAX)
+      expect(c.reward % 500).toBe(0)
+      expect(CITIES_BY_SECTOR[c.sector].some((city) => city.id === c.cityId)).toBe(true)
+      expect(c.district).toBeGreaterThanOrEqual(2)
+      expect(c.district).toBeLessThanOrEqual(29)
+      expect(c.expiresAtT - c.createdT).toBeGreaterThanOrEqual(CONTRACT_EXPIRY_MIN_SEC)
+      expect(c.expiresAtT - c.createdT).toBeLessThanOrEqual(
+        CONTRACT_EXPIRY_MIN_SEC + CONTRACT_EXPIRY_SPAN_SEC,
+      )
+      expect(c.seed).toBeGreaterThanOrEqual(0)
+      expect(c.seed).toBeLessThanOrEqual(0xffffffff)
+      expect(c.priority).toBe(false)
+      expect(isGeneratedMissionId(c.id)).toBe(true)
+    }
+  })
+
+  it('pulls generated work toward restless, poorly held sectors', () => {
+    const bySector: Record<string, number> = {}
+    for (const c of rollMany(300)) bySector[c.sector] = (bySector[c.sector] ?? 0) + 1
+    // oc: unrest 60, control 20. eu: unrest 18, control 62.
+    expect(bySector.oc ?? 0).toBeGreaterThan(bySector.eu ?? 0)
+  })
+
+  it('a suppression contract is priority work: premium pay, short expiry', () => {
+    const input = inputFor('af')
+    const { contract: c } = rollSuppressionContract(input, 2000, 0x77)
+    expect(c.priority).toBe(true)
+    expect(c.type).toBe('SUPPRESSION')
+    expect(c.sector).toBe('af')
+    expect(c.expiresAtT - c.createdT).toBeGreaterThanOrEqual(PRIORITY_EXPIRY_MIN_SEC)
+    expect(c.expiresAtT - c.createdT).toBeLessThanOrEqual(
+      PRIORITY_EXPIRY_MIN_SEC + PRIORITY_EXPIRY_SPAN_SEC,
+    )
+    expect(c.reward).toBeGreaterThanOrEqual(CONTRACT_REWARD_MIN)
+    expect(c.reward).toBeLessThanOrEqual(CONTRACT_REWARD_MAX)
+  })
+})
+
+describe('threat and client derivation', () => {
+  it('maps defense and garrison condition onto the threat ladder', () => {
+    expect(contractThreat(80, 'SECURE')).toBe('MODERATE')
+    expect(contractThreat(50, 'SECURE')).toBe('HIGH')
+    expect(contractThreat(80, 'STRAINED')).toBe('HIGH')
+    expect(contractThreat(30, 'SECURE')).toBe('SEVERE')
+    expect(contractThreat(80, 'CRITICAL')).toBe('SEVERE')
+  })
+
+  it('names the corporation holding the most cities, ties in holder order', () => {
+    const owner: Record<string, CorpId> = {}
+    for (const c of CITIES) owner[c.id] = c.corp
+    // At start eu splits helix 2 / omni 1.
+    expect(sectorClient('eu', owner)).toBe('helix')
+    // Hand omni a second eu city: the majority flips with it.
+    owner.nc = 'omni'
+    expect(sectorClient('eu', owner)).toBe('omni')
+    // A three-way split breaks in HOLDERS order: stratos comes first.
+    owner.ln = 'helix'
+    owner.nc = 'omni'
+    owner.os = 'stratos'
+    expect(HOLDERS[0]).toBe('stratos')
+    expect(sectorClient('eu', owner)).toBe('stratos')
+  })
+})
+
+describe('derived missions', () => {
+  it('derives identical missions from equal records', () => {
+    const a = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
+    const b = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
+    expect(b).toEqual(a)
+  })
+
+  it('keeps a stable object identity per record', () => {
+    const record = rollContract(INPUTS, 1000, 0x42).contract
+    expect(contractMission(record)).toBe(contractMission(record))
+  })
+
+  it('gates intel by threat', () => {
+    for (const c of rollMany(60)) {
+      expect(contractMission(c).intelReq).toBe(CONTRACT_INTEL_REQ[c.threat])
+    }
+  })
+
+  it('builds a playable mission for every contract type', () => {
+    // Chain the cursor until every regular type showed up, then add a
+    // suppression roll, and validate each derived mission like an authored
+    // one: generated city, walkable spawns, resolvable objective chain.
+    const byType = new Map<ContractType, GeneratedContract>()
+    let state = 0x5eed
+    for (let i = 0; i < 200 && byType.size < 3; i++) {
+      const rolled = rollContract(INPUTS, 1000, state)
+      state = rolled.state
+      if (!byType.has(rolled.contract.type)) byType.set(rolled.contract.type, rolled.contract)
+    }
+    byType.set(
+      'SUPPRESSION',
+      rollSuppressionContract(inputFor('oc'), 1000, state).contract,
+    )
+    expect([...byType.keys()].sort()).toEqual([
+      'EXTRACTION', 'SABOTAGE', 'SEIZURE', 'SUPPRESSION',
+    ])
+
+    for (const contract of byType.values()) {
+      const m = contractMission(contract)
+      const w = createWorld(m, [operativeById('op1')])
+
+      // The generated district resolves the same core landmarks as authored
+      // work, and the squad inserts on walkable ground.
+      for (const key of ['insertion', 'extraction', 'target']) {
+        expect(w.city.landmarks[key]).toBeDefined()
+      }
+      for (const p of w.city.spawnAgents) {
+        expect(isWalkable(w.city, p.x, p.z)).toBe(true)
+      }
+
+      // The objective chain is well formed: unique ids, extract last, and
+      // every reference resolves against the built city.
+      const ids = m.objectives.map((o) => o.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      expect(m.objectives.length).toBeGreaterThanOrEqual(3)
+      expect(m.objectives.at(-1)?.kind).toBe('extract')
+      for (const objective of m.objectives) {
+        expect(objective.optional).toBeUndefined()
+        if (objective.landmark) {
+          expect(w.city.landmarks[objective.landmark]).toBeDefined()
+        }
+        if (objective.kind === 'eliminate-tag' || objective.kind === 'destroy') {
+          expect(objective.tag).toBeDefined()
+          const tagged =
+            w.city.enemies.some((e) => e.tag === objective.tag) ||
+            w.city.devices.some((d) => d.tag === objective.tag)
+          expect(tagged).toBe(true)
+        }
+        if (objective.kind === 'interact') {
+          expect(objective.durationSec ?? 0).toBeGreaterThan(0)
+        }
+        if (objective.kind === 'escort') {
+          expect(w.city.vips.length).toBeGreaterThan(0)
+        }
+      }
+
+      // The dossier fields the brief renders are all present.
+      expect(m.codename.length).toBeGreaterThan(0)
+      expect(m.briefing.length).toBeGreaterThanOrEqual(4)
+      expect(m.notes.length).toBeGreaterThanOrEqual(3)
+      expect(m.variants).toHaveLength(2)
+      expect(m.mapPos.x).toBeGreaterThan(0)
+      expect(m.mapPos.x).toBeLessThan(100)
+      expect(m.mapPos.y).toBeGreaterThan(0)
+      expect(m.mapPos.y).toBeLessThan(100)
+    }
+  })
+})

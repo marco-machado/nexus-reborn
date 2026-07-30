@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
-import { WEAPONS, missionById } from '../game/data'
+import { WEAPONS } from '../game/data'
+import { resolveMission } from '../state/worldStore'
 import { useCampaignStore } from '../state/campaignStore'
 import { WEATHER_LABEL } from '../game/missionParams'
 import { getWorld, panCameraTo } from '../game/runtime'
@@ -95,7 +96,7 @@ export default function Hud() {
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
   const operatives = useCampaignStore((s) => s.operatives)
-  const mission = missionId ? missionById(missionId) : null
+  const mission = missionId ? resolveMission(missionId) : null
   const district = mission ? mission.district : 'DISTRICT 07'
 
   const logRef = useRef<HTMLDivElement | null>(null)

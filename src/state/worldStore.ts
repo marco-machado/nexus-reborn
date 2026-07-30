@@ -1,13 +1,39 @@
 // CONTRACT FILE. Strategic layer state: the world clock, per sector control
-// and unrest, city ownership, and the events feed that moves them. The world
-// map screen drives tick() while it is mounted; nothing else writes here.
+// and unrest, city ownership, the events feed that moves them, and the
+// generated contract market the feed feeds. The world map screen drives tick()
+// while it is mounted; nothing else writes here.
 import { create } from 'zustand'
 import { mulberryStep } from '../game/rng'
-import { missionById } from '../game/data'
-import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS, sectorDef } from '../game/atlas'
+import { MISSIONS } from '../game/data'
+import {
+  CITIES,
+  CITIES_BY_SECTOR,
+  HOLDERS,
+  OPEN_SECTORS,
+  SECTORS,
+  cityById,
+  sectorDef,
+} from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { CORPS } from '../game/atlas'
-import type { SectorId } from '../game/types'
+import {
+  CONTRACT_MIN_SEC,
+  CONTRACT_SPAN_SEC,
+  CONTRACT_TARGET,
+  INITIAL_CONTRACT_RNG,
+  contractMission,
+  contractMissionById,
+  isGeneratedMissionId,
+  rollContract,
+  rollSuppressionContract,
+  sectorClient,
+} from '../game/contracts'
+import type {
+  ContractSectorInput,
+  GeneratedContract,
+  RolledContract,
+} from '../game/contracts'
+import type { MissionDef, SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 
 export const DAY = 86400
@@ -27,6 +53,8 @@ const EVENT_MIN = 900
 const EVENT_SPAN = 1800
 const MAX_EVENTS = 40
 export const INITIAL_WORLD_RNG = 0x2087051
+// First contract-generation check, one minimum interval after world start.
+export const INITIAL_NEXT_CONTRACT_T = CONTRACT_MIN_SEC
 
 function p2(n: number): string {
   return String(n).padStart(2, '0')
@@ -56,7 +84,7 @@ export function hhmm(t: number): string {
 
 /* --------------------------------- events --------------------------------- */
 
-export type EventKind = 'riot' | 'seizure' | 'trade' | 'raid' | 'blackout' | 'kia'
+export type EventKind = 'riot' | 'seizure' | 'trade' | 'raid' | 'blackout' | 'kia' | 'contract'
 export type EventTone = 'red' | 'green' | 'amber' | 'dim'
 
 export interface WorldEvent {
@@ -107,7 +135,15 @@ const TONE: Record<EventKind, EventTone> = {
   raid: 'amber',
   blackout: 'dim',
   kia: 'red',
+  contract: 'green',
 }
+
+// Odds that a rolled world event touches the contract market, kept beside the
+// event tables so the definitions and their market effects read together. A
+// riot may spawn a linked suppression contract in its sector; a CorpSec raid
+// may withdraw an open generated contract; a seizure that flips a city always
+// re-clients the sector's open contracts when the dominant holder changed.
+const EVENT_CONTRACT_FX = { riot: 0.45, raid: 0.35, seizure: 1 } as const
 
 interface RngCursor {
   state: number
@@ -179,8 +215,10 @@ const LINES: Record<EventKind, string[]> = {
   raid: ['CORPSEC RAID SWEEPS ', 'CURFEW ENFORCED IN ', 'CORPSEC RETAKES THE DOCKS IN '],
   trade: [' SECURES TRADE AGREEMENT IN ', ' OPENS A FREE PORT IN ', ' BUYS THE UTILITY GRID IN '],
   seizure: [' TAKES CONTROL OF ', ' SEIZES THE COUNCIL IN ', ' ANNEXES THE HOLDINGS OF '],
-  // Never rolled: KIA events are posted by applyMissionResult alone.
+  // Never rolled: KIA events are posted by applyMissionResult alone, and
+  // contract events by the market flow alone.
   kia: [],
+  contract: [],
 }
 
 function rollEvent(
@@ -247,6 +285,210 @@ function rollEvent(
   }
 }
 
+/* ------------------------------- world flow -------------------------------- */
+
+// The timed world processes as one mutable working set, so tick() and
+// advanceDays() run the identical catch-up and a contract ETA jump lands
+// exactly where continuous ticking would have.
+interface WorldFlow {
+  sectors: Record<string, SectorState>
+  owner: Record<string, CorpId>
+  events: WorldEvent[]
+  unread: number
+  nextEventT: number
+  rngState: number
+  contracts: GeneratedContract[]
+  contractRngState: number
+  nextContractT: number
+}
+
+function flowOf(s: WorldStoreState): WorldFlow {
+  return {
+    sectors: s.sectors,
+    owner: s.owner,
+    events: s.events,
+    unread: s.unread,
+    nextEventT: s.nextEventT,
+    rngState: s.rngState,
+    contracts: s.contracts,
+    contractRngState: s.contractRngState,
+    nextContractT: s.nextContractT,
+  }
+}
+
+function nextEventId(f: WorldFlow): number {
+  return (f.events[f.events.length - 1]?.id ?? 0) + 1
+}
+
+function appendEvent(f: WorldFlow, event: WorldEvent): void {
+  const events = f.events.concat(event)
+  f.events = events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events
+  f.unread = Math.min(MAX_EVENTS, f.unread + 1)
+}
+
+function postContractEvent(
+  f: WorldFlow,
+  t: number,
+  sector: SectorId,
+  tone: EventTone,
+  text: string,
+): void {
+  appendEvent(f, { id: nextEventId(f), t, sector, kind: 'contract', tone, text })
+}
+
+// Snapshot of every open sector as contract-generation input: the readout the
+// world map shows (defense, garrison) plus the atlas weight and the corp
+// holding the most cities, so generated work derives from what the player sees.
+function contractInputs(
+  sectors: Record<string, SectorState>,
+  owner: Record<string, CorpId>,
+): ContractSectorInput[] {
+  return OPEN_SECTORS.map((id) => {
+    const def = sectorDef(id)
+    const read = sectorReadout(id, sectors[id])
+    return {
+      sector: id,
+      control: read.control,
+      unrest: read.unrest,
+      defense: read.defense,
+      garrison: read.garrison,
+      weight: def.weight,
+      client: sectorClient(id, owner),
+    }
+  })
+}
+
+// One contract whose id does not collide with an open one, advancing the
+// contract cursor deterministically either way.
+function freshContract(
+  f: WorldFlow,
+  roll: (state: number) => RolledContract,
+): GeneratedContract {
+  let rolled = roll(f.contractRngState)
+  for (let tries = 0; tries < 8 && f.contracts.some((c) => c.id === rolled.contract.id); tries++) {
+    rolled = roll(rolled.state)
+  }
+  f.contractRngState = rolled.state
+  return rolled.contract
+}
+
+// World events touch the contract market with the odds in EVENT_CONTRACT_FX.
+// Contract rolls step the contract cursor, never the event stream, so the
+// market leaves the event sequence itself unchanged.
+function applyContractHooks(f: WorldFlow, event: WorldEvent, flipped: boolean): void {
+  if (event.kind === 'riot') {
+    const rng = { state: f.contractRngState }
+    const roll = nextRandom(rng)
+    f.contractRngState = rng.state
+    if (roll < EVENT_CONTRACT_FX.riot && f.contracts.length < CONTRACT_TARGET) {
+      const input = contractInputs(f.sectors, f.owner).find((i) => i.sector === event.sector)
+      if (!input) return
+      const contract = freshContract(f, (state) =>
+        rollSuppressionContract(input, event.t, state),
+      )
+      f.contracts = [...f.contracts, contract]
+      postContractEvent(
+        f,
+        event.t,
+        event.sector,
+        'amber',
+        'PRIORITY CONTRACT ' +
+          contractMission(contract).codename +
+          ' POSTED IN ' +
+          cityById(contract.cityId).name,
+      )
+    }
+  } else if (event.kind === 'raid') {
+    const open = f.contracts.filter((c) => c.sector === event.sector)
+    if (open.length === 0) return
+    const rng = { state: f.contractRngState }
+    if (nextRandom(rng) < EVENT_CONTRACT_FX.raid) {
+      const victim = open[Math.floor(nextRandom(rng) * open.length) % open.length]
+      f.contracts = f.contracts.filter((c) => c.id !== victim.id)
+      postContractEvent(
+        f,
+        event.t,
+        event.sector,
+        'amber',
+        'CORPSEC RAID WITHDRAWS CONTRACT ' + contractMission(victim).codename,
+      )
+    }
+    f.contractRngState = rng.state
+  } else if (event.kind === 'seizure' && flipped && EVENT_CONTRACT_FX.seizure > 0) {
+    const client = sectorClient(event.sector, f.owner)
+    for (const c of f.contracts) {
+      if (c.sector !== event.sector || c.client === client) continue
+      f.contracts = f.contracts.map((x) => (x.id === c.id ? { ...x, client } : x))
+      postContractEvent(
+        f,
+        event.t,
+        event.sector,
+        'dim',
+        'CONTRACT ' + contractMission(c).codename + ' RE-CLIENTED TO ' + CORPS[client].name,
+      )
+    }
+  }
+}
+
+// Advances every timed world process (event rolls, contract expiry, contract
+// generation) to time t in timestamp order. Returns whether anything moved.
+function advanceFlow(f: WorldFlow, t: number): boolean {
+  let changed = false
+  for (;;) {
+    let expireT = Infinity
+    for (const c of f.contracts) if (c.expiresAtT < expireT) expireT = c.expiresAtT
+    const stepT = Math.min(f.nextEventT, f.nextContractT, expireT)
+    if (stepT > t) return changed
+    changed = true
+    if (expireT === stepT) {
+      const due = f.contracts.filter((c) => c.expiresAtT <= stepT)
+      f.contracts = f.contracts.filter((c) => c.expiresAtT > stepT)
+      for (const c of due) {
+        postContractEvent(
+          f,
+          c.expiresAtT,
+          c.sector,
+          'dim',
+          'CONTRACT ' + contractMission(c).codename + ' EXPIRED // OFFER RESCINDED',
+        )
+      }
+    } else if (f.nextEventT === stepT) {
+      const rolled = rollEvent(nextEventId(f), f.nextEventT, f.sectors, f.owner, f.rngState)
+      f.sectors = { ...f.sectors, [rolled.event.sector]: rolled.state }
+      if (rolled.flip) f.owner = { ...f.owner, [rolled.flip.city]: rolled.flip.corp }
+      appendEvent(f, rolled.event)
+      const scheduleRng = { state: rolled.rngState }
+      f.nextEventT += EVENT_MIN + nextRandom(scheduleRng) * EVENT_SPAN
+      f.rngState = scheduleRng.state
+      applyContractHooks(f, rolled.event, rolled.flip !== null)
+    } else {
+      // Generation checkpoint: below target, roll one contract; either way,
+      // schedule the next check 2-6 world hours out.
+      const rng = { state: f.contractRngState }
+      if (f.contracts.length < CONTRACT_TARGET) {
+        const inputs = contractInputs(f.sectors, f.owner)
+        const contract = freshContract(f, (state) =>
+          rollContract(inputs, f.nextContractT, state),
+        )
+        f.contracts = [...f.contracts, contract]
+        postContractEvent(
+          f,
+          f.nextContractT,
+          contract.sector,
+          'green',
+          'OPEN CONTRACT ' +
+            contractMission(contract).codename +
+            ' POSTED IN ' +
+            cityById(contract.cityId).name,
+        )
+        rng.state = f.contractRngState
+      }
+      f.nextContractT += CONTRACT_MIN_SEC + nextRandom(rng) * CONTRACT_SPAN_SEC
+      f.contractRngState = rng.state
+    }
+  }
+}
+
 /* --------------------------------- store ---------------------------------- */
 
 export interface WorldStoreState {
@@ -262,6 +504,11 @@ export interface WorldStoreState {
   review: number | null
   nextEventT: number
   rngState: number
+  // The generated contract market: open records, its own serialized rng
+  // cursor, and the next generation check on the strategic clock.
+  contracts: GeneratedContract[]
+  contractRngState: number
+  nextContractT: number
   tick: (dt: number) => void
   advanceDays: (days: number) => void
   // `kia` carries the codenames of operatives lost in the mission; the feed
@@ -299,87 +546,50 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
   review: null,
   nextEventT: EVENT_MIN + EVENT_SPAN * 0.4,
   rngState: INITIAL_WORLD_RNG,
+  contracts: [],
+  contractRngState: INITIAL_CONTRACT_RNG,
+  nextContractT: INITIAL_NEXT_CONTRACT_T,
 
   tick: (dt) => {
     const s = get()
     if (s.paused) return
     const t = s.t + dt * s.speed * TIME_SCALE
-    if (t < s.nextEventT) {
-      // Reviewing more than a day back is off the timeline; snap to live.
-      if (s.review !== null && s.review < t - DAY) set({ t, review: null })
-      else set({ t })
+    // Reviewing more than a day back is off the timeline; snap to live.
+    const review = s.review !== null && s.review < t - DAY ? null : s.review
+    const flow = flowOf(s)
+    if (!advanceFlow(flow, t)) {
+      set(review !== s.review ? { t, review } : { t })
       return
     }
-
-    const rolled = rollEvent(
-      s.events[s.events.length - 1].id + 1,
-      s.nextEventT,
-      s.sectors,
-      s.owner,
-      s.rngState,
-    )
-    const scheduleRng = { state: rolled.rngState }
-    const events = s.events.concat(rolled.event)
-    const owner = rolled.flip ? { ...s.owner, [rolled.flip.city]: rolled.flip.corp } : s.owner
-    set({
-      t,
-      sectors: { ...s.sectors, [rolled.event.sector]: rolled.state },
-      owner,
-      events: events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events,
-      unread: s.unread + 1,
-      review: s.review !== null && s.review < t - DAY ? null : s.review,
-      nextEventT: s.nextEventT + EVENT_MIN + nextRandom(scheduleRng) * EVENT_SPAN,
-      rngState: scheduleRng.state,
-    })
+    set({ t, review, ...flow })
   },
 
-  // Contract ETA cost: jumps the clock forward whole days and rolls every
-  // event the skipped time would have produced, so sectors, ownership and the
-  // rng stream land exactly where continuous ticking would have put them.
-  // Labs and injuries catch up through their own sync(t) on the next clock.
+  // Contract ETA cost: jumps the clock forward whole days and replays every
+  // event, contract expiry and contract roll the skipped time would have
+  // produced, so sectors, ownership, the market and both rng streams land
+  // exactly where continuous ticking would have put them. Labs and injuries
+  // catch up through their own sync(t) on the next clock.
   advanceDays: (days) =>
     set((s) => {
       if (!Number.isFinite(days) || days <= 0) return s
       const t = s.t + days * DAY
-      const sectors = { ...s.sectors }
-      let owner = s.owner
-      let events = s.events
-      let nextEventT = s.nextEventT
-      let rngState = s.rngState
-      let rolledCount = 0
-      while (nextEventT <= t) {
-        const rolled = rollEvent(
-          (events[events.length - 1]?.id ?? 0) + 1,
-          nextEventT,
-          sectors,
-          owner,
-          rngState,
-        )
-        sectors[rolled.event.sector] = rolled.state
-        if (rolled.flip) owner = { ...owner, [rolled.flip.city]: rolled.flip.corp }
-        events = events.concat(rolled.event)
-        if (events.length > MAX_EVENTS) events = events.slice(events.length - MAX_EVENTS)
-        const scheduleRng = { state: rolled.rngState }
-        nextEventT += EVENT_MIN + nextRandom(scheduleRng) * EVENT_SPAN
-        rngState = scheduleRng.state
-        rolledCount += 1
-      }
-      return {
-        t,
-        sectors,
-        owner,
-        events,
-        unread: Math.min(MAX_EVENTS, s.unread + rolledCount),
-        review: null,
-        nextEventT,
-        rngState,
-      }
+      const flow = flowOf(s)
+      advanceFlow(flow, t)
+      return { t, review: null, ...flow }
     }),
 
   applyMissionResult: (missionId, outcome, kia) =>
     set((state) => {
-      const mission = missionById(missionId)
-      const missionIndex = Math.max(0, Number.parseInt(mission.id.slice(1), 10) - 1)
+      const record = state.contracts.find((c) => c.id === missionId) ?? null
+      const mission: MissionDef | undefined = record
+        ? contractMission(record)
+        : (MISSIONS.find((m) => m.id === missionId) ?? contractMissionById(missionId))
+      if (!mission) return state
+      // Authored ids carry their campaign index; generated work varies the
+      // deltas off its rolled seed instead.
+      const missionIndex = isGeneratedMissionId(mission.id)
+        ? mission.seed % 3
+        : Math.max(0, Number.parseInt(mission.id.slice(1), 10) - 1)
       const previous = state.sectors[mission.sector]
       const collateral = Math.min(5, Math.max(0, outcome.civiliansHit))
       const controlDelta = outcome.won ? 4 + (missionIndex % 3) : -(1 + (missionIndex % 2))
@@ -426,6 +636,10 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
         sectors: { ...state.sectors, [mission.sector]: sector },
         events: events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events,
         unread: state.unread + added,
+        // A generated contract is spent by its debrief, won or lost.
+        contracts: record
+          ? state.contracts.filter((c) => c.id !== missionId)
+          : state.contracts,
       }
     }),
 
@@ -441,6 +655,19 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
   setReview: (t) => set({ review: t }),
   markRead: () => set({ unread: 0 }),
 }))
+
+/* ------------------------------ mission lookup ----------------------------- */
+
+// Authored missions plus open generated contracts, plus the last derived
+// mission for a contract that just left the store: the debrief renders after
+// applyMissionResult removed the fulfilled record.
+export function resolveMission(id: string): MissionDef | null {
+  const authored = MISSIONS.find((m) => m.id === id)
+  if (authored) return authored
+  const record = useWorldStore.getState().contracts.find((c) => c.id === id)
+  if (record) return contractMission(record)
+  return contractMissionById(id) ?? null
+}
 
 /* -------------------------------- selectors ------------------------------- */
 

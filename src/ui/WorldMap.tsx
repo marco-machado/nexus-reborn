@@ -15,6 +15,8 @@ import {
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
 import { MISSIONS } from '../game/data'
+import { contractMission } from '../game/contracts'
+import type { GeneratedContract } from '../game/contracts'
 import { ROSTER_CAP } from '../game/recruits'
 import { missionChance, missionMods } from '../game/missionParams'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
@@ -78,15 +80,43 @@ function intelGate(level: number): string {
   return 'REQUIRES INTEL LVL ' + level
 }
 
+// One operations entry: an authored mission, or a generated contract with its
+// derived mission. Both render through the same rows and markers.
+interface OpEntry {
+  m: MissionDef
+  gen: GeneratedContract | null
+}
+
+function opsFor(sector: SectorId | null, contracts: GeneratedContract[]): OpEntry[] {
+  return [
+    ...MISSIONS.filter((m) => sector === null || m.sector === sector).map((m) => ({
+      m,
+      gen: null,
+    })),
+    ...contracts
+      .filter((c) => sector === null || c.sector === sector)
+      .map((c) => ({ m: contractMission(c), gen: c })),
+  ]
+}
+
+// Hours until a generated offer is rescinded. The selector output only moves
+// once per world hour, so the countdown never re-renders at clock rate.
+function ExpiryHours(props: { at: number }) {
+  const hours = useWorldStore((s) => Math.max(0, Math.ceil((props.at - s.t) / 3600)))
+  return <>{hours}H</>
+}
+
 /* ------------------------------- map plate -------------------------------- */
 
 function WorldPlate() {
   const sectors = useWorldStore((s) => s.sectors)
   const owner = useWorldStore((s) => s.owner)
   const selected = useWorldStore((s) => s.selected)
+  const contracts = useWorldStore((s) => s.contracts)
   const selectMission = useAppStore((s) => s.selectMission)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const researched = useResearchStore((s) => s.done)
+  const marks = useMemo(() => opsFor(null, contracts), [contracts])
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -182,7 +212,7 @@ function WorldPlate() {
         <span className="wm-sweep" />
       </span>
 
-      {MISSIONS.map((m) => {
+      {marks.map(({ m, gen }) => {
         const locked = missionLocked(m, intelLevel)
         return (
           <button
@@ -234,6 +264,12 @@ function WorldPlate() {
                     <span>THREAT</span>
                     {m.threat}
                   </i>
+                  {gen && (
+                    <i>
+                      <span>EXPIRES</span>
+                      <ExpiryHours at={gen.expiresAtT} />
+                    </i>
+                  )}
                 </>
               )}
             </span>
@@ -273,12 +309,16 @@ function WorldPlate() {
 function SectorInset(props: { id: SectorId }) {
   const owner = useWorldStore((s) => s.owner)
   const step = useWorldStore((s) => s.stepSector)
+  const contracts = useWorldStore((s) => s.contracts)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const def = sectorDef(props.id)
   const corp = sectorCorp(props.id, owner)
   const cities = CITIES_BY_SECTOR[props.id] ?? []
   const lights = LIGHTS_BY_SECTOR[props.id] ?? []
-  const mission = MISSIONS.find((m) => m.sector === props.id)
+  const generated = contracts.find((c) => c.sector === props.id)
+  const mission =
+    MISSIONS.find((m) => m.sector === props.id) ??
+    (generated ? contractMission(generated) : undefined)
 
   return (
     <div className="wm-inset corners">
@@ -585,13 +625,14 @@ export function WorldMap() {
   const contractsWon = useCampaignStore((s) => s.contractsWon)
   const operativeCount = useCampaignStore((s) => s.operatives.length)
   const researched = useResearchStore((s) => s.done)
+  const contracts = useWorldStore((s) => s.contracts)
   useWorldClock()
 
   const def = sectorDef(selected)
   const read = sectorReadout(selected, sectors[selected])
   const influence = globalInfluence(sectors)
-  const ops = useMemo(() => MISSIONS.filter((m) => m.sector === selected), [selected])
-  const openOps = ops.filter((m) => !missionLocked(m, intelLevel)).length
+  const ops = useMemo(() => opsFor(selected, contracts), [selected, contracts])
+  const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
 
   return (
     <div className="screen wm">
@@ -770,7 +811,7 @@ export function WorldMap() {
                   <i className="dim">SECTOR UNDER PASSIVE MONITORING</i>
                 </div>
               ) : (
-                ops.map((m) => {
+                ops.map(({ m, gen }) => {
                   const locked = missionLocked(m, intelLevel)
                   return (
                     <button
@@ -781,7 +822,13 @@ export function WorldMap() {
                       aria-label={
                         locked
                           ? m.codename + ' // LOCKED // ' + intelGate(m.intelReq)
-                          : 'OPEN CONTRACT ' + m.codename + ' // ' + m.type + ' // ' + m.city
+                          : 'OPEN CONTRACT ' +
+                            m.codename +
+                            ' // ' +
+                            m.type +
+                            ' // ' +
+                            m.city +
+                            (gen ? (gen.priority ? ' // PRIORITY CONTRACT' : ' // GENERATED CONTRACT') : '')
                       }
                       onClick={locked ? undefined : act(() => selectMission(m.id))}
                     >
@@ -797,10 +844,20 @@ export function WorldMap() {
                         )}
                       </span>
                       <span className="wm-op-meta">
+                        {gen && (
+                          <span className={'chip ' + (gen.priority ? 'amber' : 'dim')}>
+                            {gen.priority ? 'PRIORITY' : 'GENERATED'}
+                          </span>
+                        )}
                         <span className="chip dim">
                           CHANCE {chanceFor(m, sectors, researched.length)}%
                         </span>
                         <span className="chip dim">ETA {m.etaDays}D</span>
+                        {gen && (
+                          <span className="chip dim">
+                            EXP <ExpiryHours at={gen.expiresAtT} />
+                          </span>
+                        )}
                       </span>
                     </button>
                   )

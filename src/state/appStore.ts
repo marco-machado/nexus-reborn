@@ -1,6 +1,7 @@
 // CONTRACT FILE. App level state: screen flow, mission choice, squad, credits.
 import { create } from 'zustand'
-import { DEFAULT_SQUAD, missionById } from '../game/data'
+import { DEFAULT_SQUAD } from '../game/data'
+import { resolveMission } from './worldStore'
 import { LOADOUT_SLOTS, emptyLoadout } from '../game/mass'
 import type { LoadoutItemId, OperativeLoadout, SquadLoadout } from '../game/mass'
 import { missionLocked, useCampaignStore } from './campaignStore'
@@ -65,8 +66,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   outcomeSerial: 0,
   goto: (phase) => set({ phase }),
   selectMission: (id) => {
-    const mission = missionById(id)
-    if (missionLocked(mission, useCampaignStore.getState().intelLevel)) return
+    const mission = resolveMission(id)
+    if (!mission || missionLocked(mission, useCampaignStore.getState().intelLevel)) return
     set({ missionId: id, phase: 'brief' })
   },
   toggleOperative: (id) =>

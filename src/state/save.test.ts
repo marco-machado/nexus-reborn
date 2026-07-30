@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_SQUAD, ROSTER } from '../game/data'
 import { CANDIDATE_REFRESH_SEC } from '../game/recruits'
+import {
+  CONTRACT_MIN_SEC,
+  INITIAL_CONTRACT_RNG,
+} from '../game/contracts'
 import { nodeById } from '../game/research'
 import { useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
@@ -15,7 +19,7 @@ import {
   validateSave,
   writeSave,
 } from './save'
-import type { SaveStorage, SaveV3 } from './save'
+import type { SaveStorage, SaveV4 } from './save'
 import { useWorldStore } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
@@ -48,10 +52,21 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+// A v4 blob without the generated contract market, as a real v3 save held.
+function downgradeToV3(save: SaveV4): Record<string, unknown> {
+  const blob = structuredClone(save) as unknown as Record<string, unknown>
+  blob.version = 3
+  const world = blob.world as Record<string, unknown>
+  delete world.contracts
+  delete world.contractRngState
+  delete world.nextContractT
+  return blob
+}
+
 // Older blobs never carried the live roster: strip the v3 campaign fields so
 // the synthetic downgrade matches what a real v1/v2 save held.
-function downgradeToV2(save: SaveV3): Record<string, unknown> {
-  const blob = structuredClone(save) as unknown as Record<string, unknown>
+function downgradeToV2(save: SaveV4): Record<string, unknown> {
+  const blob = downgradeToV3(save)
   blob.version = 2
   const campaign = blob.campaign as Record<string, unknown>
   delete campaign.operatives
@@ -66,7 +81,7 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const invalid = structuredClone(save) as SaveV3
+    const invalid = structuredClone(save) as SaveV4
     invalid.campaign.contractsWon = ['unknown']
     expect(validateSave(invalid)).toBe(false)
   })
@@ -74,21 +89,21 @@ describe('save validation', () => {
   it('rejects roster tampering: unknown squad ids, roster/operative mismatch', () => {
     const save = captureSave()
 
-    const badSquad = structuredClone(save) as SaveV3
+    const badSquad = structuredClone(save) as SaveV4
     badSquad.app.squad = ['op99']
     expect(validateSave(badSquad)).toBe(false)
 
-    const badRoster = structuredClone(save) as SaveV3
+    const badRoster = structuredClone(save) as SaveV4
     delete badRoster.campaign.roster.op1
     expect(validateSave(badRoster)).toBe(false)
 
-    const badCandidate = structuredClone(save) as SaveV3
+    const badCandidate = structuredClone(save) as SaveV4
     badCandidate.campaign.candidates[0].cost = 1
     expect(validateSave(badCandidate)).toBe(false)
   })
 
   it('accepts a fully wiped roster so a lost campaign can rebuild', () => {
-    const wiped = structuredClone(captureSave()) as SaveV3
+    const wiped = structuredClone(captureSave()) as SaveV4
     wiped.campaign.operatives = []
     wiped.campaign.roster = {}
     wiped.app.squad = []
@@ -99,8 +114,8 @@ describe('save validation', () => {
   it('rejects malformed loadouts: unknown ids, wrong lengths, unknown items', () => {
     const save = captureSave()
 
-    const badOp = structuredClone(save) as SaveV3
-    badOp.app.loadout = { op99: ['med', null] } as SaveV3['app']['loadout']
+    const badOp = structuredClone(save) as SaveV4
+    badOp.app.loadout = { op99: ['med', null] } as SaveV4['app']['loadout']
     expect(validateSave(badOp)).toBe(false)
 
     const badLength = structuredClone(save)
@@ -120,9 +135,11 @@ describe('save validation', () => {
 
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
-    expect(loaded?.version).toBe(3)
+    expect(loaded?.version).toBe(4)
     expect(loaded?.app.loadout).toEqual({})
     expect(loaded?.campaign.operatives).toEqual(initialCampaignData().operatives)
+    expect(loaded?.world.contracts).toEqual([])
+    expect(loaded?.world.contractRngState).toBe(INITIAL_CONTRACT_RNG)
   })
 
   it('upgrades a v2 blob by seeding the default roster and candidate market', () => {
@@ -134,11 +151,41 @@ describe('save validation', () => {
     expect(loaded).not.toBeNull()
     if (!loaded) return
     const seeded = initialCampaignData()
-    expect(loaded.version).toBe(3)
+    expect(loaded.version).toBe(4)
     expect(loaded.campaign.operatives.map((o) => o.id)).toEqual(ROSTER.map((o) => o.id))
     expect(loaded.campaign.candidates).toEqual(seeded.candidates)
     expect(loaded.campaign.recruitRngState).toBe(seeded.recruitRngState)
     expect(loaded.campaign.nextCandidateT).toBe(5000 + CANDIDATE_REFRESH_SEC)
+  })
+
+  it('upgrades a v3 blob by starting an empty contract market on the world clock', () => {
+    useWorldStore.setState({ t: 9000 })
+    const v3 = downgradeToV3(captureSave())
+    storage.setItem(SAVE_KEY, JSON.stringify(v3))
+
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    expect(loaded.version).toBe(4)
+    expect(loaded.world.contracts).toEqual([])
+    expect(loaded.world.contractRngState).toBe(INITIAL_CONTRACT_RNG)
+    expect(loaded.world.nextContractT).toBe(9000 + CONTRACT_MIN_SEC)
+  })
+
+  it('rejects tampered generated contracts', () => {
+    useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
+    useWorldStore.getState().tick(1)
+    const save = captureSave()
+    expect(save.world.contracts.length).toBeGreaterThan(0)
+    expect(validateSave(save)).toBe(true)
+
+    const badReward = structuredClone(save) as SaveV4
+    badReward.world.contracts[0].reward = 1
+    expect(validateSave(badReward)).toBe(false)
+
+    const badClient = structuredClone(save) as SaveV4
+    ;(badClient.world.contracts[0] as unknown as Record<string, unknown>).client = 'sable'
+    expect(validateSave(badClient)).toBe(false)
   })
 
   it('discards malformed JSON and schema mismatches from storage', () => {
@@ -273,6 +320,30 @@ describe('save round trip', () => {
     expect(campaign.recruitRngState).toBe(expected.campaign.recruitRngState)
     expect(campaign.nextCandidateT).toBe(expected.campaign.nextCandidateT)
     expect(useAppStore.getState().credits).toBe(expected.app.credits)
+  })
+
+  it('round-trips the open contract market so a reload reproduces it exactly', () => {
+    // Generate two contracts on the strategic clock, then save and reload.
+    useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
+    useWorldStore.getState().tick(1)
+    const mid = useWorldStore.getState()
+    useWorldStore.setState({ t: mid.nextContractT - 1 })
+    useWorldStore.getState().tick(1)
+    const expected = captureSave()
+    expect(expected.world.contracts).toHaveLength(2)
+    expect(writeSave(storage)).toBe(true)
+
+    startNewOperation()
+    expect(useWorldStore.getState().contracts).toEqual([])
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    hydrateSave(loaded)
+
+    const world = useWorldStore.getState()
+    expect(world.contracts).toEqual(expected.world.contracts)
+    expect(world.contractRngState).toBe(expected.world.contractRngState)
+    expect(world.nextContractT).toBe(expected.world.nextContractT)
   })
 
   it('new operation clears the prior blob and restores campaign defaults', () => {
