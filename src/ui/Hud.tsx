@@ -7,6 +7,7 @@ import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
 import { useResearchStore } from '../state/researchStore'
 import { ROSTER, WEAPONS, missionById } from '../game/data'
+import { WEATHER_LABEL } from '../game/missionParams'
 import { squadWeapon } from '../game/research'
 import { getWorld, panCameraTo } from '../game/runtime'
 import type { WeaponId } from '../game/types'
@@ -165,7 +166,7 @@ export default function Hud() {
           <b className="hud-district">{district}</b>
           <span className="hud-clock">{clock}</span>
           <span className="chip dim">13.7C</span>
-          <span className="chip dim">HUM 72</span>
+          <span className="chip dim">{WEATHER_LABEL[mission?.weather ?? 'none']}</span>
           <span className="chip dim">1.2M/S</span>
         </div>
         <div className={'hud-alert' + (alert > 0 ? ' hot' : '')}>
@@ -284,16 +285,31 @@ export default function Hud() {
       {/* ----------------------------- objectives --------------------------- */}
       <div className="hud-panel hud-objectives corners">
         <div className="hud-panel-head">
-          <span>OBJECTIVE: BREACH THE CHECKPOINT</span>
+          <span>MISSION DIRECTIVES // {mission ? mission.type : 'TASKING'}</span>
         </div>
         <div className="hud-objectives-body">
           {objectives.map((o) => (
             <div
               key={o.id}
-              className={'hud-obj' + (o.done ? ' done' : o.active ? ' active' : '')}
+              className={
+                'hud-obj' +
+                (o.done ? ' done' : o.failed ? ' failed' : o.active ? ' active' : '') +
+                (o.optional ? ' optional' : '')
+              }
             >
-              <ObjMark state={o.done ? 'done' : o.active ? 'active' : 'pending'} />
-              <span>{o.label}</span>
+              <ObjMark state={o.done ? 'done' : o.active && !o.failed ? 'active' : 'pending'} />
+              <span className="hud-obj-main">
+                <span className="hud-obj-label">
+                  <span className="hud-obj-text">{o.label}</span>
+                  {o.optional && <i className="hud-obj-opt">OPTIONAL</i>}
+                  {o.timer !== undefined && <b className="hud-obj-timer">{o.timer}</b>}
+                </span>
+                {o.progress !== undefined && (
+                  <span className="hud-obj-bar">
+                    <i style={{ width: Math.round(o.progress * 100) + '%' }} />
+                  </span>
+                )}
+              </span>
             </div>
           ))}
           {objectives.length === 0 && (

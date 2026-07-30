@@ -48,6 +48,15 @@ interface Shared {
   civRingMat: THREE.MeshBasicMaterial
   civMats: THREE.MeshStandardMaterial[]
   civHead: THREE.MeshStandardMaterial
+  vipBody: THREE.MeshStandardMaterial
+  vipHead: THREE.MeshStandardMaterial
+  vipTrim: THREE.MeshStandardMaterial
+  vipRingMat: THREE.MeshBasicMaterial
+  deviceGeom: THREE.BoxGeometry
+  deviceCoreGeom: THREE.BoxGeometry
+  deviceBody: THREE.MeshStandardMaterial
+  deviceCore: THREE.MeshStandardMaterial
+  deviceRingMat: THREE.MeshBasicMaterial
   accentMats: Map<string, THREE.MeshStandardMaterial>
   slotMats: Map<number, THREE.MeshBasicMaterial>
   factionMats: Map<string, THREE.MeshBasicMaterial>
@@ -148,6 +157,36 @@ function getShared(): Shared {
     }),
     civMats: ['#4a4238', '#3d4650', '#55483a', '#414a41', '#5a5044', '#38404b'].map((c) => std(c, 0.95)),
     civHead: std('#5c5348', 0.9),
+    vipBody: std('#c9d4d8', 0.85),
+    vipHead: std('#8a7f6e', 0.85),
+    vipTrim: new THREE.MeshStandardMaterial({
+      color: '#000000',
+      emissive: new THREE.Color('#9be8ff'),
+      emissiveIntensity: 2.0,
+    }),
+    vipRingMat: new THREE.MeshBasicMaterial({
+      color: '#9be8ff',
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+    deviceGeom: new THREE.BoxGeometry(0.9, 1.0, 0.9),
+    deviceCoreGeom: new THREE.BoxGeometry(0.55, 0.22, 0.55),
+    deviceBody: std('#1c2427', 0.9),
+    // Emissive so the target reads under the bloom pass.
+    deviceCore: new THREE.MeshStandardMaterial({
+      color: '#000000',
+      emissive: new THREE.Color('#ffb300'),
+      emissiveIntensity: 2.8,
+    }),
+    deviceRingMat: new THREE.MeshBasicMaterial({
+      color: '#ffb300',
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
     accentMats: new Map(),
     slotMats: new Map(),
     factionMats: new Map(),
@@ -195,6 +234,8 @@ function slotMat(s: Shared, slot: number): THREE.MeshBasicMaterial {
 interface View {
   root: THREE.Group
   rig: THREE.Group
+  // Devices flatten on death instead of toppling, and never animate legs.
+  isDevice: boolean
   legL: THREE.Mesh
   legR: THREE.Mesh
   ring: THREE.Mesh | null
@@ -222,7 +263,7 @@ function buildView(u: Unit, s: Shared): View {
   const root = new THREE.Group()
   const rig = new THREE.Group()
   // Slightly larger than life so squads and hostiles read at tactical zoom.
-  rig.scale.setScalar(u.kind === 'civilian' ? 1.05 : 1.22)
+  rig.scale.setScalar(u.kind === 'civilian' ? 1.05 : u.kind === 'device' ? 1 : 1.22)
   root.add(rig)
 
   let body = s.civMats[Math.floor(hashId(u.id) * s.civMats.length) % s.civMats.length]
@@ -236,19 +277,39 @@ function buildView(u: Unit, s: Shared): View {
     body = s.enemyBody
     coat = s.enemyCoat
     head = s.enemyHead
+  } else if (u.kind === 'vip') {
+    body = s.vipBody
+    coat = s.vipBody
+    head = s.vipHead
   }
 
+  // Legs exist for every view so the walk cycle code stays branch free; a
+  // device simply never parents them.
   const legL = new THREE.Mesh(s.legGeom, coat)
   legL.position.set(0, 0.7, -0.09)
   const legR = new THREE.Mesh(s.legGeom, coat)
   legR.position.set(0, 0.7, 0.09)
-  const coatMesh = new THREE.Mesh(s.coatGeom, coat)
-  coatMesh.position.set(0, 0.86, 0)
-  const torso = new THREE.Mesh(s.torsoGeom, body)
-  torso.position.set(0, 1.0, 0)
-  const headMesh = new THREE.Mesh(s.headGeom, head)
-  headMesh.position.set(0, 1.42, 0)
-  rig.add(legL, legR, coatMesh, torso, headMesh)
+  if (u.kind === 'device') {
+    const base = new THREE.Mesh(s.deviceGeom, s.deviceBody)
+    base.position.set(0, 0.5, 0)
+    const core = new THREE.Mesh(s.deviceCoreGeom, s.deviceCore)
+    core.position.set(0, 1.11, 0)
+    rig.add(base, core)
+  } else {
+    const coatMesh = new THREE.Mesh(s.coatGeom, coat)
+    coatMesh.position.set(0, 0.86, 0)
+    const torso = new THREE.Mesh(s.torsoGeom, body)
+    torso.position.set(0, 1.0, 0)
+    const headMesh = new THREE.Mesh(s.headGeom, head)
+    headMesh.position.set(0, 1.42, 0)
+    rig.add(legL, legR, coatMesh, torso, headMesh)
+  }
+
+  if (u.kind === 'vip') {
+    const stripe = new THREE.Mesh(s.stripeGeom, s.vipTrim)
+    stripe.position.set(0, 1.29, 0)
+    rig.add(stripe)
+  }
 
   if (u.kind === 'agent') {
     const accent = u.operative ? u.operative.accent : '#7ef0d4'
@@ -280,6 +341,8 @@ function buildView(u: Unit, s: Shared): View {
   let factionRingMat: THREE.MeshBasicMaterial = s.civRingMat
   if (u.kind === 'agent') factionRingMat = factionMat(s, u.operative ? u.operative.accent : '#7ef0d4')
   else if (u.kind === 'enemy') factionRingMat = s.enemyRingIdle
+  else if (u.kind === 'vip') factionRingMat = s.vipRingMat
+  else if (u.kind === 'device') factionRingMat = s.deviceRingMat
   const faction = new THREE.Mesh(s.factionRingGeom, factionRingMat)
   faction.position.y = 0.04
   faction.renderOrder = 3
@@ -340,6 +403,7 @@ function buildView(u: Unit, s: Shared): View {
   return {
     root,
     rig,
+    isDevice: u.kind === 'device',
     legL,
     legR,
     ring,
@@ -399,6 +463,14 @@ export default function Units() {
       const dead = u.stance === 'dead' || u.hp <= 0
       if (dead) {
         const k = u.deathT !== undefined ? Math.min(1, Math.max(0, (t - u.deathT) / 0.25)) : 1
+        if (view.isDevice) {
+          // A destroyed device collapses in place rather than toppling.
+          view.rig.rotation.z = 0
+          view.rig.scale.y = 1 - 0.6 * k
+          view.rig.position.y = 0
+          view.faction.visible = false
+          continue
+        }
         view.rig.rotation.z = (Math.PI / 2) * k
         view.rig.position.y = -0.08 * k
         view.legL.rotation.z = 0

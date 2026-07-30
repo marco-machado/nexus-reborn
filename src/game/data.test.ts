@@ -90,14 +90,14 @@ describe('MISSIONS', () => {
     }
   })
 
-  it('keeps reward, chance, eta, and seed in sane ranges', () => {
+  it('keeps reward, eta, seed, and variants in sane ranges', () => {
     for (const m of MISSIONS) {
       expect(m.reward).toBeGreaterThan(0)
-      expect(m.chance).toBeGreaterThan(0)
-      expect(m.chance).toBeLessThanOrEqual(100)
       expect(m.etaDays).toBeGreaterThan(0)
       expect(Number.isInteger(m.seed)).toBe(true)
       expect(m.seed).toBeGreaterThan(0)
+      expect(m.variants.length).toBeGreaterThanOrEqual(2)
+      for (const v of m.variants) expect(Number.isInteger(v.seed)).toBe(true)
     }
   })
 
@@ -113,11 +113,22 @@ describe('MISSIONS', () => {
     for (const m of MISSIONS) {
       expect(Number.isInteger(m.intelReq)).toBe(true)
       expect(m.intelReq).toBeGreaterThan(0)
-      expect(m.objectives.map((objective) => objective.kind)).toEqual([
-        'reach-zone',
-        'eliminate-tag',
-        'extract',
-      ])
+      // Every mission runs a required sequence ending in extraction; the
+      // optional entries never carry the sequence.
+      const required = m.objectives.filter((objective) => !objective.optional)
+      expect(required.length).toBeGreaterThanOrEqual(3)
+      expect(required[required.length - 1].kind).toBe('extract')
+      for (const objective of m.objectives) {
+        if (objective.optional) expect(objective.bonusReward ?? 0).toBeGreaterThan(0)
+        if (objective.kind === 'interact' || objective.kind === 'defend') {
+          expect(objective.durationSec ?? 0).toBeGreaterThan(0)
+        }
+        if (objective.kind === 'destroy') expect(objective.tag ?? '').not.toBe('')
+        if (objective.kind === 'defend') {
+          expect(objective.wave).toBeDefined()
+          expect(objective.wave?.entry.length ?? 0).toBeGreaterThan(0)
+        }
+      }
     }
     const open = MISSIONS.filter((m) => m.intelReq <= 1)
     expect(open.length).toBeGreaterThan(0)

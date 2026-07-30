@@ -72,37 +72,6 @@ beforeEach(() => {
 })
 
 describe('createWorld', () => {
-  it.each(MISSIONS.slice(1))(
-    'builds a connected, completable placeholder objective route for $codename',
-    (mission) => {
-      const w = createWorld(mission, ops(DEFAULT_SQUAD))
-      deployReset()
-      w.tick(STEP)
-      expect(w.city.walk.length).toBe(w.city.size * w.city.size)
-      expect(w.units.some((unit) => unit.kind === 'enemy' && unit.tag === 'garrison')).toBe(true)
-
-      const a1 = w.unit('a1')
-      expect(a1).toBeDefined()
-      if (!a1) return
-      a1.pos.x = w.city.checkpoint.x
-      a1.pos.z = w.city.checkpoint.z
-      a1.path.length = 0
-      w.tick(STEP)
-      for (const unit of w.units) if (unit.kind === 'enemy') unit.stance = 'dead'
-      w.tick(STEP)
-      for (const unit of w.units) {
-        if (unit.kind === 'agent' && unit.stance !== 'dead') {
-          unit.pos.x = w.city.extraction.x
-          unit.pos.z = w.city.extraction.z
-          unit.path.length = 0
-        }
-      }
-      w.tick(STEP)
-      expect(useMissionStore.getState().result).toBe('won')
-      expect(useMissionStore.getState().objectives.every((objective) => objective.done)).toBe(true)
-    },
-  )
-
   it('returns a working WorldApi with one agent per operative def', () => {
     const squadOps = ops(DEFAULT_SQUAD)
     const w = createWorld(MISSION, squadOps)
@@ -491,6 +460,175 @@ describe('orders', () => {
     expect(() => w.orderAttack(['a1'], 'zz')).not.toThrow()
     expect(w.unit('a1')?.targetId).toBeNull()
     expect(w.unit('zz')).toBeUndefined()
+  })
+})
+
+describe('milestone 2 missions', () => {
+  const HOLLOW_CROWN = MISSIONS[1]
+  const RUST_HAVEN = MISSIONS[2]
+
+  function put(u: { pos: Vec2; path: Vec2[] }, at: Vec2): void {
+    u.pos.x = at.x
+    u.pos.z = at.z
+    u.path.length = 0
+  }
+
+  function row(id: string) {
+    const r = useMissionStore.getState().objectives.find((o) => o.id === id)
+    expect(r).toBeDefined()
+    return r!
+  }
+
+  it('runs Hollow Crown end to end: gate, locks, optional server, escort, extract', () => {
+    const w = createWorld(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    expect(w.city.archetype).toBe('compound')
+    const vip = w.units.find((u) => u.kind === 'vip')
+    expect(vip).toBeDefined()
+    if (!vip) return
+    // Keep the run free of fire so hp and collateral stay put.
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+
+    // 1: reach the compound gate, resolved through the landmark record.
+    put(a1, w.city.landmarks.gate)
+    w.tick(STEP)
+    expect(row('hc1').done).toBe(true)
+    expect(row('hc2').active).toBe(true)
+    // The optional server pull activates together with objective 2.
+    expect(row('hc-opt').active).toBe(true)
+    expect(row('hc-opt').optional).toBe(true)
+
+    // 2: channel at the console. Progress pauses while the zone is empty and
+    // resumes where it left off.
+    put(a1, w.city.landmarks.console)
+    warm(w, 2)
+    const partial = row('hc2').progress ?? 0
+    expect(partial).toBeGreaterThan(0.2)
+    expect(row('hc2').done).toBe(false)
+    put(a1, { x: w.city.landmarks.console.x, z: w.city.landmarks.console.z + 10 })
+    warm(w, 2)
+    const paused = row('hc2').progress ?? 0
+    expect(paused).toBeCloseTo(partial, 1)
+    put(a1, w.city.landmarks.console)
+    warm(w, 3.5)
+    expect(row('hc2').done).toBe(true)
+    // The vip spawned beside the console and picked up the escort.
+    expect(vip.alerted).toBe(true)
+
+    // Optional: pull the detention server for the bonus.
+    put(a1, w.city.landmarks.server)
+    warm(w, 4.5)
+    expect(row('hc-opt').done).toBe(true)
+
+    // 3 and 4: walk everyone, vip included, onto the extraction pad.
+    for (const u of w.units) {
+      if (u.kind === 'agent' && u.stance !== 'dead') put(u, w.city.extraction)
+    }
+    put(vip, w.city.extraction)
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('won')
+
+    warm(w, 3)
+    const app = useAppStore.getState()
+    expect(app.outcome?.bonus).toBe(9000)
+    expect(app.credits).toBe(128450 + HOLLOW_CROWN.reward + 9000)
+  })
+
+  it('loses Hollow Crown on the spot when the vip dies', () => {
+    const w = createWorld(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const vip = w.units.find((u) => u.kind === 'vip')
+    const a1 = w.unit('a1')
+    expect(vip).toBeDefined()
+    expect(a1).toBeDefined()
+    if (!vip || !a1) return
+    // A grenade on the cell block: 70 damage at the centre beats 60 vip hp.
+    put(a1, { x: vip.pos.x + 5, z: vip.pos.z })
+    expect(w.orderGrenade('a1', { x: vip.pos.x, z: vip.pos.z })).toBe(true)
+    expect(vip.stance).toBe('dead')
+    expect(useMissionStore.getState().result).toBe('lost')
+  })
+
+  it('runs Rust Haven: destroy, paused defend countdown, no bonus when skipped', () => {
+    const w = createWorld(RUST_HAVEN, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    expect(w.city.archetype).toBe('industrial')
+    const relays = w.units.filter((u) => u.kind === 'device' && u.tag === 'relay')
+    const transformer = w.units.find((u) => u.kind === 'device' && u.tag === 'transformer')
+    expect(relays).toHaveLength(3)
+    expect(transformer).toBeDefined()
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+
+    // 1: reach yard-a.
+    put(a1, w.city.landmarks['yard-a'])
+    w.tick(STEP)
+    expect(row('rh1').done).toBe(true)
+    expect(row('rh-opt').active).toBe(true)
+
+    // Park the squad clear of the hold zone before the burn starts.
+    put(a1, w.city.extraction)
+
+    // 2: drop the three relays. The wave then enters in combat.
+    const before = w.units.length
+    for (const d of relays) d.stance = 'dead'
+    w.tick(STEP)
+    expect(row('rh2').done).toBe(true)
+    expect(row('rh3').active).toBe(true)
+    const wave = w.units.slice(before)
+    expect(wave).toHaveLength(5)
+    expect(wave.every((u) => u.kind === 'enemy' && u.aiState === 'combat')).toBe(true)
+
+    // 3: the countdown burns only while an agent holds the zone.
+    for (const u of wave) u.stance = 'dead'
+    warm(w, 2)
+    expect(row('rh3').progress ?? 0).toBe(0)
+    put(a1, w.city.landmarks.target)
+    warm(w, 2)
+    expect(row('rh3').progress ?? 0).toBeGreaterThan(0)
+    warm(w, 44)
+    expect(row('rh3').done).toBe(true)
+
+    // 4: extract. The skipped transformer pays nothing.
+    for (const u of w.units) {
+      if (u.kind === 'agent' && u.stance !== 'dead') put(u, w.city.extraction)
+    }
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('won')
+    warm(w, 3)
+    const app = useAppStore.getState()
+    expect(app.outcome?.bonus).toBe(0)
+    expect(app.credits).toBe(128450 + RUST_HAVEN.reward)
+  })
+
+  it('builds distinct, connected layouts for both authored variants of each mission', () => {
+    for (const mission of MISSIONS) {
+      const a = createWorld(mission, ops(['op1']), { district: mission.variants[0] })
+      const b = createWorld(mission, ops(['op1']), { district: mission.variants[1] })
+      expect(a.city.walk.length).toBe(a.city.size * a.city.size)
+      let differs = false
+      for (let i = 0; i < a.city.walk.length; i++) {
+        if (a.city.walk[i] !== b.city.walk[i]) {
+          differs = true
+          break
+        }
+      }
+      expect(differs).toBe(true)
+      for (const key of ['insertion', 'extraction', 'target']) {
+        expect(a.city.landmarks[key]).toBeDefined()
+        expect(b.city.landmarks[key]).toBeDefined()
+      }
+    }
   })
 })
 

@@ -183,6 +183,7 @@ describe('mission results', () => {
       timeSec: 300,
       civiliansHit: 0,
       reward: 85000,
+      bonus: 0,
       deadIds: [],
       ...over,
     }

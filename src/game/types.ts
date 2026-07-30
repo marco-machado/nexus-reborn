@@ -43,7 +43,7 @@ export interface OperativeDef {
   bio: string
 }
 
-export type UnitKind = 'agent' | 'enemy' | 'civilian'
+export type UnitKind = 'agent' | 'enemy' | 'civilian' | 'vip' | 'device'
 export type UnitStance = 'idle' | 'moving' | 'attacking' | 'fleeing' | 'dead'
 
 // Enemy awareness. Patrol has seen nothing, suspicious is walking to something
@@ -99,18 +99,57 @@ export interface Boom {
   color: string
 }
 
-export type ObjectiveKind = 'reach-zone' | 'eliminate-tag' | 'extract'
+export type ObjectiveKind =
+  | 'reach-zone'
+  | 'eliminate-tag'
+  | 'extract'
+  | 'interact' // channel at a point for a duration
+  | 'escort' // bring the vip to a zone alive
+  | 'destroy' // reduce tagged device units to zero
+  | 'defend' // hold a zone for a duration against a spawned wave
+
+export interface Zone {
+  x: number
+  z: number
+  r: number
+}
+
+// Defend wave: entry names resolve through CityData.landmarks, so authored
+// data never carries coordinates the generator owns.
+export interface WaveSpec {
+  count: number
+  weapons: WeaponId[]
+  entry: string[]
+}
 
 export interface ObjectiveDef {
   id: string
   label: string
   kind: ObjectiveKind
   tag?: string
-  zone?: { x: number; z: number; r: number }
+  zone?: Zone
+  // Resolves the zone from CityData.landmarks when zone is not given.
+  landmark?: string
+  durationSec?: number
+  // An optional objective activates with the required objective it precedes
+  // in the list, never blocks the sequence, and pays bonusReward when done.
+  optional?: boolean
+  bonusReward?: number
+  wave?: WaveSpec
 }
 
 // Continental sector of the world map. Ids index the atlas.
 export type SectorId = 'na' | 'sa' | 'eu' | 'af' | 'as' | 'oc' | 'an'
+
+// Tactical layout family the generator builds for a mission.
+export type DistrictArchetype = 'checkpoint' | 'compound' | 'industrial'
+
+export interface DistrictSpec {
+  archetype: DistrictArchetype
+  seed: number
+}
+
+export type Weather = 'heavy' | 'light' | 'none'
 
 export interface MissionDef {
   id: string
@@ -122,9 +161,13 @@ export interface MissionDef {
   client: string
   threat: 'MODERATE' | 'HIGH' | 'SEVERE'
   reward: number
-  // Projected success chance in percent and time to the extraction window.
-  chance: number
+  // Time to the extraction window; the debrief advances the world clock by it.
+  // Success chance is derived (game/missionParams.ts), never authored.
   etaDays: number
+  weather: Weather
+  // Authored layouts; the first entry is the default, a replay after a won
+  // contract rotates to the next.
+  variants: DistrictSpec[]
   seed: number
   briefing: string[]
   notes: string[]
@@ -178,6 +221,7 @@ export interface RoadRect {
 
 export interface CityData {
   size: number
+  archetype: DistrictArchetype
   walk: Uint8Array
   buildings: BuildingData[]
   props: PropData[]
@@ -190,8 +234,14 @@ export interface CityData {
   spawnAgents: Vec2[]
   enemies: EnemySpawn[]
   civilians: Vec2[]
-  extraction: { x: number; z: number; r: number }
-  checkpoint: { x: number; z: number; r: number }
+  vips: Vec2[]
+  devices: Array<{ pos: Vec2; tag: string }>
+  // Named zones: insertion, extraction, target, plus archetype extras
+  // (gate, console, server, yard-a, yard-b, waveEntry-*).
+  landmarks: Record<string, Zone>
+  // Mirrors of landmarks.extraction and landmarks.target for older read sites.
+  extraction: Zone
+  checkpoint: Zone
 }
 
 export interface CommEntry {
@@ -214,6 +264,9 @@ export interface WorldApi {
   tracers: Tracer[]
   booms: Boom[]
   time: number
+  // Effective guard sight range for this mission: ENEMY_VISION scaled by the
+  // weather modifier. The minimap cones must draw from this, not the const.
+  vision: number
   tick(dt: number): void
   orderMove(agentIds: string[], dest: Vec2): void
   orderAttack(agentIds: string[], targetId: string): void

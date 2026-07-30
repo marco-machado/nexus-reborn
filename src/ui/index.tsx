@@ -15,9 +15,15 @@ import {
   startNewOperation,
 } from '../state/save'
 import { ROSTER, missionById, operativeById } from '../game/data'
+import {
+  WEATHER_LABEL,
+  missionChance,
+  missionMods,
+  missionVariant,
+} from '../game/missionParams'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
 import type { ResearchNode } from '../game/research'
-import type { AgentRole, MissionDef } from '../game/types'
+import type { AgentRole, DistrictArchetype, MissionDef } from '../game/types'
 import {
   Panel,
   Chip,
@@ -186,18 +192,25 @@ const THREAT_BLOCKS: Record<MissionDef['threat'], number> = {
 }
 const OBJECTIVE_TIER = ['PRIMARY', 'SECONDARY', 'TERTIARY']
 // Recon callout, sized from its own text so the frame always holds the label.
-// The stack sits below the readouts on the right, clear of both.
-const CALLOUT_LINES = [
-  { text: 'TARGET BUILDING', size: 8, track: 0.9, cls: 'label' },
-  { text: 'CHECKPOINT GATE', size: 10.5, track: 1, cls: 'name' },
-  { text: 'ID: CP-07 // GRID 77-2A', size: 8, track: 0.9, cls: 'sub' },
-]
+// The stack sits below the readouts on the right, clear of both. The target
+// name follows the layout archetype the mission deploys.
+const CALLOUT_NAME: Record<DistrictArchetype, string> = {
+  checkpoint: 'CHECKPOINT GATE',
+  compound: 'DETENTION COMPOUND',
+  industrial: 'RELAY YARD',
+}
 const CALLOUT_PAD = 9
-const CALLOUT_W =
-  Math.max(...CALLOUT_LINES.map((l) => textWidth(l.text, l.size, l.track))) + CALLOUT_PAD * 2
 const CALLOUT_H = 52
-const CALLOUT_X = RECON_W - 16 - CALLOUT_W
 const CALLOUT_Y = 104
+function calloutFor(arch: DistrictArchetype, district: string) {
+  const lines = [
+    { text: 'TARGET BUILDING', size: 8, track: 0.9, cls: 'label' },
+    { text: CALLOUT_NAME[arch], size: 10.5, track: 1, cls: 'name' },
+    { text: 'ID: ' + district.replace('DISTRICT ', 'D-') + ' // GRID 77-2A', size: 8, track: 0.9, cls: 'sub' },
+  ]
+  const w = Math.max(...lines.map((l) => textWidth(l.text, l.size, l.track))) + CALLOUT_PAD * 2
+  return { lines, w, x: RECON_W - 16 - w }
+}
 const COMMS_LOG = [
   ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
   ['23:40:45', 'WEATHER: HEAVY RAIN. VISIBILITY LOW.'],
@@ -223,11 +236,35 @@ export function MissionBrief() {
   const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
   const clock = useUtcClock()
+  const sectors = useWorldStore((s) => s.sectors)
+  const contractsWon = useCampaignStore((s) => s.contractsWon)
+  const researched = useResearchStore((s) => s.done)
   const m = missionId ? missionById(missionId) : null
   const blocks = useMemo(() => buildReconBlocks(m ? m.seed : 1), [m])
   const targetLights = useMemo(() => targetWindows(m ? m.seed : 1), [m])
-  const tac = useMemo(() => (m ? buildTacticalMap(m) : null), [m])
-  if (!m || !tac) return null
+  // The same variant and modifiers MissionScreen will deploy with, computed
+  // live so the counts and the derived chance move with sector state and
+  // completed research.
+  const spec = m ? missionVariant(m, contractsWon.includes(m.id)) : null
+  const mods = m ? missionMods(m, sectors[m.sector]) : null
+  const chance = m && mods ? missionChance(m, mods, researched.length) : 0
+  const tac = useMemo(
+    () =>
+      m && spec && mods
+        ? buildTacticalMap(m, spec, {
+            enemyExtra: mods.enemyExtra,
+            civilianCount: mods.civilianCount,
+          })
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- spec/mods are derived values; their inputs are listed
+    [m, spec?.archetype, spec?.seed, mods?.enemyExtra, mods?.civilianCount],
+  )
+  const callout = useMemo(
+    () => (m && spec ? calloutFor(spec.archetype, m.district) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- spec is derived; its inputs are listed
+    [m, spec?.archetype],
+  )
+  if (!m || !tac || !spec || !mods || !callout) return null
   const initials = m.codename
     .split(' ')
     .map((w) => w.charAt(0))
@@ -386,16 +423,16 @@ export function MissionBrief() {
               {/* target callout, anchored clear of the readouts above */}
               <polyline
                 className="mb-callout"
-                points={`544,150 700,${CALLOUT_Y + CALLOUT_H / 2} ${CALLOUT_X},${CALLOUT_Y + CALLOUT_H / 2}`}
+                points={`544,150 700,${CALLOUT_Y + CALLOUT_H / 2} ${callout.x},${CALLOUT_Y + CALLOUT_H / 2}`}
               />
               <circle className="mb-callout-dot" cx="544" cy="150" r="3" />
               <g className="mb-callout-box">
-                <rect x={CALLOUT_X} y={CALLOUT_Y} width={CALLOUT_W} height={CALLOUT_H} />
-                {CALLOUT_LINES.map((l, i) => (
+                <rect x={callout.x} y={CALLOUT_Y} width={callout.w} height={CALLOUT_H} />
+                {callout.lines.map((l, i) => (
                   <text
                     key={l.text}
                     className={l.cls}
-                    x={CALLOUT_X + CALLOUT_PAD}
+                    x={callout.x + CALLOUT_PAD}
                     y={CALLOUT_Y + 15 + i * 15}
                   >
                     {l.text}
@@ -419,6 +456,8 @@ export function MissionBrief() {
               <TacStat label="GARRISON" value={pad2(tac.counts.garrison)} tone="red" />
               <TacStat label="ROUTE ALPHA" value={tac.counts.alphaMetres + ' M'} tone="teal" />
               <TacStat label="ROUTE OMEGA" value={tac.counts.omegaMetres + ' M'} tone="red" />
+              <TacStat label="WEATHER" value={WEATHER_LABEL[m.weather]} />
+              <TacStat label="PROJECTED SUCCESS" value={chance + '%'} tone="teal" />
             </div>
             <div className="mb-tac-plate">
               <svg
@@ -509,11 +548,26 @@ export function MissionBrief() {
                 <text
                   className="mb-tac-label amber"
                   x={tac.target.x}
-                  y={tac.target.z + 9.5}
+                  y={tac.target.z + tac.target.r + 3.5}
                   textAnchor="middle"
                 >
-                  TARGET CP-07
+                  TARGET ZONE
                 </text>
+                {/* demolition devices and the detained asset, when the
+                    contract carries them */}
+                {tac.devices.map((d, i) => (
+                  <rect
+                    key={'dev' + i}
+                    className="mb-tac-device"
+                    x={d.x - 1.1}
+                    y={d.z - 1.1}
+                    width="2.2"
+                    height="2.2"
+                  />
+                ))}
+                {tac.vips.map((v, i) => (
+                  <circle key={'vip' + i} className="mb-tac-vip" cx={v.x} cy={v.z} r="1.6" />
+                ))}
                 {/* landing zone: the squad inserts and extracts on the same pad */}
                 <circle className="mb-tac-ring teal" cx={lz.x} cy={lz.z} r="4.4" />
                 <polygon
@@ -676,14 +730,25 @@ export function MissionBrief() {
                 </div>
                 <div className="mb-box">
                   <label>OBJECTIVES:</label>
-                  {m.objectives.map((o, i) => (
-                    <div key={o.id} className="mb-obj">
-                      <span className="mb-obj-glyph" />
-                      <span>
-                        <b>{OBJECTIVE_TIER[Math.min(i, 2)]}:</b> {o.label}
-                      </span>
-                    </div>
-                  ))}
+                  {(() => {
+                    let tier = 0
+                    return m.objectives.map((o) => (
+                      <div key={o.id} className="mb-obj">
+                        <span className="mb-obj-glyph" />
+                        <span>
+                          <b>
+                            {o.optional
+                              ? 'OPTIONAL:'
+                              : OBJECTIVE_TIER[Math.min(tier++, 2)] + ':'}
+                          </b>{' '}
+                          {o.label}
+                          {o.optional && o.bonusReward ? (
+                            <i className="dim"> (+{fmt(o.bonusReward)} CR)</i>
+                          ) : null}
+                        </span>
+                      </div>
+                    ))
+                  })()}
                 </div>
                 <div className="mb-box">
                   <label>
@@ -1157,6 +1222,14 @@ export function Debrief() {
         squad: state.squad.filter((id) => !dead.has(id)),
       }))
     }
+    // A completed contract costs its ETA in world days. Labs and recovery
+    // clocks run across the jump: their sync sees the advanced time at once.
+    if (outcome.won) {
+      useWorldStore.getState().advanceDays(missionById(missionId).etaDays)
+      const t = useWorldStore.getState().t
+      useResearchStore.getState().sync(t)
+      useCampaignStore.getState().sync(t)
+    }
   }, [missionId, outcome, outcomeSerial])
   const mmss = (sec: number) => {
     const s = Math.max(0, Math.floor(sec))
@@ -1182,6 +1255,12 @@ export function Debrief() {
   if (outcome && won && fine > 0) {
     rows.push({ label: 'CONTRACT VALUE', value: fmt(outcome.reward) + ' CR' })
     rows.push({ label: 'COLLATERAL PENALTY', value: '-' + fmt(fine) + ' CR', tone: 'red' })
+  }
+  if (outcome && won && outcome.bonus > 0) {
+    rows.push({ label: 'OPTIONAL BONUS', value: '+' + fmt(outcome.bonus) + ' CR', tone: 'teal' })
+  }
+  if (outcome && won && m) {
+    rows.push({ label: 'CONTRACT ETA', value: '+' + m.etaDays + ' DAYS ELAPSED', tone: 'amber' })
   }
   rows.push({
     label: 'PAYOUT',

@@ -4,7 +4,10 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
+import { useWorldStore } from '../state/worldStore'
+import { useCampaignStore } from '../state/campaignStore'
 import { missionById, operativeById } from '../game/data'
+import { missionMods, missionVariant } from '../game/missionParams'
 import { createWorld } from '../game/world'
 import { setWorld } from '../game/runtime'
 import GameCanvas from '../scene/GameCanvas'
@@ -20,7 +23,15 @@ export default function MissionScreen() {
     if (!missionId) return
     const mission = missionById(missionId)
     const ops = squad.map(operativeById)
-    const world = createWorld(mission, ops)
+    // Deployment snapshot: sector state and the layout variant are computed
+    // here, outside the sim, so world.ts never reads worldStore. A replay of
+    // a won contract rotates to the second authored variant.
+    const replay = useCampaignStore.getState().contractsWon.includes(mission.id)
+    const sector = useWorldStore.getState().sectors[mission.sector]
+    const world = createWorld(mission, ops, {
+      mods: missionMods(mission, sector),
+      district: missionVariant(mission, replay),
+    })
     setWorld(world)
     const ms = useMissionStore.getState()
     ms.reset()

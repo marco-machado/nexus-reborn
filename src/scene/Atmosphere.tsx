@@ -23,7 +23,10 @@ export default function Atmosphere() {
     return out
   }, [world])
 
-  const gate = world ? world.city.checkpoint : { x: 48, z: 14, r: 6 }
+  // Gate lights and fog anchor on the archetype's gate landmark when present.
+  const gate = world
+    ? (world.city.landmarks.gate ?? world.city.checkpoint)
+    : { x: 48, z: 14, r: 6 }
 
   return (
     <>

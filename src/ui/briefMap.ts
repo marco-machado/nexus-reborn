@@ -10,8 +10,9 @@
 // projection, so its skyline is generated here from the mission seed.
 import { findPath } from '../game/pathfind'
 import { CITY_SIZE } from '../game/types'
-import type { MissionDef, Vec2 } from '../game/types'
+import type { DistrictSpec, MissionDef, Vec2 } from '../game/types'
 import { generateCity } from '../world/citygen'
+import type { GenParams } from '../world/citygen'
 import { rngFrom } from './util'
 
 /* ------------------------------ tactical map ------------------------------ */
@@ -41,6 +42,8 @@ export interface TacticalMap {
   routeAlpha: Vec2[]
   routeOmega: Vec2[]
   patrols: Vec2[][]
+  vips: Vec2[]
+  devices: Vec2[]
   counts: {
     blocks: number
     streets: number
@@ -107,10 +110,16 @@ function laneOffset(points: Vec2[], d: number): Vec2[] {
   })
 }
 
-export function buildTacticalMap(mission: MissionDef): TacticalMap {
-  const city = generateCity(mission)
+// The brief passes the same variant and modifiers MissionScreen deploys with,
+// so the plotted city is the one the squad will actually walk.
+export function buildTacticalMap(
+  mission: MissionDef,
+  spec?: DistrictSpec,
+  gen?: Partial<GenParams>,
+): TacticalMap {
+  const city = generateCity(mission, spec, gen)
   const insertion = city.spawnAgents[0] ?? { x: CITY_SIZE / 2, z: CITY_SIZE - 8 }
-  const target = city.checkpoint
+  const target = city.landmarks.target ?? city.checkpoint
   const extraction = city.extraction
 
   // Both legs start at their own origin, which findPath leaves out of the
@@ -161,6 +170,8 @@ export function buildTacticalMap(mission: MissionDef): TacticalMap {
     // Garrison loops sit inside the hostile ring and would only clutter it, so
     // the drawn patrols are the ones that walk the streets between the routes.
     patrols,
+    vips: city.vips.map((v) => ({ x: v.x, z: v.z })),
+    devices: city.devices.map((d) => ({ x: d.pos.x, z: d.pos.z })),
     counts: {
       blocks: city.buildings.length,
       streets: city.roadsH.length + city.roadsV.length,

@@ -9,7 +9,6 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react
 import { getCameraFocus, getCameraFootprint, getWorld, panCameraTo } from '../game/runtime'
 import {
   CAMERA_YAW,
-  ENEMY_VISION,
   VISION_HALF_ANGLE,
   type CameraFootprint,
   type Vec2,
@@ -124,6 +123,9 @@ const COLOR = {
   coneHot: 'rgba(255,107,85,0.13)',
   coneSuspect: 'rgba(240,180,69,0.11)',
   civilian: 'rgba(184,216,207,0.26)',
+  device: '#ffb300',
+  deviceDead: 'rgba(255,179,0,0.25)',
+  vip: '#9be8ff',
   viewport: 'rgba(184,216,207,0.5)',
   viewportFill: 'rgba(184,216,207,0.045)',
   text: 'rgba(93,125,117,0.8)',
@@ -231,13 +233,21 @@ export default function Minimap({
       ctx.fill()
       ctx.restore()
 
-      // active objective: expanding amber pulse on its world zone
-      const activeObj = useMissionStore.getState().objectives.find((o) => o.active && !o.done)
+      // active objective: expanding amber pulse on its world zone. A defend
+      // objective adds a countdown ring that empties as the timer burns.
+      const activeObj = useMissionStore
+        .getState()
+        .objectives.find((o) => o.active && !o.done && !o.failed && !o.optional)
       const def = activeObj
         ? world.mission.objectives.find((d) => d.id === activeObj.id)
         : undefined
       if (def) {
-        const zone = def.kind === 'extract' ? city.extraction : (def.zone ?? city.checkpoint)
+        const zone =
+          def.kind === 'extract'
+            ? city.extraction
+            : (def.zone ??
+              (def.landmark ? city.landmarks[def.landmark] : undefined) ??
+              city.checkpoint)
         const phase = (Date.now() % 1400) / 1400
         ctx.save()
         ctx.globalAlpha = 0.85 * (1 - phase)
@@ -247,6 +257,21 @@ export default function Minimap({
         ctx.arc(zone.x * s, zone.z * s, Math.max(4, zone.r * s) * (0.55 + phase), 0, Math.PI * 2)
         ctx.stroke()
         ctx.restore()
+        if (def.kind === 'defend' && activeObj?.progress !== undefined) {
+          ctx.save()
+          ctx.strokeStyle = COLOR.checkpoint
+          ctx.lineWidth = 1.6
+          ctx.beginPath()
+          ctx.arc(
+            zone.x * s,
+            zone.z * s,
+            Math.max(4, zone.r * s),
+            -Math.PI / 2,
+            -Math.PI / 2 + (1 - activeObj.progress) * Math.PI * 2,
+          )
+          ctx.stroke()
+          ctx.restore()
+        }
       }
 
       // camera viewport: the frustum footprint on the ground, a trapezoid under
@@ -270,11 +295,25 @@ export default function Minimap({
         ctx.restore()
       }
 
-      // units: civilians under enemies under agents
+      // units: civilians under devices and vips under enemies under agents
       for (const u of units) {
         if (u.kind !== 'civilian' || u.stance === 'dead' || u.hp <= 0) continue
         ctx.fillStyle = COLOR.civilian
         ctx.fillRect(u.pos.x * s - 0.8, u.pos.z * s - 0.8, 1.6, 1.6)
+      }
+      // devices as squares (dimmed once destroyed), the vip as an open ring
+      for (const u of units) {
+        if (u.kind !== 'device') continue
+        ctx.fillStyle = u.stance === 'dead' ? COLOR.deviceDead : COLOR.device
+        ctx.fillRect(u.pos.x * s - 1.6, u.pos.z * s - 1.6, 3.2, 3.2)
+      }
+      for (const u of units) {
+        if (u.kind !== 'vip' || u.stance === 'dead' || u.hp <= 0) continue
+        ctx.strokeStyle = COLOR.vip
+        ctx.lineWidth = 1.4
+        ctx.beginPath()
+        ctx.arc(u.pos.x * s, u.pos.z * s, 2.6, 0, Math.PI * 2)
+        ctx.stroke()
       }
       // Sight cone of every guard that has something to look for. World heading
       // is atan2(dx, dz), so the canvas bearing is a quarter turn less.
@@ -288,7 +327,7 @@ export default function Minimap({
         ctx.arc(
           u.pos.x * s,
           u.pos.z * s,
-          ENEMY_VISION * s,
+          world.vision * s,
           a - VISION_HALF_ANGLE,
           a + VISION_HALF_ANGLE,
         )

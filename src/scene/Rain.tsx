@@ -1,9 +1,11 @@
-// Heavy rain as vertical streak line segments, two layers falling inside a
-// 70-unit box that follows the camera focus. Positions wrap vertically and
-// horizontally so the storm never ends and never leaves the view.
+// Rain as vertical streak line segments, two layers falling inside a 70-unit
+// box that follows the camera focus. Positions wrap vertically and
+// horizontally so the storm never ends and never leaves the view. Streak
+// density comes from the mission weather; a clear mission mounts nothing.
 import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
+import { getWorld } from '../game/runtime'
 
 const BOX = 70
 const HALF = BOX / 2
@@ -55,16 +57,26 @@ function buildLayer(count: number, streak: number, opacity: number, fall: number
 const TMP_DIR = new THREE.Vector3()
 
 export default function Rain() {
+  // The mission's weather is fixed for the lifetime of this mount: the world
+  // is set before the canvas renders and swapped only across remounts.
+  const weather = getWorld()?.mission.weather ?? 'none'
+  if (weather === 'none') return null
+  return <RainLayers heavy={weather === 'heavy'} />
+}
+
+function RainLayers({ heavy }: { heavy: boolean }) {
   const scene = useThree((s) => s.scene)
   // Layers and group must come from ONE memo: StrictMode re-invokes memo
   // creators, and a second creator re-running against a cached layers value
   // would reparent the segments into a discarded group.
   const { layers, group } = useMemo(() => {
-    const built = [buildLayer(1100, 0.55, 0.22, 15), buildLayer(700, 0.85, 0.13, 10)]
+    const built = heavy
+      ? [buildLayer(1100, 0.55, 0.22, 15), buildLayer(700, 0.85, 0.13, 10)]
+      : [buildLayer(480, 0.45, 0.15, 13), buildLayer(300, 0.7, 0.09, 9)]
     const g = new THREE.Group()
     for (const l of built) g.add(l.lines)
     return { layers: built, group: g }
-  }, [])
+  }, [heavy])
 
   useEffect(() => {
     scene.add(group)

@@ -15,8 +15,11 @@ import {
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
 import { MISSIONS, ROSTER } from '../game/data'
+import { missionChance, missionMods } from '../game/missionParams'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
-import type { SectorId } from '../game/types'
+import { useResearchStore } from '../state/researchStore'
+import type { MissionDef, SectorId } from '../game/types'
+import type { SectorState } from '../state/worldStore'
 import {
   ARCS,
   CITIES,
@@ -60,6 +63,16 @@ function agoLabel(sec: number): string {
   return m < 90 ? m + 'M' : (m / 60).toFixed(1) + 'H'
 }
 
+// Success chance is derived, never authored: it moves with sector state and
+// completed research, exactly as the brief computes it.
+function chanceFor(
+  m: MissionDef,
+  sectors: Record<string, SectorState>,
+  researchedCount: number,
+): number {
+  return missionChance(m, missionMods(m, sectors[m.sector]), researchedCount)
+}
+
 function intelGate(level: number): string {
   return 'REQUIRES INTEL LVL ' + level
 }
@@ -72,6 +85,7 @@ function WorldPlate() {
   const selected = useWorldStore((s) => s.selected)
   const selectMission = useAppStore((s) => s.selectMission)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
+  const researched = useResearchStore((s) => s.done)
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -209,7 +223,7 @@ function WorldPlate() {
                   </i>
                   <i>
                     <span>CHANCE</span>
-                    {m.chance}%
+                    {chanceFor(m, sectors, researched.length)}%
                   </i>
                   <i>
                     <span>ETA</span>
@@ -568,6 +582,7 @@ export function WorldMap() {
   const intelProgress = useCampaignStore((s) => s.intelProgress)
   const campaignWon = useCampaignStore((s) => s.campaignWon)
   const contractsWon = useCampaignStore((s) => s.contractsWon)
+  const researched = useResearchStore((s) => s.done)
   useWorldClock()
 
   const def = sectorDef(selected)
@@ -780,7 +795,9 @@ export function WorldMap() {
                         )}
                       </span>
                       <span className="wm-op-meta">
-                        <span className="chip dim">CHANCE {m.chance}%</span>
+                        <span className="chip dim">
+                          CHANCE {chanceFor(m, sectors, researched.length)}%
+                        </span>
                         <span className="chip dim">ETA {m.etaDays}D</span>
                       </span>
                     </button>

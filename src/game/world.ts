@@ -4,6 +4,7 @@
 // every store write is deferred to the first tick (startup()).
 import type {
   Boom,
+  DistrictSpec,
   MissionDef,
   ObjectiveDef,
   OperativeDef,
@@ -11,9 +12,12 @@ import type {
   Unit,
   Vec2,
   WorldApi,
+  Zone,
 } from './types'
 import { ENEMY_VISION, NOTICE_RADIUS, VISION_HALF_ANGLE, isWalkable } from './types'
 import { WEAPONS, weaponNoise } from './data'
+import { missionMods } from './missionParams'
+import type { MissionMods } from './missionParams'
 import { crewBonus, squadWeapon } from './research'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
@@ -38,7 +42,6 @@ const BOOM_LIFE = 0.4
 const SEPARATION_R = 0.7
 // Body radius a missed round has to cross to catch whoever is standing there.
 const STRAY_R = 0.5
-const VISION2 = ENEMY_VISION * ENEMY_VISION
 const NOTICE2 = NOTICE_RADIUS * NOTICE_RADIUS
 const VISION_COS = Math.cos(VISION_HALF_ANGLE)
 // Seconds of unbroken sight before a guard is certain, at arm's length and at
@@ -86,6 +89,11 @@ const GRENADE_NOISE_RADIUS = 24
 // A click may land just inside a wall or prop proxy. Snap it to adjacent
 // pavement, but reject a click buried deep inside inaccessible geometry.
 const GRENADE_TARGET_SNAP = 2.5
+// Vip behavior: picks up escort inside the acquire radius, then trails the
+// nearest living agent, stopping short so it never crowds the shooter.
+const VIP_ACQUIRE_R = 3
+const VIP_FOLLOW_STOP = 2.2
+const VIP_REPATH = 0.8
 
 const MOVE_LINES = ['Moving up.', 'Copy that.', 'On my way.', 'Repositioning.', 'Advancing.']
 // No 'Weapons free.' here: an ordered shot fires through hold fire, so that
@@ -131,9 +139,27 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
 
-export function createWorld(mission: MissionDef, operatives: OperativeDef[]): WorldApi {
+// Deployment inputs computed outside the sim (MissionScreen), so world.ts
+// never reads worldStore. Both default for tests and headless construction.
+export interface DeployParams {
+  mods?: MissionMods
+  district?: DistrictSpec
+}
+
+export function createWorld(
+  mission: MissionDef,
+  operatives: OperativeDef[],
+  deploy?: DeployParams,
+): WorldApi {
   const rng = mulberry32(mission.seed)
-  const city = generateCity(mission)
+  const mods = deploy?.mods ?? missionMods(mission)
+  const city = generateCity(mission, deploy?.district, {
+    enemyExtra: mods.enemyExtra,
+    civilianCount: mods.civilianCount,
+  })
+  // Weather scales guard sight and shot carry for this whole mission.
+  const vision = ENEMY_VISION * mods.visionMul
+  const vision2 = vision * vision
 
   const units: SimUnit[] = []
   const byId = new Map<string, SimUnit>()
@@ -160,8 +186,28 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   let lastOrderChatterT = -MOVE_CHATTER_GAP
   let lastFlavorT = -FLAVOR_GAP
   let lastSuspectLogT = -SUSPECT_LOG_GAP
-  let activeObjective = 0
-  const objectivesDone: boolean[] = mission.objectives.map(() => false)
+
+  // Objective engine. Required objectives run in strict sequence through
+  // reqPtr; an optional objective activates together with the required
+  // objective it precedes in the list, never blocks the sequence, and pays
+  // bonusReward on completion.
+  type ObjState = 'pending' | 'active' | 'done' | 'failed'
+  const objectives = mission.objectives
+  const objState: ObjState[] = objectives.map(() => 'pending')
+  const requiredOrder: number[] = []
+  objectives.forEach((d, i) => {
+    if (!d.optional) requiredOrder.push(i)
+  })
+  let reqPtr = 0
+  let bonusEarned = 0
+  // Interact channels accrued and defend countdowns remaining, per objective.
+  const interactT: number[] = objectives.map(() => 0)
+  const interactStarted: boolean[] = objectives.map(() => false)
+  const defendLeft: number[] = objectives.map((d) => d.durationSec ?? 0)
+  // Tags whose device died to non-squad fire: an optional destroy over such a
+  // tag is failed, not completed.
+  const deviceLostTags = new Set<string>()
+  let waveSeq = 0
   const inventory: MissionInventory = { med: 2, cell: 1 }
   for (const op of operatives) {
     if (op.role === 'medic') inventory.med += 2
@@ -215,7 +261,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
 
   city.enemies.forEach((sp, i) => {
     const w = WEAPONS[sp.weapon]
-    const hp = sp.hp ?? 60
+    const hp = Math.round((sp.hp ?? 60) * mods.enemyHpMul)
     addUnit({
       id: 'e' + (i + 1),
       kind: 'enemy',
@@ -269,6 +315,59 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       holdGround: false,
       holdFire: false,
       wanderT: rng() * 3,
+    })
+  })
+
+  // Vips: unarmed, fragile, idle until the squad reaches them. `alerted`
+  // doubles as the following flag; guards only treat a following vip as a
+  // target, so a captive standing in its cell trips no alarms.
+  city.vips.forEach((p, i) => {
+    addUnit({
+      id: 'v' + (i + 1),
+      kind: 'vip',
+      name: 'ASSET',
+      pos: snap(p),
+      heading: Math.PI,
+      hp: 60,
+      maxHp: 60,
+      speed: 4.0,
+      weapon: null,
+      stance: 'idle',
+      path: [],
+      targetId: null,
+      cooldown: 0,
+      magazine: 0,
+      reloading: 0,
+      alerted: false,
+      holdGround: false,
+      holdFire: false,
+      repathT: 0,
+    })
+  })
+
+  // Devices: stationary tagged demolition targets. No weapon, no AI; they die
+  // through the ordinary damage path.
+  city.devices.forEach((d, i) => {
+    addUnit({
+      id: 'd' + (i + 1),
+      kind: 'device',
+      name: d.tag.toUpperCase() + '-' + pad2(i + 1),
+      pos: snap(d.pos),
+      heading: 0,
+      hp: 120,
+      maxHp: 120,
+      speed: 0,
+      weapon: null,
+      stance: 'idle',
+      path: [],
+      targetId: null,
+      cooldown: 0,
+      magazine: 0,
+      reloading: 0,
+      alerted: false,
+      holdGround: true,
+      holdFire: false,
+      tag: d.tag,
     })
   })
 
@@ -369,10 +468,10 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     const r2 = SEPARATION_R * SEPARATION_R
     for (let i = 0; i < n; i++) {
       const a = units[i]
-      if (a.stance === 'dead') continue
+      if (a.stance === 'dead' || a.kind === 'device') continue
       for (let j = i + 1; j < n; j++) {
         const b = units[j]
-        if (b.stance === 'dead') continue
+        if (b.stance === 'dead' || b.kind === 'device') continue
         let dx = b.pos.x - a.pos.x
         let dz = b.pos.z - a.pos.z
         const d2 = dx * dx + dz * dz
@@ -424,6 +523,16 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     // A flatlined agent takes no orders, so it must not keep advertising them.
     t.holdGround = false
     t.holdFire = false
+    if (t.kind === 'device') {
+      // A device goes up, not down: blast boom and a noise event, no thud.
+      booms.push({ pos: { x: t.pos.x, z: t.pos.z }, t: world.time, r: 2.4, color: '#ff9b52' })
+      noiseSeq += 1
+      noises.push({ id: noiseSeq, pos: { x: t.pos.x, z: t.pos.z }, r: 20, t: world.time })
+      sfx.blast()
+      if (by.kind !== 'agent' && t.tag) deviceLostTags.add(t.tag)
+      pushLog('SYS', 'DEVICE DESTROYED: ' + t.name + '.', by.kind === 'agent' ? 'ok' : 'alert')
+      return
+    }
     booms.push({ pos: { x: t.pos.x, z: t.pos.z }, t: world.time, r: 0.55, color: '#ff8352' })
     sfx.deathThud()
     if (t.kind === 'enemy') {
@@ -433,6 +542,9 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       casualties += 1
       if (t.operative) deadIds.push(t.operative.id)
       pushLog('SYS', 'AGENT DOWN. ' + t.name + ' flatlined.', 'alert')
+    } else if (t.kind === 'vip') {
+      pushLog('SYS', 'ASSET DOWN. THE CLIENT IS WATCHING.', 'alert')
+      onVipDead()
     } else {
       pushLog('SYS', 'CIVILIAN DOWN. KILLED BY STRAY FIRE.', 'alert')
     }
@@ -557,7 +669,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     noises.push({
       id: noiseSeq,
       pos: { x: u.pos.x, z: u.pos.z },
-      r: weaponNoise(w),
+      r: weaponNoise(w) * mods.noiseMul,
       t: world.time,
     })
     sfx.gunshot(w.id)
@@ -701,19 +813,27 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     e.stance = 'idle'
   }
 
-  // Nearest agent this guard can make out: inside the facing cone out to
-  // ENEMY_VISION, or anywhere inside NOTICE_RADIUS, and never through a wall.
+  // Whether a guard treats this body as an intruder: any living agent, and a
+  // vip that has broken escort (following). A captive vip alarms nobody.
+  function hostileToGuards(a: SimUnit): boolean {
+    if (a.stance === 'dead') return false
+    return a.kind === 'agent' || (a.kind === 'vip' && a.alerted)
+  }
+
+  // Nearest intruder this guard can make out: inside the facing cone out to
+  // the mission vision range, or anywhere inside NOTICE_RADIUS, and never
+  // through a wall.
   function seen(e: SimUnit): SimUnit | null {
     let best: SimUnit | null = null
     let bestD2 = Infinity
     const fx = Math.sin(e.heading)
     const fz = Math.cos(e.heading)
     for (const a of units) {
-      if (a.kind !== 'agent' || a.stance === 'dead') continue
+      if (!hostileToGuards(a)) continue
       const dx = a.pos.x - e.pos.x
       const dz = a.pos.z - e.pos.z
       const d2 = dx * dx + dz * dz
-      if (d2 > VISION2 || d2 >= bestD2) continue
+      if (d2 > vision2 || d2 >= bestD2) continue
       if (d2 > NOTICE2 && (fx * dx + fz * dz) / Math.sqrt(d2) < VISION_COS) continue
       if (!hasLos(city, e.pos, a.pos)) continue
       best = a
@@ -754,7 +874,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
   // Certainty gained per second of clear sight; a close agent registers in a
   // fraction of the time one at the edge of the cone does.
   function sightGain(d: number): number {
-    const k = Math.min(1, d / ENEMY_VISION)
+    const k = Math.min(1, d / vision)
     return 1 / (SIGHT_NEAR_T + (SIGHT_FAR_T - SIGHT_NEAR_T) * k)
   }
 
@@ -832,11 +952,11 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
 
   function combatStep(e: SimUnit, dt: number): void {
     const w = e.weapon
-    const seeR = Math.max(ENEMY_VISION, w ? w.range : 0)
+    const seeR = Math.max(vision, w ? w.range : 0)
     let tgt: SimUnit | null = null
     let bestD = seeR
     for (const a of units) {
-      if (a.kind !== 'agent' || a.stance === 'dead') continue
+      if (!hostileToGuards(a)) continue
       const d = dist(e.pos, a.pos)
       if (d <= bestD && hasLos(city, e.pos, a.pos)) {
         tgt = a
@@ -893,6 +1013,45 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       if (e.aiState === 'combat') combatStep(e, dt)
       else if (e.aiState === 'suspicious') suspiciousStep(e, dt)
       else patrolStep(e)
+    }
+  }
+
+  // Idle vips wait for the squad; a following vip trails the nearest living
+  // agent on a repath cadence and stops short of stepping on its heels.
+  function updateVips(dt: number): void {
+    for (const v of units) {
+      if (v.kind !== 'vip' || v.stance === 'dead') continue
+      let nearest: SimUnit | null = null
+      let nd = Infinity
+      for (const a of units) {
+        if (a.kind !== 'agent' || a.stance === 'dead') continue
+        const d = dist(v.pos, a.pos)
+        if (d < nd) {
+          nd = d
+          nearest = a
+        }
+      }
+      if (!v.alerted) {
+        if (!nearest || nd > VIP_ACQUIRE_R) continue
+        v.alerted = true
+        pushLog('SYS', 'ASSET SECURED. Keep the escort alive.', 'ok')
+      }
+      if (!nearest) {
+        v.path.length = 0
+        v.stance = 'idle'
+        continue
+      }
+      if (nd > VIP_FOLLOW_STOP) {
+        if (world.time >= (v.repathT ?? 0)) {
+          v.repathT = world.time + VIP_REPATH
+          v.path = findPath(city, v.pos, nearest.pos)
+        }
+        v.stance = v.path.length > 0 ? 'moving' : 'idle'
+      } else {
+        v.path.length = 0
+        v.stance = 'idle'
+        faceToward(v, nearest.pos, dt)
+      }
     }
   }
 
@@ -970,65 +1129,234 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     noises.length = w
   }
 
-  function zoneFor(def: ObjectiveDef): { x: number; z: number; r: number } {
-    return def.zone ?? city.checkpoint
+  function zoneFor(def: ObjectiveDef): Zone {
+    if (def.zone) return def.zone
+    if (def.landmark && city.landmarks[def.landmark]) return city.landmarks[def.landmark]
+    return city.checkpoint
   }
 
-  function objectiveMet(def: ObjectiveDef): boolean {
+  function inZone(p: Vec2, zone: Zone): boolean {
+    const dx = p.x - zone.x
+    const dz = p.z - zone.z
+    return dx * dx + dz * dz <= zone.r * zone.r
+  }
+
+  function agentInZone(zone: Zone): boolean {
+    return units.some((u) => u.kind === 'agent' && u.stance !== 'dead' && inZone(u.pos, zone))
+  }
+
+  function livingDevices(tag: string | undefined): boolean {
+    return units.some((u) => u.kind === 'device' && u.tag === tag && u.stance !== 'dead')
+  }
+
+  // Wave spawn for a defend objective: enemies enter already fighting, headed
+  // for the zone, from the generator's guaranteed-connected entry landmarks.
+  function spawnWave(def: ObjectiveDef): void {
+    const wave = def.wave
+    if (!wave || wave.count <= 0) return
+    const zone = zoneFor(def)
+    const entries = wave.entry
+      .map((k) => city.landmarks[k])
+      .filter((z): z is Zone => z !== undefined)
+    for (let i = 0; i < wave.count; i++) {
+      const at = entries.length > 0 ? entries[i % entries.length] : zone
+      const w = WEAPONS[wave.weapons[i % wave.weapons.length] ?? 'smg']
+      waveSeq += 1
+      addUnit({
+        id: 'w' + waveSeq,
+        kind: 'enemy',
+        name: 'CORPSEC-W' + pad2(waveSeq),
+        pos: snap({ x: at.x + (rng() - 0.5) * 2, z: at.z + (rng() - 0.5) * 2 }),
+        heading: Math.atan2(zone.x - at.x, zone.z - at.z),
+        hp: Math.round(60 * mods.enemyHpMul),
+        maxHp: Math.round(60 * mods.enemyHpMul),
+        speed: 4.2,
+        weapon: w,
+        stance: 'idle',
+        path: [],
+        targetId: null,
+        cooldown: rng() * 0.4,
+        magazine: w.magazine,
+        reloading: 0,
+        alerted: true,
+        holdGround: false,
+        holdFire: false,
+        patrol: [],
+        patrolIndex: 0,
+        aiState: 'combat',
+        senseT: 0,
+        senseAt: world.time,
+        repathT: 0,
+        lastSeenT: world.time,
+        lastSeenPos: { x: zone.x, z: zone.z },
+        awareness: 1,
+        heardId: noiseSeq,
+      })
+    }
+    sfx.alertSting()
+    pushLog('SYS', 'CORPSEC WAVE INBOUND. HOLD THE ZONE.', 'alert')
+  }
+
+  function activateIndex(i: number): void {
+    if (objState[i] !== 'pending') return
+    objState[i] = 'active'
+    if (objectives[i].kind === 'defend') spawnWave(objectives[i])
+  }
+
+  // Brings a required objective live along with every optional that precedes
+  // it in the list back to the previous required entry.
+  function activateRequired(ri: number): void {
+    const idx = requiredOrder[ri]
+    if (idx === undefined) return
+    activateIndex(idx)
+    objectives.forEach((d, j) => {
+      if (!d.optional) return
+      const companion = requiredOrder.find((r) => r > j)
+      if (companion === idx) activateIndex(j)
+    })
+  }
+
+  function objectiveMet(def: ObjectiveDef, i: number): boolean {
     switch (def.kind) {
-      case 'reach-zone': {
-        const zone = zoneFor(def)
-        const r2 = zone.r * zone.r
-        return units.some((u) => {
-          if (u.kind !== 'agent' || u.stance === 'dead') return false
-          const dx = u.pos.x - zone.x
-          const dz = u.pos.z - zone.z
-          return dx * dx + dz * dz <= r2
-        })
-      }
+      case 'reach-zone':
+        return agentInZone(zoneFor(def))
       case 'eliminate-tag':
         return !units.some((u) => u.kind === 'enemy' && u.tag === def.tag && u.stance !== 'dead')
+      case 'interact':
+        return interactT[i] >= (def.durationSec ?? 0)
+      case 'escort': {
+        const crowd = units.filter((u) => u.kind === 'vip')
+        if (crowd.length === 0) return false
+        const zone = zoneFor(def)
+        return crowd.every((v) => v.stance !== 'dead' && inZone(v.pos, zone))
+      }
+      case 'destroy':
+        return !livingDevices(def.tag)
+      case 'defend':
+        return defendLeft[i] <= 0
       case 'extract': {
         const alive = livingAgents()
         if (alive.length === 0) return false
         const zone = city.extraction
-        const r2 = zone.r * zone.r
-        return alive.every((u) => {
-          const dx = u.pos.x - zone.x
-          const dz = u.pos.z - zone.z
-          return dx * dx + dz * dz <= r2
-        })
+        return alive.every((u) => inZone(u.pos, zone))
       }
     }
+  }
+
+  function mmssLeft(sec: number): string {
+    const s = Math.max(0, Math.ceil(sec))
+    return Math.floor(s / 60) + ':' + pad2(s % 60)
   }
 
   function syncObjectives(): void {
-    const rows: ObjectiveUi[] = mission.objectives.map((d, i) => ({
-      id: d.id,
-      label: d.label,
-      done: objectivesDone[i] === true,
-      active: i === activeObjective && objectivesDone[i] !== true,
-    }))
+    const rows: ObjectiveUi[] = objectives.map((d, i) => {
+      const st = objState[i]
+      const row: ObjectiveUi = {
+        id: d.id,
+        label: d.label,
+        done: st === 'done',
+        active: st === 'active',
+        optional: d.optional === true,
+        failed: st === 'failed',
+      }
+      if (st === 'active' && d.durationSec) {
+        if (d.kind === 'interact') row.progress = Math.min(1, interactT[i] / d.durationSec)
+        else if (d.kind === 'defend') {
+          row.progress = Math.min(1, 1 - defendLeft[i] / d.durationSec)
+          row.timer = mmssLeft(defendLeft[i])
+        }
+      }
+      return row
+    })
     useMissionStore.getState().setObjectives(rows)
   }
 
-  function updateObjectives(): void {
-    if (activeObjective >= mission.objectives.length) return
-    const def = mission.objectives[activeObjective]
-    if (!objectiveMet(def)) return
-    objectivesDone[activeObjective] = true
-    activeObjective += 1
+  // True while an active objective pushes continuous progress the HUD shows.
+  function objectivesTicking(): boolean {
+    return objectives.some(
+      (d, i) => objState[i] === 'active' && (d.kind === 'interact' || d.kind === 'defend'),
+    )
+  }
+
+  function failObjective(i: number): void {
+    if (objState[i] === 'done' || objState[i] === 'failed') return
+    objState[i] = 'failed'
+    pushLog('SYS', 'OBJECTIVE FAILED: ' + objectives[i].label, 'alert')
+    syncObjectives()
+  }
+
+  // A dead vip voids every unfinished escort: optional ones fail and are
+  // skipped, a required one loses the mission on the spot.
+  function onVipDead(): void {
+    objectives.forEach((d, i) => {
+      if (d.kind !== 'escort' || objState[i] === 'done') return
+      if (d.optional) {
+        failObjective(i)
+      } else if (result === 'none') {
+        setResultNow('lost')
+        pushLog('SYS', 'CONTRACT BREACHED. THE ASSET IS DEAD.', 'alert')
+      }
+    })
+  }
+
+  function completeObjective(i: number): void {
+    const def = objectives[i]
+    objState[i] = 'done'
     sfx.objectiveChime()
     pushLog('SYS', 'OBJECTIVE COMPLETE: ' + def.label, 'ok')
-    const next = mission.objectives[activeObjective]
-    if (next) {
-      if (next.kind === 'extract') {
-        pushLog('SYS', 'Extraction window open. Return to the insertion zone.', 'ok')
-      } else {
-        pushLog('SYS', 'OBJECTIVE: ' + next.label)
+    if (def.optional) {
+      if (def.bonusReward) {
+        bonusEarned += def.bonusReward
+        pushLog('SYS', 'BONUS SECURED: +' + def.bonusReward + ' CR.', 'ok')
+      }
+    } else {
+      reqPtr += 1
+      const nextIdx = requiredOrder[reqPtr]
+      if (nextIdx !== undefined) {
+        activateRequired(reqPtr)
+        const next = objectives[nextIdx]
+        if (next.kind === 'extract') {
+          pushLog('SYS', 'Extraction window open. Return to the insertion zone.', 'ok')
+        } else {
+          pushLog('SYS', 'OBJECTIVE: ' + next.label)
+        }
       }
     }
     syncObjectives()
+  }
+
+  function updateObjectives(dt: number): void {
+    for (let i = 0; i < objectives.length; i++) {
+      if (objState[i] !== 'active') continue
+      const def = objectives[i]
+      if (def.kind === 'interact') {
+        // Progress accrues while any living agent holds the zone; an empty
+        // zone pauses the channel where it stands, never resets it.
+        if (agentInZone(zoneFor(def))) {
+          if (!interactStarted[i]) {
+            interactStarted[i] = true
+            pushLog('SYS', 'UPLINK OPEN: ' + def.label, 'ok')
+          }
+          const before = Math.floor(interactT[i])
+          interactT[i] += dt
+          if (Math.floor(interactT[i]) > before) sfx.interactTick()
+        }
+      } else if (def.kind === 'defend') {
+        // The countdown mirrors interact: it only burns while the squad
+        // actually holds the zone.
+        if (agentInZone(zoneFor(def))) defendLeft[i] = Math.max(0, defendLeft[i] - dt)
+      } else if (
+        def.kind === 'destroy' &&
+        def.optional &&
+        def.tag &&
+        deviceLostTags.has(def.tag) &&
+        !livingDevices(def.tag)
+      ) {
+        failObjective(i)
+        continue
+      }
+      if (objectiveMet(def, i)) completeObjective(i)
+    }
   }
 
   function setResultNow(r: 'won' | 'lost'): void {
@@ -1043,7 +1371,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       pushLog('SYS', 'SQUAD ELIMINATED. UPLINK LOST.', 'alert')
       return
     }
-    if (mission.objectives.length > 0 && activeObjective >= mission.objectives.length) {
+    if (requiredOrder.length > 0 && reqPtr >= requiredOrder.length) {
       setResultNow('won')
       pushLog('SYS', 'MISSION COMPLETE. EXTRACTION CONFIRMED.', 'ok')
     }
@@ -1059,6 +1387,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       timeSec: world.time,
       civiliansHit,
       reward: result === 'won' ? mission.reward : 0,
+      bonus: result === 'won' ? bonusEarned : 0,
       deadIds: deadIds.slice(),
     })
   }
@@ -1128,7 +1457,9 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
 
   function startup(): void {
     pushLog('SYS', 'SQUAD LINK ESTABLISHED. ' + livingAgents().length + ' ONLINE.')
-    const first = mission.objectives[0]
+    activateRequired(0)
+    const firstIdx = requiredOrder[0]
+    const first = firstIdx !== undefined ? objectives[firstIdx] : undefined
     if (first) {
       if (first.kind === 'extract') {
         pushLog('SYS', 'Extraction window open. Return to the insertion zone.', 'ok')
@@ -1170,6 +1501,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     world.time += dt
     updateAgents(dt)
     updateEnemies(dt)
+    updateVips(dt)
     updateCivilians()
     for (const u of units) {
       // holdGround is enforced here as well as at every path writer, so a
@@ -1180,7 +1512,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     separate(dt)
     decayFx()
     if (result === 'none') {
-      updateObjectives()
+      updateObjectives(dt)
       checkEnd()
     }
     updateAlert()
@@ -1190,6 +1522,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
       syncT -= SYNC_INTERVAL
       syncSquad()
       syncMissionResources()
+      // Channels and countdowns move every step; push their bars at sync rate.
+      if (objectivesTicking()) syncObjectives()
       useMissionStore.getState().setClock(clockStr())
     }
   }
@@ -1257,7 +1591,8 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
 
   function orderAttack(agentIds: string[], targetId: string): void {
     const t = byId.get(targetId)
-    if (!t || t.kind !== 'enemy' || t.stance === 'dead') return
+    // Devices are legal attack targets: gunfire is the slow demolition tool.
+    if (!t || (t.kind !== 'enemy' && t.kind !== 'device') || t.stance === 'dead') return
     const shooters = ordered(agentIds)
     if (shooters.length === 0) return
     for (const u of shooters) {
@@ -1400,6 +1735,7 @@ export function createWorld(mission: MissionDef, operatives: OperativeDef[]): Wo
     tracers,
     booms,
     time: 0,
+    vision,
     tick,
     orderMove,
     orderAttack,

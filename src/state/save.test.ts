@@ -79,6 +79,7 @@ describe('save round trip', () => {
       timeSec: 300,
       civiliansHit: 1,
       reward: 85000,
+      bonus: 0,
       deadIds: [],
     })
     useResearchStore.getState().start(nodeById('b-propellants'), 1000)

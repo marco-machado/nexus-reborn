@@ -11,6 +11,7 @@ interface MissionSfx {
   objectiveChime: () => void
   deathThud: () => void
   blast: () => void
+  interactTick: () => void
 }
 
 let loaded: MissionSfx | null = null
@@ -43,5 +44,8 @@ export const missionSfx: MissionSfx = {
   },
   blast() {
     loaded?.blast()
+  },
+  interactTick() {
+    loaded?.interactTick()
   },
 }

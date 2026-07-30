@@ -198,7 +198,7 @@ function buildCity(city: CityData): Built {
   }
   acMesh.instanceMatrix.needsUpdate = true
   acMesh.frustumCulled = false
-  group.add(acMesh)
+  if (acSpots.length > 0) group.add(acMesh)
 
   // Neon banners grouped by color, one instanced quad batch per color.
   const neonGroups = new Map<string, Array<{ b: BuildingData; side: number; hFac: number }>>()
@@ -335,7 +335,11 @@ function buildCity(city: CityData): Built {
     m.compose(p.copy(off), q, sc.set(s, s, s))
     mesh.setMatrixAt(i, m)
   }
+  // A zero-count InstancedMesh allocates a zero-size uniform buffer, which
+  // WebGPU rejects at bind group creation. Archetypes drop whole prop kinds
+  // (a compound has no barriers), so empty batches never reach the scene.
   const finish = (mesh: THREE.InstancedMesh): void => {
+    if (mesh.count === 0) return
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.frustumCulled = false
@@ -416,7 +420,8 @@ function buildCity(city: CityData): Built {
   finish(capMesh)
 
   // Checkpoint gate dressing: crossbar and laser fence between the pillars.
-  if (pillarPs.length >= 2) {
+  // Checkpoint archetype only; compound gate pillars stay bare posts.
+  if (city.archetype === 'checkpoint' && pillarPs.length >= 2) {
     const a = pillarPs[0]
     const b = pillarPs[1]
     const midX = (a.x + b.x) / 2

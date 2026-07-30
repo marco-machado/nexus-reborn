@@ -17,6 +17,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     timeSec: 420,
     civiliansHit: 0,
     reward: 85000,
+    bonus: 0,
     deadIds: [],
     ...over,
   }

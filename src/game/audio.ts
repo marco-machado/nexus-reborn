@@ -214,4 +214,11 @@ export const sfx = {
     if (!live) return
     tone(live, { dur: 0.02, type: 'square', f0: 1500, f1: 900, gain: 0.12 })
   },
+
+  // One short data blip per second of interact channel progress.
+  interactTick(): void {
+    const live = gate('interact', 0.2)
+    if (!live) return
+    tone(live, { dur: 0.05, type: 'square', f0: 1180, f1: 1420, gain: 0.14 })
+  },
 }

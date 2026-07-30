@@ -12,6 +12,8 @@ export interface MissionOutcome {
   timeSec: number
   civiliansHit: number
   reward: number
+  // Optional-objective pay, on top of the contract fee. Zero on a loss.
+  bonus: number
   deadIds: string[]
 }
 
@@ -24,7 +26,7 @@ export function collateralFine(o: MissionOutcome): number {
 }
 
 export function netPayout(o: MissionOutcome): number {
-  return o.won ? o.reward - collateralFine(o) : 0
+  return o.won ? o.reward - collateralFine(o) + o.bonus : 0
 }
 
 export const INITIAL_CREDITS = 128450

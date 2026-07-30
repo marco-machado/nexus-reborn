@@ -10,7 +10,7 @@
 //
 // An empty selection is a real state: nothing re-selects the squad behind your
 // back, so an order given with no one selected does nothing.
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { bindingFor, codeOf } from '../game/bindings'
@@ -97,12 +97,16 @@ export default function Input() {
   const gl = useThree((s) => s.gl)
   const grenadeTargeting = useMissionStore((s) => s.grenadeTargeting)
   const size = world ? world.city.size : 96
+  // Wave spawns grow the unit list mid-mission; tracking the count keeps the
+  // pick proxies covering them. Devices are attack targets like enemies.
+  const [unitCount, setUnitCount] = useState(world ? world.units.length : 0)
   const picks = useMemo(() => {
     if (!world) return []
+    void unitCount
     return world.units
-      .filter((u) => u.kind === 'agent' || u.kind === 'enemy')
+      .filter((u) => u.kind === 'agent' || u.kind === 'enemy' || u.kind === 'device')
       .map((u): Pick => ({ id: u.id, agent: u.kind === 'agent' }))
-  }, [world])
+  }, [world, unitCount])
   const proxies = useRef<Map<string, THREE.Mesh>>(new Map())
   // Written by the pick handlers, read by the window pointerdown below: r3f
   // runs the canvas handlers before the same event reaches the window.
@@ -325,6 +329,7 @@ export default function Input() {
   useFrame(() => {
     const w = getWorld()
     if (!w) return
+    if (w.units.length !== unitCount) setUnitCount(w.units.length)
     for (const p of picks) {
       const mesh = proxies.current.get(p.id)
       const u = w.unit(p.id)

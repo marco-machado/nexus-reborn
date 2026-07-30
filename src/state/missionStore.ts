@@ -47,6 +47,12 @@ export interface ObjectiveUi {
   label: string
   done: boolean
   active: boolean
+  optional?: boolean
+  failed?: boolean
+  // 0..1 for an active interact channel or defend countdown.
+  progress?: number
+  // Remaining defend time, preformatted (m:ss).
+  timer?: string
 }
 
 export interface MissionUiState {

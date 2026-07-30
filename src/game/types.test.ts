@@ -16,6 +16,7 @@ function makeCity(size: number, walkable: Array<[number, number]>): CityData {
   for (const [cx, cz] of walkable) walk[cz * size + cx] = 1
   return {
     size,
+    archetype: 'checkpoint',
     walk,
     buildings: [],
     props: [],
@@ -26,6 +27,9 @@ function makeCity(size: number, walkable: Array<[number, number]>): CityData {
     spawnAgents: [],
     enemies: [],
     civilians: [],
+    vips: [],
+    devices: [],
+    landmarks: {},
     extraction: { x: 0, z: 0, r: 1 },
     checkpoint: { x: 0, z: 0, r: 1 },
   }

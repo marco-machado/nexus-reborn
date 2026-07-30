@@ -1573,6 +1573,8 @@
 .mb-patrol circle { fill: rgba(150, 190, 178, 0.6); }
 
 .mb-tac-target { stroke: var(--amber); stroke-width: 0.6; }
+.mb-tac-device { fill: rgba(255, 179, 0, 0.85); stroke: rgba(255, 179, 0, 0.4); stroke-width: 0.3; }
+.mb-tac-vip { fill: none; stroke: #9be8ff; stroke-width: 0.45; }
 .mb-tac-ring { fill: none; stroke-width: 0.45; stroke-dasharray: 1.4 1.2; }
 .mb-tac-ring.amber { stroke: rgba(240, 180, 69, 0.75); }
 .mb-tac-ring.teal { stroke: rgba(126, 240, 212, 0.6); }
@@ -2570,9 +2572,36 @@
 }
 
 .hud-obj.done { color: var(--teal); }
-.hud-obj.done span:last-child { opacity: 0.75; }
+.hud-obj.done .hud-obj-main { opacity: 0.75; }
 .hud-obj.active { color: var(--amber-hot); }
+.hud-obj.failed { color: var(--red); }
+.hud-obj.failed .hud-obj-text { text-decoration: line-through; opacity: 0.7; }
 .hud-obj-mark { width: 12px; height: 12px; flex: none; }
+.hud-obj-main { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.hud-obj-label { display: flex; align-items: baseline; gap: 6px; }
+.hud-obj-text { flex: 1; min-width: 0; }
+.hud-obj-opt {
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+  border: 1px solid rgba(93, 125, 117, 0.5);
+  padding: 0 3px;
+  flex: none;
+}
+.hud-obj-timer { font-size: 10px; letter-spacing: 0.08em; flex: none; }
+.hud-obj-bar {
+  display: block;
+  height: 4px;
+  background: rgba(93, 125, 117, 0.25);
+  border: 1px solid rgba(93, 125, 117, 0.4);
+}
+.hud-obj-bar i {
+  display: block;
+  height: 100%;
+  background: var(--amber-hot);
+  transition: width 0.2s linear;
+}
 
 /* comm log */
 .hud-comms {

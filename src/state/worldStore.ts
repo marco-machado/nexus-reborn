@@ -260,6 +260,7 @@ export interface WorldStoreState {
   nextEventT: number
   rngState: number
   tick: (dt: number) => void
+  advanceDays: (days: number) => void
   applyMissionResult: (missionId: string, outcome: MissionOutcome) => void
   setSpeed: (speed: number) => void
   togglePause: () => void
@@ -326,6 +327,49 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       rngState: scheduleRng.state,
     })
   },
+
+  // Contract ETA cost: jumps the clock forward whole days and rolls every
+  // event the skipped time would have produced, so sectors, ownership and the
+  // rng stream land exactly where continuous ticking would have put them.
+  // Labs and injuries catch up through their own sync(t) on the next clock.
+  advanceDays: (days) =>
+    set((s) => {
+      if (!Number.isFinite(days) || days <= 0) return s
+      const t = s.t + days * DAY
+      const sectors = { ...s.sectors }
+      let owner = s.owner
+      let events = s.events
+      let nextEventT = s.nextEventT
+      let rngState = s.rngState
+      let rolledCount = 0
+      while (nextEventT <= t) {
+        const rolled = rollEvent(
+          (events[events.length - 1]?.id ?? 0) + 1,
+          nextEventT,
+          sectors,
+          owner,
+          rngState,
+        )
+        sectors[rolled.event.sector] = rolled.state
+        if (rolled.flip) owner = { ...owner, [rolled.flip.city]: rolled.flip.corp }
+        events = events.concat(rolled.event)
+        if (events.length > MAX_EVENTS) events = events.slice(events.length - MAX_EVENTS)
+        const scheduleRng = { state: rolled.rngState }
+        nextEventT += EVENT_MIN + nextRandom(scheduleRng) * EVENT_SPAN
+        rngState = scheduleRng.state
+        rolledCount += 1
+      }
+      return {
+        t,
+        sectors,
+        owner,
+        events,
+        unread: Math.min(MAX_EVENTS, s.unread + rolledCount),
+        review: null,
+        nextEventT,
+        rngState,
+      }
+    }),
 
   applyMissionResult: (missionId, outcome) =>
     set((state) => {
