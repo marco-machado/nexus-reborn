@@ -2176,21 +2176,35 @@
 
 .ts-weapon-name { font-size: 9.5px; letter-spacing: 0.1em; line-height: 1.3; color: var(--ink); }
 
-.ts-inv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+/* loadout item slots: two cycling buttons per operative */
+.ts-loadout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
 
-.ts-inv-tile {
-  position: relative;
-  aspect-ratio: 1;
-  border: 1px solid var(--line);
+.ts-loadout-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 6px;
+  border: 1px dashed var(--line);
   background: var(--bg-inset);
-  display: grid;
-  place-items: center;
-  color: rgba(126, 240, 212, 0.5);
+  color: rgba(126, 240, 212, 0.55);
+  font: inherit;
+  cursor: pointer;
   transition: border-color 0.12s;
 }
 
-.ts-inv-tile:hover { border-color: var(--line-strong); }
-.ts-inv-tile i { position: absolute; right: 3px; bottom: 1px; font-size: 8px; color: var(--ink-dim); }
+.ts-loadout-slot:hover { border-color: var(--line-strong); }
+
+.ts-loadout-slot.filled {
+  border-style: solid;
+  border-color: rgba(126, 240, 212, 0.5);
+  color: var(--teal);
+}
+
+.ts-loadout-slot b { font-size: 8.5px; letter-spacing: 0.12em; white-space: nowrap; }
+.ts-loadout-slot i { font-size: 8px; letter-spacing: 0.08em; }
+.ts-loadout-empty { font-size: 15px; line-height: 18px; }
+.ts-loadout-mass { letter-spacing: 0.14em; }
 
 /* bottom deploy strip */
 .ts-foot {
@@ -2250,6 +2264,13 @@
 .ts-mass-num b { font-size: clamp(19px, 1.8vw, 26px); color: #e8fbf2; letter-spacing: 0.06em; }
 .ts-mass-unit { font-size: 10px; letter-spacing: 0.14em; color: var(--ink); }
 .ts-mass-limit { font-size: 8.5px; letter-spacing: 0.12em; white-space: nowrap; }
+.ts-mass-num b.red { color: var(--red); }
+
+/* speed tier line: teal under the light limit, red over the heavy one */
+.ts-mass-tier { font-size: 8px; letter-spacing: 0.14em; white-space: nowrap; }
+.ts-mass-tier.light { color: var(--teal); }
+.ts-mass-tier.standard { color: var(--ink-dim); }
+.ts-mass-tier.heavy { color: var(--red); }
 
 .ts-deploy { display: flex; flex-direction: column; gap: 5px; justify-content: center; }
 .ts-deploy .cta { width: 100%; }
@@ -2773,6 +2794,21 @@ button.hud-slot:focus-visible {
   line-height: 1;
   color: currentColor;
 }
+
+/* usable item buttons: teal while stocked, struck through red once spent */
+.hud-slot.item.usable {
+  color: var(--teal);
+  border-color: rgba(126, 240, 212, 0.5);
+  box-shadow: inset 0 0 12px rgba(126, 240, 212, 0.08);
+}
+
+.hud-slot.item.usable:hover {
+  color: #d9fff4;
+  border-color: var(--teal);
+}
+
+.hud-slot.item:disabled { cursor: not-allowed; }
+.hud-slot.item:disabled:hover { border-color: inherit; }
 
 .hud-slot.item.spent {
   color: rgba(224, 75, 60, 0.24);

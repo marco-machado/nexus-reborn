@@ -14,7 +14,7 @@ import {
   validateSave,
   writeSave,
 } from './save'
-import type { SaveStorage, SaveV1 } from './save'
+import type { SaveStorage, SaveV2 } from './save'
 import { useWorldStore } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
@@ -48,13 +48,42 @@ afterEach(() => {
 })
 
 describe('save validation', () => {
-  it('accepts a captured V1 campaign and rejects unknown ids', () => {
+  it('accepts a captured V2 campaign and rejects unknown ids', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const invalid = structuredClone(save) as SaveV1
+    const invalid = structuredClone(save) as SaveV2
     invalid.campaign.contractsWon = ['unknown']
     expect(validateSave(invalid)).toBe(false)
+  })
+
+  it('rejects malformed loadouts: unknown ids, wrong lengths, unknown items', () => {
+    const save = captureSave()
+
+    const badOp = structuredClone(save) as SaveV2
+    badOp.app.loadout = { op99: ['med', null] } as SaveV2['app']['loadout']
+    expect(validateSave(badOp)).toBe(false)
+
+    const badLength = structuredClone(save)
+    ;(badLength.app.loadout as Record<string, unknown>).op1 = ['med']
+    expect(validateSave(badLength)).toBe(false)
+
+    const badItem = structuredClone(save)
+    ;(badItem.app.loadout as Record<string, unknown>).op1 = ['med', 'frag']
+    expect(validateSave(badItem)).toBe(false)
+  })
+
+  it('upgrades a v1 blob by adding an empty loadout', () => {
+    const save = captureSave()
+    const v1 = structuredClone(save) as unknown as Record<string, unknown>
+    v1.version = 1
+    delete (v1.app as Record<string, unknown>).loadout
+    storage.setItem(SAVE_KEY, JSON.stringify(v1))
+
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    expect(loaded?.version).toBe(2)
+    expect(loaded?.app.loadout).toEqual({})
   })
 
   it('discards malformed JSON and schema mismatches from storage', () => {
@@ -70,7 +99,11 @@ describe('save validation', () => {
 
 describe('save round trip', () => {
   it('restores all four stores while resetting transient view and outcome state', () => {
-    useAppStore.setState({ credits: 222333, squad: ['op1', 'op3', 'op6'] })
+    useAppStore.setState({
+      credits: 222333,
+      squad: ['op1', 'op3', 'op6'],
+      loadout: { op1: ['med', 'cell'], op3: [null, 'med'] },
+    })
     useWorldStore.setState({ t: 1000, speed: 4, paused: true, selected: 'as', review: 500 })
     useWorldStore.getState().applyMissionResult('m01', {
       won: true,
@@ -94,7 +127,7 @@ describe('save round trip', () => {
     expect(writeSave(storage)).toBe(true)
 
     startNewOperation()
-    useAppStore.setState({ credits: 1, squad: [] })
+    useAppStore.setState({ credits: 1, squad: [], loadout: {} })
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
@@ -109,6 +142,7 @@ describe('save round trip', () => {
       missionId: null,
       credits: expected.app.credits,
       squad: expected.app.squad,
+      loadout: { op1: ['med', 'cell'], op3: [null, 'med'] },
       outcome: null,
       outcomeSerial: 0,
     })

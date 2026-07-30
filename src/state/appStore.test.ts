@@ -35,6 +35,7 @@ beforeEach(() => {
     phase: 'menu',
     missionId: null,
     squad: [...DEFAULT_SQUAD],
+    loadout: {},
     credits: START_CREDITS,
     outcome: null,
     outcomeSerial: 0,
@@ -55,6 +56,31 @@ describe('initial state', () => {
 
   it('copies the default squad instead of sharing the array', () => {
     expect(bootState.squad).not.toBe(DEFAULT_SQUAD)
+  })
+})
+
+describe('setLoadout', () => {
+  it('fills one slot and leaves the other empty', () => {
+    useAppStore.getState().setLoadout('op1', 0, 'med')
+    expect(useAppStore.getState().loadout).toEqual({ op1: ['med', null] })
+    useAppStore.getState().setLoadout('op1', 1, 'cell')
+    expect(useAppStore.getState().loadout).toEqual({ op1: ['med', 'cell'] })
+  })
+
+  it('clears a slot back to empty without touching other operatives', () => {
+    useAppStore.getState().setLoadout('op1', 0, 'med')
+    useAppStore.getState().setLoadout('op2', 0, 'cell')
+    useAppStore.getState().setLoadout('op1', 0, null)
+    expect(useAppStore.getState().loadout).toEqual({
+      op1: [null, null],
+      op2: ['cell', null],
+    })
+  })
+
+  it('ignores an out-of-range slot index', () => {
+    useAppStore.getState().setLoadout('op1', 2, 'med')
+    useAppStore.getState().setLoadout('op1', -1, 'med')
+    expect(useAppStore.getState().loadout).toEqual({})
   })
 })
 

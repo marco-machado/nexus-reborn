@@ -53,7 +53,6 @@ beforeEach(() => {
     clock: '22:00:00',
     inventory: { med: 0, cell: 0 },
     abilities: {
-      medStim: { availability: 'out-of-stock', cooldownRemaining: 0, cooldownDuration: 2 },
       grenade: { availability: 'out-of-stock', cooldownRemaining: 0, cooldownDuration: 4 },
     },
     grenadeTargeting: false,
@@ -92,7 +91,9 @@ describe('createWorld', () => {
       expect(a.operative).toBe(op)
       expect(a.hp).toBe(op.maxHp)
       expect(a.maxHp).toBe(op.maxHp)
-      expect(a.speed).toBe(op.speed)
+      // The default squad sits under LIGHT_MASS_KG, so every operative gets
+      // the light-load speed bonus.
+      expect(a.speed).toBeCloseTo(op.speed + 0.15, 10)
       expect(a.weapon?.id).toBe(op.weapon)
       expect(a.magazine).toBe(WEAPONS[op.weapon].magazine)
       expect(a.pos).toEqual(w.city.spawnAgents[i])
@@ -199,7 +200,6 @@ describe('store sync', () => {
     expect(s.log[1].msg).toBe('OBJECTIVE: ' + MISSION.objectives[0].label)
     expect(s.clock).toBe('22:14:08')
     expect(s.inventory).toEqual({ med: 2, cell: 1 })
-    expect(s.abilities.medStim.availability).toBe('usable')
     expect(s.abilities.grenade.availability).toBe('usable')
   })
 
@@ -234,6 +234,53 @@ describe('store sync', () => {
     w.tick(STEP)
     expect(useMissionStore.getState().inventory).toEqual({ med: 5, cell: 2 })
   })
+
+  it('adds loadout items from deployed operatives to the mission pools', () => {
+    const w = createWorld(BARE_MISSION, ops(['op8', 'op7', 'op6']), {
+      loadout: {
+        op8: ['med', 'med'],
+        op6: ['cell', null],
+        // Not deployed: contributes nothing.
+        op1: ['med', 'cell'],
+      },
+    })
+    deployReset()
+    w.tick(STEP)
+    expect(useMissionStore.getState().inventory).toEqual({ med: 7, cell: 3 })
+  })
+
+  it('drops the light-load speed bonus once loadout mass crosses the tier line', () => {
+    // The default squad weighs 286.1 kg; eight med kits push it to 350.1,
+    // over LIGHT_MASS_KG and under HEAVY_MASS_KG: the standard tier.
+    const squadOps = ops(DEFAULT_SQUAD)
+    const w = createWorld(BARE_MISSION, squadOps, {
+      loadout: {
+        op1: ['med', 'med'],
+        op2: ['med', 'med'],
+        op3: ['med', 'med'],
+        op4: ['med', 'med'],
+      },
+    })
+    const a1 = w.unit('a1')
+    expect(a1?.speed).toBeCloseTo(squadOps[0].speed, 10)
+  })
+
+  it('slows the squad when research armor and full loadouts go heavy', () => {
+    // +36 max HP of research plating adds 9 kg per operative: 286.1 + 64
+    // of items + 36 = 386.1 kg, over HEAVY_MASS_KG.
+    useResearchStore.setState({ done: ['c-pain', 'c-weave'] })
+    const squadOps = ops(DEFAULT_SQUAD)
+    const w = createWorld(BARE_MISSION, squadOps, {
+      loadout: {
+        op1: ['med', 'med'],
+        op2: ['med', 'med'],
+        op3: ['med', 'med'],
+        op4: ['med', 'med'],
+      },
+    })
+    const a1 = w.unit('a1')
+    expect(a1?.speed).toBeCloseTo(squadOps[0].speed - 0.15, 10)
+  })
 })
 
 describe('research', () => {
@@ -245,7 +292,8 @@ describe('research', () => {
     expect(a1).toBeDefined()
     expect(a1?.maxHp).toBe(base.maxHp + 14)
     expect(a1?.hp).toBe(base.maxHp + 14)
-    expect(a1?.speed).toBeCloseTo(base.speed + 0.2, 10)
+    // Research speed plus the light-load mass bonus for a lone operative.
+    expect(a1?.speed).toBeCloseTo(base.speed + 0.2 + 0.15, 10)
     // Research first, then the assault role passive (x1.1) on top.
     expect(a1?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.12 * 1.1, 10)
 
@@ -372,7 +420,42 @@ describe('orders', () => {
     expect(useMissionStore.getState().inventory.cell).toBe(0)
   })
 
-  it('heals a wounded agent with a med stim, once per cooldown, while stock lasts', () => {
+  it('heals the most wounded selected operative with a med kit while stock lasts', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1', 'op2']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')
+    const a2 = w.unit('a2')
+    expect(a1).toBeDefined()
+    expect(a2).toBeDefined()
+    if (!a1 || !a2) return
+
+    // Nobody wounded: refused with a comm fail line, nothing spent.
+    expect(w.orderUseMed(['a1', 'a2'])).toBe(false)
+    const log = useMissionStore.getState().log
+    expect(log[log.length - 1].msg).toBe('MED KIT: NO WOUNDED OPERATIVE SELECTED.')
+
+    // The kit lands on the worse-off of the two, +50 HP.
+    a1.hp -= 20
+    a2.hp -= 60
+    expect(w.orderUseMed(['a1', 'a2'])).toBe(true)
+    expect(a2.hp).toBeCloseTo(a2.maxHp - 10, 10)
+    expect(a1.hp).toBeCloseTo(a1.maxHp - 20, 10)
+
+    // The heal caps at the missing health.
+    expect(w.orderUseMed(['a2'])).toBe(true)
+    expect(a2.hp).toBeCloseTo(a2.maxHp, 10)
+
+    // Base stock is 2 med: the third kit is out of stock, refused silently.
+    a1.hp -= 10
+    const lines = useMissionStore.getState().log.length
+    expect(w.orderUseMed(['a1'])).toBe(false)
+    expect(useMissionStore.getState().log).toHaveLength(lines)
+    warm(w, 0.25)
+    expect(useMissionStore.getState().inventory.med).toBe(0)
+  })
+
+  it('finishes a running ability cooldown with a power cell', () => {
     const w = createWorld(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
@@ -380,28 +463,25 @@ describe('orders', () => {
     expect(a1).toBeDefined()
     if (!a1) return
 
-    // Full health: refused, nothing spent.
-    expect(w.orderMedStim('a1')).toBe(false)
+    // No cooldown running: refused with a comm fail line, nothing spent.
+    expect(w.orderUseCell(['a1'])).toBe(false)
+    const log = useMissionStore.getState().log
+    expect(log[log.length - 1].msg).toBe('POWER CELL: NO ABILITY COOLDOWN RUNNING.')
 
-    a1.hp -= 60
-    expect(w.orderMedStim('a1')).toBe(true)
-    expect(a1.hp).toBeCloseTo(a1.maxHp - 15, 10)
+    // Overdrive charges its cooldown; the cell wipes it at once.
+    w.orderAbility(['a1'])
+    expect(a1.abilityReadyAt ?? 0).toBeGreaterThan(w.time)
+    expect(w.orderUseCell(['a1'])).toBe(true)
+    expect(a1.abilityReadyAt).toBe(w.time)
 
-    // Cooldown: a second stim inside MED_STIM_COOLDOWN is refused.
-    a1.hp -= 20
-    expect(w.orderMedStim('a1')).toBe(false)
-    warm(w, 2.1)
-
-    // The heal caps at the missing health.
-    expect(w.orderMedStim('a1')).toBe(true)
-    expect(a1.hp).toBeCloseTo(a1.maxHp, 10)
-
-    // Base stock is 2 med: the third stim is out of stock.
-    a1.hp -= 10
-    expect(w.orderMedStim('a1')).toBe(false)
-    warm(w, 2.1)
-    expect(w.orderMedStim('a1')).toBe(false)
-    expect(useMissionStore.getState().inventory.med).toBe(0)
+    // Base stock is 1 cell: the second cell is out of stock, refused silently.
+    warm(w, ROLE_ABILITIES.assault.active.duration + 0.2)
+    w.orderAbility(['a1'])
+    expect(a1.abilityReadyAt ?? 0).toBeGreaterThan(w.time)
+    expect(w.orderUseCell(['a1'])).toBe(false)
+    expect(a1.abilityReadyAt ?? 0).toBeGreaterThan(w.time)
+    warm(w, 0.25)
+    expect(useMissionStore.getState().inventory.cell).toBe(0)
   })
 
   it('hold ground parks the route on the spot and resumes it on release', () => {

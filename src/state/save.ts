@@ -4,6 +4,8 @@ import { CITIES, HOLDERS, SECTORS } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { BRANCH_IDS, NODES } from '../game/research'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
+import { LOADOUT_SLOTS } from '../game/mass'
+import type { SquadLoadout } from '../game/mass'
 import type { SectorId } from '../game/types'
 import { INITIAL_CREDITS, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
@@ -19,8 +21,10 @@ import {
 } from './worldStore'
 import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore'
 
+// The storage key never moves; the version field inside the blob is what is
+// bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 1 as const
+const SAVE_VERSION = 2 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -28,11 +32,12 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV1 {
-  version: 1
+export interface SaveV2 {
+  version: 2
   app: {
     credits: number
     squad: string[]
+    loadout: SquadLoadout
   }
   world: {
     t: number
@@ -161,6 +166,17 @@ function validLabs(value: unknown): value is Labs {
   return true
 }
 
+function validLoadout(value: unknown): value is SquadLoadout {
+  if (!isObject(value)) return false
+  return Object.entries(value).every(
+    ([id, items]) =>
+      ROSTER_IDS.has(id) &&
+      Array.isArray(items) &&
+      items.length === LOADOUT_SLOTS &&
+      items.every((item) => item === null || item === 'med' || item === 'cell'),
+  )
+}
+
 function validRoster(value: unknown): value is Record<string, CampaignRosterEntry> {
   if (!isObject(value) || !hasExactKeys(value, [...ROSTER_IDS])) return false
   return Object.values(value).every((entry) => {
@@ -170,7 +186,7 @@ function validRoster(value: unknown): value is Record<string, CampaignRosterEntr
   })
 }
 
-export function validateSave(value: unknown): value is SaveV1 {
+export function validateSave(value: unknown): value is SaveV2 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -184,6 +200,7 @@ export function validateSave(value: unknown): value is SaveV1 {
     !finite(app.credits) ||
     app.credits < 0 ||
     !validIdList(app.squad, ROSTER_IDS, 4) ||
+    !validLoadout(app.loadout) ||
     !finite(world.t) ||
     world.t < 0 ||
     !finite(world.speed) ||
@@ -222,7 +239,7 @@ export function validateSave(value: unknown): value is SaveV1 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV1 {
+export function captureSave(): SaveV2 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -232,6 +249,7 @@ export function captureSave(): SaveV1 {
     app: {
       credits: app.credits,
       squad: [...app.squad],
+      loadout: structuredClone(app.loadout),
     },
     world: {
       t: world.t,
@@ -268,13 +286,27 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
   }
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV1 | null {
+// A v1 blob is a v2 blob without app.loadout. Upgrading before validation
+// keeps old campaigns loading instead of discarding them on the version check.
+function upgraded(value: unknown): unknown {
+  if (
+    isObject(value) &&
+    value.version === 1 &&
+    isObject(value.app) &&
+    !('loadout' in value.app)
+  ) {
+    return { ...value, version: SAVE_VERSION, app: { ...value.app, loadout: {} } }
+  }
+  return value
+}
+
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV2 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
     raw = storage.getItem(SAVE_KEY)
     if (!raw) return null
-    const value: unknown = JSON.parse(raw)
+    const value: unknown = upgraded(JSON.parse(raw))
     if (validateSave(value)) return value
   } catch {
     // Invalid or unavailable storage is treated as no campaign.
@@ -287,7 +319,7 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV1
   return null
 }
 
-export function hydrateSave(save: SaveV1): void {
+export function hydrateSave(save: SaveV2): void {
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
     intelProgress: save.campaign.intelProgress,
@@ -309,6 +341,7 @@ export function hydrateSave(save: SaveV1): void {
     phase: 'menu',
     missionId: null,
     squad: [...save.app.squad],
+    loadout: structuredClone(save.app.loadout),
     credits: save.app.credits,
     outcome: null,
     outcomeSerial: 0,
@@ -408,6 +441,7 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     phase: 'world',
     missionId: null,
     squad: [...DEFAULT_SQUAD],
+    loadout: {},
     credits: INITIAL_CREDITS,
     outcome: null,
     outcomeSerial: 0,

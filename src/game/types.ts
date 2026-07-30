@@ -17,6 +17,8 @@ export interface WeaponDef {
   reload: number
   spread: number
   tracer: string
+  // Carried mass in kilograms; game/mass.ts sums it into deployment mass.
+  massKg: number
 }
 
 export type AgentRole =
@@ -305,7 +307,14 @@ export interface WorldApi {
   // silently; a targeted ability that finds no target pushes a comm line and
   // keeps its cooldown.
   orderAbility(agentIds: string[]): void
-  orderMedStim(agentId: string): boolean
+  // Spends one med kit on the most wounded living operative in the selection.
+  // No wounded target pushes a comm fail line and spends nothing; out of
+  // stock or a mission that is not running returns false silently.
+  orderUseMed(agentIds: string[]): boolean
+  // Spends one power cell to finish the first selected operative's running
+  // role-ability cooldown. No running cooldown pushes a comm fail line and
+  // spends nothing.
+  orderUseCell(agentIds: string[]): boolean
   orderGrenade(agentId: string, target: Vec2): boolean
   unit(id: string): Unit | undefined
 }

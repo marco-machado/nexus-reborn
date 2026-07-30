@@ -454,18 +454,28 @@ Every role carries one active ability and one always-on passive, both defined as
 | Support | Suppression Sweep (30 s) | For 6 s, enemies within 12 m and line of sight move at half speed | Operatives within 6 m reload 20% faster |
 | Medic | Field Stim (25 s) | Heals the most wounded living operative within 8 m by 40 HP, never above max | Living operatives within 6 m regenerate 1 HP/s up to half their maximum |
 
-Roles also feed the usable item stock:
+Roles and loadout feed the usable item stock, fixed for the whole mission at deployment:
 
-- Base squad: two med items and one cell.
+- Base squad: two med kits and one power cell.
 - Medic: +2 med.
 - Support: +1 med.
 - Tech: +1 cell.
+- Each filled loadout slot on a deployed operative: +1 of its item.
 
-Stat passives (assault damage, sniper range) are applied to the weapon copies at deployment, after research, so both slots carry them; the rest are checked live in the simulation. Team-screen inventory tiles remain non-functional displays.
+Both pools are squad-shared consumables. A med kit (E, or the HUD ITEMS button) heals the most wounded selected operative by 50 HP, never above max; with nobody selected wounded it reports on the comm log and spends nothing. A power cell (R) instantly finishes the first selected operative's running role-ability cooldown, with the same comm-log refusal when no cooldown runs. Power cells also arm grenades (G), so the cell pool is contested between the two uses.
+
+Stat passives (assault damage, sniper range) are applied to the weapon copies at deployment, after research, so both slots carry them; the rest are checked live in the simulation.
 
 ### 9.4 Deployment mass
 
-The assembly screen calculates and displays squad mass from authored health and speed values plus a base amount. It is presented against a 400 kg limit, but the limit does not restrict deployment and research-modified stats do not affect the calculation.
+Squad mass is a real deployment constraint, computed by `src/game/mass.ts` from the same numbers the mission uses:
+
+- 60 kg base per operative.
+- Both weapon slots' authored masses (assault 4.2, SMG 3.1, pistol 1.2, longrifle 6.8, shotgun 4.9 kg).
+- 0.25 kg per max-HP point above 90, so research max-HP projects add plating mass.
+- 8 kg per loaded MED KIT and 6 kg per POWER CELL.
+
+Each operative carries up to two extra item slots, chosen on the assembly screen and persisted by the versioned save; filled slots add their items to the mission pools. The 400 kg limit blocks deployment: the deploy button disables and names the overage. Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 kg every operative moves +0.15 m/s faster, over 380 kg 0.15 m/s slower. The assembly screen shows the active tier next to the mass readout.
 
 ---
 
@@ -839,7 +849,8 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - Four squad bays.
 - Research-adjusted stats and weapon values.
 - Installed-augmentation presentation.
-- Informational inventory and deployment mass.
+- Two loadout item slots per operative (med kit / power cell / empty).
+- Enforced deployment mass with the 400 kg limit and the speed-tier readout.
 
 #### Mission HUD
 
@@ -850,8 +861,8 @@ Rain is visual. It does not currently change sight distance, accuracy, movement,
 - Objective list.
 - Comm log.
 - Active operative’s primary and sidearm readout.
-- Live ability bar: one role-ability button per squad member with ready, cooldown-fill, and running-duration states, plus the grenade and med stim controls.
-- Informational item counts.
+- Live ability bar: one role-ability button per squad member with ready, cooldown-fill, and running-duration states, plus the grenade control.
+- Usable item buttons with live med kit and power cell counts, disabled at zero.
 - Interactive, zoomable minimap.
 - Pause menu and mission result banner.
 
@@ -945,7 +956,8 @@ Abort returns to the World Network and discards the current mission state withou
 | Input | Action |
 |---|---|
 | Q | Use the selected operatives' role ability |
-| M | Use med stim |
+| E / M | Use a med kit on the most wounded selected operative |
+| R | Use a power cell to finish the selected operative's ability cooldown |
 | G | Arm / cancel grenade targeting |
 
 ### Mouse
@@ -1189,7 +1201,10 @@ Avoid increasing difficulty by removing minimap information without offering com
 - A* pathfinding and line-of-sight checks.
 - Patrol, suspicion, combat, hearing, vision, and alert-propagation AI.
 - Civilian wandering, fleeing, damage, and collateral fines.
-- Five differentiated weapons.
+- Five differentiated weapons with sidearm slots and V swapping.
+- Per-role active abilities and passives.
+- Usable med kits and power cells from a squad-pooled, role-and-loadout-fed stock.
+- Per-operative loadout slots and an enforced deployment-mass model with speed tiers.
 - Sequential objectives, win/loss, and debrief.
 - Functional minimap, camera controls, pause menu, and abort confirmation.
 - Procedural visuals and audio.
@@ -1202,11 +1217,6 @@ Avoid increasing difficulty by removing minimap information without offering com
 ### 19.2 Scaffolded or presentation-only
 
 - Hollow Crown and Rust Haven placeholder objective sets; Milestone 2 owns their full designs.
-- Roles beyond authored stats and HUD item counts.
-- Sidearms.
-- Inventory.
-- Abilities.
-- Deployment mass limit.
 - Contract chance and ETA.
 - Weather effects on gameplay.
 - Influence as a spendable resource.
@@ -1220,8 +1230,6 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Mission outcome effects on city ownership.
 - New contract generation or a larger authored mission set.
 - Permanent operative death, recruitment, and experience.
-- Loadout customization.
-- Usable items, sidearms, and abilities.
 - Mission types beyond reach/eliminate/extract.
 - A strategic fail state; the campaign has victory and recoverable pressure only.
 - Tutorials and onboarding.
@@ -1263,8 +1271,8 @@ Known limits: missions do not flip city ownership (Glass Veil's client holds no 
 
 1. Give every role one active ability and one passive. Done 2026-07-30.
 2. Implement sidearm switching. Done 2026-07-30.
-3. Convert inventory display into usable items with finite quantities.
-4. Add loadout and deployment-mass tradeoffs.
+3. Convert inventory display into usable items with finite quantities. Done 2026-07-30.
+4. Add loadout and deployment-mass tradeoffs. Done 2026-07-30.
 5. Add recovery, injury, recruitment, and persistent operative consequences.
 
 ### Milestone 4 — Deepen the strategic game

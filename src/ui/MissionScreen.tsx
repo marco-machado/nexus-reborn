@@ -31,6 +31,7 @@ export default function MissionScreen() {
     const world = createWorld(mission, ops, {
       mods: missionMods(mission, sector),
       district: missionVariant(mission, replay),
+      loadout: useAppStore.getState().loadout,
     })
     setWorld(world)
     const ms = useMissionStore.getState()

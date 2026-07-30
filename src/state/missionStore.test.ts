@@ -16,7 +16,6 @@ const INITIAL = {
   clock: '22:00:00',
   inventory: { med: 0, cell: 0 },
   abilities: {
-    medStim: { availability: 'out-of-stock', cooldownRemaining: 0, cooldownDuration: 2 },
     grenade: { availability: 'out-of-stock', cooldownRemaining: 0, cooldownDuration: 4 },
   },
   grenadeTargeting: false,
@@ -78,7 +77,6 @@ function member(unitId: string, dead = false): SquadMemberUi {
 
 function abilities(grenade: AbilityAvailability): MissionAbilities {
   return {
-    medStim: { availability: 'usable', cooldownRemaining: 0, cooldownDuration: 2 },
     grenade: { availability: grenade, cooldownRemaining: 0, cooldownDuration: 4 },
   }
 }

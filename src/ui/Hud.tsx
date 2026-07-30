@@ -121,14 +121,7 @@ export default function Hud() {
   const abilityTarget = selected
     .map((id) => squad.find((r) => r.unitId === id))
     .find((r): r is SquadMemberUi => !!r && !r.dead)
-  const medTargetReady = !!abilityTarget && abilityTarget.hp < abilityTarget.maxHp
   const grenadeTargetReady = !!abilityTarget
-  const medState =
-    abilities.medStim.availability !== 'usable'
-      ? abilities.medStim.availability
-      : medTargetReady
-        ? 'usable'
-        : 'disabled-target'
   const grenadeState =
     abilities.grenade.availability !== 'usable'
       ? abilities.grenade.availability
@@ -137,14 +130,16 @@ export default function Hud() {
         : grenadeTargeting
           ? 'armed'
           : 'usable'
+  // The item buttons disable on stock alone: a click with no valid target is
+  // answered by the sim's comm fail line, exactly like the E and R keys.
   const medLabel =
-    medState === 'out-of-stock'
-      ? 'Med stim unavailable: out of MED'
-      : medState === 'cooldown'
-        ? 'Med stim cooling down'
-        : medState === 'disabled-target'
-          ? 'Med stim unavailable: select an injured living operative'
-          : 'Use med stim on selected operative'
+    inventory.med <= 0
+      ? 'Med kit unavailable: out of MED'
+      : 'Use a med kit on the most wounded selected operative'
+  const cellLabel =
+    inventory.cell <= 0
+      ? 'Power cell unavailable: out of CELL'
+      : "Spend a power cell to finish the selected operative's ability cooldown"
   const grenadeLabel =
     grenadeState === 'out-of-stock'
       ? 'Grenade unavailable: out of CELL'
@@ -383,7 +378,7 @@ export default function Hud() {
             <div className="hud-panel-head">
               <span>ABILITIES</span>
               <span className={grenadeTargeting ? 'amber' : 'dim'}>
-                {grenadeTargeting ? 'TARGETING' : 'Q / M / G'}
+                {grenadeTargeting ? 'TARGETING' : 'Q / G'}
               </span>
             </div>
             <div className="hud-slots">
@@ -405,23 +400,6 @@ export default function Hud() {
                   <span className="hud-slot-cd">{abilities.grenade.cooldownRemaining.toFixed(1)}</span>
                 )}
                 {grenadeState === 'out-of-stock' && <span className="hud-slot-cd">00</span>}
-              </button>
-              <button
-                type="button"
-                className={'hud-slot ability ' + medState}
-                aria-label={medLabel}
-                disabled={medState !== 'usable'}
-                title={medLabel}
-                onClick={() => {
-                  if (abilityTarget) getWorld()?.orderMedStim(abilityTarget.unitId)
-                }}
-              >
-                <AbilityGlyph kind="medstim" />
-                <span className="hud-slot-key">M</span>
-                {medState === 'cooldown' && (
-                  <span className="hud-slot-cd">{abilities.medStim.cooldownRemaining.toFixed(1)}</span>
-                )}
-                {medState === 'out-of-stock' && <span className="hud-slot-cd">00</span>}
               </button>
               {/* One role-ability slot per squad member, keyed to the same
                   slot digits as selection. Q fires the selection's abilities;
@@ -479,16 +457,33 @@ export default function Hud() {
           <div className="hud-panel hud-items corners">
             <div className="hud-panel-head">
               <span>ITEMS</span>
+              <span className="dim">E / R</span>
             </div>
             <div className="hud-slots">
-              <span className={'hud-slot item' + (inventory.med <= 0 ? ' spent' : '')}>
+              <button
+                type="button"
+                className={'hud-slot item' + (inventory.med <= 0 ? ' spent' : ' usable')}
+                aria-label={medLabel}
+                title={medLabel}
+                disabled={inventory.med <= 0}
+                onClick={() => getWorld()?.orderUseMed(selected)}
+              >
                 <ItemGlyph kind="med" size={16} />
+                <span className="hud-slot-key">E</span>
                 <i>{pad2(inventory.med)}</i>
-              </span>
-              <span className={'hud-slot item' + (inventory.cell <= 0 ? ' spent' : '')}>
+              </button>
+              <button
+                type="button"
+                className={'hud-slot item' + (inventory.cell <= 0 ? ' spent' : ' usable')}
+                aria-label={cellLabel}
+                title={cellLabel}
+                disabled={inventory.cell <= 0}
+                onClick={() => getWorld()?.orderUseCell(selected)}
+              >
                 <ItemGlyph kind="cell" size={16} />
+                <span className="hud-slot-key">R</span>
                 <i>{pad2(inventory.cell)}</i>
-              </span>
+              </button>
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
 // CONTRACT FILE. App level state: screen flow, mission choice, squad, credits.
 import { create } from 'zustand'
 import { DEFAULT_SQUAD, missionById } from '../game/data'
+import { LOADOUT_SLOTS, emptyLoadout } from '../game/mass'
+import type { LoadoutItemId, OperativeLoadout, SquadLoadout } from '../game/mass'
 import { missionLocked, useCampaignStore } from './campaignStore'
 
 export type Phase = 'menu' | 'world' | 'research' | 'brief' | 'team' | 'mission' | 'debrief'
@@ -35,12 +37,16 @@ export interface AppState {
   phase: Phase
   missionId: string | null
   squad: string[]
+  // Per-operative extra item slots (game/mass.ts). Keyed by operative id; a
+  // missing entry means both slots empty. Persisted by the versioned save.
+  loadout: SquadLoadout
   credits: number
   outcome: MissionOutcome | null
   outcomeSerial: number
   goto: (phase: Phase) => void
   selectMission: (id: string) => void
   toggleOperative: (id: string) => void
+  setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
   spendCredits: (amount: number) => void
   setOutcome: (o: MissionOutcome) => void
 }
@@ -49,6 +55,7 @@ export const useAppStore = create<AppState>((set) => ({
   phase: 'menu',
   missionId: null,
   squad: [...DEFAULT_SQUAD],
+  loadout: {},
   credits: INITIAL_CREDITS,
   outcome: null,
   outcomeSerial: 0,
@@ -67,6 +74,13 @@ export const useAppStore = create<AppState>((set) => ({
       if (useCampaignStore.getState().roster[id]?.status !== 'READY') return s
       if (s.squad.length >= 4) return s
       return { squad: [...s.squad, id] }
+    }),
+  setLoadout: (opId, slot, item) =>
+    set((s) => {
+      if (slot < 0 || slot >= LOADOUT_SLOTS) return s
+      const items = [...(s.loadout[opId] ?? emptyLoadout())] as OperativeLoadout
+      items[slot] = item
+      return { loadout: { ...s.loadout, [opId]: items } }
     }),
   // Funds research. Guarded here so no caller can overdraw the account.
   spendCredits: (amount) =>

@@ -166,11 +166,14 @@ export default function Input() {
         case 'pause':
           ms.setPaused(!ms.paused)
           break
-        case 'medStim': {
-          const id = selectedAgents(w)[0]
-          if (id) w.orderMedStim(id)
+        // The item orders take the whole selection: the sim picks the target
+        // and answers a bad selection with a comm fail line.
+        case 'useMed':
+          w.orderUseMed(selectedAgents(w))
           break
-        }
+        case 'useCell':
+          w.orderUseCell(selectedAgents(w))
+          break
         case 'grenade': {
           if (ms.grenadeTargeting) {
             ms.setGrenadeTargeting(false)

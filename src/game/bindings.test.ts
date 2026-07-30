@@ -59,6 +59,9 @@ describe('bindingFor', () => {
     expect(bindingFor('Numpad4')?.id).toBe('selectSlot')
     expect(bindingFor('Backquote')?.id).toBe('selectAll')
     expect(bindingFor('KeyQ')?.id).toBe('useAbility')
+    expect(bindingFor('KeyE')?.id).toBe('useMed')
+    expect(bindingFor('KeyM')?.id).toBe('useMed')
+    expect(bindingFor('KeyR')?.id).toBe('useCell')
   })
 
   it('returns undefined for an unclaimed code', () => {

@@ -19,7 +19,6 @@ export interface AbilitySnapshot {
 }
 
 export interface MissionAbilities {
-  medStim: AbilitySnapshot
   grenade: AbilitySnapshot
 }
 
@@ -116,7 +115,6 @@ const initial = {
   clock: '22:00:00',
   inventory: { med: 0, cell: 0 } as MissionInventory,
   abilities: {
-    medStim: emptyAbility(2),
     grenade: emptyAbility(4),
   } as MissionAbilities,
   grenadeTargeting: false,

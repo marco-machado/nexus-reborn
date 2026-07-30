@@ -18,6 +18,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     reload: 1.7,
     spread: 0.045,
     tracer: '#ffd28a',
+    massKg: 4.2,
   },
   smg: {
     id: 'smg',
@@ -29,6 +30,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     reload: 1.9,
     spread: 0.08,
     tracer: '#ffb36b',
+    massKg: 3.1,
   },
   pistol: {
     id: 'pistol',
@@ -40,6 +42,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     reload: 1.2,
     spread: 0.03,
     tracer: '#d8e6ff',
+    massKg: 1.2,
   },
   longrifle: {
     id: 'longrifle',
@@ -51,6 +54,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     reload: 2.6,
     spread: 0.008,
     tracer: '#9be8ff',
+    massKg: 6.8,
   },
   shotgun: {
     id: 'shotgun',
@@ -62,6 +66,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     reload: 2.2,
     spread: 0.12,
     tracer: '#ffc79a',
+    massKg: 4.9,
   },
 }
 

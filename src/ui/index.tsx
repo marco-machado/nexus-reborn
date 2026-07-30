@@ -17,6 +17,17 @@ import {
 import { ROSTER, missionById, operativeById } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
 import {
+  ITEM_LABEL,
+  ITEM_MASS_KG,
+  MASS_LIMIT_KG,
+  TIER_SPEED_DELTA,
+  massTier,
+  operativeItems,
+  operativeMassKg,
+  squadMassKg,
+} from '../game/mass'
+import type { LoadoutItemId } from '../game/mass'
+import {
   WEATHER_LABEL,
   missionChance,
   missionMods,
@@ -821,6 +832,8 @@ export function TeamSelect() {
   const goto = useAppStore((s) => s.goto)
   const squad = useAppStore((s) => s.squad)
   const toggle = useAppStore((s) => s.toggleOperative)
+  const loadout = useAppStore((s) => s.loadout)
+  const setLoadout = useAppStore((s) => s.setLoadout)
   const missionId = useAppStore((s) => s.missionId)
   const roster = useCampaignStore((s) => s.roster)
   const [focusId, setFocusId] = useState<string | null>(null)
@@ -844,14 +857,21 @@ export function TeamSelect() {
   }
   const primary = squadWeapon(focus.weapon, done)
   const sidearm = squadWeapon(focus.sidearm, done)
-  const mass = squad.reduce((a, id) => {
-    const o = operativeById(id)
-    return a + o.maxHp * 0.48 + o.speed * 5.2
-  }, 18.3)
+  // The same model createWorld applies: research max HP counts, items count.
+  const mass = squadMassKg(squad.map(operativeById), bonus.maxHp, loadout)
+  const tier = massTier(mass)
+  const overKg = mass - MASS_LIMIT_KG
   const ready =
     squad.length >= 1 && squad.every((id) => roster[id]?.status === 'READY')
+  const deployable = ready && overKg <= 0
   const augs = installedAugs(done)
-  const invKinds = ['med', 'cell', 'frag', 'chip'] as const
+  const focusItems = operativeItems(loadout, focus.id)
+  // Each slot cycles empty -> med kit -> power cell -> empty.
+  const cycleSlot = (slot: number): void => {
+    const cur = focusItems[slot]
+    const next: LoadoutItemId | null = cur === null ? 'med' : cur === 'med' ? 'cell' : null
+    setLoadout(focus.id, slot, next)
+  }
   return (
     <div className="screen ts">
       <header className="ts-head">
@@ -1130,15 +1150,47 @@ export function TeamSelect() {
                 </div>
                 <div className="ts-box">
                   <label>
-                    INVENTORY <span className="dim">12/16</span>
+                    ITEM SLOTS{' '}
+                    <span className="dim">
+                      MED {ITEM_MASS_KG.med}KG / CELL {ITEM_MASS_KG.cell}KG
+                    </span>
                   </label>
-                  <div className="ts-inv">
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <span key={i} className="ts-inv-tile">
-                        <ItemGlyph kind={invKinds[(i + (fh % 4)) % 4]} />
-                        <i>{pad2(((fh >>> i) % 3) + 1)}</i>
-                      </span>
+                  <div className="ts-loadout">
+                    {focusItems.map((item, slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={'ts-loadout-slot' + (item ? ' filled' : '')}
+                        aria-label={
+                          'ITEM SLOT ' +
+                          (slot + 1) +
+                          ' // ' +
+                          (item ? ITEM_LABEL[item] : 'EMPTY') +
+                          ' // CYCLE'
+                        }
+                        title="CYCLE: EMPTY / MED KIT / POWER CELL"
+                        onClick={act(() => cycleSlot(slot))}
+                      >
+                        {item ? (
+                          <>
+                            <ItemGlyph kind={item} size={18} />
+                            <b>{ITEM_LABEL[item]}</b>
+                            <i className="dim">{ITEM_MASS_KG[item].toFixed(1)} KG</i>
+                          </>
+                        ) : (
+                          <>
+                            <span className="ts-loadout-empty" aria-hidden="true">
+                              +
+                            </span>
+                            <b className="dim">EMPTY SLOT</b>
+                            <i className="dim">0.0 KG</i>
+                          </>
+                        )}
+                      </button>
                     ))}
+                  </div>
+                  <div className="dim mini ts-loadout-mass">
+                    CARRIED: {operativeMassKg(focus, bonus.maxHp, focusItems).toFixed(1)} KG
                   </div>
                 </div>
               </div>
@@ -1173,11 +1225,18 @@ export function TeamSelect() {
         <div className="ts-mass corners">
           <label>DEPLOYMENT MASS</label>
           <div className="ts-mass-num">
-            <b>{mass.toFixed(1)}</b>
+            <b className={overKg > 0 ? 'red' : undefined}>{mass.toFixed(1)}</b>
             <span className="ts-mass-unit">KG</span>
           </div>
-          <div className="ts-mass-limit dim">/ 400.0 KG LIMIT</div>
-          <SegBar value={mass / 4} tone="amber" />
+          <div className="ts-mass-limit dim">/ {MASS_LIMIT_KG.toFixed(1)} KG LIMIT</div>
+          <SegBar value={(mass / MASS_LIMIT_KG) * 100} tone={overKg > 0 ? 'red' : 'amber'} />
+          <div className={'ts-mass-tier ' + tier}>
+            {tier === 'light'
+              ? 'LIGHT LOAD // +' + TIER_SPEED_DELTA.toFixed(2) + ' M/S'
+              : tier === 'heavy'
+                ? 'HEAVY LOAD // -' + TIER_SPEED_DELTA.toFixed(2) + ' M/S'
+                : 'STANDARD LOAD'}
+          </div>
         </div>
         <div className="ts-deploy">
           <button
@@ -1191,20 +1250,24 @@ export function TeamSelect() {
           <button
             type="button"
             className="cta big"
-            disabled={!ready}
+            disabled={!deployable}
             aria-label={
-              ready
+              deployable
                 ? 'DEPLOY STRIKE TEAM 04'
-                : 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
+                : !ready
+                  ? 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
+                  : 'DEPLOY TEAM // ' + overKg.toFixed(1) + ' KG OVER THE MASS LIMIT'
             }
             onClick={act(() => goto('mission'))}
           >
             <span className="cta-inner">DEPLOY TEAM &gt;&gt;</span>
           </button>
           <div className="dim mini ts-deploy-sub">
-            {ready
-              ? 'CONFIRM AND DEPLOY STRIKE TEAM 04'
-              : 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'}
+            {!ready
+              ? 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'
+              : overKg > 0
+                ? 'OFFLOAD ' + overKg.toFixed(1) + ' KG BEFORE DEPLOYMENT'
+                : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
           </div>
         </div>
       </footer>

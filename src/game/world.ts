@@ -22,6 +22,8 @@ import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
 import { missionMods } from './missionParams'
 import type { MissionMods } from './missionParams'
 import { crewBonus, squadWeapon } from './research'
+import { loadoutPools, massTier, squadMassKg, tierSpeedDelta } from './mass'
+import type { SquadLoadout } from './mass'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
@@ -83,8 +85,7 @@ const FLAVOR_GAP = 6
 const CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
 // Seconds after a weapon swap before the drawn weapon can fire.
 const SWAP_DELAY = 0.5
-const MED_STIM_HEAL = 45
-const MED_STIM_COOLDOWN = 2
+const MED_KIT_HEAL = 50
 const GRENADE_COOLDOWN = 4
 const GRENADE_RANGE = 18
 const GRENADE_RADIUS = 3.5
@@ -173,6 +174,9 @@ function pad2(n: number): string {
 export interface DeployParams {
   mods?: MissionMods
   district?: DistrictSpec
+  // Per-operative extra item slots (game/mass.ts): they raise the mission's
+  // med/cell pools and count toward the deployment-mass speed tier.
+  loadout?: SquadLoadout
 }
 
 export function createWorld(
@@ -243,7 +247,9 @@ export function createWorld(
     else if (op.role === 'support') inventory.med += 1
     else if (op.role === 'tech') inventory.cell += 1
   }
-  let medStimReadyAt = 0
+  const extraItems = loadoutPools(operatives, deploy?.loadout)
+  inventory.med += extraItems.med
+  inventory.cell += extraItems.cell
   let grenadeReadyAt = 0
 
   // Thrown frag charges waiting on their fuse.
@@ -269,6 +275,12 @@ export function createWorld(
   const researched = useResearchStore.getState().done
   const bonus = crewBonus(researched)
 
+  // Deployment-mass tier: one shared speed adjustment for the whole squad,
+  // from the same model the assembly screen displays (game/mass.ts).
+  const massDelta = tierSpeedDelta(
+    massTier(squadMassKg(operatives, bonus.maxHp, deploy?.loadout)),
+  )
+
   // Stat passives land on the weapon copies at deployment, after research:
   // assault damage and sniper range reach both slots the same way research
   // does, so the HUD and the sim read one number.
@@ -293,7 +305,7 @@ export function createWorld(
       heading: Math.PI,
       hp,
       maxHp: hp,
-      speed: op.speed + bonus.speed,
+      speed: op.speed + bonus.speed + massDelta,
       weapon: w,
       stance: 'idle',
       path: [],
@@ -1620,11 +1632,6 @@ export function createWorld(
 
   function syncMissionResources(): void {
     const abilities: MissionAbilities = {
-      medStim: {
-        availability: availability(inventory.med, medStimReadyAt),
-        cooldownRemaining: Math.max(0, medStimReadyAt - world.time),
-        cooldownDuration: MED_STIM_COOLDOWN,
-      },
       grenade: {
         availability: availability(inventory.cell, grenadeReadyAt),
         cooldownRemaining: Math.max(0, grenadeReadyAt - world.time),
@@ -1985,18 +1992,54 @@ export function createWorld(
     return u
   }
 
-  function orderMedStim(agentId: string): boolean {
-    const u = canUseAbility(agentId)
-    if (!u) return false
-    // Stock has precedence over cooldown, matching the HUD snapshot.
-    if (inventory.med <= 0 || world.time < medStimReadyAt || u.hp >= u.maxHp) return false
-    const healed = Math.min(MED_STIM_HEAL, u.maxHp - u.hp)
-    if (healed <= 0) return false
-    u.hp += healed
+  function itemsUsable(): boolean {
+    const ms = useMissionStore.getState()
+    return ms.live && !ms.paused && ms.result === 'none' && result === 'none'
+  }
+
+  // The count reaches the HUD through the normal SYNC_INTERVAL push, so the
+  // orders never write the store directly.
+  function orderUseMed(agentIds: string[]): boolean {
+    if (!itemsUsable() || inventory.med <= 0) return false
+    let best: SimUnit | null = null
+    let worst = 1
+    for (const u of ordered(agentIds)) {
+      if (u.hp >= u.maxHp) continue
+      const frac = u.hp / u.maxHp
+      if (frac < worst) {
+        worst = frac
+        best = u
+      }
+    }
+    if (!best) {
+      pushLog('SYS', 'MED KIT: NO WOUNDED OPERATIVE SELECTED.', 'alert')
+      return false
+    }
+    const healed = Math.min(MED_KIT_HEAL, best.maxHp - best.hp)
+    best.hp += healed
     inventory.med -= 1
-    medStimReadyAt = world.time + MED_STIM_COOLDOWN
     sfx.confirmBlip()
-    pushLog('SYS', 'MED STIM APPLIED TO ' + (u.operative?.codename ?? u.name) + '. +' + Math.ceil(healed) + ' HP.', 'ok')
+    pushLog('SYS', 'MED KIT APPLIED TO ' + (best.operative?.codename ?? best.name) + '. +' + Math.ceil(healed) + ' HP.', 'ok')
+    return true
+  }
+
+  function orderUseCell(agentIds: string[]): boolean {
+    if (!itemsUsable() || inventory.cell <= 0) return false
+    let target: SimUnit | null = null
+    for (const u of ordered(agentIds)) {
+      if ((u.abilityReadyAt ?? 0) > world.time) {
+        target = u
+        break
+      }
+    }
+    if (!target) {
+      pushLog('SYS', 'POWER CELL: NO ABILITY COOLDOWN RUNNING.', 'alert')
+      return false
+    }
+    target.abilityReadyAt = world.time
+    inventory.cell -= 1
+    sfx.confirmBlip()
+    pushLog('SYS', 'POWER CELL SPENT. ' + (target.operative?.codename ?? target.name) + ' ABILITY CHARGED.', 'ok')
     return true
   }
 
@@ -2058,7 +2101,8 @@ export function createWorld(
     orderHoldFire,
     orderSwapWeapon,
     orderAbility,
-    orderMedStim,
+    orderUseMed,
+    orderUseCell,
     orderGrenade,
     unit: (id: string) => byId.get(id),
   }

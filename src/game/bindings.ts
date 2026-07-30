@@ -27,7 +27,8 @@ export type BindingId =
   | 'holdFire'
   | 'swapWeapon'
   | 'useAbility'
-  | 'medStim'
+  | 'useMed'
+  | 'useCell'
   | 'grenade'
   | 'pause'
   | 'pickSelect'
@@ -89,7 +90,10 @@ export const BINDINGS: Binding[] = [
 
   /* abilities, handled in src/scene/Input.tsx */
   { id: 'useAbility', group: 'abilities', codes: ['KeyQ'], keys: ['Q'], label: 'Use role ability' },
-  { id: 'medStim', group: 'abilities', codes: ['KeyM'], keys: ['M'], label: 'Use med stim' },
+  // The med kit keeps M as an alias: it was the med stim key before the items
+  // became squad-pooled consumables on E and R.
+  { id: 'useMed', group: 'abilities', codes: ['KeyE', 'KeyM'], keys: ['E', 'M'], label: 'Use med kit' },
+  { id: 'useCell', group: 'abilities', codes: ['KeyR'], keys: ['R'], label: 'Use power cell' },
   { id: 'grenade', group: 'abilities', codes: ['KeyG'], keys: ['G'], label: 'Arm / cancel grenade' },
 
   /* mouse, handled in src/scene/Input.tsx and src/ui/Minimap.tsx */

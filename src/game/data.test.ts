@@ -34,6 +34,14 @@ describe('WEAPONS', () => {
   it('gives every weapon a hex tracer color', () => {
     for (const id of WEAPON_IDS) expect(WEAPONS[id].tracer).toMatch(/^#[0-9a-f]{6}$/i)
   })
+
+  it('authors a positive carried mass per weapon', () => {
+    expect(WEAPONS.assault.massKg).toBeCloseTo(4.2, 10)
+    expect(WEAPONS.smg.massKg).toBeCloseTo(3.1, 10)
+    expect(WEAPONS.pistol.massKg).toBeCloseTo(1.2, 10)
+    expect(WEAPONS.longrifle.massKg).toBeCloseTo(6.8, 10)
+    expect(WEAPONS.shotgun.massKg).toBeCloseTo(4.9, 10)
+  })
 })
 
 describe('weaponNoise', () => {
