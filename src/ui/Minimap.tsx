@@ -59,21 +59,13 @@ function layout(world: WorldApi, width: number, height: number, zoom: number): M
   const originX = -size * YAW_SIN
   const s = (Math.min(width, height) / span) * (ZOOM[zoom] ?? 1)
 
-  // When zoomed, pan toward the living agents' centroid.
+  // When zoomed, pan toward the camera focus so the map follows the view.
   let fx = size / 2
   let fz = size / 2
-  let n = 0
-  let sx = 0
-  let sz = 0
-  for (const u of world.units) {
-    if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
-    sx += u.pos.x
-    sz += u.pos.z
-    n += 1
-  }
-  if (n > 0) {
-    fx = sx / n
-    fz = sz / n
+  const focus = getCameraFocus()
+  if (focus) {
+    fx = focus.x
+    fz = focus.z
   }
   return {
     s,

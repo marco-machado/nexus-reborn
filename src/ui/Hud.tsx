@@ -111,7 +111,7 @@ export default function Hud() {
   // opens it, and takes focus back when the menu closes.
   const pauseBtnRef = useRef<HTMLButtonElement | null>(null)
 
-  const [mmZoom, setMmZoom] = useState(0)
+  const [mmZoom, setMmZoom] = useState(MM_ZOOM_MAX)
 
   const online = squad.filter((r) => !r.dead).length
   const firstSelected = selected.length > 0 ? squad.find((r) => r.unitId === selected[0]) : undefined
