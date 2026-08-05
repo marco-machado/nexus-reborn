@@ -286,10 +286,12 @@ export function MissionBrief() {
         ? buildTacticalMap(m, spec, {
             enemyExtra: mods.enemyExtra,
             civilianCount: mods.civilianCount,
+            officerCount: mods.officerCount,
+            heavyCount: mods.heavyCount,
           })
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- spec/mods are derived values; their inputs are listed
-    [m, spec?.archetype, spec?.seed, mods?.enemyExtra, mods?.civilianCount],
+    [m, spec?.archetype, spec?.seed, mods?.enemyExtra, mods?.civilianCount, mods?.officerCount, mods?.heavyCount],
   )
   const callout = useMemo(
     () => (m && spec ? calloutFor(spec.archetype, m.district) : null),

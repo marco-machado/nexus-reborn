@@ -17,7 +17,14 @@ import type {
   Zone,
 } from './types'
 import { ENEMY_VISION, NOTICE_RADIUS, VISION_HALF_ANGLE, isWalkable } from './types'
-import { WEAPONS, weaponNoise } from './data'
+import {
+  ENEMY_ARCHETYPES,
+  OFFICER_RADIO_DELAY,
+  OFFICER_RADIO_HOLD,
+  OFFICER_RADIO_R,
+  WEAPONS,
+  weaponNoise,
+} from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
 import { missionMods } from './missionParams'
 import type { MissionMods } from './missionParams'
@@ -46,6 +53,8 @@ const MAX_CATCHUP = 5
 const SYNC_INTERVAL = 0.2
 const TRACER_LIFE = 0.09
 const BOOM_LIFE = 0.4
+// Shortest gap between impact flashes on one body; caps hit booms per victim.
+const HIT_BOOM_GAP = 0.15
 const SEPARATION_R = 0.7
 // Body radius a missed round has to cross to catch whoever is standing there.
 const STRAY_R = 0.5
@@ -107,6 +116,8 @@ const GRENADE_TARGET_SNAP = 2.5
 const VIP_ACQUIRE_R = 3
 const VIP_FOLLOW_STOP = 2.2
 const VIP_REPATH = 0.8
+// How far a marksman backpedals when a target closes inside its minimum range.
+const MARKSMAN_BACKOFF = 6
 
 const MOVE_LINES = ['Moving up.', 'Copy that.', 'On my way.', 'Repositioning.', 'Advancing.']
 // No 'Weapons free.' here: an ordered shot fires through hold fire, so that
@@ -159,6 +170,10 @@ interface SimUnit extends Unit {
   heardId?: number
   scanT?: number
   scanYaw?: number
+  // Officer radio call: armed when the officer enters combat, cleared if it
+  // calms down or dies first, done exactly once.
+  radioAt?: number
+  radioDone?: boolean
   acquireT?: number
   explicitTarget?: boolean
   // The cooldown length the last activation was charged, tech passive
@@ -195,6 +210,8 @@ export function createWorld(
   const city = generateCity(mission, deploy?.district, {
     enemyExtra: mods.enemyExtra,
     civilianCount: mods.civilianCount,
+    officerCount: mods.officerCount,
+    heavyCount: mods.heavyCount,
   })
   // Weather scales guard sight and shot carry for this whole mission.
   const vision = ENEMY_VISION * mods.visionMul
@@ -263,6 +280,8 @@ export function createWorld(
   const interactT: number[] = objectives.map(() => 0)
   const interactStarted: boolean[] = objectives.map(() => false)
   const defendLeft: number[] = objectives.map((d) => d.durationSec ?? 0)
+  // Time-limit countdowns remaining, per objective; only ticks while active.
+  const failLeft: number[] = objectives.map((d) => d.failSec ?? 0)
   // Completion time of each objective, -1 while unfinished (telemetry).
   const objDoneT: number[] = objectives.map(() => -1)
   // Tags whose device died to non-squad fire: an optional destroy over such a
@@ -364,8 +383,9 @@ export function createWorld(
   })
 
   city.enemies.forEach((sp, i) => {
+    const arch = ENEMY_ARCHETYPES[sp.archetype ?? 'trooper']
     const w = WEAPONS[sp.weapon]
-    const hp = Math.round((sp.hp ?? 60) * mods.enemyHpMul)
+    const hp = Math.round((sp.hp ?? arch.hp) * mods.enemyHpMul)
     addUnit({
       id: 'e' + (i + 1),
       kind: 'enemy',
@@ -374,7 +394,8 @@ export function createWorld(
       heading: rng() * Math.PI * 2,
       hp,
       maxHp: hp,
-      speed: 4.2,
+      speed: arch.speed,
+      archetype: sp.archetype ?? 'trooper',
       weapon: w,
       stance: 'idle',
       path: [],
@@ -579,11 +600,25 @@ export function createWorld(
       } else {
         const inv = remaining / d
         moveTo(u, u.pos.x + dx * inv, u.pos.z + dz * inv)
-        turnToward(u, Math.atan2(dx, dz), dt)
+        // A kiting enemy backpedals: facing stays on the target while the
+        // path carries it away, so the read matches the fire it keeps up.
+        const aim = kiteAim(u)
+        if (aim) faceToward(u, aim.pos, dt)
+        else turnToward(u, Math.atan2(dx, dz), dt)
         remaining = 0
       }
     }
     if (u.path.length === 0 && u.stance === 'moving') u.stance = 'idle'
+  }
+
+  // The live target a min-range archetype should face while its path moves
+  // it, null for every other unit. Combat targeting itself ignores facing;
+  // this only keeps the model and vision cone on the operative it is shooting.
+  function kiteAim(u: SimUnit): SimUnit | null {
+    if (u.kind !== 'enemy' || u.aiState !== 'combat' || u.targetId === null) return null
+    if (!ENEMY_ARCHETYPES[u.archetype ?? 'trooper'].minRange) return null
+    const t = byId.get(u.targetId)
+    return t && t.stance !== 'dead' ? t : null
   }
 
   function tryNudge(u: SimUnit, mx: number, mz: number): void {
@@ -674,6 +709,10 @@ export function createWorld(
     if (t.kind === 'enemy') {
       if (by.kind === 'agent') kills += 1
       pushLog('SYS', 'Hostile neutralized.')
+      if (t.archetype === 'officer' && t.radioAt !== undefined && !t.radioDone) {
+        t.radioAt = undefined
+        pushLog('SYS', 'OFFICER DOWN. THE CALL NEVER WENT OUT.', 'ok')
+      }
     } else if (t.kind === 'agent') {
       casualties += 1
       if (t.operative) deadIds.push(t.operative.id)
@@ -705,9 +744,29 @@ export function createWorld(
     if (t.kind === 'agent' && t.operative?.role === 'demolitions') {
       dealt *= ROLE_ABILITIES.demolitions.passive.magnitude
     }
+    // Archetype armor: heavies shrug part of every hit off.
+    if (t.kind === 'enemy') dealt *= ENEMY_ARCHETYPES[t.archetype ?? 'trooper'].dmgTakenMul
     if (by.kind === 'agent' && (t.kind === 'enemy' || t.kind === 'device')) damageDealt += dealt
     if (t.kind === 'agent') damageTaken += dealt
     t.hp -= dealt
+    if (t.hp > 0) {
+      // Impact feedback on a surviving body: a small flash, the flinch stamp
+      // the renderer reads, and a thump when it is one of ours. The flash is
+      // rate-limited per victim: the renderer's boom pool is a fixed size,
+      // and unthrottled hit pips in a dense firefight fill it and starve the
+      // death and grenade flashes pushed behind them.
+      const lastHit = t.lastHitT
+      t.lastHitT = world.time
+      if (lastHit === undefined || world.time - lastHit >= HIT_BOOM_GAP) {
+        booms.push({
+          pos: { x: t.pos.x, z: t.pos.z },
+          t: world.time,
+          r: 0.3,
+          color: t.kind === 'agent' ? '#ff6a55' : '#ffd9a0',
+        })
+      }
+      if (t.kind === 'agent') sfx.agentHit()
+    }
     if (t.kind === 'enemy') {
       t.lastSeenT = world.time
       markLastSeen(t, by.pos)
@@ -942,6 +1001,10 @@ export function createWorld(
     e.awareness = 1
     e.lastSeenT = world.time
     e.repathT = 0
+    if (e.archetype === 'officer' && !e.radioDone && e.radioAt === undefined) {
+      e.radioAt = world.time + OFFICER_RADIO_DELAY
+      pushLog('SYS', 'OFFICER ON COMMS. CUT THE LINK.', 'alert')
+    }
     if (!firstContact) {
       firstContact = true
       firstContactT = world.time
@@ -953,6 +1016,9 @@ export function createWorld(
 
   function enterSuspicious(e: SimUnit): void {
     if (e.stance === 'dead' || e.aiState === 'suspicious') return
+    // An officer calmed down before the delay ran out never makes the call;
+    // this is the EM burst counterplay.
+    if (e.radioAt !== undefined && !e.radioDone) e.radioAt = undefined
     const fromPatrol = e.aiState === 'patrol'
     e.aiState = 'suspicious'
     e.alerted = false
@@ -1067,7 +1133,10 @@ export function createWorld(
       if (!target) markLastSeen(e, noise.pos)
     }
     // Fresh evidence restarts the look, whether or not it moves certainty.
-    if (target || noise) e.investigateUntil = world.time + INVESTIGATE_T
+    // Max, never assign: minor evidence must not shorten a longer hold (the
+    // officer radio sets one so called guards finish the walk over).
+    if (target || noise)
+      e.investigateUntil = Math.max(e.investigateUntil ?? 0, world.time + INVESTIGATE_T)
     else aware -= elapsed * AWARE_DECAY
     if (aware < 1) {
       const ally = allyInCombat(e)
@@ -1135,11 +1204,28 @@ export function createWorld(
         bestD = d
       }
     }
+    const minR = ENEMY_ARCHETYPES[e.archetype ?? 'trooper'].minRange ?? 0
     if (tgt && w) {
       e.lastSeenT = world.time
       markLastSeen(e, tgt.pos)
       e.targetId = tgt.id
-      if (bestD <= Math.max(1.5, w.range - 1)) {
+      if (minR > 0 && bestD < minR) {
+        // Marksman keeps range: backpedal away from the target while still
+        // firing on the move, rather than trading at arm's length. Every
+        // operative outruns it, so going quiet here would make it harmless.
+        e.stance = 'moving'
+        if (world.time >= (e.repathT ?? 0)) {
+          e.repathT = world.time + ENEMY_REPATH
+          const len = Math.max(bestD, 0.001)
+          const back = {
+            x: e.pos.x + ((e.pos.x - tgt.pos.x) / len) * MARKSMAN_BACKOFF,
+            z: e.pos.z + ((e.pos.z - tgt.pos.z) / len) * MARKSMAN_BACKOFF,
+          }
+          const dest = nearestWalkable(city, back)
+          if (dest) e.path = findPath(city, e.pos, dest)
+        }
+        tryFire(e, tgt, ENEMY_ACC)
+      } else if (bestD <= Math.max(1.5, w.range - 1)) {
         e.path.length = 0
         e.stance = 'attacking'
         faceToward(e, tgt.pos, dt)
@@ -1170,10 +1256,45 @@ export function createWorld(
     e.stance = e.path.length > 0 ? 'moving' : 'idle'
   }
 
+  // The radio call lands on every guard in range not already fighting:
+  // certainty capped below the firing threshold, so they converge on the
+  // squad's last seen position and sweep rather than shooting blind.
+  function officerRadio(officer: SimUnit): void {
+    const at = officer.lastSeenPos ?? officer.pos
+    let called = 0
+    for (const e of units) {
+      if (e.kind !== 'enemy' || e.stance === 'dead' || e === officer) continue
+      if (e.aiState === 'combat') continue
+      if (dist(officer.pos, e.pos) > OFFICER_RADIO_R) continue
+      e.awareness = Math.max(e.awareness ?? 0, HEARD_MAX)
+      markLastSeen(e, at)
+      enterSuspicious(e)
+      // Longer than the stock investigate window so the outer ring finishes
+      // the walk over instead of peeling off mid-convergence.
+      e.investigateUntil = world.time + OFFICER_RADIO_HOLD
+      called += 1
+    }
+    // A call nobody answered must not read like a converging wave: the sting
+    // and the alert line only fire when at least one guard outside the
+    // firefight was put on the position. Already-suspicious guards count;
+    // the call re-tasks them onto the squad's last seen spot.
+    if (called === 0) {
+      pushLog('SYS', 'THE CALL WENT OUT. NO ONE ANSWERED.', 'ok')
+      return
+    }
+    sfx.alertSting()
+    pushLog('SYS', 'REINFORCEMENT CALL OUT. GUARDS CONVERGING.', 'alert')
+  }
+
   function updateEnemies(dt: number): void {
     for (const e of units) {
       if (e.kind !== 'enemy' || e.stance === 'dead') continue
       tickWeapon(e, dt)
+      if (e.radioAt !== undefined && !e.radioDone && world.time >= e.radioAt) {
+        e.radioDone = true
+        e.radioAt = undefined
+        officerRadio(e)
+      }
       if (e.aiState !== 'combat' && world.time >= (e.senseT ?? 0)) {
         // Clamped because sense() is skipped while fighting, so the gap since
         // the last look can be far longer than the interval.
@@ -1398,9 +1519,10 @@ export function createWorld(
         name: 'CORPSEC-W' + pad2(waveSeq),
         pos: snap({ x: at.x + (rng() - 0.5) * 2, z: at.z + (rng() - 0.5) * 2 }),
         heading: Math.atan2(zone.x - at.x, zone.z - at.z),
-        hp: Math.round(60 * mods.enemyHpMul),
-        maxHp: Math.round(60 * mods.enemyHpMul),
-        speed: 4.2,
+        hp: Math.round(ENEMY_ARCHETYPES.trooper.hp * mods.enemyHpMul),
+        maxHp: Math.round(ENEMY_ARCHETYPES.trooper.hp * mods.enemyHpMul),
+        speed: ENEMY_ARCHETYPES.trooper.speed,
+        archetype: 'trooper',
         weapon: w,
         stance: 'idle',
         path: [],
@@ -1496,6 +1618,11 @@ export function createWorld(
           row.timer = mmssLeft(defendLeft[i])
         }
       }
+      // The fail window overwrites a defend hold in the single timer slot:
+      // between the two countdowns, it is the one that can lose the mission.
+      if (st === 'active' && d.failSec) {
+        row.timer = mmssLeft(failLeft[i])
+      }
       return row
     })
     useMissionStore.getState().setObjectives(rows)
@@ -1504,7 +1631,11 @@ export function createWorld(
   // True while an active objective pushes continuous progress the HUD shows.
   function objectivesTicking(): boolean {
     return objectives.some(
-      (d, i) => objState[i] === 'active' && (d.kind === 'interact' || d.kind === 'defend'),
+      (d, i) =>
+        objState[i] === 'active' &&
+        // Truthy on purpose, matching the countdown in updateObjectives:
+        // failSec 0 never ticks, so it must not report as ticking here.
+        (d.kind === 'interact' || d.kind === 'defend' || (d.failSec ?? 0) > 0),
     )
   }
 
@@ -1561,6 +1692,18 @@ export function createWorld(
     for (let i = 0; i < objectives.length; i++) {
       if (objState[i] !== 'active') continue
       const def = objectives[i]
+      if (def.failSec) {
+        failLeft[i] -= dt
+        if (failLeft[i] <= 0) {
+          failObjective(i)
+          if (!def.optional) {
+            setResultNow('lost')
+            pushLog('SYS', 'CONTRACT BREACHED. THE WINDOW CLOSED.', 'alert')
+            return
+          }
+          continue
+        }
+      }
       if (def.kind === 'interact') {
         // Progress accrues while any living agent holds the zone; an empty
         // zone pauses the channel where it stands, never resets it.
@@ -1595,6 +1738,7 @@ export function createWorld(
     result = r
     resultAt = world.time
     useMissionStore.getState().setResult(r)
+    sfx.threatLevel(0)
   }
 
   function checkEnd(): void {
@@ -1661,6 +1805,9 @@ export function createWorld(
     if (lvl !== alertLevel) {
       alertLevel = lvl
       useMissionStore.getState().setAlert(lvl)
+      // Tension drone tracks the alert level; a decided mission has already
+      // silenced it and stays silent.
+      if (result === 'none') sfx.threatLevel(lvl)
     }
   }
 

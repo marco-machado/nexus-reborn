@@ -24,6 +24,22 @@ let noise: AudioBuffer | null = null
 let failed = false
 const lastAt: Record<string, number> = {}
 
+// Alert tension drone: two detuned saws through a lowpass, held while the
+// mission alert level is up. Built lazily on the first nonzero level and kept
+// for the life of the context, since stopped oscillators cannot restart;
+// level 0 just ramps it silent. Tearing it down instead would let a level
+// rise inside the release tail build a second layer over the audible first.
+interface ThreatLayer {
+  osc1: OscillatorNode
+  osc2: OscillatorNode
+  filter: BiquadFilterNode
+  gain: GainNode
+}
+let threat: ThreatLayer | null = null
+const THREAT_GAIN = [0, 0.045, 0.075, 0.11]
+const THREAT_FREQ = [140, 220, 320, 460]
+const THREAT_RAMP = 0.9
+
 // Desired stage factors, 0..1 each. Held here so levels set before the
 // context exists (or before audio is unlocked) land when it is built.
 const levels = { master: 1, ui: 1, combat: 1 }
@@ -267,5 +283,55 @@ export const sfx = {
     const live = gate('interact', 0.2)
     if (!live) return
     tone(live, live.ui, { dur: 0.05, type: 'square', f0: 1180, f1: 1420, gain: 0.14 })
+  },
+
+  // A round landing on one of ours: a dull body thump under the gunshot, so a
+  // wounded operative registers without watching the health bar.
+  agentHit(): void {
+    const live = gate('agenthit', 0.12)
+    if (!live) return
+    tone(live, live.combat, { dur: 0.12, type: 'sine', f0: 180, f1: 55, gain: 0.3 })
+    burst(live, live.combat, { dur: 0.06, type: 'lowpass', freq: 420, q: 0.8, gain: 0.18 })
+  },
+
+  // Sets the tension drone to the mission alert level, 0..3. Level 0 ramps to
+  // silence.
+  threatLevel(level: number): void {
+    const l = Math.max(0, Math.min(3, Math.floor(level)))
+    if (l === 0 && !threat) return
+    const live = ensure()
+    if (!live) return
+    const now = live.c.currentTime
+    if (!threat) {
+      const gain = live.c.createGain()
+      // Plain assignments, not setValueAtTime: the ramp block below cancels
+      // events at `now` and reads .value, which before the first render
+      // quantum still reports the node defaults (gain 1, 350 Hz) — scheduled
+      // values would be discarded and the drone would enter at full scale.
+      gain.gain.value = 0.0001
+      const filter = live.c.createBiquadFilter()
+      filter.type = 'lowpass'
+      filter.Q.value = 0.9
+      filter.frequency.value = THREAT_FREQ[0]
+      const osc1 = live.c.createOscillator()
+      osc1.type = 'sawtooth'
+      osc1.frequency.value = 55
+      const osc2 = live.c.createOscillator()
+      osc2.type = 'sawtooth'
+      osc2.frequency.value = 55.7
+      osc1.connect(filter)
+      osc2.connect(filter)
+      filter.connect(gain).connect(live.combat)
+      osc1.start(now)
+      osc2.start(now)
+      threat = { osc1, osc2, filter, gain }
+    }
+    const t = threat
+    t.gain.gain.cancelScheduledValues(now)
+    t.gain.gain.setValueAtTime(Math.max(0.0001, t.gain.gain.value), now)
+    t.gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, THREAT_GAIN[l]), now + THREAT_RAMP)
+    t.filter.frequency.cancelScheduledValues(now)
+    t.filter.frequency.setValueAtTime(Math.max(20, t.filter.frequency.value), now)
+    t.filter.frequency.exponentialRampToValueAtTime(THREAT_FREQ[l], now + THREAT_RAMP)
   },
 }

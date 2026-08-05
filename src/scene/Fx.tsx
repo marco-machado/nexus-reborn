@@ -158,7 +158,9 @@ function buildPool(): FxPool {
 
   const boomGeom = track(new THREE.SphereGeometry(1, 10, 8))
   const booms: BoomSlot[] = []
-  for (let i = 0; i < 24; i++) {
+  // Sized for a dense firefight: the world array is index-mapped onto these
+  // slots, so any boom past the pool size is silently never drawn.
+  for (let i = 0; i < 48; i++) {
     const mat = track(
       new THREE.MeshStandardMaterial({
         color: '#000000',

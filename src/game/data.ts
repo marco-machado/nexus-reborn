@@ -1,5 +1,6 @@
-// CONTRACT FILE. Static game data: weapons, operative roster, missions.
-import type { MissionDef, OperativeDef, WeaponDef, WeaponId } from './types'
+// CONTRACT FILE. Static game data: weapons, enemy archetypes, operative
+// roster, missions.
+import type { EnemyArchetype, MissionDef, OperativeDef, WeaponDef, WeaponId } from './types'
 
 // Campaign state owns the live values. These are only new-operation seeds.
 export const INTEL_LEVEL = 1
@@ -69,6 +70,37 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     massKg: 4.9,
   },
 }
+
+// Enemy archetype stats. `hp` is the base before the mission health
+// multiplier and any per-spawn override. `dmgTakenMul` scales incoming
+// damage; `minRange` makes a build back off targets that close inside it.
+// The citygen assigns archetypes; world.ts applies these numbers.
+export interface EnemyArchetypeDef {
+  hp: number
+  speed: number
+  dmgTakenMul: number
+  minRange?: number
+}
+
+export const ENEMY_ARCHETYPES: Record<EnemyArchetype, EnemyArchetypeDef> = {
+  trooper: { hp: 60, speed: 4.2, dmgTakenMul: 1 },
+  heavy: { hp: 100, speed: 3.2, dmgTakenMul: 0.85 },
+  marksman: { hp: 70, speed: 4.0, dmgTakenMul: 1, minRange: 8 },
+  officer: { hp: 70, speed: 4.4, dmgTakenMul: 1 },
+}
+
+// Seconds between an officer entering combat and the radio call that puts
+// nearby guards on the squad's last seen position. Killing the officer first
+// cancels the call.
+export const OFFICER_RADIO_DELAY = 4
+// How far the call carries from the officer. Bounded so the whole map does
+// not converge on one firefight; guards past it stay on their beats.
+export const OFFICER_RADIO_R = 22
+// How long a called guard holds the investigation with no fresh stimuli.
+// Sized to walk the full radio radius: the default investigate window is
+// shorter than the trip from the outer ring, and guards would peel off
+// mid-convergence.
+export const OFFICER_RADIO_HOLD = 8
 
 // How far one shot carries, in meters. Derived from the round the weapon
 // fires, so the longrifle is heard across the plaza and the pistol only down
@@ -155,6 +187,7 @@ export const MISSIONS: MissionDef[] = [
       'CIVILIAN DENSITY LOW. COLLATERAL TOLERANCE MODERATE.',
       'THE ASSET IS FRAGILE. KEEP IT OUT OF THE CROSSFIRE.',
       'THE COMPOUND GARRISON CAN BE BYPASSED. ENGAGEMENT IS OPTIONAL.',
+      'THE DETENTION SERVER STARTS ITS WIPE WHEN THE GATE FALLS. 90 SECONDS.',
     ],
     objectives: [
       { id: 'hc1', label: 'REACH THE COMPOUND GATE', kind: 'reach-zone', landmark: 'gate' },
@@ -166,6 +199,7 @@ export const MISSIONS: MissionDef[] = [
         durationSec: 4,
         optional: true,
         bonusReward: 9000,
+        failSec: 90,
       },
       {
         id: 'hc2',
