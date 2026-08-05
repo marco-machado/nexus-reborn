@@ -1246,18 +1246,37 @@ describe('enemy archetypes', () => {
       0.5,
     )
     expect(tripped).toBe(true)
-    // Cease fire so the officer lives to make the call.
+    // Break contact so both sides live through the delay: the officer stays
+    // in combat for DISENGAGE_T (6s) after losing sight, past the 4s fuse,
+    // and a1 stops soaking the whole garrison's fire.
     w.orderStop(['a1'])
     w.orderHoldFire(['a1'], true)
-    warm(w, OFFICER_RADIO_DELAY + 1.5)
-
+    put(w, a1, { x: 46.5, z: 85.5 })
+    warm(w, OFFICER_RADIO_DELAY - 1)
+    // Park a street patroller inside radio range (22) but outside the
+    // firefight and PROPAGATE_R (9) of the fighting garrison: a call nobody
+    // answers stays quiet, and the garrison around the officer is already in
+    // combat by now.
+    const patroller = w.units.find(
+      (u) =>
+        u.kind === 'enemy' && u.stance !== 'dead' && u.tag !== 'garrison' && u.aiState !== 'combat',
+    )
+    expect(patroller).toBeDefined()
+    if (!patroller) return
+    put(w, patroller, { x: officer.pos.x - 17, z: officer.pos.z })
+    // Catch the call the moment it lands: the answering guard then converges
+    // on the plaza, where sight of the fighting garrison would upgrade its
+    // investigation to combat.
+    const called = runUntil(
+      w,
+      () => useMissionStore.getState().log.some((e) => e.msg.includes('REINFORCEMENT CALL OUT')),
+      3,
+    )
+    expect(called).toBe(true)
     const log = useMissionStore.getState().log
     expect(log.some((e) => e.msg.includes('OFFICER ON COMMS'))).toBe(true)
-    expect(log.some((e) => e.msg.includes('REINFORCEMENT CALL OUT'))).toBe(true)
-    // The call put guards outside the firefight onto an investigation.
-    expect(
-      w.units.some((e) => e.kind === 'enemy' && e.stance !== 'dead' && e.aiState === 'suspicious'),
-    ).toBe(true)
+    // The call put the guard outside the firefight onto an investigation.
+    expect(patroller.aiState).toBe('suspicious')
   })
 
   it('killing the officer before the delay cancels the call', () => {

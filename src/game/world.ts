@@ -46,6 +46,8 @@ const MAX_CATCHUP = 5
 const SYNC_INTERVAL = 0.2
 const TRACER_LIFE = 0.09
 const BOOM_LIFE = 0.4
+// Shortest gap between impact flashes on one body; caps hit booms per victim.
+const HIT_BOOM_GAP = 0.15
 const SEPARATION_R = 0.7
 // Body radius a missed round has to cross to catch whoever is standing there.
 const STRAY_R = 0.5
@@ -728,15 +730,20 @@ export function createWorld(
     t.hp -= dealt
     if (t.hp > 0) {
       // Impact feedback on a surviving body: a small flash, the flinch stamp
-      // the renderer reads, and a thump when it is one of ours. The push is
-      // bounded by fire rate and decays with BOOM_LIFE, like tracers.
+      // the renderer reads, and a thump when it is one of ours. The flash is
+      // rate-limited per victim: the renderer's boom pool is a fixed size,
+      // and unthrottled hit pips in a dense firefight fill it and starve the
+      // death and grenade flashes pushed behind them.
+      const lastHit = t.lastHitT
       t.lastHitT = world.time
-      booms.push({
-        pos: { x: t.pos.x, z: t.pos.z },
-        t: world.time,
-        r: 0.3,
-        color: t.kind === 'agent' ? '#ff6a55' : '#ffd9a0',
-      })
+      if (lastHit === undefined || world.time - lastHit >= HIT_BOOM_GAP) {
+        booms.push({
+          pos: { x: t.pos.x, z: t.pos.z },
+          t: world.time,
+          r: 0.3,
+          color: t.kind === 'agent' ? '#ff6a55' : '#ffd9a0',
+        })
+      }
       if (t.kind === 'agent') sfx.agentHit()
     }
     if (t.kind === 'enemy') {
@@ -1179,8 +1186,9 @@ export function createWorld(
       markLastSeen(e, tgt.pos)
       e.targetId = tgt.id
       if (minR > 0 && bestD < minR) {
-        // Marksman keeps range: backpedal away from the target before firing
-        // again, rather than trading at arm's length.
+        // Marksman keeps range: backpedal away from the target while still
+        // firing on the move, rather than trading at arm's length. Every
+        // operative outruns it, so going quiet here would make it harmless.
         e.stance = 'moving'
         if (world.time >= (e.repathT ?? 0)) {
           e.repathT = world.time + ENEMY_REPATH
@@ -1192,6 +1200,7 @@ export function createWorld(
           const dest = nearestWalkable(city, back)
           if (dest) e.path = findPath(city, e.pos, dest)
         }
+        tryFire(e, tgt, ENEMY_ACC)
       } else if (bestD <= Math.max(1.5, w.range - 1)) {
         e.path.length = 0
         e.stance = 'attacking'
@@ -1228,6 +1237,7 @@ export function createWorld(
   // squad's last seen position and sweep rather than shooting blind.
   function officerRadio(officer: SimUnit): void {
     const at = officer.lastSeenPos ?? officer.pos
+    let called = 0
     for (const e of units) {
       if (e.kind !== 'enemy' || e.stance === 'dead' || e === officer) continue
       if (e.aiState === 'combat') continue
@@ -1236,6 +1246,13 @@ export function createWorld(
       markLastSeen(e, at)
       enterSuspicious(e)
       e.investigateUntil = world.time + INVESTIGATE_T
+      called += 1
+    }
+    // A call nobody answered must not read like a converging wave: the sting
+    // and the alert line only fire when a guard actually changed state.
+    if (called === 0) {
+      pushLog('SYS', 'THE CALL WENT OUT. NO ONE ANSWERED.', 'ok')
+      return
     }
     sfx.alertSting()
     pushLog('SYS', 'REINFORCEMENT CALL OUT. GUARDS CONVERGING.', 'alert')
@@ -1573,7 +1590,9 @@ export function createWorld(
           row.timer = mmssLeft(defendLeft[i])
         }
       }
-      if (st === 'active' && d.failSec && row.timer === undefined) {
+      // The fail window overwrites a defend hold in the single timer slot:
+      // between the two countdowns, it is the one that can lose the mission.
+      if (st === 'active' && d.failSec) {
         row.timer = mmssLeft(failLeft[i])
       }
       return row
@@ -1586,7 +1605,9 @@ export function createWorld(
     return objectives.some(
       (d, i) =>
         objState[i] === 'active' &&
-        (d.kind === 'interact' || d.kind === 'defend' || d.failSec !== undefined),
+        // Truthy on purpose, matching the countdown in updateObjectives:
+        // failSec 0 never ticks, so it must not report as ticking here.
+        (d.kind === 'interact' || d.kind === 'defend' || (d.failSec ?? 0) > 0),
     )
   }
 

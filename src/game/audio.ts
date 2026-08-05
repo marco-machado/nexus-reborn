@@ -25,8 +25,10 @@ let failed = false
 const lastAt: Record<string, number> = {}
 
 // Alert tension drone: two detuned saws through a lowpass, held while the
-// mission alert level is up. Built lazily on the first nonzero level and torn
-// down after ramping back to silence, since stopped oscillators cannot restart.
+// mission alert level is up. Built lazily on the first nonzero level and kept
+// for the life of the context, since stopped oscillators cannot restart;
+// level 0 just ramps it silent. Tearing it down instead would let a level
+// rise inside the release tail build a second layer over the audible first.
 interface ThreatLayer {
   osc1: OscillatorNode
   osc2: OscillatorNode
@@ -293,7 +295,7 @@ export const sfx = {
   },
 
   // Sets the tension drone to the mission alert level, 0..3. Level 0 ramps to
-  // silence and releases the oscillators.
+  // silence.
   threatLevel(level: number): void {
     const l = Math.max(0, Math.min(3, Math.floor(level)))
     if (l === 0 && !threat) return
@@ -302,11 +304,15 @@ export const sfx = {
     const now = live.c.currentTime
     if (!threat) {
       const gain = live.c.createGain()
-      gain.gain.setValueAtTime(0.0001, now)
+      // Plain assignments, not setValueAtTime: the ramp block below cancels
+      // events at `now` and reads .value, which before the first render
+      // quantum still reports the node defaults (gain 1, 350 Hz) — scheduled
+      // values would be discarded and the drone would enter at full scale.
+      gain.gain.value = 0.0001
       const filter = live.c.createBiquadFilter()
       filter.type = 'lowpass'
       filter.Q.value = 0.9
-      filter.frequency.setValueAtTime(THREAT_FREQ[0], now)
+      filter.frequency.value = THREAT_FREQ[0]
       const osc1 = live.c.createOscillator()
       osc1.type = 'sawtooth'
       osc1.frequency.value = 55
@@ -327,10 +333,5 @@ export const sfx = {
     t.filter.frequency.cancelScheduledValues(now)
     t.filter.frequency.setValueAtTime(Math.max(20, t.filter.frequency.value), now)
     t.filter.frequency.exponentialRampToValueAtTime(THREAT_FREQ[l], now + THREAT_RAMP)
-    if (l === 0) {
-      t.osc1.stop(now + THREAT_RAMP + 0.1)
-      t.osc2.stop(now + THREAT_RAMP + 0.1)
-      threat = null
-    }
   },
 }
