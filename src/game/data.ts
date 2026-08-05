@@ -96,6 +96,11 @@ export const OFFICER_RADIO_DELAY = 4
 // How far the call carries from the officer. Bounded so the whole map does
 // not converge on one firefight; guards past it stay on their beats.
 export const OFFICER_RADIO_R = 22
+// How long a called guard holds the investigation with no fresh stimuli.
+// Sized to walk the full radio radius: the default investigate window is
+// shorter than the trip from the outer ring, and guards would peel off
+// mid-convergence.
+export const OFFICER_RADIO_HOLD = 8
 
 // How far one shot carries, in meters. Derived from the round the weapon
 // fires, so the longrifle is heard across the plaza and the pistol only down

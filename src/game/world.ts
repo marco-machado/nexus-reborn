@@ -17,7 +17,14 @@ import type {
   Zone,
 } from './types'
 import { ENEMY_VISION, NOTICE_RADIUS, VISION_HALF_ANGLE, isWalkable } from './types'
-import { ENEMY_ARCHETYPES, OFFICER_RADIO_DELAY, OFFICER_RADIO_R, WEAPONS, weaponNoise } from './data'
+import {
+  ENEMY_ARCHETYPES,
+  OFFICER_RADIO_DELAY,
+  OFFICER_RADIO_HOLD,
+  OFFICER_RADIO_R,
+  WEAPONS,
+  weaponNoise,
+} from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
 import { missionMods } from './missionParams'
 import type { MissionMods } from './missionParams'
@@ -593,11 +600,25 @@ export function createWorld(
       } else {
         const inv = remaining / d
         moveTo(u, u.pos.x + dx * inv, u.pos.z + dz * inv)
-        turnToward(u, Math.atan2(dx, dz), dt)
+        // A kiting enemy backpedals: facing stays on the target while the
+        // path carries it away, so the read matches the fire it keeps up.
+        const aim = kiteAim(u)
+        if (aim) faceToward(u, aim.pos, dt)
+        else turnToward(u, Math.atan2(dx, dz), dt)
         remaining = 0
       }
     }
     if (u.path.length === 0 && u.stance === 'moving') u.stance = 'idle'
+  }
+
+  // The live target a min-range archetype should face while its path moves
+  // it, null for every other unit. Combat targeting itself ignores facing;
+  // this only keeps the model and vision cone on the operative it is shooting.
+  function kiteAim(u: SimUnit): SimUnit | null {
+    if (u.kind !== 'enemy' || u.aiState !== 'combat' || u.targetId === null) return null
+    if (!ENEMY_ARCHETYPES[u.archetype ?? 'trooper'].minRange) return null
+    const t = byId.get(u.targetId)
+    return t && t.stance !== 'dead' ? t : null
   }
 
   function tryNudge(u: SimUnit, mx: number, mz: number): void {
@@ -1112,7 +1133,10 @@ export function createWorld(
       if (!target) markLastSeen(e, noise.pos)
     }
     // Fresh evidence restarts the look, whether or not it moves certainty.
-    if (target || noise) e.investigateUntil = world.time + INVESTIGATE_T
+    // Max, never assign: minor evidence must not shorten a longer hold (the
+    // officer radio sets one so called guards finish the walk over).
+    if (target || noise)
+      e.investigateUntil = Math.max(e.investigateUntil ?? 0, world.time + INVESTIGATE_T)
     else aware -= elapsed * AWARE_DECAY
     if (aware < 1) {
       const ally = allyInCombat(e)
@@ -1245,11 +1269,15 @@ export function createWorld(
       e.awareness = Math.max(e.awareness ?? 0, HEARD_MAX)
       markLastSeen(e, at)
       enterSuspicious(e)
-      e.investigateUntil = world.time + INVESTIGATE_T
+      // Longer than the stock investigate window so the outer ring finishes
+      // the walk over instead of peeling off mid-convergence.
+      e.investigateUntil = world.time + OFFICER_RADIO_HOLD
       called += 1
     }
     // A call nobody answered must not read like a converging wave: the sting
-    // and the alert line only fire when a guard actually changed state.
+    // and the alert line only fire when at least one guard outside the
+    // firefight was put on the position. Already-suspicious guards count;
+    // the call re-tasks them onto the squad's last seen spot.
     if (called === 0) {
       pushLog('SYS', 'THE CALL WENT OUT. NO ONE ANSWERED.', 'ok')
       return
