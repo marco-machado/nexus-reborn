@@ -35,6 +35,7 @@ interface Shared {
   enemyHead: THREE.MeshStandardMaterial
   enemyVisor: THREE.MeshStandardMaterial
   garrisonChest: THREE.MeshStandardMaterial
+  officerChest: THREE.MeshStandardMaterial
   gunMat: THREE.MeshStandardMaterial
   ringMat: THREE.MeshBasicMaterial
   glowMat: THREE.MeshBasicMaterial
@@ -100,6 +101,12 @@ function getShared(): Shared {
     garrisonChest: new THREE.MeshStandardMaterial({
       color: '#000000',
       emissive: new THREE.Color('#ff5c4a'),
+      emissiveIntensity: 3,
+    }),
+    // Officers read apart from the garrison at a glance: amber chest lamp.
+    officerChest: new THREE.MeshStandardMaterial({
+      color: '#000000',
+      emissive: new THREE.Color('#ffb300'),
       emissiveIntensity: 3,
     }),
     gunMat: new THREE.MeshStandardMaterial({ color: '#0c0e11', roughness: 0.55, metalness: 0.35 }),
@@ -236,6 +243,8 @@ interface View {
   rig: THREE.Group
   // Devices flatten on death instead of toppling, and never animate legs.
   isDevice: boolean
+  // Resting rig y scale; the hit flinch squashes against it and restores it.
+  baseScaleY: number
   legL: THREE.Mesh
   legR: THREE.Mesh
   ring: THREE.Mesh | null
@@ -262,8 +271,14 @@ function hashId(id: string): number {
 function buildView(u: Unit, s: Shared): View {
   const root = new THREE.Group()
   const rig = new THREE.Group()
-  // Slightly larger than life so squads and hostiles read at tactical zoom.
-  rig.scale.setScalar(u.kind === 'civilian' ? 1.05 : u.kind === 'device' ? 1 : 1.22)
+  // Slightly larger than life so squads and hostiles read at tactical zoom;
+  // heavies carry extra bulk and marksmen run lean so builds read by frame.
+  let scale = 1.22
+  if (u.kind === 'civilian') scale = 1.05
+  else if (u.kind === 'device') scale = 1
+  else if (u.archetype === 'heavy') scale = 1.36
+  else if (u.archetype === 'marksman') scale = 1.14
+  rig.scale.setScalar(scale)
   root.add(rig)
 
   let body = s.civMats[Math.floor(hashId(u.id) * s.civMats.length) % s.civMats.length]
@@ -323,7 +338,10 @@ function buildView(u: Unit, s: Shared): View {
     visor.position.set(0.12, 1.44, 0)
     rig.add(visor)
     if (u.tag === 'garrison') {
-      const chest = new THREE.Mesh(s.chestGeom, s.garrisonChest)
+      const chest = new THREE.Mesh(
+        s.chestGeom,
+        u.archetype === 'officer' ? s.officerChest : s.garrisonChest,
+      )
       chest.position.set(0.2, 1.05, 0)
       rig.add(chest)
     }
@@ -404,6 +422,7 @@ function buildView(u: Unit, s: Shared): View {
     root,
     rig,
     isDevice: u.kind === 'device',
+    baseScaleY: rig.scale.y,
     legL,
     legR,
     ring,
@@ -426,6 +445,8 @@ const TMP_Q = new THREE.Quaternion()
 
 // How long an enemy's ground ring stays hot and swollen after a shot.
 const FIRE_PULSE = 0.15
+// How long a body stays squashed after surviving a hit.
+const HIT_FLINCH = 0.18
 
 export default function Units() {
   const camera = useThree((st) => st.camera)
@@ -473,6 +494,7 @@ export default function Units() {
         }
         view.rig.rotation.z = (Math.PI / 2) * k
         view.rig.position.y = -0.08 * k
+        view.rig.scale.y = view.baseScaleY
         view.legL.rotation.z = 0
         view.legR.rotation.z = 0
         if (view.ring) view.ring.visible = false
@@ -496,6 +518,13 @@ export default function Units() {
       view.root.rotation.y = view.yaw
 
       view.rig.rotation.z = 0
+      // Hit flinch: a brief squash right after a surviving hit, so incoming
+      // fire reads on the body and not only on the health bar.
+      if (!view.isDevice) {
+        const hs = u.lastHitT !== undefined ? t - u.lastHitT : Infinity
+        const flinch = hs < HIT_FLINCH ? 1 - hs / HIT_FLINCH : 0
+        view.rig.scale.y = view.baseScaleY * (1 - 0.14 * flinch)
+      }
       const moving = u.stance === 'moving' || u.stance === 'fleeing'
       if (moving) {
         const ph = t * (5 + u.speed * 1.6) + view.phase

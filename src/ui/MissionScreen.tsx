@@ -9,6 +9,7 @@ import { liveOperativeById, useCampaignStore } from '../state/campaignStore'
 import { missionMods, missionVariant } from '../game/missionParams'
 import { createWorld } from '../game/world'
 import { setWorld } from '../game/runtime'
+import { missionSfx } from '../game/audioBridge'
 import GameCanvas from '../scene/GameCanvas'
 import Hud from './Hud'
 
@@ -42,6 +43,8 @@ export default function MissionScreen() {
       setReady(false)
       setWorld(null)
       useMissionStore.getState().reset()
+      // The tension drone must not follow the player back to the menus.
+      missionSfx.threatLevel(0)
     }
   }, [missionId, squad])
 

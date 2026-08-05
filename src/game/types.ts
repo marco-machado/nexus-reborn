@@ -52,6 +52,12 @@ export type UnitStance = 'idle' | 'moving' | 'attacking' | 'fleeing' | 'dead'
 // it half saw or heard, combat is engaging. Enemies only.
 export type EnemyAiState = 'patrol' | 'suspicious' | 'combat'
 
+// Enemy build. Troopers are the baseline; heavies soak damage and close in,
+// marksmen hold range with a longrifle, officers radio the garrison onto the
+// squad's last seen position unless they die first. Stats live in
+// ENEMY_ARCHETYPES (game/data.ts).
+export type EnemyArchetype = 'trooper' | 'heavy' | 'marksman' | 'officer'
+
 export interface Unit {
   id: string
   kind: UnitKind
@@ -76,6 +82,7 @@ export interface Unit {
   holdGround: boolean
   holdFire: boolean
   aiState?: EnemyAiState
+  archetype?: EnemyArchetype
   patrol?: Vec2[]
   patrolIndex?: number
   agentSlot?: number
@@ -100,6 +107,8 @@ export interface Unit {
   tag?: string
   deathT?: number
   lastFireT?: number
+  // World time of the last hit survived; the renderer reads it for the flinch.
+  lastHitT?: number
 }
 
 export interface Tracer {
@@ -155,6 +164,10 @@ export interface ObjectiveDef {
   optional?: boolean
   bonusReward?: number
   wave?: WaveSpec
+  // Time limit in seconds, counted from activation. Expiry fails an optional
+  // objective and loses the mission on a required one. The HUD shows the
+  // countdown through ObjectiveUi.timer.
+  failSec?: number
 }
 
 // Continental sector of the world map. Ids index the atlas.
@@ -226,8 +239,10 @@ export interface EnemySpawn {
   patrol: Vec2[]
   weapon: WeaponId
   tag?: string
+  // Overrides the archetype's base hit points when set.
   hp?: number
   name?: string
+  archetype?: EnemyArchetype
 }
 
 // Half open cell span of one paved road band, [x0, x1) by [z0, z1).

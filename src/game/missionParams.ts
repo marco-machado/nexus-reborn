@@ -9,6 +9,10 @@ export interface MissionMods {
   // Added street patrols beyond the archetype's base set.
   enemyExtra: number
   enemyHpMul: number
+  // Garrison members upgraded to elite archetypes (game/data.ts): officers
+  // radio the garrison in, heavies soak damage. Threat sets both.
+  officerCount: number
+  heavyCount: number
   civilianCount: number
   // Scales ENEMY_VISION for this mission.
   visionMul: number
@@ -30,6 +34,18 @@ const THREAT_HP_MUL: Record<MissionDef['threat'], number> = {
   MODERATE: 1.0,
   HIGH: 1.1,
   SEVERE: 1.2,
+}
+
+const THREAT_OFFICERS: Record<MissionDef['threat'], number> = {
+  MODERATE: 0,
+  HIGH: 0,
+  SEVERE: 1,
+}
+
+const THREAT_HEAVIES: Record<MissionDef['threat'], number> = {
+  MODERATE: 0,
+  HIGH: 1,
+  SEVERE: 1,
 }
 
 // Base bystander density per layout family; sector unrest adds to it.
@@ -70,7 +86,16 @@ export function missionMods(m: MissionDef, sector: SectorState = NEUTRAL_SECTOR)
     visionMul = 0.9
     noiseMul = 0.95
   }
-  return { enemyExtra, enemyHpMul, civilianCount, visionMul, noiseMul, rain: m.weather }
+  return {
+    enemyExtra,
+    enemyHpMul,
+    officerCount: THREAT_OFFICERS[m.threat],
+    heavyCount: THREAT_HEAVIES[m.threat],
+    civilianCount,
+    visionMul,
+    noiseMul,
+    rain: m.weather,
+  }
 }
 
 // Projected success chance in percent, derived so it moves with research and
@@ -84,6 +109,7 @@ export function missionChance(
   let chance = base
   chance -= mods.enemyExtra * 3
   chance -= Math.round((mods.enemyHpMul - 1) * 50)
+  chance -= mods.heavyCount * 2 + mods.officerCount * 3
   // Rain shortens guard sight, which favors the squad.
   chance += Math.round((1 - mods.visionMul) * 25)
   chance += researchedCount * 2

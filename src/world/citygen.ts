@@ -47,6 +47,9 @@ const MIN_SIDE = 4
 export interface GenParams {
   enemyExtra: number
   civilianCount: number
+  // Garrison entries upgraded to elite archetypes, officers first.
+  officerCount?: number
+  heavyCount?: number
 }
 
 const DEFAULT_GEN: GenParams = { enemyExtra: 0, civilianCount: 22 }
@@ -683,7 +686,8 @@ export function generateCity(
       weapon: 'longrifle',
       tag: 'garrison',
       hp: 80,
-      name: 'CORPSEC-07',
+      name: 'CORPSEC-MK01',
+      archetype: 'marksman',
     })
     addStreetPatrols(5, 8)
     addStreetPatrols(g.enemyExtra, 13)
@@ -711,6 +715,31 @@ export function generateCity(
     }
     addStreetPatrols(3, 5)
     addStreetPatrols(g.enemyExtra, 8)
+  }
+
+  // Elite upgrades from the mission modifiers: the leading garrison entries
+  // become the officer and the heavies, keeping their posts and patrols.
+  // Officers carry the radio and an smg, heavies walk a shotgun in.
+  let officersLeft = g.officerCount ?? 0
+  let heaviesLeft = g.heavyCount ?? 0
+  let officerSeq = 0
+  let heavySeq = 0
+  for (const e of enemies) {
+    if (officersLeft <= 0 && heaviesLeft <= 0) break
+    if (e.tag !== 'garrison' || e.archetype) continue
+    if (officersLeft > 0) {
+      officersLeft -= 1
+      officerSeq += 1
+      e.archetype = 'officer'
+      e.weapon = 'smg'
+      e.name = 'CORPSEC-OF' + pad(officerSeq)
+    } else {
+      heaviesLeft -= 1
+      heavySeq += 1
+      e.archetype = 'heavy'
+      e.weapon = 'shotgun'
+      e.name = 'CORPSEC-HV' + pad(heavySeq)
+    }
   }
 
   const spawnAgents: Vec2[] = [

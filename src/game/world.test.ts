@@ -5,10 +5,11 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
 import { isWalkable } from './types'
 import { createWorld } from './world'
-import { DEFAULT_SQUAD, MISSIONS, ROSTER, WEAPONS, operativeById } from './data'
+import { DEFAULT_SQUAD, MISSIONS, OFFICER_RADIO_DELAY, ROSTER, WEAPONS, operativeById } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
 import { contractMission } from './contracts'
 import type { ContractType, GeneratedContract } from './contracts'
+import { missionMods } from './missionParams'
 import { findPath, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
@@ -1175,6 +1176,168 @@ describe('milestone 2 missions', () => {
         expect(b.city.landmarks[key]).toBeDefined()
       }
     }
+  })
+})
+
+describe('enemy archetypes', () => {
+  function put(w: WorldApi, u: { pos: Vec2; path: Vec2[] }, at: Vec2): void {
+    const spot = nearestWalkable(w.city, at) ?? at
+    u.pos.x = spot.x
+    u.pos.z = spot.z
+    u.path.length = 0
+  }
+
+  it('derives elite counts from threat through the mission modifiers', () => {
+    expect(missionMods(MISSIONS[0]).officerCount).toBe(1) // SEVERE
+    expect(missionMods(MISSIONS[0]).heavyCount).toBe(1)
+    expect(missionMods(MISSIONS[1]).officerCount).toBe(0) // HIGH
+    expect(missionMods(MISSIONS[1]).heavyCount).toBe(1)
+    expect(missionMods(MISSIONS[2]).officerCount).toBe(0) // MODERATE
+    expect(missionMods(MISSIONS[2]).heavyCount).toBe(0)
+  })
+
+  it('spawns the SEVERE checkpoint with officer, heavies and the marksman', () => {
+    const w = createWorld(MISSION, ops(['op1']))
+    const enemies = w.units.filter((u) => u.kind === 'enemy')
+
+    const officer = enemies.filter((u) => u.archetype === 'officer')
+    expect(officer).toHaveLength(1)
+    expect(officer[0].name).toBe('CORPSEC-OF01')
+    expect(officer[0].weapon?.id).toBe('smg')
+    expect(officer[0].hp).toBe(Math.round(70 * 1.2))
+    expect(officer[0].speed).toBe(4.4)
+
+    const heavies = enemies.filter((u) => u.archetype === 'heavy')
+    expect(heavies).toHaveLength(1)
+    for (const h of heavies) {
+      expect(h.weapon?.id).toBe('shotgun')
+      expect(h.hp).toBe(Math.round(100 * 1.2))
+      expect(h.speed).toBe(3.2)
+    }
+
+    const marksman = enemies.filter((u) => u.archetype === 'marksman')
+    expect(marksman).toHaveLength(1)
+    expect(marksman[0].weapon?.id).toBe('longrifle')
+    // The authored 80 hp override outranks the archetype base.
+    expect(marksman[0].hp).toBe(Math.round(80 * 1.2))
+
+    // Everything not upgraded stays a trooper at trooper stats.
+    const troopers = enemies.filter((u) => u.archetype === 'trooper')
+    expect(troopers.length).toBe(enemies.length - 3)
+    for (const t of troopers) expect(t.speed).toBe(4.2)
+  })
+
+  it('officer radios the garrison onto the squad after the delay', () => {
+    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const officer = w.units.find((u) => u.archetype === 'officer')
+    const a1 = w.unit('a1')
+    expect(officer).toBeDefined()
+    expect(a1).toBeDefined()
+    if (!officer || !a1) return
+
+    put(w, a1, { x: officer.pos.x + 4, z: officer.pos.z })
+    const tripped = runUntil(
+      w,
+      () => officer.aiState === 'combat',
+      20,
+      () => w.orderAttack(['a1'], officer.id),
+      0.5,
+    )
+    expect(tripped).toBe(true)
+    // Cease fire so the officer lives to make the call.
+    w.orderStop(['a1'])
+    w.orderHoldFire(['a1'], true)
+    warm(w, OFFICER_RADIO_DELAY + 1.5)
+
+    const log = useMissionStore.getState().log
+    expect(log.some((e) => e.msg.includes('OFFICER ON COMMS'))).toBe(true)
+    expect(log.some((e) => e.msg.includes('REINFORCEMENT CALL OUT'))).toBe(true)
+    // The call put guards outside the firefight onto an investigation.
+    expect(
+      w.units.some((e) => e.kind === 'enemy' && e.stance !== 'dead' && e.aiState === 'suspicious'),
+    ).toBe(true)
+  })
+
+  it('killing the officer before the delay cancels the call', () => {
+    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const officer = w.units.find((u) => u.archetype === 'officer')
+    expect(officer).toBeDefined()
+    if (!officer) return
+
+    // The whole squad at arm's length: combat trips on the first landed hit
+    // and four guns drop the officer well inside the radio delay.
+    const ids = ['a1', 'a2', 'a3', 'a4']
+    ids.forEach((id, i) => {
+      const u = w.unit(id)
+      if (u) put(w, u, { x: officer.pos.x + 2 + i, z: officer.pos.z })
+    })
+    const dead = runUntil(
+      w,
+      () => officer.stance === 'dead',
+      10,
+      () => w.orderAttack(ids, officer.id),
+      0.25,
+    )
+    expect(dead).toBe(true)
+    warm(w, 4)
+
+    const log = useMissionStore.getState().log
+    expect(log.some((e) => e.msg.includes('THE CALL NEVER WENT OUT'))).toBe(true)
+    expect(log.some((e) => e.msg.includes('REINFORCEMENT CALL OUT'))).toBe(false)
+  })
+})
+
+describe('timed objectives', () => {
+  it('loses the mission when a required time limit expires', () => {
+    const timed: MissionDef = {
+      ...MISSION,
+      objectives: [
+        { id: 't1', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 5, z: 5, r: 1 }, failSec: 2 },
+      ],
+    }
+    const w = createWorld(timed, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('none')
+    warm(w, 2.5)
+    const s = useMissionStore.getState()
+    expect(s.result).toBe('lost')
+    expect(s.objectives[0].failed).toBe(true)
+    expect(s.log.some((e) => e.msg.includes('THE WINDOW CLOSED'))).toBe(true)
+  })
+
+  it('fails only the optional objective when its window closes', () => {
+    const timed: MissionDef = {
+      ...MISSION,
+      objectives: [
+        {
+          id: 'opt1',
+          label: 'PULL THE SERVER',
+          kind: 'interact',
+          zone: { x: 5, z: 5, r: 1 },
+          durationSec: 5,
+          optional: true,
+          bonusReward: 1000,
+          failSec: 1.5,
+        },
+        { id: 'req1', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 5, z: 5, r: 1 } },
+      ],
+    }
+    const w = createWorld(timed, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    warm(w, 0.5)
+    // The countdown reaches the HUD rows while the window is open.
+    expect(useMissionStore.getState().objectives[0].timer).toBeDefined()
+    warm(w, 1.5)
+    const s = useMissionStore.getState()
+    expect(s.objectives[0].failed).toBe(true)
+    expect(s.result).toBe('none')
+    expect(s.objectives[1].active).toBe(true)
   })
 })
 

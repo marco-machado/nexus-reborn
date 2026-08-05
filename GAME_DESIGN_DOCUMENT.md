@@ -662,6 +662,21 @@ Enemy behavior uses three states:
 2. **Suspicious:** moves to the last seen or heard location, then scans.
 3. **Combat:** pursues and attacks visible operatives.
 
+#### Archetypes
+
+Every enemy carries one of four archetypes, defined in `ENEMY_ARCHETYPES` (`game/data.ts`) and assigned by the city generator:
+
+| Archetype | Base HP | Speed | Distinct behavior |
+|---|---|---|---|
+| Trooper | 60 | 4.2 | Baseline; every street patrol and wave unit |
+| Heavy | 100 | 3.2 | Takes 15% less damage, walks a shotgun in |
+| Marksman | 70 | 4.0 | Longrifle; backpedals when a target closes inside 8 m |
+| Officer | 70 | 4.4 | Radios nearby guards onto the squad (below) |
+
+Threat rating sets the elite mix through the mission modifiers: MODERATE fields none, HIGH upgrades one garrison member to a heavy, SEVERE fields one heavy and one officer. Upgraded members keep their posts and patrols. The checkpoint's authored longrifle guard is the one authored marksman, and its 80 HP override outranks the archetype base.
+
+**Officer radio:** four seconds after an officer enters combat, every guard within 22 m that is not already fighting is put on the squad's last seen position at investigation-level awareness. Killing the officer inside the delay cancels the call, and so does calming it down (an EM burst works). Officers wear an amber chest lamp; heavies read by their bulk, marksmen by their lean frame.
+
 #### Vision
 
 - Maximum vision range: **14 m** in clear weather, **12.6 m** under light rain, **11.2 m** under heavy rain.
@@ -776,6 +791,8 @@ An objective names its zone directly or resolves one from `CityData.landmarks`, 
 
 `interact` and `defend` share one timing rule: the channel or the hold advances only while a living operative stands in the zone, and an empty zone pauses it where it stands rather than resetting it. A dead vip voids every unfinished `escort`. An optional `destroy` whose device dies to non-squad fire fails rather than completing.
 
+An objective may also carry `failSec`, a time limit counted from activation. The HUD shows the countdown on the objective row. Expiry fails an optional objective and loses the mission on a required one. Hollow Crown's server pull is the one authored use: the wipe starts when the gate objective completes and closes the bonus 90 seconds later.
+
 Required objectives are strictly sequential. A later required objective cannot complete early.
 
 Optional objectives are the exception. An optional objective activates with the required objective it precedes in the list, never blocks the sequence, and pays `bonusReward` on top of the contract when it completes. A failed or ignored optional objective costs nothing.
@@ -839,7 +856,7 @@ CorpSec has sealed District 07 behind an Omnicorp checkpoint. Sable Enterprises 
 - Heavy rain: guard sight scales to 0.8 and weapon noise to 0.85.
 - Moderate civilian density: 22 bystanders, 28 when the source sector holds above 20 unrest.
 - Low collateral tolerance.
-- Severe threat rating: three extra street patrols on top of the five base ones, four where unrest is high; enemy health scales to 1.2, or 1.25 where the sector holds above 60 control.
+- Severe threat rating: three extra street patrols on top of the five base ones, four where unrest is high; enemy health scales to 1.2, or 1.25 where the sector holds above 60 control; one garrison member is upgraded to an officer and one to a heavy.
 
 Heavy rain is the squad's ally here: it is the largest sight penalty in the game, and it is why a Severe contract still reads at a workable chance. It does not change accuracy or movement.
 
@@ -859,7 +876,8 @@ Heavy rain is the squad's ally here: it is the largest sight penalty in the game
 - Read and bypass or engage eight street patrols.
 - Manage civilians who flee across fire lanes.
 - Breach the guarded northern plaza.
-- Eliminate a six-unit mixed rifle/SMG garrison and one 80-HP longrifle guard.
+- Eliminate a six-unit garrison led by a radio officer, backed by a shotgun heavy and one 80-HP longrifle marksman that keeps its distance.
+- Silence the officer inside four seconds of contact or fight the converging plaza guards.
 - Return south with all survivors.
 
 ### 12.3 Hollow Crown
@@ -872,7 +890,7 @@ CorpSec holds a Helix neurochem architect in a detention compound in District 21
 
 - Light rain: guard sight scales to 0.9 and weapon noise to 0.95.
 - Low civilian density: 14 bystanders, 20 when the source sector holds above 20 unrest.
-- High threat rating: two extra street patrols on top of the four base ones, three where unrest is high; enemy health scales to 1.1, or 1.15 where the sector holds above 60 control.
+- High threat rating: two extra street patrols on top of the four base ones, three where unrest is high; enemy health scales to 1.1, or 1.15 where the sector holds above 60 control; one garrison member is upgraded to a heavy.
 - The compound garrison can be bypassed. Engagement is optional.
 
 The compound archetype walls a detention block into the eastern half, between the first two cross streets. It has one gated south entry and one breachable side entry; the side flank comes from seed parity, so the two authored variants mirror each other. Cell blocks line the north wall, with a records hut at the server corner.
@@ -883,6 +901,7 @@ The compound archetype walls a detention block into the eastern half, between th
    - Any living operative enters the gate zone.
 2. **Pull the detention server.** *(Optional, +9,000 CR)*
    - Channel four seconds at the records hut. Activates with objective 1 and never blocks the sequence.
+   - The server wipes itself 90 seconds after activation; the countdown shows on the objective row and expiry fails only the bonus.
 3. **Override the cell block locks.**
    - Channel five seconds at the cell block console.
 4. **Extract the Helix asset.**
@@ -1164,6 +1183,7 @@ Units are assembled procedurally from simple geometry:
 
 - Colored weapon tracers.
 - Muzzle flashes and impact/death flashes.
+- Per-hit impact flash on surviving bodies, red on operatives and amber on everything else, with a brief flinch squash on the struck figure.
 - Dashed movement routes.
 - Destination rings.
 - Click markers.
@@ -1201,6 +1221,8 @@ All audio is synthesized at runtime with Web Audio:
 - Alert sting.
 - Objective-complete chime.
 - Death thud.
+- Operative-hit thump when a round lands on the squad.
+- Alert tension drone: a filtered two-oscillator layer that tracks the mission alert level (0-3), ramps between levels, and releases at mission end and on leaving the mission screen.
 
 Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense combat from stacking excessive simultaneous sounds.
 

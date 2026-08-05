@@ -13,6 +13,8 @@ interface MissionSfx {
   blast: () => void
   interactTick: () => void
   abilityCue: () => void
+  agentHit: () => void
+  threatLevel: (level: number) => void
 }
 
 let loaded: MissionSfx | null = null
@@ -51,5 +53,11 @@ export const missionSfx: MissionSfx = {
   },
   abilityCue() {
     loaded?.abilityCue()
+  },
+  agentHit() {
+    loaded?.agentHit()
+  },
+  threatLevel(level) {
+    loaded?.threatLevel(level)
   },
 }
