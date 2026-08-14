@@ -92,13 +92,14 @@ Every surface uses the same near-black, teal, amber, and red command language. B
 
 ### World
 
-The game begins on **2087.05.14** in a world divided into corporate spheres of influence. Cities change hands through trade, seizures, raids, unrest, and infrastructure failure. The player’s organization operates a secure global command network and deploys enhanced operatives on contracts for powerful corporate clients.
+The game begins on **2087.05.14** in a world divided into corporate spheres of influence. Cities change hands through trade, seizures, raids, unrest, and infrastructure failure. **Nexus Global** operates the player’s secure global command network, holds cities, and deploys enhanced operatives on internal directives and deniable contracts for powerful corporate clients.
 
 ### Player identity
 
 The player is framed as:
 
 - User: `OPS_DIRECTOR`
+- Organization: Nexus Global
 - Clearance: Executive
 - Network: secure corporate command interface
 - Tactical asset: `STRIKE TEAM 04`
@@ -110,14 +111,14 @@ The player is not an individual operative. They are the remote decision-maker wh
 | Organization or state | Strategic function | Visual color |
 |---|---|---|
 | Stratos Industries | City holder and contract client/faction | Cyan |
-| Nexus Global | City holder and corporate faction | Green |
+| Nexus Global | Player organization, city holder, and internal-directive issuer | Green |
 | Helix Corp | City holder and contract client/faction | Amber |
 | Omnicorp | City holder and CorpSec affiliation in Glass Veil | Muted teal-gray |
 | Sable Enterprises | Client for Glass Veil; no city holdings or strategic simulation identity | No faction color defined |
 | Contested | Map ownership state | Red |
 | Unknown | Unsurveyed map state | Dark teal |
 
-The player organization is not explicitly defined as one of the four city-holding corporations. “Nexus” appears as both a map faction and the repository identity, but the build does not formally state that the player serves Nexus Global.
+The player serves Nexus Global. It is both a city-holding corporation and a deniable-operations house: rival corporations can remain paying clients, while Nexus-signed generated work is presented as an internal directive.
 
 ### Tone
 
@@ -271,7 +272,7 @@ A sector that holds above **60 unrest** decays: every 6 world hours it loses 1�
 
 The world map contains 18 named cities. Each has a current corporate holder. A sector’s displayed corporate color is determined by which corporation holds the most cities in that sector; ties display as contested.
 
-Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Ownership still has no effect on research, prices, or tactical missions.
+Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Nexus-signed work is an internal directive and may target any city in the sector; an outside client is never paired with a Nexus-held city. An all-Nexus sector can only post internal work. Ownership still has no effect on research, prices, or tactical missions.
 
 ### 6.4 Dynamic world events
 
@@ -839,7 +840,7 @@ ETA is spent, not displayed: the debrief advances the strategic clock by the con
 **Generated contracts** (`src/game/contracts.ts`) keep the market stocked beside the authored three:
 
 - The world keeps up to 3 generated contracts open; a new one rolls every 2–6 world hours when below target, weighted toward sectors with high unrest or low control.
-- Parameters derive from the source sector: threat from its defense rating and garrison condition, reward from threat and the sector's influence weight (30,000–95,000 CR on a 500 CR grid), client from city ownership, type from seizure / extraction / sabotage (plus riot-linked suppression).
+- Parameters derive from the source sector: threat from its defense rating and garrison condition, reward from threat and the sector's influence weight (30,000–95,000 CR on a 500 CR grid), client from city ownership, type from seizure / extraction / sabotage (plus riot-linked suppression). Nexus-signed records derive an `INTERNAL` dossier directive; outside-client records only select non-Nexus-held cities.
 - Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.
 - Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.
 - Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.

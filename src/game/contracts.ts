@@ -76,6 +76,9 @@ export interface ContractSectorInput {
   garrison: GarrisonState
   weight: number
   client: CorpId
+  // Live city holders at the time of the roll. This is an input snapshot, not
+  // part of the serialized contract record.
+  ownership: Readonly<Record<string, CorpId>>
 }
 
 export interface RolledContract {
@@ -189,6 +192,26 @@ function pickSector(inputs: ContractSectorInput[], rng: RngCursor): ContractSect
 
 const REGULAR_TYPES: ContractType[] = ['SEIZURE', 'EXTRACTION', 'SABOTAGE']
 
+function citiesForClient(
+  sector: SectorId,
+  client: CorpId,
+  ownership: Readonly<Record<string, CorpId>>,
+): {
+  client: CorpId
+  cities: (typeof CITIES_BY_SECTOR)[string]
+} {
+  const cities = CITIES_BY_SECTOR[sector] ?? []
+  if (client === 'nexus') return { client, cities }
+  const outsideCities = cities.filter(
+    (city) => (ownership[city.id] ?? city.corp) !== 'nexus',
+  )
+  // An all-Nexus sector can only issue internal work, even if a stale caller
+  // supplies an outside client.
+  return outsideCities.length > 0
+    ? { client, cities: outsideCities }
+    : { client: 'nexus', cities }
+}
+
 function finishContract(
   input: ContractSectorInput,
   t: number,
@@ -196,7 +219,7 @@ function finishContract(
   rng: RngCursor,
 ): RolledContract {
   const type: ContractType = priority ? 'SUPPRESSION' : pick(REGULAR_TYPES, rng)
-  const cities = CITIES_BY_SECTOR[input.sector] ?? []
+  const { client, cities } = citiesForClient(input.sector, input.client, input.ownership)
   const city = pick(cities, rng)
   const district = 2 + Math.floor(next(rng) * 28)
   const threat = contractThreat(input.defense, input.garrison)
@@ -214,7 +237,7 @@ function finishContract(
       cityId: city.id,
       district,
       type,
-      client: input.client,
+      client,
       threat,
       reward,
       seed,
@@ -271,6 +294,37 @@ export function rollSuppressionContract(
   return finishContract(input, t, true, rng)
 }
 
+// Re-client an open offer after ownership moves. Internal work may stay in any
+// city; outside work keeps its city unless that city is now Nexus-held. An
+// all-Nexus sector refuses an outside client. The market rng only advances
+// when a replacement city actually has to be selected.
+export function reclientContract(
+  contract: GeneratedContract,
+  client: CorpId,
+  ownership: Readonly<Record<string, CorpId>>,
+  state: number,
+): RolledContract {
+  const rng: RngCursor = { state }
+  const { client: resolvedClient, cities } = citiesForClient(
+    contract.sector,
+    client,
+    ownership,
+  )
+  const currentCity = cityById(contract.cityId)
+  const currentHolder = ownership[currentCity.id] ?? currentCity.corp
+  const cityId =
+    resolvedClient !== 'nexus' && currentHolder === 'nexus'
+      ? pick(cities, rng).id
+      : contract.cityId
+  if (contract.client === resolvedClient && contract.cityId === cityId) {
+    return { contract, state: rng.state }
+  }
+  return {
+    contract: { ...contract, client: resolvedClient, cityId },
+    state: rng.state,
+  }
+}
+
 /* ----------------------------- mission derivation -------------------------- */
 
 // Word pools chosen so no pair reproduces an authored codename.
@@ -309,6 +363,38 @@ function pad2(n: number): string {
 }
 
 function briefingFor(c: GeneratedContract, city: string, district: string): string[] {
+  if (c.client === 'nexus') {
+    switch (c.type) {
+      case 'SEIZURE':
+        return [
+          `CorpSec has sealed ${district} of ${city} behind a checkpoint on the main avenue.`,
+          'The board orders the district opened before the next transfer window.',
+          'Insert on the south perimeter and push north to the gate.',
+          'The checkpoint garrison holds the plaza. Expect armed response.',
+        ]
+      case 'SUPPRESSION':
+        return [
+          `Riots have overrun ${district} of ${city} and the local garrison lost the streets.`,
+          'The board authorizes a premium response to restore order before the exchanges open.',
+          'Insert on the south perimeter and break the armed cordon at the checkpoint.',
+          'The cordon reads as CorpSec garrison on the grid. Expect hard contact.',
+        ]
+      case 'EXTRACTION':
+        return [
+          `A defecting specialist sits in a CorpSec detention compound in ${district}.`,
+          'The board orders the asset moved before CorpSec transfers the block.',
+          'Breach the compound, override the cell block locks, and walk the asset out.',
+          'The asset must arrive alive. Keep them clear of the crossfire.',
+        ]
+      case 'SABOTAGE':
+        return [
+          `The board has flagged a relay yard feeding the ${city} security grid.`,
+          `Three fuel relays sit behind the yard fence in ${district}.`,
+          'Drop the relays and withdraw before CorpSec closes the gates.',
+          'The yard guard can be bypassed on the way in.',
+        ]
+    }
+  }
   const client = CORPS[c.client].name
   switch (c.type) {
     case 'SEIZURE':
@@ -417,7 +503,7 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     district,
     sector: contract.sector,
     type: contract.type,
-    client: CORPS[contract.client].name,
+    client: contract.client === 'nexus' ? 'INTERNAL' : CORPS[contract.client].name,
     threat: contract.threat,
     reward: contract.reward,
     etaDays: CONTRACT_ETA_DAYS[contract.threat],

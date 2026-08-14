@@ -1,6 +1,6 @@
 # Nexus Reborn
 
-Browser remake of Syndicate: React 19 + Vite for the DOM screens, react-three-fiber on the three.js WebGPU renderer for the mission scene, zustand for state. `inspiration/*.png` are the art reference the screens are matched against.
+Browser game inspired by Syndicate: React 19 + Vite for the DOM screens, react-three-fiber on the three.js WebGPU renderer for the mission scene, zustand for state. `inspiration/*.png` are the art reference the screens are matched against.
 
 Design: [`docs/game-design.md`](docs/game-design.md) — economy, contracts, research tree, or mission rules. Code wins when they disagree.
 

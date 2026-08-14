@@ -152,7 +152,10 @@ export function MainMenu() {
       </header>
       <div className="menu-center">
         <div className="menu-rule" aria-hidden="true" />
-        <h1 className="menu-wordmark">SYNDICATE</h1>
+        <h1 className="menu-wordmark" aria-label="Nexus Reborn">
+          <span>NEXUS</span>
+          <span>REBORN</span>
+        </h1>
         <div className="menu-tagline">CORPORATE GEOSTRATEGIC COMMAND INTERFACE</div>
         <div className="menu-rule" aria-hidden="true" />
         <div className="menu-actions">
@@ -203,7 +206,7 @@ export function MainMenu() {
       <footer className="menu-foot">
         <span>VER 7.2.1 // BUILD 2087.05.14</span>
         <span className="dim">UNAUTHORIZED ACCESS IS A CLASS-1 CORPORATE OFFENSE</span>
-        <span>USER: OPS_DIRECTOR // CLEARANCE: EXECUTIVE</span>
+        <span>USER: OPS_DIRECTOR // NEXUS GLOBAL // CLEARANCE: EXECUTIVE</span>
       </footer>
     </div>
   )
@@ -310,7 +313,7 @@ export function MissionBrief() {
       <header className="mb-head">
         <h1 className="screen-title">MISSION BRIEF</h1>
         <div className="mb-head-right">
-          <Chip tone="dim">CORPSEC OPS TERMINAL // V7.2.1</Chip>
+          <Chip tone="dim">NEXUS GLOBAL // OPS</Chip>
           <Chip tone="dim">DATETIME: 2087.05.14 {clock}</Chip>
           <Chip tone="dim">USER: OPS_DIRECTOR</Chip>
           <Chip tone="teal">SECURE CH 7A</Chip>
@@ -697,7 +700,7 @@ export function MissionBrief() {
                       <div className="value">{m.type}</div>
                     </div>
                     <div className="field">
-                      <label>CLIENT:</label>
+                      <label>{m.client === 'INTERNAL' ? 'DIRECTIVE:' : 'CLIENT:'}</label>
                       <div className="value">{m.client}</div>
                     </div>
                   </div>
