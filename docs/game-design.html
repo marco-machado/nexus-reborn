@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html lang="en" class="s-text-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS REBORN — Game Design Document & System Specification</title>
+  <!-- Mermaid.js for flowchart rendering with dark theme -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.mermaid) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'dark',
+          themeVariables: {
+            darkMode: true,
+            background: '#07100f',
+            primaryColor: '#0a1412',
+            primaryTextColor: '#7ef0d4',
+            primaryBorderColor: '#7ef0d4',
+            lineColor: '#59d6c9',
+            secondaryColor: '#0d1a18',
+            tertiaryColor: '#04070a',
+            fontFamily: "'SF Mono', ui-monospace, Menlo, Consolas, monospace"
+          }
+        });
+      }
+    });
+  </script>
+  <style>
+    /* =========================================================================
+       NEXUS REBORN DESIGN SYSTEM TOKENS & CYBERPUNK PALETTE
+       ========================================================================= */
+    :root {
+      --bg: #04070a;
+      --bg-panel: rgba(7, 16, 15, 0.94);
+      --bg-panel-solid: #0a1412;
+      --bg-panel-elevated: #0f1f1c;
+      --bg-inset: rgba(4, 10, 9, 0.95);
+      --ink: #b8d8cf;
+      --ink-bright: #e6f7f2;
+      --ink-dim: #5d7d75;
+      --ink-faint: #35504a;
+      --teal: #7ef0d4;
+      --cyan: #59d6c9;
+      --amber: #f0b445;
+      --amber-hot: #ffd075;
+      --red: #e04b3c;
+      --red-hot: #ff6b55;
+      --green: #7de08a;
+      --line: rgba(126, 240, 212, 0.20);
+      --line-strong: rgba(126, 240, 212, 0.45);
+      --line-amber: rgba(240, 180, 69, 0.55);
+      --line-red: rgba(224, 75, 60, 0.55);
+      --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, 'Cascadia Mono', 'Roboto Mono', Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --text-scale: 1;
+      --sidebar-width: 320px;
+      --header-height: 56px;
+      --glow-teal: 0 0 16px rgba(126, 240, 212, 0.25);
+      --glow-amber: 0 0 16px rgba(240, 180, 69, 0.25);
+      --glow-red: 0 0 16px rgba(224, 75, 60, 0.25);
+    }
+
+    html.s-text-90  { --text-scale: 0.9; }
+    html.s-text-100 { --text-scale: 1.0; }
+    html.s-text-110 { --text-scale: 1.1; }
+    html.s-text-125 { --text-scale: 1.25; }
+
+    html.s-high-contrast {
+      --ink: #e2f6ee;
+      --ink-bright: #ffffff;
+      --ink-dim: #9dc3b8;
+      --ink-faint: #6d938a;
+      --line: rgba(126, 240, 212, 0.42);
+      --line-strong: rgba(126, 240, 212, 0.72);
+      --line-amber: rgba(240, 180, 69, 0.8);
+      --bg-panel: rgba(10, 22, 20, 0.98);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: calc(13.5px * var(--text-scale));
+      line-height: 1.68;
+      letter-spacing: 0.035em;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Selection */
+    ::selection {
+      background: var(--teal);
+      color: var(--bg);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--ink-faint);
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--teal);
+    }
+
+    /* Reading Progress Bar */
+    .reading-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--teal) 0%, var(--amber) 100%);
+      width: 0%;
+      z-index: 10000;
+      transition: width 0.1s ease;
+      box-shadow: 0 0 8px var(--teal);
+    }
+
+    /* Scanline Overlay */
+    .crt-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(0, 0, 0, 0.04) 3px
+      );
+      mix-blend-mode: multiply;
+      transition: opacity 0.3s ease;
+    }
+    .crt-overlay.disabled {
+      opacity: 0;
+    }
+
+    /* Top Command Bar */
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.15em;
+      text-decoration: none;
+    }
+    .brand-logo .logo-icon {
+      font-size: 16px;
+      color: var(--amber);
+      animation: pulse-slow 3s infinite;
+    }
+
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--ink-dim);
+      border-left: 1px solid var(--line);
+      padding-left: 12px;
+    }
+
+    .status-pill-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--green);
+      background: rgba(125, 224, 138, 0.1);
+      border: 1px solid rgba(125, 224, 138, 0.3);
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+    }
+    .status-pill-live .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-header {
+      background: var(--bg-inset);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      border-radius: 2px;
+    }
+    .btn-header:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+      box-shadow: var(--glow-teal);
+    }
+    .btn-header.active {
+      background: rgba(126, 240, 212, 0.12);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .search-input-header {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      color: var(--ink-bright);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 6px 12px;
+      width: 220px;
+      border-radius: 2px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .search-input-header:focus {
+      border-color: var(--teal);
+      width: 280px;
+      box-shadow: var(--glow-teal);
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      margin-top: var(--header-height);
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    /* Left Sticky Sidebar */
+    .app-sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-panel-solid);
+      border-right: 1px solid var(--line);
+      position: sticky;
+      top: var(--header-height);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 900;
+    }
+
+    .toc-wrapper {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .toc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+    .toc-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.12em;
+    }
+    .toc-count {
+      font-size: 10px;
+      color: var(--ink-dim);
+    }
+
+    .toc-filter-box {
+      margin-bottom: 12px;
+    }
+    .toc-filter-input {
+      width: 100%;
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 2px;
+      outline: none;
+    }
+    .toc-filter-input:focus {
+      border-color: var(--teal);
+    }
+
+    .toc-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--ink-dim);
+      font-size: 11.5px;
+      padding: 6px 8px;
+      border-radius: 2px;
+      transition: all 0.12s ease;
+      line-height: 1.35;
+    }
+    .toc-link:hover {
+      color: var(--teal);
+      background: rgba(126, 240, 212, 0.06);
+    }
+    .toc-link.active {
+      color: var(--teal);
+      background: rgba(126, 240, 212, 0.12);
+      border-left: 2px solid var(--teal);
+      font-weight: 600;
+    }
+
+    .toc-level-1 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-bright);
+      margin-top: 4px;
+    }
+    .toc-level-2 {
+      font-size: 11.5px;
+      padding-left: 14px;
+      color: var(--ink);
+    }
+    .toc-level-3 {
+      font-size: 10.5px;
+      padding-left: 26px;
+      color: var(--ink-dim);
+    }
+
+    .toc-bullet { color: var(--amber); }
+    .toc-num { color: var(--teal); font-size: 10px; }
+    .toc-dot { color: var(--ink-faint); }
+
+    /* Main Content Area */
+    .app-main {
+      flex: 1;
+      max-width: calc(100vw - var(--sidebar-width));
+      padding: 36px 48px 100px;
+      background: var(--bg);
+    }
+
+    .content-container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Executive Hero Card */
+    .hero-panel {
+      background: linear-gradient(135deg, rgba(7, 16, 15, 0.95) 0%, rgba(10, 24, 22, 0.95) 100%);
+      border: 1px solid var(--line-strong);
+      border-left: 4px solid var(--teal);
+      padding: 28px 32px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    .hero-panel::before {
+      content: "NEXUS // SYS_SPEC_2087";
+      position: absolute;
+      right: 20px;
+      top: 14px;
+      font-size: 10px;
+      color: var(--ink-faint);
+      letter-spacing: 0.2em;
+    }
+
+    .hero-tagline {
+      color: var(--amber);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .hero-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink-bright);
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .hero-desc {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 820px;
+      margin-bottom: 20px;
+    }
+
+    .hero-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .stat-box {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      padding: 10px 14px;
+      border-radius: 2px;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: var(--ink-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .stat-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--teal);
+      margin-top: 2px;
+    }
+
+    /* Filter Bar inside Main */
+    .filter-pills-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 30px;
+      padding: 12px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+    }
+    .filter-pills-label {
+      font-size: 10.5px;
+      color: var(--ink-dim);
+      letter-spacing: 0.1em;
+      margin-right: 6px;
+    }
+    .filter-pill {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      padding: 4px 10px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+    .filter-pill:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .filter-pill.active {
+      background: rgba(126, 240, 212, 0.15);
+      border-color: var(--teal);
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    /* Headings */
+    .gdd-h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.08em;
+      margin: 48px 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line-strong);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .gdd-h1 .h-indicator {
+      color: var(--amber);
+      font-size: 18px;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, var(--line-strong) 0%, rgba(126, 240, 212, 0.05) 100%);
+      margin: 56px 0 24px;
+    }
+
+    .gdd-h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink-bright);
+      letter-spacing: 0.06em;
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .gdd-h2 .h-badge {
+      background: rgba(126, 240, 212, 0.12);
+      border: 1px solid var(--line);
+      color: var(--teal);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 2px;
+      letter-spacing: 0.1em;
+    }
+
+    .gdd-h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--cyan);
+      margin: 24px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .gdd-h3 .h3-diamond {
+      color: var(--amber);
+      font-size: 11px;
+    }
+
+    .gdd-h4 {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--amber-hot);
+      margin: 18px 0 8px;
+    }
+
+    /* Paragraphs & Typography */
+    .gdd-p {
+      margin-bottom: 16px;
+      color: var(--ink);
+    }
+
+    .gdd-hr {
+      border: none;
+      height: 1px;
+      background: var(--line);
+      margin: 36px 0;
+    }
+
+    .gdd-quote {
+      border-left: 3px solid var(--amber);
+      background: rgba(240, 180, 69, 0.05);
+      padding: 14px 20px;
+      margin: 20px 0;
+      color: var(--amber-hot);
+      font-style: italic;
+    }
+
+    /* Lists */
+    .gdd-ul, .gdd-ol {
+      margin: 12px 0 20px 24px;
+      color: var(--ink);
+    }
+    .gdd-ul li, .gdd-ol li {
+      margin-bottom: 8px;
+      line-height: 1.55;
+    }
+    .gdd-ul li::marker {
+      color: var(--teal);
+    }
+    .gdd-ol li::marker {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 20px 0 28px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .gdd-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+    .gdd-table th {
+      background: var(--bg-panel-solid);
+      color: var(--teal);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+    .gdd-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .gdd-table tr:hover td {
+      background: rgba(126, 240, 212, 0.04);
+      color: var(--ink-bright);
+    }
+
+    /* Badges & Status Tags */
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 7px;
+      border-radius: 2px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+    .status-tag .tag-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .tag-impl {
+      background: rgba(126, 240, 212, 0.12);
+      border: 1px solid rgba(126, 240, 212, 0.4);
+      color: var(--teal);
+    }
+    .tag-impl .tag-dot { background: var(--teal); box-shadow: 0 0 4px var(--teal); }
+
+    .tag-scaff {
+      background: rgba(240, 180, 69, 0.12);
+      border: 1px solid rgba(240, 180, 69, 0.4);
+      color: var(--amber);
+    }
+    .tag-scaff .tag-dot { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+
+    .tag-recom {
+      background: rgba(89, 214, 201, 0.08);
+      border: 1px solid rgba(89, 214, 201, 0.3);
+      color: var(--cyan);
+    }
+    .tag-recom .tag-dot { background: var(--cyan); }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      font-size: 10.5px;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+    }
+    .badge-implemented {
+      background: rgba(125, 224, 138, 0.15);
+      border: 1px solid rgba(125, 224, 138, 0.4);
+      color: var(--green);
+    }
+    .badge-scaffolded {
+      background: rgba(240, 180, 69, 0.15);
+      border: 1px solid rgba(240, 180, 69, 0.4);
+      color: var(--amber);
+    }
+    .badge-recommended {
+      background: rgba(224, 75, 60, 0.15);
+      border: 1px solid rgba(224, 75, 60, 0.4);
+      color: var(--red-hot);
+    }
+
+    /* Interactive Component Cards */
+    .interactive-module-card {
+      background: var(--bg-panel-solid);
+      border: 1px solid var(--line-strong);
+      padding: 22px;
+      margin: 28px 0;
+      border-radius: 2px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+    .module-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+    .module-tag {
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      color: var(--amber);
+    }
+    .module-title {
+      font-size: 15px;
+      color: var(--teal);
+      letter-spacing: 0.08em;
+    }
+
+    /* Tech Trees */
+    .tech-branches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .tech-branch-col {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      padding: 14px;
+      border-radius: 2px;
+    }
+    .branch-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    .branch-ballistics { color: var(--red-hot); }
+    .branch-cyber { color: var(--teal); }
+    .branch-control { color: var(--amber); }
+
+    .branch-nodes {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tech-node {
+      background: var(--bg-panel);
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      border-radius: 2px;
+      font-size: 11px;
+      transition: all 0.15s ease;
+    }
+    .tech-node:hover {
+      border-color: var(--teal);
+      box-shadow: var(--glow-teal);
+    }
+    .tn-capstone {
+      border-color: var(--line-amber);
+      background: rgba(240, 180, 69, 0.05);
+    }
+    .tn-name {
+      font-weight: 700;
+      color: var(--ink-bright);
+    }
+    .tn-meta {
+      font-size: 10px;
+      color: var(--ink-dim);
+      margin: 2px 0;
+    }
+    .tn-fx {
+      font-size: 10px;
+      color: var(--teal);
+    }
+
+    /* Roster Grid */
+    .roster-interactive-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .op-card {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      padding: 12px;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+    .op-card:hover {
+      border-color: var(--teal);
+    }
+    .op-card-inj {
+      border-color: var(--line-amber);
+      background: rgba(240, 180, 69, 0.03);
+    }
+    .op-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .op-badge-ready {
+      background: rgba(125, 224, 138, 0.15);
+      border: 1px solid rgba(125, 224, 138, 0.4);
+      color: var(--green);
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    .op-badge-inj {
+      background: rgba(240, 180, 69, 0.15);
+      border: 1px solid rgba(240, 180, 69, 0.4);
+      color: var(--amber);
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    .op-role {
+      font-size: 9.5px;
+      color: var(--teal);
+      letter-spacing: 0.1em;
+    }
+    .op-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-bright);
+    }
+    .op-realname {
+      font-size: 11px;
+      color: var(--ink-dim);
+      font-weight: 400;
+    }
+    .op-stats {
+      margin: 8px 0;
+    }
+    .op-stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--ink-dim);
+      margin-top: 4px;
+    }
+    .stat-bar-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 1px;
+      margin-top: 2px;
+      overflow: hidden;
+    }
+    .stat-bar-fill {
+      height: 100%;
+      background: var(--teal);
+    }
+    .stat-bar-fill.spd {
+      background: var(--cyan);
+    }
+    .op-weapons {
+      font-size: 10.5px;
+      color: var(--ink);
+      margin: 6px 0;
+    }
+    .op-ability, .op-passive {
+      font-size: 10px;
+      color: var(--ink-dim);
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+
+    /* Sector Grid */
+    .sector-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .sector-card {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      padding: 14px;
+      border-radius: 2px;
+    }
+    .sector-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 6px;
+    }
+    .sector-name {
+      font-weight: 700;
+      color: var(--ink-bright);
+      font-size: 13px;
+    }
+    .sector-wt {
+      font-size: 10px;
+      color: var(--teal);
+    }
+    .sector-meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--ink-dim);
+      margin-top: 6px;
+    }
+    .val-teal { color: var(--teal); font-weight: 700; }
+    .val-amber { color: var(--amber); font-weight: 700; }
+    .meter-track {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 1px;
+      margin-top: 2px;
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      background: var(--teal);
+    }
+    .meter-fill.unrest {
+      background: var(--amber);
+    }
+    .sector-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .btn-sec-action {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      padding: 5px 0;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+    .btn-sec-action:hover {
+      border-color: var(--amber);
+      color: var(--amber-hot);
+    }
+
+    /* Fallback Visual Flowchart */
+    .mermaid-fallback {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--line);
+    }
+    .flow-step {
+      background: var(--bg-inset);
+      border: 1px solid var(--line-strong);
+      padding: 6px 12px;
+      border-radius: 2px;
+      font-size: 11px;
+      color: var(--ink-bright);
+    }
+    .flow-step.active-mission {
+      border-color: var(--amber);
+      color: var(--amber-hot);
+      box-shadow: var(--glow-amber);
+    }
+    .flow-arrow {
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    /* Code Blocks */
+    .code-block-wrapper {
+      background: var(--bg-inset);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      margin: 18px 0 24px;
+      overflow: hidden;
+    }
+    .code-header {
+      background: var(--bg-panel-solid);
+      border-bottom: 1px solid var(--line);
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .code-lang {
+      font-size: 10px;
+      color: var(--ink-dim);
+      letter-spacing: 0.1em;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      padding: 2px 8px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .copy-btn:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    pre {
+      padding: 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--ink-bright);
+    }
+    code {
+      font-family: var(--font-mono);
+    }
+    p code, li code, td code {
+      background: rgba(126, 240, 212, 0.08);
+      border: 1px solid rgba(126, 240, 212, 0.25);
+      color: var(--teal);
+      padding: 1px 5px;
+      border-radius: 2px;
+      font-size: 12px;
+    }
+
+    /* Flowcharts */
+    .flowchart-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--line-strong);
+      padding: 20px;
+      margin: 24px 0;
+      border-radius: 2px;
+    }
+    .flowchart-title {
+      font-size: 11px;
+      color: var(--amber);
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Links */
+    .gdd-link {
+      color: var(--teal);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .gdd-link:hover {
+      color: var(--amber);
+    }
+
+    /* Back to top floating button */
+    .btn-back-to-top {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-panel-solid);
+      color: var(--teal);
+      border: 1px solid var(--line-strong);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s ease;
+      z-index: 1000;
+    }
+    .btn-back-to-top:hover {
+      background: var(--teal);
+      color: var(--bg);
+      box-shadow: var(--glow-teal);
+    }
+
+    /* Search Highlighting */
+    mark.highlight {
+      background: var(--amber);
+      color: var(--bg);
+      padding: 1px 3px;
+      border-radius: 2px;
+      font-weight: 600;
+    }
+
+    /* Animations */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Print Styles */
+    @media print {
+      .app-header, .app-sidebar, .btn-back-to-top, .crt-overlay, .filter-pills-bar, .reading-progress-bar {
+        display: none !important;
+      }
+      .app-container {
+        margin-top: 0;
+      }
+      .app-main {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #111111 !important;
+      }
+      .gdd-h1, .gdd-h2, .gdd-h3, .gdd-h4 {
+        color: #000000 !important;
+      }
+      .table-container {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+      }
+      .gdd-table th {
+        background: #eee !important;
+        color: #000 !important;
+      }
+      .gdd-table td {
+        color: #222 !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .app-sidebar {
+        display: none;
+      }
+      .app-main {
+        max-width: 100%;
+        padding: 24px 20px 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Reading Progress Bar -->
+  <div class="reading-progress-bar" id="progressBar"></div>
+
+  <!-- Scanline CRT Overlay -->
+  <div class="crt-overlay" id="crtOverlay"></div>
+
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <a href="#" class="brand-logo">
+        <span class="logo-icon">◈</span>
+        <span>NEXUS REBORN</span>
+      </a>
+      <div class="brand-meta">
+        <span>GDD SPECIFICATION</span>
+        <span>REV: c248aa2</span>
+        <div class="status-pill-live">
+          <span class="dot"></span>
+          <span>CLEARANCE: EXEC-04</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <input type="text" id="docSearch" placeholder="Search full specification..." class="search-input-header" oninput="handleDocSearch(this.value)" />
+      <button class="btn-header" onclick="adjustTextScale(-1)" title="Decrease Text Size">A-</button>
+      <button class="btn-header" onclick="adjustTextScale(1)" title="Increase Text Size">A+</button>
+      <button class="btn-header" id="crtToggleBtn" onclick="toggleCrt()" title="Toggle Scanlines">CRT: ON</button>
+      <button class="btn-header" id="contrastToggleBtn" onclick="toggleContrast()" title="Toggle High Contrast">CONTRAST</button>
+      <button class="btn-header" onclick="window.print()" title="Print or Export to PDF">🖨️ PRINT / PDF</button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <!-- Sticky TOC Sidebar -->
+    <aside class="app-sidebar">
+      
+<div class="toc-wrapper">
+  <div class="toc-header">
+    <span class="toc-title">SYSTEM MATRIX // TOC</span>
+    <span class="toc-count">111 NODES</span>
+  </div>
+  <div class="toc-filter-box">
+    <input type="text" id="tocFilter" placeholder="Filter sections..." class="toc-filter-input" onkeyup="filterToc(this.value)" />
+  </div>
+  <nav class="toc-nav" id="tocNav"><a href="#nexus-reborn-game-design-document" class="toc-link toc-level-1" data-id="nexus-reborn-game-design-document"><span class="toc-bullet">◈</span> Nexus Reborn — Game Design Document</a><a href="#1-document-purpose" class="toc-link toc-level-2" data-id="1-document-purpose"><span class="toc-num">§</span> 1. Document purpose</a><a href="#2-executive-summary" class="toc-link toc-level-2" data-id="2-executive-summary"><span class="toc-num">§</span> 2. Executive summary</a><a href="#high-concept" class="toc-link toc-level-3" data-id="high-concept"><span class="toc-dot">›</span> High concept</a><a href="#product-definition" class="toc-link toc-level-3" data-id="product-definition"><span class="toc-dot">›</span> Product definition</a><a href="#player-promise" class="toc-link toc-level-3" data-id="player-promise"><span class="toc-dot">›</span> Player promise</a><a href="#3-design-pillars" class="toc-link toc-level-2" data-id="3-design-pillars"><span class="toc-num">§</span> 3. Design pillars</a><a href="#3-1-command-do-not-micromanage" class="toc-link toc-level-3" data-id="3-1-command-do-not-micromanage"><span class="toc-dot">›</span> 3.1 Command, do not micromanage</a><a href="#3-2-information-is-operational-power" class="toc-link toc-level-3" data-id="3-2-information-is-operational-power"><span class="toc-dot">›</span> 3.2 Information is operational power</a><a href="#3-3-violence-has-corporate-consequences" class="toc-link toc-level-3" data-id="3-3-violence-has-corporate-consequences"><span class="toc-dot">›</span> 3.3 Violence has corporate consequences</a><a href="#3-4-the-strategic-and-tactical-layers-feed-each-other" class="toc-link toc-level-3" data-id="3-4-the-strategic-and-tactical-layers-feed-each-other"><span class="toc-dot">›</span> 3.4 The strategic and tactical layers feed each other</a><a href="#3-5-a-cohesive-corporate-terminal-fantasy" class="toc-link toc-level-3" data-id="3-5-a-cohesive-corporate-terminal-fantasy"><span class="toc-dot">›</span> 3.5 A cohesive corporate-terminal fantasy</a><a href="#4-setting-tone-and-narrative-frame" class="toc-link toc-level-2" data-id="4-setting-tone-and-narrative-frame"><span class="toc-num">§</span> 4. Setting, tone, and narrative frame</a><a href="#world" class="toc-link toc-level-3" data-id="world"><span class="toc-dot">›</span> World</a><a href="#player-identity" class="toc-link toc-level-3" data-id="player-identity"><span class="toc-dot">›</span> Player identity</a><a href="#corporations-and-clients" class="toc-link toc-level-3" data-id="corporations-and-clients"><span class="toc-dot">›</span> Corporations and clients</a><a href="#tone" class="toc-link toc-level-3" data-id="tone"><span class="toc-dot">›</span> Tone</a><a href="#narrative-delivery" class="toc-link toc-level-3" data-id="narrative-delivery"><span class="toc-dot">›</span> Narrative delivery</a><a href="#5-game-structure" class="toc-link toc-level-2" data-id="5-game-structure"><span class="toc-num">§</span> 5. Game structure</a><a href="#screen-and-state-flow" class="toc-link toc-level-3" data-id="screen-and-state-flow"><span class="toc-dot">›</span> Screen and state flow</a><a href="#current-flow-rules" class="toc-link toc-level-3" data-id="current-flow-rules"><span class="toc-dot">›</span> Current flow rules</a><a href="#core-loops" class="toc-link toc-level-3" data-id="core-loops"><span class="toc-dot">›</span> Core loops</a><a href="#6-strategic-layer" class="toc-link toc-level-2" data-id="6-strategic-layer"><span class="toc-num">§</span> 6. Strategic layer</a><a href="#6-1-world-clock" class="toc-link toc-level-3" data-id="6-1-world-clock"><span class="toc-dot">›</span> 6.1 World clock</a><a href="#6-2-continental-sectors" class="toc-link toc-level-3" data-id="6-2-continental-sectors"><span class="toc-dot">›</span> 6.2 Continental sectors</a><a href="#6-3-city-ownership" class="toc-link toc-level-3" data-id="6-3-city-ownership"><span class="toc-dot">›</span> 6.3 City ownership</a><a href="#6-4-dynamic-world-events" class="toc-link toc-level-3" data-id="6-4-dynamic-world-events"><span class="toc-dot">›</span> 6.4 Dynamic world events</a><a href="#6-5-intel-and-contract-access" class="toc-link toc-level-3" data-id="6-5-intel-and-contract-access"><span class="toc-dot">›</span> 6.5 Intel and contract access</a><a href="#7-economy-and-progression" class="toc-link toc-level-2" data-id="7-economy-and-progression"><span class="toc-num">§</span> 7. Economy and progression</a><a href="#7-1-credits" class="toc-link toc-level-3" data-id="7-1-credits"><span class="toc-dot">›</span> 7.1 Credits</a><a href="#7-2-collateral-penalty" class="toc-link toc-level-3" data-id="7-2-collateral-penalty"><span class="toc-dot">›</span> 7.2 Collateral penalty</a><a href="#7-3-progression-model" class="toc-link toc-level-3" data-id="7-3-progression-model"><span class="toc-dot">›</span> 7.3 Progression model</a><a href="#7-4-influence-economy" class="toc-link toc-level-3" data-id="7-4-influence-economy"><span class="toc-dot">›</span> 7.4 Influence economy</a><a href="#8-research-program" class="toc-link toc-level-2" data-id="8-research-program"><span class="toc-num">§</span> 8. Research program</a><a href="#8-1-research-rules" class="toc-link toc-level-3" data-id="8-1-research-rules"><span class="toc-dot">›</span> 8.1 Research rules</a><a href="#8-2-ballistics-248-000-cr-total" class="toc-link toc-level-3" data-id="8-2-ballistics-248-000-cr-total"><span class="toc-dot">›</span> 8.2 Ballistics — 248,000 CR total</a><a href="#8-3-cybernetics-261-000-cr-total" class="toc-link toc-level-3" data-id="8-3-cybernetics-261-000-cr-total"><span class="toc-dot">›</span> 8.3 Cybernetics — 261,000 CR total</a><a href="#8-4-control-systems-270-000-cr-total" class="toc-link toc-level-3" data-id="8-4-control-systems-270-000-cr-total"><span class="toc-dot">›</span> 8.4 Control Systems — 270,000 CR total</a><a href="#8-5-augmentation-presentation" class="toc-link toc-level-3" data-id="8-5-augmentation-presentation"><span class="toc-dot">›</span> 8.5 Augmentation presentation</a><a href="#9-operative-assembly" class="toc-link toc-level-2" data-id="9-operative-assembly"><span class="toc-num">§</span> 9. Operative assembly</a><a href="#9-1-squad-rules" class="toc-link toc-level-3" data-id="9-1-squad-rules"><span class="toc-dot">›</span> 9.1 Squad rules</a><a href="#9-2-operative-roster" class="toc-link toc-level-3" data-id="9-2-operative-roster"><span class="toc-dot">›</span> 9.2 Operative roster</a><a href="#9-3-role-implementation-status" class="toc-link toc-level-3" data-id="9-3-role-implementation-status"><span class="toc-dot">›</span> 9.3 Role implementation status</a><a href="#9-4-deployment-mass" class="toc-link toc-level-3" data-id="9-4-deployment-mass"><span class="toc-dot">›</span> 9.4 Deployment mass</a><a href="#10-mission-briefing-and-contract-selection" class="toc-link toc-level-2" data-id="10-mission-briefing-and-contract-selection"><span class="toc-num">§</span> 10. Mission briefing and contract selection</a><a href="#briefing-purpose" class="toc-link toc-level-3" data-id="briefing-purpose"><span class="toc-dot">›</span> Briefing purpose</a><a href="#contract-acceptance" class="toc-link toc-level-3" data-id="contract-acceptance"><span class="toc-dot">›</span> Contract acceptance</a><a href="#11-tactical-mission-design" class="toc-link toc-level-2" data-id="11-tactical-mission-design"><span class="toc-num">§</span> 11. Tactical mission design</a><a href="#11-1-current-mission-space" class="toc-link toc-level-3" data-id="11-1-current-mission-space"><span class="toc-dot">›</span> 11.1 Current mission space</a><a href="#11-2-selection" class="toc-link toc-level-3" data-id="11-2-selection"><span class="toc-dot">›</span> 11.2 Selection</a><a href="#11-3-orders-and-stances" class="toc-link toc-level-3" data-id="11-3-orders-and-stances"><span class="toc-dot">›</span> 11.3 Orders and stances</a><a href="#11-4-movement-and-navigation" class="toc-link toc-level-3" data-id="11-4-movement-and-navigation"><span class="toc-dot">›</span> 11.4 Movement and navigation</a><a href="#11-5-camera" class="toc-link toc-level-3" data-id="11-5-camera"><span class="toc-dot">›</span> 11.5 Camera</a><a href="#11-6-enemy-perception" class="toc-link toc-level-3" data-id="11-6-enemy-perception"><span class="toc-dot">›</span> 11.6 Enemy perception</a><a href="#11-7-civilian-behavior" class="toc-link toc-level-3" data-id="11-7-civilian-behavior"><span class="toc-dot">›</span> 11.7 Civilian behavior</a><a href="#11-8-combat-model" class="toc-link toc-level-3" data-id="11-8-combat-model"><span class="toc-dot">›</span> 11.8 Combat model</a><a href="#11-9-weapons" class="toc-link toc-level-3" data-id="11-9-weapons"><span class="toc-dot">›</span> 11.9 Weapons</a><a href="#11-10-objectives" class="toc-link toc-level-3" data-id="11-10-objectives"><span class="toc-dot">›</span> 11.10 Objectives</a><a href="#11-11-win-and-loss" class="toc-link toc-level-3" data-id="11-11-win-and-loss"><span class="toc-dot">›</span> 11.11 Win and loss</a><a href="#12-current-content-catalogue" class="toc-link toc-level-2" data-id="12-current-content-catalogue"><span class="toc-num">§</span> 12. Current content catalogue</a><a href="#12-1-contracts" class="toc-link toc-level-3" data-id="12-1-contracts"><span class="toc-dot">›</span> 12.1 Contracts</a><a href="#12-2-glass-veil" class="toc-link toc-level-3" data-id="12-2-glass-veil"><span class="toc-dot">›</span> 12.2 Glass Veil</a><a href="#12-3-hollow-crown" class="toc-link toc-level-3" data-id="12-3-hollow-crown"><span class="toc-dot">›</span> 12.3 Hollow Crown</a><a href="#12-4-rust-haven" class="toc-link toc-level-3" data-id="12-4-rust-haven"><span class="toc-dot">›</span> 12.4 Rust Haven</a><a href="#13-user-interface-and-experience" class="toc-link toc-level-2" data-id="13-user-interface-and-experience"><span class="toc-num">§</span> 13. User interface and experience</a><a href="#13-1-interface-principles" class="toc-link toc-level-3" data-id="13-1-interface-principles"><span class="toc-dot">›</span> 13.1 Interface principles</a><a href="#13-2-main-surfaces" class="toc-link toc-level-3" data-id="13-2-main-surfaces"><span class="toc-dot">›</span> 13.2 Main surfaces</a><a href="#13-3-minimap" class="toc-link toc-level-3" data-id="13-3-minimap"><span class="toc-dot">›</span> 13.3 Minimap</a><a href="#13-4-pause-and-control-discovery" class="toc-link toc-level-3" data-id="13-4-pause-and-control-discovery"><span class="toc-dot">›</span> 13.4 Pause and control discovery</a><a href="#13-5-accessibility-status" class="toc-link toc-level-3" data-id="13-5-accessibility-status"><span class="toc-dot">›</span> 13.5 Accessibility status</a><a href="#14-controls" class="toc-link toc-level-2" data-id="14-controls"><span class="toc-num">§</span> 14. Controls</a><a href="#camera" class="toc-link toc-level-3" data-id="camera"><span class="toc-dot">›</span> Camera</a><a href="#squad" class="toc-link toc-level-3" data-id="squad"><span class="toc-dot">›</span> Squad</a><a href="#abilities" class="toc-link toc-level-3" data-id="abilities"><span class="toc-dot">›</span> Abilities</a><a href="#mouse" class="toc-link toc-level-3" data-id="mouse"><span class="toc-dot">›</span> Mouse</a><a href="#15-art-direction" class="toc-link toc-level-2" data-id="15-art-direction"><span class="toc-num">§</span> 15. Art direction</a><a href="#visual-identity" class="toc-link toc-level-3" data-id="visual-identity"><span class="toc-dot">›</span> Visual identity</a><a href="#tactical-scene" class="toc-link toc-level-3" data-id="tactical-scene"><span class="toc-dot">›</span> Tactical scene</a><a href="#units" class="toc-link toc-level-3" data-id="units"><span class="toc-dot">›</span> Units</a><a href="#effects" class="toc-link toc-level-3" data-id="effects"><span class="toc-dot">›</span> Effects</a><a href="#asset-strategy" class="toc-link toc-level-3" data-id="asset-strategy"><span class="toc-dot">›</span> Asset strategy</a><a href="#16-audio-direction" class="toc-link toc-level-2" data-id="16-audio-direction"><span class="toc-num">§</span> 16. Audio direction</a><a href="#current-audio" class="toc-link toc-level-3" data-id="current-audio"><span class="toc-dot">›</span> Current audio</a><a href="#current-limitations" class="toc-link toc-level-3" data-id="current-limitations"><span class="toc-dot">›</span> Current limitations</a><a href="#recommended-audio-goals" class="toc-link toc-level-3" data-id="recommended-audio-goals"><span class="toc-dot">›</span> Recommended audio goals</a><a href="#17-difficulty-and-balance" class="toc-link toc-level-2" data-id="17-difficulty-and-balance"><span class="toc-num">§</span> 17. Difficulty and balance</a><a href="#current-balance-model" class="toc-link toc-level-3" data-id="current-balance-model"><span class="toc-dot">›</span> Current balance model</a><a href="#economy-pressure" class="toc-link toc-level-3" data-id="economy-pressure"><span class="toc-dot">›</span> Economy pressure</a><a href="#recommended-difficulty-vectors" class="toc-link toc-level-3" data-id="recommended-difficulty-vectors"><span class="toc-dot">›</span> Recommended difficulty vectors</a><a href="#18-technical-design" class="toc-link toc-level-2" data-id="18-technical-design"><span class="toc-num">§</span> 18. Technical design</a><a href="#18-1-runtime-architecture" class="toc-link toc-level-3" data-id="18-1-runtime-architecture"><span class="toc-dot">›</span> 18.1 Runtime architecture</a><a href="#18-2-state-boundaries" class="toc-link toc-level-3" data-id="18-2-state-boundaries"><span class="toc-dot">›</span> 18.2 State boundaries</a><a href="#18-3-simulation-timing" class="toc-link toc-level-3" data-id="18-3-simulation-timing"><span class="toc-dot">›</span> 18.3 Simulation timing</a><a href="#18-4-rendering" class="toc-link toc-level-3" data-id="18-4-rendering"><span class="toc-dot">›</span> 18.4 Rendering</a><a href="#18-5-determinism" class="toc-link toc-level-3" data-id="18-5-determinism"><span class="toc-dot">›</span> 18.5 Determinism</a><a href="#18-6-browser-and-layout" class="toc-link toc-level-3" data-id="18-6-browser-and-layout"><span class="toc-dot">›</span> 18.6 Browser and layout</a><a href="#18-7-build-and-quality" class="toc-link toc-level-3" data-id="18-7-build-and-quality"><span class="toc-dot">›</span> 18.7 Build and quality</a><a href="#19-implemented-scaffolded-and-missing-systems" class="toc-link toc-level-2" data-id="19-implemented-scaffolded-and-missing-systems"><span class="toc-num">§</span> 19. Implemented, scaffolded, and missing systems</a><a href="#19-1-implemented-and-functional" class="toc-link toc-level-3" data-id="19-1-implemented-and-functional"><span class="toc-dot">›</span> 19.1 Implemented and functional</a><a href="#19-2-scaffolded-or-presentation-only" class="toc-link toc-level-3" data-id="19-2-scaffolded-or-presentation-only"><span class="toc-dot">›</span> 19.2 Scaffolded or presentation-only</a><a href="#19-3-missing-for-a-complete-campaign" class="toc-link toc-level-3" data-id="19-3-missing-for-a-complete-campaign"><span class="toc-dot">›</span> 19.3 Missing for a complete campaign</a><a href="#20-design-acceptance-criteria" class="toc-link toc-level-2" data-id="20-design-acceptance-criteria"><span class="toc-num">§</span> 20. Design acceptance criteria</a><a href="#campaign-loop" class="toc-link toc-level-3" data-id="campaign-loop"><span class="toc-dot">›</span> Campaign loop</a><a href="#mission-content" class="toc-link toc-level-3" data-id="mission-content"><span class="toc-dot">›</span> Mission content</a><a href="#squad-differentiation" class="toc-link toc-level-3" data-id="squad-differentiation"><span class="toc-dot">›</span> Squad differentiation</a><a href="#ux" class="toc-link toc-level-3" data-id="ux"><span class="toc-dot">›</span> UX</a><a href="#performance" class="toc-link toc-level-3" data-id="performance"><span class="toc-dot">›</span> Performance</a><a href="#21-telemetry" class="toc-link toc-level-2" data-id="21-telemetry"><span class="toc-num">§</span> 21. Telemetry</a><a href="#22-source-of-truth-map" class="toc-link toc-level-2" data-id="22-source-of-truth-map"><span class="toc-num">§</span> 22. Source-of-truth map</a><a href="#23-glossary" class="toc-link toc-level-2" data-id="23-glossary"><span class="toc-num">§</span> 23. Glossary</a><a href="#24-final-design-statement" class="toc-link toc-level-2" data-id="24-final-design-statement"><span class="toc-num">§</span> 24. Final design statement</a></nav></div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <div class="content-container">
+        <!-- Hero Executive Overview -->
+        <div class="hero-panel">
+          <div class="hero-tagline">CORPORATE TACTICAL DIRECTIVE // SYSTEM DESIGN SPECIFICATION</div>
+          <h1 class="hero-title">NEXUS REBORN — MASTER GDD</h1>
+          <p class="hero-desc">
+            A cyberpunk corporate strategy and real-time squad tactics simulation. Commanding a strike team of four enhanced operatives through procedural rain-drenched megacity districts, balancing corporate contracts, weapons research, civilian collateral liability, and global sector control.
+          </p>
+          <div class="hero-stats-grid">
+            <div class="stat-box">
+              <div class="stat-label">ENGINE & STACK</div>
+              <div class="stat-val">React 19 / R3F / WebGPU</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">TACTICAL UNITS</div>
+              <div class="stat-val">4 Operatives / 8 Roles</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">RESEARCH NODES</div>
+              <div class="stat-val">21 Projects (3 Labs)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">STRATEGIC SECTORS</div>
+              <div class="stat-val">6 Open / 18 Cities</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Pill Bar -->
+        <div class="filter-pills-bar">
+          <span class="filter-pills-label">QUICK VIEW FILTER:</span>
+          <button class="filter-pill active" onclick="filterSections('all')">ALL SECTIONS</button>
+          <button class="filter-pill" onclick="filterSections('impl')">IMPLEMENTED ONLY</button>
+          <button class="filter-pill" onclick="filterSections('scaff')">SCAFFOLDED</button>
+          <button class="filter-pill" onclick="filterSections('recom')">RECOMMENDED</button>
+          <button class="filter-pill" onclick="filterSections('tables')">DATA TABLES</button>
+        </div>
+
+        <!-- Document Content -->
+        <div id="documentBody">
+          <h1 id="nexus-reborn-game-design-document" class="gdd-h1"><span class="h-indicator">#</span> Nexus Reborn — Game Design Document</h1>
+<p class="gdd-p"><strong>Document type:</strong> Codebase-derived design specification  </p>
+<p class="gdd-p"><strong>Project version reviewed:</strong> <code>c248aa2</code>  </p>
+<p class="gdd-p"><strong>Review date:</strong> 2026-07-30  </p>
+<p class="gdd-p"><strong>Primary platform:</strong> Desktop web browser  </p>
+<p class="gdd-p"><strong>Current implementation:</strong> React 19, TypeScript, React Three Fiber, Three.js WebGPU/WebGL2, Zustand  </p>
+<div class="section-divider"></div>
+<h2 id="1-document-purpose" class="gdd-h2"><span class="h-badge">SEC</span> 1. Document purpose</h2>
+<p class="gdd-p">This document reconstructs the intended game from the current repository. It is both:</p>
+<ol class="gdd-ol">
+  <li>A source-of-truth description of the playable build.</li>
+  <li>A production guide for completing the larger game implied by the existing systems and interface.</li>
+</ol>
+<p class="gdd-p">The following labels distinguish evidence from recommendation:</p>
+<ul class="gdd-ul">
+  <li><strong>Implemented:</strong> Functional in the current build.</li>
+  <li><strong>Scaffolded:</strong> Represented in data or UI, but incomplete as a game system.</li>
+  <li><strong>Recommended:</strong> A proposed extension that closes an identified design gap.</li>
+</ul>
+<p class="gdd-p">Where code and decorative UI disagree, the simulation code is treated as authoritative.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="2-executive-summary" class="gdd-h2"><span class="h-badge">SEC</span> 2. Executive summary</h2>
+<h3 id="high-concept" class="gdd-h3"><span class="h3-diamond">◆</span> High concept</h3>
+<p class="gdd-p"><strong>Nexus Reborn</strong> is a cyberpunk corporate strategy and real-time tactics game in which the player acts as an executive operations director. From a global command network, the player monitors a changing corporate world, funds weapons and augmentation research, selects contracts, assembles a four-operative strike team, and commands that team through dangerous rain-soaked city districts.</p>
+<p class="gdd-p">The current build delivers a persistent three-contract campaign inside a broader strategic shell; all three contracts carry a full authored design across three district archetypes. Its most distinctive qualities are:</p>
+<ul class="gdd-ul">
+  <li>A dense, diegetic corporate command interface.</li>
+  <li>A four-operative real-time tactical control model.</li>
+  <li>Enemy awareness driven by sight, sound, investigation, and local alert propagation.</li>
+  <li>Civilian collateral as both a tactical risk and an economic penalty.</li>
+  <li>A strategic clock shared by world events and a 21-project research program.</li>
+  <li>A deterministic, procedural city and a no-external-assets production approach.</li>
+  <li>A saved campaign loop: outcomes move the world, intel opens contracts, injuries gate the roster.</li>
+</ul>
+<h3 id="product-definition" class="gdd-h3"><span class="h3-diamond">◆</span> Product definition</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Attribute</th><th style="text-align:left">Current definition</th></tr></thead><tbody><tr><td style="text-align:left">Genre</td><td style="text-align:left">Real-time squad tactics with a strategic management layer</td></tr><tr><td style="text-align:left">Perspective</td><td style="text-align:left">Fixed-angle isometric-style 3D camera</td></tr><tr><td style="text-align:left">Player role</td><td style="text-align:left">Corporate Operations Director / <code>OPS_DIRECTOR</code></td></tr><tr><td style="text-align:left">Setting</td><td style="text-align:left">Corporate-controlled near-future Earth, beginning 2087.05.14</td></tr><tr><td style="text-align:left">Core unit</td><td style="text-align:left">Four cybernetically enhanced operatives</td></tr><tr><td style="text-align:left">Input</td><td style="text-align:left">Keyboard and mouse</td></tr><tr><td style="text-align:left">Target display</td><td style="text-align:left">Desktop, minimum 1280×720</td></tr><tr><td style="text-align:left">Session structure</td><td style="text-align:left">Strategic planning → briefing → squad assembly → tactical mission → debrief</td></tr><tr><td style="text-align:left">Current content</td><td style="text-align:left">Three authored contracts plus a generated market, eight operatives, five weapons, 21 research projects</td></tr><tr><td style="text-align:left">Monetization</td><td style="text-align:left">None represented in the codebase</td></tr><tr><td style="text-align:left">Networking</td><td style="text-align:left">Single-player; no multiplayer systems represented</td></tr><tr><td style="text-align:left">Persistence</td><td style="text-align:left">Versioned localStorage autosave; tactical mission state stays memory-only</td></tr></tbody></table></div>
+<h3 id="player-promise" class="gdd-h3"><span class="h3-diamond">◆</span> Player promise</h3>
+<blockquote class="gdd-quote">Read a hostile corporate world, invest in the right technologies, deploy the right four-person team, and execute a precise operation where every shot can change both the firefight and the contract payout.</blockquote>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="3-design-pillars" class="gdd-h2"><span class="h-badge">SEC</span> 3. Design pillars</h2>
+<h3 id="3-1-command-do-not-micromanage" class="gdd-h3"><span class="h3-diamond">◆</span> 3.1 Command, do not micromanage</h3>
+<p class="gdd-p">The player directs a small team using selection groups, move and attack orders, and persistent tactical stances. Operatives automatically acquire visible targets when weapons are free, allowing the player to focus on positioning and tempo instead of issuing every shot.</p>
+<h3 id="3-2-information-is-operational-power" class="gdd-h3"><span class="h3-diamond">◆</span> 3.2 Information is operational power</h3>
+<p class="gdd-p">The interface exposes world unrest, corporate control, patrol routes, objective zones, enemy awareness, weapon state, and camera coverage. The intended skill is reading the situation quickly and making a small number of consequential orders.</p>
+<h3 id="3-3-violence-has-corporate-consequences" class="gdd-h3"><span class="h3-diamond">◆</span> 3.3 Violence has corporate consequences</h3>
+<p class="gdd-p">Combat is fast and noisy. Missed shots continue downrange and can strike other bodies. Civilian casualties are not merely flavor: the client deducts credits for every unique civilian hit by the squad.</p>
+<h3 id="3-4-the-strategic-and-tactical-layers-feed-each-other" class="gdd-h3"><span class="h3-diamond">◆</span> 3.4 The strategic and tactical layers feed each other</h3>
+<p class="gdd-p">Contract rewards fund research. Completed research changes deployed weapon and operative statistics. The world clock advances both the corporate world and the labs.</p>
+<p class="gdd-p">The loop now runs in both directions. Mission outcomes change sector control and unrest, post feed events, award intel, and unlock further contracts. City ownership is the one strategic value missions do not yet move.</p>
+<h3 id="3-5-a-cohesive-corporate-terminal-fantasy" class="gdd-h3"><span class="h3-diamond">◆</span> 3.5 A cohesive corporate-terminal fantasy</h3>
+<p class="gdd-p">Every surface uses the same near-black, teal, amber, and red command language. Briefings, squad assembly, research, the world map, the HUD, and the debrief should feel like different modules of one secure corporate operating system.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="4-setting-tone-and-narrative-frame" class="gdd-h2"><span class="h-badge">SEC</span> 4. Setting, tone, and narrative frame</h2>
+<h3 id="world" class="gdd-h3"><span class="h3-diamond">◆</span> World</h3>
+<p class="gdd-p">The game begins on <strong>2087.05.14</strong> in a world divided into corporate spheres of influence. Cities change hands through trade, seizures, raids, unrest, and infrastructure failure. The player’s organization operates a secure global command network and deploys enhanced operatives on contracts for powerful corporate clients.</p>
+<h3 id="player-identity" class="gdd-h3"><span class="h3-diamond">◆</span> Player identity</h3>
+<p class="gdd-p">The player is framed as:</p>
+<ul class="gdd-ul">
+  <li>User: <code>OPS_DIRECTOR</code></li>
+  <li>Clearance: Executive</li>
+  <li>Network: secure corporate command interface</li>
+  <li>Tactical asset: <code>STRIKE TEAM 04</code></li>
+</ul>
+<p class="gdd-p">The player is not an individual operative. They are the remote decision-maker who controls funding, mission acceptance, personnel selection, and battlefield orders.</p>
+<h3 id="corporations-and-clients" class="gdd-h3"><span class="h3-diamond">◆</span> Corporations and clients</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Organization or state</th><th style="text-align:left">Strategic function</th><th style="text-align:left">Visual color</th></tr></thead><tbody><tr><td style="text-align:left">Stratos Industries</td><td style="text-align:left">City holder and contract client/faction</td><td style="text-align:left">Cyan</td></tr><tr><td style="text-align:left">Nexus Global</td><td style="text-align:left">City holder and corporate faction</td><td style="text-align:left">Green</td></tr><tr><td style="text-align:left">Helix Corp</td><td style="text-align:left">City holder and contract client/faction</td><td style="text-align:left">Amber</td></tr><tr><td style="text-align:left">Omnicorp</td><td style="text-align:left">City holder and CorpSec affiliation in Glass Veil</td><td style="text-align:left">Muted teal-gray</td></tr><tr><td style="text-align:left">Sable Enterprises</td><td style="text-align:left">Client for Glass Veil; no city holdings or strategic simulation identity</td><td style="text-align:left">No faction color defined</td></tr><tr><td style="text-align:left"><span class="badge badge-recommended">Contested</span></td><td style="text-align:left">Map ownership state</td><td style="text-align:left">Red</td></tr><tr><td style="text-align:left">Unknown</td><td style="text-align:left">Unsurveyed map state</td><td style="text-align:left">Dark teal</td></tr></tbody></table></div>
+<p class="gdd-p">The player organization is not explicitly defined as one of the four city-holding corporations. “Nexus” appears as both a map faction and the repository identity, but the build does not formally state that the player serves Nexus Global.</p>
+<h3 id="tone" class="gdd-h3"><span class="h3-diamond">◆</span> Tone</h3>
+<ul class="gdd-ul">
+  <li>Cold, procedural, and corporate.</li>
+  <li>Tactical violence described through system logs and contract language.</li>
+  <li>Operatives communicate in short, professional acknowledgements.</li>
+  <li>Civilians and collateral keep the player’s actions morally and financially legible.</li>
+  <li>Visual drama comes from night, rain, neon, scanlines, warning states, and sparse bloom.</li>
+</ul>
+<h3 id="narrative-delivery" class="gdd-h3"><span class="h3-diamond">◆</span> Narrative delivery</h3>
+<p class="gdd-p">Narrative is currently delivered through:</p>
+<ul class="gdd-ul">
+  <li>Mission briefing copy.</li>
+  <li>World event feed.</li>
+  <li>Operative names, codenames, roles, and short biographies.</li>
+  <li>Research project descriptions.</li>
+  <li>In-mission comm log.</li>
+  <li>Objective updates.</li>
+  <li>Debrief statistics and payout adjustments.</li>
+</ul>
+<p class="gdd-p">There are no cutscenes, dialogue trees, character relationships, or campaign chapters in the current implementation.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="5-game-structure" class="gdd-h2"><span class="h-badge">SEC</span> 5. Game structure</h2>
+<h3 id="screen-and-state-flow" class="gdd-h3"><span class="h3-diamond">◆</span> Screen and state flow</h3>
+
+<div class="mermaid-container">
+  <div class="flowchart-box">
+    <div class="flowchart-title"><span class="flowchart-icon">◈</span> SCREEN & STATE FLOW ARCHITECTURE</div>
+    <div class="mermaid">flowchart LR
+    A[&quot;Main Menu&quot;] --&gt; B[&quot;World Network&quot;]
+    B &lt;--&gt; C[&quot;Research Division&quot;]
+    B --&gt; D[&quot;Mission Brief&quot;]
+    D --&gt; B
+    D --&gt; E[&quot;Operative Assembly&quot;]
+    E --&gt; F[&quot;Tactical Mission&quot;]
+    F --&gt; G[&quot;Debrief&quot;]
+    G --&gt; B
+    G --&gt; D</div>
+    <!-- Fallback styled visual nodes if JS/mermaid is not loaded -->
+    <div class="mermaid-fallback">
+      <div class="flow-step">Main Menu</div>
+      <div class="flow-arrow">⇄</div>
+      <div class="flow-step">World Network</div>
+      <div class="flow-arrow">⇄</div>
+      <div class="flow-step">Research Division</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Mission Brief</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Operative Assembly</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step active-mission">Tactical Mission</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Debrief</div>
+    </div>
+  </div>
+</div>
+<h3 id="current-flow-rules" class="gdd-h3"><span class="h3-diamond">◆</span> Current flow rules</h3>
+<ol class="gdd-ol">
+  <li>The menu offers CONTINUE when a valid save exists, and NEW OPERATION behind a two-step erase confirm.</li>
+  <li>The World Network opens with Europe selected.</li>
+  <li>The player may inspect sectors, run the strategic clock, review world events, or enter Research.</li>
+  <li>Selecting an unlocked contract opens its briefing; contracts unlock at their required intel level.</li>
+  <li>Accepting the contract opens Operative Assembly.</li>
+  <li>Exactly four operatives must be assigned before deployment.</li>
+  <li>The player completes sequential objectives or loses the squad.</li>
+  <li>A debrief applies the payout, the sector effects, intel, and roster changes, then returns the player onward.</li>
+  <li>Strategy screens autosave; the mission and debrief never write a save.</li>
+</ol>
+<h3 id="core-loops" class="gdd-h3"><span class="h3-diamond">◆</span> Core loops</h3>
+<h4 id="strategic-loop" class="gdd-h4">Strategic loop</h4>
+<ol class="gdd-ol">
+  <li>Monitor world state and available operations.</li>
+  <li>Advance or pause world time.</li>
+  <li>Fund available research projects.</li>
+  <li>Choose a contract.</li>
+  <li>Assemble a team.</li>
+  <li>Complete the mission.</li>
+  <li>Receive credits, less collateral penalties.</li>
+  <li>Reinvest in research.</li>
+</ol>
+<h4 id="tactical-loop" class="gdd-h4">Tactical loop</h4>
+<ol class="gdd-ol">
+  <li>Read patrols, objective markers, sight cones, and civilian positions.</li>
+  <li>Select one or more operatives.</li>
+  <li>Move as a formation or establish a hold position.</li>
+  <li>Avoid, investigate, or deliberately trigger enemy awareness.</li>
+  <li>Engage hostiles through automatic or explicit targeting.</li>
+  <li>Complete the active objective.</li>
+  <li>Repeat until extraction.</li>
+</ol>
+<h4 id="research-loop" class="gdd-h4">Research loop</h4>
+<ol class="gdd-ol">
+  <li>Inspect available projects and prerequisites.</li>
+  <li>Commit credits to one project in a branch laboratory.</li>
+  <li>Advance world time on the World Network or Research screen.</li>
+  <li>Complete the project.</li>
+  <li>Unlock dependent projects.</li>
+  <li>Apply completed effects to future deployments.</li>
+</ol>
+<h4 id="campaign-arc" class="gdd-h4">Campaign arc</h4>
+<p class="gdd-p">The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it.</p>
+<p class="gdd-p">There is no matching fail state. A lost mission costs its payout, drops the source sector's control, raises its unrest, and can cost operatives permanently, but the campaign continues and every one of those values can be recovered. Sector crisis (section 6.2) is the strongest pressure the strategic layer applies, and it too clears.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="6-strategic-layer" class="gdd-h2"><span class="h-badge">SEC</span> 6. Strategic layer</h2>
+<h3 id="6-1-world-clock" class="gdd-h3"><span class="h3-diamond">◆</span> 6.1 World clock</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Start timestamp: <strong>2087.05.14 14:32:17 UTC</strong>.</li>
+  <li>At 1× speed, one real second advances 60 world seconds.</li>
+  <li>Available speeds: <strong>1×, 2×, 4×, 8×</strong>.</li>
+  <li>Initial speed: <strong>2×</strong>.</li>
+  <li>The clock can be paused.</li>
+  <li>World time advances only while the World Network or Research screen is mounted.</li>
+  <li>World time does not advance during the menu, briefing, squad assembly, tactical mission, or debrief.</li>
+  <li>The tactical mission uses its own independent clock, beginning at <strong>22:14:08</strong>.</li>
+  <li>The player can scrub and keyboard-navigate a rolling 24-hour event timeline without changing the live world state.</li>
+</ul>
+<p class="gdd-p">This clock is the shared authority for world events, research completion, and operative injury recovery.</p>
+<h3 id="6-2-continental-sectors" class="gdd-h3"><span class="h3-diamond">◆</span> 6.2 Continental sectors</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Sector</th><th style="text-align:right">Initial control</th><th style="text-align:right">Initial unrest</th><th style="text-align:right">Influence weight</th><th style="text-align:left">Status</th></tr></thead><tbody><tr><td style="text-align:left">North America</td><td style="text-align:right">68%</td><td style="text-align:right">12%</td><td style="text-align:right">1.15</td><td style="text-align:left"><span class="badge badge-implemented">Open</span></td></tr><tr><td style="text-align:left">South America</td><td style="text-align:right">41%</td><td style="text-align:right">24%</td><td style="text-align:right">0.85</td><td style="text-align:left"><span class="badge badge-implemented">Open</span></td></tr><tr><td style="text-align:left">Europe</td><td style="text-align:right">62%</td><td style="text-align:right">18%</td><td style="text-align:right">1.20</td><td style="text-align:left"><span class="badge badge-implemented">Open</span></td></tr><tr><td style="text-align:left">Africa</td><td style="text-align:right">37%</td><td style="text-align:right">28%</td><td style="text-align:right">0.90</td><td style="text-align:left"><span class="badge badge-implemented">Open</span></td></tr><tr><td style="text-align:left">Asia</td><td style="text-align:right">55%</td><td style="text-align:right">16%</td><td style="text-align:right">1.35</td><td style="text-align:left"><span class="badge badge-implemented">Open</span></td></tr><tr><td style="text-align:left">Oceania</td><td style="text-align:right">73%</td><td style="text-align:right">9%</td><td style="text-align:right">0.55</td><td style="text-align:left"><span class="badge badge-implemented">Open</span></td></tr><tr><td style="text-align:left">Antarctica</td><td style="text-align:right">0%</td><td style="text-align:right">0%</td><td style="text-align:right">0.00</td><td style="text-align:left"><span class="badge badge-recommended">Locked / no survey data</span></td></tr></tbody></table></div>
+<p class="gdd-p">Each open sector exposes:</p>
+<ul class="gdd-ul">
+  <li>Control.</li>
+  <li>Unrest.</li>
+  <li>Weekly tax yield.</li>
+  <li>Influence income.</li>
+  <li>Black-market impact.</li>
+  <li>Garrison condition.</li>
+  <li>Total forces.</li>
+  <li>Defense rating.</li>
+</ul>
+<p class="gdd-p">The simulation also calculates an asset count for each sector, but the current sector panel does not display it.</p>
+<p class="gdd-p">The <strong>influence index</strong> is the weighted average control of all open sectors, shown as a percentage. Beside it the player holds a spendable <strong>influence points</strong> balance (section 7.4). The sector panel exposes three numbered actions per sector, each with a point cost and a per-sector cooldown, disabled when unaffordable:</p>
+<ol class="gdd-ol">
+  <li><strong>STABILIZE</strong> (8 pts): −12 unrest applied over 6 world hours in hourly steps. 24-hour cooldown.</li>
+  <li><strong>LOBBY</strong> (10 pts): +8 control applied over 12 world hours in eight steps. 36-hour cooldown.</li>
+  <li><strong>EXPEDITE</strong> (12 pts): the sector's lowest-intel-gate open generated contract loses its intel requirement and gains 24 world hours of expiry. 24-hour cooldown.</li>
+</ol>
+<p class="gdd-p">Staged spends run on the strategic clock through the same time-ordered catch-up as events, so a contract ETA jump applies them exactly as continuous ticking would. Balance numbers live as data in <code>src/game/influence.ts</code>.</p>
+<p class="gdd-p">A sector that holds above <strong>60 unrest</strong> decays: every 6 world hours it loses 1–2 control, and its tax yield readout falls with the strain (2% per unrest point above the threshold, floored at 25%). At <strong>85+ unrest</strong> the sector enters <strong>CRISIS</strong>: it reads red on the plate and the sector list, a red feed event posts, its event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under <strong>70</strong>. Unrest is clamped to 2–96 so the crisis band is reachable.</p>
+<h3 id="6-3-city-ownership" class="gdd-h3"><span class="h3-diamond">◆</span> 6.3 City ownership</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<p class="gdd-p">The world map contains 18 named cities. Each has a current corporate holder. A sector’s displayed corporate color is determined by which corporation holds the most cities in that sector; ties display as contested.</p>
+<p class="gdd-p">Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Ownership still has no effect on research, prices, or tactical missions.</p>
+<h3 id="6-4-dynamic-world-events" class="gdd-h3"><span class="h3-diamond">◆</span> 6.4 Dynamic world events</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<p class="gdd-p">Event categories:</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Event</th><th style="text-align:left">Typical strategic effect</th><th style="text-align:left">Contract market effect</th></tr></thead><tbody><tr><td style="text-align:left">Riot</td><td style="text-align:left">Raises unrest and reduces control</td><td style="text-align:left">45% chance to spawn a linked priority suppression contract in the sector</td></tr><tr><td style="text-align:left">Blackout</td><td style="text-align:left">Raises unrest</td><td style="text-align:left">—</td></tr><tr><td style="text-align:left">CorpSec raid</td><td style="text-align:left">Reduces unrest and may improve control</td><td style="text-align:left">35% chance to withdraw an open generated contract from the sector</td></tr><tr><td style="text-align:left">Trade agreement</td><td style="text-align:left">Improves control and may reduce unrest</td><td style="text-align:left">—</td></tr><tr><td style="text-align:left">Seizure</td><td style="text-align:left">May change city ownership and alter control/unrest</td><td style="text-align:left">A city flip re-clients the sector's open generated contracts</td></tr></tbody></table></div>
+<p class="gdd-p">Events occur every <strong>15–45 world minutes</strong> and favor high-unrest sectors; a sector in crisis draws events at <strong>double weight</strong> (section 6.2). The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events. The market probabilities live as data beside the event tables in <code>src/state/worldStore.ts</code> (<code>EVENT_CONTRACT_FX</code>); the sector and kind weight tables themselves live in <code>src/game/forecast.ts</code>, where the intel event forecast reads the same rows the generator rolls from.</p>
+<p class="gdd-p">Events also share the feed with the generated contract market: new offers, priority offers, expiries, withdrawals, and re-clienting all post <code>contract</code> events. Crisis entries and exits post <code>crisis</code> events, and influence spends post <code>influence</code> events. Contract generation, staged influence spends, unrest decay, and the influence trickle all run on the same strategic clock and the same time-ordered catch-up path as events, so a contract ETA jump lands exactly where continuous ticking would have.</p>
+<p class="gdd-p">At intel level 2+ the sector panel shows an <strong>event forecast</strong>: the chance of each event category landing in the focused sector over the next 6 world hours, derived from the shared weight tables rather than a duplicate set of constants.</p>
+<p class="gdd-p">Mission results feed this system. A win raises the mission sector's control and lowers its unrest; a loss does the opposite. Each result posts its own feed event, green for a win and red for a loss, and civilian hits add unrest.</p>
+<h3 id="6-5-intel-and-contract-access" class="gdd-h3"><span class="h3-diamond">◆</span> 6.5 Intel and contract access</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Initial intel level: <strong>1</strong>, with 25/100 progress.</li>
+  <li>A contract win awards <strong>+40</strong> progress; a clean win (zero civilians hit by the squad) awards <strong>+15</strong> more.</li>
+  <li>A lost contract awards nothing.</li>
+  <li>Each 100 progress rolls into the next level.</li>
+  <li>Every contract carries a required intel level. Hollow Crown and Rust Haven need level 2.</li>
+  <li>Antarctica and the unbuilt navigation tabs stay locked at every intel level.</li>
+</ul>
+<p class="gdd-p">Intel's second strategic use is forecasting. At intel level 2+:</p>
+<ul class="gdd-ul">
+  <li>The World Network sector panel shows the next-6-hours event risk per category for the focused sector (section 6.4).</li>
+  <li>The mission brief replaces the legacy projected-success percentage with a computed <strong>risk index</strong> (LOW / GUARDED / HIGH / SEVERE), derived in <code>src/game/forecast.ts</code> from the actual deployment build: the same patrol, garrison, and civilian counts the tactical rail lists, weighted by enemy toughness and weather.</li>
+</ul>
+<p class="gdd-p">The EXPEDITE influence action (section 6.2) can waive a generated contract's intel gate.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="7-economy-and-progression" class="gdd-h2"><span class="h-badge">SEC</span> 7. Economy and progression</h2>
+<h3 id="7-1-credits" class="gdd-h3"><span class="h3-diamond">◆</span> 7.1 Credits</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Starting balance: <strong>128,450 CR</strong>.</li>
+  <li>Credits pay for research.</li>
+  <li>Successful contracts add their net payout.</li>
+  <li>Failed contracts pay nothing.</li>
+  <li>The balance cannot be overdrawn by research authorization.</li>
+</ul>
+<p class="gdd-p">Influence points are the second resource, earned and spent on the strategic layer alone (section 7.4).</p>
+<h3 id="7-2-collateral-penalty" class="gdd-h3"><span class="h3-diamond">◆</span> 7.2 Collateral penalty</h3>
+<p class="gdd-p">Each unique civilian hit by an operative deducts <strong>5,000 CR</strong> from a successful contract.</p>
+<p class="gdd-p">Rules:</p>
+<ul class="gdd-ul">
+  <li>The fine is assessed on the first squad-caused hit, not only on death.</li>
+  <li>Repeated hits to the same civilian do not add additional fines.</li>
+  <li>CorpSec-caused civilian damage does not count against the player.</li>
+  <li>Total deductions are capped at the contract reward.</li>
+  <li>A failed mission already pays zero, so collateral does not create debt.</li>
+</ul>
+<h3 id="7-3-progression-model" class="gdd-h3"><span class="h3-diamond">◆</span> 7.3 Progression model</h3>
+<p class="gdd-p">Tactical progression is research-driven:</p>
+<ul class="gdd-ul">
+  <li>Weapon projects modify damage, range, magazine, reload time, spread, or fire delay.</li>
+  <li>Crew projects add maximum health or movement speed to every deployed operative.</li>
+  <li>Effects stack in project-completion order.</li>
+  <li>Completed research is sampled when the mission is created and cannot alter an active deployment.</li>
+</ul>
+<p class="gdd-p">Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). There is currently no:</p>
+<ul class="gdd-ul">
+  <li>Account level.</li>
+  <li>Operative experience.</li>
+  <li>Equipment ownership.</li>
+  <li>Consumable inventory economy.</li>
+</ul>
+<h3 id="7-4-influence-economy" class="gdd-h3"><span class="h3-diamond">◆</span> 7.4 Influence economy</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<p class="gdd-p">Influence points are earned three ways and spent on the three sector actions (section 6.2):</p>
+<ul class="gdd-ul">
+  <li><strong>+6</strong> points per contract win, generated or authored.</li>
+  <li><strong>+2</strong> more for a clean win (zero civilians hit by the squad).</li>
+  <li><strong>+1</strong> per 12 world hours while the influence index holds above <strong>55</strong> (the trickle).</li>
+</ul>
+<p class="gdd-p">Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v6). Every balance number lives in <code>src/game/influence.ts</code>.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="8-research-program" class="gdd-h2"><span class="h-badge">SEC</span> 8. Research program</h2>
+
+<div class="interactive-module-card">
+  <div class="module-header">
+    <span class="module-tag">INTERACTIVE MATRIX</span>
+    <h3 class="module-title">RESEARCH DIVISION // LAB MATRIX</h3>
+  </div>
+  <div class="tech-branches-grid">
+    <div class="tech-branch-col">
+      <div class="branch-head branch-ballistics">
+        <span class="branch-icon">⚔️</span>
+        <span>BALLISTICS (7 Nodes / 248k CR)</span>
+      </div>
+      <div class="branch-nodes">
+        <div class="tech-node"><div class="tn-name">Adv. Propellants</div><div class="tn-meta">16k CR | 2h | T1</div><div class="tn-fx">+12% Assault Rifle DMG</div></div>
+        <div class="tech-node"><div class="tn-name">Barrel Wear Coating</div><div class="tn-meta">14k CR | 2h | T1</div><div class="tn-fx">-10% Spread (All)</div></div>
+        <div class="tech-node"><div class="tn-name">Hypervelocity Core</div><div class="tn-meta">30k CR | 4h | T2</div><div class="tn-fx">+18% Longrifle DMG / +10% Range</div></div>
+        <div class="tech-node"><div class="tn-name">Caseless Ammo Feed</div><div class="tn-meta">26k CR | 4h | T2</div><div class="tn-fx">+10 SMG Mag / -12% Reload</div></div>
+        <div class="tech-node"><div class="tn-name">Rail Stabilization</div><div class="tn-meta">44k CR | 8h | T3</div><div class="tn-fx">-15% Spread (All)</div></div>
+        <div class="tech-node"><div class="tn-name">Smart Fragmentation</div><div class="tn-meta">42k CR | 8h | T3</div><div class="tn-fx">+22% Shotgun DMG / +15% Range</div></div>
+        <div class="tech-node tn-capstone"><div class="tn-name">Tungsten Sabot</div><div class="tn-meta">76k CR | 14h | CAPSTONE</div><div class="tn-fx">+15% Damage (All Weapons)</div></div>
+      </div>
+    </div>
+    <div class="tech-branch-col">
+      <div class="branch-head branch-cyber">
+        <span class="branch-icon">🧬</span>
+        <span>CYBERNETICS (7 Nodes / 261k CR)</span>
+      </div>
+      <div class="branch-nodes">
+        <div class="tech-node"><div class="tn-name">Neural Interface I</div><div class="tn-meta">15k CR | 2h | Neural</div><div class="tn-fx">-8% Fire Delay (All)</div></div>
+        <div class="tech-node"><div class="tn-name">Synaptic Enhancement</div><div class="tn-meta">17k CR | 2h | Chest</div><div class="tn-fx">+0.20 m/s Move Speed</div></div>
+        <div class="tech-node"><div class="tn-name">Reflex Booster</div><div class="tn-meta">28k CR | 4h | Arms</div><div class="tn-fx">-15% Reload Time (All)</div></div>
+        <div class="tech-node"><div class="tn-name">Pain Inhibitor</div><div class="tn-meta">27k CR | 4h | Chest</div><div class="tn-fx">+14 Max HP</div></div>
+        <div class="tech-node"><div class="tn-name">Neural Accelerator II</div><div class="tn-meta">48k CR | 8h | Neural</div><div class="tn-fx">-12% Fire Delay / +0.15 m/s</div></div>
+        <div class="tech-node"><div class="tn-name">Subdermal Weave</div><div class="tn-meta">46k CR | 8h | Chest</div><div class="tn-fx">+22 Max HP</div></div>
+        <div class="tech-node tn-capstone"><div class="tn-name">Neural Cache Array</div><div class="tn-meta">80k CR | 14h | CAPSTONE</div><div class="tn-fx">+18 Max HP / +0.35 m/s Speed</div></div>
+      </div>
+    </div>
+    <div class="tech-branch-col">
+      <div class="branch-head branch-control">
+        <span class="branch-icon">📡</span>
+        <span>CONTROL SYSTEMS (7 Nodes / 270k CR)</span>
+      </div>
+      <div class="branch-nodes">
+        <div class="tech-node"><div class="tn-name">Targeting AI Suite</div><div class="tn-meta">18k CR | 2h | Arms</div><div class="tn-fx">-12% Spread (All)</div></div>
+        <div class="tech-node"><div class="tn-name">Sensor Fusion Array</div><div class="tn-meta">16k CR | 2h | Neural</div><div class="tn-fx">+8% Weapon Range (All)</div></div>
+        <div class="tech-node"><div class="tn-name">Swarm Coordination</div><div class="tn-meta">29k CR | 4h | Legs</div><div class="tn-fx">+0.25 m/s Move Speed</div></div>
+        <div class="tech-node"><div class="tn-name">Threat Prediction</div><div class="tn-meta">31k CR | 4h | Neural</div><div class="tn-fx">+12 Max HP</div></div>
+        <div class="tech-node"><div class="tn-name">EM Hardening</div><div class="tn-meta">45k CR | 8h | Legs</div><div class="tn-fx">+16 Max HP</div></div>
+        <div class="tech-node"><div class="tn-name">Encryption Core</div><div class="tn-meta">47k CR | 8h | Arms</div><div class="tn-fx">-10% Reload Time (All)</div></div>
+        <div class="tech-node tn-capstone"><div class="tn-name">Adaptive Command AI</div><div class="tn-meta">84k CR | 14h | CAPSTONE</div><div class="tn-fx">-10% Fire Delay / +0.20 m/s</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3 id="8-1-research-rules" class="gdd-h3"><span class="h3-diamond">◆</span> 8.1 Research rules</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Three branches: Ballistics, Cybernetics, Control Systems.</li>
+  <li>Seven projects per branch; 21 total.</li>
+  <li>One lab per branch.</li>
+  <li>One active project per lab.</li>
+  <li>Up to three projects can run concurrently if each belongs to a different branch.</li>
+  <li>Project durations use world time.</li>
+  <li>Tiers require their listed prerequisite projects.</li>
+  <li>Credits are spent immediately when authorization succeeds.</li>
+  <li>Total cost of all research: <strong>779,000 CR</strong>.</li>
+</ul>
+<p class="gdd-p">At 1× strategic speed, one world hour takes one real minute. At the default 2× speed, a two-hour project takes approximately one real minute while a strategy screen remains open.</p>
+<h3 id="8-2-ballistics-248-000-cr-total" class="gdd-h3"><span class="h3-diamond">◆</span> 8.2 Ballistics — 248,000 CR total</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Project</th><th style="text-align:right">Cost</th><th style="text-align:right">Time</th><th style="text-align:left">Prerequisites</th><th style="text-align:left">Applied effect</th></tr></thead><tbody><tr><td style="text-align:left">Advanced Propellants</td><td style="text-align:right">16,000</td><td style="text-align:right">2h</td><td style="text-align:left">None</td><td style="text-align:left">+12% assault-rifle damage</td></tr><tr><td style="text-align:left">Barrel Wear Coating</td><td style="text-align:right">14,000</td><td style="text-align:right">2h</td><td style="text-align:left">None</td><td style="text-align:left">−10% spread for all squad weapons</td></tr><tr><td style="text-align:left">Hypervelocity Core</td><td style="text-align:right">30,000</td><td style="text-align:right">4h</td><td style="text-align:left">Advanced Propellants</td><td style="text-align:left">+18% longrifle damage; +10% longrifle range</td></tr><tr><td style="text-align:left">Caseless Ammo Feed</td><td style="text-align:right">26,000</td><td style="text-align:right">4h</td><td style="text-align:left">Barrel Wear Coating</td><td style="text-align:left">+10 SMG magazine; −12% reload time for all weapons</td></tr><tr><td style="text-align:left">Rail Stabilization</td><td style="text-align:right">44,000</td><td style="text-align:right">8h</td><td style="text-align:left">Hypervelocity Core</td><td style="text-align:left">−15% spread for all weapons</td></tr><tr><td style="text-align:left">Smart Fragmentation</td><td style="text-align:right">42,000</td><td style="text-align:right">8h</td><td style="text-align:left">Caseless Ammo Feed</td><td style="text-align:left">+22% shotgun damage; +15% shotgun range</td></tr><tr><td style="text-align:left">Tungsten Sabot</td><td style="text-align:right">76,000</td><td style="text-align:right">14h</td><td style="text-align:left">Rail Stabilization + Smart Fragmentation</td><td style="text-align:left">+15% damage for all weapons</td></tr></tbody></table></div>
+<h3 id="8-3-cybernetics-261-000-cr-total" class="gdd-h3"><span class="h3-diamond">◆</span> 8.3 Cybernetics — 261,000 CR total</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Project</th><th style="text-align:right">Cost</th><th style="text-align:right">Time</th><th style="text-align:left">Prerequisites</th><th style="text-align:left">Applied effect</th><th style="text-align:left">Augmentation bay</th></tr></thead><tbody><tr><td style="text-align:left">Neural Interface I</td><td style="text-align:right">15,000</td><td style="text-align:right">2h</td><td style="text-align:left">None</td><td style="text-align:left">−8% fire delay for all weapons</td><td style="text-align:left">Neural</td></tr><tr><td style="text-align:left">Synaptic Enhancement</td><td style="text-align:right">17,000</td><td style="text-align:right">2h</td><td style="text-align:left">None</td><td style="text-align:left">+0.20 m/s move speed</td><td style="text-align:left">Chest</td></tr><tr><td style="text-align:left">Reflex Booster</td><td style="text-align:right">28,000</td><td style="text-align:right">4h</td><td style="text-align:left">Neural Interface I</td><td style="text-align:left">−15% reload time for all weapons</td><td style="text-align:left">Arms</td></tr><tr><td style="text-align:left">Pain Inhibitor</td><td style="text-align:right">27,000</td><td style="text-align:right">4h</td><td style="text-align:left">Synaptic Enhancement</td><td style="text-align:left">+14 max HP</td><td style="text-align:left">Chest</td></tr><tr><td style="text-align:left">Neural Accelerator Mk II</td><td style="text-align:right">48,000</td><td style="text-align:right">8h</td><td style="text-align:left">Reflex Booster</td><td style="text-align:left">−12% fire delay; +0.15 m/s speed</td><td style="text-align:left">Neural</td></tr><tr><td style="text-align:left">Subdermal Weave</td><td style="text-align:right">46,000</td><td style="text-align:right">8h</td><td style="text-align:left">Pain Inhibitor</td><td style="text-align:left">+22 max HP</td><td style="text-align:left">Chest</td></tr><tr><td style="text-align:left">Neural Cache Array</td><td style="text-align:right">80,000</td><td style="text-align:right">14h</td><td style="text-align:left">Neural Accelerator Mk II + Subdermal Weave</td><td style="text-align:left">+18 max HP; +0.35 m/s speed</td><td style="text-align:left">Neural</td></tr></tbody></table></div>
+<h3 id="8-4-control-systems-270-000-cr-total" class="gdd-h3"><span class="h3-diamond">◆</span> 8.4 Control Systems — 270,000 CR total</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Project</th><th style="text-align:right">Cost</th><th style="text-align:right">Time</th><th style="text-align:left">Prerequisites</th><th style="text-align:left">Applied effect</th><th style="text-align:left">Augmentation bay</th></tr></thead><tbody><tr><td style="text-align:left">Targeting AI Suite</td><td style="text-align:right">18,000</td><td style="text-align:right">2h</td><td style="text-align:left">None</td><td style="text-align:left">−12% spread for all weapons</td><td style="text-align:left">Arms</td></tr><tr><td style="text-align:left">Sensor Fusion Array</td><td style="text-align:right">16,000</td><td style="text-align:right">2h</td><td style="text-align:left">None</td><td style="text-align:left">+8% range for all weapons</td><td style="text-align:left">Neural</td></tr><tr><td style="text-align:left">Swarm Coordination</td><td style="text-align:right">29,000</td><td style="text-align:right">4h</td><td style="text-align:left">Targeting AI Suite</td><td style="text-align:left">+0.25 m/s move speed</td><td style="text-align:left">Legs</td></tr><tr><td style="text-align:left">Threat Prediction</td><td style="text-align:right">31,000</td><td style="text-align:right">4h</td><td style="text-align:left">Sensor Fusion Array</td><td style="text-align:left">+12 max HP</td><td style="text-align:left">Neural</td></tr><tr><td style="text-align:left">EM Hardening</td><td style="text-align:right">45,000</td><td style="text-align:right">8h</td><td style="text-align:left">Swarm Coordination</td><td style="text-align:left">+16 max HP</td><td style="text-align:left">Legs</td></tr><tr><td style="text-align:left">Encryption Core</td><td style="text-align:right">47,000</td><td style="text-align:right">8h</td><td style="text-align:left">Threat Prediction</td><td style="text-align:left">−10% reload time for all weapons</td><td style="text-align:left">Arms</td></tr><tr><td style="text-align:left">Adaptive Command AI</td><td style="text-align:right">84,000</td><td style="text-align:right">14h</td><td style="text-align:left">EM Hardening + Encryption Core</td><td style="text-align:left">−10% fire delay; +0.20 m/s speed</td><td style="text-align:left">Neural</td></tr></tbody></table></div>
+<h3 id="8-5-augmentation-presentation" class="gdd-h3"><span class="h3-diamond">◆</span> 8.5 Augmentation presentation</h3>
+<p class="gdd-p">The team-selection dossier has four augmentation bays:</p>
+<ul class="gdd-ul">
+  <li>Neural.</li>
+  <li>Chest.</li>
+  <li>Arms.</li>
+  <li>Legs.</li>
+</ul>
+<p class="gdd-p">The latest completed project associated with each bay is displayed as the installed augmentation for every operative. This is currently presentation logic: projects apply globally to the squad, not as individually installed or swappable hardware.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="9-operative-assembly" class="gdd-h2"><span class="h-badge">SEC</span> 9. Operative assembly</h2>
+
+<div class="interactive-module-card">
+  <div class="module-header">
+    <span class="module-tag">PERSONNEL DOSSIER</span>
+    <h3 class="module-title">STRIKE TEAM ROSTER & SQUAD MASS CALCULATOR</h3>
+  </div>
+  <div class="roster-interactive-grid" id="rosterCards">
+    <!-- Mara -->
+    <div class="op-card" data-hp="124" data-spd="4.6" data-role="Assault" data-name="Mara">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">ASSAULT</div></div>
+      <div class="op-name">MARA <span class="op-realname">D. Torres</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">124</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:94%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">4.6 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:70%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>RFC-27 Assault</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Overdrive (30s, 2x fire rate)</div>
+      <div class="op-passive"><strong>Passive:</strong> +10% Weapon Damage</div>
+    </div>
+    <!-- Ghost -->
+    <div class="op-card" data-hp="110" data-spd="5.2" data-role="Recon" data-name="Ghost">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">RECON</div></div>
+      <div class="op-name">GHOST <span class="op-realname">L. Fernandez</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">110</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:83%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">5.2 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:82%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>K-9 Rattler SMG</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Pulse Scan (35s, minimap cones)</div>
+      <div class="op-passive"><strong>Passive:</strong> 16m radar detection</div>
+    </div>
+    <!-- Dart -->
+    <div class="op-card" data-hp="98" data-spd="5.6" data-role="Infiltrator" data-name="Dart">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">INFILTRATOR</div></div>
+      <div class="op-name">DART <span class="op-realname">K. Park</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">98</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:74%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">5.6 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:90%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>K-9 Rattler SMG</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Ghost Veil (35s, 6s stealth)</div>
+      <div class="op-passive"><strong>Passive:</strong> 25% slower enemy certainty</div>
+    </div>
+    <!-- Torq -->
+    <div class="op-card" data-hp="132" data-spd="4.2" data-role="Demolitions" data-name="Torq">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">DEMOLITIONS</div></div>
+      <div class="op-name">TORQ <span class="op-realname">M. Ivanova</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">132</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:100%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">4.2 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:65%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>M6 Breacher</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Frag Charge (40s, 60 dmg 3m)</div>
+      <div class="op-passive"><strong>Passive:</strong> -15% Damage Taken</div>
+    </div>
+    <!-- Raven -->
+    <div class="op-card op-card-inj" data-hp="92" data-spd="4.4" data-role="Sniper" data-name="Raven">
+      <div class="op-head"><div class="op-badge-inj">INJURED (24h)</div><div class="op-role">SNIPER</div></div>
+      <div class="op-name">RAVEN <span class="op-realname">A. Okafor</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">92</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:70%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">4.4 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:68%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>VK-88 Longrifle</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Deadeye (30s, 2x dmg hit)</div>
+      <div class="op-passive"><strong>Passive:</strong> +15% Weapon Range</div>
+    </div>
+    <!-- Slate -->
+    <div class="op-card" data-hp="104" data-spd="4.8" data-role="Tech" data-name="Slate">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">TECH</div></div>
+      <div class="op-name">SLATE <span class="op-realname">J. Sato</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">104</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:78%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">4.8 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:74%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>K-9 Rattler SMG</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> EM Burst (35s, 8m disarm)</div>
+      <div class="op-passive"><strong>Passive:</strong> 15% faster squad cooldowns</div>
+    </div>
+    <!-- Vex -->
+    <div class="op-card" data-hp="118" data-spd="4.4" data-role="Support" data-name="Vex">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">SUPPORT</div></div>
+      <div class="op-name">VEX <span class="op-realname">R. Volkov</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">118</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:89%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">4.4 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:68%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>RFC-27 Assault</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Suppression (30s, 12m slow)</div>
+      <div class="op-passive"><strong>Passive:</strong> +20% squad reload in 6m</div>
+    </div>
+    <!-- Kestrel -->
+    <div class="op-card" data-hp="100" data-spd="5.0" data-role="Medic" data-name="Kestrel">
+      <div class="op-head"><div class="op-badge-ready">READY</div><div class="op-role">MEDIC</div></div>
+      <div class="op-name">KESTREL <span class="op-realname">N. Diallo</span></div>
+      <div class="op-stats">
+        <div class="op-stat-row"><span>HP</span><span class="stat-num">100</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:76%"></div></div>
+        <div class="op-stat-row"><span>SPEED</span><span class="stat-num">5.0 m/s</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill spd" style="width:78%"></div></div>
+      </div>
+      <div class="op-weapons"><strong>S-18 Pistol</strong> / S-18 Pistol</div>
+      <div class="op-ability"><strong>Active:</strong> Field Stim (25s, 40 HP heal)</div>
+      <div class="op-passive"><strong>Passive:</strong> 1 HP/s regen in 6m</div>
+    </div>
+  </div>
+</div>
+<h3 id="9-1-squad-rules" class="gdd-h3"><span class="h3-diamond">◆</span> 9.1 Squad rules</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Roster cap: eight. The campaign starts at the cap with the authored roster.</li>
+  <li>Deployment size: exactly four.</li>
+  <li>Default squad: Mara, Ghost, Dart, Torq.</li>
+  <li>The player may inspect an operative without assigning them.</li>
+  <li>Assignment and inspection are separate controls.</li>
+  <li>At least one operative must remain assigned while editing the squad.</li>
+  <li>Deployment is disabled until all four bays are filled.</li>
+  <li>The assembly screen shows the live roster count (for example <code>6 / 8 ON FILE</code>); the world screen's OPERATIVES readout follows the same live roster.</li>
+</ul>
+<p class="gdd-p">Death and injury are enforced:</p>
+<ul class="gdd-ul">
+  <li>An operative killed in a mission is lost for good: the debrief removes them from the roster, lists them under KILLED IN ACTION, and the world feed posts a red loss event naming them. Their bay empties and must be refilled on the assembly screen before the next deployment.</li>
+  <li>A survivor who ends a mission below 35% of maximum health returns <code>INJURED</code>. Downtime scales with the missing health: 12 world hours just under the threshold, up to 48 world hours at near-death. Survivors at or above 35% stay <code>READY</code>. The debrief lists each new injury with its recovery time.</li>
+  <li>An <code>INJURED</code> operative cannot be assigned; the team screen disables the control and names the reason. Newly injured operatives leave the squad at debrief.</li>
+  <li>Recovery runs on the world clock; Raven starts <code>INJURED</code> and recovers after 24 world hours.</li>
+</ul>
+<p class="gdd-p">Recruitment replaces losses:</p>
+<ul class="gdd-ul">
+  <li>The assembly screen's RECRUIT control opens the recruitment market: three procedural candidates at a time, refreshed one new candidate every 24 world hours on the same strategic clock injuries recover on.</li>
+  <li>A candidate carries a procedural name and codename, one of the eight roles, health and speed inside the authored roster's ranges, and the role's authored primary weapon. Portraits derive from stable hashes, so a candidate keeps one face.</li>
+  <li>Hiring costs 16,000–34,000 CR by candidate quality, paid from the credit account; an overdraw is refused, as is a hire past the roster cap.</li>
+  <li>The candidate rng is seeded and serialized with the save, so a reload continues the exact candidate sequence.</li>
+</ul>
+<h3 id="9-2-operative-roster" class="gdd-h3"><span class="h3-diamond">◆</span> 9.2 Operative roster</h3>
+<p class="gdd-p">The authored eight are a starting roster, not a fixed cast: deaths remove operatives permanently, and hires from the recruitment market fill the vacated bays (section 9.1). The live roster is store state covered by the versioned save.</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Codename</th><th style="text-align:left">Name</th><th style="text-align:left">Role</th><th style="text-align:right">HP</th><th style="text-align:right">Speed</th><th style="text-align:left">Primary</th><th style="text-align:left">Sidearm</th><th style="text-align:left">Status</th><th style="text-align:left">Intended specialty</th></tr></thead><tbody><tr><td style="text-align:left">Mara</td><td style="text-align:left">D. Torres</td><td style="text-align:left">Assault</td><td style="text-align:right">124</td><td style="text-align:right">4.6</td><td style="text-align:left">RFC-27 Assault</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Frontline breach and clear</td></tr><tr><td style="text-align:left">Ghost</td><td style="text-align:left">L. Fernandez</td><td style="text-align:left">Recon</td><td style="text-align:right">110</td><td style="text-align:right">5.2</td><td style="text-align:left">K-9 Rattler SMG</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Intel gathering and range</td></tr><tr><td style="text-align:left">Dart</td><td style="text-align:left">K. Park</td><td style="text-align:left">Infiltrator</td><td style="text-align:right">98</td><td style="text-align:right">5.6</td><td style="text-align:left">K-9 Rattler SMG</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Silent entry and close quarters</td></tr><tr><td style="text-align:left">Torq</td><td style="text-align:left">M. Ivanova</td><td style="text-align:left">Demolitions</td><td style="text-align:right">132</td><td style="text-align:right">4.2</td><td style="text-align:left">M6 Breacher</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Heavy ordnance and area denial</td></tr><tr><td style="text-align:left">Raven</td><td style="text-align:left">A. Okafor</td><td style="text-align:left">Sniper</td><td style="text-align:right">92</td><td style="text-align:right">4.4</td><td style="text-align:left">VK-88 Longrifle</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-scaffolded">Injured</span></td><td style="text-align:left">Precision and overwatch</td></tr><tr><td style="text-align:left">Slate</td><td style="text-align:left">J. Sato</td><td style="text-align:left">Tech</td><td style="text-align:right">104</td><td style="text-align:right">4.8</td><td style="text-align:left">K-9 Rattler SMG</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Intrusion and drone control</td></tr><tr><td style="text-align:left">Vex</td><td style="text-align:left">R. Volkov</td><td style="text-align:left">Support</td><td style="text-align:right">118</td><td style="text-align:right">4.4</td><td style="text-align:left">RFC-27 Assault</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Suppression and logistics</td></tr><tr><td style="text-align:left">Kestrel</td><td style="text-align:left">N. Diallo</td><td style="text-align:left">Medic</td><td style="text-align:right">100</td><td style="text-align:right">5.0</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left">S-18 Pistol</td><td style="text-align:left"><span class="badge badge-implemented">Ready</span></td><td style="text-align:left">Trauma and stim protocols</td></tr></tbody></table></div>
+<p class="gdd-p">Speed is measured in world meters per second. Research bonuses are added at deployment.</p>
+<h3 id="9-3-role-implementation-status" class="gdd-h3"><span class="h3-diamond">◆</span> 9.3 Role implementation status</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<p class="gdd-p">Every role carries one active ability and one always-on passive, both defined as data in <code>src/game/abilities.ts</code>. Q triggers the actives of the current selection; the HUD ability bar carries one per-operative button. Actives cool down for 25–45 seconds; a targeted active that finds no target reports on the comm log and keeps its cooldown.</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Role</th><th style="text-align:left">Active (cooldown)</th><th style="text-align:left">Active effect</th><th style="text-align:left">Passive</th></tr></thead><tbody><tr><td style="text-align:left">Assault</td><td style="text-align:left">Overdrive (30 s)</td><td style="text-align:left">Fire delay halved for 6 s</td><td style="text-align:left">+10% weapon damage on both slots</td></tr><tr><td style="text-align:left">Recon</td><td style="text-align:left">Pulse Scan (35 s)</td><td style="text-align:left">All enemies and their sight cones on the minimap for 8 s</td><td style="text-align:left">Enemies within 16 m are marked on the minimap even when calm</td></tr><tr><td style="text-align:left">Infiltrator</td><td style="text-align:left">Ghost Veil (35 s)</td><td style="text-align:left">Enemies cannot gain vision awareness of this operative for 6 s; hearing still works</td><td style="text-align:left">Enemy vision certainty builds 25% slower against this operative</td></tr><tr><td style="text-align:left">Demolitions</td><td style="text-align:left">Frag Charge (40 s)</td><td style="text-align:left">Thrown under the nearest enemy within 10 m; after 1 s deals 60 damage in a 3 m radius, with a large noise and an impact flash</td><td style="text-align:left">Takes 15% less damage</td></tr><tr><td style="text-align:left">Sniper</td><td style="text-align:left">Deadeye (30 s)</td><td style="text-align:left">The next shot within 10 s cannot miss and deals double damage</td><td style="text-align:left">+15% weapon range on both slots</td></tr><tr><td style="text-align:left">Tech</td><td style="text-align:left">EM Burst (35 s)</td><td style="text-align:left">Enemies within 8 m drop to suspicious, lose their target and cannot fire for 4 s</td><td style="text-align:left">Squad ability cooldowns run 15% faster while this operative lives</td></tr><tr><td style="text-align:left">Support</td><td style="text-align:left">Suppression Sweep (30 s)</td><td style="text-align:left">For 6 s, enemies within 12 m and line of sight move at half speed</td><td style="text-align:left">Operatives within 6 m reload 20% faster</td></tr><tr><td style="text-align:left">Medic</td><td style="text-align:left">Field Stim (25 s)</td><td style="text-align:left">Heals the most wounded living operative within 8 m by 40 HP, never above max</td><td style="text-align:left">Living operatives within 6 m regenerate 1 HP/s up to half their maximum</td></tr></tbody></table></div>
+<p class="gdd-p">Roles and loadout feed the usable item stock, fixed for the whole mission at deployment:</p>
+<ul class="gdd-ul">
+  <li>Base squad: two med kits and one power cell.</li>
+  <li>Medic: +2 med.</li>
+  <li>Support: +1 med.</li>
+  <li>Tech: +1 cell.</li>
+  <li>Each filled loadout slot on a deployed operative: +1 of its item.</li>
+</ul>
+<p class="gdd-p">Both pools are squad-shared consumables. A med kit (E, or the HUD ITEMS button) heals the most wounded selected operative by 50 HP, never above max; with nobody selected wounded it reports on the comm log and spends nothing. A power cell (R) instantly finishes the first selected operative's running role-ability cooldown, with the same comm-log refusal when no cooldown runs. Power cells also arm grenades (G), so the cell pool is contested between the two uses.</p>
+<p class="gdd-p">Stat passives (assault damage, sniper range) are applied to the weapon copies at deployment, after research, so both slots carry them; the rest are checked live in the simulation.</p>
+<h3 id="9-4-deployment-mass" class="gdd-h3"><span class="h3-diamond">◆</span> 9.4 Deployment mass</h3>
+<p class="gdd-p">Squad mass is a real deployment constraint, computed by <code>src/game/mass.ts</code> from the same numbers the mission uses:</p>
+<ul class="gdd-ul">
+  <li>60 kg base per operative.</li>
+  <li>Both weapon slots' authored masses (assault 4.2, SMG 3.1, pistol 1.2, longrifle 6.8, shotgun 4.9 kg).</li>
+  <li>0.25 kg per max-HP point above 90, so research max-HP projects add plating mass.</li>
+  <li>8 kg per loaded MED KIT and 6 kg per POWER CELL.</li>
+</ul>
+<p class="gdd-p">Each operative carries up to two extra item slots, chosen on the assembly screen and persisted by the versioned save; filled slots add their items to the mission pools. The 400 kg limit blocks deployment: the deploy button disables and names the overage. Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 kg every operative moves +0.15 m/s faster, over 380 kg 0.15 m/s slower. The assembly screen shows the active tier next to the mass readout.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="10-mission-briefing-and-contract-selection" class="gdd-h2"><span class="h-badge">SEC</span> 10. Mission briefing and contract selection</h2>
+<h3 id="briefing-purpose" class="gdd-h3"><span class="h3-diamond">◆</span> Briefing purpose</h3>
+<p class="gdd-p">The Mission Brief converts strategic data into an operational plan. It includes:</p>
+<ul class="gdd-ul">
+  <li>Contract identity, client, type, threat, and reward.</li>
+  <li>Narrative briefing and mission notes.</li>
+  <li>Sequential objective list.</li>
+  <li>Collateral tolerance.</li>
+  <li>Satellite-style recon image.</li>
+  <li>A tactical map generated from the same city layout used by the mission.</li>
+  <li>Insertion, target, extraction, patrol, and hostile-zone overlays.</li>
+  <li>Estimated civilian, patrol, garrison, route, block, and street counts.</li>
+</ul>
+<h3 id="contract-acceptance" class="gdd-h3"><span class="h3-diamond">◆</span> Contract acceptance</h3>
+<p class="gdd-p">There is no contract cost or confirmation dialog. Accepting a contract advances directly to team selection. The contract remains replayable after success or failure.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="11-tactical-mission-design" class="gdd-h2"><span class="h-badge">SEC</span> 11. Tactical mission design</h2>
+<h3 id="11-1-current-mission-space" class="gdd-h3"><span class="h3-diamond">◆</span> 11.1 Current mission space</h3>
+<p class="gdd-p">The current mission takes place in a deterministic <strong>96×96 meter</strong> procedural district.</p>
+<p class="gdd-p">Fixed structural landmarks:</p>
+<ul class="gdd-ul">
+  <li>Squad insertion/extraction: south, approximately <code>(48, 88)</code>.</li>
+  <li>Main north-south avenue: central.</li>
+  <li>Checkpoint and garrison plaza: north, approximately <code>(48, 14)</code>.</li>
+  <li>A road and alley network divides procedural building blocks.</li>
+  <li>Buildings retain walkable setbacks and minimum-width alleys.</li>
+  <li>The generator guarantees connectivity from insertion to the checkpoint, enemies, patrol paths, and extraction.</li>
+</ul>
+<p class="gdd-p">Population:</p>
+<ul class="gdd-ul">
+  <li>Four deployed operatives.</li>
+  <li>Seven checkpoint garrison enemies.</li>
+  <li>Five street patrol enemies.</li>
+  <li>22 civilians.</li>
+</ul>
+<p class="gdd-p">The visual district is reconstructed from the mission seed, so a given mission is repeatable.</p>
+<h3 id="11-2-selection" class="gdd-h3"><span class="h3-diamond">◆</span> 11.2 Selection</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Left click selects one operative.</li>
+  <li>Shift + left click adds or removes an operative from selection.</li>
+  <li>Left drag box-selects all living operatives whose projected center falls inside the marquee.</li>
+  <li>Shift + drag adds to the existing selection.</li>
+  <li>Left click on empty ground clears selection.</li>
+  <li>Left click on an enemy preserves the current selection.</li>
+  <li>Number keys 1–4 select one squad slot.</li>
+  <li><code>0</code> or backtick selects all living operatives.</li>
+  <li>Backspace clears selection.</li>
+  <li>The mission begins with all living operatives selected.</li>
+  <li>Dead operatives are automatically excluded from future order recipients.</li>
+</ul>
+<h3 id="11-3-orders-and-stances" class="gdd-h3"><span class="h3-diamond">◆</span> 11.3 Orders and stances</h3>
+<h4 id="move" class="gdd-h4">Move</h4>
+<p class="gdd-p">Right click on the ground sends selected operatives to a compact spread around the destination.</p>
+<ul class="gdd-ul">
+  <li>Group destinations use a ring formation so agents do not stack.</li>
+  <li>A move order clears explicit targeting.</li>
+  <li>A move order releases Hold Ground.</li>
+  <li>Operatives automatically stop and engage visible enemies along the route when weapons are free, then resume moving.</li>
+</ul>
+<h4 id="attack" class="gdd-h4">Attack</h4>
+<p class="gdd-p">Right click on a living hostile assigns it as an explicit target.</p>
+<ul class="gdd-ul">
+  <li>Operatives chase until line of sight and range are available.</li>
+  <li>Explicit attack orders override Hold Fire.</li>
+  <li>Hold Ground prevents chasing but does not cancel the target.</li>
+</ul>
+<h4 id="stop" class="gdd-h4">Stop</h4>
+<p class="gdd-p"><code>X</code> clears pathing and targeting for the selected operatives. Hold Ground and Hold Fire flags remain unchanged.</p>
+<h4 id="hold-ground" class="gdd-h4">Hold Ground</h4>
+<p class="gdd-p"><code>H</code> toggles Hold Ground for the selection.</p>
+<ul class="gdd-ul">
+  <li>The operative is pinned in place.</li>
+  <li>An active path is parked and restored when the hold is released.</li>
+  <li>Separation does not push a held operative out of position.</li>
+  <li>The operative may still fire.</li>
+</ul>
+<h4 id="hold-fire" class="gdd-h4">Hold Fire</h4>
+<p class="gdd-p"><code>C</code> toggles Hold Fire for the selection.</p>
+<ul class="gdd-ul">
+  <li>Automatic targets are cleared.</li>
+  <li>The operative does not auto-acquire.</li>
+  <li>A later explicit attack order still fires.</li>
+</ul>
+<h3 id="11-4-movement-and-navigation" class="gdd-h3"><span class="h3-diamond">◆</span> 11.4 Movement and navigation</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Eight-direction A* pathfinding on a one-meter walk grid.</li>
+  <li>Diagonal corner cutting is forbidden.</li>
+  <li>Paths are straightened when line of sight permits.</li>
+  <li>Blocked destinations snap to the nearest walkable cell.</li>
+  <li>Units slide along a valid axis when collision geometry blocks a full movement step.</li>
+  <li>Local separation keeps living units from overlapping.</li>
+  <li>There is no rigid-body physics system.</li>
+</ul>
+<h3 id="11-5-camera" class="gdd-h3"><span class="h3-diamond">◆</span> 11.5 Camera</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Fixed 45° yaw.</li>
+  <li>55° elevation.</li>
+  <li>Perspective field of view: 25°.</li>
+  <li>Zoom distance: 44–115 meters.</li>
+  <li>Keyboard and minimap panning.</li>
+  <li>Smooth damping.</li>
+  <li>Recenter on the living squad.</li>
+  <li>Buildings that obscure operatives or important ground fade to transparent ghost shells.</li>
+</ul>
+<p class="gdd-p">The camera cannot rotate or tilt during play.</p>
+<h3 id="11-6-enemy-perception" class="gdd-h3"><span class="h3-diamond">◆</span> 11.6 Enemy perception</h3>
+<p class="gdd-p">Enemy behavior uses three states:</p>
+<ol class="gdd-ol">
+  <li><strong>Patrol:</strong> follows authored patrol points at reduced speed.</li>
+  <li><strong>Suspicious:</strong> moves to the last seen or heard location, then scans.</li>
+  <li><strong>Combat:</strong> pursues and attacks visible operatives.</li>
+</ol>
+<h4 id="archetypes" class="gdd-h4">Archetypes</h4>
+<p class="gdd-p">Every enemy carries one of four archetypes, defined in <code>ENEMY_ARCHETYPES</code> (<code>game/data.ts</code>) and assigned by the city generator:</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Archetype</th><th style="text-align:left">Base HP</th><th style="text-align:left">Speed</th><th style="text-align:left">Distinct behavior</th></tr></thead><tbody><tr><td style="text-align:left">Trooper</td><td style="text-align:left">60</td><td style="text-align:left">4.2</td><td style="text-align:left">Baseline; every street patrol and wave unit</td></tr><tr><td style="text-align:left">Heavy</td><td style="text-align:left">100</td><td style="text-align:left">3.2</td><td style="text-align:left">Takes 15% less damage, walks a shotgun in</td></tr><tr><td style="text-align:left">Marksman</td><td style="text-align:left">70</td><td style="text-align:left">4.0</td><td style="text-align:left">Longrifle; backpedals when a target closes inside 8 m</td></tr><tr><td style="text-align:left">Officer</td><td style="text-align:left">70</td><td style="text-align:left">4.4</td><td style="text-align:left">Radios nearby guards onto the squad (below)</td></tr></tbody></table></div>
+<p class="gdd-p">Threat rating sets the elite mix through the mission modifiers: MODERATE fields none, HIGH upgrades one garrison member to a heavy, SEVERE fields one heavy and one officer. Upgraded members keep their posts and patrols. The checkpoint's authored longrifle guard is the one authored marksman, and its 80 HP override outranks the archetype base.</p>
+<p class="gdd-p"><strong>Officer radio:</strong> four seconds after an officer enters combat, every guard within 22 m that is not already fighting is put on the squad's last seen position at investigation-level awareness. Killing the officer inside the delay cancels the call, and so does calming it down (an EM burst works). Officers wear an amber chest lamp; heavies read by their bulk, marksmen by their lean frame.</p>
+<h4 id="vision" class="gdd-h4">Vision</h4>
+<ul class="gdd-ul">
+  <li>Maximum vision range: <strong>14 m</strong> in clear weather, <strong>12.6 m</strong> under light rain, <strong>11.2 m</strong> under heavy rain.</li>
+  <li>Vision cone: <strong>110° total</strong>.</li>
+  <li>Omnidirectional notice radius: <strong>4.5 m</strong>. Weather does not change it.</li>
+  <li>Vision requires clear grid line of sight.</li>
+  <li>Continuous sight required for certainty:</li>
+  <li>Approximately 0.45 seconds at close range.</li>
+  <li>Up to approximately 1.7 seconds at maximum vision range.</li>
+</ul>
+<h4 id="hearing" class="gdd-h4">Hearing</h4>
+<ul class="gdd-ul">
+  <li>Gunshots create noise events.</li>
+  <li>Hearing passes through walls.</li>
+  <li>Noise supplies a location, not a target.</li>
+  <li>Sound alone can raise awareness only to 85%, causing investigation but not immediate firing.</li>
+  <li>Weapon noise radius increases with range and damage.</li>
+</ul>
+<h4 id="alert-propagation" class="gdd-h4">Alert propagation</h4>
+<ul class="gdd-ul">
+  <li>A guard can alert another guard within 9 m when they have line of sight to each other.</li>
+  <li>Combat awareness does not propagate through walls.</li>
+  <li>After losing sight for six seconds, a guard returns to suspicious investigation rather than directly to patrol.</li>
+  <li>Awareness decays when no evidence is received.</li>
+</ul>
+<h3 id="11-7-civilian-behavior" class="gdd-h3"><span class="h3-diamond">◆</span> 11.7 Civilian behavior</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Civilians wander locally when calm.</li>
+  <li>Gunfire within 10 m causes them to flee.</li>
+  <li>Flee behavior lasts five seconds after the latest nearby shot.</li>
+  <li>Fleeing civilians move 50% faster.</li>
+  <li>A direct hit forces the civilian to flee from the shooter.</li>
+  <li>Civilians can be injured or killed by either side.</li>
+</ul>
+<h3 id="11-8-combat-model" class="gdd-h3"><span class="h3-diamond">◆</span> 11.8 Combat model</h3>
+<p class="gdd-p">Combat is real-time and automatically resolved after positioning and targeting decisions.</p>
+<h4 id="fire-prerequisites" class="gdd-h4">Fire prerequisites</h4>
+<p class="gdd-p">The shooter must:</p>
+<ul class="gdd-ul">
+  <li>Be alive.</li>
+  <li>Have a weapon.</li>
+  <li>Have ammunition in the current magazine.</li>
+  <li>Not be reloading.</li>
+  <li>Have completed the weapon cooldown.</li>
+  <li>Have the target in range.</li>
+  <li>Have line of sight.</li>
+</ul>
+<h4 id="accuracy" class="gdd-h4">Accuracy</h4>
+<p class="gdd-p">Base hit chance is approximately:</p>
+<p class="gdd-p"><code>(0.78 − 0.28 × distance/range + random jitter) × accuracy multiplier</code></p>
+<p class="gdd-p">The result is clamped between 5% and 95%.</p>
+<ul class="gdd-ul">
+  <li>Operative accuracy multiplier: 1.0.</li>
+  <li>CorpSec accuracy multiplier: 0.45.</li>
+  <li>Weapon spread affects the path of missed shots, not the initial hit-roll formula.</li>
+</ul>
+<h4 id="damage-and-fire-rate" class="gdd-h4">Damage and fire rate</h4>
+<ul class="gdd-ul">
+  <li>Operatives deal the weapon’s full damage.</li>
+  <li>CorpSec deals 70% of weapon damage.</li>
+  <li>CorpSec weapon cooldowns are 1.75× longer than authored weapon cooldowns.</li>
+  <li>Magazines automatically reload from an unlimited implicit reserve.</li>
+</ul>
+<h4 id="misses-and-stray-fire" class="gdd-h4">Misses and stray fire</h4>
+<p class="gdd-p">Missed rounds continue along the shot lane to weapon range. The first living body intersected before cover can be hit, regardless of faction.</p>
+<p class="gdd-p">Consequences:</p>
+<ul class="gdd-ul">
+  <li>Civilians can be hit by misses.</li>
+  <li>Other operatives can be hit by friendly stray fire.</li>
+  <li>Enemies can hit civilians or other enemies with stray fire.</li>
+  <li>Cover blocks the continued shot lane.</li>
+</ul>
+<p class="gdd-p">This is a central expression of the collateral pillar and should remain highly legible through tracers, logs, and debrief feedback.</p>
+<h3 id="11-9-weapons" class="gdd-h3"><span class="h3-diamond">◆</span> 11.9 Weapons</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Weapon</th><th style="text-align:right">Damage</th><th style="text-align:right">Range</th><th style="text-align:right">Fire delay</th><th style="text-align:right">Magazine</th><th style="text-align:right">Reload</th><th style="text-align:right">Spread</th><th style="text-align:left">Tactical identity</th></tr></thead><tbody><tr><td style="text-align:left">RFC-27 Assault</td><td style="text-align:right">11</td><td style="text-align:right">16 m</td><td style="text-align:right">0.16 s</td><td style="text-align:right">30</td><td style="text-align:right">1.7 s</td><td style="text-align:right">0.045</td><td style="text-align:left">Flexible sustained fire</td></tr><tr><td style="text-align:left">K-9 Rattler SMG</td><td style="text-align:right">7</td><td style="text-align:right">12 m</td><td style="text-align:right">0.09 s</td><td style="text-align:right">40</td><td style="text-align:right">1.9 s</td><td style="text-align:right">0.080</td><td style="text-align:left">High-volume close combat</td></tr><tr><td style="text-align:left">S-18 Pistol</td><td style="text-align:right">10</td><td style="text-align:right">11 m</td><td style="text-align:right">0.45 s</td><td style="text-align:right">12</td><td style="text-align:right">1.2 s</td><td style="text-align:right">0.030</td><td style="text-align:left">Accurate light sidearm</td></tr><tr><td style="text-align:left">VK-88 Longrifle</td><td style="text-align:right">46</td><td style="text-align:right">26 m</td><td style="text-align:right">1.60 s</td><td style="text-align:right">5</td><td style="text-align:right">2.6 s</td><td style="text-align:right">0.008</td><td style="text-align:left">Precision long-range elimination</td></tr><tr><td style="text-align:left">M6 Breacher</td><td style="text-align:right">26</td><td style="text-align:right">8 m</td><td style="text-align:right">0.90 s</td><td style="text-align:right">6</td><td style="text-align:right">2.2 s</td><td style="text-align:right">0.120</td><td style="text-align:left">Short-range burst damage</td></tr></tbody></table></div>
+<p class="gdd-p"><strong>Sidearm switching:</strong> Every operative carries two live weapon slots, the authored primary and sidearm. <code>V</code> swaps every selected operative to its other slot. The drawn weapon cannot fire for a 0.5-second readiness delay, shown as DRAWING on the HUD. Each slot keeps its own magazine: swapping cancels an in-progress reload of the stowed weapon, its round count persists as-is and resumes when drawn again. Auto-fire, ordered attacks, engagement range, noise radius, tracers, and gunshot audio all follow the drawn weapon, and weapon research applies to sidearms exactly as to primaries. Enemies carry a single weapon and never swap. Reserve-ammo values shown in the UI are informational and do not constrain the simulation.</p>
+<h3 id="11-10-objectives" class="gdd-h3"><span class="h3-diamond">◆</span> 11.10 Objectives</h3>
+<p class="gdd-p">Seven objective kinds, defined as <code>ObjectiveKind</code> in <code>game/types.ts</code> and driven by data alone:</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Kind</th><th style="text-align:left">Completes when</th></tr></thead><tbody><tr><td style="text-align:left"><code>reach-zone</code></td><td style="text-align:left">Any living operative enters the radius</td></tr><tr><td style="text-align:left"><code>eliminate-tag</code></td><td style="text-align:left">No living enemy with the tag remains</td></tr><tr><td style="text-align:left"><code>extract</code></td><td style="text-align:left">Every surviving operative is inside the extraction radius</td></tr><tr><td style="text-align:left"><code>interact</code></td><td style="text-align:left">The channel at the point reaches <code>durationSec</code></td></tr><tr><td style="text-align:left"><code>escort</code></td><td style="text-align:left">Every vip is alive and inside the target zone</td></tr><tr><td style="text-align:left"><code>destroy</code></td><td style="text-align:left">No device with the tag is left alive</td></tr><tr><td style="text-align:left"><code>defend</code></td><td style="text-align:left">The hold timer at the zone reaches zero</td></tr></tbody></table></div>
+<p class="gdd-p">An objective names its zone directly or resolves one from <code>CityData.landmarks</code>, so authored data never carries coordinates the generator owns. A <code>defend</code> objective also carries a <code>WaveSpec</code>: a unit count, a weapon list, and named entry landmarks. The wave spawns when the objective activates.</p>
+<p class="gdd-p"><code>interact</code> and <code>defend</code> share one timing rule: the channel or the hold advances only while a living operative stands in the zone, and an empty zone pauses it where it stands rather than resetting it. A dead vip voids every unfinished <code>escort</code>. An optional <code>destroy</code> whose device dies to non-squad fire fails rather than completing.</p>
+<p class="gdd-p">An objective may also carry <code>failSec</code>, a time limit counted from activation. The HUD shows the countdown on the objective row. Expiry fails an optional objective and loses the mission on a required one. Hollow Crown's server pull is the one authored use: the wipe starts when the gate objective completes and closes the bonus 90 seconds later.</p>
+<p class="gdd-p">Required objectives are strictly sequential. A later required objective cannot complete early.</p>
+<p class="gdd-p">Optional objectives are the exception. An optional objective activates with the required objective it precedes in the list, never blocks the sequence, and pays <code>bonusReward</code> on top of the contract when it completes. A failed or ignored optional objective costs nothing.</p>
+<h3 id="11-11-win-and-loss" class="gdd-h3"><span class="h3-diamond">◆</span> 11.11 Win and loss</h3>
+<p class="gdd-p"><strong>Win:</strong> Every required objective completes. Optional objectives do not gate the win.  </p>
+<p class="gdd-p"><strong>Loss:</strong> No living operatives remain.</p>
+<p class="gdd-p">The HUD presents the result immediately. After a 2.5-second delay, the game enters the debrief.</p>
+<p class="gdd-p">The debrief reports:</p>
+<ul class="gdd-ul">
+  <li>Target.</li>
+  <li>Eliminations.</li>
+  <li>Squad casualties.</li>
+  <li>Civilian collateral count.</li>
+  <li>Mission time.</li>
+  <li>Contract value when relevant.</li>
+  <li>Optional bonus when an optional objective completed.</li>
+  <li>Collateral penalty when relevant.</li>
+  <li>Contract ETA spent as world time.</li>
+  <li>Net payout.</li>
+  <li>New account balance.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="12-current-content-catalogue" class="gdd-h2"><span class="h-badge">SEC</span> 12. Current content catalogue</h2>
+<h3 id="12-1-contracts" class="gdd-h3"><span class="h3-diamond">◆</span> 12.1 Contracts</h3>
+<p class="gdd-p">Contract supply is the authored three plus a procedural stream.</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Codename</th><th style="text-align:left">Location</th><th style="text-align:left">Type</th><th style="text-align:left">Client</th><th style="text-align:left">Threat</th><th style="text-align:right">Reward</th><th style="text-align:left">Archetype</th><th style="text-align:right">Chance</th><th style="text-align:right">ETA</th><th style="text-align:left">Status</th></tr></thead><tbody><tr><td style="text-align:left">Glass Veil</td><td style="text-align:left">New Carthage, District 07, Europe</td><td style="text-align:left">Seizure</td><td style="text-align:left">Sable Enterprises</td><td style="text-align:left"><span class="badge badge-recommended">Severe</span></td><td style="text-align:right">85,000 CR</td><td style="text-align:left">Checkpoint</td><td style="text-align:right">41%</td><td style="text-align:right">2 days</td><td style="text-align:left"><span class="badge badge-implemented">Playable</span></td></tr><tr><td style="text-align:left">Hollow Crown</td><td style="text-align:left">Shingang, District 21, Asia</td><td style="text-align:left">Extraction</td><td style="text-align:left">Helix Corp</td><td style="text-align:left"><span class="badge badge-scaffolded">High</span></td><td style="text-align:right">62,000 CR</td><td style="text-align:left">Compound</td><td style="text-align:right">59%</td><td style="text-align:right">4 days</td><td style="text-align:left">Playable; intel level 2</td></tr><tr><td style="text-align:left">Rust Haven</td><td style="text-align:left">Detroit Sprawl, District 03, North America</td><td style="text-align:left">Sabotage</td><td style="text-align:left">Stratos Industries</td><td style="text-align:left"><span class="badge badge-scaffolded">Moderate</span></td><td style="text-align:right">41,000 CR</td><td style="text-align:left">Industrial</td><td style="text-align:right">79%</td><td style="text-align:right">3 days</td><td style="text-align:left">Playable; intel level 2</td></tr></tbody></table></div>
+<p class="gdd-p">Reward and ETA are authored. Chance is not: <code>missionChance</code> in <code>game/missionParams.ts</code> derives it from threat, weather, the source sector's control and unrest, and the count of completed research, then clamps it to 35–95. The percentages above are the campaign-start figures, with no research done and the sectors at their opening values; they move as the campaign moves. At intel level 2+ the brief hides the percentage and shows the computed risk index instead (section 6.5).</p>
+<p class="gdd-p">ETA is spent, not displayed: the debrief advances the strategic clock by the contract's <code>etaDays</code>, so a long contract costs world time that research and injury recovery run through.</p>
+<p class="gdd-p"><strong>Generated contracts</strong> (<code>src/game/contracts.ts</code>) keep the market stocked beside the authored three:</p>
+<ul class="gdd-ul">
+  <li>The world keeps up to 3 generated contracts open; a new one rolls every 2–6 world hours when below target, weighted toward sectors with high unrest or low control.</li>
+  <li>Parameters derive from the source sector: threat from its defense rating and garrison condition, reward from threat and the sector's influence weight (30,000–95,000 CR on a 500 CR grid), client from city ownership, type from seizure / extraction / sabotage (plus riot-linked suppression).</li>
+  <li>Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.</li>
+  <li>Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.</li>
+  <li>Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.</li>
+  <li>The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v6), so a reload reproduces the same open contracts.</li>
+</ul>
+<h3 id="12-2-glass-veil" class="gdd-h3"><span class="h3-diamond">◆</span> 12.2 Glass Veil</h3>
+<h4 id="premise" class="gdd-h4">Premise</h4>
+<p class="gdd-p">CorpSec has sealed District 07 behind an Omnicorp checkpoint. Sable Enterprises wants the district opened for an asset transfer at 23:00. The squad inserts on the south perimeter and advances through market blocks under heavy rain.</p>
+<h4 id="conditions" class="gdd-h4">Conditions</h4>
+<ul class="gdd-ul">
+  <li>Heavy rain: guard sight scales to 0.8 and weapon noise to 0.85.</li>
+  <li>Moderate civilian density: 22 bystanders, 28 when the source sector holds above 20 unrest.</li>
+  <li>Low collateral tolerance.</li>
+  <li>Severe threat rating: three extra street patrols on top of the five base ones, four where unrest is high; enemy health scales to 1.2, or 1.25 where the sector holds above 60 control; one garrison member is upgraded to an officer and one to a heavy.</li>
+</ul>
+<p class="gdd-p">Heavy rain is the squad's ally here: it is the largest sight penalty in the game, and it is why a Severe contract still reads at a workable chance. It does not change accuracy or movement.</p>
+<h4 id="objective-sequence" class="gdd-h4">Objective sequence</h4>
+<ol class="gdd-ol">
+  <li><strong>Reach the checkpoint gate.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Any living operative enters the checkpoint zone.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Eliminate the CorpSec garrison.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Kill the seven checkpoint enemies tagged <code>garrison</code>.</li>
+  <li>The eight untagged street patrols are optional unless they threaten the squad.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Extract the squad.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Move every surviving operative back to the southern insertion zone.</li>
+</ul>
+<h4 id="tactical-arc" class="gdd-h4">Tactical arc</h4>
+<ul class="gdd-ul">
+  <li>Approach from the comparatively low-rise southern edge.</li>
+  <li>Read and bypass or engage eight street patrols.</li>
+  <li>Manage civilians who flee across fire lanes.</li>
+  <li>Breach the guarded northern plaza.</li>
+  <li>Eliminate a six-unit garrison led by a radio officer, backed by a shotgun heavy and one 80-HP longrifle marksman that keeps its distance.</li>
+  <li>Silence the officer inside four seconds of contact or fight the converging plaza guards.</li>
+  <li>Return south with all survivors.</li>
+</ul>
+<h3 id="12-3-hollow-crown" class="gdd-h3"><span class="h3-diamond">◆</span> 12.3 Hollow Crown</h3>
+<h4 id="premise" class="gdd-h4">Premise</h4>
+<p class="gdd-p">CorpSec holds a Helix neurochem architect in a detention compound in District 21, and intends to move the asset before the next maglev window. Helix Corp pays for the architect alive and nothing for a body. The squad inserts on the south perimeter and works east to the compound under light rain.</p>
+<h4 id="conditions" class="gdd-h4">Conditions</h4>
+<ul class="gdd-ul">
+  <li>Light rain: guard sight scales to 0.9 and weapon noise to 0.95.</li>
+  <li>Low civilian density: 14 bystanders, 20 when the source sector holds above 20 unrest.</li>
+  <li>High threat rating: two extra street patrols on top of the four base ones, three where unrest is high; enemy health scales to 1.1, or 1.15 where the sector holds above 60 control; one garrison member is upgraded to a heavy.</li>
+  <li>The compound garrison can be bypassed. Engagement is optional.</li>
+</ul>
+<p class="gdd-p">The compound archetype walls a detention block into the eastern half, between the first two cross streets. It has one gated south entry and one breachable side entry; the side flank comes from seed parity, so the two authored variants mirror each other. Cell blocks line the north wall, with a records hut at the server corner.</p>
+<h4 id="objective-sequence" class="gdd-h4">Objective sequence</h4>
+<ol class="gdd-ol">
+  <li><strong>Reach the compound gate.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Any living operative enters the gate zone.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Pull the detention server.</strong> <em>(Optional, +9,000 CR)</em></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Channel four seconds at the records hut. Activates with objective 1 and never blocks the sequence.</li>
+  <li>The server wipes itself 90 seconds after activation; the countdown shows on the objective row and expiry fails only the bonus.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Override the cell block locks.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Channel five seconds at the cell block console.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Extract the Helix asset.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Walk the freed vip to the extraction pad alive.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Extract the squad.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Move every surviving operative into the extraction zone.</li>
+</ul>
+<h4 id="tactical-arc" class="gdd-h4">Tactical arc</h4>
+<ul class="gdd-ul">
+  <li>Cross the southern blocks past six street patrols.</li>
+  <li>Choose the gate or the breachable side wall; the side entry skips most of the interior garrison.</li>
+  <li>Hold the console position for the full channel while a six-unit garrison patrols inside the walls.</li>
+  <li>Escort a fragile vip out through whatever the squad has already stirred up.</li>
+  <li>The optional server sits away from the console, so the bonus costs exposure time.</li>
+</ul>
+<h3 id="12-4-rust-haven" class="gdd-h3"><span class="h3-diamond">◆</span> 12.4 Rust Haven</h3>
+<h4 id="premise" class="gdd-h4">Premise</h4>
+<p class="gdd-p">Stratos Industries has located an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates in District 03. The squad drops the relays, then holds the yard while the burn takes the grid down.</p>
+<h4 id="conditions" class="gdd-h4">Conditions</h4>
+<ul class="gdd-ul">
+  <li>Clear night: guards see and hear at full range.</li>
+  <li>Sparse civilian density: 8 bystanders, 14 where unrest is high. The industrial band is mostly empty.</li>
+  <li>Moderate threat rating: three base street patrols and no threat bonus, one more where unrest is high; enemy health scales to 1.0, or 1.05 where the sector holds above 60 control.</li>
+  <li>Demolition cells are the fast tool against the devices. Gunfire works, slowly.</li>
+</ul>
+<p class="gdd-p">The industrial archetype fences a relay yard into the eastern half, between the first two cross streets, with two gates and an inner fence splitting it into two sub-yards. The split axis comes from seed parity. Streets run wider than the other archetypes: 8 m cross streets against 7 m.</p>
+<h4 id="objective-sequence" class="gdd-h4">Objective sequence</h4>
+<ol class="gdd-ol">
+  <li><strong>Reach the relay yard.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Any living operative enters the first sub-yard.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Drop the backup transformer.</strong> <em>(Optional, +6,000 CR)</em></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Destroy the device tagged <code>transformer</code> in the second sub-yard.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Destroy the three fuel relays.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Two sit in the first sub-yard, one in the second.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Hold the yard for the burn.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Keep the squad in the yard for 45 seconds against a five-unit CorpSec wave entering through both gate approaches.</li>
+</ul>
+<ol class="gdd-ol">
+  <li><strong>Extract the squad.</strong></li>
+</ol>
+<ul class="gdd-ul">
+  <li>Move every surviving operative into the extraction zone.</li>
+</ul>
+<h4 id="tactical-arc" class="gdd-h4">Tactical arc</h4>
+<ul class="gdd-ul">
+  <li>Bypass three street patrols on a quiet approach; the yard guard can be walked past on the way in.</li>
+  <li>Clear or avoid four yard guards before touching the devices.</li>
+  <li>Spend grenades on the relays or accept a long, loud small-arms burn.</li>
+  <li>The defend objective inverts the mission: the squad has been the aggressor until the wave arrives, then holds ground it just made noisy.</li>
+  <li>The optional transformer sits in the far sub-yard, so taking it commits the squad deeper before the wave.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="13-user-interface-and-experience" class="gdd-h2"><span class="h-badge">SEC</span> 13. User interface and experience</h2>
+<h3 id="13-1-interface-principles" class="gdd-h3"><span class="h3-diamond">◆</span> 13.1 Interface principles</h3>
+<ul class="gdd-ul">
+  <li>DOM UI surrounds and overlays the 3D scene.</li>
+  <li>Near-black backgrounds preserve contrast.</li>
+  <li>Teal communicates operation and selection.</li>
+  <li>Amber communicates focus, authorization, and active objectives.</li>
+  <li>Red communicates danger, lock states, damage, and failure.</li>
+  <li>Green communicates completion and positive status.</li>
+  <li>Small monospace uppercase labels create a command-terminal identity.</li>
+  <li>Primary values should remain visually larger than labels.</li>
+</ul>
+<h3 id="13-2-main-surfaces" class="gdd-h3"><span class="h3-diamond">◆</span> 13.2 Main surfaces</h3>
+<h4 id="main-menu" class="gdd-h4">Main Menu</h4>
+<ul class="gdd-ul">
+  <li>Establishes the secure-system fiction.</li>
+  <li>Unlocks browser audio on the first user gesture.</li>
+  <li>Offers CONTINUE when a valid save exists.</li>
+  <li>Offers NEW OPERATION behind a two-step erase confirm.</li>
+  <li>Opens the SETTINGS panel (audio, controls, accessibility).</li>
+</ul>
+<h4 id="world-network" class="gdd-h4">World Network</h4>
+<ul class="gdd-ul">
+  <li>Sector selection and corporate ownership map.</li>
+  <li>Mission markers and operation list.</li>
+  <li>World time controls and 24-hour review timeline.</li>
+  <li>Dynamic events feed.</li>
+  <li>Credits, influence, operative count, and intel display.</li>
+  <li>Campaign-complete banner after all three contracts are won.</li>
+  <li>Navigation to Research.</li>
+  <li>First-visit orientation overlay naming the panel groups and the Research tab; its dismissal persists with the save.</li>
+</ul>
+<h4 id="research-division" class="gdd-h4">Research Division</h4>
+<ul class="gdd-ul">
+  <li>Three simultaneous branch trees.</li>
+  <li>Four node states: researched, active, available, locked.</li>
+  <li>Live progress fills.</li>
+  <li>Project detail, prerequisites, effects, time, cost, and authorization.</li>
+  <li>Lab status and program summary.</li>
+</ul>
+<h4 id="mission-brief" class="gdd-h4">Mission Brief</h4>
+<ul class="gdd-ul">
+  <li>Recon image and code-derived tactical plan.</li>
+  <li>Dossier, objectives, notes, threat, reward, and collateral tolerance.</li>
+  <li>Contract acceptance.</li>
+</ul>
+<h4 id="operative-assembly" class="gdd-h4">Operative Assembly</h4>
+<ul class="gdd-ul">
+  <li>Roster inspection and assignment.</li>
+  <li>Four squad bays.</li>
+  <li>Research-adjusted stats and weapon values.</li>
+  <li>Installed-augmentation presentation.</li>
+  <li>Two loadout item slots per operative (med kit / power cell / empty).</li>
+  <li>Enforced deployment mass with the 400 kg limit and the speed-tier readout.</li>
+</ul>
+<h4 id="mission-hud" class="gdd-h4">Mission HUD</h4>
+<ul class="gdd-ul">
+  <li>District clock and static weather readouts.</li>
+  <li>Alert level.</li>
+  <li>Account credits.</li>
+  <li>Squad cards with HP, magazine, selected/active state, and tactical stances.</li>
+  <li>Objective list.</li>
+  <li>Comm log.</li>
+  <li>Active operative’s primary and sidearm readout.</li>
+  <li>Live ability bar: one role-ability button per squad member with ready, cooldown-fill, and running-duration states, plus the grenade control.</li>
+  <li>Usable item buttons with live med kit and power cell counts, disabled at zero.</li>
+  <li>Interactive, zoomable minimap.</li>
+  <li>Pause menu and mission result banner.</li>
+  <li>First-mission tutorial toasts and one-shot contextual advisories, dismissible, never blocking input or pausing the sim; progress persists with the save.</li>
+</ul>
+<h4 id="debrief" class="gdd-h4">Debrief</h4>
+<ul class="gdd-ul">
+  <li>Outcome, combat, collateral, timing, and economy.</li>
+  <li>Applies the sector, intel, and roster consequences exactly once per outcome.</li>
+  <li>Return to World Network or replay.</li>
+</ul>
+<h3 id="13-3-minimap" class="gdd-h3"><span class="h3-diamond">◆</span> 13.3 Minimap</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Rotated to match screen orientation.</li>
+  <li>Building footprints and roads.</li>
+  <li>Extraction and checkpoint zones.</li>
+  <li>Active-objective pulse.</li>
+  <li>Calm, suspicious, and combat enemy states.</li>
+  <li>Sight cones for suspicious and combat guards.</li>
+  <li>Civilians and operatives.</li>
+  <li>Ground footprint of the current camera.</li>
+  <li>Three zoom levels.</li>
+  <li>Click and drag to steer the camera.</li>
+</ul>
+<h3 id="13-4-pause-and-control-discovery" class="gdd-h3"><span class="h3-diamond">◆</span> 13.4 Pause and control discovery</h3>
+<p class="gdd-p">Space or Escape opens a modal pause menu. The menu:</p>
+<ul class="gdd-ul">
+  <li>Freezes simulation and camera motion.</li>
+  <li>Displays every mission binding from the same authoritative binding table used by input, including any player remaps.</li>
+  <li>Supports focus trapping.</li>
+  <li>Offers Resume.</li>
+  <li>Opens the SETTINGS panel; the sim stays frozen and closing returns to the pause menu.</li>
+  <li>Uses a two-step, three-second confirmation window for Abort.</li>
+</ul>
+<p class="gdd-p">Abort returns to the World Network and discards the current mission state without a debrief.</p>
+<p class="gdd-p">Control discovery is also carried by the first-mission tutorial: a sequence of small dismissible HUD toasts (selection, move, attack, stances, ability, items, weapon swap, directives, extraction) that name the current bindings, advance when the player performs the action or dismisses them, and never block input. A SKIP TUTORIAL control marks all steps seen. One-shot contextual advisories fire at most once per campaign: an operative under 35% health with med kits in stock, the first combat alert, a role ability left ready for a minute, and an overweight deployment.</p>
+<h3 id="13-5-accessibility-status" class="gdd-h3"><span class="h3-diamond">◆</span> 13.5 Accessibility status</h3>
+<p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
+<ul class="gdd-ul">
+  <li>Most major buttons have contextual accessible labels.</li>
+  <li>Research nodes support Enter and Space.</li>
+  <li>The timeline supports arrows, Home, and End.</li>
+  <li>Pause-menu and settings-panel focus is trapped and restored.</li>
+  <li>The minimap is keyboard-focusable but its declared arrow-key behavior is actually handled by the global camera controls.</li>
+  <li>Color is often reinforced by labels, icons, or state text.</li>
+  <li>Remappable controls (settings panel; pause, operative slots, and mouse stay fixed).</li>
+  <li>Reduced-motion mode: decorative sweeps disappear, looping pulse and flow animations freeze, the minimap objective pulse holds a steady ring, and rain drops to minimum density.</li>
+  <li>High-contrast mode: brighter ink tiers and stronger frame lines.</li>
+  <li>Text scaling at 90/100/110/125%; screens scroll rather than clip at the larger sizes.</li>
+  <li>All of it persists in localStorage separate from the campaign save, so NEW OPERATION keeps the player's settings.</li>
+</ul>
+<p class="gdd-p"><span class="status-tag tag-recom"><span class="tag-dot"></span>RECOMMENDED</span></p>
+<ul class="gdd-ul">
+  <li>Full keyboard navigation for all screen panels.</li>
+  <li>Color-vision presets.</li>
+  <li>Captions or textual equivalents for all audio cues.</li>
+  <li>Screen-reader validation of the tactical HUD.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="14-controls" class="gdd-h2"><span class="h-badge">SEC</span> 14. Controls</h2>
+<p class="gdd-p">The tables below list the default keys. Every keyboard action except the pause keys and the operative slots can be remapped from the SETTINGS panel; the pause menu, the tutorial prompts, and the input handlers all read the same binding table, so a remap renames itself everywhere at once.</p>
+<h3 id="camera" class="gdd-h3"><span class="h3-diamond">◆</span> Camera</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Input</th><th style="text-align:left">Action</th></tr></thead><tbody><tr><td style="text-align:left">W / Up</td><td style="text-align:left">Pan forward</td></tr><tr><td style="text-align:left">S / Down</td><td style="text-align:left">Pan backward</td></tr><tr><td style="text-align:left">A / Left</td><td style="text-align:left">Pan left</td></tr><tr><td style="text-align:left">D / Right</td><td style="text-align:left">Pan right</td></tr><tr><td style="text-align:left">F</td><td style="text-align:left">Recenter on living squad</td></tr><tr><td style="text-align:left"><code>=</code> / Numpad <code>+</code></td><td style="text-align:left">Zoom in</td></tr><tr><td style="text-align:left"><code>-</code> / Numpad <code>-</code></td><td style="text-align:left">Zoom out</td></tr><tr><td style="text-align:left">Mouse wheel</td><td style="text-align:left">Zoom</td></tr><tr><td style="text-align:left">Minimap click/drag</td><td style="text-align:left">Steer camera</td></tr></tbody></table></div>
+<h3 id="squad" class="gdd-h3"><span class="h3-diamond">◆</span> Squad</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Input</th><th style="text-align:left">Action</th></tr></thead><tbody><tr><td style="text-align:left">1–4 / Numpad 1–4</td><td style="text-align:left">Select operative slot</td></tr><tr><td style="text-align:left">0 / backtick / Numpad 0</td><td style="text-align:left">Select all living operatives</td></tr><tr><td style="text-align:left">Backspace</td><td style="text-align:left">Clear selection</td></tr><tr><td style="text-align:left">X</td><td style="text-align:left">Stop and clear orders</td></tr><tr><td style="text-align:left">H</td><td style="text-align:left">Toggle Hold Ground</td></tr><tr><td style="text-align:left">C</td><td style="text-align:left">Toggle Hold Fire</td></tr><tr><td style="text-align:left">V</td><td style="text-align:left">Swap weapon</td></tr><tr><td style="text-align:left">Space / Escape</td><td style="text-align:left">Pause menu</td></tr></tbody></table></div>
+<h3 id="abilities" class="gdd-h3"><span class="h3-diamond">◆</span> Abilities</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Input</th><th style="text-align:left">Action</th></tr></thead><tbody><tr><td style="text-align:left">Q</td><td style="text-align:left">Use the selected operatives' role ability</td></tr><tr><td style="text-align:left">E / M</td><td style="text-align:left">Use a med kit on the most wounded selected operative</td></tr><tr><td style="text-align:left">R</td><td style="text-align:left">Use a power cell to finish the selected operative's ability cooldown</td></tr><tr><td style="text-align:left">G</td><td style="text-align:left">Arm / cancel grenade targeting</td></tr></tbody></table></div>
+<h3 id="mouse" class="gdd-h3"><span class="h3-diamond">◆</span> Mouse</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Input</th><th style="text-align:left">Action</th></tr></thead><tbody><tr><td style="text-align:left">Left click operative</td><td style="text-align:left">Select</td></tr><tr><td style="text-align:left">Shift + left click</td><td style="text-align:left">Add/remove selection</td></tr><tr><td style="text-align:left">Left drag</td><td style="text-align:left">Box select</td></tr><tr><td style="text-align:left">Shift + left drag</td><td style="text-align:left">Add box selection</td></tr><tr><td style="text-align:left">Left click bare ground</td><td style="text-align:left">Clear selection</td></tr><tr><td style="text-align:left">Right click ground</td><td style="text-align:left">Move order</td></tr><tr><td style="text-align:left">Right click hostile</td><td style="text-align:left">Attack order</td></tr><tr><td style="text-align:left">Double-click squad HUD card</td><td style="text-align:left">Center camera on operative</td></tr></tbody></table></div>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="15-art-direction" class="gdd-h2"><span class="h-badge">SEC</span> 15. Art direction</h2>
+<h3 id="visual-identity" class="gdd-h3"><span class="h3-diamond">◆</span> Visual identity</h3>
+<p class="gdd-p">The project uses a late-1980s/1990s cyberpunk strategy-game vocabulary rebuilt as a crisp modern browser interface:</p>
+<ul class="gdd-ul">
+  <li>Near-black and dark blue-green ground.</li>
+  <li>Teal operational graphics.</li>
+  <li>Amber active/focus states.</li>
+  <li>Red hostile and failure states.</li>
+  <li>Thin technical borders.</li>
+  <li>Monospace uppercase typography.</li>
+  <li>Scanlines, vignette, radar sweeps, data chips, coordinate labels, and barcodes.</li>
+</ul>
+<h3 id="tactical-scene" class="gdd-h3"><span class="h3-diamond">◆</span> Tactical scene</h3>
+<ul class="gdd-ul">
+  <li>Nighttime urban district.</li>
+  <li>Heavy rain.</li>
+  <li>Wet asphalt and puddle-like roughness variation.</li>
+  <li>Cool window light and warm street lamps.</li>
+  <li>Procedural neon banners.</li>
+  <li>Dense towers, blocks, slabs, and industrial structures.</li>
+  <li>Instanced cars, barriers, crates, dumpsters, pillars, and checkpoint dressing.</li>
+  <li>Emissive-only bloom keeps lights controlled.</li>
+  <li>Building ghosting protects tactical readability.</li>
+</ul>
+<h3 id="units" class="gdd-h3"><span class="h3-diamond">◆</span> Units</h3>
+<p class="gdd-p">Units are assembled procedurally from simple geometry:</p>
+<ul class="gdd-ul">
+  <li>Operatives use cool armored forms and personal accent colors.</li>
+  <li>CorpSec uses dark coats, red visors, faction rings, and garrison markings.</li>
+  <li>Civilians use varied procedural colors.</li>
+  <li>Operatives display slot tags, health pips, selection rings, and route feedback.</li>
+  <li>Enemies display alert/suspicion markers and health feedback.</li>
+</ul>
+<h3 id="effects" class="gdd-h3"><span class="h3-diamond">◆</span> Effects</h3>
+<ul class="gdd-ul">
+  <li>Colored weapon tracers.</li>
+  <li>Muzzle flashes and impact/death flashes.</li>
+  <li>Per-hit impact flash on surviving bodies, red on operatives and amber on everything else, with a brief flinch squash on the struck figure.</li>
+  <li>Dashed movement routes.</li>
+  <li>Destination rings.</li>
+  <li>Click markers.</li>
+  <li>Objective pulses.</li>
+  <li>Two-layer camera-following rain.</li>
+  <li>Scanline and vignette overlay.</li>
+</ul>
+<h3 id="asset-strategy" class="gdd-h3"><span class="h3-diamond">◆</span> Asset strategy</h3>
+<p class="gdd-p"><strong>Implemented constraint:</strong> No external art assets.</p>
+<p class="gdd-p">The build generates:</p>
+<ul class="gdd-ul">
+  <li>Canvas textures.</li>
+  <li>SVG portraits and full-body figures.</li>
+  <li>Icons and glyphs.</li>
+  <li>Unit geometry.</li>
+  <li>World-map graphics.</li>
+  <li>UI decoration.</li>
+</ul>
+<p class="gdd-p">This keeps the build self-contained and stylistically consistent. A future external asset pipeline should be introduced only if the project intentionally changes this constraint.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="16-audio-direction" class="gdd-h2"><span class="h-badge">SEC</span> 16. Audio direction</h2>
+<h3 id="current-audio" class="gdd-h3"><span class="h3-diamond">◆</span> Current audio</h3>
+<p class="gdd-p">All audio is synthesized at runtime with Web Audio:</p>
+<ul class="gdd-ul">
+  <li>Weapon-specific gunshots.</li>
+  <li>Reload sound.</li>
+  <li>Confirmation blip.</li>
+  <li>UI click.</li>
+  <li>Alert sting.</li>
+  <li>Objective-complete chime.</li>
+  <li>Death thud.</li>
+  <li>Operative-hit thump when a round lands on the squad.</li>
+  <li>Alert tension drone: a filtered two-oscillator layer that tracks the mission alert level (0-3), ramps between levels, and releases at mission end and on leaving the mission screen.</li>
+</ul>
+<p class="gdd-p">Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense combat from stacking excessive simultaneous sounds.</p>
+<p class="gdd-p">Every voice routes through one of two channel gains (UI cues and combat) under a master gain. The SETTINGS panel carries master, UI, and combat sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.</p>
+<h3 id="current-limitations" class="gdd-h3"><span class="h3-diamond">◆</span> Current limitations</h3>
+<ul class="gdd-ul">
+  <li>No music.</li>
+  <li>No ambient rain bed.</li>
+  <li>No city ambience.</li>
+  <li>No spoken operative dialogue.</li>
+  <li>No spatial audio model.</li>
+</ul>
+<h3 id="recommended-audio-goals" class="gdd-h3"><span class="h3-diamond">◆</span> Recommended audio goals</h3>
+<ul class="gdd-ul">
+  <li>Low industrial ambience on strategy screens.</li>
+  <li>Rain, distant traffic, electrical hum, and sirens in missions.</li>
+  <li>Clear perceptual separation among squad, CorpSec, UI, and objective sounds.</li>
+  <li>Optional synthetic radio voice treatment for operative acknowledgements.</li>
+  <li>Independent music and ambience levels once those beds exist.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="17-difficulty-and-balance" class="gdd-h2"><span class="h-badge">SEC</span> 17. Difficulty and balance</h2>
+<h3 id="current-balance-model" class="gdd-h3"><span class="h3-diamond">◆</span> Current balance model</h3>
+<p class="gdd-p">There is one authored difficulty state and no selectable difficulty setting.</p>
+<p class="gdd-p">Player advantages:</p>
+<ul class="gdd-ul">
+  <li>Four operatives.</li>
+  <li>Full weapon damage.</li>
+  <li>Higher accuracy.</li>
+  <li>Faster weapon cooldowns than CorpSec.</li>
+  <li>Automatic target acquisition.</li>
+  <li>Tactical pause freezes the simulation.</li>
+  <li>Enemy states and sight cones are visible on the minimap.</li>
+  <li>Research can permanently improve future deployments within the session.</li>
+</ul>
+<p class="gdd-p">Enemy advantages:</p>
+<ul class="gdd-ul">
+  <li>Numerical superiority: 12 hostiles.</li>
+  <li>Patrol coverage across the route.</li>
+  <li>Alert propagation.</li>
+  <li>Longrifle garrison guard.</li>
+  <li>Civilian presence complicates fire lanes.</li>
+</ul>
+<h3 id="economy-pressure" class="gdd-h3"><span class="h3-diamond">◆</span> Economy pressure</h3>
+<p class="gdd-p">Glass Veil pays 85,000 CR. The full research tree costs 779,000 CR, so repeated mission income or additional contracts are required to complete progression. The current build allows unlimited replay of the same contract and has no diminishing rewards.</p>
+<h3 id="recommended-difficulty-vectors" class="gdd-h3"><span class="h3-diamond">◆</span> Recommended difficulty vectors</h3>
+<p class="gdd-p">Difficulty should modify readable systems rather than hide information:</p>
+<ul class="gdd-ul">
+  <li>Enemy sight confirmation time.</li>
+  <li>Enemy accuracy and cooldown multiplier.</li>
+  <li>Patrol count and route overlap.</li>
+  <li>Garrison composition.</li>
+  <li>Civilian density.</li>
+  <li>Research and contract economy.</li>
+  <li>Alert propagation distance.</li>
+  <li>Optional-objective requirements.</li>
+</ul>
+<p class="gdd-p">Avoid increasing difficulty by removing minimap information without offering compensating tools.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="18-technical-design" class="gdd-h2"><span class="h-badge">SEC</span> 18. Technical design</h2>
+<h3 id="18-1-runtime-architecture" class="gdd-h3"><span class="h3-diamond">◆</span> 18.1 Runtime architecture</h3>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Layer</th><th style="text-align:left">Responsibility</th></tr></thead><tbody><tr><td style="text-align:left"><code>src/game/</code></td><td style="text-align:left">Pure TypeScript simulation, static data, pathfinding, research effects, audio</td></tr><tr><td style="text-align:left"><code>src/world/</code></td><td style="text-align:left">Deterministic procedural city generation</td></tr><tr><td style="text-align:left"><code>src/scene/</code></td><td style="text-align:left">React Three Fiber / Three.js rendering and mission input</td></tr><tr><td style="text-align:left"><code>src/ui/</code></td><td style="text-align:left">DOM screens, HUD, minimap, briefing visualizations</td></tr><tr><td style="text-align:left"><code>src/state/</code></td><td style="text-align:left">Zustand stores for app, world, research, and low-frequency mission UI</td></tr></tbody></table></div>
+<h3 id="18-2-state-boundaries" class="gdd-h3"><span class="h3-diamond">◆</span> 18.2 State boundaries</h3>
+<ul class="gdd-ul">
+  <li>High-frequency mission state lives in a mutable <code>WorldApi</code>, outside React.</li>
+  <li>Render systems read unit positions and effects directly each frame.</li>
+  <li>Mission UI is synchronized at approximately 5 Hz.</li>
+  <li>The minimap redraws at approximately 10 Hz.</li>
+  <li>The strategic clock batches updates at approximately 20 Hz.</li>
+  <li>App, world, research, campaign, and mission UI have separate stores.</li>
+  <li>A save module writes the app, world, research, and campaign stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes.</li>
+</ul>
+<h3 id="18-3-simulation-timing" class="gdd-h3"><span class="h3-diamond">◆</span> 18.3 Simulation timing</h3>
+<ul class="gdd-ul">
+  <li>Tactical frames are subdivided into steps no larger than 0.05 seconds.</li>
+  <li>Up to five seconds of a long frame gap can be consumed.</li>
+  <li>Opening warm-up prevents multiple unseen seconds from simulating while WebGPU pipelines compile.</li>
+  <li>World and tactical clocks are intentionally independent.</li>
+</ul>
+<h3 id="18-4-rendering" class="gdd-h3"><span class="h3-diamond">◆</span> 18.4 Rendering</h3>
+<ul class="gdd-ul">
+  <li>React Three Fiber root is manually configured.</li>
+  <li>Three.js <code>WebGPURenderer</code> is preferred.</li>
+  <li>WebGL2 fallback occurs through renderer initialization.</li>
+  <li>ACES filmic tone mapping.</li>
+  <li>Emissive MRT bloom pipeline.</li>
+  <li>Static city geometry uses instancing.</li>
+  <li>Units and effects use pooled geometry and preallocated buffers.</li>
+  <li>Per-frame hot paths are designed to avoid allocation.</li>
+</ul>
+<h4 id="quality-tiers" class="gdd-h4">Quality tiers</h4>
+<p class="gdd-p">Three tiers set the renderer's cost, resolved once at mission mount and never read per frame. The table is data in <code>game/quality.ts</code>:</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Tier</th><th style="text-align:right">Device pixel ratio</th><th style="text-align:right">Rain density</th><th style="text-align:left">Bloom</th></tr></thead><tbody><tr><td style="text-align:left">HIGH</td><td style="text-align:right">1.75 max</td><td style="text-align:right">100%</td><td style="text-align:left"><span class="badge badge-implemented">On</span></td></tr><tr><td style="text-align:left">MEDIUM</td><td style="text-align:right">1.25 max</td><td style="text-align:right">50%</td><td style="text-align:left"><span class="badge badge-implemented">On</span></td></tr><tr><td style="text-align:left">LOW</td><td style="text-align:right">1.0 max</td><td style="text-align:right">15%</td><td style="text-align:left"><span class="badge badge-recommended">Off</span></td></tr></tbody></table></div>
+<p class="gdd-p">The settings panel offers AUTO, HIGH, MED, and LOW, and AUTO is the default. AUTO probes the renderer backend at mount: a WebGPU context runs HIGH, the WebGL2 fallback MEDIUM. Building ghosting is tactical readability, so it survives every tier.</p>
+<p class="gdd-p">A frame-time governor guards the setting. It ignores the first 8 seconds, because WebGPU pipeline compiles distort the opening frames. After that, a moving average that holds above <strong>28 ms</strong> for a continuous 6 seconds steps the persisted setting down one tier, and the comm log posts the change. LOW has nowhere further to fall, and the player can always set a tier by hand.</p>
+<h3 id="18-5-determinism" class="gdd-h3"><span class="h3-diamond">◆</span> 18.5 Determinism</h3>
+<ul class="gdd-ul">
+  <li>Missions and cities use the mission seed.</li>
+  <li>Portraits and UI figures use stable hashes.</li>
+  <li>Strategic event generation steps an explicit, serializable rng state, so a reload continues the same sequence.</li>
+  <li>Procedural rain and WebAudio noise use unseeded randomness because they do not affect gameplay.</li>
+</ul>
+<h3 id="18-6-browser-and-layout" class="gdd-h3"><span class="h3-diamond">◆</span> 18.6 Browser and layout</h3>
+<ul class="gdd-ul">
+  <li>Minimum supported viewport: <strong>1280×720</strong>.</li>
+  <li>Smaller browser windows preserve the minimum layout and scroll rather than compressing panels.</li>
+  <li>Mission scene is full viewport with DOM HUD overlays.</li>
+  <li>There is no mobile or touch-control design.</li>
+</ul>
+<h3 id="18-7-build-and-quality" class="gdd-h3"><span class="h3-diamond">◆</span> 18.7 Build and quality</h3>
+<ul class="gdd-ul">
+  <li>The checks are <code>npm run lint</code>, <code>npm run test</code>, and <code>npm run build</code>.</li>
+  <li>A vitest suite (26 files, 424 tests) covers the pure layers: <code>src/game/</code>, <code>src/world/</code>, <code>src/state/</code>.</li>
+  <li>Beyond unit coverage, the suite carries scenario tests: an orders-driven Glass Veil playthrough (advance, clear the garrison by weapon fire, extract, net payout) and a squad wipe driven by CorpSec fire; a cross-store economy integration test (payout minus fines, intel and influence awards, research spend gating, hiring, influence spends) holding a credits-never-negative invariant; research program sums against the authored tables and effect-stacking order; and an objective-completability sweep over the three authored missions plus all four generated-contract types (zones walkable and reachable from insertion, tagged and device sets nonempty, extraction last).</li>
+  <li>Saves are versioned; the loader validates a blob and discards it on any mismatch. The settings and telemetry blobs live under their own keys with their own version guards.</li>
+  <li>Scene and DOM screens rely on the manual click-through.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="19-implemented-scaffolded-and-missing-systems" class="gdd-h2"><span class="h-badge">SEC</span> 19. Implemented, scaffolded, and missing systems</h2>
+<h3 id="19-1-implemented-and-functional" class="gdd-h3"><span class="h3-diamond">◆</span> 19.1 Implemented and functional</h3>
+<ul class="gdd-ul">
+  <li>Complete screen flow from menu to debrief.</li>
+  <li>Interactive world map with six open sectors.</li>
+  <li>Strategic time controls and review timeline.</li>
+  <li>Dynamic world events and city ownership changes.</li>
+  <li>Credit economy.</li>
+  <li>Full 21-node research tree with real gameplay effects.</li>
+  <li>A live operative roster (cap eight) and four-person assembly.</li>
+  <li>Permanent operative death with KIA reporting in the debrief and the world feed.</li>
+  <li>Graded injury recovery scaled by end-of-mission health.</li>
+  <li>A seeded, save-persistent recruitment market with quality-priced hires.</li>
+  <li>Code-derived mission briefing map.</li>
+  <li>One deterministic procedural tactical district.</li>
+  <li>Real-time selection, formation movement, attack, stop, Hold Ground, and Hold Fire.</li>
+  <li>A* pathfinding and line-of-sight checks.</li>
+  <li>Patrol, suspicion, combat, hearing, vision, and alert-propagation AI.</li>
+  <li>Civilian wandering, fleeing, damage, and collateral fines.</li>
+  <li>Five differentiated weapons with sidearm slots and V swapping.</li>
+  <li>Per-role active abilities and passives.</li>
+  <li>Usable med kits and power cells from a squad-pooled, role-and-loadout-fed stock.</li>
+  <li>Per-operative loadout slots and an enforced deployment-mass model with speed tiers.</li>
+  <li>Sequential objectives, win/loss, and debrief.</li>
+  <li>Functional minimap, camera controls, pause menu, and abort confirmation.</li>
+  <li>Procedural visuals and audio.</li>
+  <li>Versioned save/load with autosave, boot validation, CONTINUE, and NEW OPERATION.</li>
+  <li>Mission outcomes that move sector control and unrest and post feed events.</li>
+  <li>Intel earned from wins and clean wins; intel-gated contract unlocks.</li>
+  <li>Campaign completion state after all three contracts.</li>
+  <li>Injury enforcement with timed recovery on the world clock.</li>
+  <li>First-mission tutorial toasts, one-shot contextual advisories, and the World Network onboarding overlay, with save-persistent progress.</li>
+  <li>A settings panel (main menu and pause): audio channel sliders and mute, control remapping with conflict rejection, reduced-motion, high-contrast, and text scaling, persisted separately from the campaign save.</li>
+</ul>
+<h3 id="19-2-scaffolded-or-presentation-only" class="gdd-h3"><span class="h3-diamond">◆</span> 19.2 Scaffolded or presentation-only</h3>
+<ul class="gdd-ul">
+  <li>Nothing on the contract card. Chance is derived and ETA is spent as world time at the debrief (section 12.1); at intel level 2+ the brief replaces the chance readout with the computed risk index.</li>
+  <li>Weather beyond guard sight and weapon noise. Rain does not change accuracy, movement speed, or the omnidirectional notice radius, and there is no in-mission weather change.</li>
+  <li>Sector assets and black-market values as decision systems. Defense rating and garrison condition feed generated contract threat, and tax yield now falls under unrest pressure; assets and black market stay presentation.</li>
+  <li>Sector-intel view (the dead button; the sector panel's event forecast covers the intel readout).</li>
+  <li>Archives and additional navigation tabs.</li>
+</ul>
+<h3 id="19-3-missing-for-a-complete-campaign" class="gdd-h3"><span class="h3-diamond">◆</span> 19.3 Missing for a complete campaign</h3>
+<ul class="gdd-ul">
+  <li>Mission outcome effects on city ownership.</li>
+  <li>Operative experience.</li>
+  <li>A strategic fail state; the campaign has victory and recoverable pressure only, even through sector crisis.</li>
+  <li>Difficulty modes.</li>
+  <li>Music and ambient sound.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="20-design-acceptance-criteria" class="gdd-h2"><span class="h-badge">SEC</span> 20. Design acceptance criteria</h2>
+<h3 id="campaign-loop" class="gdd-h3"><span class="h3-diamond">◆</span> Campaign loop</h3>
+<ul class="gdd-ul">
+  <li>A successful mission visibly changes at least two strategic values.</li>
+  <li>A failed mission produces a meaningful but recoverable consequence.</li>
+  <li>Intel has at least two earn sources and at least two unlock uses.</li>
+  <li>Saving and reloading reproduces all strategic and roster state.</li>
+</ul>
+<h3 id="mission-content" class="gdd-h3"><span class="h3-diamond">◆</span> Mission content</h3>
+<ul class="gdd-ul">
+  <li>Every operation has at least one route choice.</li>
+  <li>Optional engagement is possible; not every patrol must be killed.</li>
+  <li>Civilian placement creates risk without making collateral feel arbitrary.</li>
+  <li>Mission notes correspond to active modifiers.</li>
+  <li>Briefing geometry matches the deployed city.</li>
+</ul>
+<h3 id="squad-differentiation" class="gdd-h3"><span class="h3-diamond">◆</span> Squad differentiation</h3>
+<ul class="gdd-ul">
+  <li>Every role changes at least one tactical decision.</li>
+  <li>Every active ability has readable range, targeting, cooldown, and feedback.</li>
+  <li>A four-person composition has identifiable strengths and weaknesses.</li>
+</ul>
+<h3 id="ux" class="gdd-h3"><span class="h3-diamond">◆</span> UX</h3>
+<ul class="gdd-ul">
+  <li>Every interactive element is keyboard reachable.</li>
+  <li>All critical states use more than color alone.</li>
+  <li>Text remains legible at 1280×720.</li>
+  <li>A new player can discover selection, move, attack, Hold Ground, Hold Fire, objectives, and extraction without opening source code or external documentation.</li>
+</ul>
+<h3 id="performance" class="gdd-h3"><span class="h3-diamond">◆</span> Performance</h3>
+<ul class="gdd-ul">
+  <li>Stable frame pacing with four agents, 12+ enemies, 22 civilians, rain, bloom, and a dense city.</li>
+  <li>No unbounded object creation in per-frame systems.</li>
+  <li>Long renderer initialization never advances the unseen opening encounter.</li>
+</ul>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="21-telemetry" class="gdd-h2"><span class="h-badge">SEC</span> 21. Telemetry</h2>
+<p class="gdd-p"><strong>Implemented, local-only</strong></p>
+<p class="gdd-p">Telemetry is opt-in and never leaves the machine. The SETTINGS panel carries a <code>TELEMETRY: LOCAL ONLY</code> toggle, off by default; nothing records until the player turns it on, and no network transmission exists anywhere in the pipeline.</p>
+<p class="gdd-p">When enabled, the debrief boundary appends one record per mission outcome to a versioned localStorage blob under its own key (<code>state/telemetry.ts</code>), capped at 60 records FIFO. The counters ride the outcome the simulation already pushes: <code>world.ts</code> keeps plain numeric fields during the mission (the hot path allocates nothing) and hands them over once, inside <code>MissionOutcome.telemetry</code>.</p>
+<p class="gdd-p">Each record captures:</p>
+<ul class="gdd-ul">
+  <li>Mission id, seed, outcome, and duration.</li>
+  <li>Time to first contact.</li>
+  <li>Per-objective completion times.</li>
+  <li>Shots and damage by weapon (squad fire only).</li>
+  <li>Damage dealt to hostiles and damage taken by the squad.</li>
+  <li>Civilian hits by source (squad versus CorpSec).</li>
+  <li>Med kit and power cell uses.</li>
+  <li>Ability uses by role.</li>
+  <li>Operatives killed in action.</li>
+  <li>Payout, fines, reward, and bonus.</li>
+  <li>The deployed squad composition by role.</li>
+</ul>
+<p class="gdd-p">The <strong>BALANCE dashboard</strong> (reachable from the SETTINGS panel and the debrief) aggregates the stored records in the terminal style: win rate, mean duration, mean time to first contact, collateral rate, civilian and KIA totals, item use, payout statistics, weapon damage share, and ability use by role, drawn with plain div bars. EXPORT downloads the records as JSON through a data URL; CLEAR erases the log behind a two-step confirm.</p>
+<p class="gdd-p"><strong>Still recommended, unmet</strong></p>
+<ul class="gdd-ul">
+  <li>Time spent on each strategic screen.</li>
+  <li>World speed usage.</li>
+  <li>Projects authorized and completion order; research spending.</li>
+  <li>Alert-level duration.</li>
+  <li>Number of explicit attacks versus automatic engagements.</li>
+  <li>Hold Ground and Hold Fire usage.</li>
+  <li>Deaths and reloads by weapon.</li>
+  <li>The shot context of civilian hits.</li>
+  <li>Patrols bypassed versus killed.</li>
+  <li>Abort and replay rates.</li>
+</ul>
+<p class="gdd-p">Telemetry must distinguish a deliberate tactical choice from a usability failure; for example, an unused Hold Fire command may indicate either a preferred aggressive play style or poor control discovery.</p>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="22-source-of-truth-map" class="gdd-h2"><span class="h-badge">SEC</span> 22. Source-of-truth map</h2>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Design area</th><th style="text-align:left">Primary implementation</th></tr></thead><tbody><tr><td style="text-align:left">Screen flow</td><td style="text-align:left"><code>src/App.tsx</code></td></tr><tr><td style="text-align:left">Missions, weapons, roster, intel</td><td style="text-align:left"><code>src/game/data.ts</code></td></tr><tr><td style="text-align:left">Shared gameplay types</td><td style="text-align:left"><code>src/game/types.ts</code></td></tr><tr><td style="text-align:left">Tactical simulation</td><td style="text-align:left"><code>src/game/world.ts</code></td></tr><tr><td style="text-align:left">Pathfinding and line of sight</td><td style="text-align:left"><code>src/game/pathfind.ts</code></td></tr><tr><td style="text-align:left">Research tree and effects</td><td style="text-align:left"><code>src/game/research.ts</code></td></tr><tr><td style="text-align:left">Strategic world simulation</td><td style="text-align:left"><code>src/state/worldStore.ts</code></td></tr><tr><td style="text-align:left">Research progression</td><td style="text-align:left"><code>src/state/researchStore.ts</code></td></tr><tr><td style="text-align:left">Credits, squad, outcomes</td><td style="text-align:left"><code>src/state/appStore.ts</code></td></tr><tr><td style="text-align:left">Intel, roster condition, campaign result</td><td style="text-align:left"><code>src/state/campaignStore.ts</code></td></tr><tr><td style="text-align:left">Save, load, autosave</td><td style="text-align:left"><code>src/state/save.ts</code></td></tr><tr><td style="text-align:left">City generation</td><td style="text-align:left"><code>src/world/citygen.ts</code></td></tr><tr><td style="text-align:left">Mission input</td><td style="text-align:left"><code>src/scene/Input.tsx</code></td></tr><tr><td style="text-align:left">Mission controls table</td><td style="text-align:left"><code>src/game/bindings.ts</code></td></tr><tr><td style="text-align:left">Camera</td><td style="text-align:left"><code>src/scene/CameraRig.tsx</code></td></tr><tr><td style="text-align:left">Mission HUD</td><td style="text-align:left"><code>src/ui/Hud.tsx</code></td></tr><tr><td style="text-align:left">Minimap</td><td style="text-align:left"><code>src/ui/Minimap.tsx</code></td></tr><tr><td style="text-align:left">World Network</td><td style="text-align:left"><code>src/ui/WorldMap.tsx</code></td></tr><tr><td style="text-align:left">Research UI</td><td style="text-align:left"><code>src/ui/Research.tsx</code></td></tr><tr><td style="text-align:left">Briefing, assembly, debrief</td><td style="text-align:left"><code>src/ui/index.tsx</code></td></tr><tr><td style="text-align:left">Visual tokens</td><td style="text-align:left"><code>src/index.css</code>, <code>src/ui/ui.css</code></td></tr><tr><td style="text-align:left">Procedural audio</td><td style="text-align:left"><code>src/game/audio.ts</code></td></tr></tbody></table></div>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="23-glossary" class="gdd-h2"><span class="h-badge">SEC</span> 23. Glossary</h2>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Term</th><th style="text-align:left">Meaning</th></tr></thead><tbody><tr><td style="text-align:left">Alert</td><td style="text-align:left">HUD level derived from the number of living enemies in combat</td></tr><tr><td style="text-align:left">Awareness</td><td style="text-align:left">Per-enemy certainty value from 0 to 1</td></tr><tr><td style="text-align:left">Candidate</td><td style="text-align:left">A procedural operative offered by the recruitment market, hired for credits</td></tr><tr><td style="text-align:left">CorpSec</td><td style="text-align:left">Armed corporate security enemies</td></tr><tr><td style="text-align:left">KIA</td><td style="text-align:left">An operative killed in a mission, removed from the roster permanently</td></tr><tr><td style="text-align:left">Explicit target</td><td style="text-align:left">A hostile assigned by right-click attack order</td></tr><tr><td style="text-align:left">Hold Fire / Tight</td><td style="text-align:left">Prevent automatic target acquisition</td></tr><tr><td style="text-align:left">Hold Ground</td><td style="text-align:left">Pin an operative in place while preserving their parked route</td></tr><tr><td style="text-align:left">Intel</td><td style="text-align:left">Earned progression level that gates contract access</td></tr><tr><td style="text-align:left">Operative</td><td style="text-align:left">A player-controlled squad member</td></tr><tr><td style="text-align:left">Review time</td><td style="text-align:left">A historical point in the 24-hour strategic event timeline</td></tr><tr><td style="text-align:left">Role ability</td><td style="text-align:left">A role's active (triggered on Q, per-role cooldown) or always-on passive, defined in <code>src/game/abilities.ts</code></td></tr><tr><td style="text-align:left">Strategic time</td><td style="text-align:left">World-map and research clock</td></tr><tr><td style="text-align:left">Tactical time</td><td style="text-align:left">Independent mission clock and simulation time</td></tr><tr><td style="text-align:left">Tagged enemy</td><td style="text-align:left">An enemy associated with an eliminate objective, such as <code>garrison</code></td></tr></tbody></table></div>
+<hr class="gdd-hr" />
+<div class="section-divider"></div>
+<h2 id="24-final-design-statement" class="gdd-h2"><span class="h-badge">SEC</span> 24. Final design statement</h2>
+<p class="gdd-p">The codebase already establishes a coherent identity: a corporate geostrategy interface wrapped around an unusually readable real-time squad simulation. The tactical game’s strongest authored tension is not simple survival; it is moving four powerful operatives through a populated city while managing information, detection, fire lanes, and financial liability.</p>
+<p class="gdd-p">The two layers feed each other rather than sitting side by side. Mission outcomes move sector control and unrest, intel earned in the field opens contracts, injuries and deaths gate the next deployment, and the whole campaign survives a reload. Content matches that shell: three authored contracts across three district archetypes, an objective engine of seven kinds, eight roles that each change a tactical decision, and a strategic economy where influence and unrest have consequences.</p>
+<p class="gdd-p">What the design does not yet have is listed in section 19.3. The largest gaps are city ownership that missions can flip, operative experience, and a strategic fail state to sit opposite the campaign victory.</p>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating Back to Top Button -->
+  <button class="btn-back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+    <span>▲ TOP</span>
+  </button>
+
+  <!-- Interactive Client Scripts -->
+  <script>
+    // Reading Progress Bar
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      const pBar = document.getElementById('progressBar');
+      if (pBar) pBar.style.width = scrolled + '%';
+    });
+
+    // Text scale adjustment
+    let currentScaleIndex = 1;
+    const scales = ['s-text-90', 's-text-100', 's-text-110', 's-text-125'];
+    function adjustTextScale(delta) {
+      document.documentElement.classList.remove(scales[currentScaleIndex]);
+      currentScaleIndex = Math.max(0, Math.min(scales.length - 1, currentScaleIndex + delta));
+      document.documentElement.classList.add(scales[currentScaleIndex]);
+    }
+
+    // Toggle CRT Scanlines
+    function toggleCrt() {
+      const crt = document.getElementById('crtOverlay');
+      const btn = document.getElementById('crtToggleBtn');
+      crt.classList.toggle('disabled');
+      btn.innerText = crt.classList.contains('disabled') ? 'CRT: OFF' : 'CRT: ON';
+      btn.classList.toggle('active', !crt.classList.contains('disabled'));
+    }
+
+    // Toggle High Contrast
+    function toggleContrast() {
+      document.documentElement.classList.toggle('s-high-contrast');
+      const btn = document.getElementById('contrastToggleBtn');
+      btn.classList.toggle('active', document.documentElement.classList.contains('s-high-contrast'));
+    }
+
+    // TOC Filtering
+    function filterToc(val) {
+      const q = val.toLowerCase().trim();
+      const links = document.querySelectorAll('.toc-link');
+      links.forEach(link => {
+        const text = link.innerText.toLowerCase();
+        link.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    // Document Full-text Search
+    let searchDebounceTimer = null;
+    function handleDocSearch(query) {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        performSearch(query);
+      }, 250);
+    }
+
+    function performSearch(query) {
+      const q = query.trim().toLowerCase();
+      const body = document.getElementById('documentBody');
+      
+      // Clear previous marks
+      const marks = body.querySelectorAll('mark.highlight');
+      marks.forEach(m => {
+        const parent = m.parentNode;
+        parent.replaceChild(document.createTextNode(m.innerText), m);
+        parent.normalize();
+      });
+
+      if (!q) return;
+
+      const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, null, false);
+      const textNodes = [];
+      let node;
+      while ((node = walker.nextNode())) {
+        if (node.parentElement && !['SCRIPT', 'STYLE', 'CODE'].includes(node.parentElement.tagName)) {
+          textNodes.push(node);
+        }
+      }
+
+      let firstMatch = null;
+      textNodes.forEach(tNode => {
+        const text = tNode.nodeValue;
+        const index = text.toLowerCase().indexOf(q);
+        if (index >= 0) {
+          const span = document.createElement('span');
+          span.innerHTML = text.replace(new RegExp('(' + q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'gi'), '<mark class="highlight">$1</mark>');
+          tNode.parentNode.replaceChild(span, tNode);
+          if (!firstMatch) {
+            firstMatch = span;
+          }
+        }
+      });
+
+      if (firstMatch) {
+        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    // Quick Filter by Tag / Section type
+    function filterSections(type) {
+      document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+      if (event && event.target) {
+        event.target.classList.add('active');
+      }
+
+      const elements = document.querySelectorAll('#documentBody > *');
+      if (type === 'all') {
+        elements.forEach(el => el.style.display = '');
+        return;
+      }
+
+      // Filter logic
+      if (type === 'tables') {
+        elements.forEach(el => {
+          const isTable = el.classList.contains('table-container') || el.querySelector('.gdd-table') || el.classList.contains('interactive-module-card');
+          const isH = el.tagName && el.tagName.startsWith('H');
+          el.style.display = (isTable || isH) ? '' : 'none';
+        });
+      } else if (type === 'impl') {
+        elements.forEach(el => {
+          const hasTag = el.innerHTML.includes('tag-impl') || el.innerHTML.includes('badge-implemented');
+          const isH = el.tagName && el.tagName.startsWith('H');
+          el.style.display = (hasTag || isH) ? '' : 'none';
+        });
+      } else if (type === 'scaff') {
+        elements.forEach(el => {
+          const hasTag = el.innerHTML.includes('tag-scaff') || el.innerHTML.includes('badge-scaffolded');
+          const isH = el.tagName && el.tagName.startsWith('H');
+          el.style.display = (hasTag || isH) ? '' : 'none';
+        });
+      } else if (type === 'recom') {
+        elements.forEach(el => {
+          const hasTag = el.innerHTML.includes('tag-recom') || el.innerHTML.includes('badge-recommended');
+          const isH = el.tagName && el.tagName.startsWith('H');
+          el.style.display = (hasTag || isH) ? '' : 'none';
+        });
+      }
+    }
+
+    // Scrollspy for active TOC item
+    window.addEventListener('scroll', () => {
+      const headings = document.querySelectorAll('h1[id], h2[id], h3[id]');
+      let currentId = '';
+      const scrollPos = window.scrollY + 100;
+
+      headings.forEach(h => {
+        if (h.offsetTop <= scrollPos) {
+          currentId = h.id;
+        }
+      });
+
+      if (currentId) {
+        document.querySelectorAll('.toc-link').forEach(link => {
+          link.classList.toggle('active', link.getAttribute('data-id') === currentId);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
