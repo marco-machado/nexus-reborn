@@ -5,7 +5,7 @@ import type { Phase } from '../state/appStore'
 import { NAV_LOCK } from '../game/data'
 import { LockGlyph, NavGlyph } from './bits'
 import type { NavKind } from './bits'
-import { uiClick } from './sound'
+import { act } from './util'
 
 const TABS: Array<{ key: NavKind; label: string; phase?: Phase }> = [
   { key: 'world', label: 'WORLD MAP', phase: 'world' },
@@ -31,14 +31,7 @@ export function NavTabs(props: { current: NavKind }) {
               aria-current={here ? 'page' : undefined}
               aria-disabled={open ? undefined : true}
               aria-label={open ? tab.label : tab.label + ' // LOCKED // ' + NAV_LOCK}
-              onClick={
-                open && !here
-                  ? () => {
-                      uiClick()
-                      goto(tab.phase as Phase)
-                    }
-                  : undefined
-              }
+              onClick={open && !here ? act(() => goto(tab.phase as Phase)) : undefined}
             >
               <NavGlyph kind={tab.key} size={here ? 15 : 13} />
               <span className="navtab-label">{tab.label}</span>

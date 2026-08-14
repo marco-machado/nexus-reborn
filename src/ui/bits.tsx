@@ -3,6 +3,7 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import type { AgentRole, WeaponId } from '../game/types'
+import { DARK_RED, INK_DEEP } from './tokens'
 
 /* --------------------------------- atoms --------------------------------- */
 
@@ -243,10 +244,10 @@ function roleShape(role: AgentRole): ReactNode {
         <g fill="currentColor">
           <circle cx="8" cy="6.4" r="4.6" />
           <rect x="5.4" y="10.2" width="5.2" height="3.4" />
-          <circle cx="6.2" cy="6" r="1.3" fill="#07100e" />
-          <circle cx="9.8" cy="6" r="1.3" fill="#07100e" />
-          <rect x="6.7" y="10.8" width="0.8" height="2.2" fill="#07100e" />
-          <rect x="8.5" y="10.8" width="0.8" height="2.2" fill="#07100e" />
+          <circle cx="6.2" cy="6" r="1.3" fill={INK_DEEP} />
+          <circle cx="9.8" cy="6" r="1.3" fill={INK_DEEP} />
+          <rect x="6.7" y="10.8" width="0.8" height="2.2" fill={INK_DEEP} />
+          <rect x="8.5" y="10.8" width="0.8" height="2.2" fill={INK_DEEP} />
         </g>
       )
     case 'recon':
@@ -324,7 +325,7 @@ function abilityShape(kind: AbilityKind): ReactNode {
           <rect x="6" y="7" width="8" height="10" rx="2" />
           <rect x="8" y="4" width="4" height="3" />
           <circle cx="14.4" cy="4.2" r="2" fill="none" stroke="currentColor" strokeWidth="1.2" />
-          <rect x="8.8" y="9" width="2.4" height="1" fill="#07100e" />
+          <rect x="8.8" y="9" width="2.4" height="1" fill={INK_DEEP} />
         </g>
       )
     case 'medstim':
@@ -400,7 +401,7 @@ function itemShape(kind: ItemKind): ReactNode {
         <g fill="currentColor">
           <circle cx="8" cy="9.4" r="4.2" />
           <rect x="6.6" y="2.6" width="2.8" height="2.4" />
-          <path d="M5 9.4h6" stroke="#07100e" strokeWidth="0.9" />
+          <path d="M5 9.4h6" stroke={INK_DEEP} strokeWidth="0.9" />
         </g>
       )
     case 'chip':
@@ -487,10 +488,10 @@ export function SkullGlyph(props: { size?: number }) {
         <path d="M10 1.6c4 0 6.6 2.6 6.6 6.2 0 2-1 3.6-2.4 4.6v2H5.8v-2C4.4 11.4 3.4 9.8 3.4 7.8 3.4 4.2 6 1.6 10 1.6Z" />
         <rect x="6.4" y="14.8" width="7.2" height="3.4" />
       </g>
-      <circle cx="7" cy="8" r="1.7" fill="#140505" />
-      <circle cx="13" cy="8" r="1.7" fill="#140505" />
-      <path d="M10 10.2 9 12.4h2Z" fill="#140505" />
-      <path d="M8.2 15v3M10 15v3M11.8 15v3" stroke="#140505" strokeWidth="0.9" />
+      <circle cx="7" cy="8" r="1.7" fill={DARK_RED} />
+      <circle cx="13" cy="8" r="1.7" fill={DARK_RED} />
+      <path d="M10 10.2 9 12.4h2Z" fill={DARK_RED} />
+      <path d="M8.2 15v3M10 15v3M11.8 15v3" stroke={DARK_RED} strokeWidth="0.9" />
     </svg>
   )
 }

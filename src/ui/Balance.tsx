@@ -13,13 +13,8 @@ import {
 } from '../state/telemetry'
 import { useSettingsStore } from '../state/settingsStore'
 import { Panel } from './bits'
-import { fmt } from './util'
+import { fmt, mmss } from './util'
 import { uiClick } from './sound'
-
-function mmss(sec: number): string {
-  const s = Math.max(0, Math.round(sec))
-  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')
-}
 
 function Stat(props: { label: string; value: string; tone?: string }) {
   return (

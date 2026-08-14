@@ -10,7 +10,11 @@ import { Chip, Panel } from './bits'
 import SettingsPanel from './Settings'
 import { uiClick } from './sound'
 
-export default function PauseMenu(props: {
+export default function PauseMenu({
+  onResume,
+  onAbort,
+  returnRef,
+}: {
   onResume: () => void
   onAbort: () => void
   // The control that opened the menu; focus goes back to it on close.
@@ -34,7 +38,6 @@ export default function PauseMenu(props: {
     if (!settingsOpen) resumeRef.current?.focus()
   }, [settingsOpen])
 
-  const returnRef = props.returnRef
   useEffect(
     () => () => {
       returnRef.current?.focus()
@@ -113,7 +116,7 @@ export default function PauseMenu(props: {
               ref={resumeRef}
               onClick={() => {
                 uiClick()
-                props.onResume()
+                onResume()
               }}
             >
               RESUME
@@ -135,7 +138,7 @@ export default function PauseMenu(props: {
               aria-label={abortArmed ? 'Confirm abort mission' : 'Abort mission'}
               onClick={() => {
                 uiClick()
-                if (abortArmed) props.onAbort()
+                if (abortArmed) onAbort()
                 else setAbortArmed(true)
               }}
             >

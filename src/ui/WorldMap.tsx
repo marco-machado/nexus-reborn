@@ -58,23 +58,12 @@ import type { CorpId } from '../game/atlas'
 import { Chip, LockGlyph, Panel, ScrollBox, SegBar, TargetGlyph } from './bits'
 import { NavTabs } from './Nav'
 import { useWorldClock } from './clock'
-import { fmt } from './util'
+import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
-
-function act(fn: () => void): () => void {
-  return () => {
-    uiClick()
-    fn()
-  }
-}
+import { ART_BG, WORLD_GLOW } from './tokens'
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
-}
-
-function agoLabel(sec: number): string {
-  const m = Math.round(sec / 60)
-  return m < 90 ? m + 'M' : (m / 60).toFixed(1) + 'H'
 }
 
 // Success chance is derived, never authored: it moves with sector state and
@@ -273,11 +262,11 @@ function WorldPlate() {
       >
         <defs>
           <radialGradient id="wm-glow" cx="0.5" cy="0.42" r="0.75">
-            <stop offset="0" stopColor="#0e2c26" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#0e2c26" stopOpacity="0" />
+            <stop offset="0" stopColor={WORLD_GLOW} stopOpacity="0.5" />
+            <stop offset="1" stopColor={WORLD_GLOW} stopOpacity="0" />
           </radialGradient>
         </defs>
-        <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill="#03080a" />
+        <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill={ART_BG} />
         <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill="url(#wm-glow)" />
 
         <g className="wm-grat">

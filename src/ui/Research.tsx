@@ -25,11 +25,10 @@ import {
 } from '../game/research'
 import type { Branch, ResearchNode } from '../game/research'
 import { Chip, LockGlyph, Panel, ScrollBox, SegBar } from './bits'
-import { researchShape } from './researchGlyphs'
+import { researchShape, type ResearchGlyphId } from './researchGlyphs'
 import { NavTabs } from './Nav'
 import { useWorldClock } from './clock'
-import { fmt, pad2 } from './util'
-import { uiClick } from './sound'
+import { act, fmt, spanLabel } from './util'
 /* ------------------------------- geometry --------------------------------- */
 // One branch column is drawn as a single scaled SVG, so the hexes and the
 // links between them stay aligned at any panel width.
@@ -67,18 +66,6 @@ function linkPath(from: ResearchNode, to: ResearchNode): string {
   return 'M' + a.x + ' ' + y0 + 'V' + mid + 'H' + b.x + 'V' + y1
 }
 /* -------------------------------- helpers --------------------------------- */
-function act(fn: () => void): () => void {
-  return () => {
-    uiClick()
-    fn()
-  }
-}
-function spanLabel(sec: number): string {
-  const s = Math.max(0, Math.round(sec))
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  return h > 0 ? h + 'H ' + pad2(m) + 'M' : m + 'M'
-}
 const STATE_LABEL: Record<NodeState, string> = {
   researched: 'RESEARCHED',
   active: 'IN PROGRESS',
@@ -143,7 +130,7 @@ function HexNode(props: {
       <polygon className="rs-hex" points={hexPoints(x, y)} />
       {props.run && <HexFill node={n} run={props.run} />}
       <g className="rs-node-glyph" transform={'translate(' + (x - 12) + ' ' + (y - 26) + ')'}>
-        {researchShape(n.glyph)}
+        {researchShape(n.glyph as ResearchGlyphId)}
       </g>
       {n.lines.map((line, i) => (
         <text key={i} className="rs-node-label" x={x} y={y + 10 + i * 11} textAnchor="middle">
@@ -311,7 +298,7 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
         <div className="rs-schematic">
           <span className={'rs-schematic-art corners ' + state}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              {researchShape(n.glyph)}
+              {researchShape(n.glyph as ResearchGlyphId)}
             </svg>
           </span>
           <span className="rs-spec">

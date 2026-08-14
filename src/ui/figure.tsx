@@ -6,6 +6,8 @@
 import { useMemo } from 'react'
 import type { WeaponId } from '../game/types'
 import { GunShape } from './bits'
+import { blurFilterDef, polyPoints as p, scanlinePatternDef, visorGradientDef } from './glyph'
+import { ARMOR_LIT, ARMOR_MID, ARMOR_LOW, BODY_BELT, BODY_DEEP, GUN_IRON, RIM, TEAL, TEAL_A35, TEAL_A40, TEAL_A45, TEAL_A50 } from './tokens'
 import { hashOf, rngFrom } from './util'
 
 export interface FigureOp {
@@ -41,10 +43,6 @@ interface Build {
   boots: [string, string]
   plinth: string
   seams: Array<[number, number, number, number]>
-}
-
-function p(list: Array<[number, number]>): string {
-  return list.map((q) => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ')
 }
 
 function flip(list: Array<[number, number]>): Array<[number, number]> {
@@ -261,13 +259,13 @@ function buildFigure(op: FigureOp): Build {
 // One key light from the viewer's left, so every plate shares the same ramp
 // across the figure rather than shading itself.
 const RAMPS: Array<[string, [string, string, string]]> = [
-  ['lit', ['#3a635a', '#22403a', '#0f221d']],
-  ['mid', ['#2b4d45', '#193029', '#0a1714']],
-  ['low', ['#1b342e', '#10231e', '#060f0d']],
+  ['lit', ARMOR_LIT],
+  ['mid', ARMOR_MID],
+  ['low', ARMOR_LOW],
 ]
 
-const EDGE = 'rgba(126,240,212,0.35)'
-const EDGE_HI = 'rgba(126,240,212,0.5)'
+const EDGE = TEAL_A35
+const EDGE_HI = TEAL_A50
 
 export function Figure({ op }: { op: FigureOp }) {
   const g = useMemo(() => buildFigure(op), [op])
@@ -281,25 +279,17 @@ export function Figure({ op }: { op: FigureOp }) {
       aria-label={'OPERATIVE ' + op.codename}
     >
       <defs>
-        <linearGradient id={uid + '-v'} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.85" />
-          <stop offset="0.25" stopColor={op.accent} />
-          <stop offset="1" stopColor={op.accent} stopOpacity="0.25" />
-        </linearGradient>
+        {visorGradientDef(uid, op.accent)}
         <radialGradient id={uid + '-amb'} cx="0.5" cy="0.32" r="0.6">
           <stop offset="0" stopColor={op.accent} stopOpacity="0.16" />
           <stop offset="1" stopColor={op.accent} stopOpacity="0" />
         </radialGradient>
         <radialGradient id={uid + '-floor'} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#7ef0d4" stopOpacity="0.22" />
-          <stop offset="1" stopColor="#7ef0d4" stopOpacity="0" />
+          <stop offset="0" stopColor={TEAL} stopOpacity="0.22" />
+          <stop offset="1" stopColor={TEAL} stopOpacity="0" />
         </radialGradient>
-        <pattern id={uid + '-s'} width="4" height="3" patternUnits="userSpaceOnUse">
-          <rect width="4" height="1" fill="rgba(0,0,0,0.26)" />
-        </pattern>
-        <filter id={uid + '-b'} x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="2.2" />
-        </filter>
+        {scanlinePatternDef(uid, 0.26)}
+        {blurFilterDef(uid, 2.2)}
         {RAMPS.map(([name, stops]) => (
           <linearGradient
             key={name}
@@ -322,7 +312,7 @@ export function Figure({ op }: { op: FigureOp }) {
       <ellipse cx="60" cy="322" rx="52" ry="20" fill={'url(#' + uid + '-floor)'} />
 
       {/* plinth */}
-      <polygon points={g.plinth} fill="#0b1613" stroke={EDGE} strokeWidth="0.7" />
+      <polygon points={g.plinth} fill={BODY_DEEP} stroke={EDGE} strokeWidth="0.7" />
       <rect x="34" y="327" width="52" height="1.6" fill={op.accent} opacity="0.55" />
 
       {/* legs */}
@@ -343,7 +333,7 @@ export function Figure({ op }: { op: FigureOp }) {
 
       {/* hips and belt */}
       <polygon points={g.hips} fill={'url(#' + uid + '-low)'} stroke={EDGE} strokeWidth="0.6" />
-      <rect x="36" y="150" width="48" height="12" fill="#0b1714" stroke={EDGE} strokeWidth="0.6" />
+      <rect x="36" y="150" width="48" height="12" fill={BODY_BELT} stroke={EDGE} strokeWidth="0.6" />
       <g fill={'url(#' + uid + '-lit)'} stroke={EDGE} strokeWidth="0.4">
         {g.pouches.map((b, i) => (
           <rect key={'po' + i} x={b.x} y={152} width={b.w} height={8} />
@@ -367,11 +357,11 @@ export function Figure({ op }: { op: FigureOp }) {
 
       {/* head */}
       <polygon points={g.neck} fill={'url(#' + uid + '-low)'} stroke={EDGE} strokeWidth="0.5" />
-      <polygon points={g.head} fill={'url(#' + uid + '-lit)'} stroke="rgba(126,240,212,0.45)" strokeWidth="0.6" />
+      <polygon points={g.head} fill={'url(#' + uid + '-lit)'} stroke={TEAL_A45} strokeWidth="0.6" />
       <polyline
         points={g.rim}
         fill="none"
-        stroke="rgba(232,251,242,0.4)"
+        stroke={RIM}
         strokeWidth="1"
         strokeLinejoin="round"
       />
@@ -385,7 +375,7 @@ export function Figure({ op }: { op: FigureOp }) {
             y1={g.antenna.y1}
             x2={g.antenna.x2}
             y2={g.antenna.y2}
-            stroke="rgba(126,240,212,0.4)"
+            stroke={TEAL_A40}
             strokeWidth="0.7"
           />
           <circle cx={g.antenna.x2} cy={g.antenna.y2 - 1} r="1.1" fill={op.accent} opacity="0.9" />
@@ -406,7 +396,7 @@ export function Figure({ op }: { op: FigureOp }) {
           strokeWidth="0.6"
         />
       ))}
-      <g transform="translate(24 141) rotate(-30) scale(0.66)" color="#82a396">
+      <g transform="translate(24 141) rotate(-30) scale(0.66)" color={GUN_IRON}>
         <GunShape weapon={op.weapon} />
       </g>
       {g.gloves.map((d, i) => (

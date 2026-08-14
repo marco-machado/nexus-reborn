@@ -92,7 +92,15 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   // A quality change during a mission cannot rebuild the live pipeline; the
   // row says so instead of pretending it applied.
   const missionLive = useMissionStore((s) => s.live)
-  const store = useSettingsStore
+  const setMuted = useSettingsStore((s) => s.setMuted)
+  const setReducedMotion = useSettingsStore((s) => s.setReducedMotion)
+  const setHighContrast = useSettingsStore((s) => s.setHighContrast)
+  const setTextScale = useSettingsStore((s) => s.setTextScale)
+  const setQuality = useSettingsStore((s) => s.setQuality)
+  const setTelemetry = useSettingsStore((s) => s.setTelemetry)
+  const setBindingOverride = useSettingsStore((s) => s.setBindingOverride)
+  const clearBindingOverride = useSettingsStore((s) => s.clearBindingOverride)
+  const resetBindings = useSettingsStore((s) => s.resetBindings)
 
   const [capture, setCapture] = useState<BindingId | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -158,7 +166,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
           setNotice(keyLabel(code).toUpperCase() + ' IS CLAIMED BY: ' + holder.label.toUpperCase())
           return
         }
-        store.getState().setBindingOverride(capture, [code])
+        setBindingOverride(capture, [code])
         setCapture(null)
         setNotice(null)
         return
@@ -173,7 +181,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
     }
     document.addEventListener('keydown', onKey, true)
     return () => document.removeEventListener('keydown', onKey, true)
-  }, [capture, onClose, store, balanceOpen])
+  }, [capture, onClose, setBindingOverride, balanceOpen])
 
   const fixedNote = (b: Binding): string | null => {
     if (b.group === 'mouse' || b.codes.length === 0) return 'MOUSE'
@@ -200,7 +208,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                 label="MUTE"
                 sub="Silences every synthesized voice"
                 on={muted}
-                onToggle={(next) => store.getState().setMuted(next)}
+                onToggle={setMuted}
               />
             </div>
             <div className="set-section">
@@ -209,13 +217,13 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                 label="REDUCED MOTION"
                 sub="Stops sweeps and pulses; rain drops to minimum density"
                 on={reducedMotion}
-                onToggle={(next) => store.getState().setReducedMotion(next)}
+                onToggle={setReducedMotion}
               />
               <ToggleRow
                 label="HIGH CONTRAST"
                 sub="Brightens text against the dark panels"
                 on={highContrast}
-                onToggle={(next) => store.getState().setHighContrast(next)}
+                onToggle={setHighContrast}
               />
               <div className="set-toggle">
                 <span className="set-toggle-main">
@@ -232,7 +240,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                       aria-label={'Text scale ' + scale + '%'}
                       onClick={() => {
                         uiClick()
-                        store.getState().setTextScale(scale)
+                        setTextScale(scale)
                       }}
                     >
                       {scale}%
@@ -262,7 +270,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                       aria-label={'Render quality ' + q}
                       onClick={() => {
                         uiClick()
-                        store.getState().setQuality(q)
+                        setQuality(q)
                       }}
                     >
                       {QUALITY_LABEL[q]}
@@ -277,7 +285,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                 label="TELEMETRY: LOCAL ONLY"
                 sub="Logs mission records on this terminal; nothing is transmitted"
                 on={telemetry}
-                onToggle={(next) => store.getState().setTelemetry(next)}
+                onToggle={setTelemetry}
               />
               <div className="set-toggle">
                 <span className="set-toggle-main">
@@ -311,7 +319,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                     uiClick()
                     setCapture(null)
                     setNotice(null)
-                    store.getState().resetBindings()
+                    resetBindings()
                   }}
                 >
                   RESET ALL
@@ -371,7 +379,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                                     uiClick()
                                     setCapture(null)
                                     setNotice(null)
-                                    store.getState().clearBindingOverride(b.id)
+                                    clearBindingOverride(b.id)
                                   }}
                                 >
                                   RESET

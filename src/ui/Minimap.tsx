@@ -3,9 +3,11 @@
 // cones, the camera viewport and unit blips. The map is turned by the camera
 // yaw, so up on the panel is up on screen and the viewport reads as an upright
 // cone. Clicking and dragging run the same transform backwards to steer the
-// camera. Canvas colors are hardcoded hexes matching the tokens in
-// src/index.css.
+// camera. Canvas colors come from ./tokens, the single design-token source that
+// mirrors the CSS custom properties in src/index.css.
 import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { useMissionStore } from '../state/missionStore'
+import { useSettingsStore } from '../state/settingsStore'
 import { getCameraFocus, getCameraFootprint, getWorld, panCameraTo } from '../game/runtime'
 import {
   CAMERA_YAW,
@@ -16,9 +18,32 @@ import {
   type WorldApi,
 } from '../game/types'
 import { ROLE_ABILITIES } from '../game/abilities'
-import { useMissionStore } from '../state/missionStore'
-import { useSettingsStore } from '../state/settingsStore'
 import { uiClick } from './sound'
+import {
+  AMBER,
+  AMBER_A11,
+  AMBER_A35,
+  ART_BG,
+  DEVICE,
+  DEVICE_A25,
+  INK_A045,
+  INK_A26,
+  INK_A5,
+  INK_DIM_A8,
+  RED_A08,
+  RED_A13,
+  RED_A45,
+  RED_A8,
+  RED_HOT,
+  TEAL,
+  TEAL_A025,
+  TEAL_A04,
+  TEAL_A055,
+  TEAL_A06,
+  TEAL_A14,
+  TEAL_A8,
+  VIP,
+} from './tokens'
 
 const ZOOM = [1, 1.7, 2.8]
 export const MM_ZOOM_MAX = ZOOM.length - 1
@@ -103,29 +128,29 @@ function insideQuad(q: CameraFootprint, x: number, z: number): boolean {
 }
 
 const COLOR = {
-  bg: '#030a08',
-  grid: 'rgba(126,240,212,0.04)',
-  road: 'rgba(126,240,212,0.055)',
-  building: 'rgba(126,240,212,0.14)',
-  extraction: 'rgba(126,240,212,0.8)',
-  extractionFill: 'rgba(126,240,212,0.06)',
-  checkpoint: '#f0b445',
-  checkpointDim: 'rgba(240,180,69,0.35)',
-  agent: '#7ef0d4',
-  enemyHot: '#ff6b55',
-  enemySuspect: '#f0b445',
-  enemyCalm: 'rgba(224,75,60,0.45)',
-  enemyRevealed: 'rgba(224,75,60,0.8)',
-  coneHot: 'rgba(255,107,85,0.13)',
-  coneSuspect: 'rgba(240,180,69,0.11)',
-  coneCalm: 'rgba(224,75,60,0.08)',
-  civilian: 'rgba(184,216,207,0.26)',
-  device: '#ffb300',
-  deviceDead: 'rgba(255,179,0,0.25)',
-  vip: '#9be8ff',
-  viewport: 'rgba(184,216,207,0.5)',
-  viewportFill: 'rgba(184,216,207,0.045)',
-  text: 'rgba(93,125,117,0.8)',
+  bg: ART_BG,
+  grid: TEAL_A04,
+  road: TEAL_A055,
+  building: TEAL_A14,
+  extraction: TEAL_A8,
+  extractionFill: TEAL_A06,
+  checkpoint: AMBER,
+  checkpointDim: AMBER_A35,
+  agent: TEAL,
+  enemyHot: RED_HOT,
+  enemySuspect: AMBER,
+  enemyCalm: RED_A45,
+  enemyRevealed: RED_A8,
+  coneHot: RED_A13,
+  coneSuspect: AMBER_A11,
+  coneCalm: RED_A08,
+  civilian: INK_A26,
+  device: DEVICE,
+  deviceDead: DEVICE_A25,
+  vip: VIP,
+  viewport: INK_A5,
+  viewportFill: INK_A045,
+  text: INK_DIM_A8,
 }
 
 export default function Minimap({
@@ -183,7 +208,7 @@ export default function Minimap({
       ctx.rotate(CAMERA_YAW)
 
       // map footprint background
-      ctx.fillStyle = 'rgba(126,240,212,0.025)'
+      ctx.fillStyle = TEAL_A025
       ctx.fillRect(0, 0, size * s, size * s)
 
       // roads: the paved bands as generated

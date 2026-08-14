@@ -63,25 +63,36 @@ import {
   targetWindows,
   textWidth,
 } from './briefMap'
-import { fmt, pad2, hashOf } from './util'
+import { act, fmt, hashOf, mmss, pad2, utcNow } from './util'
 import { Portrait } from './portrait'
 import { Figure } from './figure'
 import SettingsPanel from './Settings'
 import BalancePanel from './Balance'
-import { uiClick, unlockAudio } from './sound'
+import { unlockAudio } from './sound'
+import {
+  AMBER,
+  AMBER_A1,
+  AMBER_A6,
+  ART_BG_DEEP,
+  ART_BG_INSET,
+  ART_BG_PANEL,
+  ART_BG_TILE,
+  INK_DIM,
+  PANEL_GRAD_A,
+  PANEL_GRAD_B,
+  RED_A06,
+  RED_A18,
+  RED_A34,
+  RED_A6,
+  RED_A7,
+  RED_HOT,
+  TEAL,
+  TEAL_A07,
+  TEAL_A34,
+} from './tokens'
 export { WorldMap } from './WorldMap'
 export { Research } from './Research'
 /* -------------------------------- helpers -------------------------------- */
-function act(fn: () => void): () => void {
-  return () => {
-    uiClick()
-    fn()
-  }
-}
-function utcNow(): string {
-  const d = new Date()
-  return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds())
-}
 function useUtcClock(): string {
   const [t, setT] = useState(() => utcNow())
   useEffect(() => {
@@ -338,16 +349,16 @@ export function MissionBrief() {
             >
               <defs>
                 <linearGradient id="mb-recon-scrim" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#020708" stopOpacity="0.94" />
-                  <stop offset="70%" stopColor="#020708" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#020708" stopOpacity="0" />
+                  <stop offset="0%" stopColor={ART_BG_DEEP} stopOpacity="0.94" />
+                  <stop offset="70%" stopColor={ART_BG_DEEP} stopOpacity="0.7" />
+                  <stop offset="100%" stopColor={ART_BG_DEEP} stopOpacity="0" />
                 </linearGradient>
                 <radialGradient id="mb-target-glow">
-                  <stop offset="0%" stopColor="#f0b445" stopOpacity="0.26" />
-                  <stop offset="100%" stopColor="#f0b445" stopOpacity="0" />
+                  <stop offset="0%" stopColor={AMBER} stopOpacity="0.26" />
+                  <stop offset="100%" stopColor={AMBER} stopOpacity="0" />
                 </radialGradient>
               </defs>
-              <rect x="0" y="0" width={RECON_W} height={RECON_H} fill="#05090b" />
+              <rect x="0" y="0" width={RECON_W} height={RECON_H} fill={ART_BG_PANEL} />
               <g className="mb-grid">
                 {[60, 132, 204, 276, 332].map((y) => (
                   <line key={'h' + y} x1="0" y1={y} x2={RECON_W} y2={y} />
@@ -531,8 +542,8 @@ export function MissionBrief() {
                     patternTransform="rotate(45)"
                     patternUnits="userSpaceOnUse"
                   >
-                    <rect width="3" height="3" fill="rgba(224,75,60,0.06)" />
-                    <rect width="0.7" height="3" fill="rgba(224,75,60,0.34)" />
+                    <rect width="3" height="3" fill={RED_A06} />
+                    <rect width="0.7" height="3" fill={RED_A34} />
                   </pattern>
                   <pattern
                     id="mb-hatch-a"
@@ -541,11 +552,11 @@ export function MissionBrief() {
                     patternTransform="rotate(45)"
                     patternUnits="userSpaceOnUse"
                   >
-                    <rect width="2.4" height="2.4" fill="rgba(240,180,69,0.1)" />
-                    <rect width="0.7" height="2.4" fill="rgba(240,180,69,0.6)" />
+                    <rect width="2.4" height="2.4" fill={AMBER_A1} />
+                    <rect width="0.7" height="2.4" fill={AMBER_A6} />
                   </pattern>
                 </defs>
-                <rect x="0" y="0" width={tac.size} height={tac.size} fill="#04090a" />
+                <rect x="0" y="0" width={tac.size} height={tac.size} fill={ART_BG_TILE} />
                 <g className="mb-tac-grid">
                   {[16, 32, 48, 64, 80].map((v) => (
                     <line key={'h' + v} x1="0" y1={v} x2={tac.size} y2={v} />
@@ -655,28 +666,28 @@ export function MissionBrief() {
             </div>
             <div className="mb-legend">
               <LegendRow label="INSERTION POINT">
-                <polygon points="10,2 16,10 4,10" fill="none" stroke="#7ef0d4" strokeWidth="1.2" />
+                <polygon points="10,2 16,10 4,10" fill="none" stroke={TEAL} strokeWidth="1.2" />
               </LegendRow>
               <LegendRow label="EXTRACTION POINT">
-                <polygon points="4,2 16,2 10,10" fill="none" stroke="#ff6b55" strokeWidth="1.2" />
+                <polygon points="4,2 16,2 10,10" fill="none" stroke={RED_HOT} strokeWidth="1.2" />
               </LegendRow>
               <LegendRow label="TARGET ZONE">
-                <rect x="5" y="1.5" width="9" height="9" fill="none" stroke="#f0b445" strokeWidth="1.2" />
+                <rect x="5" y="1.5" width="9" height="9" fill="none" stroke={AMBER} strokeWidth="1.2" />
               </LegendRow>
               <LegendRow label="ROUTE ALPHA">
-                <line x1="2" y1="6" x2="18" y2="6" stroke="#7ef0d4" strokeWidth="1.4" strokeDasharray="3 2" />
+                <line x1="2" y1="6" x2="18" y2="6" stroke={TEAL} strokeWidth="1.4" strokeDasharray="3 2" />
               </LegendRow>
               <LegendRow label="ROUTE OMEGA">
-                <line x1="2" y1="6" x2="18" y2="6" stroke="#ff6b55" strokeWidth="1.4" strokeDasharray="3 2" />
+                <line x1="2" y1="6" x2="18" y2="6" stroke={RED_HOT} strokeWidth="1.4" strokeDasharray="3 2" />
               </LegendRow>
               <LegendRow label="HOSTILE ZONE">
-                <rect x="4" y="1.5" width="12" height="9" fill="rgba(224,75,60,0.18)" stroke="rgba(224,75,60,0.6)" strokeWidth="1" />
-                <line x1="4" y1="10.5" x2="16" y2="1.5" stroke="rgba(224,75,60,0.7)" strokeWidth="1" />
+                <rect x="4" y="1.5" width="12" height="9" fill={RED_A18} stroke={RED_A6} strokeWidth="1" />
+                <line x1="4" y1="10.5" x2="16" y2="1.5" stroke={RED_A7} strokeWidth="1" />
               </LegendRow>
               <LegendRow label="PATROL ROUTE">
-                <line x1="2" y1="6" x2="18" y2="6" stroke="#5d7d75" strokeWidth="1.2" strokeDasharray="1.5 2.5" />
-                <circle cx="6" cy="6" r="1.3" fill="#5d7d75" />
-                <circle cx="14" cy="6" r="1.3" fill="#5d7d75" />
+                <line x1="2" y1="6" x2="18" y2="6" stroke={INK_DIM} strokeWidth="1.2" strokeDasharray="1.5 2.5" />
+                <circle cx="6" cy="6" r="1.3" fill={INK_DIM} />
+                <circle cx="14" cy="6" r="1.3" fill={INK_DIM} />
               </LegendRow>
             </div>
           </Panel>
@@ -708,20 +719,20 @@ export function MissionBrief() {
                     <svg viewBox="0 0 118 176" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                       <defs>
                         <linearGradient id="mb-sil-bg" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#0d1a17" />
-                          <stop offset="100%" stopColor="#050b0a" />
+                          <stop offset="0%" stopColor={PANEL_GRAD_A} />
+                          <stop offset="100%" stopColor={PANEL_GRAD_B} />
                         </linearGradient>
                         <linearGradient id="mb-sil-rim" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor="#7ef0d4" stopOpacity="0.5" />
-                          <stop offset="45%" stopColor="#7ef0d4" stopOpacity="0.06" />
-                          <stop offset="100%" stopColor="#f0b445" stopOpacity="0.22" />
+                          <stop offset="0%" stopColor={TEAL} stopOpacity="0.5" />
+                          <stop offset="45%" stopColor={TEAL} stopOpacity="0.06" />
+                          <stop offset="100%" stopColor={AMBER} stopOpacity="0.22" />
                         </linearGradient>
                         <pattern id="mb-sil-s" width="4" height="3" patternUnits="userSpaceOnUse">
                           <rect width="4" height="1.1" fill="rgba(0,0,0,0.4)" />
                         </pattern>
                       </defs>
                       <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-bg)" />
-                      <g stroke="rgba(126,240,212,0.07)" strokeWidth="0.8">
+                      <g stroke={TEAL_A07} strokeWidth="0.8">
                         {[30, 60, 90, 120, 150].map((y) => (
                           <line key={y} x1="0" y1={y} x2="118" y2={y} />
                         ))}
@@ -732,18 +743,18 @@ export function MissionBrief() {
                       {/* head, shoulders and torso, filling the frame */}
                       <path
                         d="M59 22c14 0 23 11 23 26 0 11-3 19-9 25 19 6 31 19 34 41v62H11v-62c3-22 15-35 34-41-6-6-9-14-9-25 0-15 9-26 23-26Z"
-                        fill="#070d0c"
+                        fill={ART_BG_INSET}
                         stroke="url(#mb-sil-rim)"
                         strokeWidth="1.6"
                       />
                       <path
                         d="M59 22c-14 0-23 11-23 26 0 11 3 19 9 25-19 6-31 19-34 41v62"
                         fill="none"
-                        stroke="rgba(126,240,212,0.34)"
+                        stroke={TEAL_A34}
                         strokeWidth="1.4"
                       />
                       <rect x="0" y="0" width="118" height="176" fill="url(#mb-sil-s)" />
-                      <g stroke="var(--amber)" strokeWidth="1.6" fill="none">
+                      <g stroke={AMBER} strokeWidth="1.6" fill="none">
                         <path d="M5 16V5h11" />
                         <path d="M102 5h11v11" />
                         <path d="M113 160v11h-11" />
@@ -1522,10 +1533,6 @@ export function Debrief() {
       useCampaignStore.getState().sync(t)
     }
   }, [missionId, outcome, outcomeSerial])
-  const mmss = (sec: number) => {
-    const s = Math.max(0, Math.floor(sec))
-    return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60)
-  }
   // Built as a list because the deduction only takes a line when a round caught
   // a bystander, and the row stagger has to stay even either way.
   const rows: { label: string; value: ReactNode; tone?: string }[] = [

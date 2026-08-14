@@ -5,19 +5,22 @@ import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
-import { WEAPONS } from '../game/data'
 import { resolveMission } from '../state/worldStore'
 import { useCampaignStore } from '../state/campaignStore'
+import { noteTutorial } from '../state/tutorialStore'
+import { WEAPONS } from '../game/data'
 import { WEATHER_LABEL } from '../game/missionParams'
 import { getWorld, panCameraTo } from '../game/runtime'
-import { noteTutorial } from '../state/tutorialStore'
 import type { WeaponId } from '../game/types'
+import { BINDINGS } from '../game/bindings'
+import type { BindingId } from '../game/bindings'
 import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import PauseMenu from './PauseMenu'
 import TutorialToasts from './TutorialToasts'
 import { Portrait } from './portrait'
 import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox } from './bits'
+import { AMBER, INK_DIM_A7, TEAL, TEAL_A12 } from './tokens'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
 
@@ -28,11 +31,15 @@ function weaponIdByName(name: string): WeaponId {
   return 'assault'
 }
 
+// The mission keys the HUD prints come from game/bindings, so a player's rebind
+// shows up here too. Panels print the first key per action to keep labels short.
+const firstKey = (id: BindingId): string => BINDINGS.find((b) => b.id === id)?.keys[0] ?? ''
+
 function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
   if (props.state === 'active') {
     return (
       <svg viewBox="0 0 12 12" className="hud-obj-mark" aria-hidden="true">
-        <polygon points="3,1.5 10,6 3,10.5" fill="#f0b445" />
+        <polygon points="3,1.5 10,6 3,10.5" fill={AMBER} />
       </svg>
     )
   }
@@ -43,12 +50,12 @@ function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
         y="1.5"
         width="9"
         height="9"
-        fill={props.state === 'done' ? 'rgba(126,240,212,0.12)' : 'none'}
-        stroke={props.state === 'done' ? '#7ef0d4' : 'rgba(93,125,117,0.7)'}
+        fill={props.state === 'done' ? TEAL_A12 : 'none'}
+        stroke={props.state === 'done' ? TEAL : INK_DIM_A7}
         strokeWidth="1.2"
       />
       {props.state === 'done' && (
-        <path d="M3 6.2 5.2 8.6 9 3.4" fill="none" stroke="#7ef0d4" strokeWidth="1.5" />
+        <path d="M3 6.2 5.2 8.6 9 3.4" fill="none" stroke={TEAL} strokeWidth="1.5" />
       )}
     </svg>
   )
@@ -123,6 +130,8 @@ export default function Hud() {
   const priMag = active ? (primaryDrawn ? active.magazine : active.stowedMagazine) : 0
   const secName = active ? (primaryDrawn ? active.stowedName : active.weaponName) : ''
   const secMag = active ? (primaryDrawn ? active.stowedMagazine : active.magazine) : 0
+  const priCap = active ? (primaryDrawn ? active.magazineSize : active.stowedMagazineSize) : 0
+  const secCap = active ? (primaryDrawn ? active.stowedMagazineSize : active.magazineSize) : 0
   const abilityTarget = selected
     .map((id) => squad.find((r) => r.unitId === id))
     .find((r): r is SquadMemberUi => !!r && !r.dead)
@@ -352,7 +361,7 @@ export default function Hud() {
                 <span className="hud-wpn-name">{priName}</span>
                 <span className="hud-ammo">
                   <b>{priMag}</b>
-                  <i>/120</i>
+                  <i>/{priCap}</i>
                 </span>
                 {/* No DRAWING span: it squeezes the weapon name into an
                     ellipsis; the squad card carries the swap state. */}
@@ -375,7 +384,7 @@ export default function Hud() {
                     name under them, and the squad card carries the state. */}
                 <span className="hud-ammo sm">
                   <b>{secMag}</b>
-                  <i>/48</i>
+                  <i>/{secCap}</i>
                 </span>
               </div>
             </div>
@@ -384,7 +393,7 @@ export default function Hud() {
             <div className="hud-panel-head">
               <span>ABILITIES</span>
               <span className={grenadeTargeting ? 'amber' : 'dim'}>
-                {grenadeTargeting ? 'TARGETING' : 'Q / G'}
+                {grenadeTargeting ? 'TARGETING' : firstKey('useAbility') + ' / ' + firstKey('grenade')}
               </span>
             </div>
             <div className="hud-slots">
@@ -401,7 +410,7 @@ export default function Hud() {
                 }}
               >
                 <AbilityGlyph kind="grenade" />
-                <span className="hud-slot-key">G</span>
+                <span className="hud-slot-key">{firstKey('grenade')}</span>
                 {grenadeState === 'cooldown' && (
                   <span className="hud-slot-cd">{abilities.grenade.cooldownRemaining.toFixed(1)}</span>
                 )}
@@ -463,7 +472,7 @@ export default function Hud() {
           <div className="hud-panel hud-items corners">
             <div className="hud-panel-head">
               <span>ITEMS</span>
-              <span className="dim">E / R</span>
+              <span className="dim">{firstKey('useMed') + ' / ' + firstKey('useCell')}</span>
             </div>
             <div className="hud-slots">
               <button
@@ -475,7 +484,7 @@ export default function Hud() {
                 onClick={() => getWorld()?.orderUseMed(selected)}
               >
                 <ItemGlyph kind="med" size={16} />
-                <span className="hud-slot-key">E</span>
+                <span className="hud-slot-key">{firstKey('useMed')}</span>
                 <i>{pad2(inventory.med)}</i>
               </button>
               <button
@@ -487,7 +496,7 @@ export default function Hud() {
                 onClick={() => getWorld()?.orderUseCell(selected)}
               >
                 <ItemGlyph kind="cell" size={16} />
-                <span className="hud-slot-key">R</span>
+                <span className="hud-slot-key">{firstKey('useCell')}</span>
                 <i>{pad2(inventory.cell)}</i>
               </button>
             </div>

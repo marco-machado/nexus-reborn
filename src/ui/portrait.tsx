@@ -2,6 +2,25 @@
 // tinted by the operative accent. Geometry jitter is derived deterministically
 // from the operative id and codename so every dossier renders the same face.
 import { useMemo } from 'react'
+import { blurFilterDef, polyPoints as p, scanlinePatternDef, visorGradientDef } from './glyph'
+import {
+  FACE_BG,
+  FACE_CREST,
+  FACE_HEAD,
+  FACE_NECK,
+  FACE_SHOULDER,
+  INK_A55,
+  INK_DIM_A9,
+  RIM,
+  TEAL_A05,
+  TEAL_A16,
+  TEAL_A25,
+  TEAL_A28,
+  TEAL_A35,
+  TEAL_A40,
+  TEAL_A45,
+  TEAL_A55,
+} from './tokens'
 import { hashOf, rngFrom } from './util'
 
 export interface PortraitOp {
@@ -28,10 +47,6 @@ interface Geometry {
   bars: Array<{ x: number; w: number }>
   serial: string
   edge: string
-}
-
-function p(list: Array<[number, number]>): string {
-  return list.map((pt) => pt[0].toFixed(1) + ',' + pt[1].toFixed(1)).join(' ')
 }
 
 function buildGeometry(op: PortraitOp): Geometry {
@@ -194,27 +209,19 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       aria-label={'OPERATIVE ' + op.codename}
     >
       <defs>
-        <linearGradient id={uid + '-v'} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.85" />
-          <stop offset="0.25" stopColor={op.accent} />
-          <stop offset="1" stopColor={op.accent} stopOpacity="0.25" />
-        </linearGradient>
+        {visorGradientDef(uid, op.accent)}
         <radialGradient id={uid + '-g'} cx="0.5" cy="0.4" r="0.6">
           <stop offset="0" stopColor={op.accent} stopOpacity="0.30" />
           <stop offset="1" stopColor={op.accent} stopOpacity="0" />
         </radialGradient>
-        <pattern id={uid + '-s'} width="4" height="3" patternUnits="userSpaceOnUse">
-          <rect width="4" height="1" fill="rgba(0,0,0,0.28)" />
-        </pattern>
-        <filter id={uid + '-b'} x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="2.4" />
-        </filter>
+        {scanlinePatternDef(uid, 0.28)}
+        {blurFilterDef(uid, 2.4)}
       </defs>
 
       {/* backdrop */}
-      <rect x="0" y="0" width="100" height="100" fill="#0a1512" />
+      <rect x="0" y="0" width="100" height="100" fill={FACE_BG} />
       <rect x="0" y="0" width="100" height="100" fill={'url(#' + uid + '-g)'} />
-      <g stroke="rgba(126,240,212,0.05)" strokeWidth="0.5">
+      <g stroke={TEAL_A05} strokeWidth="0.5">
         <line x1="0" y1="25" x2="100" y2="25" />
         <line x1="0" y1="50" x2="100" y2="50" />
         <line x1="0" y1="75" x2="100" y2="75" />
@@ -222,18 +229,18 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       </g>
 
       {/* bust */}
-      <polygon points={g.shoulderPts} fill="#132420" stroke="rgba(126,240,212,0.35)" strokeWidth="0.6" />
-      <polygon points={g.neckPts} fill="#0f1d18" />
-      <polyline points={g.collarPts} fill="none" stroke="rgba(126,240,212,0.28)" strokeWidth="0.6" />
-      <polygon points={g.headPts} fill="#1c2f28" stroke="rgba(126,240,212,0.45)" strokeWidth="0.6" />
+      <polygon points={g.shoulderPts} fill={FACE_SHOULDER} stroke={TEAL_A35} strokeWidth="0.6" />
+      <polygon points={g.neckPts} fill={FACE_NECK} />
+      <polyline points={g.collarPts} fill="none" stroke={TEAL_A28} strokeWidth="0.6" />
+      <polygon points={g.headPts} fill={FACE_HEAD} stroke={TEAL_A45} strokeWidth="0.6" />
       <polyline
         points={g.rimPts}
         fill="none"
-        stroke="rgba(232,251,242,0.4)"
+        stroke={RIM}
         strokeWidth="1.1"
         strokeLinejoin="round"
       />
-      {g.crestPts && <polygon points={g.crestPts} fill="#152622" stroke="rgba(126,240,212,0.25)" strokeWidth="0.5" />}
+      {g.crestPts && <polygon points={g.crestPts} fill={FACE_CREST} stroke={TEAL_A25} strokeWidth="0.5" />}
       {g.antenna && (
         <g>
           <line
@@ -241,7 +248,7 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
             y1={g.antenna.y1}
             x2={g.antenna.x2}
             y2={g.antenna.y2}
-            stroke="rgba(126,240,212,0.4)"
+            stroke={TEAL_A40}
             strokeWidth="0.7"
           />
           <circle cx={g.antenna.dot[0]} cy={g.antenna.dot[1]} r="1.1" fill={op.accent} opacity="0.9" />
@@ -279,7 +286,7 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       <rect x="0" y="0" width="100" height="100" fill={'url(#' + uid + '-s)'} opacity="0.35" />
 
       {/* barcode strip + serial */}
-      <g fill="rgba(184,216,207,0.55)">
+      <g fill={INK_A55}>
         {g.bars.map((b, i) => (
           <rect key={i} x={b.x} y={88} width={b.w} height={7} />
         ))}
@@ -290,15 +297,15 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
         textAnchor="end"
         fontSize="4.2"
         fontFamily="inherit"
-        fill="rgba(93,125,117,0.9)"
+        fill={INK_DIM_A9}
         letterSpacing="0.6"
       >
         {g.serial}
       </text>
 
       {/* frame */}
-      <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke="rgba(126,240,212,0.16)" strokeWidth="1" />
-      <g stroke="rgba(126,240,212,0.55)" strokeWidth="1" fill="none">
+      <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={TEAL_A16} strokeWidth="1" />
+      <g stroke={TEAL_A55} strokeWidth="1" fill="none">
         <path d="M1 8V1h7" />
         <path d="M92 1h7v7" />
         <path d="M99 92v7h-7" />

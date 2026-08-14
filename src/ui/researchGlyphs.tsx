@@ -3,7 +3,32 @@
 // two sizes. Returns bare SVG children: the caller owns the svg element.
 import type { ReactNode } from 'react'
 
-export function researchShape(kind: string): ReactNode {
+// Every shape the tree can ask for. Typed (not `string`) so a node glyph id is
+// a type error when it names no drawn shape.
+export type ResearchGlyphId =
+  | 'rounds'
+  | 'barrel'
+  | 'velocity'
+  | 'feed'
+  | 'rail'
+  | 'frag'
+  | 'sabot'
+  | 'brain'
+  | 'synapse'
+  | 'reflex'
+  | 'pulse'
+  | 'accel'
+  | 'weave'
+  | 'cache'
+  | 'reticle'
+  | 'sensor'
+  | 'swarm'
+  | 'threat'
+  | 'em'
+  | 'crypt'
+  | 'ai'
+
+export function researchShape(kind: ResearchGlyphId): ReactNode {
   switch (kind) {
     /* ------------------------------ ballistics ---------------------------- */
     case 'rounds':
