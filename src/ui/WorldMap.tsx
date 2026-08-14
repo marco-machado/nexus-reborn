@@ -848,7 +848,7 @@ export function WorldMap() {
       <header className="wm-head">
         <div>
           <h1 className="screen-title">WORLD NETWORK</h1>
-          <div className="screen-sub">CORPORATE GEOSTRATEGIC COMMAND INTERFACE</div>
+          <div className="screen-sub">NEXUS GLOBAL // GEOSTRATEGIC COMMAND INTERFACE</div>
         </div>
         <div className="wm-head-right">
           <Chip tone="dim">SYS:GN-7A</Chip>

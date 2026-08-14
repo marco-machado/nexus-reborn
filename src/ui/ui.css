@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SYNDICATE UI LAYER
+   NEXUS REBORN UI LAYER
    Screen + HUD styles. Consumes the design tokens defined in src/index.css.
    Sections:
      1. shared primitives (panels, chips, bars, buttons, utilities, keyframes)
@@ -592,7 +592,10 @@
 
 .menu-wordmark {
   margin: 0;
-  font-size: clamp(56px, 9vw, 128px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(48px, 9vh, 76px);
   letter-spacing: 0.3em;
   padding-left: 0.3em;
   font-weight: 600;
@@ -601,7 +604,10 @@
     0 0 26px rgba(126, 240, 212, 0.4),
     0 0 80px rgba(126, 240, 212, 0.18);
   animation: wm-flicker 7s infinite;
-  line-height: 1;
+  line-height: 0.9;
+}
+
+.menu-wordmark span {
   white-space: nowrap;
 }
 

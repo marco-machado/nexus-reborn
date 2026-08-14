@@ -410,6 +410,7 @@ describe('generated contracts', () => {
     const s = useWorldStore.getState()
     for (const c of s.contracts) {
       expect(c.client).toBe(sectorClient(c.sector, s.owner))
+      if (c.client !== 'nexus') expect(s.owner[c.cityId]).not.toBe('nexus')
     }
   })
 

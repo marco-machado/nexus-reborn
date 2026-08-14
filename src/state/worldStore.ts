@@ -25,6 +25,7 @@ import {
   contractMission,
   contractMissionById,
   isGeneratedMissionId,
+  reclientContract,
   rollContract,
   rollSuppressionContract,
   sectorClient,
@@ -408,6 +409,7 @@ function contractInputs(
       garrison: read.garrison,
       weight: def.weight,
       client: sectorClient(id, owner),
+      ownership: owner,
     }
   })
 }
@@ -470,17 +472,25 @@ function applyContractHooks(f: WorldFlow, event: WorldEvent, flipped: boolean): 
     f.contractRngState = rng.state
   } else if (event.kind === 'seizure' && flipped && EVENT_CONTRACT_FX.seizure > 0) {
     const client = sectorClient(event.sector, f.owner)
-    for (const c of f.contracts) {
-      if (c.sector !== event.sector || c.client === client) continue
-      f.contracts = f.contracts.map((x) => (x.id === c.id ? { ...x, client } : x))
-      postContractEvent(
-        f,
-        event.t,
-        event.sector,
-        'dim',
-        'CONTRACT ' + contractMission(c).codename + ' RE-CLIENTED TO ' + CORPS[client].name,
-      )
-    }
+    f.contracts = f.contracts.map((contract) => {
+      if (contract.sector !== event.sector) return contract
+      const previousClient = contract.client
+      const rolled = reclientContract(contract, client, f.owner, f.contractRngState)
+      f.contractRngState = rolled.state
+      if (previousClient !== rolled.contract.client) {
+        postContractEvent(
+          f,
+          event.t,
+          event.sector,
+          'dim',
+          'CONTRACT ' +
+            contractMission(contract).codename +
+            ' RE-CLIENTED TO ' +
+            CORPS[rolled.contract.client].name,
+        )
+      }
+      return rolled.contract
+    })
   }
 }
 

@@ -13,6 +13,7 @@ import {
   contractThreat,
   expediteTarget,
   isGeneratedMissionId,
+  reclientContract,
   rollContract,
   rollSuppressionContract,
   sectorClient,
@@ -20,14 +21,17 @@ import {
 import type { ContractSectorInput, ContractType, GeneratedContract } from './contracts'
 import { CITIES, CITIES_BY_SECTOR, HOLDERS } from './atlas'
 import type { CorpId } from './atlas'
-import { operativeById } from './data'
+import { MISSIONS, operativeById } from './data'
 import { isWalkable } from './types'
 import { createWorld } from './world'
 
+const OWNERSHIP: Record<string, CorpId> = {}
+for (const city of CITIES) OWNERSHIP[city.id] = city.corp
+
 const INPUTS: ContractSectorInput[] = [
-  { sector: 'eu', control: 62, unrest: 18, defense: 74, garrison: 'SECURE', weight: 1.2, client: 'helix' },
-  { sector: 'af', control: 37, unrest: 28, defense: 44, garrison: 'STRAINED', weight: 0.9, client: 'omni' },
-  { sector: 'oc', control: 20, unrest: 60, defense: 11, garrison: 'CRITICAL', weight: 0.55, client: 'stratos' },
+  { sector: 'eu', control: 62, unrest: 18, defense: 74, garrison: 'SECURE', weight: 1.2, client: 'helix', ownership: OWNERSHIP },
+  { sector: 'af', control: 37, unrest: 28, defense: 44, garrison: 'STRAINED', weight: 0.9, client: 'omni', ownership: OWNERSHIP },
+  { sector: 'oc', control: 20, unrest: 60, defense: 11, garrison: 'CRITICAL', weight: 0.55, client: 'stratos', ownership: OWNERSHIP },
 ]
 
 function inputFor(sector: string): ContractSectorInput {
@@ -66,6 +70,7 @@ describe('rolling', () => {
       expect(c.reward).toBeLessThanOrEqual(CONTRACT_REWARD_MAX)
       expect(c.reward % 500).toBe(0)
       expect(CITIES_BY_SECTOR[c.sector].some((city) => city.id === c.cityId)).toBe(true)
+      if (c.client !== 'nexus') expect(OWNERSHIP[c.cityId]).not.toBe('nexus')
       expect(c.district).toBeGreaterThanOrEqual(2)
       expect(c.district).toBeLessThanOrEqual(29)
       expect(c.expiresAtT - c.createdT).toBeGreaterThanOrEqual(CONTRACT_EXPIRY_MIN_SEC)
@@ -88,17 +93,45 @@ describe('rolling', () => {
   })
 
   it('a suppression contract is priority work: premium pay, short expiry', () => {
-    const input = inputFor('af')
+    const input = inputFor('oc')
     const { contract: c } = rollSuppressionContract(input, 2000, 0x77)
     expect(c.priority).toBe(true)
     expect(c.type).toBe('SUPPRESSION')
-    expect(c.sector).toBe('af')
+    expect(c.sector).toBe('oc')
     expect(c.expiresAtT - c.createdT).toBeGreaterThanOrEqual(PRIORITY_EXPIRY_MIN_SEC)
     expect(c.expiresAtT - c.createdT).toBeLessThanOrEqual(
       PRIORITY_EXPIRY_MIN_SEC + PRIORITY_EXPIRY_SPAN_SEC,
     )
     expect(c.reward).toBeGreaterThanOrEqual(CONTRACT_REWARD_MIN)
     expect(c.reward).toBeLessThanOrEqual(CONTRACT_REWARD_MAX)
+    expect(OWNERSHIP[c.cityId]).not.toBe('nexus')
+  })
+
+  it('makes all-Nexus sectors internal without changing the economy', () => {
+    const allNexus = { ...OWNERSHIP }
+    for (const city of CITIES_BY_SECTOR.oc) allNexus[city.id] = 'nexus'
+    const outsideInput = { ...inputFor('oc'), ownership: allNexus, client: 'stratos' as const }
+    const internalInput = { ...outsideInput, client: 'nexus' as const }
+    const forced = rollContract([outsideInput], 2000, 0x4040).contract
+    const internal = rollContract([internalInput], 2000, 0x4040).contract
+
+    expect(forced.client).toBe('nexus')
+    expect({
+      type: forced.type,
+      threat: forced.threat,
+      reward: forced.reward,
+      expiresAtT: forced.expiresAtT,
+      seed: forced.seed,
+      intelReq: contractMission(forced).intelReq,
+    }).toEqual({
+      type: internal.type,
+      threat: internal.threat,
+      reward: internal.reward,
+      expiresAtT: internal.expiresAtT,
+      seed: internal.seed,
+      intelReq: contractMission(internal).intelReq,
+    })
+    expect(rollSuppressionContract(outsideInput, 2000, 0x4040).contract.client).toBe('nexus')
   })
 })
 
@@ -208,6 +241,29 @@ describe('derived missions', () => {
     expect(contractMission(expedited).notes.at(-1)).toContain('INTEL GATE WAIVED')
   })
 
+  it.each<ContractType>(['SEIZURE', 'SUPPRESSION', 'EXTRACTION', 'SABOTAGE'])(
+    'presents Nexus-signed %s work as an internal directive',
+    (type) => {
+      const record = {
+        ...rollContract([{ ...inputFor('oc'), client: 'nexus' }], 1000, 0x40).contract,
+        type,
+      }
+      const mission = contractMission(record)
+      const briefing = mission.briefing.join(' ')
+      expect(mission.client).toBe('INTERNAL')
+      expect(briefing).toContain('The board')
+      expect(briefing).not.toMatch(/\bNEXUS(?: GLOBAL)?\b/i)
+    },
+  )
+
+  it('keeps the authored clients unchanged', () => {
+    expect(MISSIONS.map((mission) => mission.client)).toEqual([
+      'SABLE ENTERPRISES',
+      'HELIX CORP',
+      'STRATOS INDUSTRIES',
+    ])
+  })
+
   it('builds a playable mission for every contract type', () => {
     // Chain the cursor until every regular type showed up, then add a
     // suppression roll, and validate each derived mission like an authored
@@ -276,5 +332,36 @@ describe('derived missions', () => {
       expect(m.mapPos.y).toBeGreaterThan(0)
       expect(m.mapPos.y).toBeLessThan(100)
     }
+  })
+})
+
+describe('re-clienting', () => {
+  const nexusRecord = (): GeneratedContract => ({
+    ...rollContract([{ ...inputFor('eu'), sector: 'na', client: 'nexus' }], 1000, 0x40)
+      .contract,
+    cityId: 'nb',
+  })
+
+  it('moves outside work off a Nexus holding and preserves mission economics', () => {
+    const before = nexusRecord()
+    const moved = reclientContract(before, 'helix', OWNERSHIP, 0x4040).contract
+    expect(moved.client).toBe('helix')
+    expect(moved.cityId).toBe('dt')
+    expect({ ...moved, client: before.client, cityId: before.cityId }).toEqual(before)
+  })
+
+  it('keeps expansion work in a rival city when re-cliented to Nexus', () => {
+    const before = { ...nexusRecord(), client: 'helix' as const, cityId: 'dt' }
+    const moved = reclientContract(before, 'nexus', OWNERSHIP, 0x4040).contract
+    expect(moved.client).toBe('nexus')
+    expect(moved.cityId).toBe('dt')
+  })
+
+  it('refuses to re-client an all-Nexus sector to an outside corporation', () => {
+    const allNexus = { ...OWNERSHIP }
+    for (const city of CITIES_BY_SECTOR.na) allNexus[city.id] = 'nexus'
+    const moved = reclientContract(nexusRecord(), 'helix', allNexus, 0x4040).contract
+    expect(moved.client).toBe('nexus')
+    expect(moved.cityId).toBe('nb')
   })
 })
