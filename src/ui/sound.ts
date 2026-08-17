@@ -10,6 +10,10 @@ interface SfxLike {
 interface AudioModuleLike {
   sfx?: SfxLike
   unlockAudio?: () => void
+  startStrategyBed?: () => void
+  stopStrategyBed?: () => void
+  startMissionBed?: () => void
+  stopMissionBed?: () => void
 }
 
 let modPromise: Promise<AudioModuleLike | null> | null = null
@@ -55,4 +59,34 @@ export function unlockAudio(): void {
   } catch {
     // audio unavailable
   }
+}
+
+function callBed(fn: (m: AudioModuleLike) => void): void {
+  try {
+    if (mod) {
+      fn(mod)
+      return
+    }
+    void load().then((m) => {
+      if (m) fn(m)
+    })
+  } catch {
+    // audio unavailable
+  }
+}
+
+export function startStrategyBed(): void {
+  callBed((m) => m.startStrategyBed?.())
+}
+
+export function stopStrategyBed(): void {
+  callBed((m) => m.stopStrategyBed?.())
+}
+
+export function startMissionBed(): void {
+  callBed((m) => m.startMissionBed?.())
+}
+
+export function stopMissionBed(): void {
+  callBed((m) => m.stopMissionBed?.())
 }

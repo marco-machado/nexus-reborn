@@ -8,6 +8,7 @@ import type { ReactNode } from 'react'
 import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { useCampaignStore } from '../state/campaignStore'
+import { useSettingsStore } from '../state/settingsStore'
 import { resolveMission, useWorldStore } from '../state/worldStore'
 import {
   continueOperation,
@@ -38,6 +39,7 @@ import {
 } from '../game/missionParams'
 import { missionRisk } from '../game/forecast'
 import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
+import { xpBonus } from '../game/experience'
 import type { ResearchNode } from '../game/research'
 import type { AgentRole, DistrictArchetype, MissionDef, OperativeDef, Weather } from '../game/types'
 import {
@@ -292,7 +294,8 @@ export function MissionBrief() {
   // live so the counts and the derived chance move with sector state and
   // completed research.
   const spec = m ? missionVariant(m, contractsWon.includes(m.id)) : null
-  const mods = m ? missionMods(m, sectors[m.sector]) : null
+  const difficulty = useSettingsStore((s) => s.difficulty)
+  const mods = m ? missionMods(m, sectors[m.sector], difficulty) : null
   const chance = m && mods ? missionChance(m, mods, researched.length) : 0
   const tac = useMemo(
     () =>
@@ -1026,8 +1029,9 @@ export function TeamSelect() {
       </div>
     )
   }
-  const maxHp = focus.maxHp + bonus.maxHp
-  const speed = focus.speed + bonus.speed
+  const xp = xpBonus(roster[focus.id]?.xp ?? 0)
+  const maxHp = focus.maxHp + bonus.maxHp + xp.maxHp
+  const speed = focus.speed + bonus.speed + xp.speed
   const fh = hashOf(focus.id + focus.name)
   const stats = {
     hlth: Math.min(100, Math.round(maxHp / 1.35)),
@@ -1557,6 +1561,13 @@ export function Debrief() {
           label: 'INJURED // ' + inj.codename,
           value: Math.ceil(inj.downtimeSec / 3600) + 'H RECOVERY',
           tone: 'amber',
+        }))
+      : []),
+    ...(outcome && report
+      ? report.xp.map((row) => ({
+          label: 'EXPERIENCE // ' + row.codename,
+          value: '+' + row.gained + ' XP (' + row.total + ')',
+          tone: 'teal',
         }))
       : []),
     {

@@ -28,6 +28,8 @@ import { eventForecast } from '../game/forecast'
 import type { ForecastKind } from '../game/forecast'
 import { ROSTER_CAP } from '../game/recruits'
 import { missionChance, missionMods } from '../game/missionParams'
+import type { Difficulty } from '../game/missionParams'
+import { useSettingsStore } from '../state/settingsStore'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
 import { useTutorialStore } from '../state/tutorialStore'
@@ -72,8 +74,9 @@ function chanceFor(
   m: MissionDef,
   sectors: Record<string, SectorState>,
   researchedCount: number,
+  difficulty: Difficulty,
 ): number {
-  return missionChance(m, missionMods(m, sectors[m.sector]), researchedCount)
+  return missionChance(m, missionMods(m, sectors[m.sector], difficulty), researchedCount)
 }
 
 function intelGate(level: number): string {
@@ -235,7 +238,9 @@ function WorldPlate() {
   const crisis = useWorldStore((s) => s.crisis)
   const selectMission = useAppStore((s) => s.selectMission)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
+  const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const researched = useResearchStore((s) => s.done)
+  const difficulty = useSettingsStore((s) => s.difficulty)
   const marks = useMemo(() => opsFor(null, contracts), [contracts])
 
   const corps = useMemo(() => {
@@ -336,7 +341,7 @@ function WorldPlate() {
       </span>
 
       {marks.map(({ m, gen }) => {
-        const locked = missionLocked(m, intelLevel)
+        const locked = campaignFailed || missionLocked(m, intelLevel)
         return (
           <button
             key={m.id}
@@ -377,7 +382,7 @@ function WorldPlate() {
                   </i>
                   <i>
                     <span>CHANCE</span>
-                    {chanceFor(m, sectors, researched.length)}%
+                    {chanceFor(m, sectors, researched.length, difficulty)}%
                   </i>
                   <i>
                     <span>ETA</span>
@@ -818,9 +823,11 @@ export function WorldMap() {
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const intelProgress = useCampaignStore((s) => s.intelProgress)
   const campaignWon = useCampaignStore((s) => s.campaignWon)
+  const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const contractsWon = useCampaignStore((s) => s.contractsWon)
   const operativeCount = useCampaignStore((s) => s.operatives.length)
   const researched = useResearchStore((s) => s.done)
+  const difficulty = useSettingsStore((s) => s.difficulty)
   const contracts = useWorldStore((s) => s.contracts)
   const points = useWorldStore((s) => s.influence)
   const crisis = useWorldStore((s) => s.crisis)
@@ -848,7 +855,17 @@ export function WorldMap() {
         </div>
       </header>
 
-      {campaignWon && (
+      {campaignFailed && (
+        <div className="wm-campaign-fail corners" role="status">
+          <span className="wm-campaign-sigil fail" aria-hidden="true">◆</span>
+          <span>
+            <b>CAMPAIGN DIRECTIVE FAILED</b>
+            <i>STRIKE ROSTER WIPED // NETWORK COMMAND SUSPENDED</i>
+          </span>
+          <strong>0 / {MISSIONS.length}</strong>
+        </div>
+      )}
+      {campaignWon && !campaignFailed && (
         <div className="wm-campaign-win corners" role="status">
           <span className="wm-campaign-sigil" aria-hidden="true">◆</span>
           <span>
@@ -1034,7 +1051,7 @@ export function WorldMap() {
                 </div>
               ) : (
                 ops.map(({ m, gen }) => {
-                  const locked = missionLocked(m, intelLevel)
+                  const locked = campaignFailed || missionLocked(m, intelLevel)
                   return (
                     <button
                       key={m.id}
@@ -1072,7 +1089,7 @@ export function WorldMap() {
                           </span>
                         )}
                         <span className="chip dim">
-                          CHANCE {chanceFor(m, sectors, researched.length)}%
+                          CHANCE {chanceFor(m, sectors, researched.length, difficulty)}%
                         </span>
                         <span className="chip dim">ETA {m.etaDays}D</span>
                         {gen && (

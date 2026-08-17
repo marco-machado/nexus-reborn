@@ -13,6 +13,8 @@ import type { Binding, BindingId } from '../game/bindings'
 import { QUALITY_SETTINGS } from '../game/quality'
 import { TEXT_SCALES, useSettingsStore } from '../state/settingsStore'
 import type { VolumeChannel } from '../state/settingsStore'
+import { DIFFICULTIES } from '../game/missionParams'
+import type { Difficulty } from '../game/missionParams'
 import { useMissionStore } from '../state/missionStore'
 import BalancePanel from './Balance'
 import { Chip, Panel } from './bits'
@@ -29,12 +31,31 @@ const VOLUME_ROWS: Array<{ channel: VolumeChannel; label: string }> = [
   { channel: 'master', label: 'MASTER' },
   { channel: 'ui', label: 'UI CUES' },
   { channel: 'combat', label: 'COMBAT' },
+  { channel: 'music', label: 'MUSIC' },
+  { channel: 'ambience', label: 'AMBIENCE' },
 ]
 
+const DIFFICULTY_LABEL: Record<Difficulty, string> = {
+  standard: 'STANDARD',
+  hardened: 'HARDENED',
+}
+
+function volumeOf(channel: VolumeChannel, s: {
+  masterVol: number
+  uiVol: number
+  combatVol: number
+  musicVol: number
+  ambienceVol: number
+}): number {
+  if (channel === 'master') return s.masterVol
+  if (channel === 'ui') return s.uiVol
+  if (channel === 'combat') return s.combatVol
+  if (channel === 'music') return s.musicVol
+  return s.ambienceVol
+}
+
 function VolumeRow(props: { channel: VolumeChannel; label: string }) {
-  const value = useSettingsStore((s) =>
-    props.channel === 'master' ? s.masterVol : props.channel === 'ui' ? s.uiVol : s.combatVol,
-  )
+  const value = useSettingsStore((s) => volumeOf(props.channel, s))
   const setVolume = useSettingsStore((s) => s.setVolume)
   return (
     <label className="set-slider">
@@ -87,6 +108,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   const highContrast = useSettingsStore((s) => s.highContrast)
   const textScale = useSettingsStore((s) => s.textScale)
   const quality = useSettingsStore((s) => s.quality)
+  const difficulty = useSettingsStore((s) => s.difficulty)
   const telemetry = useSettingsStore((s) => s.telemetry)
   const overrides = useSettingsStore((s) => s.overrides)
   // A quality change during a mission cannot rebuild the live pipeline; the
@@ -97,6 +119,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   const setHighContrast = useSettingsStore((s) => s.setHighContrast)
   const setTextScale = useSettingsStore((s) => s.setTextScale)
   const setQuality = useSettingsStore((s) => s.setQuality)
+  const setDifficulty = useSettingsStore((s) => s.setDifficulty)
   const setTelemetry = useSettingsStore((s) => s.setTelemetry)
   const setBindingOverride = useSettingsStore((s) => s.setBindingOverride)
   const clearBindingOverride = useSettingsStore((s) => s.clearBindingOverride)
@@ -244,6 +267,34 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                       }}
                     >
                       {scale}%
+                    </button>
+                  ))}
+                </span>
+              </div>
+            </div>
+            <div className="set-section">
+              <div className="hud-menu-group-head">DIFFICULTY</div>
+              <div className="set-toggle">
+                <span className="set-toggle-main">
+                  <b>THREAT PROFILE</b>
+                  <i className="dim">
+                    HARDENED adds patrols and civilians; minimap information stays
+                  </i>
+                </span>
+                <span className="set-scale">
+                  {DIFFICULTIES.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={'btn set-scale-btn' + (difficulty === id ? ' amber' : '')}
+                      aria-pressed={difficulty === id}
+                      aria-label={'Difficulty ' + DIFFICULTY_LABEL[id]}
+                      onClick={() => {
+                        uiClick()
+                        setDifficulty(id)
+                      }}
+                    >
+                      {DIFFICULTY_LABEL[id]}
                     </button>
                   ))}
                 </span>

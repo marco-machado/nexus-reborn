@@ -1,4 +1,5 @@
-// Player settings: audio levels, control overrides, and accessibility modes.
+// Player settings: audio levels (including music and ambience beds),
+// difficulty, control overrides, and accessibility modes.
 // Deliberately outside the campaign save: settings live under their own
 // localStorage key with their own version guard, so NEW OPERATION never
 // touches them. The store owns every side effect of a setting: it persists
@@ -9,6 +10,8 @@
 import { create } from 'zustand'
 import { applyOverrides, sanitizeOverrides } from '../game/bindings'
 import type { BindingId, BindingOverrides } from '../game/bindings'
+import { DIFFICULTIES } from '../game/missionParams'
+import type { Difficulty } from '../game/missionParams'
 import { QUALITY_SETTINGS } from '../game/quality'
 import type { QualitySetting } from '../game/quality'
 
@@ -23,7 +26,12 @@ export interface SettingsData {
   masterVol: number
   uiVol: number
   combatVol: number
+  musicVol: number
+  ambienceVol: number
   muted: boolean
+  // Tactical deployment modifiers. Persists with player settings so NEW
+  // OPERATION does not wipe it. STANDARD is the authored baseline.
+  difficulty: Difficulty
   reducedMotion: boolean
   highContrast: boolean
   textScale: TextScale
@@ -43,7 +51,10 @@ export function defaultSettings(): SettingsData {
     masterVol: 100,
     uiVol: 100,
     combatVol: 100,
+    musicVol: 100,
+    ambienceVol: 100,
     muted: false,
+    difficulty: 'standard',
     reducedMotion: false,
     highContrast: false,
     textScale: 100,
@@ -90,7 +101,12 @@ function sanitizeSettings(raw: unknown): SettingsData {
     masterVol: clampVol(v.masterVol, d.masterVol),
     uiVol: clampVol(v.uiVol, d.uiVol),
     combatVol: clampVol(v.combatVol, d.combatVol),
+    musicVol: clampVol(v.musicVol, d.musicVol),
+    ambienceVol: clampVol(v.ambienceVol, d.ambienceVol),
     muted: v.muted === true,
+    difficulty: DIFFICULTIES.includes(v.difficulty as Difficulty)
+      ? (v.difficulty as Difficulty)
+      : d.difficulty,
     reducedMotion: v.reducedMotion === true,
     highContrast: v.highContrast === true,
     textScale: TEXT_SCALES.includes(v.textScale as TextScale)
@@ -155,6 +171,8 @@ function applyAudio(data: SettingsData): void {
           master: stagedGain(data.masterVol, 100, data.muted),
           ui: stagedGain(100, data.uiVol, false),
           combat: stagedGain(100, data.combatVol, false),
+          music: stagedGain(100, data.musicVol, false),
+          ambience: stagedGain(100, data.ambienceVol, false),
         }),
       () => undefined,
     )
@@ -168,7 +186,10 @@ function dataOf(s: SettingsData): SettingsData {
     masterVol: s.masterVol,
     uiVol: s.uiVol,
     combatVol: s.combatVol,
+    musicVol: s.musicVol,
+    ambienceVol: s.ambienceVol,
     muted: s.muted,
+    difficulty: s.difficulty,
     reducedMotion: s.reducedMotion,
     highContrast: s.highContrast,
     textScale: s.textScale,
@@ -178,10 +199,11 @@ function dataOf(s: SettingsData): SettingsData {
   }
 }
 
-export type VolumeChannel = 'master' | 'ui' | 'combat'
+export type VolumeChannel = 'master' | 'ui' | 'combat' | 'music' | 'ambience'
 
 export interface SettingsState extends SettingsData {
   setVolume: (channel: VolumeChannel, value: number) => void
+  setDifficulty: (difficulty: Difficulty) => void
   setMuted: (muted: boolean) => void
   setReducedMotion: (on: boolean) => void
   setHighContrast: (on: boolean) => void
@@ -212,7 +234,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       const v = clampVol(value, 100)
       if (channel === 'master') commit({ masterVol: v })
       else if (channel === 'ui') commit({ uiVol: v })
-      else commit({ combatVol: v })
+      else if (channel === 'combat') commit({ combatVol: v })
+      else if (channel === 'music') commit({ musicVol: v })
+      else commit({ ambienceVol: v })
+    },
+    setDifficulty: (difficulty) => {
+      if (DIFFICULTIES.includes(difficulty)) commit({ difficulty })
     },
     setMuted: (muted) => commit({ muted }),
     setReducedMotion: (on) => commit({ reducedMotion: on }),

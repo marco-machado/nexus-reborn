@@ -1,7 +1,8 @@
 // CONTRACT FILE. Deployment-time mission parameters. Pure TypeScript: the
 // brief and MissionScreen both compute the same numbers here, so briefing
 // counts match the deployed city, and world.ts never reads worldStore.
-// Sector values come from a snapshot taken at deployment.
+// Sector values come from a snapshot taken at deployment. Difficulty is a
+// player setting applied here (patrol count and civilian density).
 import type { DistrictSpec, MissionDef, Weather } from './types'
 import type { SectorState } from '../state/worldStore'
 
@@ -66,7 +67,25 @@ export function missionVariant(m: MissionDef, replay: boolean): DistrictSpec {
   return variants[replay ? 1 % variants.length : 0]
 }
 
-export function missionMods(m: MissionDef, sector: SectorState = NEUTRAL_SECTOR): MissionMods {
+// Player-facing difficulty. STANDARD is the authored baseline; HARDENED
+// adds street patrols and bystanders — two of the listed vectors — without
+// hiding minimap information.
+export const DIFFICULTIES = ['standard', 'hardened'] as const
+export type Difficulty = (typeof DIFFICULTIES)[number]
+
+export const DIFFICULTY_FX: Record<
+  Difficulty,
+  { extraPatrol: number; extraCivilians: number }
+> = {
+  standard: { extraPatrol: 0, extraCivilians: 0 },
+  hardened: { extraPatrol: 2, extraCivilians: 6 },
+}
+
+export function missionMods(
+  m: MissionDef,
+  sector: SectorState = NEUTRAL_SECTOR,
+  difficulty: Difficulty = 'standard',
+): MissionMods {
   let enemyExtra = THREAT_EXTRA[m.threat]
   let enemyHpMul = THREAT_HP_MUL[m.threat]
   let civilianCount = CIVILIANS[defaultDistrict(m).archetype]
@@ -77,6 +96,9 @@ export function missionMods(m: MissionDef, sector: SectorState = NEUTRAL_SECTOR)
     enemyExtra += 1
   }
   if (sector.control > 60) enemyHpMul += 0.05
+  const fx = DIFFICULTY_FX[difficulty] ?? DIFFICULTY_FX.standard
+  enemyExtra += fx.extraPatrol
+  civilianCount += fx.extraCivilians
   let visionMul = 1
   let noiseMul = 1
   if (m.weather === 'heavy') {

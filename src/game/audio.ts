@@ -7,10 +7,13 @@ type AcCtor = typeof AudioContext
 
 interface Live {
   c: AudioContext
-  // Channel gains: UI cues and combat voices ride separate stages under the
-  // master, so the settings sliders can weight them independently.
+  // Channel gains: UI cues, combat voices, music, and ambience ride separate
+  // stages under the master, so the settings sliders can weight them
+  // independently.
   ui: GainNode
   combat: GainNode
+  music: GainNode
+  ambience: GainNode
 }
 
 // The authored output level a full master slider maps to.
@@ -20,6 +23,8 @@ let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let uiGain: GainNode | null = null
 let combatGain: GainNode | null = null
+let musicGain: GainNode | null = null
+let ambienceGain: GainNode | null = null
 let noise: AudioBuffer | null = null
 let failed = false
 const lastAt: Record<string, number> = {}
@@ -42,31 +47,55 @@ const THREAT_RAMP = 0.9
 
 // Desired stage factors, 0..1 each. Held here so levels set before the
 // context exists (or before audio is unlocked) land when it is built.
-const levels = { master: 1, ui: 1, combat: 1 }
+const levels = { master: 1, ui: 1, combat: 1, music: 1, ambience: 1 }
 
 function clamp01(v: number): number {
   return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 1
 }
 
 function applyLevels(): void {
-  if (!master || !uiGain || !combatGain) return
+  if (!master || !uiGain || !combatGain || !musicGain || !ambienceGain) return
   master.gain.value = BASE_MASTER * levels.master
   uiGain.gain.value = levels.ui
   combatGain.gain.value = levels.combat
+  musicGain.gain.value = levels.music
+  ambienceGain.gain.value = levels.ambience
 }
 
 // Settings entry point. Fractions 0..1 per stage; the mute switch is a master
 // of 0. Safe to call with no context: values apply on construction.
-export function setAudioLevels(next: { master?: number; ui?: number; combat?: number }): void {
+export function setAudioLevels(next: {
+  master?: number
+  ui?: number
+  combat?: number
+  music?: number
+  ambience?: number
+}): void {
   if (next.master !== undefined) levels.master = clamp01(next.master)
   if (next.ui !== undefined) levels.ui = clamp01(next.ui)
   if (next.combat !== undefined) levels.combat = clamp01(next.combat)
+  if (next.music !== undefined) levels.music = clamp01(next.music)
+  if (next.ambience !== undefined) levels.ambience = clamp01(next.ambience)
   applyLevels()
+}
+
+// Readback for settings and tests. The mute switch is already folded into
+// the staged factors the store pushes here.
+export function getAudioLevels(): {
+  master: number
+  ui: number
+  combat: number
+  music: number
+  ambience: number
+} {
+  return { ...levels }
 }
 
 function ensure(): Live | null {
   if (failed) return null
-  if (ctx && uiGain && combatGain) return { c: ctx, ui: uiGain, combat: combatGain }
+  if (ctx && uiGain && combatGain && musicGain && ambienceGain) {
+    return { c: ctx, ui: uiGain, combat: combatGain, music: musicGain, ambience: ambienceGain }
+  }
   try {
     const g = globalThis as { AudioContext?: AcCtor; webkitAudioContext?: AcCtor }
     const AC = g.AudioContext ?? g.webkitAudioContext
@@ -81,14 +110,20 @@ function ensure(): Live | null {
     uiGain.connect(master)
     combatGain = ctx.createGain()
     combatGain.connect(master)
+    musicGain = ctx.createGain()
+    musicGain.connect(master)
+    ambienceGain = ctx.createGain()
+    ambienceGain.connect(master)
     applyLevels()
-    return { c: ctx, ui: uiGain, combat: combatGain }
+    return { c: ctx, ui: uiGain, combat: combatGain, music: musicGain, ambience: ambienceGain }
   } catch {
     failed = true
     ctx = null
     master = null
     uiGain = null
     combatGain = null
+    musicGain = null
+    ambienceGain = null
     return null
   }
 }
@@ -334,4 +369,109 @@ export const sfx = {
     t.filter.frequency.setValueAtTime(Math.max(20, t.filter.frequency.value), now)
     t.filter.frequency.exponentialRampToValueAtTime(THREAT_FREQ[l], now + THREAT_RAMP)
   },
+}
+
+// Looping beds. Strategy rides the music stage (a low industrial drone);
+// mission rides ambience (rain hiss + city hum). Built lazily, torn down on
+// stop. Safe with no AudioContext: ensure() returns null and these no-op.
+interface Bed {
+  oscs: OscillatorNode[]
+  srcs: AudioBufferSourceNode[]
+  gain: GainNode
+}
+
+let strategyBed: Bed | null = null
+let missionBed: Bed | null = null
+const BED_FADE = 0.45
+
+function stopBed(bed: Bed | null): void {
+  if (!bed || !ctx) return
+  const now = ctx.currentTime
+  bed.gain.gain.cancelScheduledValues(now)
+  bed.gain.gain.setValueAtTime(Math.max(0.0001, bed.gain.gain.value), now)
+  bed.gain.gain.exponentialRampToValueAtTime(0.0001, now + BED_FADE)
+  for (const osc of bed.oscs) {
+    try {
+      osc.stop(now + BED_FADE + 0.05)
+    } catch {
+      // already stopped
+    }
+  }
+  for (const src of bed.srcs) {
+    try {
+      src.stop(now + BED_FADE + 0.05)
+    } catch {
+      // already stopped
+    }
+  }
+}
+
+export function startStrategyBed(): void {
+  if (strategyBed) return
+  const live = ensure()
+  if (!live) return
+  const now = live.c.currentTime
+  const gain = live.c.createGain()
+  gain.gain.value = 0.0001
+  gain.connect(live.music)
+  const osc1 = live.c.createOscillator()
+  osc1.type = 'sawtooth'
+  osc1.frequency.value = 48
+  const osc2 = live.c.createOscillator()
+  osc2.type = 'triangle'
+  osc2.frequency.value = 72.4
+  const filter = live.c.createBiquadFilter()
+  filter.type = 'lowpass'
+  filter.frequency.value = 180
+  filter.Q.value = 0.7
+  osc1.connect(filter)
+  osc2.connect(filter)
+  filter.connect(gain)
+  osc1.start(now)
+  osc2.start(now)
+  gain.gain.exponentialRampToValueAtTime(0.09, now + 0.8)
+  strategyBed = { oscs: [osc1, osc2], srcs: [], gain }
+}
+
+export function stopStrategyBed(): void {
+  stopBed(strategyBed)
+  strategyBed = null
+}
+
+export function startMissionBed(): void {
+  if (missionBed) return
+  const live = ensure()
+  if (!live) return
+  const now = live.c.currentTime
+  const gain = live.c.createGain()
+  gain.gain.value = 0.0001
+  gain.connect(live.ambience)
+  const rain = live.c.createBufferSource()
+  rain.buffer = noiseBuffer(live.c)
+  rain.loop = true
+  const rainFlt = live.c.createBiquadFilter()
+  rainFlt.type = 'highpass'
+  rainFlt.frequency.value = 1400
+  rainFlt.Q.value = 0.5
+  const rainGain = live.c.createGain()
+  rainGain.gain.value = 0.22
+  rain.connect(rainFlt).connect(rainGain).connect(gain)
+  const hum = live.c.createOscillator()
+  hum.type = 'sine'
+  hum.frequency.value = 62
+  const humFlt = live.c.createBiquadFilter()
+  humFlt.type = 'lowpass'
+  humFlt.frequency.value = 140
+  const humGain = live.c.createGain()
+  humGain.gain.value = 0.05
+  hum.connect(humFlt).connect(humGain).connect(gain)
+  rain.start(now)
+  hum.start(now)
+  gain.gain.exponentialRampToValueAtTime(0.16, now + 0.7)
+  missionBed = { oscs: [hum], srcs: [rain], gain }
+}
+
+export function stopMissionBed(): void {
+  stopBed(missionBed)
+  missionBed = null
 }

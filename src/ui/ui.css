@@ -725,6 +725,53 @@
   letter-spacing: 0.08em;
 }
 
+.wm-campaign-fail {
+  --corner-c: rgba(224, 75, 60, 0.7);
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+  min-height: 42px;
+  padding: 7px 12px;
+  border: 1px solid rgba(224, 75, 60, 0.42);
+  background:
+    linear-gradient(90deg, rgba(224, 75, 60, 0.12), rgba(17, 5, 5, 0.92) 38%),
+    var(--bg-panel);
+  box-shadow: inset 0 0 18px rgba(224, 75, 60, 0.06);
+}
+
+.wm-campaign-fail > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wm-campaign-fail b {
+  color: var(--red);
+  font-size: calc(11px * var(--text-scale));
+  letter-spacing: 0.2em;
+}
+
+.wm-campaign-fail i {
+  color: var(--ink-dim);
+  font-size: calc(8.5px * var(--text-scale));
+  letter-spacing: 0.12em;
+  font-style: normal;
+}
+
+.wm-campaign-fail strong {
+  color: var(--red);
+  font-size: calc(17px * var(--text-scale));
+  letter-spacing: 0.08em;
+}
+
+.wm-campaign-sigil.fail {
+  color: var(--red);
+  text-shadow: 0 0 12px rgba(224, 75, 60, 0.45);
+}
+
 .wm-left,
 .wm-right {
   display: flex;

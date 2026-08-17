@@ -10,6 +10,8 @@ import { missionMods, missionVariant } from '../game/missionParams'
 import { createWorld } from '../game/world'
 import { setWorld } from '../game/runtime'
 import { missionSfx } from '../game/audioBridge'
+import { useSettingsStore } from '../state/settingsStore'
+import { startMissionBed, stopMissionBed } from './sound'
 import GameCanvas from '../scene/GameCanvas'
 import Hud from './Hud'
 
@@ -30,7 +32,7 @@ export default function MissionScreen() {
     const replay = useCampaignStore.getState().contractsWon.includes(mission.id)
     const sector = useWorldStore.getState().sectors[mission.sector]
     const world = createWorld(mission, ops, {
-      mods: missionMods(mission, sector),
+      mods: missionMods(mission, sector, useSettingsStore.getState().difficulty),
       district: missionVariant(mission, replay),
       loadout: useAppStore.getState().loadout,
     })
@@ -39,12 +41,14 @@ export default function MissionScreen() {
     ms.reset()
     ms.setLive(true)
     setReady(true)
+    startMissionBed()
     return () => {
       setReady(false)
       setWorld(null)
       useMissionStore.getState().reset()
-      // The tension drone must not follow the player back to the menus.
+      // The tension drone and rain bed must not follow the player back.
       missionSfx.threatLevel(0)
+      stopMissionBed()
     }
   }, [missionId, squad])
 

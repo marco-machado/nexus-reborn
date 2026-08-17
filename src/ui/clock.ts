@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { MAX_DT, useWorldStore } from '../state/worldStore'
 import { useResearchStore } from '../state/researchStore'
 import { useCampaignStore } from '../state/campaignStore'
+import { startStrategyBed, stopStrategyBed } from './sound'
 
 // Batched to 20Hz so the clock, the timeline and the lab bars repaint smoothly
 // without a render every frame.
@@ -28,6 +29,10 @@ export function useWorldClock(): void {
       syncCampaign(t)
     }
     raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
+    startStrategyBed()
+    return () => {
+      cancelAnimationFrame(raf)
+      stopStrategyBed()
+    }
   }, [tick, syncCampaign, syncResearch])
 }

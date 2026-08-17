@@ -9,6 +9,7 @@ import {
   stagedGain,
   useSettingsStore,
 } from './settingsStore'
+import { startNewOperation } from './save'
 import type { SettingsStorage } from './settingsStore'
 
 class MemoryStorage implements SettingsStorage {
@@ -172,5 +173,45 @@ describe('render quality setting', () => {
     // An invalid runtime value is refused without touching the stored choice.
     useSettingsStore.getState().setQuality('ultra' as never)
     expect(useSettingsStore.getState().quality).toBe('low')
+  })
+})
+
+describe('difficulty and bed levels', () => {
+  it('persists HARDENED and the music/ambience sliders', () => {
+    useSettingsStore.getState().setDifficulty('hardened')
+    useSettingsStore.getState().setVolume('music', 40)
+    useSettingsStore.getState().setVolume('ambience', 25)
+    expect(stored()).toMatchObject({
+      difficulty: 'hardened',
+      musicVol: 40,
+      ambienceVol: 25,
+    })
+    expect(loadSettings(storage).difficulty).toBe('hardened')
+    expect(loadSettings(storage).musicVol).toBe(40)
+    expect(loadSettings(storage).ambienceVol).toBe(25)
+
+    storage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ version: SETTINGS_VERSION, difficulty: 'nightmare' }),
+    )
+    expect(loadSettings(storage).difficulty).toBe('standard')
+  })
+
+  it('keeps the chosen difficulty after NEW OPERATION', () => {
+    useSettingsStore.getState().setDifficulty('hardened')
+    startNewOperation()
+    expect(useSettingsStore.getState().difficulty).toBe('hardened')
+    initSettings(storage)
+    expect(useSettingsStore.getState().difficulty).toBe('hardened')
+  })
+
+  it('pushes music and ambience sliders into the audio pipeline', async () => {
+    await import('../game/audio')
+    useSettingsStore.getState().setVolume('music', 40)
+    useSettingsStore.getState().setVolume('ambience', 50)
+    await Promise.resolve()
+    const { getAudioLevels } = await import('../game/audio')
+    expect(getAudioLevels().music).toBeCloseTo(0.4)
+    expect(getAudioLevels().ambience).toBeCloseTo(0.5)
   })
 })
