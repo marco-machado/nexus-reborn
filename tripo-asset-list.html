@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus Reborn — Tripo3D Asset List</title>
+<style>
+  :root {
+    --bg: #0a0e12;
+    --panel: #10161d;
+    --edge: #1e2a33;
+    --teal: #4dd8c7;
+    --amber: #f0b32e;
+    --ink: #c8d4d9;
+    --dim: #6e8087;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.5 "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    padding: 32px 24px 64px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  h1 { color: var(--teal); font-size: 22px; letter-spacing: 2px; text-transform: uppercase; }
+  h2 {
+    color: var(--amber); font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+    margin: 40px 0 4px; border-bottom: 1px solid var(--edge); padding-bottom: 6px;
+  }
+  .sub { color: var(--dim); font-size: 13px; margin-top: 6px; }
+  .rules {
+    background: var(--panel); border: 1px solid var(--edge); border-left: 3px solid var(--teal);
+    padding: 12px 16px; margin-top: 18px; font-size: 13px;
+  }
+  .rules li { margin-left: 18px; margin-top: 4px; }
+  .groupnote { color: var(--dim); font-size: 13px; margin: 4px 0 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--edge);
+    margin-top: 16px; padding: 14px 16px;
+  }
+  .card h3 { color: var(--ink); font-size: 15px; }
+  .card h3 .scale { color: var(--dim); font-weight: normal; font-size: 12px; margin-left: 8px; }
+  .row { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; }
+  .label { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; width: 58px; flex: none; padding-top: 7px; }
+  pre {
+    flex: 1; background: #0c1218; border: 1px solid var(--edge); padding: 8px 10px;
+    white-space: pre-wrap; word-break: break-word; font-size: 13px; color: var(--ink);
+  }
+  .path pre { color: var(--teal); }
+  button {
+    flex: none; background: transparent; border: 1px solid var(--teal); color: var(--teal);
+    font: 11px/1 inherit; letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 12px; cursor: pointer; margin-top: 1px;
+  }
+  button:hover { background: var(--teal); color: var(--bg); }
+  button.done { border-color: var(--amber); color: var(--amber); }
+  .rig { color: var(--amber); font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Nexus Reborn — Tripo3D Asset List</h1>
+<p class="sub">Generate each asset in the Tripo3D web app (no API), download as GLB, save to the listed path.</p>
+
+<div class="rules">
+  <ul>
+    <li>Scale: 1 unit = 1 meter, +Y up. Target size is noted per asset; rescale on import if needed.</li>
+    <li>Export/download <b>GLB with PBR textures</b>. Download immediately — Tripo download links expire.</li>
+    <li>Characters: verify the preview shows a complete head-to-feet T-pose body <b>before</b> rigging. Rig as <b>biped</b>, then retarget presets: idle, walk, run, shoot, hurt.</li>
+    <li>Props and buildings: no rigging. Prefer low face counts; these repeat many times per mission.</li>
+  </ul>
+</div>
+
+<h2>Characters — rig after generation</h2>
+<p class="groupnote">Matches <code>UnitKind</code>: agent, enemy, civilian, vip.</p>
+
+<div class="card">
+  <h3>Agent (player squad)<span class="scale">~1.85 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready cyberpunk corporate agent, long black armored trench coat over dark tactical bodysuit, short hair, stern face, subtle teal glowing accent strips, full-body T-pose, arms away from body, legs separated, front-facing, symmetric, anatomically complete with head, no weapons or props fused into the silhouette, strong readable silhouette, PBR materials, clean topology for browser game, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/units/agent/agent.glb</pre><button>Copy</button></div>
+  <p class="rig">Rig: biped &middot; clips: idle, walk, run, shoot, hurt</p>
+</div>
+
+<div class="card">
+  <h3>Enemy (corporate security)<span class="scale">~1.85 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready corporate security trooper, gray and gunmetal tactical armor, closed helmet with amber glowing visor, utility harness, full-body T-pose, arms away from body, legs separated, front-facing, symmetric, anatomically complete, no weapons or props fused into the silhouette, strong readable silhouette, PBR materials, clean topology for browser game, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/units/enemy/enemy.glb</pre><button>Copy</button></div>
+  <p class="rig">Rig: biped &middot; clips: idle, walk, run, shoot, hurt</p>
+</div>
+
+<div class="card">
+  <h3>Civilian<span class="scale">~1.75 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready dystopian city civilian, worn hooded raincoat over plain casual clothes, tired face, muted desaturated colors, full-body T-pose, arms away from body, legs separated, front-facing, symmetric, anatomically complete with head, no props fused into the silhouette, readable silhouette, PBR materials, clean topology for browser game, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/units/civilian/civilian.glb</pre><button>Copy</button></div>
+  <p class="rig">Rig: biped &middot; clips: idle, walk, run, hurt</p>
+</div>
+
+<div class="card">
+  <h3>VIP (extraction target)<span class="scale">~1.8 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready corporate executive, tailored dark suit with high collar and gold trim details, neat hair, confident posture, full-body T-pose, arms away from body, legs separated, front-facing, symmetric, anatomically complete with head, no props fused into the silhouette, readable silhouette, PBR materials, clean topology for browser game, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/units/vip/vip.glb</pre><button>Copy</button></div>
+  <p class="rig">Rig: biped &middot; clips: idle, walk, run, hurt</p>
+</div>
+
+<h2>Objective device — static</h2>
+<p class="groupnote">Matches <code>UnitKind</code> 'device'.</p>
+
+<div class="card">
+  <h3>Data terminal<span class="scale">~1.4 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready cyberpunk data terminal kiosk, angular dark metal housing, glowing teal holographic screen panel, thick cables running to the base, freestanding on a flat plinth, strong readable silhouette, PBR materials, emissive screen, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/units/device/device.glb</pre><button>Copy</button></div>
+</div>
+
+<h2>Street props — static, instanced</h2>
+<p class="groupnote">Matches <code>PropData</code> kinds: crate, barrier, car, dumpster, vent, pillar.</p>
+
+<div class="card">
+  <h3>Crate<span class="scale">~1 m cube</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready industrial cargo crate, cube proportions, scuffed dark metal panels, reinforced corners, faded amber hazard stripes, worn edges, dystopian shipping crate, PBR materials, clean low-poly topology for browser game, centered pivot, no text, no logos</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/props/crate/crate.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Barrier<span class="scale">~1 m wide, 0.9 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready concrete road barrier, jersey barrier shape, chipped and stained concrete, amber warning stripes, small embedded hazard light, cyberpunk street checkpoint prop, PBR materials, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/props/barrier/barrier.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Parked car<span class="scale">~4.5 m long</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready parked cyberpunk sedan, low angular wedge body, partially enclosed wheels, dark gunmetal paint, thin teal underglow light strip, rain-streaked grimy surfaces, strong readable silhouette, PBR materials, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/props/car/car.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Dumpster<span class="scale">~1.5 m long</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready street dumpster, dented dark green metal body, heavy hinged lid slightly ajar, rust streaks and grime, side handles, cyberpunk alley prop, PBR materials, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/props/dumpster/dumpster.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Vent unit<span class="scale">~1 m cube</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready industrial ventilation unit, boxy sheet-metal housing, angled louver slats, round exhaust fan grille, grimy weathered metal, cyberpunk street machinery, PBR materials, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/props/vent/vent.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Pillar<span class="scale">~0.6 m wide, 3 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready concrete structural pillar, square column, chipped corners, embedded vertical teal light strip, stained industrial concrete, cyberpunk plaza architecture, PBR materials, emissive light strip, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/props/pillar/pillar.glb</pre><button>Copy</button></div>
+</div>
+
+<h2>Lights — static, emissive</h2>
+<p class="groupnote">Matches <code>LightData</code> kinds: street, neon. Emissive parts matter — bloom in this project is emissive-only.</p>
+
+<div class="card">
+  <h3>Street lamp<span class="scale">~6 m tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready street lamp post, tall slim dark metal pole, angular cantilever arm, flat rectangular LED head with glowing panel, cyberpunk street furniture, PBR materials, emissive lamp head, clean low-poly topology for browser game, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/lights/street/street-lamp.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Neon sign<span class="scale">~1.5 m wide</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready wall-mounted neon sign, abstract angular glyph tubes in teal and magenta, dark metal backing plate with mounting brackets and cables, cyberpunk storefront, PBR materials, emissive glowing tubes, clean low-poly topology for browser game, centered pivot, no readable text or letters</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/lights/neon/neon-sign.glb</pre><button>Copy</button></div>
+</div>
+
+<h2>Buildings — later, optional</h2>
+<p class="groupnote">Buildings come from <code>citygen.ts</code> as procedural boxes; swapping in meshes is a bigger integration job. Generate these last, one hero variant per <code>BuildingData</code> kind: tower, block, industrial, slab.</p>
+
+<div class="card">
+  <h3>Tower<span class="scale">~12 m footprint, tall</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready cyberpunk skyscraper tower, stepped monolithic massing, dense window grid with scattered lit windows, rooftop antenna cluster and vents, dark concrete and glass, teal and amber window glow, PBR materials, emissive windows, clean low-poly topology for browser game, flat base, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/buildings/tower/tower.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Block<span class="scale">~10 m footprint, mid-rise</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready dystopian apartment block, mid-rise rectangular building, repeating balconies and window rows, rooftop water tanks, stained concrete facade, scattered lit windows, PBR materials, emissive windows, clean low-poly topology for browser game, flat base, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/buildings/block/block.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Industrial<span class="scale">~12 m footprint, low</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready industrial factory building, low wide hall with sawtooth roof, external pipes and tanks, corrugated metal walls, loading dock door, grime and rust, faint amber interior glow through windows, PBR materials, clean low-poly topology for browser game, flat base, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/buildings/industrial/industrial.glb</pre><button>Copy</button></div>
+</div>
+
+<div class="card">
+  <h3>Slab<span class="scale">~10 m footprint, squat</span></h3>
+  <div class="row"><span class="label">Prompt</span><pre>game-ready brutalist office slab building, squat heavy rectangular massing, deep-set horizontal window bands, raw concrete, rooftop equipment boxes, sparse teal window glow, PBR materials, emissive window bands, clean low-poly topology for browser game, flat base, centered pivot, no text</pre><button>Copy</button></div>
+  <div class="row path"><span class="label">Save as</span><pre>/Users/machado/Projects/nexus-reborn/assets/models/buildings/slab/slab.glb</pre><button>Copy</button></div>
+</div>
+
+<script>
+document.querySelectorAll('.row').forEach(row => {
+  const btn = row.querySelector('button');
+  const pre = row.querySelector('pre');
+  btn.addEventListener('click', () => {
+    const text = pre.textContent.trim();
+    const done = () => {
+      btn.textContent = 'Copied';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done));
+    } else {
+      fallback(text, done);
+    }
+  });
+});
+function fallback(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  done();
+}
+</script>
+
+</body>
+</html>
