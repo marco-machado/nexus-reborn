@@ -1,8 +1,8 @@
 // CONTRACT FILE. Strategic layer state: the world clock, per sector control
-// and unrest, city ownership, the events feed that moves them, the generated
-// contract market the feed feeds, the spendable influence resource, and the
-// unrest pressure/crisis flow. The world map screen drives tick() while it is
-// mounted; nothing else writes here.
+// and unrest, city ownership (including mission-result flips), the events
+// feed that moves them, the generated contract market the feed feeds, the
+// spendable influence resource, and the unrest pressure/crisis flow. The
+// world map screen drives tick() while it is mounted; nothing else writes here.
 import { create } from 'zustand'
 import { mulberryStep } from '../game/rng'
 import { MISSIONS } from '../game/data'
@@ -17,6 +17,7 @@ import {
 } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { CORPS } from '../game/atlas'
+import { cityIdByName, nextCityHolder } from '../game/ownership'
 import {
   CONTRACT_MIN_SEC,
   CONTRACT_SPAN_SEC,
@@ -788,11 +789,9 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
         control: clamp(previous.control + controlDelta, CONTROL_MIN, CONTROL_MAX),
         unrest: clamp(previous.unrest + unrestDelta, UNREST_MIN, UNREST_MAX),
       }
-      // Authored Milestone 1 missions change sector pressure only. Glass Veil's
-      // client, Sable Enterprises, is not a city holder, so there is no valid
-      // ownership target until holder-corp seizure contracts arrive.
+      let nextId = (state.events[state.events.length - 1]?.id ?? 0) + 1
       const event: WorldEvent = {
-        id: (state.events[state.events.length - 1]?.id ?? 0) + 1,
+        id: nextId++,
         t: state.t,
         sector: mission.sector,
         kind: outcome.won ? 'seizure' : 'riot',
@@ -803,11 +802,32 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       }
       let events = [...state.events, event]
       let added = 1
+      const cityId = cityIdByName(mission.city)
+      const currentHolder = cityId ? state.owner[cityId] : null
+      const nextHolder =
+        cityId && currentHolder
+          ? nextCityHolder(cityId, currentHolder, outcome.won)
+          : null
+      const flipped = Boolean(cityId && nextHolder && nextHolder !== currentHolder)
+      if (flipped && cityId && nextHolder) {
+        events = [
+          ...events,
+          {
+            id: nextId++,
+            t: state.t,
+            sector: mission.sector,
+            kind: 'seizure' as const,
+            tone: outcome.won ? 'green' : 'red',
+            text: CORPS[nextHolder].name + ' TAKES CONTROL OF ' + mission.city,
+          },
+        ]
+        added += 1
+      }
       if (kia && kia.length > 0) {
         events = [
           ...events,
           {
-            id: event.id + 1,
+            id: nextId++,
             t: state.t,
             sector: mission.sector,
             kind: 'kia' as const,
@@ -826,11 +846,25 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       // fulfilled generated contract leaves the market first, won or lost.
       const f = flowOf(state)
       f.sectors = { ...state.sectors, [mission.sector]: sector }
+      if (flipped && cityId && nextHolder) {
+        f.owner = { ...state.owner, [cityId]: nextHolder }
+        const client = sectorClient(mission.sector, f.owner)
+        f.contracts = (record
+          ? state.contracts.filter((c) => c.id !== missionId)
+          : state.contracts
+        ).map((contract) => {
+          if (contract.sector !== mission.sector) return contract
+          const rolled = reclientContract(contract, client, f.owner, f.contractRngState)
+          f.contractRngState = rolled.state
+          return rolled.contract
+        })
+      } else {
+        f.contracts = record
+          ? state.contracts.filter((c) => c.id !== missionId)
+          : state.contracts
+      }
       f.events = events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events
       f.unread = state.unread + added
-      f.contracts = record
-        ? state.contracts.filter((c) => c.id !== missionId)
-        : state.contracts
       f.influence = outcome.won
         ? state.influence +
           INFLUENCE_WIN_PTS +

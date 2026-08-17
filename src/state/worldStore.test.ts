@@ -423,8 +423,9 @@ describe('generated contracts', () => {
     expect(after.contracts).toHaveLength(0)
     expect(after.sectors.eu.control).toBeGreaterThan(before.control)
     expect(after.sectors.eu.unrest).toBeLessThan(before.unrest)
-    expect(after.events.at(-1)?.tone).toBe('green')
-    expect(after.events.at(-1)?.text).toContain('STRIKE TEAM 04 OPENS')
+    expect(after.events.at(-2)?.tone).toBe('green')
+    expect(after.events.at(-2)?.text).toContain('STRIKE TEAM 04 OPENS')
+    expect(after.events.at(-1)?.text).toContain('TAKES CONTROL OF')
   })
 
   it('resolveMission finds authored, open generated, and just-fulfilled missions', () => {
@@ -492,13 +493,20 @@ describe('mission results', () => {
     const after = useWorldStore.getState()
     expect(after.sectors.eu.control).toBe(before.sectors.eu.control + 4)
     expect(after.sectors.eu.unrest).toBe(before.sectors.eu.unrest - 4)
-    expect(after.owner).toEqual(before.owner)
-    expect(after.events.at(-1)).toMatchObject({
+    expect(before.owner.nc).toBe('helix')
+    expect(after.owner.nc).toBe('nexus')
+    expect(after.events.at(-2)).toMatchObject({
       sector: 'eu',
       tone: 'green',
       text: 'STRIKE TEAM 04 OPENS DISTRICT 07 IN NEW CARTHAGE',
     })
-    expect(after.unread).toBe(before.unread + 1)
+    expect(after.events.at(-1)).toMatchObject({
+      sector: 'eu',
+      kind: 'seizure',
+      tone: 'green',
+      text: 'NEXUS GLOBAL TAKES CONTROL OF NEW CARTHAGE',
+    })
+    expect(after.unread).toBe(before.unread + 2)
   })
 
   it('posts a red KIA feed event naming the operatives lost', () => {
@@ -513,15 +521,33 @@ describe('mission results', () => {
       ])
     const after = useWorldStore.getState()
     expect(after.events.at(-1)).toMatchObject({
-      id: lastId + 2,
+      id: lastId + 3,
       sector: 'eu',
       kind: 'kia',
       tone: 'red',
       text: 'OPERATIVES MARA, GHOST KIA IN NEW CARTHAGE',
     })
-    // The result event still lands right before the loss line.
+    // Ownership flip lands before the loss line; both stay green.
     expect(after.events.at(-2)?.tone).toBe('green')
-    expect(after.unread).toBe(unread + 2)
+    expect(after.unread).toBe(unread + 3)
+  })
+
+  it('a second Glass Veil win on a fresh start still hands New Carthage to Nexus', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    const first = useWorldStore.getState().owner.nc
+    useWorldStore.setState(structuredClone(snapshot))
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    expect(first).toBe('nexus')
+    expect(useWorldStore.getState().owner.nc).toBe('nexus')
+  })
+
+  it('a loss of a Nexus-held city returns it to the atlas default', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    expect(useWorldStore.getState().owner.nc).toBe('nexus')
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    expect(useWorldStore.getState().owner.nc).toBe('helix')
   })
 
   it('a single loss reads as one operative', () => {
