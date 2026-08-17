@@ -23,7 +23,7 @@ import {
   validateSave,
   writeSave,
 } from './save'
-import type { SaveStorage, SaveV6 } from './save'
+import type { SaveStorage, SaveV7 } from './save'
 import { useTutorialStore } from './tutorialStore'
 import { useWorldStore } from './worldStore'
 
@@ -57,9 +57,20 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-// A v6 blob without the tutorial section, as a real v5 save held.
-function downgradeToV5(save: SaveV6): Record<string, unknown> {
+// A v7 blob without campaignFailed or roster XP, as a real v6 save held.
+function downgradeToV6(save: SaveV7): Record<string, unknown> {
   const blob = structuredClone(save) as unknown as Record<string, unknown>
+  blob.version = 6
+  const campaign = blob.campaign as Record<string, unknown>
+  delete campaign.campaignFailed
+  const roster = campaign.roster as Record<string, Record<string, unknown>>
+  for (const entry of Object.values(roster)) delete entry.xp
+  return blob
+}
+
+// A v6 blob without the tutorial section, as a real v5 save held.
+function downgradeToV5(save: SaveV7): Record<string, unknown> {
+  const blob = downgradeToV6(save)
   blob.version = 5
   delete blob.tutorial
   return blob
@@ -67,7 +78,7 @@ function downgradeToV5(save: SaveV6): Record<string, unknown> {
 
 // A v5 blob without the influence economy or unrest pressure, as a real v4
 // save held: no world influence fields and no expedited flag on contracts.
-function downgradeToV4(save: SaveV6): Record<string, unknown> {
+function downgradeToV4(save: SaveV7): Record<string, unknown> {
   const blob = downgradeToV5(save)
   blob.version = 4
   const world = blob.world as Record<string, unknown>
@@ -86,7 +97,7 @@ function downgradeToV4(save: SaveV6): Record<string, unknown> {
 }
 
 // A v4 blob without the generated contract market, as a real v3 save held.
-function downgradeToV3(save: SaveV6): Record<string, unknown> {
+function downgradeToV3(save: SaveV7): Record<string, unknown> {
   const blob = downgradeToV4(save)
   blob.version = 3
   const world = blob.world as Record<string, unknown>
@@ -98,7 +109,7 @@ function downgradeToV3(save: SaveV6): Record<string, unknown> {
 
 // Older blobs never carried the live roster: strip the v3 campaign fields so
 // the synthetic downgrade matches what a real v1/v2 save held.
-function downgradeToV2(save: SaveV6): Record<string, unknown> {
+function downgradeToV2(save: SaveV7): Record<string, unknown> {
   const blob = downgradeToV3(save)
   blob.version = 2
   const campaign = blob.campaign as Record<string, unknown>
@@ -114,7 +125,7 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const invalid = structuredClone(save) as SaveV6
+    const invalid = structuredClone(save) as SaveV7
     invalid.campaign.contractsWon = ['unknown']
     expect(validateSave(invalid)).toBe(false)
   })
@@ -122,21 +133,21 @@ describe('save validation', () => {
   it('rejects roster tampering: unknown squad ids, roster/operative mismatch', () => {
     const save = captureSave()
 
-    const badSquad = structuredClone(save) as SaveV6
+    const badSquad = structuredClone(save) as SaveV7
     badSquad.app.squad = ['op99']
     expect(validateSave(badSquad)).toBe(false)
 
-    const badRoster = structuredClone(save) as SaveV6
+    const badRoster = structuredClone(save) as SaveV7
     delete badRoster.campaign.roster.op1
     expect(validateSave(badRoster)).toBe(false)
 
-    const badCandidate = structuredClone(save) as SaveV6
+    const badCandidate = structuredClone(save) as SaveV7
     badCandidate.campaign.candidates[0].cost = 1
     expect(validateSave(badCandidate)).toBe(false)
   })
 
   it('accepts a fully wiped roster so a lost campaign can rebuild', () => {
-    const wiped = structuredClone(captureSave()) as SaveV6
+    const wiped = structuredClone(captureSave()) as SaveV7
     wiped.campaign.operatives = []
     wiped.campaign.roster = {}
     wiped.app.squad = []
@@ -147,8 +158,8 @@ describe('save validation', () => {
   it('rejects malformed loadouts: unknown ids, wrong lengths, unknown items', () => {
     const save = captureSave()
 
-    const badOp = structuredClone(save) as SaveV6
-    badOp.app.loadout = { op99: ['med', null] } as SaveV6['app']['loadout']
+    const badOp = structuredClone(save) as SaveV7
+    badOp.app.loadout = { op99: ['med', null] } as SaveV7['app']['loadout']
     expect(validateSave(badOp)).toBe(false)
 
     const badLength = structuredClone(save)
@@ -168,7 +179,7 @@ describe('save validation', () => {
 
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
-    expect(loaded?.version).toBe(6)
+    expect(loaded?.version).toBe(7)
     expect(loaded?.app.loadout).toEqual({})
     expect(loaded?.campaign.operatives).toEqual(initialCampaignData().operatives)
     expect(loaded?.world.contracts).toEqual([])
@@ -186,7 +197,7 @@ describe('save validation', () => {
     expect(loaded).not.toBeNull()
     if (!loaded) return
     const seeded = initialCampaignData()
-    expect(loaded.version).toBe(6)
+    expect(loaded.version).toBe(7)
     expect(loaded.campaign.operatives.map((o) => o.id)).toEqual(ROSTER.map((o) => o.id))
     expect(loaded.campaign.candidates).toEqual(seeded.candidates)
     expect(loaded.campaign.recruitRngState).toBe(seeded.recruitRngState)
@@ -201,7 +212,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(6)
+    expect(loaded.version).toBe(7)
     expect(loaded.world.contracts).toEqual([])
     expect(loaded.world.contractRngState).toBe(INITIAL_CONTRACT_RNG)
     expect(loaded.world.nextContractT).toBe(9000 + CONTRACT_MIN_SEC)
@@ -225,7 +236,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(6)
+    expect(loaded.version).toBe(7)
     expect(loaded.world.influence).toBe(0)
     expect(loaded.world.nextTrickleT).toBe(loaded.world.t + TRICKLE_INTERVAL_SEC)
     expect(loaded.world.spends).toEqual([])
@@ -248,20 +259,39 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(6)
+    expect(loaded.version).toBe(7)
     // The pre-tutorial campaign starts the prompts from scratch.
     expect(loaded.tutorial.seen).toEqual([])
+  })
+
+  it('upgrades a v6 blob with campaignFailed false and zero XP', () => {
+    const v6 = downgradeToV6(captureSave())
+    storage.setItem(SAVE_KEY, JSON.stringify(v6))
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    expect(loaded.version).toBe(7)
+    expect(loaded.campaign.campaignFailed).toBe(false)
+    expect(Object.values(loaded.campaign.roster).every((e) => e.xp === 0)).toBe(true)
+  })
+
+  it('rejects a blob that is both campaign-won and campaign-failed', () => {
+    const save = captureSave()
+    save.campaign.campaignWon = true
+    save.campaign.campaignFailed = true
+    save.campaign.contractsWon = ['m01', 'm02', 'm03']
+    expect(validateSave(save)).toBe(false)
   })
 
   it('rejects tampered tutorial history', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const badId = structuredClone(save) as SaveV6
+    const badId = structuredClone(save) as SaveV7
     badId.tutorial.seen = ['tut-select', 'not-a-real-id']
     expect(validateSave(badId)).toBe(false)
 
-    const duplicate = structuredClone(save) as SaveV6
+    const duplicate = structuredClone(save) as SaveV7
     duplicate.tutorial.seen = ['tut-select', 'tut-select']
     expect(validateSave(duplicate)).toBe(false)
 
@@ -269,7 +299,7 @@ describe('save validation', () => {
     delete missing.tutorial
     expect(validateSave(missing)).toBe(false)
 
-    const good = structuredClone(save) as SaveV6
+    const good = structuredClone(save) as SaveV7
     good.tutorial.seen = ['tut-select', 'hint-lowhp', 'hint-worldmap']
     expect(validateSave(good)).toBe(true)
   })
@@ -281,11 +311,11 @@ describe('save validation', () => {
     expect(save.world.contracts.length).toBeGreaterThan(0)
     expect(validateSave(save)).toBe(true)
 
-    const badReward = structuredClone(save) as SaveV6
+    const badReward = structuredClone(save) as SaveV7
     badReward.world.contracts[0].reward = 1
     expect(validateSave(badReward)).toBe(false)
 
-    const badClient = structuredClone(save) as SaveV6
+    const badClient = structuredClone(save) as SaveV7
     ;(badClient.world.contracts[0] as unknown as Record<string, unknown>).client = 'sable'
     expect(validateSave(badClient)).toBe(false)
   })
@@ -294,29 +324,29 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const badPoints = structuredClone(save) as SaveV6
+    const badPoints = structuredClone(save) as SaveV7
     badPoints.world.influence = -3
     expect(validateSave(badPoints)).toBe(false)
 
-    const badSpend = structuredClone(save) as SaveV6
+    const badSpend = structuredClone(save) as SaveV7
     badSpend.world.spends = [
       { action: 'stabilize', sector: 'eu', nextT: 100, remaining: 99 },
     ]
     expect(validateSave(badSpend)).toBe(false)
 
-    const badCooldown = structuredClone(save) as SaveV6
+    const badCooldown = structuredClone(save) as SaveV7
     badCooldown.world.cooldowns = { 'eu:bribe': 100 }
     expect(validateSave(badCooldown)).toBe(false)
 
-    const badCrisis = structuredClone(save) as SaveV6
-    badCrisis.world.crisis = ['an' as SaveV6['world']['crisis'][number]]
+    const badCrisis = structuredClone(save) as SaveV7
+    badCrisis.world.crisis = ['an' as SaveV7['world']['crisis'][number]]
     expect(validateSave(badCrisis)).toBe(false)
 
-    const badPressure = structuredClone(save) as SaveV6
+    const badPressure = structuredClone(save) as SaveV7
     badPressure.world.pressure = { zz: 100 }
     expect(validateSave(badPressure)).toBe(false)
 
-    const goodSpend = structuredClone(save) as SaveV6
+    const goodSpend = structuredClone(save) as SaveV7
     goodSpend.world.influence = 14
     goodSpend.world.spends = [
       { action: 'lobby', sector: 'sa', nextT: 6400, remaining: 3 },
@@ -426,6 +456,7 @@ describe('save round trip', () => {
       nextCandidateT: expected.campaign.nextCandidateT,
       contractsWon: expected.campaign.contractsWon,
       campaignWon: expected.campaign.campaignWon,
+      campaignFailed: expected.campaign.campaignFailed,
       outcomeApplied: 0,
       lastReport: null,
     })
@@ -468,10 +499,46 @@ describe('save round trip', () => {
     expect(campaign.operatives.at(-1)?.id).toBe(hired.id)
     expect(campaign.roster).toEqual(expected.campaign.roster)
     expect(campaign.roster.op1.status).toBe('INJURED')
+    expect(campaign.roster.op1.xp).toBe(1)
+    expect(campaign.roster.op2.xp).toBe(1)
     expect(campaign.candidates).toEqual(expected.campaign.candidates)
     expect(campaign.recruitRngState).toBe(expected.campaign.recruitRngState)
     expect(campaign.nextCandidateT).toBe(expected.campaign.nextCandidateT)
     expect(useAppStore.getState().credits).toBe(expected.app.credits)
+  })
+
+  it('reloads a failed campaign as failed and not won', () => {
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    useCampaignStore.getState().reportMission(
+      'm01',
+      {
+        won: false,
+        kills: 0,
+        casualties: ids.length,
+        timeSec: 10,
+        civiliansHit: 0,
+        reward: 0,
+        bonus: 0,
+        deadIds: ids,
+        survivorHp: {},
+      },
+      0,
+    )
+    useAppStore.setState({ squad: [] })
+    expect(useCampaignStore.getState().campaignFailed).toBe(true)
+    expect(useCampaignStore.getState().campaignWon).toBe(false)
+    const expected = captureSave()
+    expect(validateSave(expected)).toBe(true)
+    expect(writeSave(storage)).toBe(true)
+    startNewOperation()
+    expect(useCampaignStore.getState().campaignFailed).toBe(false)
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    hydrateSave(loaded)
+    expect(useCampaignStore.getState().campaignFailed).toBe(true)
+    expect(useCampaignStore.getState().campaignWon).toBe(false)
+    expect(useCampaignStore.getState().operatives).toEqual([])
   })
 
   it('round-trips the tutorial seen set and gates hints across the reload', () => {
@@ -540,6 +607,7 @@ describe('save round trip', () => {
       intelProgress: 25,
       contractsWon: [],
       campaignWon: false,
+      campaignFailed: false,
     })
     expect(useWorldStore.getState()).toMatchObject({
       t: 0,

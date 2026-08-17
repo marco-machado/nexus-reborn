@@ -14,6 +14,8 @@ import { findPath, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
+import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
+import { XP_HP_PER, XP_SPEED_PER } from './experience'
 
 // Mirrors MAX_DT in world.ts.
 const STEP = 0.05
@@ -96,6 +98,7 @@ beforeEach(() => {
     done: [],
     labs: { ballistics: null, cybernetics: null, control: null },
   })
+  useCampaignStore.setState(initialCampaignData())
 })
 
 describe('createWorld', () => {
@@ -342,6 +345,30 @@ describe('research', () => {
     expect(plain.unit('a1')?.maxHp).toBe(base.maxHp)
     // No research leaves only the assault role passive on the weapon.
     expect(plain.unit('a1')?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.1, 10)
+  })
+
+  it('applies survivor experience at the next deployment snapshot', () => {
+    useCampaignStore.getState().reportMission(
+      MISSION.id,
+      {
+        won: true,
+        kills: 1,
+        casualties: 0,
+        timeSec: 10,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: [],
+        survivorHp: { op1: 1 },
+      },
+      0,
+    )
+    expect(useCampaignStore.getState().roster.op1.xp).toBe(1)
+    const base = operativeById('op1')
+    const w = createWorld(BARE_MISSION, [base])
+    const a1 = w.unit('a1')
+    expect(a1?.maxHp).toBe(base.maxHp + XP_HP_PER)
+    expect(a1?.speed).toBeCloseTo(base.speed + 0.15 + XP_SPEED_PER, 10)
   })
 })
 

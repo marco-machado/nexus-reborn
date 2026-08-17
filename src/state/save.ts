@@ -52,7 +52,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 6 as const
+const SAVE_VERSION = 7 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -60,8 +60,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV6 {
-  version: 6
+export interface SaveV7 {
+  version: 7
   app: {
     credits: number
     squad: string[]
@@ -101,6 +101,7 @@ export interface SaveV6 {
     nextCandidateT: number
     contractsWon: string[]
     campaignWon: boolean
+    campaignFailed: boolean
   }
   tutorial: {
     // Tutorial steps, one-shot hints, and onboarding overlays already shown
@@ -147,6 +148,7 @@ const SECTOR_IDS = new Set<string>(SECTORS.map((sector) => sector.id))
 const CITY_IDS = new Set(CITIES.map((city) => city.id))
 const EVENT_KINDS = new Set<EventKind>([
   'riot', 'seizure', 'trade', 'raid', 'blackout', 'kia', 'contract',
+  'crisis', 'influence',
 ])
 const CONTRACT_TYPES = new Set<ContractType>([
   'SEIZURE', 'EXTRACTION', 'SABOTAGE', 'SUPPRESSION',
@@ -384,13 +386,14 @@ function validRoster(
   return Object.values(value).every((entry) => {
     if (!isObject(entry) || (entry.status !== 'READY' && entry.status !== 'INJURED')) return false
     if (entry.recoverAtT !== null && !finite(entry.recoverAtT)) return false
+    if (!integer(entry.xp) || entry.xp < 0) return false
     return entry.status === 'READY' ? entry.recoverAtT === null : entry.recoverAtT !== null
   })
 }
 
 const SEEN_ID_SET = new Set<string>(SEEN_IDS)
 
-export function validateSave(value: unknown): value is SaveV6 {
+export function validateSave(value: unknown): value is SaveV7 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -462,7 +465,8 @@ export function validateSave(value: unknown): value is SaveV6 {
     campaign.recruitRngState > 0xffffffff ||
     !finite(campaign.nextCandidateT) ||
     !validIdList(campaign.contractsWon, MISSION_IDS) ||
-    typeof campaign.campaignWon !== 'boolean'
+    typeof campaign.campaignWon !== 'boolean' ||
+    typeof campaign.campaignFailed !== 'boolean'
   ) {
     return false
   }
@@ -470,11 +474,14 @@ export function validateSave(value: unknown): value is SaveV6 {
   const contractsWon = campaign.contractsWon as string[]
   const roster = campaign.roster as Record<string, CampaignRosterEntry>
   const expectedWin = MISSIONS.every((mission) => contractsWon.includes(mission.id))
-  if (campaign.campaignWon !== expectedWin) return false
+  // Won and failed are mutually exclusive. A failed blob may still list
+  // authored wins; a non-failed blob must match the three-contract record.
+  if (campaign.campaignFailed && campaign.campaignWon) return false
+  if (!campaign.campaignFailed && campaign.campaignWon !== expectedWin) return false
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV6 {
+export function captureSave(): SaveV7 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -521,6 +528,7 @@ export function captureSave(): SaveV6 {
       nextCandidateT: campaign.nextCandidateT,
       contractsWon: [...campaign.contractsWon],
       campaignWon: campaign.campaignWon,
+      campaignFailed: campaign.campaignFailed,
     },
     tutorial: {
       seen: [...tutorial.seen],
@@ -631,10 +639,30 @@ function upgraded(value: unknown): unknown {
   if (isObject(v) && v.version === 5 && !('tutorial' in v)) {
     v = { ...v, version: 6, tutorial: { seen: [] } }
   }
+  if (
+    isObject(v) &&
+    v.version === 6 &&
+    isObject(v.campaign) &&
+    !('campaignFailed' in v.campaign)
+  ) {
+    const roster = isObject(v.campaign.roster)
+      ? Object.fromEntries(
+          Object.entries(v.campaign.roster).map(([id, entry]) => [
+            id,
+            isObject(entry) ? { ...entry, xp: 0 } : entry,
+          ]),
+        )
+      : v.campaign.roster
+    v = {
+      ...v,
+      version: 7,
+      campaign: { ...v.campaign, campaignFailed: false, roster },
+    }
+  }
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV6 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV7 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -653,7 +681,7 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV6
   return null
 }
 
-export function hydrateSave(save: SaveV6): void {
+export function hydrateSave(save: SaveV7): void {
   useTutorialStore.getState().hydrate(save.tutorial.seen)
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
@@ -666,6 +694,7 @@ export function hydrateSave(save: SaveV6): void {
     contractsWon: [...save.campaign.contractsWon],
     outcomeApplied: 0,
     campaignWon: save.campaign.campaignWon,
+    campaignFailed: save.campaign.campaignFailed,
     lastReport: null,
   })
   useWorldStore.setState({

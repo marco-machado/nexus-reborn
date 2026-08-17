@@ -39,8 +39,8 @@ describe('campaign initialization and intel', () => {
     const state = useCampaignStore.getState()
     expect(state.intelLevel).toBe(1)
     expect(state.intelProgress).toBe(25)
-    expect(state.roster.op5).toEqual({ status: 'INJURED', recoverAtT: 24 * HOUR })
-    expect(state.roster.op1).toEqual({ status: 'READY', recoverAtT: null })
+    expect(state.roster.op5).toEqual({ status: 'INJURED', recoverAtT: 24 * HOUR, xp: 0 })
+    expect(state.roster.op1).toEqual({ status: 'READY', recoverAtT: null, xp: 0 })
   })
 
   it('seeds the live roster from the authored eight and a full candidate pool', () => {
@@ -95,6 +95,7 @@ describe('permanent death', () => {
     expect(state.lastReport).toEqual({
       kia: [{ id: 'op1', codename: 'MARA' }],
       injured: [],
+      xp: [],
     })
     // No recovery ever brings a KIA back.
     useCampaignStore.getState().sync(9000 + 1000 * HOUR)
@@ -125,9 +126,13 @@ describe('graded injury recovery', () => {
       )
     const state = useCampaignStore.getState()
     const downtime = injuryRecoverySec(0.2)
-    expect(state.roster.op1).toEqual({ status: 'INJURED', recoverAtT: worldT + downtime })
-    expect(state.roster.op2).toEqual({ status: 'READY', recoverAtT: null })
-    expect(state.roster.op3).toEqual({ status: 'READY', recoverAtT: null })
+    expect(state.roster.op1).toEqual({
+      status: 'INJURED',
+      recoverAtT: worldT + downtime,
+      xp: 1,
+    })
+    expect(state.roster.op2).toEqual({ status: 'READY', recoverAtT: null, xp: 1 })
+    expect(state.roster.op3).toEqual({ status: 'READY', recoverAtT: null, xp: 1 })
     expect(state.lastReport?.injured).toEqual([
       { id: 'op1', codename: 'MARA', downtimeSec: downtime },
     ])
@@ -138,6 +143,7 @@ describe('graded injury recovery', () => {
     expect(useCampaignStore.getState().roster.op1).toEqual({
       status: 'READY',
       recoverAtT: null,
+      xp: 1,
     })
   })
 })
@@ -153,7 +159,7 @@ describe('recruitment market', () => {
     let state = useCampaignStore.getState()
     expect(state.operatives).toHaveLength(ROSTER_CAP)
     expect(state.operatives.at(-1)?.id).toBe(candidate.id)
-    expect(state.roster[candidate.id]).toEqual({ status: 'READY', recoverAtT: null })
+    expect(state.roster[candidate.id]).toEqual({ status: 'READY', recoverAtT: null, xp: 0 })
     expect(state.candidates.some((c) => c.id === candidate.id)).toBe(false)
 
     // At the cap, and for unknown ids, nothing moves.
@@ -211,5 +217,57 @@ describe('mission record', () => {
     const state = useCampaignStore.getState()
     expect(state.contractsWon).toEqual(['m02', 'm01', 'm03'])
     expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
+  })
+})
+
+describe('operative experience', () => {
+  it('awards a point to each survivor named in survivorHp', () => {
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ survivorHp: { op1: 0.9, op2: 0.8 } }),
+      0,
+    )
+    const state = useCampaignStore.getState()
+    expect(state.roster.op1.xp).toBe(1)
+    expect(state.roster.op2.xp).toBe(1)
+    expect(state.roster.op3.xp).toBe(0)
+    expect(state.lastReport?.xp).toEqual([
+      { id: 'op1', codename: 'MARA', gained: 1, total: 1 },
+      { id: 'op2', codename: 'GHOST', gained: 1, total: 1 },
+    ])
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ survivorHp: { op1: 1 } }),
+      0,
+    )
+    expect(useCampaignStore.getState().roster.op1.xp).toBe(2)
+  })
+})
+
+describe('campaign fail state', () => {
+  it('fails when the last operative dies and refuses a later hire', () => {
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ won: false, reward: 0, casualties: ids.length, deadIds: ids }),
+      0,
+    )
+    const failed = useCampaignStore.getState()
+    expect(failed.operatives).toEqual([])
+    expect(failed.campaignFailed).toBe(true)
+    expect(failed.campaignWon).toBe(false)
+    expect(failed.acceptHire(failed.candidates[0].id)).toBe(false)
+    expect(useCampaignStore.getState().operatives).toEqual([])
+  })
+
+  it('a fresh campaign is not failed, and a win is never also failed', () => {
+    expect(useCampaignStore.getState().campaignFailed).toBe(false)
+    useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 1 }), 0)
+    useCampaignStore.getState().reportMission('m02', outcome({ civiliansHit: 1 }), 0)
+    useCampaignStore.getState().reportMission('m03', outcome({ civiliansHit: 1 }), 0)
+    const state = useCampaignStore.getState()
+    expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
   })
 })

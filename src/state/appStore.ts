@@ -71,8 +71,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   outcomeSerial: 0,
   goto: (phase) => set({ phase }),
   selectMission: (id) => {
+    const campaign = useCampaignStore.getState()
     const mission = resolveMission(id)
-    if (!mission || missionLocked(mission, useCampaignStore.getState().intelLevel)) return
+    if (!mission || campaign.campaignFailed || missionLocked(mission, campaign.intelLevel)) {
+      return
+    }
     set({ missionId: id, phase: 'brief' })
   },
   toggleOperative: (id) =>

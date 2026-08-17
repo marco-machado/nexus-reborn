@@ -29,6 +29,7 @@ import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
 import { missionMods } from './missionParams'
 import type { MissionMods } from './missionParams'
 import { crewBonus, squadWeapon } from './research'
+import { xpBonus } from './experience'
 import { loadoutPools, massTier, squadMassKg, tierSpeedDelta } from './mass'
 import type { SquadLoadout } from './mass'
 import { generateCity } from '../world/citygen'
@@ -47,6 +48,7 @@ import type {
 } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
+import { useCampaignStore } from '../state/campaignStore'
 
 const MAX_DT = 0.05
 const MAX_CATCHUP = 5
@@ -325,10 +327,12 @@ export function createWorld(
     return nearestWalkable(city, p) ?? { x: p.x, z: p.z }
   }
 
-  // Completed research is read once, at deployment. The world clock is stopped
-  // during a mission, so nothing can finish while this one runs.
+  // Completed research and roster experience are read once, at deployment.
+  // The world clock is stopped during a mission, so nothing can finish or
+  // award XP while this one runs.
   const researched = useResearchStore.getState().done
   const bonus = crewBonus(researched)
+  const rosterXp = useCampaignStore.getState().roster
 
   // Deployment-mass tier: one shared speed adjustment for the whole squad,
   // from the same model the assembly screen displays (game/mass.ts).
@@ -351,7 +355,8 @@ export function createWorld(
     // squadWeapon, so a sidearm carries every completed weapon project.
     const w = roleTuneWeapon(squadWeapon(op.weapon, researched), op.role)
     const sw = roleTuneWeapon(squadWeapon(op.sidearm, researched), op.role)
-    const hp = op.maxHp + bonus.maxHp
+    const xp = xpBonus(rosterXp[op.id]?.xp ?? 0)
+    const hp = op.maxHp + bonus.maxHp + xp.maxHp
     addUnit({
       id: 'a' + (i + 1),
       kind: 'agent',
@@ -360,7 +365,7 @@ export function createWorld(
       heading: Math.PI,
       hp,
       maxHp: hp,
-      speed: op.speed + bonus.speed + massDelta,
+      speed: op.speed + bonus.speed + massDelta + xp.speed,
       weapon: w,
       stance: 'idle',
       path: [],

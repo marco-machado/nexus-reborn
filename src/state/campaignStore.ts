@@ -1,8 +1,7 @@
 // CONTRACT FILE. Campaign progression that does not belong to the tactical,
-// world, research, or screen-flow stores: intel, contract record, and the live
-// operative roster (hires, losses, injuries, and the recruitment market).
-// Intel currently unlocks contracts; its second strategic use remains
-// intentionally deferred to Milestone 4.
+// world, research, or screen-flow stores: intel, contract record, the live
+// operative roster (hires, losses, injuries, experience, and the recruitment
+// market), and the terminal campaign-failed flag opposite campaign-complete.
 import { create } from 'zustand'
 import { INTEL_LEVEL, INTEL_PROGRESS, MISSIONS, ROSTER } from '../game/data'
 import {
@@ -14,6 +13,7 @@ import {
   rollCandidate,
 } from '../game/recruits'
 import type { Candidate } from '../game/recruits'
+import { XP_PER_SURVIVE } from '../game/experience'
 import type { MissionDef, OperativeDef } from '../game/types'
 import type { MissionOutcome } from './appStore'
 
@@ -33,6 +33,7 @@ export type OperativeCondition = 'READY' | 'INJURED'
 export interface CampaignRosterEntry {
   status: OperativeCondition
   recoverAtT: number | null
+  xp: number
 }
 
 // What the last debrief did to the roster, for the debrief screen. Transient:
@@ -40,6 +41,14 @@ export interface CampaignRosterEntry {
 export interface DebriefReport {
   kia: Array<{ id: string; codename: string }>
   injured: Array<{ id: string; codename: string; downtimeSec: number }>
+  xp: Array<{ id: string; codename: string; gained: number; total: number }>
+}
+
+// Terminal fail: the live roster is empty and the campaign is not already won.
+// Distinct from recoverable sector crisis; a campaign cannot be both won and
+// failed.
+export function isCampaignFailed(rosterSize: number, campaignWon: boolean): boolean {
+  return rosterSize === 0 && !campaignWon
 }
 
 export function injuryRecoverySec(hpFrac: number): number {
@@ -65,6 +74,7 @@ export interface CampaignState {
   // Number of app-store outcomes already consumed by the debrief boundary.
   outcomeApplied: number
   campaignWon: boolean
+  campaignFailed: boolean
   lastReport: DebriefReport | null
   awardIntel: (points: number) => void
   reportMission: (missionId: string, outcome: MissionOutcome, worldT: number) => void
@@ -86,6 +96,7 @@ export type CampaignData = Pick<
   | 'contractsWon'
   | 'outcomeApplied'
   | 'campaignWon'
+  | 'campaignFailed'
   | 'lastReport'
 >
 
@@ -121,6 +132,7 @@ export function initialCampaignData(): CampaignData {
     roster[operative.id] = {
       status: injured ? 'INJURED' : 'READY',
       recoverAtT: injured ? INITIAL_INJURY_RECOVERY : null,
+      xp: 0,
     }
   }
   const candidates: Candidate[] = []
@@ -141,6 +153,7 @@ export function initialCampaignData(): CampaignData {
     contractsWon: [],
     outcomeApplied: 0,
     campaignWon: false,
+    campaignFailed: false,
     lastReport: null,
   }
 }
@@ -209,27 +222,49 @@ export const useCampaignStore = create<CampaignState>((set) => ({
       const operatives = state.operatives.filter((o) => !dead.has(o.id))
       const roster: Record<string, CampaignRosterEntry> = {}
       const injured: DebriefReport['injured'] = []
+      const xp: DebriefReport['xp'] = []
       for (const operative of operatives) {
-        const entry = state.roster[operative.id] ?? { status: 'READY', recoverAtT: null }
+        const entry = state.roster[operative.id] ?? {
+          status: 'READY' as const,
+          recoverAtT: null,
+          xp: 0,
+        }
         const hpFrac = outcome.survivorHp[operative.id]
+        let points = entry.xp
+        if (hpFrac !== undefined) {
+          points += XP_PER_SURVIVE
+          xp.push({
+            id: operative.id,
+            codename: operative.codename,
+            gained: XP_PER_SURVIVE,
+            total: points,
+          })
+        }
         if (hpFrac !== undefined && hpFrac < INJURY_HP_FRAC) {
           const downtimeSec = injuryRecoverySec(hpFrac)
-          roster[operative.id] = { status: 'INJURED', recoverAtT: worldT + downtimeSec }
+          roster[operative.id] = {
+            status: 'INJURED',
+            recoverAtT: worldT + downtimeSec,
+            xp: points,
+          }
           injured.push({ id: operative.id, codename: operative.codename, downtimeSec })
         } else {
-          roster[operative.id] = { ...entry }
+          roster[operative.id] = { ...entry, xp: points }
         }
       }
 
+      const allWon = MISSIONS.every((mission) => won.includes(mission.id))
+      const campaignFailed = isCampaignFailed(operatives.length, allWon)
       return {
         intelLevel,
         intelProgress,
         operatives,
         roster,
         contractsWon: won,
-        campaignWon: MISSIONS.every((mission) => won.includes(mission.id)),
+        campaignWon: allWon && !campaignFailed,
+        campaignFailed,
         outcomeApplied: state.outcomeApplied + 1,
-        lastReport: { kia, injured },
+        lastReport: { kia, injured, xp },
       }
     }),
 
@@ -237,13 +272,15 @@ export const useCampaignStore = create<CampaignState>((set) => ({
     let hired = false
     set((state) => {
       const candidate = state.candidates.find((c) => c.id === candidateId)
-      if (!candidate || state.operatives.length >= ROSTER_CAP) return state
+      if (!candidate || state.campaignFailed || state.operatives.length >= ROSTER_CAP) {
+        return state
+      }
       hired = true
       return {
         operatives: [...state.operatives, candidateToOperative(candidate)],
         roster: {
           ...state.roster,
-          [candidate.id]: { status: 'READY', recoverAtT: null },
+          [candidate.id]: { status: 'READY', recoverAtT: null, xp: 0 },
         },
         candidates: state.candidates.filter((c) => c.id !== candidateId),
       }
@@ -261,7 +298,7 @@ export const useCampaignStore = create<CampaignState>((set) => ({
           entry.recoverAtT !== null &&
           t >= entry.recoverAtT
         ) {
-          roster[id] = { status: 'READY', recoverAtT: null }
+          roster[id] = { status: 'READY', recoverAtT: null, xp: entry.xp }
           changed = true
         }
       }
