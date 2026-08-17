@@ -80,7 +80,7 @@ Combat is fast and noisy. Missed shots continue downrange and can strike other b
 
 Contract rewards fund research. Completed research changes deployed weapon and operative statistics. The world clock advances both the corporate world and the labs.
 
-The loop now runs in both directions. Mission outcomes change sector control and unrest, post feed events, award intel, and unlock further contracts. City ownership is the one strategic value missions do not yet move.
+The loop now runs in both directions. Mission outcomes change sector control and unrest, flip the mission city's holder, post feed events, award intel, and unlock further contracts.
 
 ### 3.5 A cohesive corporate-terminal fantasy
 
@@ -209,7 +209,7 @@ flowchart LR
 
 The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it.
 
-There is no matching fail state. A lost mission costs its payout, drops the source sector's control, raises its unrest, and can cost operatives permanently, but the campaign continues and every one of those values can be recovered. Sector crisis (section 6.2) is the strongest pressure the strategic layer applies, and it too clears.
+Losing every remaining operative is a terminal fail: the World Network posts a failure banner, contracts lock, and the campaign cannot also be marked complete. Sector crisis (section 6.2) remains recoverable pressure below that floor.
 
 ---
 
@@ -272,7 +272,7 @@ A sector that holds above **60 unrest** decays: every 6 world hours it loses 1â€
 
 The world map contains 18 named cities. Each has a current corporate holder. A sectorâ€™s displayed corporate color is determined by which corporation holds the most cities in that sector; ties display as contested.
 
-Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Nexus-signed work is an internal directive and may target any city in the sector; an outside client is never paired with a Nexus-held city. An all-Nexus sector can only post internal work. Ownership still has no effect on research, prices, or tactical missions.
+Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Nexus-signed work is an internal directive and may target any city in the sector; an outside client is never paired with a Nexus-held city. An all-Nexus sector can only post internal work. A completed mission also flips the mission city's holder: a win hands the city to Nexus Global; a loss of a Nexus-held city returns it to the atlas default holder. Ownership still has no effect on research, prices, or tactical missions.
 
 ### 6.4 Dynamic world events
 
@@ -351,10 +351,9 @@ Tactical progression is research-driven:
 - Effects stack in project-completion order.
 - Completed research is sampled when the mission is created and cannot alter an active deployment.
 
-Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). There is currently no:
+Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). Survivors gain persistent experience at debrief. Each point adds +2 max HP and +0.05 m/s at the next deployment, sampled the same way research is. There is currently no:
 
 - Account level.
-- Operative experience.
 - Equipment ownership.
 - Consumable inventory economy.
 
@@ -1231,19 +1230,14 @@ Every voice routes through one of two channel gains (UI cues and combat) under a
 
 ### Current limitations
 
-- No music.
-- No ambient rain bed.
-- No city ambience.
 - No spoken operative dialogue.
 - No spatial audio model.
 
 ### Recommended audio goals
 
-- Low industrial ambience on strategy screens.
-- Rain, distant traffic, electrical hum, and sirens in missions.
-- Clear perceptual separation among squad, CorpSec, UI, and objective sounds.
+- Clearer perceptual separation among squad, CorpSec, UI, and objective sounds.
 - Optional synthetic radio voice treatment for operative acknowledgements.
-- Independent music and ambience levels once those beds exist.
+- Spoken operative dialogue and a spatial audio model.
 
 ---
 
@@ -1251,7 +1245,7 @@ Every voice routes through one of two channel gains (UI cues and combat) under a
 
 ### Current balance model
 
-There is one authored difficulty state and no selectable difficulty setting.
+The settings panel offers STANDARD (the authored baseline) and HARDENED. HARDENED adds street patrols and civilians; it does not hide minimap information. The choice persists with player settings and survives NEW OPERATION.
 
 Player advantages:
 
@@ -1399,7 +1393,11 @@ A frame-time governor guards the setting. It ignores the first 8 seconds, becaus
 - Functional minimap, camera controls, pause menu, and abort confirmation.
 - Procedural visuals and audio.
 - Versioned save/load with autosave, boot validation, CONTINUE, and NEW OPERATION.
-- Mission outcomes that move sector control and unrest and post feed events.
+- Mission outcomes that move sector control and unrest, flip the mission city's holder, and post feed events.
+- Persistent operative experience awarded to survivors and sampled at deployment.
+- A terminal campaign-failed state when the roster is wiped, opposite campaign-complete.
+- Player-selectable STANDARD / HARDENED difficulty persisted with settings.
+- Synthesized strategy and mission audio beds with independent music and ambience levels.
 - Intel earned from wins and clean wins; intel-gated contract unlocks.
 - Campaign completion state after all three contracts.
 - Injury enforcement with timed recovery on the world clock.
@@ -1416,11 +1414,7 @@ A frame-time governor guards the setting. It ignores the first 8 seconds, becaus
 
 ### 19.3 Missing for a complete campaign
 
-- Mission outcome effects on city ownership.
-- Operative experience.
-- A strategic fail state; the campaign has victory and recoverable pressure only, even through sector crisis.
-- Difficulty modes.
-- Music and ambient sound.
+None of the five campaign-spine gaps remain. Mission outcomes flip city ownership, survivors gain persistent experience, an empty roster is a terminal fail opposite campaign-complete, difficulty is a persisted player setting, and synthesized strategy/mission beds ride independent music and ambience levels.
 
 ---
 
@@ -1560,4 +1554,4 @@ The codebase already establishes a coherent identity: a corporate geostrategy in
 
 The two layers feed each other rather than sitting side by side. Mission outcomes move sector control and unrest, intel earned in the field opens contracts, injuries and deaths gate the next deployment, and the whole campaign survives a reload. Content matches that shell: three authored contracts across three district archetypes, an objective engine of seven kinds, eight roles that each change a tactical decision, and a strategic economy where influence and unrest have consequences.
 
-What the design does not yet have is listed in section 19.3. The largest gaps are city ownership that missions can flip, operative experience, and a strategic fail state to sit opposite the campaign victory.
+Section 19.3 is closed: missions flip city ownership, survivors gain experience, an empty roster fails the campaign, difficulty is selectable, and the strategy and mission screens carry synthesized beds.
