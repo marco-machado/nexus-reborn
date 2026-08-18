@@ -4,7 +4,10 @@
 // field lands in the serialized record, so a reload reproduces the same open
 // contracts. contractMission derives the full playable MissionDef from a
 // record alone; the mission pipeline (brief, team, sim, debrief) never
-// distinguishes generated from authored work.
+// distinguishes generated from authored work. Objective sequences pick a
+// variant through sequenceVariant, hashed from the stored seed on a stream
+// separate from the cosmetic rng, so re-derived missions keep their
+// codename, weather, Opening hour, and map jitter.
 import { mulberry32, mulberryStep } from './rng'
 import { CITIES_BY_SECTOR, CORPS, HOLDERS, PLATE_H, PLATE_W, cityById } from './atlas'
 import type { CorpId } from './atlas'
@@ -13,6 +16,7 @@ import type {
   MissionDef,
   ObjectiveDef,
   SectorId,
+  WaveSpec,
   Weather,
   WeatherFront,
 } from './types'
@@ -358,68 +362,79 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
 
+// Independent of the cosmetic stream (0x9e3779b9). Changing this mix would
+// reshuffle existing saves' sequences, not their weather or map jitter.
+const SEQUENCE_MIX = 0x51ed5e91
+const SEQUENCE_COUNT = 3
+
+export function sequenceVariant(seed: number, count = SEQUENCE_COUNT): number {
+  return Math.floor(mulberry32((seed ^ SEQUENCE_MIX) >>> 0)() * count) % count
+}
+
 function briefingFor(c: GeneratedContract, city: string, district: string): string[] {
-  if (c.client === 'nexus') {
-    switch (c.type) {
-      case 'SEIZURE':
-        return [
-          `CorpSec has sealed ${district} of ${city} behind a checkpoint on the main avenue.`,
-          'The board orders the district opened before the next transfer window.',
-          'Insert on the south perimeter and push north to the gate.',
-          'The checkpoint garrison holds the plaza. Expect armed response.',
-        ]
-      case 'SUPPRESSION':
-        return [
-          `Riots have overrun ${district} of ${city} and the local garrison lost the streets.`,
-          'The board authorizes a premium response to restore order before the exchanges open.',
-          'Insert on the south perimeter and break the armed cordon at the checkpoint.',
-          'The cordon reads as CorpSec garrison on the grid. Expect hard contact.',
-        ]
-      case 'EXTRACTION':
-        return [
-          `A defecting specialist sits in a CorpSec detention compound in ${district}.`,
-          'The board orders the asset moved before CorpSec transfers the block.',
-          'Breach the compound, override the cell block locks, and walk the asset out.',
-          'The asset must arrive alive. Keep them clear of the crossfire.',
-        ]
-      case 'SABOTAGE':
-        return [
-          `The board has flagged a relay yard feeding the ${city} security grid.`,
-          `Three fuel relays sit behind the yard fence in ${district}.`,
-          'Drop the relays and withdraw before CorpSec closes the gates.',
-          'The yard guard can be bypassed on the way in.',
-        ]
-    }
-  }
-  const client = CORPS[c.client].name
+  const v = sequenceVariant(c.seed)
+  const nexus = c.client === 'nexus'
+  const client = nexus ? 'The board' : CORPS[c.client].name
   switch (c.type) {
     case 'SEIZURE':
       return [
         `CorpSec has sealed ${district} of ${city} behind a checkpoint on the main avenue.`,
-        `${client} wants the district opened before the next transfer window.`,
+        nexus
+          ? 'The board orders the district opened before the next transfer window.'
+          : `${client} wants the district opened before the next transfer window.`,
         'Insert on the south perimeter and push north to the gate.',
-        'The checkpoint garrison holds the plaza. Expect armed response.',
+        v === 1
+          ? 'Override the plaza locks. The garrison does not have to die.'
+          : v === 2
+            ? 'The checkpoint garrison holds the plaza. Three minutes. Expect armed response.'
+            : 'The checkpoint garrison holds the plaza. Expect armed response.',
       ]
     case 'SUPPRESSION':
       return [
         `Riots have overrun ${district} of ${city} and the local garrison lost the streets.`,
-        `${client} is paying a premium to restore order before the exchanges open.`,
-        'Insert on the south perimeter and break the armed cordon at the checkpoint.',
-        'The cordon reads as CorpSec garrison on the grid. Expect hard contact.',
+        nexus
+          ? 'The board authorizes a premium response to restore order before the exchanges open.'
+          : `${client} is paying a premium to restore order before the exchanges open.`,
+        v === 1
+          ? 'Insert on the south perimeter and take the checkpoint plaza.'
+          : 'Insert on the south perimeter and break the armed cordon at the checkpoint.',
+        v === 1
+          ? 'Seize the plaza control. Not every street patrol has to die.'
+          : v === 2
+            ? 'The cordon reads as CorpSec garrison on the grid. Three minutes. Expect hard contact.'
+            : 'The cordon reads as CorpSec garrison on the grid. Expect hard contact.',
       ]
     case 'EXTRACTION':
       return [
         `A defecting specialist sits in a CorpSec detention compound in ${district}.`,
-        `${client} means to move the asset before CorpSec transfers the block.`,
+        nexus
+          ? 'The board orders the asset moved before CorpSec transfers the block.'
+          : `${client} means to move the asset before CorpSec transfers the block.`,
         'Breach the compound, override the cell block locks, and walk the asset out.',
-        `${client} pays nothing for a body. Keep the asset clear of the crossfire.`,
+        v === 1
+          ? nexus
+            ? 'The asset must arrive alive. Ninety seconds on the escort. Keep them clear of the crossfire.'
+            : `${client} pays nothing for a body. Ninety seconds on the escort.`
+          : v === 2
+            ? 'The detention server starts a ninety-second wipe when the gate falls. Optional, extra fee.'
+            : nexus
+              ? 'The asset must arrive alive. Keep them clear of the crossfire.'
+              : `${client} pays nothing for a body. Keep the asset clear of the crossfire.`,
       ]
     case 'SABOTAGE':
       return [
-        `${client} has flagged a relay yard feeding the ${city} security grid.`,
+        nexus
+          ? `The board has flagged a relay yard feeding the ${city} security grid.`
+          : `${client} has flagged a relay yard feeding the ${city} security grid.`,
         `Three fuel relays sit behind the yard fence in ${district}.`,
-        'Drop the relays and withdraw before CorpSec closes the gates.',
-        'The yard guard can be bypassed on the way in.',
+        v === 1
+          ? 'Drop the relays, then hold the yard while the burn takes the grid down.'
+          : 'Drop the relays and withdraw before CorpSec closes the gates.',
+        v === 1
+          ? 'CorpSec will push a response wave through the gates. Withdraw once the burn holds.'
+          : v === 2
+            ? 'A backup transformer in the far yard is optional extra fee. The yard guard can be bypassed.'
+            : 'The yard guard can be bypassed on the way in.',
       ]
   }
 }
@@ -441,34 +456,101 @@ function notesFor(
   return notes
 }
 
+// Copied from authored Rust Haven; generated sabotage variant 1 holds the
+// same burn shape. Authored missions stay in data.ts.
+const RELAY_BURN_WAVE: WaveSpec = {
+  count: 5,
+  weapons: ['smg', 'assault', 'smg', 'smg', 'assault'],
+  entry: ['waveEntry-a', 'waveEntry-b'],
+}
+
 function objectivesFor(c: GeneratedContract): ObjectiveDef[] {
   const id = c.id
+  const v = sequenceVariant(c.seed)
   switch (c.type) {
     case 'SEIZURE':
+    case 'SUPPRESSION': {
+      const kill: ObjectiveDef =
+        c.type === 'SUPPRESSION'
+          ? { id: id + '-o2', label: 'PUT DOWN THE ARMED CORDON', kind: 'eliminate-tag', tag: 'garrison' }
+          : { id: id + '-o2', label: 'ELIMINATE THE CORPSEC GARRISON', kind: 'eliminate-tag', tag: 'garrison' }
+      if (v === 2) kill.failSec = 180
+      const mid: ObjectiveDef =
+        v === 1
+          ? {
+              id: id + '-o2',
+              label: c.type === 'SUPPRESSION' ? 'SEIZE THE PLAZA CONTROL' : 'OVERRIDE THE CHECKPOINT LOCKS',
+              kind: 'interact',
+              landmark: 'target',
+              durationSec: 4,
+            }
+          : kill
       return [
         { id: id + '-o1', label: 'REACH THE CHECKPOINT GATE', kind: 'reach-zone' },
-        { id: id + '-o2', label: 'ELIMINATE THE CORPSEC GARRISON', kind: 'eliminate-tag', tag: 'garrison' },
+        mid,
         { id: id + '-o3', label: 'EXTRACT THE SQUAD', kind: 'extract' },
       ]
-    case 'SUPPRESSION':
-      return [
-        { id: id + '-o1', label: 'REACH THE CHECKPOINT GATE', kind: 'reach-zone' },
-        { id: id + '-o2', label: 'PUT DOWN THE ARMED CORDON', kind: 'eliminate-tag', tag: 'garrison' },
-        { id: id + '-o3', label: 'EXTRACT THE SQUAD', kind: 'extract' },
-      ]
-    case 'EXTRACTION':
-      return [
+    }
+    case 'EXTRACTION': {
+      const objectives: ObjectiveDef[] = [
         { id: id + '-o1', label: 'REACH THE COMPOUND GATE', kind: 'reach-zone', landmark: 'gate' },
+      ]
+      if (v === 2) {
+        objectives.push({
+          id: id + '-opt',
+          label: 'PULL THE DETENTION SERVER',
+          kind: 'interact',
+          landmark: 'server',
+          durationSec: 4,
+          optional: true,
+          bonusReward: 9000,
+          failSec: 90,
+        })
+      }
+      const escort: ObjectiveDef = {
+        id: id + '-o3',
+        label: 'EXTRACT THE ASSET',
+        kind: 'escort',
+        landmark: 'extraction',
+      }
+      if (v === 1) escort.failSec = 90
+      objectives.push(
         { id: id + '-o2', label: 'OVERRIDE THE CELL BLOCK LOCKS', kind: 'interact', landmark: 'console', durationSec: 5 },
-        { id: id + '-o3', label: 'EXTRACT THE ASSET', kind: 'escort', landmark: 'extraction' },
+        escort,
         { id: id + '-o4', label: 'EXTRACT THE SQUAD', kind: 'extract' },
-      ]
-    case 'SABOTAGE':
-      return [
+      )
+      return objectives
+    }
+    case 'SABOTAGE': {
+      const objectives: ObjectiveDef[] = [
         { id: id + '-o1', label: 'REACH THE RELAY YARD', kind: 'reach-zone', landmark: 'yard-a' },
-        { id: id + '-o2', label: 'DESTROY THE THREE FUEL RELAYS', kind: 'destroy', tag: 'relay' },
-        { id: id + '-o3', label: 'EXTRACT THE SQUAD', kind: 'extract' },
       ]
+      if (v === 2) {
+        objectives.push({
+          id: id + '-opt',
+          label: 'DROP THE BACKUP TRANSFORMER',
+          kind: 'destroy',
+          tag: 'transformer',
+          optional: true,
+          bonusReward: 6000,
+        })
+      }
+      objectives.push({ id: id + '-o2', label: 'DESTROY THE THREE FUEL RELAYS', kind: 'destroy', tag: 'relay' })
+      if (v === 1) {
+        objectives.push({
+          id: id + '-o3',
+          label: 'HOLD THE YARD FOR THE BURN',
+          kind: 'defend',
+          landmark: 'target',
+          durationSec: 45,
+          wave: RELAY_BURN_WAVE,
+        })
+        objectives.push({ id: id + '-o4', label: 'EXTRACT THE SQUAD', kind: 'extract' })
+      } else {
+        objectives.push({ id: id + '-o3', label: 'EXTRACT THE SQUAD', kind: 'extract' })
+      }
+      return objectives
+    }
   }
 }
 

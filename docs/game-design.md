@@ -479,7 +479,7 @@ Beside the authored three, the World Network keeps up to three generated contrac
 - Reward comes from threat and influence weight, 30,000–95,000 CR on a 500 CR grid.
 - Client comes from city ownership.
 - Type is seizure, extraction, sabotage, or riot-linked suppression.
-- Each type maps to a district family and a full objective set built from the shared primitives. CorpSec counts scale with threat.
+- Each type maps to a district family. The seed picks one of several authored objective sequences from the shared primitives; threat scales CorpSec counts, not the sequence.
 - Unaccepted offers expire after 24–48 strategic hours (priority 8–16) and post a feed line.
 - A fulfilled or failed generated contract applies the standard debrief consequences and leaves the market.
 
