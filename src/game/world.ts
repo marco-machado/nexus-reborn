@@ -909,7 +909,7 @@ export function createWorld(
       r: weaponNoise(w) * noiseMul,
       t: world.time,
     })
-    sfx.gunshot(w.id)
+    sfx.gunshot(w.id, u.kind === 'enemy' ? 'corpsec' : 'squad')
     if (u.magazine <= 0) startReload(u)
   }
 
