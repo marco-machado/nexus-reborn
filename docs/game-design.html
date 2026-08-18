@@ -1190,7 +1190,7 @@
       </a>
       <div class="brand-meta">
         <span>GDD SPECIFICATION</span>
-        <span>REV: c248aa2</span>
+        <span>REV: 29c27ec</span>
         <div class="status-pill-live">
           <span class="dot"></span>
           <span>CLEARANCE: EXEC-04</span>
@@ -1268,8 +1268,8 @@
         <div id="documentBody">
           <h1 id="nexus-reborn-game-design-document" class="gdd-h1"><span class="h-indicator">#</span> Nexus Reborn — Game Design Document</h1>
 <p class="gdd-p"><strong>Document type:</strong> Codebase-derived design specification  </p>
-<p class="gdd-p"><strong>Project version reviewed:</strong> <code>c248aa2</code>  </p>
-<p class="gdd-p"><strong>Review date:</strong> 2026-07-30  </p>
+<p class="gdd-p"><strong>Project version reviewed:</strong> <code>29c27ec</code>  </p>
+<p class="gdd-p"><strong>Review date:</strong> 2026-08-17  </p>
 <p class="gdd-p"><strong>Primary platform:</strong> Desktop web browser  </p>
 <p class="gdd-p"><strong>Current implementation:</strong> React 19, TypeScript, React Three Fiber, Three.js WebGPU/WebGL2, Zustand  </p>
 <div class="section-divider"></div>
@@ -1316,7 +1316,7 @@
 <p class="gdd-p">Combat is fast and noisy. Missed shots continue downrange and can strike other bodies. Civilian casualties are not merely flavor: the client deducts credits for every unique civilian hit by the squad.</p>
 <h3 id="3-4-the-strategic-and-tactical-layers-feed-each-other" class="gdd-h3"><span class="h3-diamond">◆</span> 3.4 The strategic and tactical layers feed each other</h3>
 <p class="gdd-p">Contract rewards fund research. Completed research changes deployed weapon and operative statistics. The world clock advances both the corporate world and the labs.</p>
-<p class="gdd-p">The loop now runs in both directions. Mission outcomes change sector control and unrest, post feed events, award intel, and unlock further contracts. City ownership is the one strategic value missions do not yet move.</p>
+<p class="gdd-p">The loop now runs in both directions. Mission outcomes change sector control and unrest, flip the mission city's holder, post feed events, award intel, and unlock further contracts.</p>
 <h3 id="3-5-a-cohesive-corporate-terminal-fantasy" class="gdd-h3"><span class="h3-diamond">◆</span> 3.5 A cohesive corporate-terminal fantasy</h3>
 <p class="gdd-p">Every surface uses the same near-black, teal, amber, and red command language. Briefings, squad assembly, research, the world map, the HUD, and the debrief should feel like different modules of one secure corporate operating system.</p>
 <hr class="gdd-hr" />
@@ -1438,7 +1438,7 @@
 </ol>
 <h4 id="campaign-arc" class="gdd-h4">Campaign arc</h4>
 <p class="gdd-p">The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it.</p>
-<p class="gdd-p">There is no matching fail state. A lost mission costs its payout, drops the source sector's control, raises its unrest, and can cost operatives permanently, but the campaign continues and every one of those values can be recovered. Sector crisis (section 6.2) is the strongest pressure the strategic layer applies, and it too clears.</p>
+<p class="gdd-p">Losing every remaining operative is a terminal fail: the World Network posts a failure banner, contracts lock, and the campaign cannot also be marked complete. Sector crisis (section 6.2) remains recoverable pressure below that floor.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="6-strategic-layer" class="gdd-h2"><span class="h-badge">SEC</span> 6. Strategic layer</h2>
@@ -1481,7 +1481,7 @@
 <h3 id="6-3-city-ownership" class="gdd-h3"><span class="h3-diamond">◆</span> 6.3 City ownership</h3>
 <p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
 <p class="gdd-p">The world map contains 18 named cities. Each has a current corporate holder. A sector’s displayed corporate color is determined by which corporation holds the most cities in that sector; ties display as contested.</p>
-<p class="gdd-p">Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Nexus-signed work is an internal directive and may target any city in the sector; an outside client is never paired with a Nexus-held city. An all-Nexus sector can only post internal work. Ownership still has no effect on research, prices, or tactical missions.</p>
+<p class="gdd-p">Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Nexus-signed work is an internal directive and may target any city in the sector; an outside client is never paired with a Nexus-held city. An all-Nexus sector can only post internal work. A completed mission also flips the mission city's holder: a win hands the city to Nexus Global; a loss of a Nexus-held city returns it to the atlas default holder. Ownership still has no effect on research, prices, or tactical missions.</p>
 <h3 id="6-4-dynamic-world-events" class="gdd-h3"><span class="h3-diamond">◆</span> 6.4 Dynamic world events</h3>
 <p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
 <p class="gdd-p">Event categories:</p>
@@ -1537,10 +1537,9 @@
   <li>Effects stack in project-completion order.</li>
   <li>Completed research is sampled when the mission is created and cannot alter an active deployment.</li>
 </ul>
-<p class="gdd-p">Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). There is currently no:</p>
+<p class="gdd-p">Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). Survivors gain persistent experience at debrief. Each point adds +2 max HP and +0.05 m/s at the next deployment, sampled the same way research is. There is currently no:</p>
 <ul class="gdd-ul">
   <li>Account level.</li>
-  <li>Operative experience.</li>
   <li>Equipment ownership.</li>
   <li>Consumable inventory economy.</li>
 </ul>
@@ -1552,7 +1551,7 @@
   <li><strong>+2</strong> more for a clean win (zero civilians hit by the squad).</li>
   <li><strong>+1</strong> per 12 world hours while the influence index holds above <strong>55</strong> (the trickle).</li>
 </ul>
-<p class="gdd-p">Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v6). Every balance number lives in <code>src/game/influence.ts</code>.</p>
+<p class="gdd-p">Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v7). Every balance number lives in <code>src/game/influence.ts</code>.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="8-research-program" class="gdd-h2"><span class="h-badge">SEC</span> 8. Research program</h2>
@@ -1837,24 +1836,17 @@
 <div class="section-divider"></div>
 <h2 id="11-tactical-mission-design" class="gdd-h2"><span class="h-badge">SEC</span> 11. Tactical mission design</h2>
 <h3 id="11-1-current-mission-space" class="gdd-h3"><span class="h3-diamond">◆</span> 11.1 Current mission space</h3>
-<p class="gdd-p">The current mission takes place in a deterministic <strong>96×96 meter</strong> procedural district.</p>
-<p class="gdd-p">Fixed structural landmarks:</p>
+<p class="gdd-p">Every mission takes place in a deterministic <strong>96×96 meter</strong> procedural district. Three layout families share one generator, one south insertion, and the same connectivity guarantees. The visual district is reconstructed from the mission seed, so a given mission is repeatable.</p>
+<p class="gdd-p">Shared landmarks:</p>
 <ul class="gdd-ul">
   <li>Squad insertion/extraction: south, approximately <code>(48, 88)</code>.</li>
   <li>Main north-south avenue: central.</li>
-  <li>Checkpoint and garrison plaza: north, approximately <code>(48, 14)</code>.</li>
   <li>A road and alley network divides procedural building blocks.</li>
   <li>Buildings retain walkable setbacks and minimum-width alleys.</li>
-  <li>The generator guarantees connectivity from insertion to the checkpoint, enemies, patrol paths, and extraction.</li>
+  <li>The generator guarantees walkable routes from insertion to the objective landmarks, enemies, patrol paths, and extraction.</li>
 </ul>
-<p class="gdd-p">Population:</p>
-<ul class="gdd-ul">
-  <li>Four deployed operatives.</li>
-  <li>Seven checkpoint garrison enemies.</li>
-  <li>Five street patrol enemies.</li>
-  <li>22 civilians.</li>
-</ul>
-<p class="gdd-p">The visual district is reconstructed from the mission seed, so a given mission is repeatable.</p>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Archetype</th><th style="text-align:left">Used by</th><th style="text-align:right">Base garrison</th><th style="text-align:right">Base street patrols</th><th style="text-align:right">Base civilians</th><th style="text-align:left">Distinct geometry</th></tr></thead><tbody><tr><td style="text-align:left">Checkpoint</td><td style="text-align:left">Glass Veil; generated seizure and suppression</td><td style="text-align:right">6 plaza + 1 authored 80-HP longrifle marksman</td><td style="text-align:right">5</td><td style="text-align:right">22</td><td style="text-align:left">Northern plaza at approximately <code>(48, 14)</code></td></tr><tr><td style="text-align:left">Compound</td><td style="text-align:left">Hollow Crown; generated extraction</td><td style="text-align:right">6 interior (bypassable)</td><td style="text-align:right">4</td><td style="text-align:right">14</td><td style="text-align:left">Walled eastern detention block; 7 m streets</td></tr><tr><td style="text-align:left">Industrial</td><td style="text-align:left">Rust Haven; generated sabotage</td><td style="text-align:right">4 yard guards</td><td style="text-align:right">3</td><td style="text-align:right">8</td><td style="text-align:left">Fenced eastern yard; 8 m cross streets</td></tr></tbody></table></div>
+<p class="gdd-p">Threat extras, unrest extras, and HARDENED difficulty add street patrols and civilians on top of those bases (sections 12 and 17). Four operatives deploy on every mission.</p>
 <h3 id="11-2-selection" class="gdd-h3"><span class="h3-diamond">◆</span> 11.2 Selection</h3>
 <p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
 <ul class="gdd-ul">
@@ -2016,6 +2008,7 @@
 <h3 id="11-9-weapons" class="gdd-h3"><span class="h3-diamond">◆</span> 11.9 Weapons</h3>
 <div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Weapon</th><th style="text-align:right">Damage</th><th style="text-align:right">Range</th><th style="text-align:right">Fire delay</th><th style="text-align:right">Magazine</th><th style="text-align:right">Reload</th><th style="text-align:right">Spread</th><th style="text-align:left">Tactical identity</th></tr></thead><tbody><tr><td style="text-align:left">RFC-27 Assault</td><td style="text-align:right">11</td><td style="text-align:right">16 m</td><td style="text-align:right">0.16 s</td><td style="text-align:right">30</td><td style="text-align:right">1.7 s</td><td style="text-align:right">0.045</td><td style="text-align:left">Flexible sustained fire</td></tr><tr><td style="text-align:left">K-9 Rattler SMG</td><td style="text-align:right">7</td><td style="text-align:right">12 m</td><td style="text-align:right">0.09 s</td><td style="text-align:right">40</td><td style="text-align:right">1.9 s</td><td style="text-align:right">0.080</td><td style="text-align:left">High-volume close combat</td></tr><tr><td style="text-align:left">S-18 Pistol</td><td style="text-align:right">10</td><td style="text-align:right">11 m</td><td style="text-align:right">0.45 s</td><td style="text-align:right">12</td><td style="text-align:right">1.2 s</td><td style="text-align:right">0.030</td><td style="text-align:left">Accurate light sidearm</td></tr><tr><td style="text-align:left">VK-88 Longrifle</td><td style="text-align:right">46</td><td style="text-align:right">26 m</td><td style="text-align:right">1.60 s</td><td style="text-align:right">5</td><td style="text-align:right">2.6 s</td><td style="text-align:right">0.008</td><td style="text-align:left">Precision long-range elimination</td></tr><tr><td style="text-align:left">M6 Breacher</td><td style="text-align:right">26</td><td style="text-align:right">8 m</td><td style="text-align:right">0.90 s</td><td style="text-align:right">6</td><td style="text-align:right">2.2 s</td><td style="text-align:right">0.120</td><td style="text-align:left">Short-range burst damage</td></tr></tbody></table></div>
 <p class="gdd-p"><strong>Sidearm switching:</strong> Every operative carries two live weapon slots, the authored primary and sidearm. <code>V</code> swaps every selected operative to its other slot. The drawn weapon cannot fire for a 0.5-second readiness delay, shown as DRAWING on the HUD. Each slot keeps its own magazine: swapping cancels an in-progress reload of the stowed weapon, its round count persists as-is and resumes when drawn again. Auto-fire, ordered attacks, engagement range, noise radius, tracers, and gunshot audio all follow the drawn weapon, and weapon research applies to sidearms exactly as to primaries. Enemies carry a single weapon and never swap. Reserve-ammo values shown in the UI are informational and do not constrain the simulation.</p>
+<p class="gdd-p"><strong>Grenades:</strong> <code>G</code> arms or cancels grenade targeting. A confirmed throw spends one power cell from the shared pool, so grenades compete with cooldown resets. The throw snaps onto nearby pavement within 2.5 m, must land within 18 m of the thrower, and detonates immediately: 70 damage at the centre falling to 35 at a 3.5 m edge, only through line of sight, with a 24 m noise radius and a 4-second squad cooldown. The HUD grenade control disables when the cell pool is empty or the cooldown is running.</p>
 <h3 id="11-10-objectives" class="gdd-h3"><span class="h3-diamond">◆</span> 11.10 Objectives</h3>
 <p class="gdd-p">Seven objective kinds, defined as <code>ObjectiveKind</code> in <code>game/types.ts</code> and driven by data alone:</p>
 <div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Kind</th><th style="text-align:left">Completes when</th></tr></thead><tbody><tr><td style="text-align:left"><code>reach-zone</code></td><td style="text-align:left">Any living operative enters the radius</td></tr><tr><td style="text-align:left"><code>eliminate-tag</code></td><td style="text-align:left">No living enemy with the tag remains</td></tr><tr><td style="text-align:left"><code>extract</code></td><td style="text-align:left">Every surviving operative is inside the extraction radius</td></tr><tr><td style="text-align:left"><code>interact</code></td><td style="text-align:left">The channel at the point reaches <code>durationSec</code></td></tr><tr><td style="text-align:left"><code>escort</code></td><td style="text-align:left">Every vip is alive and inside the target zone</td></tr><tr><td style="text-align:left"><code>destroy</code></td><td style="text-align:left">No device with the tag is left alive</td></tr><tr><td style="text-align:left"><code>defend</code></td><td style="text-align:left">The hold timer at the zone reaches zero</td></tr></tbody></table></div>
@@ -2026,13 +2019,21 @@
 <p class="gdd-p">Optional objectives are the exception. An optional objective activates with the required objective it precedes in the list, never blocks the sequence, and pays <code>bonusReward</code> on top of the contract when it completes. A failed or ignored optional objective costs nothing.</p>
 <h3 id="11-11-win-and-loss" class="gdd-h3"><span class="h3-diamond">◆</span> 11.11 Win and loss</h3>
 <p class="gdd-p"><strong>Win:</strong> Every required objective completes. Optional objectives do not gate the win.  </p>
-<p class="gdd-p"><strong>Loss:</strong> No living operatives remain.</p>
+<p class="gdd-p"><strong>Loss:</strong> any of:</p>
+<ul class="gdd-ul">
+  <li>No living operatives remain.</li>
+  <li>A required escort VIP dies.</li>
+  <li>A required objective's <code>failSec</code> window expires.</li>
+</ul>
 <p class="gdd-p">The HUD presents the result immediately. After a 2.5-second delay, the game enters the debrief.</p>
 <p class="gdd-p">The debrief reports:</p>
 <ul class="gdd-ul">
   <li>Target.</li>
   <li>Eliminations.</li>
   <li>Squad casualties.</li>
+  <li>Killed-in-action list.</li>
+  <li>New injuries with recovery times.</li>
+  <li>Survivor experience awards.</li>
   <li>Civilian collateral count.</li>
   <li>Mission time.</li>
   <li>Contract value when relevant.</li>
@@ -2047,7 +2048,7 @@
 <h2 id="12-current-content-catalogue" class="gdd-h2"><span class="h-badge">SEC</span> 12. Current content catalogue</h2>
 <h3 id="12-1-contracts" class="gdd-h3"><span class="h3-diamond">◆</span> 12.1 Contracts</h3>
 <p class="gdd-p">Contract supply is the authored three plus a procedural stream.</p>
-<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Codename</th><th style="text-align:left">Location</th><th style="text-align:left">Type</th><th style="text-align:left">Client</th><th style="text-align:left">Threat</th><th style="text-align:right">Reward</th><th style="text-align:left">Archetype</th><th style="text-align:right">Chance</th><th style="text-align:right">ETA</th><th style="text-align:left">Status</th></tr></thead><tbody><tr><td style="text-align:left">Glass Veil</td><td style="text-align:left">New Carthage, District 07, Europe</td><td style="text-align:left">Seizure</td><td style="text-align:left">Sable Enterprises</td><td style="text-align:left"><span class="badge badge-recommended">Severe</span></td><td style="text-align:right">85,000 CR</td><td style="text-align:left">Checkpoint</td><td style="text-align:right">41%</td><td style="text-align:right">2 days</td><td style="text-align:left"><span class="badge badge-implemented">Playable</span></td></tr><tr><td style="text-align:left">Hollow Crown</td><td style="text-align:left">Shingang, District 21, Asia</td><td style="text-align:left">Extraction</td><td style="text-align:left">Helix Corp</td><td style="text-align:left"><span class="badge badge-scaffolded">High</span></td><td style="text-align:right">62,000 CR</td><td style="text-align:left">Compound</td><td style="text-align:right">59%</td><td style="text-align:right">4 days</td><td style="text-align:left">Playable; intel level 2</td></tr><tr><td style="text-align:left">Rust Haven</td><td style="text-align:left">Detroit Sprawl, District 03, North America</td><td style="text-align:left">Sabotage</td><td style="text-align:left">Stratos Industries</td><td style="text-align:left"><span class="badge badge-scaffolded">Moderate</span></td><td style="text-align:right">41,000 CR</td><td style="text-align:left">Industrial</td><td style="text-align:right">79%</td><td style="text-align:right">3 days</td><td style="text-align:left">Playable; intel level 2</td></tr></tbody></table></div>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Codename</th><th style="text-align:left">Location</th><th style="text-align:left">Type</th><th style="text-align:left">Client</th><th style="text-align:left">Threat</th><th style="text-align:right">Reward</th><th style="text-align:left">Archetype</th><th style="text-align:right">Chance</th><th style="text-align:right">ETA</th><th style="text-align:left">Status</th></tr></thead><tbody><tr><td style="text-align:left">Glass Veil</td><td style="text-align:left">New Carthage, District 07, Europe</td><td style="text-align:left">Seizure</td><td style="text-align:left">Sable Enterprises</td><td style="text-align:left"><span class="badge badge-recommended">Severe</span></td><td style="text-align:right">85,000 CR</td><td style="text-align:left">Checkpoint</td><td style="text-align:right">36%</td><td style="text-align:right">2 days</td><td style="text-align:left"><span class="badge badge-implemented">Playable</span></td></tr><tr><td style="text-align:left">Hollow Crown</td><td style="text-align:left">Shingang, District 21, Asia</td><td style="text-align:left">Extraction</td><td style="text-align:left">Helix Corp</td><td style="text-align:left"><span class="badge badge-scaffolded">High</span></td><td style="text-align:right">62,000 CR</td><td style="text-align:left">Compound</td><td style="text-align:right">57%</td><td style="text-align:right">4 days</td><td style="text-align:left">Playable; intel level 2</td></tr><tr><td style="text-align:left">Rust Haven</td><td style="text-align:left">Detroit Sprawl, District 03, North America</td><td style="text-align:left">Sabotage</td><td style="text-align:left">Stratos Industries</td><td style="text-align:left"><span class="badge badge-scaffolded">Moderate</span></td><td style="text-align:right">41,000 CR</td><td style="text-align:left">Industrial</td><td style="text-align:right">79%</td><td style="text-align:right">3 days</td><td style="text-align:left">Playable; intel level 2</td></tr></tbody></table></div>
 <p class="gdd-p">Reward and ETA are authored. Chance is not: <code>missionChance</code> in <code>game/missionParams.ts</code> derives it from threat, weather, the source sector's control and unrest, and the count of completed research, then clamps it to 35–95. The percentages above are the campaign-start figures, with no research done and the sectors at their opening values; they move as the campaign moves. At intel level 2+ the brief hides the percentage and shows the computed risk index instead (section 6.5).</p>
 <p class="gdd-p">ETA is spent, not displayed: the debrief advances the strategic clock by the contract's <code>etaDays</code>, so a long contract costs world time that research and injury recovery run through.</p>
 <p class="gdd-p"><strong>Generated contracts</strong> (<code>src/game/contracts.ts</code>) keep the market stocked beside the authored three:</p>
@@ -2057,7 +2058,7 @@
   <li>Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.</li>
   <li>Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.</li>
   <li>Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.</li>
-  <li>The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v6), so a reload reproduces the same open contracts.</li>
+  <li>The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v7), so a reload reproduces the same open contracts.</li>
 </ul>
 <h3 id="12-2-glass-veil" class="gdd-h3"><span class="h3-diamond">◆</span> 12.2 Glass Veil</h3>
 <h4 id="premise" class="gdd-h4">Premise</h4>
@@ -2222,7 +2223,7 @@
   <li>Unlocks browser audio on the first user gesture.</li>
   <li>Offers CONTINUE when a valid save exists.</li>
   <li>Offers NEW OPERATION behind a two-step erase confirm.</li>
-  <li>Opens the SETTINGS panel (audio, controls, accessibility).</li>
+  <li>Opens the SETTINGS panel (audio, controls, accessibility, quality, difficulty, telemetry).</li>
 </ul>
 <h4 id="world-network" class="gdd-h4">World Network</h4>
 <ul class="gdd-ul">
@@ -2231,7 +2232,8 @@
   <li>World time controls and 24-hour review timeline.</li>
   <li>Dynamic events feed.</li>
   <li>Credits, influence, operative count, and intel display.</li>
-  <li>Campaign-complete banner after all three contracts are won.</li>
+  <li>Campaign-complete banner after all three authored contracts are won.</li>
+  <li>Campaign-failed banner when the roster is wiped; contracts lock.</li>
   <li>Navigation to Research.</li>
   <li>First-visit orientation overlay naming the panel groups and the Research tab; its dismissal persists with the save.</li>
 </ul>
@@ -2415,28 +2417,29 @@
   <li>Alert tension drone: a filtered two-oscillator layer that tracks the mission alert level (0-3), ramps between levels, and releases at mission end and on leaving the mission screen.</li>
 </ul>
 <p class="gdd-p">Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense combat from stacking excessive simultaneous sounds.</p>
-<p class="gdd-p">Every voice routes through one of two channel gains (UI cues and combat) under a master gain. The SETTINGS panel carries master, UI, and combat sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.</p>
+<p class="gdd-p">Every voice routes through one of four channel gains (UI cues, combat, music, and ambience) under a master gain. The SETTINGS panel carries master, UI, combat, music, and ambience sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.</p>
+<p class="gdd-p">Two looping beds ride those extra channels:</p>
+<ul class="gdd-ul">
+  <li>Strategy screens start a low industrial drone on the music stage.</li>
+  <li>The mission starts a rain-hiss and city-hum bed on the ambience stage.</li>
+  <li>Both fade out when the screen that owns them unmounts.</li>
+</ul>
 <h3 id="current-limitations" class="gdd-h3"><span class="h3-diamond">◆</span> Current limitations</h3>
 <ul class="gdd-ul">
-  <li>No music.</li>
-  <li>No ambient rain bed.</li>
-  <li>No city ambience.</li>
   <li>No spoken operative dialogue.</li>
   <li>No spatial audio model.</li>
 </ul>
 <h3 id="recommended-audio-goals" class="gdd-h3"><span class="h3-diamond">◆</span> Recommended audio goals</h3>
 <ul class="gdd-ul">
-  <li>Low industrial ambience on strategy screens.</li>
-  <li>Rain, distant traffic, electrical hum, and sirens in missions.</li>
-  <li>Clear perceptual separation among squad, CorpSec, UI, and objective sounds.</li>
+  <li>Clearer perceptual separation among squad, CorpSec, UI, and objective sounds.</li>
   <li>Optional synthetic radio voice treatment for operative acknowledgements.</li>
-  <li>Independent music and ambience levels once those beds exist.</li>
+  <li>Spoken operative dialogue and a spatial audio model.</li>
 </ul>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="17-difficulty-and-balance" class="gdd-h2"><span class="h-badge">SEC</span> 17. Difficulty and balance</h2>
 <h3 id="current-balance-model" class="gdd-h3"><span class="h3-diamond">◆</span> Current balance model</h3>
-<p class="gdd-p">There is one authored difficulty state and no selectable difficulty setting.</p>
+<p class="gdd-p">The settings panel offers STANDARD (the authored baseline) and HARDENED. HARDENED adds two street patrols and six civilians; it does not hide minimap information. The choice persists with player settings and survives NEW OPERATION.</p>
 <p class="gdd-p">Player advantages:</p>
 <ul class="gdd-ul">
   <li>Four operatives.</li>
@@ -2450,7 +2453,7 @@
 </ul>
 <p class="gdd-p">Enemy advantages:</p>
 <ul class="gdd-ul">
-  <li>Numerical superiority: 12 hostiles.</li>
+  <li>Numerical superiority: 12 hostiles on the baseline checkpoint (7 garrison + 5 patrols) before threat extras.</li>
   <li>Patrol coverage across the route.</li>
   <li>Alert propagation.</li>
   <li>Longrifle garrison guard.</li>
@@ -2475,7 +2478,7 @@
 <div class="section-divider"></div>
 <h2 id="18-technical-design" class="gdd-h2"><span class="h-badge">SEC</span> 18. Technical design</h2>
 <h3 id="18-1-runtime-architecture" class="gdd-h3"><span class="h3-diamond">◆</span> 18.1 Runtime architecture</h3>
-<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Layer</th><th style="text-align:left">Responsibility</th></tr></thead><tbody><tr><td style="text-align:left"><code>src/game/</code></td><td style="text-align:left">Pure TypeScript simulation, static data, pathfinding, research effects, audio</td></tr><tr><td style="text-align:left"><code>src/world/</code></td><td style="text-align:left">Deterministic procedural city generation</td></tr><tr><td style="text-align:left"><code>src/scene/</code></td><td style="text-align:left">React Three Fiber / Three.js rendering and mission input</td></tr><tr><td style="text-align:left"><code>src/ui/</code></td><td style="text-align:left">DOM screens, HUD, minimap, briefing visualizations</td></tr><tr><td style="text-align:left"><code>src/state/</code></td><td style="text-align:left">Zustand stores for app, world, research, and low-frequency mission UI</td></tr></tbody></table></div>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Layer</th><th style="text-align:left">Responsibility</th></tr></thead><tbody><tr><td style="text-align:left"><code>src/game/</code></td><td style="text-align:left">Pure TypeScript simulation, static data, pathfinding, research effects, audio</td></tr><tr><td style="text-align:left"><code>src/world/</code></td><td style="text-align:left">Deterministic procedural city generation</td></tr><tr><td style="text-align:left"><code>src/scene/</code></td><td style="text-align:left">React Three Fiber / Three.js rendering and mission input</td></tr><tr><td style="text-align:left"><code>src/ui/</code></td><td style="text-align:left">DOM screens, HUD, minimap, briefing visualizations</td></tr><tr><td style="text-align:left"><code>src/state/</code></td><td style="text-align:left">Zustand stores for app, world, research, campaign, tutorial, settings, and low-frequency mission UI</td></tr></tbody></table></div>
 <h3 id="18-2-state-boundaries" class="gdd-h3"><span class="h3-diamond">◆</span> 18.2 State boundaries</h3>
 <ul class="gdd-ul">
   <li>High-frequency mission state lives in a mutable <code>WorldApi</code>, outside React.</li>
@@ -2483,8 +2486,8 @@
   <li>Mission UI is synchronized at approximately 5 Hz.</li>
   <li>The minimap redraws at approximately 10 Hz.</li>
   <li>The strategic clock batches updates at approximately 20 Hz.</li>
-  <li>App, world, research, campaign, and mission UI have separate stores.</li>
-  <li>A save module writes the app, world, research, and campaign stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes.</li>
+  <li>Seven stores, split by lifetime and rate: <code>appStore</code> (flow, squad, outcome), <code>missionStore</code> (HUD, pause), <code>worldStore</code> (clock, sectors, contracts), <code>researchStore</code>, <code>campaignStore</code> (roster, injuries, recruits, campaign result), <code>tutorialStore</code>, <code>settingsStore</code>.</li>
+  <li>A save module writes the app, world, research, campaign, and tutorial stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes. Settings and telemetry persist under their own keys.</li>
 </ul>
 <h3 id="18-3-simulation-timing" class="gdd-h3"><span class="h3-diamond">◆</span> 18.3 Simulation timing</h3>
 <ul class="gdd-ul">
@@ -2526,7 +2529,7 @@
 <h3 id="18-7-build-and-quality" class="gdd-h3"><span class="h3-diamond">◆</span> 18.7 Build and quality</h3>
 <ul class="gdd-ul">
   <li>The checks are <code>npm run lint</code>, <code>npm run test</code>, and <code>npm run build</code>.</li>
-  <li>A vitest suite (26 files, 424 tests) covers the pure layers: <code>src/game/</code>, <code>src/world/</code>, <code>src/state/</code>.</li>
+  <li>A vitest suite (30 files, 460 tests) covers the pure layers: <code>src/game/</code>, <code>src/world/</code>, <code>src/state/</code>.</li>
   <li>Beyond unit coverage, the suite carries scenario tests: an orders-driven Glass Veil playthrough (advance, clear the garrison by weapon fire, extract, net payout) and a squad wipe driven by CorpSec fire; a cross-store economy integration test (payout minus fines, intel and influence awards, research spend gating, hiring, influence spends) holding a credits-never-negative invariant; research program sums against the authored tables and effect-stacking order; and an objective-completability sweep over the three authored missions plus all four generated-contract types (zones walkable and reachable from insertion, tagged and device sets nonempty, extraction last).</li>
   <li>Saves are versioned; the loader validates a blob and discards it on any mismatch. The settings and telemetry blobs live under their own keys with their own version guards.</li>
   <li>Scene and DOM screens rely on the manual click-through.</li>
@@ -2547,7 +2550,7 @@
   <li>Graded injury recovery scaled by end-of-mission health.</li>
   <li>A seeded, save-persistent recruitment market with quality-priced hires.</li>
   <li>Code-derived mission briefing map.</li>
-  <li>One deterministic procedural tactical district.</li>
+  <li>Three deterministic procedural district archetypes (checkpoint, compound, industrial).</li>
   <li>Real-time selection, formation movement, attack, stop, Hold Ground, and Hold Fire.</li>
   <li>A* pathfinding and line-of-sight checks.</li>
   <li>Patrol, suspicion, combat, hearing, vision, and alert-propagation AI.</li>
@@ -2560,7 +2563,11 @@
   <li>Functional minimap, camera controls, pause menu, and abort confirmation.</li>
   <li>Procedural visuals and audio.</li>
   <li>Versioned save/load with autosave, boot validation, CONTINUE, and NEW OPERATION.</li>
-  <li>Mission outcomes that move sector control and unrest and post feed events.</li>
+  <li>Mission outcomes that move sector control and unrest, flip the mission city's holder, and post feed events.</li>
+  <li>Persistent operative experience awarded to survivors and sampled at deployment.</li>
+  <li>A terminal campaign-failed state when the roster is wiped, opposite campaign-complete.</li>
+  <li>Player-selectable STANDARD / HARDENED difficulty persisted with settings.</li>
+  <li>Synthesized strategy and mission audio beds with independent music and ambience levels.</li>
   <li>Intel earned from wins and clean wins; intel-gated contract unlocks.</li>
   <li>Campaign completion state after all three contracts.</li>
   <li>Injury enforcement with timed recovery on the world clock.</li>
@@ -2576,13 +2583,7 @@
   <li>Archives and additional navigation tabs.</li>
 </ul>
 <h3 id="19-3-missing-for-a-complete-campaign" class="gdd-h3"><span class="h3-diamond">◆</span> 19.3 Missing for a complete campaign</h3>
-<ul class="gdd-ul">
-  <li>Mission outcome effects on city ownership.</li>
-  <li>Operative experience.</li>
-  <li>A strategic fail state; the campaign has victory and recoverable pressure only, even through sector crisis.</li>
-  <li>Difficulty modes.</li>
-  <li>Music and ambient sound.</li>
-</ul>
+<p class="gdd-p">None of the five campaign-spine gaps remain. Mission outcomes flip city ownership, survivors gain experience, an empty roster is a terminal fail opposite campaign-complete, difficulty is a persisted player setting, and synthesized strategy/mission beds ride independent music and ambience levels.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="20-design-acceptance-criteria" class="gdd-h2"><span class="h-badge">SEC</span> 20. Design acceptance criteria</h2>
@@ -2658,7 +2659,7 @@
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="22-source-of-truth-map" class="gdd-h2"><span class="h-badge">SEC</span> 22. Source-of-truth map</h2>
-<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Design area</th><th style="text-align:left">Primary implementation</th></tr></thead><tbody><tr><td style="text-align:left">Screen flow</td><td style="text-align:left"><code>src/App.tsx</code></td></tr><tr><td style="text-align:left">Missions, weapons, roster, intel</td><td style="text-align:left"><code>src/game/data.ts</code></td></tr><tr><td style="text-align:left">Shared gameplay types</td><td style="text-align:left"><code>src/game/types.ts</code></td></tr><tr><td style="text-align:left">Tactical simulation</td><td style="text-align:left"><code>src/game/world.ts</code></td></tr><tr><td style="text-align:left">Pathfinding and line of sight</td><td style="text-align:left"><code>src/game/pathfind.ts</code></td></tr><tr><td style="text-align:left">Research tree and effects</td><td style="text-align:left"><code>src/game/research.ts</code></td></tr><tr><td style="text-align:left">Strategic world simulation</td><td style="text-align:left"><code>src/state/worldStore.ts</code></td></tr><tr><td style="text-align:left">Research progression</td><td style="text-align:left"><code>src/state/researchStore.ts</code></td></tr><tr><td style="text-align:left">Credits, squad, outcomes</td><td style="text-align:left"><code>src/state/appStore.ts</code></td></tr><tr><td style="text-align:left">Intel, roster condition, campaign result</td><td style="text-align:left"><code>src/state/campaignStore.ts</code></td></tr><tr><td style="text-align:left">Save, load, autosave</td><td style="text-align:left"><code>src/state/save.ts</code></td></tr><tr><td style="text-align:left">City generation</td><td style="text-align:left"><code>src/world/citygen.ts</code></td></tr><tr><td style="text-align:left">Mission input</td><td style="text-align:left"><code>src/scene/Input.tsx</code></td></tr><tr><td style="text-align:left">Mission controls table</td><td style="text-align:left"><code>src/game/bindings.ts</code></td></tr><tr><td style="text-align:left">Camera</td><td style="text-align:left"><code>src/scene/CameraRig.tsx</code></td></tr><tr><td style="text-align:left">Mission HUD</td><td style="text-align:left"><code>src/ui/Hud.tsx</code></td></tr><tr><td style="text-align:left">Minimap</td><td style="text-align:left"><code>src/ui/Minimap.tsx</code></td></tr><tr><td style="text-align:left">World Network</td><td style="text-align:left"><code>src/ui/WorldMap.tsx</code></td></tr><tr><td style="text-align:left">Research UI</td><td style="text-align:left"><code>src/ui/Research.tsx</code></td></tr><tr><td style="text-align:left">Briefing, assembly, debrief</td><td style="text-align:left"><code>src/ui/index.tsx</code></td></tr><tr><td style="text-align:left">Visual tokens</td><td style="text-align:left"><code>src/index.css</code>, <code>src/ui/ui.css</code></td></tr><tr><td style="text-align:left">Procedural audio</td><td style="text-align:left"><code>src/game/audio.ts</code></td></tr></tbody></table></div>
+<div class="table-container"><table class="gdd-table"><thead><tr><th style="text-align:left">Design area</th><th style="text-align:left">Primary implementation</th></tr></thead><tbody><tr><td style="text-align:left">Screen flow</td><td style="text-align:left"><code>src/App.tsx</code></td></tr><tr><td style="text-align:left">Missions, weapons, roster, intel</td><td style="text-align:left"><code>src/game/data.ts</code></td></tr><tr><td style="text-align:left">Shared gameplay types</td><td style="text-align:left"><code>src/game/types.ts</code></td></tr><tr><td style="text-align:left">Tactical simulation</td><td style="text-align:left"><code>src/game/world.ts</code></td></tr><tr><td style="text-align:left">Pathfinding and line of sight</td><td style="text-align:left"><code>src/game/pathfind.ts</code></td></tr><tr><td style="text-align:left">Research tree and effects</td><td style="text-align:left"><code>src/game/research.ts</code></td></tr><tr><td style="text-align:left">Strategic world simulation</td><td style="text-align:left"><code>src/state/worldStore.ts</code></td></tr><tr><td style="text-align:left">Research progression</td><td style="text-align:left"><code>src/state/researchStore.ts</code></td></tr><tr><td style="text-align:left">Credits, squad, outcomes</td><td style="text-align:left"><code>src/state/appStore.ts</code></td></tr><tr><td style="text-align:left">Intel, roster condition, campaign result</td><td style="text-align:left"><code>src/state/campaignStore.ts</code></td></tr><tr><td style="text-align:left">Save, load, autosave</td><td style="text-align:left"><code>src/state/save.ts</code></td></tr><tr><td style="text-align:left">City generation</td><td style="text-align:left"><code>src/world/citygen.ts</code></td></tr><tr><td style="text-align:left">Mission input</td><td style="text-align:left"><code>src/scene/Input.tsx</code></td></tr><tr><td style="text-align:left">Mission controls table</td><td style="text-align:left"><code>src/game/bindings.ts</code></td></tr><tr><td style="text-align:left">Camera</td><td style="text-align:left"><code>src/scene/CameraRig.tsx</code></td></tr><tr><td style="text-align:left">Mission HUD</td><td style="text-align:left"><code>src/ui/Hud.tsx</code></td></tr><tr><td style="text-align:left">Minimap</td><td style="text-align:left"><code>src/ui/Minimap.tsx</code></td></tr><tr><td style="text-align:left">World Network</td><td style="text-align:left"><code>src/ui/WorldMap.tsx</code></td></tr><tr><td style="text-align:left">Research UI</td><td style="text-align:left"><code>src/ui/Research.tsx</code></td></tr><tr><td style="text-align:left">Briefing, assembly, debrief</td><td style="text-align:left"><code>src/ui/index.tsx</code></td></tr><tr><td style="text-align:left">Visual tokens</td><td style="text-align:left"><code>src/index.css</code>, <code>src/ui/ui.css</code>, <code>src/ui/tokens.ts</code></td></tr><tr><td style="text-align:left">Procedural audio</td><td style="text-align:left"><code>src/game/audio.ts</code></td></tr><tr><td style="text-align:left">Role abilities</td><td style="text-align:left"><code>src/game/abilities.ts</code></td></tr><tr><td style="text-align:left">Influence and unrest pressure</td><td style="text-align:left"><code>src/game/influence.ts</code></td></tr><tr><td style="text-align:left">Generated contracts</td><td style="text-align:left"><code>src/game/contracts.ts</code></td></tr><tr><td style="text-align:left">Event and mission forecasts</td><td style="text-align:left"><code>src/game/forecast.ts</code></td></tr><tr><td style="text-align:left">Deployment modifiers and difficulty</td><td style="text-align:left"><code>src/game/missionParams.ts</code></td></tr><tr><td style="text-align:left">Deployment mass and loadout</td><td style="text-align:left"><code>src/game/mass.ts</code></td></tr><tr><td style="text-align:left">Operative experience</td><td style="text-align:left"><code>src/game/experience.ts</code></td></tr><tr><td style="text-align:left">Recruitment market</td><td style="text-align:left"><code>src/game/recruits.ts</code></td></tr><tr><td style="text-align:left">City-ownership outcomes</td><td style="text-align:left"><code>src/game/ownership.ts</code></td></tr><tr><td style="text-align:left">Render quality tiers</td><td style="text-align:left"><code>src/game/quality.ts</code></td></tr><tr><td style="text-align:left">Tutorial copy</td><td style="text-align:left"><code>src/game/tutorial.ts</code></td></tr><tr><td style="text-align:left">Player settings</td><td style="text-align:left"><code>src/state/settingsStore.ts</code></td></tr><tr><td style="text-align:left">Local telemetry</td><td style="text-align:left"><code>src/state/telemetry.ts</code></td></tr></tbody></table></div>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="23-glossary" class="gdd-h2"><span class="h-badge">SEC</span> 23. Glossary</h2>
@@ -2668,7 +2669,7 @@
 <h2 id="24-final-design-statement" class="gdd-h2"><span class="h-badge">SEC</span> 24. Final design statement</h2>
 <p class="gdd-p">The codebase already establishes a coherent identity: a corporate geostrategy interface wrapped around an unusually readable real-time squad simulation. The tactical game’s strongest authored tension is not simple survival; it is moving four powerful operatives through a populated city while managing information, detection, fire lanes, and financial liability.</p>
 <p class="gdd-p">The two layers feed each other rather than sitting side by side. Mission outcomes move sector control and unrest, intel earned in the field opens contracts, injuries and deaths gate the next deployment, and the whole campaign survives a reload. Content matches that shell: three authored contracts across three district archetypes, an objective engine of seven kinds, eight roles that each change a tactical decision, and a strategic economy where influence and unrest have consequences.</p>
-<p class="gdd-p">What the design does not yet have is listed in section 19.3. The largest gaps are city ownership that missions can flip, operative experience, and a strategic fail state to sit opposite the campaign victory.</p>
+<p class="gdd-p">Section 19.3 is closed: missions flip city ownership, survivors gain experience, an empty roster fails the campaign, difficulty is selectable, and the strategy and mission screens carry synthesized beds.</p>
 
         </div>
       </div>

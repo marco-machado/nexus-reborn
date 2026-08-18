@@ -1,8 +1,8 @@
 # Nexus Reborn — Game Design Document
 
 **Document type:** Codebase-derived design specification  
-**Project version reviewed:** `c248aa2`  
-**Review date:** 2026-07-30  
+**Project version reviewed:** `29c27ec`  
+**Review date:** 2026-08-17  
 **Primary platform:** Desktop web browser  
 **Current implementation:** React 19, TypeScript, React Three Fiber, Three.js WebGPU/WebGL2, Zustand  
 
@@ -367,7 +367,7 @@ Influence points are earned three ways and spent on the three sector actions (se
 - **+2** more for a clean win (zero civilians hit by the squad).
 - **+1** per 12 world hours while the influence index holds above **55** (the trickle).
 
-Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v6). Every balance number lives in `src/game/influence.ts`.
+Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v7). Every balance number lives in `src/game/influence.ts`.
 
 ---
 
@@ -551,25 +551,23 @@ There is no contract cost or confirmation dialog. Accepting a contract advances 
 
 ### 11.1 Current mission space
 
-The current mission takes place in a deterministic **96×96 meter** procedural district.
+Every mission takes place in a deterministic **96×96 meter** procedural district. Three layout families share one generator, one south insertion, and the same connectivity guarantees. The visual district is reconstructed from the mission seed, so a given mission is repeatable.
 
-Fixed structural landmarks:
+Shared landmarks:
 
 - Squad insertion/extraction: south, approximately `(48, 88)`.
 - Main north-south avenue: central.
-- Checkpoint and garrison plaza: north, approximately `(48, 14)`.
 - A road and alley network divides procedural building blocks.
 - Buildings retain walkable setbacks and minimum-width alleys.
-- The generator guarantees connectivity from insertion to the checkpoint, enemies, patrol paths, and extraction.
+- The generator guarantees walkable routes from insertion to the objective landmarks, enemies, patrol paths, and extraction.
 
-Population:
+| Archetype | Used by | Base garrison | Base street patrols | Base civilians | Distinct geometry |
+|---|---|---:|---:|---:|---|
+| Checkpoint | Glass Veil; generated seizure and suppression | 6 plaza + 1 authored 80-HP longrifle marksman | 5 | 22 | Northern plaza at approximately `(48, 14)` |
+| Compound | Hollow Crown; generated extraction | 6 interior (bypassable) | 4 | 14 | Walled eastern detention block; 7 m streets |
+| Industrial | Rust Haven; generated sabotage | 4 yard guards | 3 | 8 | Fenced eastern yard; 8 m cross streets |
 
-- Four deployed operatives.
-- Seven checkpoint garrison enemies.
-- Five street patrol enemies.
-- 22 civilians.
-
-The visual district is reconstructed from the mission seed, so a given mission is repeatable.
+Threat extras, unrest extras, and HARDENED difficulty add street patrols and civilians on top of those bases (sections 12 and 17). Four operatives deploy on every mission.
 
 ### 11.2 Selection
 
@@ -773,6 +771,8 @@ This is a central expression of the collateral pillar and should remain highly l
 
 **Sidearm switching:** Every operative carries two live weapon slots, the authored primary and sidearm. `V` swaps every selected operative to its other slot. The drawn weapon cannot fire for a 0.5-second readiness delay, shown as DRAWING on the HUD. Each slot keeps its own magazine: swapping cancels an in-progress reload of the stowed weapon, its round count persists as-is and resumes when drawn again. Auto-fire, ordered attacks, engagement range, noise radius, tracers, and gunshot audio all follow the drawn weapon, and weapon research applies to sidearms exactly as to primaries. Enemies carry a single weapon and never swap. Reserve-ammo values shown in the UI are informational and do not constrain the simulation.
 
+**Grenades:** `G` arms or cancels grenade targeting. A confirmed throw spends one power cell from the shared pool, so grenades compete with cooldown resets. The throw snaps onto nearby pavement within 2.5 m, must land within 18 m of the thrower, and detonates immediately: 70 damage at the centre falling to 35 at a 3.5 m edge, only through line of sight, with a 24 m noise radius and a 4-second squad cooldown. The HUD grenade control disables when the cell pool is empty or the cooldown is running.
+
 ### 11.10 Objectives
 
 Seven objective kinds, defined as `ObjectiveKind` in `game/types.ts` and driven by data alone:
@@ -800,7 +800,11 @@ Optional objectives are the exception. An optional objective activates with the 
 ### 11.11 Win and loss
 
 **Win:** Every required objective completes. Optional objectives do not gate the win.  
-**Loss:** No living operatives remain.
+**Loss:** any of:
+
+- No living operatives remain.
+- A required escort VIP dies.
+- A required objective's `failSec` window expires.
 
 The HUD presents the result immediately. After a 2.5-second delay, the game enters the debrief.
 
@@ -809,6 +813,9 @@ The debrief reports:
 - Target.
 - Eliminations.
 - Squad casualties.
+- Killed-in-action list.
+- New injuries with recovery times.
+- Survivor experience awards.
 - Civilian collateral count.
 - Mission time.
 - Contract value when relevant.
@@ -828,8 +835,8 @@ Contract supply is the authored three plus a procedural stream.
 
 | Codename | Location | Type | Client | Threat | Reward | Archetype | Chance | ETA | Status |
 |---|---|---|---|---|---:|---|---:|---:|---|
-| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | 41% | 2 days | Playable |
-| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | 59% | 4 days | Playable; intel level 2 |
+| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | 36% | 2 days | Playable |
+| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | 57% | 4 days | Playable; intel level 2 |
 | Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | 79% | 3 days | Playable; intel level 2 |
 
 Reward and ETA are authored. Chance is not: `missionChance` in `game/missionParams.ts` derives it from threat, weather, the source sector's control and unrest, and the count of completed research, then clamps it to 35–95. The percentages above are the campaign-start figures, with no research done and the sectors at their opening values; they move as the campaign moves. At intel level 2+ the brief hides the percentage and shows the computed risk index instead (section 6.5).
@@ -843,7 +850,7 @@ ETA is spent, not displayed: the debrief advances the strategic clock by the con
 - Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.
 - Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.
 - Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.
-- The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v6), so a reload reproduces the same open contracts.
+- The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v7), so a reload reproduces the same open contracts.
 
 ### 12.2 Glass Veil
 
@@ -976,7 +983,7 @@ The industrial archetype fences a relay yard into the eastern half, between the 
 - Unlocks browser audio on the first user gesture.
 - Offers CONTINUE when a valid save exists.
 - Offers NEW OPERATION behind a two-step erase confirm.
-- Opens the SETTINGS panel (audio, controls, accessibility).
+- Opens the SETTINGS panel (audio, controls, accessibility, quality, difficulty, telemetry).
 
 #### World Network
 
@@ -985,7 +992,8 @@ The industrial archetype fences a relay yard into the eastern half, between the 
 - World time controls and 24-hour review timeline.
 - Dynamic events feed.
 - Credits, influence, operative count, and intel display.
-- Campaign-complete banner after all three contracts are won.
+- Campaign-complete banner after all three authored contracts are won.
+- Campaign-failed banner when the roster is wiped; contracts lock.
 - Navigation to Research.
 - First-visit orientation overlay naming the panel groups and the Research tab; its dismissal persists with the save.
 
@@ -1226,7 +1234,13 @@ All audio is synthesized at runtime with Web Audio:
 
 Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense combat from stacking excessive simultaneous sounds.
 
-Every voice routes through one of two channel gains (UI cues and combat) under a master gain. The SETTINGS panel carries master, UI, and combat sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.
+Every voice routes through one of four channel gains (UI cues, combat, music, and ambience) under a master gain. The SETTINGS panel carries master, UI, combat, music, and ambience sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.
+
+Two looping beds ride those extra channels:
+
+- Strategy screens start a low industrial drone on the music stage.
+- The mission starts a rain-hiss and city-hum bed on the ambience stage.
+- Both fade out when the screen that owns them unmounts.
 
 ### Current limitations
 
@@ -1245,7 +1259,7 @@ Every voice routes through one of two channel gains (UI cues and combat) under a
 
 ### Current balance model
 
-The settings panel offers STANDARD (the authored baseline) and HARDENED. HARDENED adds street patrols and civilians; it does not hide minimap information. The choice persists with player settings and survives NEW OPERATION.
+The settings panel offers STANDARD (the authored baseline) and HARDENED. HARDENED adds two street patrols and six civilians; it does not hide minimap information. The choice persists with player settings and survives NEW OPERATION.
 
 Player advantages:
 
@@ -1260,7 +1274,7 @@ Player advantages:
 
 Enemy advantages:
 
-- Numerical superiority: 12 hostiles.
+- Numerical superiority: 12 hostiles on the baseline checkpoint (7 garrison + 5 patrols) before threat extras.
 - Patrol coverage across the route.
 - Alert propagation.
 - Longrifle garrison guard.
@@ -1297,7 +1311,7 @@ Avoid increasing difficulty by removing minimap information without offering com
 | `src/world/` | Deterministic procedural city generation |
 | `src/scene/` | React Three Fiber / Three.js rendering and mission input |
 | `src/ui/` | DOM screens, HUD, minimap, briefing visualizations |
-| `src/state/` | Zustand stores for app, world, research, and low-frequency mission UI |
+| `src/state/` | Zustand stores for app, world, research, campaign, tutorial, settings, and low-frequency mission UI |
 
 ### 18.2 State boundaries
 
@@ -1306,8 +1320,8 @@ Avoid increasing difficulty by removing minimap information without offering com
 - Mission UI is synchronized at approximately 5 Hz.
 - The minimap redraws at approximately 10 Hz.
 - The strategic clock batches updates at approximately 20 Hz.
-- App, world, research, campaign, and mission UI have separate stores.
-- A save module writes the app, world, research, and campaign stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes.
+- Seven stores, split by lifetime and rate: `appStore` (flow, squad, outcome), `missionStore` (HUD, pause), `worldStore` (clock, sectors, contracts), `researchStore`, `campaignStore` (roster, injuries, recruits, campaign result), `tutorialStore`, `settingsStore`.
+- A save module writes the app, world, research, campaign, and tutorial stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes. Settings and telemetry persist under their own keys.
 
 ### 18.3 Simulation timing
 
@@ -1358,7 +1372,7 @@ A frame-time governor guards the setting. It ignores the first 8 seconds, becaus
 ### 18.7 Build and quality
 
 - The checks are `npm run lint`, `npm run test`, and `npm run build`.
-- A vitest suite (26 files, 424 tests) covers the pure layers: `src/game/`, `src/world/`, `src/state/`.
+- A vitest suite (30 files, 460 tests) covers the pure layers: `src/game/`, `src/world/`, `src/state/`.
 - Beyond unit coverage, the suite carries scenario tests: an orders-driven Glass Veil playthrough (advance, clear the garrison by weapon fire, extract, net payout) and a squad wipe driven by CorpSec fire; a cross-store economy integration test (payout minus fines, intel and influence awards, research spend gating, hiring, influence spends) holding a credits-never-negative invariant; research program sums against the authored tables and effect-stacking order; and an objective-completability sweep over the three authored missions plus all four generated-contract types (zones walkable and reachable from insertion, tagged and device sets nonempty, extraction last).
 - Saves are versioned; the loader validates a blob and discards it on any mismatch. The settings and telemetry blobs live under their own keys with their own version guards.
 - Scene and DOM screens rely on the manual click-through.
@@ -1380,7 +1394,7 @@ A frame-time governor guards the setting. It ignores the first 8 seconds, becaus
 - Graded injury recovery scaled by end-of-mission health.
 - A seeded, save-persistent recruitment market with quality-priced hires.
 - Code-derived mission briefing map.
-- One deterministic procedural tactical district.
+- Three deterministic procedural district archetypes (checkpoint, compound, industrial).
 - Real-time selection, formation movement, attack, stop, Hold Ground, and Hold Fire.
 - A* pathfinding and line-of-sight checks.
 - Patrol, suspicion, combat, hearing, vision, and alert-propagation AI.
@@ -1521,8 +1535,21 @@ Telemetry must distinguish a deliberate tactical choice from a usability failure
 | World Network | `src/ui/WorldMap.tsx` |
 | Research UI | `src/ui/Research.tsx` |
 | Briefing, assembly, debrief | `src/ui/index.tsx` |
-| Visual tokens | `src/index.css`, `src/ui/ui.css` |
+| Visual tokens | `src/index.css`, `src/ui/ui.css`, `src/ui/tokens.ts` |
 | Procedural audio | `src/game/audio.ts` |
+| Role abilities | `src/game/abilities.ts` |
+| Influence and unrest pressure | `src/game/influence.ts` |
+| Generated contracts | `src/game/contracts.ts` |
+| Event and mission forecasts | `src/game/forecast.ts` |
+| Deployment modifiers and difficulty | `src/game/missionParams.ts` |
+| Deployment mass and loadout | `src/game/mass.ts` |
+| Operative experience | `src/game/experience.ts` |
+| Recruitment market | `src/game/recruits.ts` |
+| City-ownership outcomes | `src/game/ownership.ts` |
+| Render quality tiers | `src/game/quality.ts` |
+| Tutorial copy | `src/game/tutorial.ts` |
+| Player settings | `src/state/settingsStore.ts` |
+| Local telemetry | `src/state/telemetry.ts` |
 
 ---
 
