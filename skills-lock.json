@@ -133,6 +133,12 @@
       "skillPath": "skills/disciplines/physics-tuning/SKILL.md",
       "computedHash": "9c9ef209249b49aeb8d99e4a210811f6e07ee0f18ba2f6acfaf941a355737309"
     },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "computedHash": "f602822b51bcb6d033749c60731b8f1e80f308222fcb2e4af551905a817c6e08"
+    },
     "procedural-gen": {
       "source": "gamedev-skills/awesome-gamedev-agent-skills",
       "sourceType": "github",
