@@ -861,7 +861,7 @@ The player has four operatives, full weapon damage, higher accuracy, faster weap
 
 CorpSec has numerical superiority (12 on the baseline checkpoint before extras), street-patrol coverage, awareness propagation, a longrifle garrison marksman, and civilians in the lane.
 
-**Standard** is the authored baseline. **Hardened** adds two street patrols and six civilians. It does not hide minimap information. The choice lives in player settings and survives New Operation.
+**Standard** is the authored baseline. **Hardened** adds two street patrols and six civilians, lengthens sight confirmation, raises CorpSec accuracy, adds one metre of guard vision, and tightens optional-objective windows. It does not hide minimap information. The choice lives in player settings and survives New Operation.
 
 Difficulty should turn readable knobs: sight confirmation time, accuracy and cooldown, street-patrol count and overlap, garrison mix, civilian density, economy, awareness range, optional-objective pressure. It must not turn off the minimap without giving the player a compensating tool.
 

@@ -11,6 +11,8 @@ import {
   adjacentWeather,
   clearerWeather,
   clearWeatherNote,
+  difficultyNote,
+  missionChance,
   missionClockAt,
   missionMods,
   missionPeriod,
@@ -31,9 +33,44 @@ describe('difficulty modifiers', () => {
     expect(hardened.civilianCount - standard.civilianCount).toBe(
       DIFFICULTY_FX.hardened.extraCivilians,
     )
-    expect(DIFFICULTY_FX.hardened.extraPatrol).toBeGreaterThan(0)
-    expect(DIFFICULTY_FX.hardened.extraCivilians).toBeGreaterThan(0)
+    expect(DIFFICULTY_FX.hardened.extraPatrol).toBe(2)
+    expect(DIFFICULTY_FX.hardened.extraCivilians).toBe(6)
+    expect(DIFFICULTY_FX.standard).toEqual({
+      extraPatrol: 0,
+      extraCivilians: 0,
+      sightConfirmMul: 1,
+      enemyAccMul: 1,
+      visionAdd: 0,
+      optFailMul: 1,
+    })
+    expect(standard.sightConfirmMul).toBe(1)
+    expect(standard.enemyAccMul).toBe(1)
+    expect(standard.visionAdd).toBe(0)
+    expect(standard.optFailMul).toBe(1)
+    expect(hardened.sightConfirmMul).toBe(DIFFICULTY_FX.hardened.sightConfirmMul)
+    expect(hardened.enemyAccMul).toBe(DIFFICULTY_FX.hardened.enemyAccMul)
+    expect(hardened.visionAdd).toBe(DIFFICULTY_FX.hardened.visionAdd)
+    expect(hardened.optFailMul).toBe(DIFFICULTY_FX.hardened.optFailMul)
+    expect(hardened.sightConfirmMul).toBeGreaterThan(1)
+    expect(hardened.enemyAccMul).toBeGreaterThan(1)
+    expect(hardened.visionAdd).toBeGreaterThan(0)
+    expect(hardened.optFailMul).toBeLessThan(1)
     expect(missionMods(mission, undefined, 'standard')).toEqual(standard)
+  })
+
+  it('missionChance is lower on HARDENED than STANDARD for the same mission', () => {
+    const mission = MISSIONS[0]
+    const standard = missionMods(mission)
+    const hardened = missionMods(mission, undefined, 'hardened')
+    expect(missionChance(mission, hardened, 0)).toBeLessThan(missionChance(mission, standard, 0))
+    expect(missionChance(mission, hardened, 4)).toBeLessThan(missionChance(mission, standard, 4))
+  })
+
+  it('prints HARDENED knobs in the same voice as weather notes', () => {
+    expect(difficultyNote('standard')).toBe('')
+    expect(difficultyNote('hardened')).toBe(
+      'HARDENED PROFILE. GUARD SIGHT +1M. ACCURACY UP. CONFIRM SLOW. OPTIONAL WINDOWS TIGHT.',
+    )
   })
 })
 

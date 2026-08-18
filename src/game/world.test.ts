@@ -3,13 +3,13 @@
 // tick() by hand, so no timers or real clocks are involved.
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
-import { isWalkable } from './types'
+import { ENEMY_VISION, isWalkable } from './types'
 import { createWorld } from './world'
 import { DEFAULT_SQUAD, MISSIONS, OFFICER_RADIO_DELAY, ROSTER, WEAPONS, operativeById } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
 import { contractMission } from './contracts'
 import type { ContractType, GeneratedContract } from './contracts'
-import { missionMods } from './missionParams'
+import { DIFFICULTY_FX, missionMods, weatherMul } from './missionParams'
 import { findPath, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
@@ -1413,6 +1413,61 @@ describe('timed objectives', () => {
     expect(s.objectives[0].failed).toBe(true)
     expect(s.result).toBe('none')
     expect(s.objectives[1].active).toBe(true)
+  })
+})
+
+describe('hardened difficulty', () => {
+  it('adds one metre of CorpSec vision and keeps it through a weather front', () => {
+    const add = DIFFICULTY_FX.hardened.visionAdd
+    const std = createWorld(MISSION, ops(['op1']), { mods: missionMods(MISSION) })
+    const hard = createWorld(MISSION, ops(['op1']), {
+      mods: missionMods(MISSION, undefined, 'hardened'),
+    })
+    expect(hard.vision).toBeCloseTo(std.vision + add, 10)
+    deployReset()
+    const opening = hard.vision
+    warm(hard, 150.1)
+    expect(hard.weather).toBe('light')
+    expect(hard.vision).toBeCloseTo(ENEMY_VISION * weatherMul('light').visionMul + add, 10)
+    expect(hard.vision).toBeGreaterThan(opening)
+  })
+
+  it('tightens an optional failSec window', () => {
+    const timed: MissionDef = {
+      ...MISSION,
+      weatherFront: undefined,
+      objectives: [
+        {
+          id: 'opt1',
+          label: 'PULL THE SERVER',
+          kind: 'interact',
+          zone: { x: 5, z: 5, r: 1 },
+          durationSec: 30,
+          optional: true,
+          bonusReward: 1000,
+          failSec: 10,
+        },
+        { id: 'req1', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 5, z: 5, r: 1 } },
+      ],
+    }
+    const hard = createWorld(timed, ops(['op1']), {
+      mods: missionMods(timed, undefined, 'hardened'),
+    })
+    deployReset()
+    hard.tick(STEP)
+    // Authored 10 s * 0.85 = 8.5 s. Past that the optional fails; the contract holds.
+    warm(hard, 8.6)
+    expect(useMissionStore.getState().objectives[0].failed).toBe(true)
+    expect(useMissionStore.getState().result).toBe('none')
+
+    const std = createWorld(timed, ops(['op1']), { mods: missionMods(timed) })
+    deployReset()
+    std.tick(STEP)
+    warm(std, 8.6)
+    expect(useMissionStore.getState().objectives[0].failed).toBe(false)
+    warm(std, 1.6)
+    expect(useMissionStore.getState().objectives[0].failed).toBe(true)
+    expect(useMissionStore.getState().result).toBe('none')
   })
 })
 
