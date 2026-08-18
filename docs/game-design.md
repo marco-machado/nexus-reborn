@@ -1,1104 +1,724 @@
-# Nexus Reborn — Game Design Document
+# Nexus Reborn
 
-**Document type:** Codebase-derived design specification  
-**Project version reviewed:** `29c27ec`  
-**Review date:** 2026-08-17  
-**Primary platform:** Desktop web browser  
-**Current implementation:** React 19, TypeScript, React Three Fiber, Three.js WebGPU/WebGL2, Zustand  
+**Game Design Document**
 
-## 1. Document purpose
+A living specification of the game. It describes what the player does, what the world does back, and which rules are load-bearing. It is not a tour of the repository.
 
-This document reconstructs the intended game from the current repository. It is both:
-
-1. A source-of-truth description of the playable build.
-2. A production guide for completing the larger game implied by the existing systems and interface.
-
-The following labels distinguish evidence from recommendation:
-
-- **Implemented:** Functional in the current build.
-- **Scaffolded:** Represented in data or UI, but incomplete as a game system.
-- **Recommended:** A proposed extension that closes an identified design gap.
-
-Where code and decorative UI disagree, the simulation code is treated as authoritative.
+When this document and the playable build disagree, treat the disagreement as a defect in one of them and resolve both. Do not silently let either drift.
 
 ---
 
-## 2. Executive summary
+## 1. The game
 
 ### High concept
 
-**Nexus Reborn** is a cyberpunk corporate strategy and real-time tactics game in which the player acts as an executive operations director. From a global command network, the player monitors a changing corporate world, funds weapons and augmentation research, selects contracts, assembles a four-operative strike team, and commands that team through dangerous rain-soaked city districts.
+The player is an executive operations director for **Nexus Global**. From a secure corporate command network they watch a hostile world change hands, fund a research program, accept deniable contracts, and deploy a four-operative strike team into rain-soaked city districts.
 
-The current build delivers a persistent three-contract campaign inside a broader strategic shell; all three contracts carry a full authored design across three district archetypes. Its most distinctive qualities are:
-
-- A dense, diegetic corporate command interface.
-- A four-operative real-time tactical control model.
-- Enemy awareness driven by sight, sound, investigation, and local alert propagation.
-- Civilian collateral as both a tactical risk and an economic penalty.
-- A strategic clock shared by world events and a 21-project research program.
-- A deterministic, procedural city and a no-external-assets production approach.
-- A saved campaign loop: outcomes move the world, intel opens contracts, injuries gate the roster.
-
-### Product definition
-
-| Attribute | Current definition |
-|---|---|
-| Genre | Real-time squad tactics with a strategic management layer |
-| Perspective | Fixed-angle isometric-style 3D camera |
-| Player role | Corporate Operations Director / `OPS_DIRECTOR` |
-| Setting | Corporate-controlled near-future Earth, beginning 2087.05.14 |
-| Core unit | Four cybernetically enhanced operatives |
-| Input | Keyboard and mouse |
-| Target display | Desktop, minimum 1280×720 |
-| Session structure | Strategic planning → briefing → squad assembly → tactical mission → debrief |
-| Current content | Three authored contracts plus a generated market, eight operatives, five weapons, 21 research projects |
-| Monetization | None represented in the codebase |
-| Networking | Single-player; no multiplayer systems represented |
-| Persistence | Versioned localStorage autosave; tactical mission state stays memory-only |
+The fantasy is remote command, not heroics. The player never walks the street. They read a situation, spend a few consequential orders, and live with the corporate cost of every stray round.
 
 ### Player promise
 
 > Read a hostile corporate world, invest in the right technologies, deploy the right four-person team, and execute a precise operation where every shot can change both the firefight and the contract payout.
 
----
+### Product
 
-## 3. Design pillars
+| | |
+|---|---|
+| Genre | Real-time squad tactics with a strategic management layer |
+| Perspective | Fixed-angle isometric 3D |
+| Player role | Corporate Operations Director |
+| Setting | Corporate-controlled Earth, 14 May 2087 |
+| Core unit | Four cybernetically enhanced operatives |
+| Input | Keyboard and mouse |
+| Display | Desktop browser, 1280×720 minimum |
+| Session | Plan on the network → brief → assemble → execute → debrief |
+| Content | Three authored operations, a generated contract market, eight starting operatives, five weapons, twenty-one research projects |
+| Players | Single-player |
+| Persistence | Versioned local campaign save. A mission in progress is not saved. |
+| Monetization | None |
 
-### 3.1 Command, do not micromanage
+### What this game is not
 
-The player directs a small team using selection groups, move and attack orders, and persistent tactical stances. Operatives automatically acquire visible targets when weapons are free, allowing the player to focus on positioning and tempo instead of issuing every shot.
-
-### 3.2 Information is operational power
-
-The interface exposes world unrest, corporate control, patrol routes, objective zones, enemy awareness, weapon state, and camera coverage. The intended skill is reading the situation quickly and making a small number of consequential orders.
-
-### 3.3 Violence has corporate consequences
-
-Combat is fast and noisy. Missed shots continue downrange and can strike other bodies. Civilian casualties are not merely flavor: the client deducts credits for every unique civilian hit by the squad.
-
-### 3.4 The strategic and tactical layers feed each other
-
-Contract rewards fund research. Completed research changes deployed weapon and operative statistics. The world clock advances both the corporate world and the labs.
-
-The loop now runs in both directions. Mission outcomes change sector control and unrest, flip the mission city's holder, post feed events, award intel, and unlock further contracts.
-
-### 3.5 A cohesive corporate-terminal fantasy
-
-Every surface uses the same near-black, teal, amber, and red command language. Briefings, squad assembly, research, the world map, the HUD, and the debrief should feel like different modules of one secure corporate operating system.
+- A hero shooter, stealth sim, or click-every-shot RTS.
+- A character drama. There are no cutscenes, dialogue trees, or relationship tracks.
+- A loadout locker. There is no equipment inventory, consumable shop, or account level.
+- A multiplayer or mobile game.
 
 ---
 
-## 4. Setting, tone, and narrative frame
+## 2. Design pillars
 
-### World
+Each pillar can kill a proposal. If a pillar never does, it is copy, not design.
 
-The game begins on **2087.05.14** in a world divided into corporate spheres of influence. Cities change hands through trade, seizures, raids, unrest, and infrastructure failure. **Nexus Global** operates the player’s secure global command network, holds cities, and deploys enhanced operatives on internal directives and deniable contracts for powerful corporate clients.
+### Command, do not micromanage
 
-### Player identity
+The player selects groups, places them, and sets stances. Operatives acquire visible targets on their own when weapons are free. The skill is tempo and position, not issuing every shot.
 
-The player is framed as:
+*Vetoes:* per-bullet click combat; forcing the player to babysit idle operatives who can already see a target.
 
-- User: `OPS_DIRECTOR`
-- Organization: Nexus Global
-- Clearance: Executive
-- Network: secure corporate command interface
-- Tactical asset: `STRIKE TEAM 04`
+### Information is operational power
 
-The player is not an individual operative. They are the remote decision-maker who controls funding, mission acceptance, personnel selection, and battlefield orders.
+The player is rewarded for reading the board: unrest, control, patrols, sight cones, objective zones, weapon state, camera coverage. A good order is a small order made at the right time.
 
-### Corporations and clients
+*Vetoes:* hiding the minimap as a difficulty lever; fog that exists only to pad mission length; undecorated numbers the player cannot act on.
 
-| Organization or state | Strategic function | Visual color |
+### Violence has corporate consequences
+
+Combat is fast and noisy. Missed shots continue downrange and hit whoever is in the lane. A civilian struck by the squad is a line item on the invoice, not flavor text.
+
+*Vetoes:* harmless stray fire; collateral that is narrated but not priced; making CorpSec-caused civilian harm the player's fine.
+
+### The two layers feed each other
+
+Contract money funds research. Research changes the next deployment. Mission results move the world: control, unrest, city ownership, intel, injuries, deaths. The strategic clock is the same clock that finishes labs and heals the roster.
+
+*Vetoes:* a world map that is only a mission picker; research that does not change a later firefight; a win that leaves the network looking as it did before.
+
+### One corporate operating system
+
+Every surface is a module of the same secure terminal: near-black, teal, amber, red. Briefing, assembly, research, the world map, the HUD, and the debrief are different rooms of one building.
+
+*Vetoes:* a game-UI that breaks character; a second visual language for “gameplay” versus “menu.”
+
+---
+
+## 3. Fantasy and world
+
+### The player
+
+The login is `OPS_DIRECTOR`. The organization is Nexus Global. Clearance is Executive. The tactical asset is Strike Team 04.
+
+The player funds programs, accepts work, chooses personnel, and issues battlefield orders. They are not an operative.
+
+### The world
+
+Earth in 2087 is split into corporate spheres. Cities change hands through trade, seizures, raids, unrest, and infrastructure failure. Nexus Global is both a city-holding corporation and a deniable-operations house. Rivals remain paying clients. Work Nexus signs itself is an internal directive.
+
+Story arrives as paperwork: briefing copy, the world event feed, operative dossiers, research abstracts, the in-mission comm log, objective updates, and the debrief invoice. That is the narrative system. It is complete as designed.
+
+### Corporations
+
+| Name | Role | Color |
 |---|---|---|
-| Stratos Industries | City holder and contract client/faction | Cyan |
-| Nexus Global | Player organization, city holder, and internal-directive issuer | Green |
-| Helix Corp | City holder and contract client/faction | Amber |
-| Omnicorp | City holder and CorpSec affiliation in Glass Veil | Muted teal-gray |
-| Sable Enterprises | Client for Glass Veil; no city holdings or strategic simulation identity | No faction color defined |
-| Contested | Map ownership state | Red |
-| Unknown | Unsurveyed map state | Dark teal |
+| Stratos Industries | City holder and client | Cyan |
+| Nexus Global | Player house, city holder, issuer of internal directives | Green |
+| Helix Corp | City holder and client | Amber |
+| Omnicorp | City holder; CorpSec affiliation on Glass Veil | Muted teal-gray |
+| Sable Enterprises | Client for Glass Veil | None on the map |
+| Contested | Ownership tie | Red |
+| Unknown | Unsurveyed | Dark teal |
 
-The player serves Nexus Global. It is both a city-holding corporation and a deniable-operations house: rival corporations can remain paying clients, while Nexus-signed generated work is presented as an internal directive.
+Nexus-signed generated work may target any city in its sector. An outside client is never paired with a Nexus-held city. A sector held entirely by Nexus can only post internal work.
+
+Sable has no cities and no color. That is a hole; see Open questions.
 
 ### Tone
 
-- Cold, procedural, and corporate.
-- Tactical violence described through system logs and contract language.
-- Operatives communicate in short, professional acknowledgements.
-- Civilians and collateral keep the player’s actions morally and financially legible.
-- Visual drama comes from night, rain, neon, scanlines, warning states, and sparse bloom.
-
-### Narrative delivery
-
-Narrative is currently delivered through:
-
-- Mission briefing copy.
-- World event feed.
-- Operative names, codenames, roles, and short biographies.
-- Research project descriptions.
-- In-mission comm log.
-- Objective updates.
-- Debrief statistics and payout adjustments.
-
-There are no cutscenes, dialogue trees, character relationships, or campaign chapters in the current implementation.
+Cold, procedural, corporate. Violence is logged, not celebrated. Operatives answer in short professional acknowledgements. Civilians keep the player’s fire morally and financially legible. Spectacle is night, rain, neon, scanlines, and sparse bloom.
 
 ---
 
-## 5. Game structure
-
-### Screen and state flow
+## 4. Structure of play
 
 ```mermaid
 flowchart LR
-    A["Main Menu"] --> B["World Network"]
-    B <--> C["Research Division"]
-    B --> D["Mission Brief"]
-    D --> B
-    D --> E["Operative Assembly"]
-    E --> F["Tactical Mission"]
-    F --> G["Debrief"]
-    G --> B
-    G --> D
+    Menu --> Network
+    Network <--> Research
+    Network --> Brief
+    Brief --> Network
+    Brief --> Assembly
+    Assembly --> Mission
+    Mission --> Debrief
+    Debrief --> Network
+    Debrief --> Brief
 ```
 
-### Current flow rules
+### Session rules
 
-1. The menu offers CONTINUE when a valid save exists, and NEW OPERATION behind a two-step erase confirm.
-2. The World Network opens with Europe selected.
-3. The player may inspect sectors, run the strategic clock, review world events, or enter Research.
-4. Selecting an unlocked contract opens its briefing; contracts unlock at their required intel level.
-5. Accepting the contract opens Operative Assembly.
+1. The menu offers Continue when a campaign save exists, and New Operation behind a two-step erase.
+2. The World Network opens on Europe.
+3. From the network the player inspects sectors, runs or pauses the strategic clock, reads the feed, or opens Research.
+4. An unlocked contract opens its brief. Intel level gates access.
+5. Accepting a contract goes straight to assembly. There is no buy-in and no second confirm.
 6. Exactly four operatives must be assigned before deployment.
-7. The player completes sequential objectives or loses the squad.
-8. A debrief applies the payout, the sector effects, intel, and roster changes, then returns the player onward.
-9. Strategy screens autosave; the mission and debrief never write a save.
+7. The mission ends when the required objectives are done, or when the squad is lost.
+8. The debrief applies payout, sector movement, intel, influence, and roster changes once, then returns the player to the network (or back to the brief to replay).
+9. Strategy screens autosave. The mission and the debrief do not. Aborting a mission discards it. There is no mid-operation resume.
 
-### Core loops
+The unsaved mission is a design choice, not a limitation. Once the team is on the ground, the director is committed.
 
-#### Strategic loop
+### The strategic loop
 
-1. Monitor world state and available operations.
-2. Advance or pause world time.
-3. Fund available research projects.
-4. Choose a contract.
-5. Assemble a team.
-6. Complete the mission.
-7. Receive credits, less collateral penalties.
-8. Reinvest in research.
+Monitor the world. Spend or hold time. Fund research. Take a contract. Pick four. Execute. Collect the invoice, less collateral. Reinvest.
 
-#### Tactical loop
+### The tactical loop
 
-1. Read patrols, objective markers, sight cones, and civilian positions.
-2. Select one or more operatives.
-3. Move as a formation or establish a hold position.
-4. Avoid, investigate, or deliberately trigger enemy awareness.
-5. Engage hostiles through automatic or explicit targeting.
-6. Complete the active objective.
-7. Repeat until extraction.
+Read patrols, cones, civilians, and the objective. Select. Move or hold. Choose whether to trip awareness. Engage by placement or by explicit fire. Complete the active objective. Repeat through extraction.
 
-#### Research loop
+### The research loop
 
-1. Inspect available projects and prerequisites.
-2. Commit credits to one project in a branch laboratory.
-3. Advance world time on the World Network or Research screen.
-4. Complete the project.
-5. Unlock dependent projects.
-6. Apply completed effects to future deployments.
+Inspect a branch. Commit credits to one project in that lab. Let world time run. Collect the effect on the next deployment. Unlock the next tier.
 
-#### Campaign arc
+### Campaign end
 
-The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it.
+Winning all three authored contracts marks the campaign complete. The network posts a banner. The contracts stay replayable; completion is a mark, not a lock.
 
-Losing every remaining operative is a terminal fail: the World Network posts a failure banner, contracts lock, and the campaign cannot also be marked complete. Sector crisis (section 6.2) remains recoverable pressure below that floor.
+Losing every remaining operative is a terminal fail. The network posts a failure banner, contracts lock, and the campaign cannot also be marked complete.
+
+Sector crisis is pressure below that floor. It is recoverable.
 
 ---
 
-## 6. Strategic layer
+## 5. The strategic layer
 
-### 6.1 World clock
+The World Network is the player’s job between operations. Time is a resource. Leaving it paused is a decision.
 
-**Implemented**
+### Two clocks
 
-- Start timestamp: **2087.05.14 14:32:17 UTC**.
-- At 1× speed, one real second advances 60 world seconds.
-- Available speeds: **1×, 2×, 4×, 8×**.
-- Initial speed: **2×**.
-- The clock can be paused.
-- World time advances only while the World Network or Research screen is mounted.
-- World time does not advance during the menu, briefing, squad assembly, tactical mission, or debrief.
-- The tactical mission uses its own independent clock, beginning at **22:14:08**.
-- The player can scrub and keyboard-navigate a rolling 24-hour event timeline without changing the live world state.
+**Strategic time** runs only on the World Network and Research screens. The campaign begins 14 May 2087, 14:32:17 UTC. At 1×, one real second is sixty world seconds. Speeds are 1×, 2×, 4×, and 8×; the default is 2×. The clock can be paused. A rolling 24-hour timeline can be scrubbed without changing live state.
 
-This clock is the shared authority for world events, research completion, and operative injury recovery.
+**Tactical time** is a separate night. Every mission opens at 22:14:08 on its own clock. The world does not tick while the team is in the field. After a win, the debrief spends the contract’s ETA in strategic days, and labs, injuries, and recruitment catch up to that new time.
 
-### 6.2 Continental sectors
+The clocks are independent because the director is either watching the world or running an operation, never both.
 
-| Sector | Initial control | Initial unrest | Influence weight | Status |
-|---|---:|---:|---:|---|
-| North America | 68% | 12% | 1.15 | Open |
-| South America | 41% | 24% | 0.85 | Open |
-| Europe | 62% | 18% | 1.20 | Open |
-| Africa | 37% | 28% | 0.90 | Open |
-| Asia | 55% | 16% | 1.35 | Open |
-| Oceania | 73% | 9% | 0.55 | Open |
-| Antarctica | 0% | 0% | 0.00 | Locked / no survey data |
+### Sectors
 
-Each open sector exposes:
+Six continents are open. Antarctica is locked at every intel level: no survey data.
 
-- Control.
-- Unrest.
-- Weekly tax yield.
-- Influence income.
-- Black-market impact.
-- Garrison condition.
-- Total forces.
-- Defense rating.
+| Sector | Opening control | Opening unrest | Influence weight |
+|---|---:|---:|---:|
+| North America | 68% | 12% | 1.15 |
+| South America | 41% | 24% | 0.85 |
+| Europe | 62% | 18% | 1.20 |
+| Africa | 37% | 28% | 0.90 |
+| Asia | 55% | 16% | 1.35 |
+| Oceania | 73% | 9% | 0.55 |
+| Antarctica | — | — | — |
 
-The simulation also calculates an asset count for each sector, but the current sector panel does not display it.
+Each open sector shows control, unrest, weekly tax yield, influence income, black-market impact, garrison condition, total forces, and defense rating.
 
-The **influence index** is the weighted average control of all open sectors, shown as a percentage. Beside it the player holds a spendable **influence points** balance (section 7.4). The sector panel exposes three numbered actions per sector, each with a point cost and a per-sector cooldown, disabled when unaffordable:
+**Influence index** is the weighted average control of the open sectors. Beside it sits a spendable **influence points** balance.
 
-1. **STABILIZE** (8 pts): −12 unrest applied over 6 world hours in hourly steps. 24-hour cooldown.
-2. **LOBBY** (10 pts): +8 control applied over 12 world hours in eight steps. 36-hour cooldown.
-3. **EXPEDITE** (12 pts): the sector's lowest-intel-gate open generated contract loses its intel requirement and gains 24 world hours of expiry. 24-hour cooldown.
+A sector above **60 unrest** decays: every 6 world hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it reads red, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is always reachable.
 
-Staged spends run on the strategic clock through the same time-ordered catch-up as events, so a contract ETA jump applies them exactly as continuous ticking would. Balance numbers live as data in `src/game/influence.ts`.
+Asset count and black-market impact are readouts, not verbs. Defense rating and garrison condition already feed generated-contract threat; tax yield already falls under unrest. See Open questions.
 
-A sector that holds above **60 unrest** decays: every 6 world hours it loses 1–2 control, and its tax yield readout falls with the strain (2% per unrest point above the threshold, floored at 25%). At **85+ unrest** the sector enters **CRISIS**: it reads red on the plate and the sector list, a red feed event posts, its event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is reachable.
+### Influence actions
 
-### 6.3 City ownership
+Three numbered actions per sector, each with a point cost and a per-sector cooldown. Unaffordable actions disable.
 
-**Implemented**
+| Action | Cost | Effect | Cooldown |
+|---|---:|---|---:|
+| Stabilize | 8 | −12 unrest over 6 world hours, hourly | 24 h |
+| Lobby | 10 | +8 control over 12 world hours, eight steps | 36 h |
+| Expedite | 12 | The sector’s lowest-intel open generated contract loses its intel gate and gains 24 world hours of expiry | 24 h |
 
-The world map contains 18 named cities. Each has a current corporate holder. A sector’s displayed corporate color is determined by which corporation holds the most cities in that sector; ties display as contested.
+Staged spends ride the same time-ordered catch-up as world events, so a contract ETA jump applies them exactly as continuous ticking would.
 
-Ownership can change through generated seizure events, and it now drives contract supply: the client of every generated contract is the corporation holding the most cities in its source sector (ties break in a fixed holder order), and a seizure event that flips a city re-clients that sector's open generated contracts and posts a feed note. Nexus-signed work is an internal directive and may target any city in the sector; an outside client is never paired with a Nexus-held city. An all-Nexus sector can only post internal work. A completed mission also flips the mission city's holder: a win hands the city to Nexus Global; a loss of a Nexus-held city returns it to the atlas default holder. Ownership still has no effect on research, prices, or tactical missions.
+### City ownership
 
-### 6.4 Dynamic world events
+Eighteen named cities, each with a corporate holder. A sector’s color is the corporation that holds the most of its cities; ties display as contested.
 
-**Implemented**
+Ownership changes through seizure events and through missions: a win hands the mission city to Nexus Global; a loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector’s open generated contracts and posts a feed note.
 
-Event categories:
+Ownership does not change research prices, tactical layouts, or weapon tables. It changes who is paying, and who holds the map.
 
-| Event | Typical strategic effect | Contract market effect |
+### World events
+
+Events fire every 15–45 world minutes and favor high-unrest sectors. Crisis doubles a sector’s weight.
+
+| Event | World effect | Market effect |
 |---|---|---|
-| Riot | Raises unrest and reduces control | 45% chance to spawn a linked priority suppression contract in the sector |
+| Riot | Raises unrest, reduces control | 45% chance of a linked priority suppression contract |
 | Blackout | Raises unrest | — |
-| CorpSec raid | Reduces unrest and may improve control | 35% chance to withdraw an open generated contract from the sector |
-| Trade agreement | Improves control and may reduce unrest | — |
-| Seizure | May change city ownership and alter control/unrest | A city flip re-clients the sector's open generated contracts |
+| CorpSec raid | Reduces unrest, may improve control | 35% chance to withdraw an open generated contract |
+| Trade agreement | Improves control, may reduce unrest | — |
+| Seizure | May change city ownership and control/unrest | A city flip re-clients the sector’s open generated contracts |
 
-Events occur every **15–45 world minutes** and favor high-unrest sectors; a sector in crisis draws events at **double weight** (section 6.2). The feed stores up to 40 events, displays the most recent 14 for the selected timeline point, and tracks unread events. The market probabilities live as data beside the event tables in `src/state/worldStore.ts` (`EVENT_CONTRACT_FX`); the sector and kind weight tables themselves live in `src/game/forecast.ts`, where the intel event forecast reads the same rows the generator rolls from.
+The feed also carries contract offers, priority tags, expiries, withdrawals, re-clienting, crisis entry and exit, and influence spends. It holds 40 events and shows the most recent 14 for the selected timeline point.
 
-Events also share the feed with the generated contract market: new offers, priority offers, expiries, withdrawals, and re-clienting all post `contract` events. Crisis entries and exits post `crisis` events, and influence spends post `influence` events. Contract generation, staged influence spends, unrest decay, and the influence trickle all run on the same strategic clock and the same time-ordered catch-up path as events, so a contract ETA jump lands exactly where continuous ticking would have.
+A mission result writes into this system. A win raises the sector’s control and lowers unrest. A loss does the opposite. Civilian hits add unrest. Each result posts its own feed event.
 
-At intel level 2+ the sector panel shows an **event forecast**: the chance of each event category landing in the focused sector over the next 6 world hours, derived from the shared weight tables rather than a duplicate set of constants.
+At intel 2+ the sector panel shows an **event forecast**: the chance of each category landing in the focused sector over the next 6 world hours, derived from the same weights the generator rolls.
 
-Mission results feed this system. A win raises the mission sector's control and lowers its unrest; a loss does the opposite. Each result posts its own feed event, green for a win and red for a loss, and civilian hits add unrest.
+### Intel
 
-### 6.5 Intel and contract access
+The campaign opens at intel **1**, with 25/100 progress.
 
-**Implemented**
+- A contract win awards **+40**. A clean win (no civilian hit by the squad) awards **+15** more.
+- A loss awards nothing.
+- Each 100 progress becomes the next level.
+- Hollow Crown and Rust Haven require level 2. Generated contracts gate by threat: moderate at 1, high at 2, severe at 3.
+- Expedite can waive a generated contract’s intel gate.
 
-- Initial intel level: **1**, with 25/100 progress.
-- A contract win awards **+40** progress; a clean win (zero civilians hit by the squad) awards **+15** more.
-- A lost contract awards nothing.
-- Each 100 progress rolls into the next level.
-- Every contract carries a required intel level. Hollow Crown and Rust Haven need level 2.
-- Antarctica and the unbuilt navigation tabs stay locked at every intel level.
+At intel 2+ the brief replaces a raw success percentage with a computed **risk index** (Low / Guarded / High / Severe), derived from the actual deployment: patrol, garrison, and civilian counts, weighted by enemy toughness and weather.
 
-Intel's second strategic use is forecasting. At intel level 2+:
-
-- The World Network sector panel shows the next-6-hours event risk per category for the focused sector (section 6.4).
-- The mission brief replaces the legacy projected-success percentage with a computed **risk index** (LOW / GUARDED / HIGH / SEVERE), derived in `src/game/forecast.ts` from the actual deployment build: the same patrol, garrison, and civilian counts the tactical rail lists, weighted by enemy toughness and weather.
-
-The EXPEDITE influence action (section 6.2) can waive a generated contract's intel gate.
+Intel is earned in the field and spent on access and foresight. That is its whole job.
 
 ---
 
-## 7. Economy and progression
+## 6. Economy and progression
 
-### 7.1 Credits
+Two currencies. **Credits** buy research and recruits. **Influence** buys sector actions. They do not convert.
 
-**Implemented**
+### Credits
 
-- Starting balance: **128,450 CR**.
-- Credits pay for research.
-- Successful contracts add their net payout.
-- Failed contracts pay nothing.
-- The balance cannot be overdrawn by research authorization.
+Opening balance: **128,450 CR**. Successful contracts add their net payout. Failed contracts pay nothing. Research and hiring cannot overdraw the account; the authorization simply refuses.
 
-Influence points are the second resource, earned and spent on the strategic layer alone (section 7.4).
-
-### 7.2 Collateral penalty
+### Collateral
 
 Each unique civilian hit by an operative deducts **5,000 CR** from a successful contract.
 
-Rules:
+- The fine is on the first squad-caused hit, not only on death.
+- Repeated hits to the same civilian do not stack.
+- CorpSec-caused civilian harm does not count.
+- Deductions cannot exceed the contract reward.
+- A failed mission already pays zero, so collateral cannot create debt.
 
-- The fine is assessed on the first squad-caused hit, not only on death.
-- Repeated hits to the same civilian do not add additional fines.
-- CorpSec-caused civilian damage does not count against the player.
-- Total deductions are capped at the contract reward.
-- A failed mission already pays zero, so collateral does not create debt.
+This is the corporate face of the violence pillar. The debrief must make the fine readable.
 
-### 7.3 Progression model
+### How the player gets stronger
 
-Tactical progression is research-driven:
+The next deployment is better because of what happened between operations, not because the player bought a gun.
 
-- Weapon projects modify damage, range, magazine, reload time, spread, or fire delay.
-- Crew projects add maximum health or movement speed to every deployed operative.
-- Effects stack in project-completion order.
-- Completed research is sampled when the mission is created and cannot alter an active deployment.
+- **Research** changes weapon stats or every operative’s health and speed. Effects stack in completion order. They are sampled when the mission is created and cannot change a team already on the ground.
+- **Experience** goes to survivors at debrief. Each point is +2 max HP and +0.05 m/s on the next deployment, sampled the same way.
+- **Intel** opens work and forecasts.
+- **The roster** is itself progression: the dead are gone, the injured cost world time, replacements are bought from a rolling market.
 
-Beyond research, wins raise intel and mission results move sector values (sections 6.4 and 6.5), and the roster itself is a progression surface: operatives die for good, injuries cost world time scaled by the damage taken, and replacements come from a rolling candidate market for credits (section 9.1). Survivors gain persistent experience at debrief. Each point adds +2 max HP and +0.05 m/s at the next deployment, sampled the same way research is. There is currently no:
+There is no account level, no owned equipment, and no consumable shop. Those are out of scope.
 
-- Account level.
-- Equipment ownership.
-- Consumable inventory economy.
+### Influence income
 
-### 7.4 Influence economy
-
-**Implemented**
-
-Influence points are earned three ways and spent on the three sector actions (section 6.2):
-
-- **+6** points per contract win, generated or authored.
-- **+2** more for a clean win (zero civilians hit by the squad).
-- **+1** per 12 world hours while the influence index holds above **55** (the trickle).
-
-Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v7). Every balance number lives in `src/game/influence.ts`.
+- **+6** on any contract win.
+- **+2** more for a clean win.
+- **+1** per 12 world hours while the influence index holds above **55**.
 
 ---
 
-## 8. Research program
+## 7. Research
 
-### 8.1 Research rules
+Research is the loadout system. The player does not pick guns per operative. They fund a program, and the next team goes in changed.
 
-**Implemented**
+### Rules
 
-- Three branches: Ballistics, Cybernetics, Control Systems.
-- Seven projects per branch; 21 total.
-- One lab per branch.
-- One active project per lab.
-- Up to three projects can run concurrently if each belongs to a different branch.
-- Project durations use world time.
-- Tiers require their listed prerequisite projects.
-- Credits are spent immediately when authorization succeeds.
-- Total cost of all research: **779,000 CR**.
+- Three branches, seven projects each, twenty-one total.
+- One laboratory per branch. One active project per lab. Three projects may run at once if they are in different branches.
+- Durations use strategic time. Credits are spent the moment authorization succeeds.
+- Tiers require their listed prerequisites.
+- Full program cost: **779,000 CR**.
 
-At 1× strategic speed, one world hour takes one real minute. At the default 2× speed, a two-hour project takes approximately one real minute while a strategy screen remains open.
+At default 2× strategic speed, a two-hour project takes about one real minute of network time.
 
-### 8.2 Ballistics — 248,000 CR total
+Ballistics is lethality and handling. Cybernetics is the body. Control Systems is coordination and sensors. The split is the fantasy of three labs, not three independent games.
 
-| Project | Cost | Time | Prerequisites | Applied effect |
+### Ballistics — 248,000 CR
+
+| Project | Cost | Time | Requires | Effect |
 |---|---:|---:|---|---|
-| Advanced Propellants | 16,000 | 2h | None | +12% assault-rifle damage |
-| Barrel Wear Coating | 14,000 | 2h | None | −10% spread for all squad weapons |
+| Advanced Propellants | 16,000 | 2h | — | +12% assault-rifle damage |
+| Barrel Wear Coating | 14,000 | 2h | — | −10% spread, all squad weapons |
 | Hypervelocity Core | 30,000 | 4h | Advanced Propellants | +18% longrifle damage; +10% longrifle range |
-| Caseless Ammo Feed | 26,000 | 4h | Barrel Wear Coating | +10 SMG magazine; −12% reload time for all weapons |
-| Rail Stabilization | 44,000 | 8h | Hypervelocity Core | −15% spread for all weapons |
+| Caseless Ammo Feed | 26,000 | 4h | Barrel Wear Coating | +10 SMG magazine; −12% reload, all weapons |
+| Rail Stabilization | 44,000 | 8h | Hypervelocity Core | −15% spread, all weapons |
 | Smart Fragmentation | 42,000 | 8h | Caseless Ammo Feed | +22% shotgun damage; +15% shotgun range |
-| Tungsten Sabot | 76,000 | 14h | Rail Stabilization + Smart Fragmentation | +15% damage for all weapons |
+| Tungsten Sabot | 76,000 | 14h | Rail Stabilization + Smart Fragmentation | +15% damage, all weapons |
 
-### 8.3 Cybernetics — 261,000 CR total
+### Cybernetics — 261,000 CR
 
-| Project | Cost | Time | Prerequisites | Applied effect | Augmentation bay |
+| Project | Cost | Time | Requires | Effect | Bay |
 |---|---:|---:|---|---|---|
-| Neural Interface I | 15,000 | 2h | None | −8% fire delay for all weapons | Neural |
-| Synaptic Enhancement | 17,000 | 2h | None | +0.20 m/s move speed | Chest |
-| Reflex Booster | 28,000 | 4h | Neural Interface I | −15% reload time for all weapons | Arms |
+| Neural Interface I | 15,000 | 2h | — | −8% fire delay, all weapons | Neural |
+| Synaptic Enhancement | 17,000 | 2h | — | +0.20 m/s | Chest |
+| Reflex Booster | 28,000 | 4h | Neural Interface I | −15% reload, all weapons | Arms |
 | Pain Inhibitor | 27,000 | 4h | Synaptic Enhancement | +14 max HP | Chest |
-| Neural Accelerator Mk II | 48,000 | 8h | Reflex Booster | −12% fire delay; +0.15 m/s speed | Neural |
+| Neural Accelerator Mk II | 48,000 | 8h | Reflex Booster | −12% fire delay; +0.15 m/s | Neural |
 | Subdermal Weave | 46,000 | 8h | Pain Inhibitor | +22 max HP | Chest |
-| Neural Cache Array | 80,000 | 14h | Neural Accelerator Mk II + Subdermal Weave | +18 max HP; +0.35 m/s speed | Neural |
+| Neural Cache Array | 80,000 | 14h | Neural Accelerator Mk II + Subdermal Weave | +18 max HP; +0.35 m/s | Neural |
 
-### 8.4 Control Systems — 270,000 CR total
+### Control Systems — 270,000 CR
 
-| Project | Cost | Time | Prerequisites | Applied effect | Augmentation bay |
+| Project | Cost | Time | Requires | Effect | Bay |
 |---|---:|---:|---|---|---|
-| Targeting AI Suite | 18,000 | 2h | None | −12% spread for all weapons | Arms |
-| Sensor Fusion Array | 16,000 | 2h | None | +8% range for all weapons | Neural |
-| Swarm Coordination | 29,000 | 4h | Targeting AI Suite | +0.25 m/s move speed | Legs |
+| Targeting AI Suite | 18,000 | 2h | — | −12% spread, all weapons | Arms |
+| Sensor Fusion Array | 16,000 | 2h | — | +8% range, all weapons | Neural |
+| Swarm Coordination | 29,000 | 4h | Targeting AI Suite | +0.25 m/s | Legs |
 | Threat Prediction | 31,000 | 4h | Sensor Fusion Array | +12 max HP | Neural |
 | EM Hardening | 45,000 | 8h | Swarm Coordination | +16 max HP | Legs |
-| Encryption Core | 47,000 | 8h | Threat Prediction | −10% reload time for all weapons | Arms |
-| Adaptive Command AI | 84,000 | 14h | EM Hardening + Encryption Core | −10% fire delay; +0.20 m/s speed | Neural |
+| Encryption Core | 47,000 | 8h | Threat Prediction | −10% reload, all weapons | Arms |
+| Adaptive Command AI | 84,000 | 14h | EM Hardening + Encryption Core | −10% fire delay; +0.20 m/s | Neural |
 
-### 8.5 Augmentation presentation
+### Augmentation bays
 
-The team-selection dossier has four augmentation bays:
+The assembly dossier shows four bays — Neural, Chest, Arms, Legs — and lists the latest completed project in each bay as installed hardware.
 
-- Neural.
-- Chest.
-- Arms.
-- Legs.
-
-The latest completed project associated with each bay is displayed as the installed augmentation for every operative. This is currently presentation logic: projects apply globally to the squad, not as individually installed or swappable hardware.
+That hardware is a label on a global program. Projects apply to the whole squad, not as individually installed or swappable cyberware. The diegesis is “the program upgraded the team.” Per-operative loadouts are a different game; see Open questions.
 
 ---
 
-## 9. Operative assembly
+## 8. The strike team
 
-### 9.1 Squad rules
+### Deployment rules
 
-**Implemented**
+- Roster cap: eight. The campaign starts full.
+- Every mission deploys exactly four.
+- Default four: Mara, Ghost, Dart, Torq.
+- Inspection and assignment are separate. At least one operative stays assigned while the player edits.
+- Deploy is disabled until all four bays are filled.
 
-- Roster cap: eight. The campaign starts at the cap with the authored roster.
-- Deployment size: exactly four.
-- Default squad: Mara, Ghost, Dart, Torq.
-- The player may inspect an operative without assigning them.
-- Assignment and inspection are separate controls.
-- At least one operative must remain assigned while editing the squad.
-- Deployment is disabled until all four bays are filled.
-- The assembly screen shows the live roster count (for example `6 / 8 ON FILE`); the world screen's OPERATIVES readout follows the same live roster.
+The eight are a starting roster, not a protected cast.
 
-Death and injury are enforced:
+### Death, injury, replacement
 
-- An operative killed in a mission is lost for good: the debrief removes them from the roster, lists them under KILLED IN ACTION, and the world feed posts a red loss event naming them. Their bay empties and must be refilled on the assembly screen before the next deployment.
-- A survivor who ends a mission below 35% of maximum health returns `INJURED`. Downtime scales with the missing health: 12 world hours just under the threshold, up to 48 world hours at near-death. Survivors at or above 35% stay `READY`. The debrief lists each new injury with its recovery time.
-- An `INJURED` operative cannot be assigned; the team screen disables the control and names the reason. Newly injured operatives leave the squad at debrief.
-- Recovery runs on the world clock; Raven starts `INJURED` and recovers after 24 world hours.
+A kill is permanent. The debrief removes the operative, lists them under Killed in Action, and the world feed posts a red loss naming them. Their bay is empty. The next deployment cannot leave until it is filled.
 
-Recruitment replaces losses:
+A survivor who ends a mission below 35% of maximum health returns **Injured**. Downtime scales with missing health: 12 world hours just under the threshold, up to 48 at near-death. Everyone else stays Ready. Newly injured operatives leave the squad at debrief and cannot be assigned until the world clock finishes their recovery. Raven opens the campaign Injured and recovers after 24 world hours.
 
-- The assembly screen's RECRUIT control opens the recruitment market: three procedural candidates at a time, refreshed one new candidate every 24 world hours on the same strategic clock injuries recover on.
-- A candidate carries a procedural name and codename, one of the eight roles, health and speed inside the authored roster's ranges, and the role's authored primary weapon. Portraits derive from stable hashes, so a candidate keeps one face.
-- Hiring costs 16,000–34,000 CR by candidate quality, paid from the credit account; an overdraw is refused, as is a hire past the roster cap.
-- The candidate rng is seeded and serialized with the save, so a reload continues the exact candidate sequence.
+**Recruitment** replaces losses. The assembly screen offers three procedural candidates at a time, one new candidate every 24 world hours on the same clock injuries recover on. A candidate has a stable name, face, one of the eight roles, health and speed inside the authored ranges, and that role’s primary weapon. Hiring costs 16,000–34,000 CR by quality and is refused on overdraw or a full roster.
 
-### 9.2 Operative roster
+### Starting roster
 
-The authored eight are a starting roster, not a fixed cast: deaths remove operatives permanently, and hires from the recruitment market fill the vacated bays (section 9.1). The live roster is store state covered by the versioned save.
+Speed is meters per second. Research and experience are added at deployment.
 
-| Codename | Name | Role | HP | Speed | Primary | Sidearm | Status | Intended specialty |
+| Codename | Name | Role | HP | Speed | Primary | Sidearm | Opens | Specialty |
 |---|---|---|---:|---:|---|---|---|---|
-| Mara | D. Torres | Assault | 124 | 4.6 | RFC-27 Assault | S-18 Pistol | Ready | Frontline breach and clear |
-| Ghost | L. Fernandez | Recon | 110 | 5.2 | K-9 Rattler SMG | S-18 Pistol | Ready | Intel gathering and range |
-| Dart | K. Park | Infiltrator | 98 | 5.6 | K-9 Rattler SMG | S-18 Pistol | Ready | Silent entry and close quarters |
-| Torq | M. Ivanova | Demolitions | 132 | 4.2 | M6 Breacher | S-18 Pistol | Ready | Heavy ordnance and area denial |
-| Raven | A. Okafor | Sniper | 92 | 4.4 | VK-88 Longrifle | S-18 Pistol | Injured | Precision and overwatch |
-| Slate | J. Sato | Tech | 104 | 4.8 | K-9 Rattler SMG | S-18 Pistol | Ready | Intrusion and drone control |
-| Vex | R. Volkov | Support | 118 | 4.4 | RFC-27 Assault | S-18 Pistol | Ready | Suppression and logistics |
-| Kestrel | N. Diallo | Medic | 100 | 5.0 | S-18 Pistol | S-18 Pistol | Ready | Trauma and stim protocols |
+| Mara | D. Torres | Assault | 124 | 4.6 | RFC-27 Assault | S-18 Pistol | Ready | Frontline breach |
+| Ghost | L. Fernandez | Recon | 110 | 5.2 | K-9 Rattler SMG | S-18 Pistol | Ready | Intel and range |
+| Dart | K. Park | Infiltrator | 98 | 5.6 | K-9 Rattler SMG | S-18 Pistol | Ready | Quiet close work |
+| Torq | M. Ivanova | Demolitions | 132 | 4.2 | M6 Breacher | S-18 Pistol | Ready | Breach and denial |
+| Raven | A. Okafor | Sniper | 92 | 4.4 | VK-88 Longrifle | S-18 Pistol | Injured | Overwatch |
+| Slate | J. Sato | Tech | 104 | 4.8 | K-9 Rattler SMG | S-18 Pistol | Ready | Disruption |
+| Vex | R. Volkov | Support | 118 | 4.4 | RFC-27 Assault | S-18 Pistol | Ready | Tempo and logistics |
+| Kestrel | N. Diallo | Medic | 100 | 5.0 | S-18 Pistol | S-18 Pistol | Ready | Trauma |
 
-Speed is measured in world meters per second. Research bonuses are added at deployment.
+### Roles
 
-### 9.3 Role implementation status
+Every role has one active and one passive. Q fires the actives of the current selection. Actives cool down for 25–45 seconds. A targeted active that finds no target reports on the comm log and keeps its cooldown.
 
-**Implemented**
+A role that does not change a tactical decision is unfinished.
 
-Every role carries one active ability and one always-on passive, both defined as data in `src/game/abilities.ts`. Q triggers the actives of the current selection; the HUD ability bar carries one per-operative button. Actives cool down for 25–45 seconds; a targeted active that finds no target reports on the comm log and keeps its cooldown.
-
-| Role | Active (cooldown) | Active effect | Passive |
+| Role | Active | Effect | Passive |
 |---|---|---|---|
-| Assault | Overdrive (30 s) | Fire delay halved for 6 s | +10% weapon damage on both slots |
-| Recon | Pulse Scan (35 s) | All enemies and their sight cones on the minimap for 8 s | Enemies within 16 m are marked on the minimap even when calm |
+| Assault | Overdrive (30 s) | Fire delay halved for 6 s | +10% weapon damage, both slots |
+| Recon | Pulse Scan (35 s) | All enemies and their sight cones on the minimap for 8 s | Enemies within 16 m are marked even when calm |
 | Infiltrator | Ghost Veil (35 s) | Enemies cannot gain vision awareness of this operative for 6 s; hearing still works | Enemy vision certainty builds 25% slower against this operative |
-| Demolitions | Frag Charge (40 s) | Thrown under the nearest enemy within 10 m; after 1 s deals 60 damage in a 3 m radius, with a large noise and an impact flash | Takes 15% less damage |
-| Sniper | Deadeye (30 s) | The next shot within 10 s cannot miss and deals double damage | +15% weapon range on both slots |
-| Tech | EM Burst (35 s) | Enemies within 8 m drop to suspicious, lose their target and cannot fire for 4 s | Squad ability cooldowns run 15% faster while this operative lives |
+| Demolitions | Frag Charge (40 s) | Thrown under the nearest enemy within 10 m; after 1 s deals 60 damage in a 3 m radius, loud, with an impact flash | Takes 15% less damage |
+| Sniper | Deadeye (30 s) | Next shot within 10 s cannot miss and deals double damage | +15% weapon range, both slots |
+| Tech | EM Burst (35 s) | Enemies within 8 m drop to suspicious, lose their target, and cannot fire for 4 s | Squad ability cooldowns run 15% faster while this operative lives |
 | Support | Suppression Sweep (30 s) | For 6 s, enemies within 12 m and line of sight move at half speed | Operatives within 6 m reload 20% faster |
 | Medic | Field Stim (25 s) | Heals the most wounded living operative within 8 m by 40 HP, never above max | Living operatives within 6 m regenerate 1 HP/s up to half their maximum |
 
-Roles and loadout feed the usable item stock, fixed for the whole mission at deployment:
+### Items
 
-- Base squad: two med kits and one power cell.
-- Medic: +2 med.
-- Support: +1 med.
-- Tech: +1 cell.
-- Each filled loadout slot on a deployed operative: +1 of its item.
+Med kits and power cells are squad-shared pools, fixed at deployment.
 
-Both pools are squad-shared consumables. A med kit (E, or the HUD ITEMS button) heals the most wounded selected operative by 50 HP, never above max; with nobody selected wounded it reports on the comm log and spends nothing. A power cell (R) instantly finishes the first selected operative's running role-ability cooldown, with the same comm-log refusal when no cooldown runs. Power cells also arm grenades (G), so the cell pool is contested between the two uses.
+- Base team: two med kits, one power cell.
+- Medic +2 med. Support +1 med. Tech +1 cell.
+- Each filled loadout slot on a deployed operative adds one of its item.
 
-Stat passives (assault damage, sniper range) are applied to the weapon copies at deployment, after research, so both slots carry them; the rest are checked live in the simulation.
+A med kit heals the most wounded selected operative by 50 HP, never above max. A power cell instantly finishes the first selected operative’s running ability cooldown. Power cells also arm grenades, so the cell pool is contested.
 
-### 9.4 Deployment mass
+Empty or invalid use reports on the comm log and spends nothing.
 
-Squad mass is a real deployment constraint, computed by `src/game/mass.ts` from the same numbers the mission uses:
+### Deployment mass
+
+Mass is a real gate, not a flavor number.
 
 - 60 kg base per operative.
-- Both weapon slots' authored masses (assault 4.2, SMG 3.1, pistol 1.2, longrifle 6.8, shotgun 4.9 kg).
-- 0.25 kg per max-HP point above 90, so research max-HP projects add plating mass.
-- 8 kg per loaded MED KIT and 6 kg per POWER CELL.
+- Authored weapon masses: assault 4.2, SMG 3.1, pistol 1.2, longrifle 6.8, shotgun 4.9.
+- 0.25 kg per max-HP point above 90, so health research is also plating.
+- 8 kg per med kit, 6 kg per power cell.
 
-Each operative carries up to two extra item slots, chosen on the assembly screen and persisted by the versioned save; filled slots add their items to the mission pools. The 400 kg limit blocks deployment: the deploy button disables and names the overage. Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 kg every operative moves +0.15 m/s faster, over 380 kg 0.15 m/s slower. The assembly screen shows the active tier next to the mass readout.
+Each operative has two extra item slots on the assembly screen. Filled slots add their items to the mission pools.
 
----
+**400 kg** blocks deployment. The button names the overage.
 
-## 10. Mission briefing and contract selection
-
-### Briefing purpose
-
-The Mission Brief converts strategic data into an operational plan. It includes:
-
-- Contract identity, client, type, threat, and reward.
-- Narrative briefing and mission notes.
-- Sequential objective list.
-- Collateral tolerance.
-- Satellite-style recon image.
-- A tactical map generated from the same city layout used by the mission.
-- Insertion, target, extraction, patrol, and hostile-zone overlays.
-- Estimated civilian, patrol, garrison, route, block, and street counts.
-
-### Contract acceptance
-
-There is no contract cost or confirmation dialog. Accepting a contract advances directly to team selection. The contract remains replayable after success or failure.
+Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 kg, +0.15 m/s; over 380 kg, −0.15 m/s. The assembly screen shows the active tier beside the mass readout.
 
 ---
 
-## 11. Tactical mission design
+## 9. Contracts
 
-### 11.1 Current mission space
+A contract is a night of work with a client, a city, a threat, a reward, and an ETA. Accepting it is free. After the mission, the debrief spends the ETA as strategic days.
 
-Every mission takes place in a deterministic **96×96 meter** procedural district. Three layout families share one generator, one south insertion, and the same connectivity guarantees. The visual district is reconstructed from the mission seed, so a given mission is repeatable.
+Authored chance is not a static field. It is derived from threat, weather, the source sector’s control and unrest, and completed research, then clamped to 35–95. At intel 2+ the brief hides the percentage and shows the risk index instead.
 
-Shared landmarks:
+### Authored operations
 
-- Squad insertion/extraction: south, approximately `(48, 88)`.
-- Main north-south avenue: central.
-- A road and alley network divides procedural building blocks.
-- Buildings retain walkable setbacks and minimum-width alleys.
-- The generator guarantees walkable routes from insertion to the objective landmarks, enemies, patrol paths, and extraction.
+Opening-campaign figures, no research done, sectors at their starting values:
 
-| Archetype | Used by | Base garrison | Base street patrols | Base civilians | Distinct geometry |
+| Codename | City | Type | Client | Threat | Reward | District | Opens at | ETA |
+|---|---|---|---|---|---:|---|---|---:|
+| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | Intel 1 | 2 days |
+| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | Intel 2 | 4 days |
+| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | Intel 2 | 3 days |
+
+Contracts remain replayable after success or failure. That is the current economy. It is also an open question: the full research tree costs 779,000 CR, Glass Veil pays 85,000, and nothing diminishes a replay.
+
+### Generated market
+
+Beside the authored three, the network keeps up to three generated contracts. A new one rolls every 2–6 world hours when below target, weighted toward high unrest or low control.
+
+- Threat comes from the sector’s defense rating and garrison.
+- Reward comes from threat and influence weight, 30,000–95,000 CR on a 500 CR grid.
+- Client comes from city ownership.
+- Type is seizure, extraction, sabotage, or riot-linked suppression.
+- Each type maps to a district archetype and a full objective set built from the shared primitives. Enemy counts scale with threat.
+- Unaccepted offers expire after 24–48 world hours (priority 8–16) and post a feed line.
+- A fulfilled or failed generated contract applies the standard debrief consequences and leaves the market.
+
+Generated work is first-class content, not filler. The authored three are the campaign spine; the market is the world’s ongoing demand.
+
+### The brief
+
+The brief is the translation from strategy into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the sequential objectives, collateral tolerance, a recon image, and a tactical map built from the same city the mission will use: insertion, target, extraction, patrols, hostile zones, and estimated civilian and force counts.
+
+If the brief’s geometry does not match the deployed city, the brief is wrong.
+
+---
+
+## 10. The tactical mission
+
+Every mission is a night in a deterministic **96 × 96 meter** district. Three layout families share one generator, one southern insertion, and the same connectivity guarantees. The seed rebuilds the same city.
+
+Shared landmarks: insertion and extraction on the south, near (48, 88); a central north-south avenue; a road and alley grid with walkable setbacks. The generator guarantees walkable routes from insertion to the objective landmarks, the enemies, the patrol paths, and extraction.
+
+| Archetype | Used by | Base garrison | Base street patrols | Base civilians | Geometry |
 |---|---|---:|---:|---:|---|
-| Checkpoint | Glass Veil; generated seizure and suppression | 6 plaza + 1 authored 80-HP longrifle marksman | 5 | 22 | Northern plaza at approximately `(48, 14)` |
-| Compound | Hollow Crown; generated extraction | 6 interior (bypassable) | 4 | 14 | Walled eastern detention block; 7 m streets |
+| Checkpoint | Glass Veil; generated seizure and suppression | 6 plaza + 1 authored 80-HP longrifle | 5 | 22 | Northern plaza near (48, 14) |
+| Compound | Hollow Crown; generated extraction | 6 interior, bypassable | 4 | 14 | Walled eastern detention block; 7 m streets |
 | Industrial | Rust Haven; generated sabotage | 4 yard guards | 3 | 8 | Fenced eastern yard; 8 m cross streets |
 
-Threat extras, unrest extras, and HARDENED difficulty add street patrols and civilians on top of those bases (sections 12 and 17). Four operatives deploy on every mission.
+Threat extras, unrest extras, and Hardened add street patrols and civilians on top of those bases. Four operatives deploy every time.
 
-### 11.2 Selection
+### Player verbs
 
-**Implemented**
+The mission opens with every living operative selected. The dead are never valid order recipients.
 
-- Left click selects one operative.
-- Shift + left click adds or removes an operative from selection.
-- Left drag box-selects all living operatives whose projected center falls inside the marquee.
-- Shift + drag adds to the existing selection.
-- Left click on empty ground clears selection.
-- Left click on an enemy preserves the current selection.
-- Number keys 1–4 select one squad slot.
-- `0` or backtick selects all living operatives.
-- Backspace clears selection.
-- The mission begins with all living operatives selected.
-- Dead operatives are automatically excluded from future order recipients.
+**Select.** Left click one. Shift-click to add or remove. Drag a box; shift-drag adds. Click empty ground to clear. Clicking an enemy does not clear. Keys 1–4 pick a slot. 0 or backtick picks everyone living. Backspace clears.
 
-### 11.3 Orders and stances
+**Move.** Right click ground. Selected operatives walk to a compact ring so they do not stack. A move clears explicit targeting and releases Hold Ground. Along the route, operatives stop to engage visible enemies when weapons are free, then resume.
 
-#### Move
+**Attack.** Right click a living hostile. They chase until they have line of sight and range. Explicit attack overrides Hold Fire. Hold Ground prevents the chase but keeps the target.
 
-Right click on the ground sends selected operatives to a compact spread around the destination.
+**Stop.** Clears pathing and targeting. Stances stay.
 
-- Group destinations use a ring formation so agents do not stack.
-- A move order clears explicit targeting.
-- A move order releases Hold Ground.
-- Operatives automatically stop and engage visible enemies along the route when weapons are free, then resume moving.
+**Hold Ground.** Pins the operative. An active path is parked and restored on release. Separation will not shove a held operative off their tile. They may still fire.
 
-#### Attack
+**Hold Fire.** Clears automatic targets. The operative will not auto-acquire. A later explicit attack still fires.
 
-Right click on a living hostile assigns it as an explicit target.
+These five plus the ability key are the whole command language. New verbs need a pillar reason.
 
-- Operatives chase until line of sight and range are available.
-- Explicit attack orders override Hold Fire.
-- Hold Ground prevents chasing but does not cancel the target.
+### Movement
 
-#### Stop
+Eight-direction pathfinding on a one-meter walk grid. No diagonal corner cutting. Paths straighten when line of sight allows. Blocked clicks snap to the nearest walkable cell. Units slide on a valid axis when a step is blocked, and living bodies separate so they do not overlap. There is no rigid-body physics.
 
-`X` clears pathing and targeting for the selected operatives. Hold Ground and Hold Fire flags remain unchanged.
+### Camera
 
-#### Hold Ground
+Fixed 45° yaw, 55° elevation, 25° field of view. Zoom 44–115 meters. Pan from the keyboard or the minimap. Recenter on the living squad. Buildings that hide operatives or important ground fade to ghost shells.
 
-`H` toggles Hold Ground for the selection.
+The camera does not rotate or tilt in play. Up on the minimap is up on the screen. That shared orientation is load-bearing.
 
-- The operative is pinned in place.
-- An active path is parked and restored when the hold is released.
-- Separation does not push a held operative out of position.
-- The operative may still fire.
+### The opposing force
 
-#### Hold Fire
+CorpSec has three states: **patrol** (authored route, reduced speed), **suspicious** (last seen or heard point, then a scan), **combat** (pursue and fire).
 
-`C` toggles Hold Fire for the selection.
+Four archetypes:
 
-- Automatic targets are cleared.
-- The operative does not auto-acquire.
-- A later explicit attack order still fires.
-
-### 11.4 Movement and navigation
-
-**Implemented**
-
-- Eight-direction A* pathfinding on a one-meter walk grid.
-- Diagonal corner cutting is forbidden.
-- Paths are straightened when line of sight permits.
-- Blocked destinations snap to the nearest walkable cell.
-- Units slide along a valid axis when collision geometry blocks a full movement step.
-- Local separation keeps living units from overlapping.
-- There is no rigid-body physics system.
-
-### 11.5 Camera
-
-**Implemented**
-
-- Fixed 45° yaw.
-- 55° elevation.
-- Perspective field of view: 25°.
-- Zoom distance: 44–115 meters.
-- Keyboard and minimap panning.
-- Smooth damping.
-- Recenter on the living squad.
-- Buildings that obscure operatives or important ground fade to transparent ghost shells.
-
-The camera cannot rotate or tilt during play.
-
-### 11.6 Enemy perception
-
-Enemy behavior uses three states:
-
-1. **Patrol:** follows authored patrol points at reduced speed.
-2. **Suspicious:** moves to the last seen or heard location, then scans.
-3. **Combat:** pursues and attacks visible operatives.
-
-#### Archetypes
-
-Every enemy carries one of four archetypes, defined in `ENEMY_ARCHETYPES` (`game/data.ts`) and assigned by the city generator:
-
-| Archetype | Base HP | Speed | Distinct behavior |
+| Archetype | HP | Speed | Distinct behavior |
 |---|---|---|---|
-| Trooper | 60 | 4.2 | Baseline; every street patrol and wave unit |
-| Heavy | 100 | 3.2 | Takes 15% less damage, walks a shotgun in |
-| Marksman | 70 | 4.0 | Longrifle; backpedals when a target closes inside 8 m |
-| Officer | 70 | 4.4 | Radios nearby guards onto the squad (below) |
+| Trooper | 60 | 4.2 | Baseline. Every street patrol and wave unit. |
+| Heavy | 100 | 3.2 | Takes 15% less damage. Walks a shotgun in. |
+| Marksman | 70 | 4.0 | Longrifle. Backpedals when a target closes inside 8 m. |
+| Officer | 70 | 4.4 | Radios nearby guards onto the squad. |
 
-Threat rating sets the elite mix through the mission modifiers: MODERATE fields none, HIGH upgrades one garrison member to a heavy, SEVERE fields one heavy and one officer. Upgraded members keep their posts and patrols. The checkpoint's authored longrifle guard is the one authored marksman, and its 80 HP override outranks the archetype base.
+Threat sets the elite mix: Moderate fields none; High upgrades one garrison member to a heavy; Severe fields one heavy and one officer. Upgraded members keep their posts. The checkpoint’s authored longrifle is the one authored marksman; its 80 HP outranks the archetype base.
 
-**Officer radio:** four seconds after an officer enters combat, every guard within 22 m that is not already fighting is put on the squad's last seen position at investigation-level awareness. Killing the officer inside the delay cancels the call, and so does calming it down (an EM burst works). Officers wear an amber chest lamp; heavies read by their bulk, marksmen by their lean frame.
+**Officer radio.** Four seconds after an officer enters combat, every guard within 22 m that is not already fighting is put on the squad’s last seen position at investigation-level awareness. Killing the officer inside the delay — or calming them, for example with an EM burst — cancels the call. Officers wear an amber chest lamp. Heavies read by bulk. Marksmen read by a lean frame.
 
-#### Vision
+**Vision.** 14 m in clear weather, 12.6 m in light rain, 11.2 m in heavy rain. 110° cone. 4.5 m omnidirectional notice, weather-invariant. Vision needs clear grid line of sight. Certainty takes about 0.45 s up close and about 1.7 s at maximum range.
 
-- Maximum vision range: **14 m** in clear weather, **12.6 m** under light rain, **11.2 m** under heavy rain.
-- Vision cone: **110° total**.
-- Omnidirectional notice radius: **4.5 m**. Weather does not change it.
-- Vision requires clear grid line of sight.
-- Continuous sight required for certainty:
-  - Approximately 0.45 seconds at close range.
-  - Up to approximately 1.7 seconds at maximum vision range.
+**Hearing.** Gunshots make noise that passes through walls. Noise supplies a location, not a target. Sound alone can raise awareness only to 85%: investigation, not fire. Louder weapons shout farther.
 
-#### Hearing
+**Alert.** A guard can alert another within 9 m if they can see each other. Combat awareness does not propagate through walls. After six seconds without sight, a guard falls back to suspicious investigation, not straight to patrol. Awareness decays when no evidence arrives.
 
-- Gunshots create noise events.
-- Hearing passes through walls.
-- Noise supplies a location, not a target.
-- Sound alone can raise awareness only to 85%, causing investigation but not immediate firing.
-- Weapon noise radius increases with range and damage.
+### Civilians
 
-#### Alert propagation
+Civilians wander when calm. Gunfire within 10 m makes them flee for five seconds after the latest nearby shot, at +50% speed. A direct hit forces a flee from the shooter. Either side can injure or kill them.
 
-- A guard can alert another guard within 9 m when they have line of sight to each other.
-- Combat awareness does not propagate through walls.
-- After losing sight for six seconds, a guard returns to suspicious investigation rather than directly to patrol.
-- Awareness decays when no evidence is received.
+They exist to complicate fire lanes and to price the invoice. Placement that makes collateral feel arbitrary is a content bug.
 
-### 11.7 Civilian behavior
+### Combat
 
-**Implemented**
+Combat is real-time and resolves itself after the player’s placement and targeting decisions.
 
-- Civilians wander locally when calm.
-- Gunfire within 10 m causes them to flee.
-- Flee behavior lasts five seconds after the latest nearby shot.
-- Fleeing civilians move 50% faster.
-- A direct hit forces the civilian to flee from the shooter.
-- Civilians can be injured or killed by either side.
+A shot requires a living shooter, a drawn weapon, a round in the magazine, no reload in progress, a finished cooldown, the target in range, and line of sight.
 
-### 11.8 Combat model
+Hit chance is approximately `(0.78 − 0.28 × distance/range + jitter) × accuracy`, clamped 5–95%. Operative accuracy is 1.0. CorpSec accuracy is 0.45. Weapon spread shapes the path of a miss; it is not the hit roll.
 
-Combat is real-time and automatically resolved after positioning and targeting decisions.
+Operatives deal full weapon damage. CorpSec deals 70% and fires at 1.75× the authored cooldown. Magazines reload from an unlimited reserve.
 
-#### Fire prerequisites
+**Missed rounds continue** along the shot lane to weapon range. The first living body in that lane before cover is hit, regardless of faction. Friendlies, civilians, and other enemies are all legal. Cover stops the lane.
 
-The shooter must:
+Tracers, the comm log, and the debrief must make this readable. If stray fire is invisible, the pillar is broken.
 
-- Be alive.
-- Have a weapon.
-- Have ammunition in the current magazine.
-- Not be reloading.
-- Have completed the weapon cooldown.
-- Have the target in range.
-- Have line of sight.
+### Weapons
 
-#### Accuracy
-
-Base hit chance is approximately:
-
-`(0.78 − 0.28 × distance/range + random jitter) × accuracy multiplier`
-
-The result is clamped between 5% and 95%.
-
-- Operative accuracy multiplier: 1.0.
-- CorpSec accuracy multiplier: 0.45.
-- Weapon spread affects the path of missed shots, not the initial hit-roll formula.
-
-#### Damage and fire rate
-
-- Operatives deal the weapon’s full damage.
-- CorpSec deals 70% of weapon damage.
-- CorpSec weapon cooldowns are 1.75× longer than authored weapon cooldowns.
-- Magazines automatically reload from an unlimited implicit reserve.
-
-#### Misses and stray fire
-
-Missed rounds continue along the shot lane to weapon range. The first living body intersected before cover can be hit, regardless of faction.
-
-Consequences:
-
-- Civilians can be hit by misses.
-- Other operatives can be hit by friendly stray fire.
-- Enemies can hit civilians or other enemies with stray fire.
-- Cover blocks the continued shot lane.
-
-This is a central expression of the collateral pillar and should remain highly legible through tracers, logs, and debrief feedback.
-
-### 11.9 Weapons
-
-| Weapon | Damage | Range | Fire delay | Magazine | Reload | Spread | Tactical identity |
+| Weapon | Damage | Range | Delay | Mag | Reload | Spread | Job |
 |---|---:|---:|---:|---:|---:|---:|---|
 | RFC-27 Assault | 11 | 16 m | 0.16 s | 30 | 1.7 s | 0.045 | Flexible sustained fire |
-| K-9 Rattler SMG | 7 | 12 m | 0.09 s | 40 | 1.9 s | 0.080 | High-volume close combat |
+| K-9 Rattler SMG | 7 | 12 m | 0.09 s | 40 | 1.9 s | 0.080 | High-volume close work |
 | S-18 Pistol | 10 | 11 m | 0.45 s | 12 | 1.2 s | 0.030 | Accurate light sidearm |
-| VK-88 Longrifle | 46 | 26 m | 1.60 s | 5 | 2.6 s | 0.008 | Precision long-range elimination |
-| M6 Breacher | 26 | 8 m | 0.90 s | 6 | 2.2 s | 0.120 | Short-range burst damage |
+| VK-88 Longrifle | 46 | 26 m | 1.60 s | 5 | 2.6 s | 0.008 | Precision elimination |
+| M6 Breacher | 26 | 8 m | 0.90 s | 6 | 2.2 s | 0.120 | Short-range burst |
 
-**Sidearm switching:** Every operative carries two live weapon slots, the authored primary and sidearm. `V` swaps every selected operative to its other slot. The drawn weapon cannot fire for a 0.5-second readiness delay, shown as DRAWING on the HUD. Each slot keeps its own magazine: swapping cancels an in-progress reload of the stowed weapon, its round count persists as-is and resumes when drawn again. Auto-fire, ordered attacks, engagement range, noise radius, tracers, and gunshot audio all follow the drawn weapon, and weapon research applies to sidearms exactly as to primaries. Enemies carry a single weapon and never swap. Reserve-ammo values shown in the UI are informational and do not constrain the simulation.
+Every operative carries a primary and a sidearm. V swaps the selection. The drawn weapon cannot fire for 0.5 s (the HUD reads Drawing). Each slot keeps its own magazine; swapping cancels an in-progress reload of the stowed weapon and resumes its count when drawn again. Auto-fire, ordered attacks, engagement range, noise, tracers, and gunshot audio follow the drawn weapon. Research applies to both slots. Enemies carry one weapon and never swap. Reserve-ammo numbers in the UI are informational.
 
-**Grenades:** `G` arms or cancels grenade targeting. A confirmed throw spends one power cell from the shared pool, so grenades compete with cooldown resets. The throw snaps onto nearby pavement within 2.5 m, must land within 18 m of the thrower, and detonates immediately: 70 damage at the centre falling to 35 at a 3.5 m edge, only through line of sight, with a 24 m noise radius and a 4-second squad cooldown. The HUD grenade control disables when the cell pool is empty or the cooldown is running.
+**Grenades.** G arms or cancels targeting. A confirmed throw spends one power cell, snaps onto nearby pavement within 2.5 m, must land within 18 m, and detonates immediately: 70 damage at centre falling to 35 at a 3.5 m edge, line of sight only, 24 m noise, 4 s squad cooldown. Empty cells or a running cooldown disable the control.
 
-### 11.10 Objectives
+### Objectives
 
-Seven objective kinds, defined as `ObjectiveKind` in `game/types.ts` and driven by data alone:
+Seven kinds. An objective names a zone or resolves one from the city’s landmarks; authored data never carries coordinates the generator owns.
 
 | Kind | Completes when |
 |---|---|
-| `reach-zone` | Any living operative enters the radius |
-| `eliminate-tag` | No living enemy with the tag remains |
-| `extract` | Every surviving operative is inside the extraction radius |
-| `interact` | The channel at the point reaches `durationSec` |
-| `escort` | Every vip is alive and inside the target zone |
-| `destroy` | No device with the tag is left alive |
-| `defend` | The hold timer at the zone reaches zero |
+| Reach zone | Any living operative enters the radius |
+| Eliminate tag | No living enemy with the tag remains |
+| Extract | Every surviving operative is inside the extraction radius |
+| Interact | The channel at the point reaches its duration |
+| Escort | Every VIP is alive and inside the target zone |
+| Destroy | No device with the tag remains |
+| Defend | The hold timer at the zone reaches zero |
 
-An objective names its zone directly or resolves one from `CityData.landmarks`, so authored data never carries coordinates the generator owns. A `defend` objective also carries a `WaveSpec`: a unit count, a weapon list, and named entry landmarks. The wave spawns when the objective activates.
+Interact and defend advance only while a living operative stands in the zone. An empty zone pauses; it does not reset. A dead VIP voids every unfinished escort. An optional destroy whose device dies to non-squad fire fails rather than completing.
 
-`interact` and `defend` share one timing rule: the channel or the hold advances only while a living operative stands in the zone, and an empty zone pauses it where it stands rather than resetting it. A dead vip voids every unfinished `escort`. An optional `destroy` whose device dies to non-squad fire fails rather than completing.
+Defend carries a wave: unit count, weapons, and named entry landmarks. The wave spawns when the objective activates.
 
-An objective may also carry `failSec`, a time limit counted from activation. The HUD shows the countdown on the objective row. Expiry fails an optional objective and loses the mission on a required one. Hollow Crown's server pull is the one authored use: the wipe starts when the gate objective completes and closes the bonus 90 seconds later.
+An objective may carry a time limit from activation. Expiry fails an optional objective and loses the mission on a required one.
 
-Required objectives are strictly sequential. A later required objective cannot complete early.
+Required objectives are strictly sequential. Optional objectives activate with the required objective they precede, never block the sequence, and pay a bonus on top of the contract. Ignoring or failing an optional costs nothing.
 
-Optional objectives are the exception. An optional objective activates with the required objective it precedes in the list, never blocks the sequence, and pays `bonusReward` on top of the contract when it completes. A failed or ignored optional objective costs nothing.
+### Win and loss
 
-### 11.11 Win and loss
+**Win:** every required objective completes. Optionals do not gate the win.
 
-**Win:** Every required objective completes. Optional objectives do not gate the win.  
-**Loss:** any of:
+**Loss:** no living operatives remain; a required escort VIP dies; or a required time limit expires.
 
-- No living operatives remain.
-- A required escort VIP dies.
-- A required objective's `failSec` window expires.
-
-The HUD presents the result immediately. After a 2.5-second delay, the game enters the debrief.
-
-The debrief reports:
-
-- Target.
-- Eliminations.
-- Squad casualties.
-- Killed-in-action list.
-- New injuries with recovery times.
-- Survivor experience awards.
-- Civilian collateral count.
-- Mission time.
-- Contract value when relevant.
-- Optional bonus when an optional objective completed.
-- Collateral penalty when relevant.
-- Contract ETA spent as world time.
-- Net payout.
-- New account balance.
+The HUD shows the result immediately. After 2.5 seconds the game enters the debrief, which reports target, eliminations, squad casualties, the KIA list, new injuries and recovery times, survivor experience, civilian collateral, mission time, contract value, optional bonus, collateral penalty, ETA spent, net payout, and the new balance.
 
 ---
 
-## 12. Current content catalogue
+## 11. The three authored nights
 
-### 12.1 Contracts
+Each authored operation is a designed problem, not a reskin. Generated contracts reuse the archetypes and the objective vocabulary; they do not replace these three as the campaign’s argument.
 
-Contract supply is the authored three plus a procedural stream.
+### Glass Veil — open the district
 
-| Codename | Location | Type | Client | Threat | Reward | Archetype | Chance | ETA | Status |
-|---|---|---|---|---|---:|---|---:|---:|---|
-| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | 36% | 2 days | Playable |
-| Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | 57% | 4 days | Playable; intel level 2 |
-| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | 79% | 3 days | Playable; intel level 2 |
+Sable wants District 07 opened for an asset transfer at 23:00. Omnicorp CorpSec has sealed it behind a checkpoint. The team inserts on the south perimeter and advances through market blocks under heavy rain.
 
-Reward and ETA are authored. Chance is not: `missionChance` in `game/missionParams.ts` derives it from threat, weather, the source sector's control and unrest, and the count of completed research, then clamps it to 35–95. The percentages above are the campaign-start figures, with no research done and the sectors at their opening values; they move as the campaign moves. At intel level 2+ the brief hides the percentage and shows the computed risk index instead (section 6.5).
+Heavy rain is the squad’s ally: the largest sight penalty in the game, which is why a Severe contract is still workable. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Collateral tolerance is low. Severe threat adds three extra street patrols (four if unrest is high), scales enemy health to 1.2 (1.25 if control is above 60), and upgrades one garrison member to an officer and one to a heavy.
 
-ETA is spent, not displayed: the debrief advances the strategic clock by the contract's `etaDays`, so a long contract costs world time that research and injury recovery run through.
+1. Reach the checkpoint gate.
+2. Eliminate the seven-garrison (street patrols are optional unless they threaten the team).
+3. Extract south.
 
-**Generated contracts** (`src/game/contracts.ts`) keep the market stocked beside the authored three:
+The night is a read-and-commit: bypass or break eight street patrols, keep fleeing civilians out of the lane, breach the northern plaza, and silence the officer inside four seconds or fight the whole plaza. Then walk home with whoever is still standing.
 
-- The world keeps up to 3 generated contracts open; a new one rolls every 2–6 world hours when below target, weighted toward sectors with high unrest or low control.
-- Parameters derive from the source sector: threat from its defense rating and garrison condition, reward from threat and the sector's influence weight (30,000–95,000 CR on a 500 CR grid), client from city ownership, type from seizure / extraction / sabotage (plus riot-linked suppression). Nexus-signed records derive an `INTERNAL` dossier directive; outside-client records only select non-Nexus-held cities.
-- Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.
-- Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.
-- Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.
-- The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v7), so a reload reproduces the same open contracts.
+### Hollow Crown — take the architect alive
 
-### 12.2 Glass Veil
+Helix pays for a neurochem architect, alive. CorpSec means to move the asset before the next maglev window. Light rain. The compound can be bypassed; the interior garrison is optional.
 
-#### Premise
+High threat: two extra street patrols (three if unrest is high), enemy health 1.1 (1.15 if control is above 60), one garrison heavy. Fourteen civilians, twenty if unrest is high. The compound is a walled eastern detention block with one gated south entry and one breachable side entry; seed parity mirrors the flank. Cell blocks on the north wall, records hut at the server corner.
 
-CorpSec has sealed District 07 behind an Omnicorp checkpoint. Sable Enterprises wants the district opened for an asset transfer at 23:00. The squad inserts on the south perimeter and advances through market blocks under heavy rain.
+1. Reach the compound gate.
+2. *(Optional, +9,000 CR)* Pull the detention server — a four-second channel at the records hut. Activates with objective 1. The server wipes 90 seconds later; expiry fails only the bonus.
+3. Override the cell-block locks — a five-second channel at the console.
+4. Walk the freed VIP to extraction alive.
+5. Extract the squad.
 
-#### Conditions
+The night is a route choice and an escort. The side wall skips most of the interior. The optional server sits away from the console, so the bonus is paid in exposure. The VIP is fragile and walks out through whatever the team already woke up. A body pays nothing.
 
-- Heavy rain: guard sight scales to 0.8 and weapon noise to 0.85.
-- Moderate civilian density: 22 bystanders, 28 when the source sector holds above 20 unrest.
-- Low collateral tolerance.
-- Severe threat rating: three extra street patrols on top of the five base ones, four where unrest is high; enemy health scales to 1.2, or 1.25 where the sector holds above 60 control; one garrison member is upgraded to an officer and one to a heavy.
+### Rust Haven — drop the grid and hold it
 
-Heavy rain is the squad's ally here: it is the largest sight penalty in the game, and it is why a Severe contract still reads at a workable chance. It does not change accuracy or movement.
+Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. Clear night: full sight, full hearing. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; enemy health 1.0 (1.05 if control is above 60). Demolition cells drop devices quickly. Gunfire works, slowly.
 
-#### Objective sequence
+The yard splits into two sub-yards. Seed parity sets the split. Streets are wider than the other archetypes.
 
-1. **Reach the checkpoint gate.**
-   - Any living operative enters the checkpoint zone.
-2. **Eliminate the CorpSec garrison.**
-   - Kill the seven checkpoint enemies tagged `garrison`.
-   - The eight untagged street patrols are optional unless they threaten the squad.
-3. **Extract the squad.**
-   - Move every surviving operative back to the southern insertion zone.
+1. Reach the relay yard.
+2. *(Optional, +6,000 CR)* Destroy the backup transformer in the far sub-yard.
+3. Destroy the three fuel relays.
+4. Hold the yard 45 seconds against a five-unit wave through both gates.
+5. Extract.
 
-#### Tactical arc
-
-- Approach from the comparatively low-rise southern edge.
-- Read and bypass or engage eight street patrols.
-- Manage civilians who flee across fire lanes.
-- Breach the guarded northern plaza.
-- Eliminate a six-unit garrison led by a radio officer, backed by a shotgun heavy and one 80-HP longrifle marksman that keeps its distance.
-- Silence the officer inside four seconds of contact or fight the converging plaza guards.
-- Return south with all survivors.
-
-### 12.3 Hollow Crown
-
-#### Premise
-
-CorpSec holds a Helix neurochem architect in a detention compound in District 21, and intends to move the asset before the next maglev window. Helix Corp pays for the architect alive and nothing for a body. The squad inserts on the south perimeter and works east to the compound under light rain.
-
-#### Conditions
-
-- Light rain: guard sight scales to 0.9 and weapon noise to 0.95.
-- Low civilian density: 14 bystanders, 20 when the source sector holds above 20 unrest.
-- High threat rating: two extra street patrols on top of the four base ones, three where unrest is high; enemy health scales to 1.1, or 1.15 where the sector holds above 60 control; one garrison member is upgraded to a heavy.
-- The compound garrison can be bypassed. Engagement is optional.
-
-The compound archetype walls a detention block into the eastern half, between the first two cross streets. It has one gated south entry and one breachable side entry; the side flank comes from seed parity, so the two authored variants mirror each other. Cell blocks line the north wall, with a records hut at the server corner.
-
-#### Objective sequence
-
-1. **Reach the compound gate.**
-   - Any living operative enters the gate zone.
-2. **Pull the detention server.** *(Optional, +9,000 CR)*
-   - Channel four seconds at the records hut. Activates with objective 1 and never blocks the sequence.
-   - The server wipes itself 90 seconds after activation; the countdown shows on the objective row and expiry fails only the bonus.
-3. **Override the cell block locks.**
-   - Channel five seconds at the cell block console.
-4. **Extract the Helix asset.**
-   - Walk the freed vip to the extraction pad alive.
-5. **Extract the squad.**
-   - Move every surviving operative into the extraction zone.
-
-#### Tactical arc
-
-- Cross the southern blocks past six street patrols.
-- Choose the gate or the breachable side wall; the side entry skips most of the interior garrison.
-- Hold the console position for the full channel while a six-unit garrison patrols inside the walls.
-- Escort a fragile vip out through whatever the squad has already stirred up.
-- The optional server sits away from the console, so the bonus costs exposure time.
-
-### 12.4 Rust Haven
-
-#### Premise
-
-Stratos Industries has located an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates in District 03. The squad drops the relays, then holds the yard while the burn takes the grid down.
-
-#### Conditions
-
-- Clear night: guards see and hear at full range.
-- Sparse civilian density: 8 bystanders, 14 where unrest is high. The industrial band is mostly empty.
-- Moderate threat rating: three base street patrols and no threat bonus, one more where unrest is high; enemy health scales to 1.0, or 1.05 where the sector holds above 60 control.
-- Demolition cells are the fast tool against the devices. Gunfire works, slowly.
-
-The industrial archetype fences a relay yard into the eastern half, between the first two cross streets, with two gates and an inner fence splitting it into two sub-yards. The split axis comes from seed parity. Streets run wider than the other archetypes: 8 m cross streets against 7 m.
-
-#### Objective sequence
-
-1. **Reach the relay yard.**
-   - Any living operative enters the first sub-yard.
-2. **Drop the backup transformer.** *(Optional, +6,000 CR)*
-   - Destroy the device tagged `transformer` in the second sub-yard.
-3. **Destroy the three fuel relays.**
-   - Two sit in the first sub-yard, one in the second.
-4. **Hold the yard for the burn.**
-   - Keep the squad in the yard for 45 seconds against a five-unit CorpSec wave entering through both gate approaches.
-5. **Extract the squad.**
-   - Move every surviving operative into the extraction zone.
-
-#### Tactical arc
-
-- Bypass three street patrols on a quiet approach; the yard guard can be walked past on the way in.
-- Clear or avoid four yard guards before touching the devices.
-- Spend grenades on the relays or accept a long, loud small-arms burn.
-- The defend objective inverts the mission: the squad has been the aggressor until the wave arrives, then holds ground it just made noisy.
-- The optional transformer sits in the far sub-yard, so taking it commits the squad deeper before the wave.
+The night inverts. The team is the aggressor until the burn starts, then it holds ground it just made loud. The optional transformer sits deeper in, so taking it commits the squad before the wave.
 
 ---
 
-## 13. User interface and experience
+## 12. Interface
 
-### 13.1 Interface principles
+The interface is the game’s character. It is a secure corporate OS wrapped around a readable tactical picture, not a HUD pasted on a shooter.
 
-- DOM UI surrounds and overlays the 3D scene.
-- Near-black backgrounds preserve contrast.
-- Teal communicates operation and selection.
-- Amber communicates focus, authorization, and active objectives.
-- Red communicates danger, lock states, damage, and failure.
-- Green communicates completion and positive status.
-- Small monospace uppercase labels create a command-terminal identity.
-- Primary values should remain visually larger than labels.
+### Principles
 
-### 13.2 Main surfaces
+- DOM around and over the 3D scene.
+- Near-black ground for contrast.
+- Teal for operation and selection. Amber for focus, authorization, and the active objective. Red for danger, locks, damage, and failure. Green for completion.
+- Small monospace uppercase labels. Primary values larger than their labels.
+- Every screen is a module of the same terminal.
+- Critical state is never color alone.
+- Text must remain legible at 1280×720. Clipping or truncation at that size is a bug.
+- Smaller windows keep the minimum layout and scroll. They do not compress panels.
 
-#### Main Menu
+### Surfaces
 
-- Establishes the secure-system fiction.
-- Unlocks browser audio on the first user gesture.
-- Offers CONTINUE when a valid save exists.
-- Offers NEW OPERATION behind a two-step erase confirm.
-- Opens the SETTINGS panel (audio, controls, accessibility, quality, difficulty, telemetry).
+**Menu.** Establishes the secure-system fiction, unlocks audio on the first gesture, offers Continue and New Operation, and opens Settings.
 
-#### World Network
+**World Network.** The job between nights: sectors, ownership, contracts, the clock, the 24-hour review timeline, the feed, credits, influence, roster count, intel. Campaign-complete and campaign-failed banners live here. First visit, a one-shot overlay names the panel groups and the Research tab.
 
-- Sector selection and corporate ownership map.
-- Mission markers and operation list.
-- World time controls and 24-hour review timeline.
-- Dynamic events feed.
-- Credits, influence, operative count, and intel display.
-- Campaign-complete banner after all three authored contracts are won.
-- Campaign-failed banner when the roster is wiped; contracts lock.
-- Navigation to Research.
-- First-visit orientation overlay naming the panel groups and the Research tab; its dismissal persists with the save.
+**Research Division.** Three branch trees. Node states: researched, active, available, locked. Authorization is a spend, not a browse.
 
-#### Research Division
+**Mission Brief.** Dossier and plan. The map must be the city.
 
-- Three simultaneous branch trees.
-- Four node states: researched, active, available, locked.
-- Live progress fills.
-- Project detail, prerequisites, effects, time, cost, and authorization.
-- Lab status and program summary.
+**Operative Assembly.** Inspect, assign, read research-adjusted stats, see bay labels, fill two item slots, and pass the 400 kg gate.
 
-#### Mission Brief
+**Mission HUD.** District clock, weather, alert, credits, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim.
 
-- Recon image and code-derived tactical plan.
-- Dossier, objectives, notes, threat, reward, and collateral tolerance.
-- Contract acceptance.
+**Debrief.** The invoice. It applies sector, intel, influence, and roster consequences exactly once.
 
-#### Operative Assembly
+**Settings.** Audio, remaps, accessibility, quality, difficulty, telemetry. Persists separately from the campaign, so New Operation keeps the player’s preferences.
 
-- Roster inspection and assignment.
-- Four squad bays.
-- Research-adjusted stats and weapon values.
-- Installed-augmentation presentation.
-- Two loadout item slots per operative (med kit / power cell / empty).
-- Enforced deployment mass with the 400 kg limit and the speed-tier readout.
+### Minimap
 
-#### Mission HUD
+A tactical instrument, not a decoration. It shares the camera’s yaw so up is up. It shows buildings, roads, extraction and checkpoints, the active-objective pulse, enemy calm/suspicious/combat, sight cones for suspicious and combat guards, civilians, operatives, and the camera’s ground footprint. Three zoom levels. Click and drag steers the camera.
 
-- District clock and static weather readouts.
-- Alert level.
-- Account credits.
-- Squad cards with HP, magazine, selected/active state, and tactical stances.
-- Objective list.
-- Comm log.
-- Active operative’s primary and sidearm readout.
-- Live ability bar: one role-ability button per squad member with ready, cooldown-fill, and running-duration states, plus the grenade control.
-- Usable item buttons with live med kit and power cell counts, disabled at zero.
-- Interactive, zoomable minimap.
-- Pause menu and mission result banner.
-- First-mission tutorial toasts and one-shot contextual advisories, dismissible, never blocking input or pausing the sim; progress persists with the save.
+Difficulty must not strip this information.
 
-#### Debrief
+### Pause and discovery
 
-- Outcome, combat, collateral, timing, and economy.
-- Applies the sector, intel, and roster consequences exactly once per outcome.
-- Return to World Network or replay.
+Space or Escape opens a modal pause: the sim and the camera freeze, every remappable binding prints from the same table the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a two-step, three-second confirm that discards the mission without a debrief.
 
-### 13.3 Minimap
+The first mission teaches with dismissible HUD toasts — selection, move, attack, stances, ability, items, weapon swap, directives, extraction — that name the current bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. One-shot advisories fire at most once per campaign: an operative under 35% with med kits in stock, the first combat alert, a role ability left ready for a minute, an overweight deployment.
 
-**Implemented**
+### Accessibility
 
-- Rotated to match screen orientation.
-- Building footprints and roads.
-- Extraction and checkpoint zones.
-- Active-objective pulse.
-- Calm, suspicious, and combat enemy states.
-- Sight cones for suspicious and combat guards.
-- Civilians and operatives.
-- Ground footprint of the current camera.
-- Three zoom levels.
-- Click and drag to steer the camera.
+Designed in, not bolted on:
 
-### 13.4 Pause and control discovery
+- Contextual accessible labels on major controls.
+- Research nodes activate on Enter and Space.
+- Timeline: arrows, Home, End.
+- Pause and Settings trap and restore focus.
+- Remappable controls, with pause, operative slots, and mouse reserved.
+- Reduced motion: decorative sweeps gone, looping pulses frozen, rain at minimum.
+- High contrast: brighter ink, stronger frames.
+- Text scale 90 / 100 / 110 / 125%; screens scroll rather than clip.
 
-Space or Escape opens a modal pause menu. The menu:
-
-- Freezes simulation and camera motion.
-- Displays every mission binding from the same authoritative binding table used by input, including any player remaps.
-- Supports focus trapping.
-- Offers Resume.
-- Opens the SETTINGS panel; the sim stays frozen and closing returns to the pause menu.
-- Uses a two-step, three-second confirmation window for Abort.
-
-Abort returns to the World Network and discards the current mission state without a debrief.
-
-Control discovery is also carried by the first-mission tutorial: a sequence of small dismissible HUD toasts (selection, move, attack, stances, ability, items, weapon swap, directives, extraction) that name the current bindings, advance when the player performs the action or dismisses them, and never block input. A SKIP TUTORIAL control marks all steps seen. One-shot contextual advisories fire at most once per campaign: an operative under 35% health with med kits in stock, the first combat alert, a role ability left ready for a minute, and an overweight deployment.
-
-### 13.5 Accessibility status
-
-**Implemented**
-
-- Most major buttons have contextual accessible labels.
-- Research nodes support Enter and Space.
-- The timeline supports arrows, Home, and End.
-- Pause-menu and settings-panel focus is trapped and restored.
-- The minimap is keyboard-focusable but its declared arrow-key behavior is actually handled by the global camera controls.
-- Color is often reinforced by labels, icons, or state text.
-- Remappable controls (settings panel; pause, operative slots, and mouse stay fixed).
-- Reduced-motion mode: decorative sweeps disappear, looping pulse and flow animations freeze, the minimap objective pulse holds a steady ring, and rain drops to minimum density.
-- High-contrast mode: brighter ink tiers and stronger frame lines.
-- Text scaling at 90/100/110/125%; screens scroll rather than clip at the larger sizes.
-- All of it persists in localStorage separate from the campaign save, so NEW OPERATION keeps the player's settings.
-
-**Recommended**
-
-- Full keyboard navigation for all screen panels.
-- Color-vision presets.
-- Captions or textual equivalents for all audio cues.
-- Screen-reader validation of the tactical HUD.
+Still open: full keyboard travel across every panel, color-vision presets, captions for audio cues, and a screen-reader pass on the tactical HUD.
 
 ---
 
-## 14. Controls
+## 13. Controls
 
-The tables below list the default keys. Every keyboard action except the pause keys and the operative slots can be remapped from the SETTINGS panel; the pause menu, the tutorial prompts, and the input handlers all read the same binding table, so a remap renames itself everywhere at once.
+Defaults below. Every keyboard action except pause and the operative slots can be remapped. The pause menu, the tutorial, and the input handlers read one table, so a remap renames itself everywhere at once.
 
 ### Camera
 
@@ -1108,477 +728,186 @@ The tables below list the default keys. Every keyboard action except the pause k
 | S / Down | Pan backward |
 | A / Left | Pan left |
 | D / Right | Pan right |
-| F | Recenter on living squad |
+| F | Recenter on the living squad |
 | `=` / Numpad `+` | Zoom in |
 | `-` / Numpad `-` | Zoom out |
 | Mouse wheel | Zoom |
-| Minimap click/drag | Steer camera |
+| Minimap click or drag | Steer camera |
 
 ### Squad
 
 | Input | Action |
 |---|---|
-| 1–4 / Numpad 1–4 | Select operative slot |
-| 0 / backtick / Numpad 0 | Select all living operatives |
+| 1–4 / Numpad 1–4 | Select slot |
+| 0 / backtick / Numpad 0 | Select all living |
 | Backspace | Clear selection |
 | X | Stop and clear orders |
 | H | Toggle Hold Ground |
 | C | Toggle Hold Fire |
 | V | Swap weapon |
-| Space / Escape | Pause menu |
+| Space / Escape | Pause |
 
-### Abilities
+### Abilities and items
 
 | Input | Action |
 |---|---|
-| Q | Use the selected operatives' role ability |
-| E / M | Use a med kit on the most wounded selected operative |
-| R | Use a power cell to finish the selected operative's ability cooldown |
-| G | Arm / cancel grenade targeting |
+| Q | Role ability for the selection |
+| E / M | Med kit on the most wounded selected operative |
+| R | Power cell: finish the selected operative’s ability cooldown |
+| G | Arm or cancel grenade targeting |
 
 ### Mouse
 
 | Input | Action |
 |---|---|
 | Left click operative | Select |
-| Shift + left click | Add/remove selection |
+| Shift + left click | Add or remove |
 | Left drag | Box select |
 | Shift + left drag | Add box selection |
 | Left click bare ground | Clear selection |
-| Right click ground | Move order |
-| Right click hostile | Attack order |
-| Double-click squad HUD card | Center camera on operative |
+| Right click ground | Move |
+| Right click hostile | Attack |
+| Double-click squad card | Center camera on that operative |
 
 ---
 
-## 15. Art direction
+## 14. Art direction
 
-### Visual identity
+Late-1980s / 1990s cyberpunk strategy vocabulary, rebuilt as a crisp modern terminal.
 
-The project uses a late-1980s/1990s cyberpunk strategy-game vocabulary rebuilt as a crisp modern browser interface:
+Near-black and dark blue-green ground. Teal operational graphics. Amber focus. Red hostility and failure. Thin technical borders. Monospace uppercase type. Scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes.
 
-- Near-black and dark blue-green ground.
-- Teal operational graphics.
-- Amber active/focus states.
-- Red hostile and failure states.
-- Thin technical borders.
-- Monospace uppercase typography.
-- Scanlines, vignette, radar sweeps, data chips, coordinate labels, and barcodes.
+The tactical scene is a night district in heavy weather: wet asphalt, cool window light, warm street lamps, procedural neon, dense towers and industrial slabs, instanced street dressing. Bloom is emissive only. Building ghosting exists so the player can still read the fight.
 
-### Tactical scene
+Units are assembled from simple geometry. Operatives are cool armor with personal accent colors, slot tags, health pips, selection rings, and route feedback. CorpSec is dark coats, red visors, faction rings, garrison marks, alert and suspicion markers. Civilians vary. Hits flash; operatives flash red, everyone else amber, with a brief flinch.
 
-- Nighttime urban district.
-- Heavy rain.
-- Wet asphalt and puddle-like roughness variation.
-- Cool window light and warm street lamps.
-- Procedural neon banners.
-- Dense towers, blocks, slabs, and industrial structures.
-- Instanced cars, barriers, crates, dumpsters, pillars, and checkpoint dressing.
-- Emissive-only bloom keeps lights controlled.
-- Building ghosting protects tactical readability.
+Effects stay sparse and informative: colored tracers, muzzle and impact flashes, dashed routes, destination rings, click marks, objective pulses, two-layer camera-following rain.
 
-### Units
-
-Units are assembled procedurally from simple geometry:
-
-- Operatives use cool armored forms and personal accent colors.
-- CorpSec uses dark coats, red visors, faction rings, and garrison markings.
-- Civilians use varied procedural colors.
-- Operatives display slot tags, health pips, selection rings, and route feedback.
-- Enemies display alert/suspicion markers and health feedback.
-
-### Effects
-
-- Colored weapon tracers.
-- Muzzle flashes and impact/death flashes.
-- Per-hit impact flash on surviving bodies, red on operatives and amber on everything else, with a brief flinch squash on the struck figure.
-- Dashed movement routes.
-- Destination rings.
-- Click markers.
-- Objective pulses.
-- Two-layer camera-following rain.
-- Scanline and vignette overlay.
-
-### Asset strategy
-
-**Implemented constraint:** No external art assets.
-
-The build generates:
-
-- Canvas textures.
-- SVG portraits and full-body figures.
-- Icons and glyphs.
-- Unit geometry.
-- World-map graphics.
-- UI decoration.
-
-This keeps the build self-contained and stylistically consistent. A future external asset pipeline should be introduced only if the project intentionally changes this constraint.
+**No external art assets.** Textures, portraits, figures, icons, unit geometry, the world plate, and UI decoration are generated in code. The constraint is stylistic and production: one hand drew this world. An external pipeline is a deliberate change of project, not a polish pass.
 
 ---
 
-## 16. Audio direction
+## 15. Audio direction
 
-### Current audio
+Audio is synthesized at runtime. It confirms orders, marks danger, and prices violence. It does not narrate.
 
-All audio is synthesized at runtime with Web Audio:
+Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump. An alert-tension drone tracks the mission alert level (0–3), ramps between levels, and releases when the mission ends.
 
-- Weapon-specific gunshots.
-- Reload sound.
-- Confirmation blip.
-- UI click.
-- Alert sting.
-- Objective-complete chime.
-- Death thud.
-- Operative-hit thump when a round lands on the squad.
-- Alert tension drone: a filtered two-oscillator layer that tracks the mission alert level (0-3), ramps between levels, and releases at mission end and on leaving the mission screen.
+Two beds: a low industrial drone on strategy screens (music), a rain-hiss and city-hum on the mission (ambience). Each dies with the screen that owns it.
 
-Voices use filtered noise and oscillator envelopes. Rate limiting prevents dense combat from stacking excessive simultaneous sounds.
+Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 
-Every voice routes through one of four channel gains (UI cues, combat, music, and ambience) under a master gain. The SETTINGS panel carries master, UI, combat, music, and ambience sliders (0-100) plus a mute switch; the sliders multiply, and the levels persist with the player settings, not the campaign save.
-
-Two looping beds ride those extra channels:
-
-- Strategy screens start a low industrial drone on the music stage.
-- The mission starts a rain-hiss and city-hum bed on the ambience stage.
-- Both fade out when the screen that owns them unmounts.
-
-### Current limitations
-
-- No spoken operative dialogue.
-- No spatial audio model.
-
-### Recommended audio goals
-
-- Clearer perceptual separation among squad, CorpSec, UI, and objective sounds.
-- Optional synthetic radio voice treatment for operative acknowledgements.
-- Spoken operative dialogue and a spatial audio model.
+There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Clearer separation among squad, CorpSec, UI, and objective voices, and an optional synthetic radio treatment on acknowledgements, are welcome polish inside the current system.
 
 ---
 
-## 17. Difficulty and balance
+## 16. Difficulty and balance
 
-### Current balance model
+The player’s advantages are information, quality, and pause. CorpSec’s advantages are numbers, coverage, and propagation.
 
-The settings panel offers STANDARD (the authored baseline) and HARDENED. HARDENED adds two street patrols and six civilians; it does not hide minimap information. The choice persists with player settings and survives NEW OPERATION.
+The player has four operatives, full weapon damage, higher accuracy, faster weapon cooldowns, automatic acquisition, a tactical pause, visible enemy states and sight cones, and a research program that permanently improves later nights.
 
-Player advantages:
+CorpSec has numerical superiority (12 hostiles on the baseline checkpoint before extras), patrol coverage, alert propagation, a longrifle garrison guard, and civilians in the lane.
 
-- Four operatives.
-- Full weapon damage.
-- Higher accuracy.
-- Faster weapon cooldowns than CorpSec.
-- Automatic target acquisition.
-- Tactical pause freezes the simulation.
-- Enemy states and sight cones are visible on the minimap.
-- Research can permanently improve future deployments within the session.
+**Standard** is the authored baseline. **Hardened** adds two street patrols and six civilians. It does not hide minimap information. The choice lives in player settings and survives New Operation.
 
-Enemy advantages:
+Difficulty should turn readable knobs: sight confirmation time, accuracy and cooldown, patrol count and overlap, garrison mix, civilian density, economy, alert range, optional-objective pressure. It must not turn off the minimap without giving the player a compensating tool.
 
-- Numerical superiority: 12 hostiles on the baseline checkpoint (7 garrison + 5 patrols) before threat extras.
-- Patrol coverage across the route.
-- Alert propagation.
-- Longrifle garrison guard.
-- Civilian presence complicates fire lanes.
-
-### Economy pressure
-
-Glass Veil pays 85,000 CR. The full research tree costs 779,000 CR, so repeated mission income or additional contracts are required to complete progression. The current build allows unlimited replay of the same contract and has no diminishing rewards.
-
-### Recommended difficulty vectors
-
-Difficulty should modify readable systems rather than hide information:
-
-- Enemy sight confirmation time.
-- Enemy accuracy and cooldown multiplier.
-- Patrol count and route overlap.
-- Garrison composition.
-- Civilian density.
-- Research and contract economy.
-- Alert propagation distance.
-- Optional-objective requirements.
-
-Avoid increasing difficulty by removing minimap information without offering compensating tools.
+Economy pressure is real. Glass Veil pays 85,000 CR. The tree costs 779,000 CR. Completing the program requires repeated income. Unlimited undiminished replay of the same authored contract is the current rule and an open question.
 
 ---
 
-## 18. Technical design
+## 17. Platform and persistence
 
-### 18.1 Runtime architecture
+Desktop web. Keyboard and mouse. Minimum 1280×720. No mobile or touch design.
 
-| Layer | Responsibility |
-|---|---|
-| `src/game/` | Pure TypeScript simulation, static data, pathfinding, research effects, audio |
-| `src/world/` | Deterministic procedural city generation |
-| `src/scene/` | React Three Fiber / Three.js rendering and mission input |
-| `src/ui/` | DOM screens, HUD, minimap, briefing visualizations |
-| `src/state/` | Zustand stores for app, world, research, campaign, tutorial, settings, and low-frequency mission UI |
+Single-player. No networking.
 
-### 18.2 State boundaries
+The campaign save is versioned and local. It holds the network, the labs, the roster, tutorial progress, and the campaign result. A mission in progress is memory only. Settings and telemetry live in their own slots so a new operation does not reset the player’s preferences.
 
-- High-frequency mission state lives in a mutable `WorldApi`, outside React.
-- Render systems read unit positions and effects directly each frame.
-- Mission UI is synchronized at approximately 5 Hz.
-- The minimap redraws at approximately 10 Hz.
-- The strategic clock batches updates at approximately 20 Hz.
-- Seven stores, split by lifetime and rate: `appStore` (flow, squad, outcome), `missionStore` (HUD, pause), `worldStore` (clock, sectors, contracts), `researchStore`, `campaignStore` (roster, injuries, recruits, campaign result), `tutorialStore`, `settingsStore`.
-- A save module writes the app, world, research, campaign, and tutorial stores to localStorage with a debounced autosave; the mission and debrief phases suspend writes. Settings and telemetry persist under their own keys.
+Missions and cities are deterministic from the mission seed. Portraits and figures use stable hashes. The strategic event stream and the recruitment market use serialized random state so a reload continues the same sequence. Rain and synthesized noise may be unseeded; they do not change outcomes.
 
-### 18.3 Simulation timing
+Quality is a player setting (Auto / High / Medium / Low), not a design lever. Building ghosting survives every tier because it is readability.
 
-- Tactical frames are subdivided into steps no larger than 0.05 seconds.
-- Up to five seconds of a long frame gap can be consumed.
-- Opening warm-up prevents multiple unseen seconds from simulating while WebGPU pipelines compile.
-- World and tactical clocks are intentionally independent.
+Telemetry is opt-in, local, off by default, and never leaves the machine. When enabled, each debrief appends one record (capped at 60) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, and deployed roles. A Balance dashboard aggregates those records. Export is a local JSON download. Clear is a two-step confirm.
 
-### 18.4 Rendering
-
-- React Three Fiber root is manually configured.
-- Three.js `WebGPURenderer` is preferred.
-- WebGL2 fallback occurs through renderer initialization.
-- ACES filmic tone mapping.
-- Emissive MRT bloom pipeline.
-- Static city geometry uses instancing.
-- Units and effects use pooled geometry and preallocated buffers.
-- Per-frame hot paths are designed to avoid allocation.
-
-#### Quality tiers
-
-Three tiers set the renderer's cost, resolved once at mission mount and never read per frame. The table is data in `game/quality.ts`:
-
-| Tier | Device pixel ratio | Rain density | Bloom |
-|---|---:|---:|---|
-| HIGH | 1.75 max | 100% | On |
-| MEDIUM | 1.25 max | 50% | On |
-| LOW | 1.0 max | 15% | Off |
-
-The settings panel offers AUTO, HIGH, MED, and LOW, and AUTO is the default. AUTO probes the renderer backend at mount: a WebGPU context runs HIGH, the WebGL2 fallback MEDIUM. Building ghosting is tactical readability, so it survives every tier.
-
-A frame-time governor guards the setting. It ignores the first 8 seconds, because WebGPU pipeline compiles distort the opening frames. After that, a moving average that holds above **28 ms** for a continuous 6 seconds steps the persisted setting down one tier, and the comm log posts the change. LOW has nowhere further to fall, and the player can always set a tier by hand.
-
-### 18.5 Determinism
-
-- Missions and cities use the mission seed.
-- Portraits and UI figures use stable hashes.
-- Strategic event generation steps an explicit, serializable rng state, so a reload continues the same sequence.
-- Procedural rain and WebAudio noise use unseeded randomness because they do not affect gameplay.
-
-### 18.6 Browser and layout
-
-- Minimum supported viewport: **1280×720**.
-- Smaller browser windows preserve the minimum layout and scroll rather than compressing panels.
-- Mission scene is full viewport with DOM HUD overlays.
-- There is no mobile or touch-control design.
-
-### 18.7 Build and quality
-
-- The checks are `npm run lint`, `npm run test`, and `npm run build`.
-- A vitest suite (30 files, 460 tests) covers the pure layers: `src/game/`, `src/world/`, `src/state/`.
-- Beyond unit coverage, the suite carries scenario tests: an orders-driven Glass Veil playthrough (advance, clear the garrison by weapon fire, extract, net payout) and a squad wipe driven by CorpSec fire; a cross-store economy integration test (payout minus fines, intel and influence awards, research spend gating, hiring, influence spends) holding a credits-never-negative invariant; research program sums against the authored tables and effect-stacking order; and an objective-completability sweep over the three authored missions plus all four generated-contract types (zones walkable and reachable from insertion, tagged and device sets nonempty, extraction last).
-- Saves are versioned; the loader validates a blob and discards it on any mismatch. The settings and telemetry blobs live under their own keys with their own version guards.
-- Scene and DOM screens rely on the manual click-through.
+Telemetry should distinguish a deliberate play style from a discovery failure. An unused Hold Fire may be aggression or a hidden binding.
 
 ---
 
-## 19. Implemented, scaffolded, and missing systems
+## 18. Out of scope
 
-### 19.1 Implemented and functional
+These are not unfinished features. They are not this game.
 
-- Complete screen flow from menu to debrief.
-- Interactive world map with six open sectors.
-- Strategic time controls and review timeline.
-- Dynamic world events and city ownership changes.
-- Credit economy.
-- Full 21-node research tree with real gameplay effects.
-- A live operative roster (cap eight) and four-person assembly.
-- Permanent operative death with KIA reporting in the debrief and the world feed.
-- Graded injury recovery scaled by end-of-mission health.
-- A seeded, save-persistent recruitment market with quality-priced hires.
-- Code-derived mission briefing map.
-- Three deterministic procedural district archetypes (checkpoint, compound, industrial).
-- Real-time selection, formation movement, attack, stop, Hold Ground, and Hold Fire.
-- A* pathfinding and line-of-sight checks.
-- Patrol, suspicion, combat, hearing, vision, and alert-propagation AI.
-- Civilian wandering, fleeing, damage, and collateral fines.
-- Five differentiated weapons with sidearm slots and V swapping.
-- Per-role active abilities and passives.
-- Usable med kits and power cells from a squad-pooled, role-and-loadout-fed stock.
-- Per-operative loadout slots and an enforced deployment-mass model with speed tiers.
-- Sequential objectives, win/loss, and debrief.
-- Functional minimap, camera controls, pause menu, and abort confirmation.
-- Procedural visuals and audio.
-- Versioned save/load with autosave, boot validation, CONTINUE, and NEW OPERATION.
-- Mission outcomes that move sector control and unrest, flip the mission city's holder, and post feed events.
-- Persistent operative experience awarded to survivors and sampled at deployment.
-- A terminal campaign-failed state when the roster is wiped, opposite campaign-complete.
-- Player-selectable STANDARD / HARDENED difficulty persisted with settings.
-- Synthesized strategy and mission audio beds with independent music and ambience levels.
-- Intel earned from wins and clean wins; intel-gated contract unlocks.
-- Campaign completion state after all three contracts.
-- Injury enforcement with timed recovery on the world clock.
-- First-mission tutorial toasts, one-shot contextual advisories, and the World Network onboarding overlay, with save-persistent progress.
-- A settings panel (main menu and pause): audio channel sliders and mute, control remapping with conflict rejection, reduced-motion, high-contrast, and text scaling, persisted separately from the campaign save.
-
-### 19.2 Scaffolded or presentation-only
-
-- Nothing on the contract card. Chance is derived and ETA is spent as world time at the debrief (section 12.1); at intel level 2+ the brief replaces the chance readout with the computed risk index.
-- Weather beyond guard sight and weapon noise. Rain does not change accuracy, movement speed, or the omnidirectional notice radius, and there is no in-mission weather change.
-- Sector assets and black-market values as decision systems. Defense rating and garrison condition feed generated contract threat, and tax yield now falls under unrest pressure; assets and black market stay presentation.
-- Sector-intel view (the dead button; the sector panel's event forecast covers the intel readout).
-- Archives and additional navigation tabs.
-
-### 19.3 Missing for a complete campaign
-
-None of the five campaign-spine gaps remain. Mission outcomes flip city ownership, survivors gain persistent experience, an empty roster is a terminal fail opposite campaign-complete, difficulty is a persisted player setting, and synthesized strategy/mission beds ride independent music and ambience levels.
+- Multiplayer, accounts, leaderboards, cloud saves.
+- Mobile or touch controls.
+- Cutscenes, branching dialogue, companion relationships, campaign chapters.
+- Player-as-operative, rotatable tactical camera, click-per-shot combat.
+- Equipment ownership, a consumable shop, account levels.
+- Mid-mission save and resume.
+- External art or licensed audio pipelines.
+- Spoken VO and a spatial audio model, unless explicitly reopened.
 
 ---
 
-## 20. Design acceptance criteria
+## 19. Open questions
 
-### Campaign loop
+Unresolved on purpose. Do not implement a silent answer.
 
-- A successful mission visibly changes at least two strategic values.
-- A failed mission produces a meaningful but recoverable consequence.
-- Intel has at least two earn sources and at least two unlock uses.
-- Saving and reloading reproduces all strategic and roster state.
+1. **Replay economy.** Authored contracts pay full reward forever. The research tree cannot be finished on a single pass of the three. Does a replay diminish, convert to influence, or stay as the intended grind?
 
-### Mission content
+2. **Sable Enterprises.** Glass Veil’s client has no cities and no map color. Give them a strategic identity, or write them as a pure client house and stop implying they are a peer of Stratos and Helix.
 
-- Every operation has at least one route choice.
-- Optional engagement is possible; not every patrol must be killed.
-- Civilian placement creates risk without making collateral feel arbitrary.
-- Mission notes correspond to active modifiers.
-- Briefing geometry matches the deployed city.
+3. **Per-operative augmentations.** Bays are labels on a global program. Is that the fantasy, or should operatives wear distinct hardware?
 
-### Squad differentiation
+4. **Weather as a combat modifier.** Rain already shortens sight and quiets weapons. Should it also change accuracy, movement, or the omnidirectional notice radius? Should weather change during a night?
 
-- Every role changes at least one tactical decision.
-- Every active ability has readable range, targeting, cooldown, and feedback.
-- A four-person composition has identifiable strengths and weaknesses.
+5. **Sector assets and the black market.** They print on the panel and do nothing. Either give them a verb or stop showing them as if they were systems.
 
-### UX
+6. **Remaining accessibility.** Full keyboard travel, color-vision presets, captions, HUD screen-reader pass.
 
-- Every interactive element is keyboard reachable.
-- All critical states use more than color alone.
-- Text remains legible at 1280×720.
-- A new player can discover selection, move, attack, Hold Ground, Hold Fire, objectives, and extraction without opening source code or external documentation.
-
-### Performance
-
-- Stable frame pacing with four agents, 12+ enemies, 22 civilians, rain, bloom, and a dense city.
-- No unbounded object creation in per-frame systems.
-- Long renderer initialization never advances the unseen opening encounter.
+7. **Telemetry depth.** Time on strategy screens, world-speed use, research order, alert-level duration, explicit versus automatic fire, stance use, patrols bypassed versus killed, abort and replay rates.
 
 ---
 
-## 21. Telemetry
+## 20. Acceptance
 
-**Implemented, local-only**
+The design is doing its job when all of the following are true.
 
-Telemetry is opt-in and never leaves the machine. The SETTINGS panel carries a `TELEMETRY: LOCAL ONLY` toggle, off by default; nothing records until the player turns it on, and no network transmission exists anywhere in the pipeline.
+**Campaign.** A successful mission visibly changes at least two strategic values. A failed mission is costly and recoverable, unless the roster is gone. Intel has at least two earn sources and at least two uses. A save and reload reproduces strategic and roster state.
 
-When enabled, the debrief boundary appends one record per mission outcome to a versioned localStorage blob under its own key (`state/telemetry.ts`), capped at 60 records FIFO. The counters ride the outcome the simulation already pushes: `world.ts` keeps plain numeric fields during the mission (the hot path allocates nothing) and hands them over once, inside `MissionOutcome.telemetry`.
+**Mission.** Every operation has at least one route choice. Not every patrol must die. Civilians create risk without making fines feel random. Mission notes match live modifiers. The brief’s city is the deployed city.
 
-Each record captures:
+**Squad.** Every role changes at least one decision. Every active has readable range, targeting, cooldown, and feedback. A four-person composition has identifiable strengths and holes.
 
-- Mission id, seed, outcome, and duration.
-- Time to first contact.
-- Per-objective completion times.
-- Shots and damage by weapon (squad fire only).
-- Damage dealt to hostiles and damage taken by the squad.
-- Civilian hits by source (squad versus CorpSec).
-- Med kit and power cell uses.
-- Ability uses by role.
-- Operatives killed in action.
-- Payout, fines, reward, and bonus.
-- The deployed squad composition by role.
+**UX.** A new player can discover select, move, attack, Hold Ground, Hold Fire, objectives, and extraction without opening this document. Critical state uses more than color. Text holds at 1280×720.
 
-The **BALANCE dashboard** (reachable from the SETTINGS panel and the debrief) aggregates the stored records in the terminal style: win rate, mean duration, mean time to first contact, collateral rate, civilian and KIA totals, item use, payout statistics, weapon damage share, and ability use by role, drawn with plain div bars. EXPORT downloads the records as JSON through a data URL; CLEAR erases the log behind a two-step confirm.
-
-**Still recommended, unmet**
-
-- Time spent on each strategic screen.
-- World speed usage.
-- Projects authorized and completion order; research spending.
-- Alert-level duration.
-- Number of explicit attacks versus automatic engagements.
-- Hold Ground and Hold Fire usage.
-- Deaths and reloads by weapon.
-- The shot context of civilian hits.
-- Patrols bypassed versus killed.
-- Abort and replay rates.
-
-Telemetry must distinguish a deliberate tactical choice from a usability failure; for example, an unused Hold Fire command may indicate either a preferred aggressive play style or poor control discovery.
+**Feel.** Four powerful operatives through a populated district, managing information, detection, fire lanes, and an invoice. If a session is only a firefight or only a spreadsheet, a pillar was ignored.
 
 ---
 
-## 22. Source-of-truth map
-
-| Design area | Primary implementation |
-|---|---|
-| Screen flow | `src/App.tsx` |
-| Missions, weapons, roster, intel | `src/game/data.ts` |
-| Shared gameplay types | `src/game/types.ts` |
-| Tactical simulation | `src/game/world.ts` |
-| Pathfinding and line of sight | `src/game/pathfind.ts` |
-| Research tree and effects | `src/game/research.ts` |
-| Strategic world simulation | `src/state/worldStore.ts` |
-| Research progression | `src/state/researchStore.ts` |
-| Credits, squad, outcomes | `src/state/appStore.ts` |
-| Intel, roster condition, campaign result | `src/state/campaignStore.ts` |
-| Save, load, autosave | `src/state/save.ts` |
-| City generation | `src/world/citygen.ts` |
-| Mission input | `src/scene/Input.tsx` |
-| Mission controls table | `src/game/bindings.ts` |
-| Camera | `src/scene/CameraRig.tsx` |
-| Mission HUD | `src/ui/Hud.tsx` |
-| Minimap | `src/ui/Minimap.tsx` |
-| World Network | `src/ui/WorldMap.tsx` |
-| Research UI | `src/ui/Research.tsx` |
-| Briefing, assembly, debrief | `src/ui/index.tsx` |
-| Visual tokens | `src/index.css`, `src/ui/ui.css`, `src/ui/tokens.ts` |
-| Procedural audio | `src/game/audio.ts` |
-| Role abilities | `src/game/abilities.ts` |
-| Influence and unrest pressure | `src/game/influence.ts` |
-| Generated contracts | `src/game/contracts.ts` |
-| Event and mission forecasts | `src/game/forecast.ts` |
-| Deployment modifiers and difficulty | `src/game/missionParams.ts` |
-| Deployment mass and loadout | `src/game/mass.ts` |
-| Operative experience | `src/game/experience.ts` |
-| Recruitment market | `src/game/recruits.ts` |
-| City-ownership outcomes | `src/game/ownership.ts` |
-| Render quality tiers | `src/game/quality.ts` |
-| Tutorial copy | `src/game/tutorial.ts` |
-| Player settings | `src/state/settingsStore.ts` |
-| Local telemetry | `src/state/telemetry.ts` |
-
----
-
-## 23. Glossary
+## 21. Glossary
 
 | Term | Meaning |
 |---|---|
-| Alert | HUD level derived from the number of living enemies in combat |
-| Awareness | Per-enemy certainty value from 0 to 1 |
-| Candidate | A procedural operative offered by the recruitment market, hired for credits |
-| CorpSec | Armed corporate security enemies |
-| KIA | An operative killed in a mission, removed from the roster permanently |
-| Explicit target | A hostile assigned by right-click attack order |
-| Hold Fire / Tight | Prevent automatic target acquisition |
-| Hold Ground | Pin an operative in place while preserving their parked route |
-| Intel | Earned progression level that gates contract access |
+| Alert | HUD level from how many living enemies are in combat |
+| Awareness | Per-enemy certainty, 0 to 1 |
+| Candidate | A procedural operative offered for credits |
+| Clean win | A win in which the squad hit no civilian |
+| CorpSec | Armed corporate security |
+| Crisis | Sector unrest at 85 or above |
+| Explicit target | A hostile assigned by a right-click attack |
+| Hold Fire | No automatic acquisition |
+| Hold Ground | Pinned in place; parked route preserved |
+| Influence | Spendable strategic points, distinct from the influence index |
+| Influence index | Weighted average control of open sectors |
+| Intel | Earned level that gates contracts and unlocks forecasts |
+| KIA | An operative killed in a mission, gone for good |
 | Operative | A player-controlled squad member |
-| Review time | A historical point in the 24-hour strategic event timeline |
-| Role ability | A role's active (triggered on Q, per-role cooldown) or always-on passive, defined in `src/game/abilities.ts` |
-| Strategic time | World-map and research clock |
-| Tactical time | Independent mission clock and simulation time |
-| Tagged enemy | An enemy associated with an eliminate objective, such as `garrison` |
-
----
-
-## 24. Final design statement
-
-The codebase already establishes a coherent identity: a corporate geostrategy interface wrapped around an unusually readable real-time squad simulation. The tactical game’s strongest authored tension is not simple survival; it is moving four powerful operatives through a populated city while managing information, detection, fire lanes, and financial liability.
-
-The two layers feed each other rather than sitting side by side. Mission outcomes move sector control and unrest, intel earned in the field opens contracts, injuries and deaths gate the next deployment, and the whole campaign survives a reload. Content matches that shell: three authored contracts across three district archetypes, an objective engine of seven kinds, eight roles that each change a tactical decision, and a strategic economy where influence and unrest have consequences.
-
-Section 19.3 is closed: missions flip city ownership, survivors gain experience, an empty roster fails the campaign, difficulty is selectable, and the strategy and mission screens carry synthesized beds.
+| Optional objective | Activates beside a required step, never blocks, pays a bonus |
+| Review time | A historical point on the 24-hour event timeline |
+| Risk index | Low / Guarded / High / Severe, computed from the live deployment |
+| Role ability | The role’s active (Q) or its always-on passive |
+| Strategic time | The network and laboratory clock |
+| Tactical time | The independent mission clock |
+| Tagged enemy | An enemy bound to an eliminate objective |
