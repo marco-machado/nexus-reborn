@@ -79,3 +79,17 @@ Everything is generated in code: WebAudio (`game/audio.ts`), CanvasTextures (`sc
 ## Commits
 
 Imperative subject line, then a body that says what changed by file, why, and what was verified (lint, build, the click-through). Reference issues with `Closes #N`.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `marco-machado/nexus-reborn` via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default role names: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
