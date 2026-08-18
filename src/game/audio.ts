@@ -168,7 +168,7 @@ interface BurstOpts {
   at?: number
 }
 
-function burst(live: Live, out: GainNode, o: BurstOpts): void {
+function burst(live: Live, out: AudioNode, o: BurstOpts): void {
   const t0 = live.c.currentTime + (o.at ?? 0)
   const src = live.c.createBufferSource()
   src.buffer = noiseBuffer(live.c)
@@ -198,7 +198,7 @@ interface ToneOpts {
   at?: number
 }
 
-function tone(live: Live, out: GainNode, o: ToneOpts): void {
+function tone(live: Live, out: AudioNode, o: ToneOpts): void {
   const t0 = live.c.currentTime + (o.at ?? 0)
   const osc = live.c.createOscillator()
   osc.type = o.type
@@ -245,11 +245,62 @@ const GUNS: Record<WeaponId, GunVoice> = {
   },
 }
 
+export type GunSide = 'squad' | 'corpsec'
+
+// Test-facing radio-ack recipe. confirmBlip() plays this on the UI bus.
+export const RADIO_BLIP = {
+  bus: 'ui' as const,
+  // Whole click stays under 120 ms so a flurry of orders does not pile up.
+  dur: 0.09,
+  lowpassHz: 2600,
+  bandpassHz: 1750,
+  bandpassQ: 0.85,
+  tone: { dur: 0.055, type: 'square' as const, f0: 1320, f1: 880, gain: 0.1 },
+  hiss: { dur: 0.04, type: 'bandpass' as const, freq: 2200, q: 1.6, gain: 0.055 },
+}
+
+// Test-facing alert identity. Combat body plus a UI pip; objective stays on UI.
+export const ALERT_STING = {
+  bus: 'combat' as const,
+  pipBus: 'ui' as const,
+  objectiveBus: 'ui' as const,
+  pip: { dur: 0.045, type: 'square' as const, f0: 1560, f1: 2100, gain: 0.09 },
+}
+
+// Squad voice as authored; CorpSec is darker, narrower, lower punch.
+export function gunVoiceFor(weaponId: WeaponId, side: GunSide = 'squad'): GunVoice {
+  const base = GUNS[weaponId] ?? GUNS.pistol
+  if (side !== 'corpsec') return base
+  return {
+    noise: {
+      ...base.noise,
+      freq: base.noise.freq * 0.58,
+      freqEnd: (base.noise.freqEnd ?? base.noise.freq * 0.35) * 0.52,
+      gain: base.noise.gain * 0.68,
+      q: base.noise.q * 1.4,
+    },
+    punch: {
+      ...base.punch,
+      f0: base.punch.f0 * 0.76,
+      f1: (base.punch.f1 ?? base.punch.f0 * 0.3) * 0.76,
+      gain: base.punch.gain * 0.58,
+    },
+    sub: base.sub
+      ? {
+          ...base.sub,
+          f0: base.sub.f0 * 0.76,
+          f1: (base.sub.f1 ?? base.sub.f0 * 0.3) * 0.76,
+          gain: base.sub.gain * 0.5,
+        }
+      : undefined,
+  }
+}
+
 export const sfx = {
-  gunshot(weaponId: WeaponId): void {
-    const live = gate('shot-' + weaponId, 0.025)
+  gunshot(weaponId: WeaponId, side: GunSide = 'squad'): void {
+    const live = gate('shot-' + side + '-' + weaponId, 0.025)
     if (!live) return
-    const v = GUNS[weaponId] ?? GUNS.pistol
+    const v = gunVoiceFor(weaponId, side)
     burst(live, live.combat, v.noise)
     tone(live, live.combat, v.punch)
     if (v.sub) tone(live, live.combat, v.sub)
@@ -266,14 +317,28 @@ export const sfx = {
   confirmBlip(): void {
     const live = gate('blip', 0.05)
     if (!live) return
-    tone(live, live.ui, { dur: 0.07, type: 'square', f0: 960, f1: 1280, gain: 0.16 })
+    const p = RADIO_BLIP
+    const bp = live.c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = p.bandpassHz
+    bp.Q.value = p.bandpassQ
+    const lp = live.c.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = p.lowpassHz
+    const mix = live.c.createGain()
+    mix.gain.value = 1
+    bp.connect(lp).connect(mix).connect(live.ui)
+    tone(live, bp, p.tone)
+    burst(live, lp, p.hiss)
   },
 
   alertSting(): void {
     const live = gate('alert', 0.25)
     if (!live) return
-    tone(live, live.combat, { dur: 0.3, type: 'sawtooth', f0: 480, f1: 190, gain: 0.2 })
-    tone(live, live.combat, { dur: 0.3, type: 'sawtooth', f0: 604, f1: 240, gain: 0.13 })
+    tone(live, live.combat, { dur: 0.3, type: 'sawtooth', f0: 480, f1: 190, gain: 0.22 })
+    tone(live, live.combat, { dur: 0.3, type: 'sawtooth', f0: 604, f1: 240, gain: 0.14 })
+    // UI pip so the sting still cuts through a dense firefight.
+    tone(live, live.ui, ALERT_STING.pip)
   },
 
   objectiveChime(): void {

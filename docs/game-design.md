@@ -849,7 +849,7 @@ Two beds: a low industrial drone on the World Network and Research (music), a ci
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 
-There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Clearer separation among squad, CorpSec, UI, and objective voices, and an optional synthetic radio treatment on acknowledgements, are welcome polish inside the current system.
+There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Clearer separation among squad, CorpSec, UI, and objective voices, and an optional synthetic radio treatment on acknowledgements, are welcome polish inside the current system. Acknowledgements are a short band-limited radio click on the UI bus; CorpSec gunshots are a darker, narrower restatement of the squad voice; the alert sting keeps a combat body plus a brief UI pip so it stays audible in a firefight.
 
 ---
 

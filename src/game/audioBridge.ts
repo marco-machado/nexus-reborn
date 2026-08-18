@@ -4,7 +4,7 @@
 import type { WeaponId, Weather } from './types'
 
 interface MissionSfx {
-  gunshot: (weaponId: WeaponId) => void
+  gunshot: (weaponId: WeaponId, side?: 'squad' | 'corpsec') => void
   reload: () => void
   confirmBlip: () => void
   alertSting: () => void
@@ -28,8 +28,8 @@ void import('./audio').then(
 )
 
 export const missionSfx: MissionSfx = {
-  gunshot(weaponId) {
-    loaded?.gunshot(weaponId)
+  gunshot(weaponId, side) {
+    loaded?.gunshot(weaponId, side)
   },
   reload() {
     loaded?.reload()
