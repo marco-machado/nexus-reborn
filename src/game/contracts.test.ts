@@ -17,12 +17,15 @@ import {
   rollContract,
   rollSuppressionContract,
   sectorClient,
+  sequenceVariant,
 } from './contracts'
 import type { ContractSectorInput, ContractType, GeneratedContract } from './contracts'
-import { CITIES, CITIES_BY_SECTOR, HOLDERS } from './atlas'
+import { CITIES, CITIES_BY_SECTOR, HOLDERS, PLATE_H, PLATE_W, cityById } from './atlas'
 import type { CorpId } from './atlas'
 import { MISSIONS, operativeById } from './data'
-import { missionPeriod } from './missionParams'
+import { missionPeriod, rollOpeningHour, rollWeatherFront } from './missionParams'
+import { mulberry32 } from './rng'
+import type { ObjectiveDef } from './types'
 import { isWalkable } from './types'
 import { createWorld } from './world'
 
@@ -325,7 +328,12 @@ describe('derived missions', () => {
       expect(m.objectives.length).toBeGreaterThanOrEqual(3)
       expect(m.objectives.at(-1)?.kind).toBe('extract')
       for (const objective of m.objectives) {
-        expect(objective.optional).toBeUndefined()
+        if (objective.optional) {
+          expect(objective.optional).toBe(true)
+          expect(objective.bonusReward).toBeGreaterThan(0)
+        } else {
+          expect(objective.optional).toBeUndefined()
+        }
         if (objective.landmark) {
           expect(w.city.landmarks[objective.landmark]).toBeDefined()
         }
@@ -342,6 +350,13 @@ describe('derived missions', () => {
         if (objective.kind === 'escort') {
           expect(w.city.vips.length).toBeGreaterThan(0)
         }
+        if (objective.kind === 'defend') {
+          expect(objective.durationSec ?? 0).toBeGreaterThan(0)
+          expect(objective.wave).toBeDefined()
+          for (const entry of objective.wave?.entry ?? []) {
+            expect(w.city.landmarks[entry]).toBeDefined()
+          }
+        }
       }
 
       // The dossier fields the brief renders are all present.
@@ -353,6 +368,195 @@ describe('derived missions', () => {
       expect(m.mapPos.x).toBeLessThan(100)
       expect(m.mapPos.y).toBeGreaterThan(0)
       expect(m.mapPos.y).toBeLessThan(100)
+    }
+  })
+})
+
+describe('objective sequence variants', () => {
+  const TYPES: ContractType[] = ['SEIZURE', 'SUPPRESSION', 'EXTRACTION', 'SABOTAGE']
+  const OBJECTIVE_LANDMARKS = new Set([
+    'gate', 'console', 'server', 'extraction', 'yard-a', 'target',
+  ])
+  const OBJECTIVE_TAGS = new Set(['relay', 'transformer', 'garrison'])
+
+  function contractOf(type: ContractType, seed: number): GeneratedContract {
+    return {
+      id: 'gc' + seed.toString(16).padStart(8, '0'),
+      createdT: 1000,
+      expiresAtT: 90000,
+      sector: 'eu',
+      cityId: 'nc',
+      district: 7,
+      type,
+      client: 'helix',
+      threat: 'HIGH',
+      reward: 52000,
+      seed,
+      priority: type === 'SUPPRESSION',
+      expedited: false,
+    }
+  }
+
+  function seedForVariant(variant: number): number {
+    for (let s = 0; s < 4096; s++) {
+      if (sequenceVariant(s) === variant) return s
+    }
+    throw new Error('no seed for variant ' + variant)
+  }
+
+  function signature(objectives: ObjectiveDef[]): string {
+    return objectives
+      .map((o) =>
+        [o.kind, o.optional ? 'opt' : '', o.failSec ?? '', o.tag ?? '', o.landmark ?? ''].join(':'),
+      )
+      .join('|')
+  }
+
+  function clamp(v: number, lo: number, hi: number): number {
+    return v < lo ? lo : v > hi ? hi : v
+  }
+
+  it('picks the same sequence for the same seed', () => {
+    for (const type of TYPES) {
+      for (const seed of [0, 1, 0x51ed, 0xabcdef]) {
+        const a = contractMission(contractOf(type, seed)).objectives
+        const b = contractMission(contractOf(type, seed)).objectives
+        expect(b).toEqual(a)
+        expect(sequenceVariant(seed)).toBe(sequenceVariant(seed))
+      }
+    }
+  })
+
+  it('produces more than one objective-kind signature per type', () => {
+    for (const type of TYPES) {
+      const sigs = new Set<string>()
+      for (let s = 0; s < 96; s++) {
+        sigs.add(signature(contractMission(contractOf(type, s)).objectives))
+      }
+      expect(sigs.size).toBeGreaterThan(1)
+      expect(sigs.size).toBe(3)
+    }
+  })
+
+  it('leaves the cosmetic rng stream untouched', () => {
+    const weathers = ['heavy', 'light', 'none'] as const
+    for (const record of rollMany(40)) {
+      const rng = mulberry32((record.seed ^ 0x9e3779b9) >>> 0)
+      rng()
+      rng()
+      const weather = weathers[Math.floor(rng() * weathers.length) % weathers.length]
+      const weatherFront = rollWeatherFront(rng, weather)
+      const city = cityById(record.cityId)
+      const mapPos = {
+        x: clamp((city.x / PLATE_W) * 100 + (rng() - 0.5) * 6, 3, 97),
+        y: clamp((city.y / PLATE_H) * 100 + (rng() - 0.5) * 6, 6, 94),
+      }
+      const openingHour = rollOpeningHour(rng)
+      const m = contractMission(record)
+      expect(m.weather).toBe(weather)
+      expect(m.weatherFront).toEqual(weatherFront)
+      expect(m.mapPos).toEqual(mapPos)
+      expect(m.openingHour).toBe(openingHour)
+    }
+  })
+
+  it('keeps the pinned cosmetic snapshot for the 0x42 seed', () => {
+    const m = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
+    expect(m.weather).toBe('none')
+    expect(m.mapPos).toEqual({ x: 51.11282241260633, y: 20.108530740325268 })
+  })
+
+  it('briefs the sequence that will deploy', () => {
+    for (const type of TYPES) {
+      for (let v = 0; v < 3; v++) {
+        const m = contractMission(contractOf(type, seedForVariant(v)))
+        const text = m.briefing.join(' ')
+        const hasDefend = m.objectives.some((o) => o.kind === 'defend')
+        const hasServer = m.objectives.some((o) => o.landmark === 'server')
+        const hasTransformer = m.objectives.some((o) => o.tag === 'transformer')
+        const timedKill = m.objectives.some((o) => o.kind === 'eliminate-tag' && o.failSec)
+        const plaza = m.objectives.some((o) => o.kind === 'interact' && o.landmark === 'target')
+        const tightEscort = m.objectives.some((o) => o.kind === 'escort' && o.failSec)
+        if (hasDefend) expect(text).toMatch(/response wave/i)
+        else expect(text).not.toMatch(/response wave/i)
+        if (hasServer) expect(text).toMatch(/detention server/i)
+        else expect(text).not.toMatch(/detention server/i)
+        if (hasTransformer) expect(text).toMatch(/transformer/i)
+        else expect(text).not.toMatch(/transformer/i)
+        if (timedKill) expect(text).toMatch(/three minutes/i)
+        if (plaza) expect(text).toMatch(/does not have to die|not every street patrol/i)
+        if (tightEscort) expect(text).toMatch(/ninety seconds/i)
+      }
+    }
+  })
+
+  it.each(TYPES)('builds a playable %s mission for every sequence variant', (type) => {
+    for (let v = 0; v < 3; v++) {
+      const contract = contractOf(type, seedForVariant(v))
+      expect(sequenceVariant(contract.seed)).toBe(v)
+      const m = contractMission(contract)
+      const w = createWorld(m, [operativeById('op1')])
+
+      for (const key of ['insertion', 'extraction', 'target']) {
+        expect(w.city.landmarks[key]).toBeDefined()
+      }
+      for (const p of w.city.spawnAgents) {
+        expect(isWalkable(w.city, p.x, p.z)).toBe(true)
+      }
+
+      const ids = m.objectives.map((o) => o.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      expect(m.objectives.at(-1)?.kind).toBe('extract')
+      for (const objective of m.objectives) {
+        if (objective.optional) {
+          expect(objective.optional).toBe(true)
+          expect(objective.bonusReward).toBeGreaterThan(0)
+        } else {
+          expect(objective.optional).toBeUndefined()
+        }
+        if (objective.landmark) {
+          expect(OBJECTIVE_LANDMARKS.has(objective.landmark)).toBe(true)
+          expect(w.city.landmarks[objective.landmark]).toBeDefined()
+        }
+        if (objective.tag) {
+          expect(OBJECTIVE_TAGS.has(objective.tag)).toBe(true)
+        }
+        if (objective.kind === 'eliminate-tag' || objective.kind === 'destroy') {
+          expect(objective.tag).toBeDefined()
+          const tagged =
+            w.city.enemies.some((e) => e.tag === objective.tag) ||
+            w.city.devices.some((d) => d.tag === objective.tag)
+          expect(tagged).toBe(true)
+        }
+        if (objective.kind === 'interact') {
+          expect(objective.durationSec ?? 0).toBeGreaterThan(0)
+        }
+        if (objective.kind === 'escort') {
+          expect(w.city.vips.length).toBeGreaterThan(0)
+        }
+        if (objective.kind === 'defend') {
+          expect(objective.durationSec).toBe(45)
+          expect(objective.wave).toEqual({
+            count: 5,
+            weapons: ['smg', 'assault', 'smg', 'smg', 'assault'],
+            entry: ['waveEntry-a', 'waveEntry-b'],
+          })
+          for (const entry of objective.wave?.entry ?? []) {
+            expect(w.city.landmarks[entry]).toBeDefined()
+          }
+        }
+      }
+    }
+  })
+
+  it('does not put failSec: undefined or optional: false on required objectives', () => {
+    for (const type of TYPES) {
+      for (let v = 0; v < 3; v++) {
+        for (const o of contractMission(contractOf(type, seedForVariant(v))).objectives) {
+          expect(o).not.toHaveProperty('failSec', undefined)
+          expect(o).not.toHaveProperty('optional', false)
+        }
+      }
     }
   })
 })
