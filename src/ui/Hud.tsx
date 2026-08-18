@@ -7,6 +7,7 @@ import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
 import { resolveMission } from '../state/worldStore'
 import { useCampaignStore } from '../state/campaignStore'
+import { recordAbort } from '../state/telemetry'
 import { noteTutorial } from '../state/tutorialStore'
 import { WEAPONS } from '../game/data'
 import { WEATHER_LABEL } from '../game/missionParams'
@@ -95,6 +96,7 @@ export default function Hud() {
   const paused = useMissionStore((s) => s.paused)
   const result = useMissionStore((s) => s.result)
   const clock = useMissionStore((s) => s.clock)
+  const weather = useMissionStore((s) => s.weather)
   const inventory = useMissionStore((s) => s.inventory)
   const abilities = useMissionStore((s) => s.abilities)
   const grenadeTargeting = useMissionStore((s) => s.grenadeTargeting)
@@ -174,7 +176,7 @@ export default function Hud() {
           <b className="hud-district">{district}</b>
           <span className="hud-clock">{clock}</span>
           <span className="chip dim">13.7C</span>
-          <span className="chip dim">{WEATHER_LABEL[mission?.weather ?? 'none']}</span>
+          <span className="chip dim">{WEATHER_LABEL[weather]}</span>
           <span className="chip dim">1.2M/S</span>
         </div>
         <div className={'hud-alert' + (alert > 0 ? ' hot' : '')}>
@@ -559,7 +561,18 @@ export default function Hud() {
         <PauseMenu
           returnRef={pauseBtnRef}
           onResume={() => setPaused(false)}
-          onAbort={() => goto('world')}
+          onAbort={() => {
+            const world = getWorld()
+            recordAbort(
+              missionId ?? world?.mission.id ?? 'unknown',
+              world?.time ?? 0,
+              world?.mission.seed ?? 0,
+              (world?.units ?? [])
+                .filter((u) => u.kind === 'agent' && u.operative)
+                .map((u) => u.operative!.role),
+            )
+            goto('world')
+          }}
         />
       )}
     </div>

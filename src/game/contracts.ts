@@ -14,7 +14,9 @@ import type {
   ObjectiveDef,
   SectorId,
   Weather,
+  WeatherFront,
 } from './types'
+import { rollWeatherFront, weatherNote } from './missionParams'
 
 /* -------------------------------- constants ------------------------------- */
 
@@ -346,12 +348,6 @@ const CONTRACT_ARCHETYPE: Record<ContractType, DistrictArchetype> = {
 
 const WEATHERS: Weather[] = ['heavy', 'light', 'none']
 
-const WEATHER_NOTE: Record<Weather, string> = {
-  heavy: 'HEAVY RAIN. VISIBILITY REDUCED.',
-  light: 'LIGHT RAIN. GUARD SIGHT MILDLY REDUCED.',
-  none: 'CLEAR NIGHT. GUARDS SEE AND HEAR AT FULL RANGE.',
-}
-
 const DENSITY_NOTE: Record<DistrictArchetype, string> = {
   checkpoint: 'CIVILIAN DENSITY MODERATE. COLLATERAL TOLERANCE LOW.',
   compound: 'CIVILIAN DENSITY LOW. COLLATERAL TOLERANCE MODERATE.',
@@ -428,9 +424,9 @@ function briefingFor(c: GeneratedContract, city: string, district: string): stri
   }
 }
 
-function notesFor(c: GeneratedContract, weather: Weather): string[] {
+function notesFor(c: GeneratedContract, weather: Weather, front?: WeatherFront): string[] {
   const notes = [
-    WEATHER_NOTE[weather],
+    weatherNote(weather, front),
     DENSITY_NOTE[CONTRACT_ARCHETYPE[c.type]],
     c.priority
       ? 'PRIORITY CONTRACT // PREMIUM FEE. OFFER EXPIRES EARLY.'
@@ -489,6 +485,7 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     ' ' +
     CODENAME_B[Math.floor(rng() * CODENAME_B.length) % CODENAME_B.length]
   const weather = WEATHERS[Math.floor(rng() * WEATHERS.length) % WEATHERS.length]
+  const weatherFront = rollWeatherFront(rng, weather)
   const city = cityById(contract.cityId)
   const mapPos = {
     x: clamp((city.x / PLATE_W) * 100 + (rng() - 0.5) * 6, 3, 97),
@@ -508,13 +505,14 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     reward: contract.reward,
     etaDays: CONTRACT_ETA_DAYS[contract.threat],
     weather,
+    weatherFront,
     variants: [
       { archetype, seed: contract.seed },
       { archetype, seed: (contract.seed + 1) >>> 0 },
     ],
     seed: contract.seed,
     briefing: briefingFor(contract, city.name, district),
-    notes: notesFor(contract, weather),
+    notes: notesFor(contract, weather, weatherFront),
     objectives: objectivesFor(contract),
     intelReq: contract.expedited ? 1 : CONTRACT_INTEL_REQ[contract.threat],
     mapPos,

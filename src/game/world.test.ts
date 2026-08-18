@@ -107,6 +107,7 @@ describe('createWorld', () => {
     const w = createWorld(MISSION, squadOps)
 
     expect(w.time).toBe(0)
+    expect(w.weather).toBe('heavy')
     expect(w.mission).toBe(MISSION)
     expect(w.city.size).toBeGreaterThan(0)
     expect(w.tracers).toEqual([])
@@ -203,6 +204,23 @@ describe('tick', () => {
   })
 })
 
+describe('weather front', () => {
+  it('retunes sight and logs when the scripted front hits', () => {
+    const w = createWorld(MISSION, ops(['op1']))
+    deployReset()
+    const opening = w.vision
+    expect(w.weather).toBe('heavy')
+    warm(w, 149.9)
+    expect(w.weather).toBe('heavy')
+    expect(w.vision).toBe(opening)
+    warm(w, 0.2)
+    expect(w.weather).toBe('light')
+    expect(w.vision).toBeGreaterThan(opening)
+    expect(useMissionStore.getState().weather).toBe('light')
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('WEATHER FRONT'))).toBe(true)
+  })
+})
+
 describe('store sync', () => {
   it('defers every store write to the first tick, which populates the HUD', () => {
     const squadOps = ops(DEFAULT_SQUAD)
@@ -296,9 +314,9 @@ describe('store sync', () => {
   })
 
   it('slows the squad when research armor and full loadouts go heavy', () => {
-    // +36 max HP of research plating adds 9 kg per operative: 286.1 + 64
-    // of items + 36 = 386.1 kg, over HEAVY_MASS_KG.
-    useResearchStore.setState({ done: ['c-pain', 'c-weave'] })
+    // Worn chest weave (+22) and leg hardening (+16) add 9.5 kg per operative:
+    // 286.1 + 64 of items + 38 = 388.1 kg, over HEAVY_MASS_KG.
+    useResearchStore.setState({ done: ['c-weave', 'k-hardening'] })
     const squadOps = ops(DEFAULT_SQUAD)
     const w = createWorld(BARE_MISSION, squadOps, {
       loadout: {
@@ -315,15 +333,15 @@ describe('store sync', () => {
 
 describe('research', () => {
   it('applies completed research at deployment and ignores later changes', () => {
-    useResearchStore.setState({ done: ['c-pain', 'c-synaptic', 'b-propellants'] })
+    useResearchStore.setState({ done: ['c-pain', 'c-accelerator', 'b-propellants'] })
     const base = operativeById('op1')
     const w = createWorld(BARE_MISSION, [base])
     const a1 = w.unit('a1')
     expect(a1).toBeDefined()
     expect(a1?.maxHp).toBe(base.maxHp + 14)
     expect(a1?.hp).toBe(base.maxHp + 14)
-    // Research speed plus the light-load mass bonus for a lone operative.
-    expect(a1?.speed).toBeCloseTo(base.speed + 0.2 + 0.15, 10)
+    // Worn neural speed plus the light-load mass bonus for a lone operative.
+    expect(a1?.speed).toBeCloseTo(base.speed + 0.15 + 0.15, 10)
     // Research first, then the assault role passive (x1.1) on top.
     expect(a1?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.12 * 1.1, 10)
 

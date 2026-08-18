@@ -780,11 +780,18 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
         ? mission.seed % 3
         : Math.max(0, Number.parseInt(mission.id.slice(1), 10) - 1)
       const previous = state.sectors[mission.sector]
+      const quiet = outcome.quietReplay === true
       const collateral = Math.min(5, Math.max(0, outcome.civiliansHit))
-      const controlDelta = outcome.won ? 4 + (missionIndex % 3) : -(1 + (missionIndex % 2))
-      const unrestDelta = outcome.won
-        ? -(3 + ((missionIndex + 1) % 3)) + collateral
-        : 4 + (missionIndex % 4) + collateral
+      const controlDelta = quiet
+        ? 0
+        : outcome.won
+          ? 4 + (missionIndex % 3)
+          : -(1 + (missionIndex % 2))
+      const unrestDelta = quiet
+        ? 0
+        : outcome.won
+          ? -(3 + ((missionIndex + 1) % 3)) + collateral
+          : 4 + (missionIndex % 4) + collateral
       const sector = {
         control: clamp(previous.control + controlDelta, CONTROL_MIN, CONTROL_MAX),
         unrest: clamp(previous.unrest + unrestDelta, UNREST_MIN, UNREST_MAX),
@@ -805,7 +812,7 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       const cityId = cityIdByName(mission.city)
       const currentHolder = cityId ? state.owner[cityId] : null
       const nextHolder =
-        cityId && currentHolder
+        !quiet && cityId && currentHolder
           ? nextCityHolder(cityId, currentHolder, outcome.won)
           : null
       const flipped = Boolean(cityId && nextHolder && nextHolder !== currentHolder)
@@ -865,11 +872,12 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       }
       f.events = events.length > MAX_EVENTS ? events.slice(events.length - MAX_EVENTS) : events
       f.unread = state.unread + added
-      f.influence = outcome.won
-        ? state.influence +
-          INFLUENCE_WIN_PTS +
-          (outcome.civiliansHit === 0 ? INFLUENCE_CLEAN_PTS : 0)
-        : state.influence
+      f.influence =
+        outcome.won && !quiet
+          ? state.influence +
+            INFLUENCE_WIN_PTS +
+            (outcome.civiliansHit === 0 ? INFLUENCE_CLEAN_PTS : 0)
+          : state.influence
       settlePressure(f, state.t)
       return { ...f }
     }),

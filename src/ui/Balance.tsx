@@ -112,6 +112,12 @@ export default function BalancePanel(props: { onClose: () => void }) {
                   value={Math.round(agg.winRate * 100) + '%'}
                   tone={agg.winRate >= 0.5 ? 'teal' : 'red'}
                 />
+                <Stat
+                  label="ABORT RATE"
+                  value={Math.round(agg.abortRate * 100) + '%'}
+                  tone={agg.aborts > 0 ? 'amber' : undefined}
+                />
+                <Stat label="ABORTS" value={String(agg.aborts)} />
                 <Stat label="MEAN DURATION" value={mmss(agg.meanDurationSec)} />
                 <Stat
                   label="MEAN FIRST CONTACT"

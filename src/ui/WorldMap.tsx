@@ -1005,22 +1005,10 @@ export function WorldMap() {
               <b>{read.taxYield.toFixed(2)}B CR</b>
             </div>
             <div className="kv">
-              <span>INFLUENCE INCOME</span>
-              <b className="teal">+{read.influenceIncome.toFixed(2)}B</b>
-            </div>
-            <div className="kv">
-              <span>BLACK MARKET IMPACT</span>
-              <b className="red">{read.blackMarket.toFixed(2)}B</b>
-            </div>
-            <div className="kv">
               <span>GARRISON STATUS</span>
               <b className={read.garrison === 'SECURE' ? 'teal' : read.garrison === 'STRAINED' ? 'amber' : 'red'}>
                 {read.garrison}
               </b>
-            </div>
-            <div className="kv">
-              <span>TOTAL FORCES</span>
-              <b>{fmt(read.forces)}</b>
             </div>
             <div className="kv">
               <span>DEFENSE RATING</span>

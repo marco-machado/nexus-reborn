@@ -2,10 +2,11 @@
 // box that follows the camera focus. Positions wrap vertically and
 // horizontally so the storm never ends and never leaves the view. Streak
 // density comes from the mission weather; a clear mission mounts nothing.
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { getWorld } from '../game/runtime'
+import type { Weather } from '../game/types'
 import { TIER_PARAMS, getMissionTier } from '../game/quality'
 import { useSettingsStore } from '../state/settingsStore'
 
@@ -59,11 +60,15 @@ function buildLayer(count: number, streak: number, opacity: number, fall: number
 const TMP_DIR = new THREE.Vector3()
 
 export default function Rain() {
-  // The mission's weather is fixed for the lifetime of this mount: the world
-  // is set before the canvas renders and swapped only across remounts.
-  const weather = getWorld()?.mission.weather ?? 'none'
+  const [weather, setWeather] = useState<Weather>(
+    () => getWorld()?.weather ?? getWorld()?.mission.weather ?? 'none',
+  )
+  useFrame(() => {
+    const next = getWorld()?.weather ?? getWorld()?.mission.weather ?? 'none'
+    if (next !== weather) setWeather(next)
+  })
   if (weather === 'none') return null
-  return <RainLayers heavy={weather === 'heavy'} />
+  return <RainLayers key={weather} heavy={weather === 'heavy'} />
 }
 
 function RainLayers({ heavy }: { heavy: boolean }) {

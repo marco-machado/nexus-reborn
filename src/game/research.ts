@@ -2,6 +2,8 @@
 // costs, how long it runs, and what it changes. Every node carries its effects
 // as data, so the screen generates its benefit lines from the same values the
 // mission applies and can never promise a change the game does not make.
+// Unslotted (Ballistics) applies to the whole squad. Slotted projects apply
+// only to operatives who wear them (`appliedNodeIds`).
 import { WEAPONS } from './data'
 import type { WeaponDef, WeaponId } from './types'
 
@@ -429,17 +431,21 @@ function pct(mul: number): string {
 }
 
 // The line the detail panel prints for one effect, and the scope it applies to.
-export function benefitOf(e: Effect): { line: string; scope: string } {
+export function benefitOf(e: Effect, node?: ResearchNode): { line: string; scope: string } {
   if (e.target === 'crew') {
     const v = e.add
     const shown = Number.isInteger(v) ? String(v) : v.toFixed(2)
-    return { line: (v > 0 ? '+' : '') + shown + ' ' + CREW_FIELD[e.field], scope: 'EVERY OPERATIVE' }
+    return {
+      line: (v > 0 ? '+' : '') + shown + ' ' + CREW_FIELD[e.field],
+      scope: node?.augSlot ? 'WORN' : 'EVERY OPERATIVE',
+    }
   }
   const f = WEAPON_FIELD[e.field]
   const line = e.mul !== undefined ? pct(e.mul) + ' ' + f.label : (e.add ?? 0) + ' ' + f.label
+  const weaponScope = e.weapon === 'all' ? 'ALL SQUAD WEAPONS' : WEAPONS[e.weapon].name
   return {
     line: e.mul === undefined && (e.add ?? 0) > 0 ? '+' + line : line,
-    scope: e.weapon === 'all' ? 'ALL SQUAD WEAPONS' : WEAPONS[e.weapon].name,
+    scope: node?.augSlot ? 'WORN // ' + weaponScope : weaponScope,
   }
 }
 
@@ -487,14 +493,70 @@ export function crewBonus(done: readonly string[]): CrewBonus {
   return out
 }
 
+// The latest completed project in a bay. Unpinned bays wear this.
+export function currentIssue(done: readonly string[], slot: AugSlot): ResearchNode | null {
+  let latest: ResearchNode | null = null
+  for (const nid of done) {
+    const node = BY_ID[nid]
+    if (node && node.augSlot === slot) latest = node
+  }
+  return latest
+}
+
 // The augmentation filling each bay: the last project completed for that slot.
 export function installedAugs(done: readonly string[]): Array<{ slot: AugSlot; node: ResearchNode | null }> {
-  return AUG_SLOTS.map((slot) => {
-    let latest: ResearchNode | null = null
-    for (const nid of done) {
-      const node = BY_ID[nid]
-      if (node && node.augSlot === slot) latest = node
-    }
-    return { slot, node: latest }
+  return AUG_SLOTS.map((slot) => ({ slot, node: currentIssue(done, slot) }))
+}
+
+// A pin holds stock issue or an older completed project. Missing key = current issue.
+export type BayPin = string | 'STOCK'
+export type BayPins = Partial<Record<AugSlot, BayPin>>
+
+export function wornNode(
+  done: readonly string[],
+  pins: BayPins | undefined,
+  slot: AugSlot,
+): ResearchNode | null {
+  const pin = pins?.[slot]
+  if (pin === 'STOCK') return null
+  if (typeof pin === 'string') {
+    const node = BY_ID[pin]
+    if (node && node.augSlot === slot && done.includes(pin)) return node
+  }
+  return currentIssue(done, slot)
+}
+
+export function wornAugs(
+  done: readonly string[],
+  pins: BayPins | undefined,
+): Array<{ slot: AugSlot; node: ResearchNode | null; pinned: boolean }> {
+  return AUG_SLOTS.map((slot) => ({
+    slot,
+    node: wornNode(done, pins, slot),
+    pinned: pins?.[slot] !== undefined,
+  }))
+}
+
+// Completed projects that apply to one operative: every unslotted node, plus
+// the slotted node that operative actually wears in each bay.
+export function appliedNodeIds(done: readonly string[], pins: BayPins | undefined): string[] {
+  const worn = new Set<string>()
+  for (const slot of AUG_SLOTS) {
+    const node = wornNode(done, pins, slot)
+    if (node) worn.add(node.id)
+  }
+  return done.filter((id) => {
+    const node = BY_ID[id]
+    if (!node) return false
+    return node.augSlot ? worn.has(id) : true
   })
+}
+
+export function completedInBay(done: readonly string[], slot: AugSlot): ResearchNode[] {
+  const out: ResearchNode[] = []
+  for (const id of done) {
+    const node = BY_ID[id]
+    if (node && node.augSlot === slot) out.push(node)
+  }
+  return out
 }

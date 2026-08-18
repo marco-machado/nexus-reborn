@@ -8,6 +8,8 @@ Names follow [`CONTEXT.md`](../CONTEXT.md). If this document and that glossary d
 
 When this document and the playable build disagree, treat the disagreement as a defect in one of them and resolve both. Do not silently let either drift.
 
+[`docs/game-design.html`](game-design.html) is a dated styled snapshot. This file, [`CONTEXT.md`](../CONTEXT.md), and [`docs/adr/`](adr/) are the spec.
+
 ---
 
 ## 1. The game
@@ -100,19 +102,24 @@ Story arrives as paperwork: the brief, the feed, operative dossiers, research ab
 
 ### Corporations
 
+**Holders** appear on the World Network and the CONTROL KEY.
+
 | Name | Role | Color |
 |---|---|---|
 | Stratos Industries | City holder and client | Cyan |
 | Nexus Global | Player house, city holder, issuer of internal directives | Green |
 | Helix Corp | City holder and client | Amber |
 | Omnicorp | City holder; CorpSec affiliation on Glass Veil | Muted teal-gray |
-| Sable Enterprises | Client for Glass Veil | None on the map |
 | Contested | Ownership tie | Red |
 | Unknown | Unsurveyed | Dark teal |
 
-Nexus-signed generated work may target any city in its sector. An outside client is never paired with a Nexus-held city. A sector held entirely by Nexus can only post Internal directives.
+**Client houses** commission work and never hold cities. They have no map color and never enter the generated-client pool.
 
-Sable has no cities and no color. That is a hole; see Open questions.
+| Name | Role |
+|---|---|
+| Sable Enterprises | Client for Glass Veil |
+
+Nexus-signed generated work may target any city in its sector. An outside client is never paired with a Nexus-held city. A sector held entirely by Nexus can only post Internal directives. The brief `CLIENT:` field is the same for a holder-client and a client house; that field does not imply a map color.
 
 ### Tone
 
@@ -144,7 +151,7 @@ flowchart LR
 5. Accepting a contract goes straight to assembly. There is no buy-in and no second confirm.
 6. Exactly four operatives must be assigned before deployment.
 7. The mission ends when the required objectives are done, or when no living operatives remain.
-8. The debrief applies payout, sector movement, intel, influence, and roster changes once, then returns the player to the World Network (or back to the brief to replay).
+8. The debrief applies payout, sector movement, intel, influence, and roster changes once, then returns the player to the World Network (or back to the brief to replay). A quiet replay applies roster and ETA only.
 9. The World Network and Research autosave. The mission and the debrief do not. Aborting a mission discards it. There is no mid-mission resume.
 
 The unsaved mission is a design choice, not a limitation. Once the squad is on the ground, the director is committed.
@@ -159,11 +166,11 @@ Read street patrols, cones, civilians, and the objective. Select. Move or Hold G
 
 ### The research loop
 
-Inspect a branch. Commit credits to one project in that laboratory. Let strategic time run. Collect the effect on the next deployment. Unlock the next projects.
+Inspect a branch. Commit credits to one project in that laboratory. Let strategic time run. Unslotted effects land on the next deployment. Slotted effects land on operatives who wear them. Unlock the next projects.
 
 ### Campaign end
 
-Winning all three authored contracts marks the campaign complete. The World Network posts a banner. The contracts stay replayable; completion is a mark, not a lock.
+Winning all three authored contracts marks the campaign complete. The World Network posts a banner. The contracts stay replayable; completion is a mark, not a lock. A replay after that first win does not pay; see Replay.
 
 Losing every remaining operative is a campaign fail. The World Network posts a failure banner, contracts lock, and the campaign cannot also be marked complete.
 
@@ -197,13 +204,13 @@ Six sectors are open. Antarctica is locked at every intel level: no survey data.
 | Oceania | 73% | 9% | 0.55 |
 | Antarctica | — | — | — |
 
-Each open sector shows control, unrest, weekly tax yield, influence income, black-market impact, garrison condition, total forces, and defense rating.
+Each open sector shows control, unrest, weekly tax yield, garrison condition, and defense rating.
 
-**Influence index** is the weighted average control of the open sectors. Beside it sits a spendable **Influence** balance.
+**Influence index** is the weighted average control of the open sectors. Beside it sits a spendable **Influence** balance. Influence income is not a per-sector row: the trickle is global, and the verbs are the influence actions.
 
 A sector above **60 unrest** is under **unrest pressure**: every 6 strategic hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it reads red, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is always reachable.
 
-Asset count and black-market impact are readouts, not verbs. Defense rating and garrison condition already feed generated-contract threat; tax yield already falls under unrest. See Open questions.
+Defense rating and garrison condition feed generated-contract threat. Tax yield is a readout of unrest strain, not a credit grant. Black-market impact, total forces, and asset count are not systems and do not print.
 
 ### Influence actions
 
@@ -248,12 +255,12 @@ At intel 2+ the sector panel shows an **event forecast**: the chance of each cat
 The campaign opens at intel **1**, with 25/100 progress.
 
 - A contract win awards **+40**. A clean win (no civilian hit by the squad) awards **+15** more.
-- A loss awards nothing.
+- A quiet replay awards nothing. A loss awards nothing.
 - Each 100 progress becomes the next intel level.
 - Hollow Crown and Rust Haven require intel 2. Generated contracts gate by threat: moderate at 1, high at 2, severe at 3.
 - Expedite can waive a generated contract’s intel gate.
 
-At intel 2+ the brief replaces a raw success percentage with a computed **risk index** (Low / Guarded / High / Severe), derived from the actual deployment: street-patrol, garrison, and civilian counts, weighted by CorpSec toughness and weather.
+At intel 2+ the brief replaces a raw success percentage with a computed **risk index** (Low / Guarded / High / Severe), derived from the actual deployment: street-patrol, garrison, and civilian counts, weighted by CorpSec toughness and the **clearer** weather on the weather script.
 
 Intel is earned in the field and spent on access and foresight. That is its whole job.
 
@@ -265,7 +272,9 @@ Two currencies. **Credits** buy research and candidates. **Influence** buys infl
 
 ### Credits
 
-Opening balance: **128,450 CR**. Successful contracts add their net payout. Failed contracts pay nothing. Research and hiring cannot overdraw the account; the authorization simply refuses.
+Opening balance: **128,450 CR**. Successful contracts add their net payout. A quiet replay and a failed contract pay nothing. Research and hiring cannot overdraw the account; the authorization simply refuses.
+
+One clean pass of the three authored contracts, both optionals included, is **203,000 CR**. The research program costs **779,000 CR**. The gap is the generated market, not authored replay. See [ADR-0004](adr/0004-quiet-replay.md).
 
 ### Collateral
 
@@ -283,7 +292,7 @@ This is the corporate face of the violence pillar. The debrief must make the col
 
 The next deployment is better because of what happened between missions, not because the player bought a gun.
 
-- **Research** changes weapon stats or every operative’s health and speed. Effects stack in completion order. They are sampled when the mission is created and cannot change a squad already on the ground.
+- **Research** changes the next deployment. Unslotted projects (Ballistics) apply to the whole squad. Slotted projects apply only to operatives who wear them. Effects stack in completion order among what actually applies. They are sampled when the mission is created and cannot change a squad already on the ground.
 - **Experience** goes to survivors at debrief. Each point is +2 max HP and +0.05 m/s on the next deployment, sampled the same way.
 - **Intel** opens work and forecasts.
 - **The roster** is itself progression: the dead are gone, the injured cost strategic time, replacements are hired from a rolling market.
@@ -292,15 +301,15 @@ There is no account level, no owned equipment, and no consumable shop. Those are
 
 ### Influence income
 
-- **+6** on any contract win.
-- **+2** more for a clean win.
+- **+6** on any contract win that is not a quiet replay.
+- **+2** more for a clean win of that kind.
 - **+1** per 12 strategic hours while the influence index holds above **55**.
 
 ---
 
 ## 7. Research
 
-Research is how the next squad changes. The player does not pick guns per operative. They fund a program, and the next squad goes in changed.
+Research is how the next squad changes. The player does not pick guns per operative. They fund a program. Unslotted projects change every weapon. Slotted projects are worn at assembly. See [ADR-0005](adr/0005-blueprint-assignment.md).
 
 ### Rules
 
@@ -352,9 +361,13 @@ Ballistics is lethality and handling. Cybernetics is the body. Control Systems i
 
 ### Augmentation bays
 
-The assembly dossier shows four augmentation bays — Neural, Chest, Arms, Legs — and lists the latest completed project in each bay as installed hardware.
+Ballistics projects are **unslotted**: always on, squad-wide. Cybernetics and Control Systems projects are **slotted** to Neural, Chest, Arms, or Legs.
 
-That hardware is a label on a global program. Projects apply to the whole squad, not as individually installed or swappable cyberware. The diegesis is “the program upgraded the squad.” Per-operative hardware is a different game; see Open questions.
+Each operative has those four bays. A bay wears at most one completed slotted project that belongs to it. The project is a blueprint: every operative may wear the same one. Wearing a project applies all of its effects to that operative only. Prerequisites gate research, not wear.
+
+Unpinned bays, including new hires, wear **current issue** — the latest completed project in that bay. The director may **pin** a bay to an older completed project or to **stock issue**. A new completion updates unpinned bays only. Death drops that operative’s assignment, not the program.
+
+The assembly dossier shows the four bays for the focused operative: worn project or stock issue, and whether the bay is pinned. The research screen still names a project’s home bay. This is not a locker and not individually owned hardware.
 
 ---
 
@@ -366,6 +379,7 @@ That hardware is a label on a global program. Projects apply to the whole squad,
 - Every mission deploys exactly four.
 - Default four: Mara, Ghost, Dart, Torq.
 - Inspection and assignment are separate. At least one operative stays assigned while the player edits.
+- Augmentation bays are worn or pinned at assembly. Unpinned bays follow current issue.
 - Deploy is disabled until all four squad bays are filled.
 
 The eight are a starting roster, not a protected cast.
@@ -376,11 +390,11 @@ A kill is permanent. The debrief removes the operative, lists them under KIA, an
 
 A survivor who ends a mission below 35% of maximum health returns **Injured**. Downtime scales with missing health: 12 strategic hours just under the threshold, up to 48 at near-death. Everyone else stays Ready. Newly injured operatives leave the squad at debrief and cannot be assigned until the strategic clock finishes their recovery. Raven opens the campaign Injured and recovers after 24 strategic hours.
 
-Hiring replaces losses. Assembly offers three procedural candidates at a time, one new candidate every 24 strategic hours on the same clock injuries recover on. A candidate has a stable name, face, one of the eight roles, health and speed inside the authored ranges, and that role’s primary weapon. Hiring costs 16,000–34,000 CR by quality and is refused on overdraw or a full roster.
+Hiring replaces losses. Assembly offers three procedural candidates at a time, one new candidate every 24 strategic hours on the same clock injuries recover on. A candidate has a stable name, face, one of the eight roles, health and speed inside the authored ranges, and that role’s primary weapon. They arrive on current issue in every bay. Hiring costs 16,000–34,000 CR by quality and is refused on overdraw or a full roster.
 
 ### Starting roster
 
-Speed is meters per second. Research and experience are added at deployment.
+Speed is meters per second. Unslotted research, worn slotted projects, and experience are added at deployment.
 
 | Codename | Name | Role | HP | Speed | Primary | Sidearm | Opens | Specialty |
 |---|---|---|---:|---:|---|---|---|---|
@@ -428,7 +442,7 @@ Deployment mass is a real gate, not a flavor number.
 
 - 60 kg base per operative.
 - Authored weapon masses: assault 4.2, SMG 3.1, pistol 1.2, longrifle 6.8, shotgun 4.9.
-- 0.25 kg per max-HP point above 90, so health research is also plating.
+- 0.25 kg per max-HP point above 90, including worn health projects and experience, so plating follows the body that deploys.
 - 8 kg per med kit, 6 kg per power cell.
 
 Each operative has two extra item slots on the assembly screen. Filled slots add their items to the mission pools.
@@ -441,9 +455,9 @@ Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 k
 
 ## 9. Contracts
 
-A contract is work with a client, a city, a type, a threat, a reward, and an ETA. Accepting it is free. After the mission, the debrief spends the ETA as strategic days.
+A contract is work with a client, a city, a type, a threat, a reward, and an ETA. Accepting it is free. After a win, the debrief spends the ETA as strategic days, including a quiet replay.
 
-Authored chance is not a static field. It is derived from threat, weather, the source sector’s control and unrest, and completed research, then clamped to 35–95. At intel 2+ the brief hides the percentage and shows the risk index instead.
+Authored chance is not a static field. It is derived from threat, the clearer weather on the weather script, the source sector’s control and unrest, and completed research, then clamped to 35–95. At intel 2+ the brief hides the percentage and shows the risk index instead.
 
 ### Authored contracts
 
@@ -455,7 +469,7 @@ Opening-campaign figures, no research done, sectors at their starting values:
 | Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | Intel 2 | 4 days |
 | Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | Intel 2 | 3 days |
 
-Contracts remain replayable after success or failure. That is the current economy. It is also an open question: the full research program costs 779,000 CR, Glass Veil pays 85,000, and nothing diminishes a replay.
+Authored contracts remain replayable after success or failure. After a win, the next deploy uses the other district layout. A replay of a contract already won is a **quiet replay**: 0 Credits, 0 Influence, 0 Intel, no control or unrest shove. It is still a real mission — KIA, injury, experience, and ETA apply. The debrief banner reads `REPLAY // FEE ALREADY COLLECTED`. A loss retry (the contract is not yet won) still pays in full. See [ADR-0004](adr/0004-quiet-replay.md).
 
 ### Generated market
 
@@ -473,9 +487,9 @@ Generated work is first-class content, not filler. The authored three are the ca
 
 ### The brief
 
-The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the sequential objectives, collateral tolerance, a recon image, and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts.
+The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the weather script (opening intensity and any coming change with its clock), the sequential objectives, collateral tolerance, a recon image, and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts.
 
-If the brief’s geometry does not match the deployed district, the brief is wrong.
+If the brief’s geometry does not match the deployed district, the brief is wrong. If the brief’s weather does not match the deployed script, the brief is wrong.
 
 ---
 
@@ -492,6 +506,24 @@ Shared landmarks: insertion and extraction on the south, near (48, 88); a centra
 | Industrial | Rust Haven; generated sabotage | 4 yard CorpSec | 3 | 8 | Fenced eastern yard; 8 m cross streets |
 
 Threat extras, unrest extras, and Hardened add street patrols and civilians on top of those bases. Four operatives deploy every time.
+
+### Weather
+
+Rain is heavy, light, or none. It shortens CorpSec sight and quiets weapons. It does not change accuracy, movement, or the 4.5 m omnidirectional notice radius.
+
+Each mission carries a **weather script**, fixed when the mission is created. The same contract seed produces the same script. Opening weather plus at most one change, to an adjacent intensity, at one tactical time from insertion. See [ADR-0006](adr/0006-weather-script.md).
+
+The brief prints the opening and the coming change (`HEAVY RAIN. FRONT CLEARS 22:16:38.`). The comm log fires when the front hits. The HUD weather chip follows. Risk index uses the clearer weather on the script; notes still print both.
+
+Authored scripts:
+
+| Contract | Opening | Front |
+|---|---|---|
+| Glass Veil | Heavy | Clears to light at 22:16:38 (T+150s) |
+| Hollow Crown | Light | Clears to none at 22:17:08 (T+180s) |
+| Rust Haven | None | None |
+
+Generated contracts pick opening weather uniformly. About two in five then roll one front at 90–240s from insertion, direction uniform among the legal adjacent steps. The rest stay static.
 
 ### Player verbs
 
@@ -538,7 +570,7 @@ Threat sets the elite mix: Moderate fields none; High upgrades one garrison memb
 
 **Officer radio.** Four seconds after an officer enters combat, every CorpSec within 22 m that is not already fighting is put on the squad’s last seen position at investigation-level awareness. Killing the officer inside the delay — or calming them, for example with an EM burst — cancels the call. Officers wear an amber chest lamp. Heavies read by bulk. Marksmen read by a lean frame.
 
-**Vision.** 14 m in clear weather, 12.6 m in light rain, 11.2 m in heavy rain. 110° cone. 4.5 m omnidirectional notice, weather-invariant. Vision needs clear grid line of sight. Certainty takes about 0.45 s up close and about 1.7 s at maximum range.
+**Vision.** 14 m in clear weather, 12.6 m in light rain, 11.2 m in heavy rain. Those ranges follow the live weather: when a front hits, sight and weapon noise retune. 110° cone. 4.5 m omnidirectional notice, weather-invariant. Vision needs clear grid line of sight. Certainty takes about 0.45 s up close and about 1.7 s at maximum range.
 
 **Hearing.** Gunshots make noise that passes through walls. Noise supplies a location, not a target. Sound alone can raise awareness only to 85%: investigation, not fire. Louder weapons shout farther.
 
@@ -574,7 +606,7 @@ Tracers, the comm log, and the debrief must make this readable. If stray fire is
 | VK-88 Longrifle | 46 | 26 m | 1.60 s | 5 | 2.6 s | 0.008 | Precision elimination |
 | M6 Breacher | 26 | 8 m | 0.90 s | 6 | 2.2 s | 0.120 | Short-range burst |
 
-Every operative carries a primary and a sidearm. V swaps the selection. The drawn weapon cannot fire for 0.5 s (the HUD reads Drawing). Each slot keeps its own magazine; swapping cancels an in-progress reload of the stowed weapon and resumes its count when drawn again. Auto-fire, ordered attacks, engagement range, noise, tracers, and gunshot audio follow the drawn weapon. Research applies to both slots. CorpSec carry one weapon and never swap. Reserve-ammo numbers in the UI are informational.
+Every operative carries a primary and a sidearm. V swaps the selection. The drawn weapon cannot fire for 0.5 s (the HUD reads Drawing). Each slot keeps its own magazine; swapping cancels an in-progress reload of the stowed weapon and resumes its count when drawn again. Auto-fire, ordered attacks, engagement range, noise, tracers, and gunshot audio follow the drawn weapon. Unslotted research applies to both slots for the whole squad. Worn slotted projects apply to that operative’s both slots. CorpSec carry one weapon and never swap. Reserve-ammo numbers in the UI are informational.
 
 **Grenades.** G arms or cancels targeting. A confirmed throw spends one power cell, snaps onto nearby pavement within 2.5 m, must land within 18 m, and detonates immediately: 70 damage at centre falling to 35 at a 3.5 m edge, line of sight only, 24 m noise, 4 s squad cooldown. Empty cells or a running cooldown disable the control.
 
@@ -606,7 +638,7 @@ Required objectives are strictly sequential. Optional objectives activate with t
 
 **Loss:** no living operatives remain; a required escort VIP dies; or a required time limit expires.
 
-The HUD shows the result immediately. After 2.5 seconds the game enters the debrief, which reports target, eliminations, KIA, new injuries and recovery times, survivor experience, civilian collateral, tactical time elapsed, Reward, optional bonus, Collateral, ETA spent, net payout, and the new balance.
+The HUD shows the result immediately. After 2.5 seconds the game enters the debrief, which reports target, eliminations, KIA, new injuries and recovery times, survivor experience, civilian collateral, tactical time elapsed, Reward, optional bonus, Collateral, ETA spent, net payout, and the new balance. A quiet replay still debriefs: the banner is `REPLAY // FEE ALREADY COLLECTED`; currency and sector lines read as not paid; roster and ETA still print.
 
 ---
 
@@ -616,19 +648,19 @@ Each authored contract is a designed problem, not a reskin. Generated contracts 
 
 ### Glass Veil — open the district
 
-Sable wants District 07 opened for an asset transfer at 23:00. Omnicorp CorpSec has sealed it behind a checkpoint. The squad inserts on the south perimeter and advances through market blocks under heavy rain.
+Sable wants District 07 opened for an asset transfer at 23:00. Omnicorp CorpSec has sealed it behind a checkpoint. The squad inserts on the south perimeter and advances through market blocks under heavy rain. The front clears to light at 22:16:38. The 23:00 transfer is contract fiction, not mission length.
 
-Heavy rain is the squad’s ally: the largest sight penalty in the game, which is why a Severe contract is still workable. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Collateral tolerance is low. Severe threat adds three extra street patrols (four if unrest is high), scales CorpSec health to 1.2 (1.25 if control is above 60), and upgrades one garrison member to an officer and one to a heavy.
+Heavy rain is the squad’s ally on the approach: the largest sight penalty in the game, which is why a Severe contract is still workable. At 22:16:38 that ally lifts one step. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Collateral tolerance is low. Severe threat adds three extra street patrols (four if unrest is high), scales CorpSec health to 1.2 (1.25 if control is above 60), and upgrades one garrison member to an officer and one to a heavy.
 
 1. Reach the checkpoint gate.
 2. Eliminate the seven-garrison (street patrols are optional unless they threaten the squad).
 3. Extract south.
 
-The mission is a read-and-commit: bypass or break eight street patrols, keep fleeing civilians out of the lane, breach the northern plaza, and silence the officer inside four seconds or fight the whole plaza. Then walk home with whoever is still standing.
+The mission is a read-and-commit: bypass or break eight street patrols in the rain, keep fleeing civilians out of the lane, breach the northern plaza as sight opens, and silence the officer inside four seconds or fight the whole plaza. Then walk home with whoever is still standing.
 
 ### Hollow Crown — take the architect alive
 
-Helix pays for a neurochem architect, alive. CorpSec means to move the asset before the next maglev window. Light rain. The compound can be bypassed; the interior garrison is optional.
+Helix pays for a neurochem architect, alive. CorpSec means to move the asset before the next maglev window. Light rain on insertion; the front clears to none at 22:17:08. The compound can be bypassed; the interior garrison is optional.
 
 High threat: two extra street patrols (three if unrest is high), CorpSec health 1.1 (1.15 if control is above 60), one garrison heavy. Fourteen civilians, twenty if unrest is high. The compound is a walled eastern detention block with one gated south entry and one breachable side entry; seed parity mirrors the flank. Cell blocks on the north wall, records hut at the server corner.
 
@@ -638,11 +670,11 @@ High threat: two extra street patrols (three if unrest is high), CorpSec health 
 4. Walk the freed VIP to extraction alive.
 5. Extract the squad.
 
-The mission is a route choice and an escort. The side wall skips most of the interior. The optional server sits away from the console, so the bonus is paid in exposure. The VIP is fragile and walks out through whatever the squad already woke up. A body pays nothing.
+The mission is a route choice and an escort. The side wall skips most of the interior. The optional server sits away from the console, so the bonus is paid in exposure. The VIP is fragile and walks out through whatever the squad already woke up, under full sight if the front has lifted. A body pays nothing.
 
 ### Rust Haven — drop the grid and hold it
 
-Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. No rain: full sight, full hearing. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; CorpSec health 1.0 (1.05 if control is above 60). Demolition cells drop devices quickly. Gunfire works, slowly.
+Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. Clear night, no front: full sight, full hearing. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; CorpSec health 1.0 (1.05 if control is above 60). Demolition cells drop devices quickly. Gunfire works, slowly.
 
 The yard splits into two sub-yards. Seed parity sets the split. Streets are wider than the other archetypes.
 
@@ -681,11 +713,11 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 **Brief.** Plan. The map must be the district.
 
-**Assembly.** Inspect, assign, read research-adjusted stats, see augmentation-bay labels, fill two item slots, and pass the 400 kg gate.
+**Assembly.** Inspect, assign, wear or pin augmentation bays, read research-adjusted stats from what is worn, fill two item slots, and pass the 400 kg gate.
 
-**Mission HUD.** District clock, weather, alert, credits, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim.
+**Mission HUD.** District clock, live weather, alert, credits, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim. A weather front writes a comm-log line.
 
-**Debrief.** The invoice. It applies sector, intel, influence, and roster consequences exactly once.
+**Debrief.** The invoice. It applies sector, intel, influence, and roster consequences exactly once. A quiet replay names the zero and still applies roster and ETA.
 
 **Settings.** Audio, remaps, accessibility, quality, difficulty, telemetry. Persists separately from the campaign, so New Operation keeps the player’s preferences.
 
@@ -714,7 +746,7 @@ Designed in, not bolted on:
 - High contrast: brighter ink, stronger frames.
 - Text scale 90 / 100 / 110 / 125%; screens scroll rather than clip.
 
-Still open: full keyboard travel across every panel, color-vision presets, captions for audio cues, and a screen-reader pass on the tactical HUD.
+Product backlog, not open design: full keyboard travel across every panel, color-vision presets, captions for audio cues, and a screen-reader pass on the tactical HUD.
 
 ---
 
@@ -815,7 +847,7 @@ CorpSec has numerical superiority (12 on the baseline checkpoint before extras),
 
 Difficulty should turn readable knobs: sight confirmation time, accuracy and cooldown, street-patrol count and overlap, garrison mix, civilian density, economy, awareness range, optional-objective pressure. It must not turn off the minimap without giving the player a compensating tool.
 
-Economy pressure is real. Glass Veil pays 85,000 CR. The research program costs 779,000 CR. Completing the program requires repeated income. Unlimited undiminished replay of the same authored contract is the current rule and an open question.
+Economy pressure is real. Glass Veil pays 85,000 CR once. The research program costs 779,000 CR. Completing the program requires the generated market. Authored replay after a win does not pay.
 
 ---
 
@@ -827,13 +859,13 @@ Single-player. No networking.
 
 The campaign save is versioned and local. It holds the World Network, the laboratories, the roster, tutorial progress, and the campaign result. A mission in progress is memory only. Settings and telemetry live in their own slots so New Operation does not reset the player’s preferences.
 
-Missions and districts are deterministic from the mission seed. Portraits and figures use stable hashes. The World Event stream and the candidate market use serialized random state so a reload continues the same sequence. Rain and synthesized noise may be unseeded; they do not change outcomes.
+Missions and districts are deterministic from the mission seed, including the weather script. Portraits and figures use stable hashes. The World Event stream and the candidate market use serialized random state so a reload continues the same sequence. Rain particles and synthesized noise may be unseeded; they do not change outcomes.
 
 Quality is a player setting (Auto / High / Medium / Low), not a design lever. Building ghosting survives every tier because it is readability.
 
-Telemetry is opt-in, local, off by default, and never leaves the machine. When enabled, each debrief appends one record (capped at 60) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, and deployed roles. A Balance dashboard aggregates those records. Export is a local JSON download. Clear is a two-step confirm.
+Telemetry is opt-in, local, off by default, and never leaves the machine. When enabled, each debrief appends one record (capped at 60) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, and deployed roles. Abort writes a thin record: `aborted`, duration, mission id, seed, deployed roles. A Balance dashboard aggregates those records. Win rate is won / (won + lost). Abort count and abort rate sit beside it. Export is a local JSON download. Clear is a two-step confirm.
 
-Telemetry should distinguish a deliberate play style from a discovery failure. An unused Hold Fire may be aggression or a hidden binding.
+Telemetry should distinguish a deliberate play style from a discovery failure. An unused Hold Fire may be aggression or a hidden binding. Further playstyle signals are backlog, not open design.
 
 ---
 
@@ -852,23 +884,27 @@ These are not unfinished features. They are not this game.
 
 ---
 
-## 19. Open questions
+## 19. Closed questions
 
-Unresolved on purpose. Do not implement a silent answer.
+These were open. They are decided. Do not silently reopen them.
 
-1. **Replay economy.** Authored contracts pay full Reward forever. The research program cannot be finished on a single pass of the three. Does a replay diminish, convert to Influence, or stay as the intended grind?
+1. **Replay economy.** A won authored contract stays replayable. The invoice is quiet. Roster and ETA still apply. The generated market funds the research gap. [ADR-0004](adr/0004-quiet-replay.md).
+2. **Sable Enterprises.** A client house. No cities, no color, no generated pool. The corporations table is split so they are not a peer of Stratos and Helix.
+3. **Augmentation bays.** Research is a program. Slotted projects are worn blueprints, one per bay, current issue with pins. Not a locker. [ADR-0005](adr/0005-blueprint-assignment.md).
+4. **Weather.** Sight and noise only. A determined script may change once, adjacent, at a known clock. Brief tells the truth. [ADR-0006](adr/0006-weather-script.md).
+5. **Sector assets and the black market.** Not systems. They do not print. Defense, garrison, and tax-as-readout stay.
+6. **Remaining accessibility.** Product backlog. The designed-in list in §12 stands.
+7. **Telemetry depth.** Balance stays a debrief dashboard. Abort is a thin record. Further signals are backlog.
 
-2. **Sable Enterprises.** Glass Veil’s client has no cities and no map color. Give them a strategic identity, or write them as a pure client house and stop implying they are a peer of Stratos and Helix.
+### Backlog
 
-3. **Per-operative augmentations.** Augmentation bays are labels on a global program. Is that the fantasy, or should operatives wear distinct hardware?
+Not unresolved design. Not a veto on shipping.
 
-4. **Weather as a combat modifier.** Rain already shortens sight and quiets weapons. Should it also change accuracy, movement, or the omnidirectional notice radius? Should weather change during a mission?
-
-5. **Sector assets and the black market.** They print on the panel and do nothing. Either give them a verb or stop showing them as if they were systems.
-
-6. **Remaining accessibility.** Full keyboard travel, color-vision presets, captions, HUD screen-reader pass.
-
-7. **Telemetry depth.** Time on the World Network and Research, strategic-speed use, research order, Alert duration, explicit versus automatic fire, stance use, street patrols bypassed versus killed, abort and replay rates.
+- Full keyboard travel across every panel.
+- Color-vision presets.
+- Captions for audio cues.
+- Screen-reader pass on the tactical HUD.
+- Time on the World Network and Research, strategic-speed use, research order, Alert duration, explicit versus automatic fire, stance use, street patrols bypassed versus killed, replay rate.
 
 ---
 

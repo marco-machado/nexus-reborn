@@ -31,13 +31,13 @@ Contracts: files whose header starts `CONTRACT FILE` — shared types, static da
 Two-tier:
 
 - Fast, per-frame: `getWorld()` inside `useFrame` or a rAF loop.
-- Slow, ~5Hz: `world.ts` pushes squad rows, objectives, clock, and log into `missionStore` every `SYNC_INTERVAL` (0.2s). HUD components subscribe there. The canvas minimap reads the live world on its own throttled loop; imperative HUD controls call the world directly.
+- Slow, ~5Hz: `world.ts` pushes squad rows, objectives, clock, weather, and log into `missionStore` every `SYNC_INTERVAL` (0.2s). HUD components subscribe there. The canvas minimap reads the live world on its own throttled loop; imperative HUD controls call the world directly.
 
 `MissionScreen` snapshots sector, replay, and loadout into `createWorld`, then resets `missionStore`. `world.ts` defers every store write to the first tick (`startup()`).
 
-`createWorld` reads `researchStore.done` once (`crewBonus`, `squadWeapon`), so research cannot change a mission already running. Orders also read `missionStore.live`, `paused`, and `result`. The sim writes `missionStore`, `appStore` (the debrief outcome), and `tutorialStore` (`noteTutorial` / `fireTutorialHint`).
+`createWorld` reads `researchStore.done` and each operative's bay pins once (`appliedNodeIds` → `crewBonus` / `squadWeapon`). Unslotted projects (Ballistics) apply to the whole squad. Slotted projects apply only if worn. Research and pins cannot change a mission already running. A weather front retunes live sight and noise; it does not re-sample research. Orders also read `missionStore.live`, `paused`, and `result`. The sim writes `missionStore`, `appStore` (the debrief outcome), and `tutorialStore` (`noteTutorial` / `fireTutorialHint`).
 
-Seven stores, split by lifetime and rate: `appStore` (flow, squad, outcome), `missionStore` (HUD, pause), `worldStore` (clock, sectors, contracts), `researchStore`, `campaignStore` (roster, injuries, recruits), `tutorialStore`, `settingsStore`. The campaign save composes app, world, research, campaign, and tutorial. Settings and telemetry persist separately.
+Seven stores, split by lifetime and rate: `appStore` (flow, squad, outcome), `missionStore` (HUD, pause), `worldStore` (clock, sectors, contracts), `researchStore`, `campaignStore` (roster, injuries, recruits, bay pins), `tutorialStore`, `settingsStore`. The campaign save composes app, world, research, campaign, and tutorial. Settings and telemetry persist separately.
 
 ## Time
 

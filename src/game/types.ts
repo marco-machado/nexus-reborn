@@ -183,6 +183,13 @@ export interface DistrictSpec {
 
 export type Weather = 'heavy' | 'light' | 'none'
 
+// One adjacent intensity change on the weather script, at a tactical time
+// from insertion. Omitted when the night stays static.
+export interface WeatherFront {
+  to: Weather
+  atSec: number
+}
+
 export interface MissionDef {
   id: string
   codename: string
@@ -197,6 +204,7 @@ export interface MissionDef {
   // Success chance is derived (game/missionParams.ts), never authored.
   etaDays: number
   weather: Weather
+  weatherFront?: WeatherFront
   // Authored layouts; the first entry is the default, a replay after a won
   // contract rotates to the next.
   variants: DistrictSpec[]
@@ -298,8 +306,10 @@ export interface WorldApi {
   tracers: Tracer[]
   booms: Boom[]
   time: number
+  // Live weather: opening intensity until a scripted front hits.
+  weather: Weather
   // Effective guard sight range for this mission: ENEMY_VISION scaled by the
-  // weather modifier. The minimap cones must draw from this, not the const.
+  // live weather. The minimap cones must draw from this, not the const.
   vision: number
   // Pulse Scan window: while time < scanUntil the minimap draws every living
   // enemy with its sight cone regardless of state. The sim owns the value.

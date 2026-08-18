@@ -32,13 +32,25 @@ import {
 } from '../game/mass'
 import type { LoadoutItemId } from '../game/mass'
 import {
-  WEATHER_LABEL,
   missionChance,
   missionMods,
   missionVariant,
+  riskWeather,
+  weatherBriefLabel,
+  weatherMul,
 } from '../game/missionParams'
 import { missionRisk } from '../game/forecast'
-import { benefitOf, crewBonus, installedAugs, nodeTitle, squadWeapon } from '../game/research'
+import {
+  appliedNodeIds,
+  benefitOf,
+  completedInBay,
+  crewBonus,
+  currentIssue,
+  nodeTitle,
+  squadWeapon,
+  wornAugs,
+} from '../game/research'
+import type { AugSlot, BayPin } from '../game/research'
 import { xpBonus } from '../game/experience'
 import type { ResearchNode } from '../game/research'
 import type { AgentRole, DistrictArchetype, MissionDef, OperativeDef, Weather } from '../game/types'
@@ -256,10 +268,13 @@ const COMMS_WEATHER: Record<Weather, string> = {
   light: 'WEATHER: LIGHT RAIN. VISIBILITY REDUCED.',
   none: 'WEATHER: CLEAR NIGHT. VISIBILITY FULL.',
 }
-function commsLog(weather: Weather): Array<[string, string]> {
+function commsLog(m: MissionDef): Array<[string, string]> {
+  const weatherLine = m.weatherFront
+    ? 'WEATHER: ' + weatherBriefLabel(m) + '.'
+    : COMMS_WEATHER[m.weather]
   return [
     ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
-    ['23:40:45', COMMS_WEATHER[weather]],
+    ['23:40:45', weatherLine],
     ['23:41:02', 'LOCAL: CORPSEC TASKFORCE ONSITE.'],
   ]
 }
@@ -507,13 +522,17 @@ export function MissionBrief() {
               <TacStat label="GARRISON" value={pad2(tac.counts.garrison)} tone="red" />
               <TacStat label="ROUTE ALPHA" value={tac.counts.alphaMetres + ' M'} tone="teal" />
               <TacStat label="ROUTE OMEGA" value={tac.counts.omegaMetres + ' M'} tone="red" />
-              <TacStat label="WEATHER" value={WEATHER_LABEL[m.weather]} />
+              <TacStat label="WEATHER" value={weatherBriefLabel(m)} />
               {/* At intel 2+ the readout is the computed risk index, derived
                   from the same deployment build as the counts above; it
-                  replaces the legacy chance estimate. */}
+                  replaces the legacy chance estimate. Risk uses the clearer
+                  weather on the script. */}
               {intelLevel >= 2 ? (
                 (() => {
-                  const risk = missionRisk(tac.counts, mods)
+                  const risk = missionRisk(tac.counts, {
+                    enemyHpMul: mods.enemyHpMul,
+                    visionMul: weatherMul(riskWeather(m)).visionMul,
+                  })
                   return (
                     <TacStat
                       label="RISK INDEX"
@@ -856,7 +875,7 @@ export function MissionBrief() {
         </button>
         <div className="mb-comms corners">
           <b>COMMS LOG // CH 7A</b>
-          {commsLog(m.weather).map(([t, msg]) => (
+          {commsLog(m).map(([t, msg]) => (
             <span key={t} className="dim" title={'[' + t + '] ' + msg}>
               <i>[{t}]</i> {msg}
             </span>
@@ -989,7 +1008,7 @@ export function TeamSelect() {
   // Completed research rides with the operative: the same numbers the mission
   // builds units from.
   const done = useResearchStore((s) => s.done)
-  const bonus = crewBonus(done)
+  const setBay = useCampaignStore((s) => s.setBay)
 
   // A campaign can lose its whole roster. The screen stays up so the market
   // can rebuild it; everything roster-bound waits for the first hire.
@@ -1030,6 +1049,8 @@ export function TeamSelect() {
     )
   }
   const xp = xpBonus(roster[focus.id]?.xp ?? 0)
+  const focusApplied = appliedNodeIds(done, roster[focus.id]?.pins)
+  const bonus = crewBonus(focusApplied)
   const maxHp = focus.maxHp + bonus.maxHp + xp.maxHp
   const speed = focus.speed + bonus.speed + xp.speed
   const fh = hashOf(focus.id + focus.name)
@@ -1039,19 +1060,35 @@ export function TeamSelect() {
     focus: 78 + (fh % 21),
     mobility: Math.min(99, Math.round(speed * 17.5)),
   }
-  const primary = squadWeapon(focus.weapon, done)
-  const sidearm = squadWeapon(focus.sidearm, done)
+  const primary = squadWeapon(focus.weapon, focusApplied)
+  const sidearm = squadWeapon(focus.sidearm, focusApplied)
   const squadOps = squad
     .map((id) => operatives.find((o) => o.id === id))
     .filter((o): o is OperativeDef => o !== undefined)
-  // The same model createWorld applies: research max HP counts, items count.
-  const mass = squadMassKg(squadOps, bonus.maxHp, loadout)
+  const hpBonusByOp: Record<string, number> = {}
+  for (const op of squadOps) {
+    const applied = appliedNodeIds(done, roster[op.id]?.pins)
+    hpBonusByOp[op.id] = crewBonus(applied).maxHp + xpBonus(roster[op.id]?.xp ?? 0).maxHp
+  }
+  const mass = squadMassKg(squadOps, hpBonusByOp, loadout)
   const tier = massTier(mass)
   const overKg = mass - MASS_LIMIT_KG
   const ready =
     squad.length >= 1 && squad.every((id) => roster[id]?.status === 'READY')
   const deployable = ready && overKg <= 0
-  const augs = installedAugs(done)
+  const augs = wornAugs(done, roster[focus.id]?.pins)
+  const cycleBay = (slot: AugSlot): void => {
+    const options: Array<BayPin | null> = [null]
+    for (const node of completedInBay(done, slot)) options.push(node.id)
+    options.push('STOCK')
+    const current = roster[focus.id]?.pins[slot]
+    const key: BayPin | null = current === undefined ? null : current
+    const idx = options.findIndex((opt) => opt === key)
+    const next = options[(idx + 1) % options.length] ?? null
+    const latest = currentIssue(done, slot)
+    if (next === null || (latest && next === latest.id)) setBay(focus.id, slot, null)
+    else setBay(focus.id, slot, next)
+  }
   const focusItems = operativeItems(loadout, focus.id)
   // Each slot cycles empty -> med kit -> power cell -> empty.
   const cycleSlot = (slot: number): void => {
@@ -1314,18 +1351,46 @@ export function TeamSelect() {
               </div>
               <div className="ts-box">
                 <label>AUGMENTATIONS</label>
-                {augs.map(({ slot, node }) => (
-                  <div key={slot} className={'ts-aug' + (node ? '' : ' stock')}>
-                    <span className="ts-aug-slot">{slot}</span>
-                    <span className="ts-aug-glyph">
-                      <HexGlyph size={13} />
-                    </span>
-                    <span className="ts-aug-main">
-                      <b>{node ? nodeTitle(node) : 'STOCK ISSUE'}</b>
-                      <i className="dim">{node ? augLine(node) : 'NO PROJECT RESEARCHED'}</i>
-                    </span>
-                  </div>
-                ))}
+                {augs.map(({ slot, node, pinned }) => {
+                  const choices = completedInBay(done, slot)
+                  const canCycle = choices.length > 0
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      className={'ts-aug' + (node ? '' : ' stock')}
+                      disabled={!canCycle}
+                      aria-label={
+                        'BAY ' +
+                        slot +
+                        ' // ' +
+                        (node ? nodeTitle(node) : 'STOCK ISSUE') +
+                        (pinned ? ' // PINNED' : ' // CURRENT ISSUE')
+                      }
+                      onClick={act(() => cycleBay(slot))}
+                    >
+                      <span className="ts-aug-slot">{slot}</span>
+                      <span className="ts-aug-glyph">
+                        <HexGlyph size={13} />
+                      </span>
+                      <span className="ts-aug-main">
+                        <b>{node ? nodeTitle(node) : 'STOCK ISSUE'}</b>
+                        <i className="dim">
+                          {node
+                            ? augLine(node)
+                            : choices.length === 0
+                              ? 'NO PROJECT RESEARCHED'
+                              : 'PINNED EMPTY'}
+                        </i>
+                      </span>
+                      {canCycle && (
+                        <span className={'ts-aug-pin' + (pinned ? ' on' : '')}>
+                          {pinned ? 'PIN' : 'AUTO'}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
               {/* loadout and inventory sit side by side: stacked they push the
                   sidearm and the whole grid past the fold at 1280x720 */}
@@ -1395,7 +1460,7 @@ export function TeamSelect() {
                     ))}
                   </div>
                   <div className="dim mini ts-loadout-mass">
-                    CARRIED: {operativeMassKg(focus, bonus.maxHp, focusItems).toFixed(1)} KG
+                    CARRIED: {operativeMassKg(focus, bonus.maxHp + xp.maxHp, focusItems).toFixed(1)} KG
                   </div>
                 </div>
               </div>
@@ -1498,7 +1563,8 @@ export function Debrief() {
   const m = missionId ? resolveMission(missionId) : null
   const report = useCampaignStore((s) => s.lastReport)
   const won = outcome?.won ?? false
-  const fine = outcome ? collateralFine(outcome) : 0
+  const quiet = outcome?.quietReplay === true
+  const fine = outcome && !quiet ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
   const [balanceOpen, setBalanceOpen] = useState(false)
   useEffect(() => {
@@ -1577,11 +1643,11 @@ export function Debrief() {
     },
     { label: 'MISSION TIME', value: outcome ? mmss(outcome.timeSec) : '--:--' },
   ]
-  if (outcome && won && fine > 0) {
+  if (outcome && won && !quiet && fine > 0) {
     rows.push({ label: 'CONTRACT VALUE', value: fmt(outcome.reward) + ' CR' })
     rows.push({ label: 'COLLATERAL PENALTY', value: '-' + fmt(fine) + ' CR', tone: 'red' })
   }
-  if (outcome && won && outcome.bonus > 0) {
+  if (outcome && won && !quiet && outcome.bonus > 0) {
     rows.push({ label: 'OPTIONAL BONUS', value: '+' + fmt(outcome.bonus) + ' CR', tone: 'teal' })
   }
   if (outcome && won && m) {
@@ -1598,14 +1664,22 @@ export function Debrief() {
       <div className="db-card corners">
         <div className="db-tag dim">OPERATIONAL DEBRIEF // STRIKE TEAM 04 // CH 7A</div>
         <h1 className={'db-title ' + (won ? 'won' : 'lost')}>
-          {won ? 'CONTRACT FULFILLED' : 'CONTRACT TERMINATED'}
+          {quiet
+            ? 'REPLAY // FEE ALREADY COLLECTED'
+            : won
+              ? 'CONTRACT FULFILLED'
+              : 'CONTRACT TERMINATED'}
         </h1>
         <div className="db-subtitle">
-          {won
-            ? fine > 0
-              ? 'EXTRACTION CONFIRMED // PAYMENT ADJUSTED'
-              : 'EXTRACTION CONFIRMED // PAYMENT RELEASED'
-            : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
+          {quiet
+            ? won
+              ? 'EXTRACTION CONFIRMED // NO FEE'
+              : 'SQUAD LINK LOST // NO FEE'
+            : won
+              ? fine > 0
+                ? 'EXTRACTION CONFIRMED // PAYMENT ADJUSTED'
+                : 'EXTRACTION CONFIRMED // PAYMENT RELEASED'
+              : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
         </div>
         <div className="db-rows">
           {rows.map((r, i) => (

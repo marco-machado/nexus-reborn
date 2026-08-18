@@ -14,6 +14,8 @@ import {
   squadWeapon,
   crewBonus,
   installedAugs,
+  appliedNodeIds,
+  wornNode,
 } from './research'
 import { WEAPONS } from './data'
 
@@ -227,6 +229,19 @@ describe('benefit lines', () => {
         expect(benefitIsGain(e), `${n.id} carries a non-gain effect`).toBe(true)
       }
     }
+  })
+})
+
+describe('worn bays', () => {
+  it('applies unslotted projects always and slotted projects only when worn', () => {
+    const done = ['b-propellants', 'c-interface', 'c-accelerator']
+    expect(appliedNodeIds(done, undefined)).toEqual(['b-propellants', 'c-accelerator'])
+    expect(appliedNodeIds(done, { NEURAL: 'STOCK' })).toEqual(['b-propellants'])
+    expect(appliedNodeIds(done, { NEURAL: 'c-interface' })).toEqual([
+      'b-propellants',
+      'c-interface',
+    ])
+    expect(wornNode(done, { NEURAL: 'c-interface' }, 'NEURAL')?.id).toBe('c-interface')
   })
 })
 

@@ -1,7 +1,8 @@
 // CONTRACT FILE. Campaign progression that does not belong to the tactical,
 // world, research, or screen-flow stores: intel, contract record, the live
-// operative roster (hires, losses, injuries, experience, and the recruitment
-// market), and the terminal campaign-failed flag opposite campaign-complete.
+// operative roster (hires, losses, injuries, experience, bay pins, and the
+// recruitment market), and the terminal campaign-failed flag opposite
+// campaign-complete.
 import { create } from 'zustand'
 import { INTEL_LEVEL, INTEL_PROGRESS, MISSIONS, ROSTER } from '../game/data'
 import {
@@ -14,6 +15,8 @@ import {
 } from '../game/recruits'
 import type { Candidate } from '../game/recruits'
 import { XP_PER_SURVIVE } from '../game/experience'
+import { nodeById } from '../game/research'
+import type { AugSlot, BayPin, BayPins } from '../game/research'
 import type { MissionDef, OperativeDef } from '../game/types'
 import type { MissionOutcome } from './appStore'
 
@@ -34,6 +37,8 @@ export interface CampaignRosterEntry {
   status: OperativeCondition
   recoverAtT: number | null
   xp: number
+  // Missing key = current issue. 'STOCK' or a completed project id pins the bay.
+  pins: BayPins
 }
 
 // What the last debrief did to the roster, for the debrief screen. Transient:
@@ -81,6 +86,8 @@ export interface CampaignState {
   // Moves a candidate onto the roster. The credit charge lives in
   // appStore.hireOperative, which calls this only after the fee cleared.
   acceptHire: (candidateId: string) => boolean
+  // null unpins (current issue). STOCK or a project id pins the bay.
+  setBay: (opId: string, slot: AugSlot, pin: BayPin | null) => void
   sync: (t: number) => void
 }
 
@@ -133,6 +140,7 @@ export function initialCampaignData(): CampaignData {
       status: injured ? 'INJURED' : 'READY',
       recoverAtT: injured ? INITIAL_INJURY_RECOVERY : null,
       xp: 0,
+      pins: {},
     }
   }
   const candidates: Candidate[] = []
@@ -196,9 +204,13 @@ export const useCampaignStore = create<CampaignState>((set) => ({
 
   reportMission: (missionId, outcome, worldT) =>
     set((state) => {
-      const intelAward = outcome.won
-        ? MISSION_INTEL + (outcome.civiliansHit === 0 ? CLEAN_INTEL : 0)
-        : 0
+      const quiet =
+        outcome.quietReplay === true ||
+        (outcome.quietReplay !== false && state.contractsWon.includes(missionId))
+      const intelAward =
+        outcome.won && !quiet
+          ? MISSION_INTEL + (outcome.civiliansHit === 0 ? CLEAN_INTEL : 0)
+          : 0
       const [intelLevel, intelProgress] = addIntel(
         state.intelLevel,
         state.intelProgress,
@@ -228,7 +240,9 @@ export const useCampaignStore = create<CampaignState>((set) => ({
           status: 'READY' as const,
           recoverAtT: null,
           xp: 0,
+          pins: {},
         }
+        const pins = entry.pins ?? {}
         const hpFrac = outcome.survivorHp[operative.id]
         let points = entry.xp
         if (hpFrac !== undefined) {
@@ -246,10 +260,11 @@ export const useCampaignStore = create<CampaignState>((set) => ({
             status: 'INJURED',
             recoverAtT: worldT + downtimeSec,
             xp: points,
+            pins,
           }
           injured.push({ id: operative.id, codename: operative.codename, downtimeSec })
         } else {
-          roster[operative.id] = { ...entry, xp: points }
+          roster[operative.id] = { ...entry, xp: points, pins }
         }
       }
 
@@ -280,13 +295,33 @@ export const useCampaignStore = create<CampaignState>((set) => ({
         operatives: [...state.operatives, candidateToOperative(candidate)],
         roster: {
           ...state.roster,
-          [candidate.id]: { status: 'READY', recoverAtT: null, xp: 0 },
+          [candidate.id]: { status: 'READY', recoverAtT: null, xp: 0, pins: {} },
         },
         candidates: state.candidates.filter((c) => c.id !== candidateId),
       }
     })
     return hired
   },
+
+  setBay: (opId, slot, pin) =>
+    set((state) => {
+      const entry = state.roster[opId]
+      if (!entry) return state
+      if (pin !== null && pin !== 'STOCK') {
+        const node = (() => {
+          try {
+            return nodeById(pin)
+          } catch {
+            return null
+          }
+        })()
+        if (!node || node.augSlot !== slot) return state
+      }
+      const pins = { ...entry.pins }
+      if (pin === null) delete pins[slot]
+      else pins[slot] = pin
+      return { roster: { ...state.roster, [opId]: { ...entry, pins } } }
+    }),
 
   sync: (t) =>
     set((state) => {
@@ -298,7 +333,7 @@ export const useCampaignStore = create<CampaignState>((set) => ({
           entry.recoverAtT !== null &&
           t >= entry.recoverAtT
         ) {
-          roster[id] = { status: 'READY', recoverAtT: null, xp: entry.xp }
+          roster[id] = { status: 'READY', recoverAtT: null, xp: entry.xp, pins: entry.pins ?? {} }
           changed = true
         }
       }

@@ -550,6 +550,29 @@ describe('mission results', () => {
     expect(useWorldStore.getState().owner.nc).toBe('helix')
   })
 
+  it('a quiet replay does not move control, unrest, ownership, or influence', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    const afterWin = useWorldStore.getState()
+    const eu = { ...afterWin.sectors.eu }
+    const influence = afterWin.influence
+    useWorldStore.getState().applyMissionResult(
+      'm01',
+      outcome({ quietReplay: true, civiliansHit: 0 }),
+    )
+    const replayWin = useWorldStore.getState()
+    expect(replayWin.sectors.eu).toEqual(eu)
+    expect(replayWin.owner.nc).toBe('nexus')
+    expect(replayWin.influence).toBe(influence)
+    useWorldStore.getState().applyMissionResult(
+      'm01',
+      outcome({ won: false, reward: 0, quietReplay: true }),
+    )
+    const replayLoss = useWorldStore.getState()
+    expect(replayLoss.sectors.eu).toEqual(eu)
+    expect(replayLoss.owner.nc).toBe('nexus')
+    expect(replayLoss.influence).toBe(influence)
+  })
+
   it('a single loss reads as one operative', () => {
     useWorldStore
       .getState()
@@ -577,9 +600,11 @@ describe('influence economy', () => {
     expect(useWorldStore.getState().influence).toBe(
       INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS,
     )
-    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 2 }))
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ civiliansHit: 2, quietReplay: true }))
     expect(useWorldStore.getState().influence).toBe(
-      2 * INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS,
+      INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS,
     )
     const before = useWorldStore.getState().influence
     useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0 }))

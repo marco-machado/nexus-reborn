@@ -2275,13 +2275,27 @@
 
 .ts-aug {
   display: grid;
-  grid-template-columns: 50px 16px minmax(0, 1fr);
+  grid-template-columns: 50px 16px minmax(0, 1fr) auto;
   gap: 7px;
   align-items: center;
   background: var(--bg-inset);
   border: 1px solid var(--line);
   padding: 3px 7px;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
+.ts-aug:disabled { cursor: default; }
+.ts-aug-pin {
+  font-size: calc(7.5px * var(--text-scale));
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+  border: 1px solid var(--line);
+  padding: 1px 4px;
+}
+.ts-aug-pin.on { color: var(--amber); border-color: rgba(240, 180, 69, 0.45); }
 
 .ts-aug-slot {
   font-size: calc(8px * var(--text-scale));

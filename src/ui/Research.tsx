@@ -354,7 +354,7 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
           <div className="rs-box">
             <label>PROJECTED BENEFIT</label>
             {n.effects.map((e, i) => {
-              const b = benefitOf(e)
+              const b = benefitOf(e, n)
               return (
                 <div key={i} className="rs-benefit">
                   <b className={benefitIsGain(e) ? 'teal' : 'red'}>{b.line}</b>

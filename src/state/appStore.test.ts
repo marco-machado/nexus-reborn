@@ -313,12 +313,17 @@ describe('economy integration', () => {
     expect(eu.unrest).toBe(worldBoot.sectors.eu.unrest - 2)
     expect(useWorldStore.getState().influence).toBe(6)
 
-    // Win 2 is clean but costs an operative, freeing a roster bay.
+    // Win 2 is a quiet replay: invoice stays still, Raven still dies.
+    const creditsAfterFirst = useAppStore.getState().credits
+    const intelAfterFirst = useCampaignStore.getState().intelProgress
     const second = outcome({ civiliansHit: 0, reward: m01.reward, deadIds: ['op5'] })
     useAppStore.getState().setOutcome(second)
+    expect(second.quietReplay).toBe(true)
+    expect(useAppStore.getState().credits).toBe(creditsAfterFirst)
     useCampaignStore.getState().reportMission(m01.id, second, 0)
     useWorldStore.getState().applyMissionResult(m01.id, second, ['RAVEN'])
-    expect(useWorldStore.getState().influence).toBe(6 + 8)
+    expect(useWorldStore.getState().influence).toBe(6)
+    expect(useCampaignStore.getState().intelProgress).toBe(intelAfterFirst)
     expect(useCampaignStore.getState().operatives.some((o) => o.id === 'op5')).toBe(false)
     assertSolvent()
 

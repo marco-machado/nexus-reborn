@@ -3,7 +3,7 @@
 // counts match the deployed city, and world.ts never reads worldStore.
 // Sector values come from a snapshot taken at deployment. Difficulty is a
 // player setting applied here (patrol count and civilian density).
-import type { DistrictSpec, MissionDef, Weather } from './types'
+import type { DistrictSpec, MissionDef, Weather, WeatherFront } from './types'
 import type { SectorState } from '../state/worldStore'
 
 export interface MissionMods {
@@ -99,25 +99,101 @@ export function missionMods(
   const fx = DIFFICULTY_FX[difficulty] ?? DIFFICULTY_FX.standard
   enemyExtra += fx.extraPatrol
   civilianCount += fx.extraCivilians
-  let visionMul = 1
-  let noiseMul = 1
-  if (m.weather === 'heavy') {
-    visionMul = 0.8
-    noiseMul = 0.85
-  } else if (m.weather === 'light') {
-    visionMul = 0.9
-    noiseMul = 0.95
-  }
+  const weather = weatherMul(m.weather)
   return {
     enemyExtra,
     enemyHpMul,
     officerCount: THREAT_OFFICERS[m.threat],
     heavyCount: THREAT_HEAVIES[m.threat],
     civilianCount,
-    visionMul,
-    noiseMul,
+    visionMul: weather.visionMul,
+    noiseMul: weather.noiseMul,
     rain: m.weather,
   }
+}
+
+// Sight and noise for one intensity. Heavy rain is the largest sight cut.
+export function weatherMul(weather: Weather): { visionMul: number; noiseMul: number } {
+  if (weather === 'heavy') return { visionMul: 0.8, noiseMul: 0.85 }
+  if (weather === 'light') return { visionMul: 0.9, noiseMul: 0.95 }
+  return { visionMul: 1, noiseMul: 1 }
+}
+
+const WEATHER_ORDER: Weather[] = ['none', 'light', 'heavy']
+
+export function adjacentWeather(weather: Weather): Weather[] {
+  const i = WEATHER_ORDER.indexOf(weather)
+  const out: Weather[] = []
+  if (i > 0) out.push(WEATHER_ORDER[i - 1]!)
+  if (i < WEATHER_ORDER.length - 1) out.push(WEATHER_ORDER[i + 1]!)
+  return out
+}
+
+// The clearer night is the worse fight for the squad (guards see farther).
+export function clearerWeather(a: Weather, b: Weather): Weather {
+  return weatherMul(a).visionMul >= weatherMul(b).visionMul ? a : b
+}
+
+export function riskWeather(m: MissionDef): Weather {
+  return m.weatherFront ? clearerWeather(m.weather, m.weatherFront.to) : m.weather
+}
+
+export function weatherAt(m: MissionDef, tSec: number): Weather {
+  if (m.weatherFront && tSec >= m.weatherFront.atSec) return m.weatherFront.to
+  return m.weather
+}
+
+// Tactical clock every mission opens at. Front copy uses this so a brief
+// time and the HUD clock mean the same second.
+export const MISSION_CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
+
+export function missionClockAt(atSec: number): string {
+  const total = (MISSION_CLOCK_BASE + Math.max(0, Math.floor(atSec))) % 86400
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return pad(h) + ':' + pad(m) + ':' + pad(s)
+}
+
+export const FRONT_CHANCE = 0.4
+export const FRONT_MIN_SEC = 90
+export const FRONT_MAX_SEC = 240
+
+export function rollWeatherFront(rng: () => number, opening: Weather): WeatherFront | undefined {
+  if (rng() >= FRONT_CHANCE) return undefined
+  const opts = adjacentWeather(opening)
+  const to = opts[Math.floor(rng() * opts.length) % opts.length]!
+  const span = FRONT_MAX_SEC - FRONT_MIN_SEC
+  return { to, atSec: Math.round(FRONT_MIN_SEC + rng() * span) }
+}
+
+export function weatherNote(weather: Weather, front?: WeatherFront): string {
+  if (!front) {
+    if (weather === 'heavy') return 'HEAVY RAIN. VISIBILITY REDUCED.'
+    if (weather === 'light') return 'LIGHT RAIN. GUARD SIGHT MILDLY REDUCED.'
+    return 'CLEAR NIGHT. GUARDS SEE AND HEAR AT FULL RANGE.'
+  }
+  const lifts = weatherMul(front.to).visionMul > weatherMul(weather).visionMul
+  return (
+    WEATHER_LABEL[weather] +
+    '. FRONT ' +
+    (lifts ? 'CLEARS' : 'ARRIVES') +
+    ' ' +
+    missionClockAt(front.atSec) +
+    '.'
+  )
+}
+
+export function weatherBriefLabel(m: MissionDef): string {
+  if (!m.weatherFront) return WEATHER_LABEL[m.weather]
+  return (
+    WEATHER_LABEL[m.weather] +
+    ' → ' +
+    WEATHER_LABEL[m.weatherFront.to] +
+    ' ' +
+    missionClockAt(m.weatherFront.atSec)
+  )
 }
 
 // Projected success chance in percent, derived so it moves with research and
@@ -133,7 +209,7 @@ export function missionChance(
   chance -= Math.round((mods.enemyHpMul - 1) * 50)
   chance -= mods.heavyCount * 2 + mods.officerCount * 3
   // Rain shortens guard sight, which favors the squad.
-  chance += Math.round((1 - mods.visionMul) * 25)
+  chance += Math.round((1 - weatherMul(riskWeather(m)).visionMul) * 25)
   chance += researchedCount * 2
   return Math.max(35, Math.min(95, Math.round(chance)))
 }

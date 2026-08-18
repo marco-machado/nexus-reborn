@@ -39,7 +39,7 @@ A historical point on the World Network's 24-hour timeline. Scrubbing it does no
 _Avoid_: Playback, rewind
 
 **ETA**:
-The strategic days a won contract costs. A loss spends none.
+The strategic days a won contract costs, including a quiet replay. A loss spends none.
 _Avoid_: Duration, mission length
 
 ## The World Network
@@ -65,12 +65,16 @@ A named house that can hold cities, commission work, or both. The city holders a
 _Avoid_: Faction, team, color
 
 **Holder**:
-The corporation that currently owns a city. Contested and Unknown are map states, not holders. Sable Enterprises is a client, not a holder.
+The corporation that currently owns a city. Contested and Unknown are map states, not holders. Sable Enterprises is a client house, not a holder.
 _Avoid_: Owner, occupier
 
 **Client**:
 The house paying for a contract. An outside client is never paired with a Nexus-held city. Work Nexus signs itself is an Internal directive.
 _Avoid_: Employer, contractor, issuer
+
+**Client house**:
+A corporation that commissions work and never holds cities. Sable Enterprises is the only one. It has no map color and never enters the generated-client pool.
+_Avoid_: Peer corporation, holder
 
 **Internal directive**:
 A contract Nexus Global signs against a city it already holds. A sector held entirely by Nexus can post only these.
@@ -143,7 +147,7 @@ An earned level, filled by progress, that gates contracts and unlocks the Event 
 _Avoid_: XP, rank, clearance (except as fiction on the login)
 
 **Risk index**:
-Low / Guarded / High / Severe, computed from the live deployment — patrols, garrison, civilians, toughness, weather — and shown on the brief at intel 2+ in place of a raw success percentage.
+Low / Guarded / High / Severe, computed from the live deployment — patrols, garrison, civilians, toughness, and the clearer weather on the weather script — and shown on the brief at intel 2+ in place of a raw success percentage.
 _Avoid_: Threat, threat level, difficulty, chance
 
 **Threat**:
@@ -185,14 +189,18 @@ The translation of a contract into an operational plan. Its city, insertion, tar
 _Avoid_: Cutscene, briefing room, dossier (the assembly page is the operative dossier)
 
 **Replay**:
-Running a contract again after success or failure. After a win, an authored contract rotates to its other District layout. The current economy pays the full Reward again.
-_Avoid_: New Game Plus, grind (except as a design question)
+Running a contract again after success or failure. After a win, an authored contract rotates to its other District layout.
+_Avoid_: New Game Plus, grind
+
+**Quiet replay**:
+A replay of a contract already won. It pays no Credits, Influence, or Intel, and does not move control or unrest. It is still a real mission: KIA, injury, experience, and ETA apply. The debrief names that zero: the fee was already collected.
+_Avoid_: Practice, sandbox, diminished payout (the invoice is zero, not reduced)
 
 ## Research
 
 **Research**:
-The program that changes the next deployment: weapon stats, every operative's health, and every operative's speed. Effects are sampled when the mission is created and cannot change a team already on the ground.
-_Avoid_: Loadout, skill tree, tech tree, upgrades (alone)
+The program that changes the next deployment. Unslotted projects apply to the whole squad. Slotted projects apply only to operatives who wear them. Effects are sampled when the mission is created and cannot change a team already on the ground.
+_Avoid_: Loadout, skill tree, tech tree, upgrades (alone), locker
 
 **Branch**:
 One of three research columns: Ballistics, Cybernetics, or Control Systems. Each branch is one Laboratory.
@@ -203,17 +211,37 @@ The one active Project slot for a Branch. Three projects may run at once only if
 _Avoid_: Queue, bench, workshop
 
 **Project**:
-One research node: a credit cost, a strategic-time duration, prerequisites, and effects. Credits are spent the moment authorization succeeds.
-_Avoid_: Node, upgrade, card, tech
+One research node: a credit cost, a strategic-time duration, prerequisites, and effects. Credits are spent the moment authorization succeeds. A project may be unslotted (always on) or tagged to one augmentation bay.
+_Avoid_: Node, upgrade, card, tech, implant
+
+**Unslotted project**:
+A project with no bay tag. All of Ballistics. Its effects apply to the whole squad.
+_Avoid_: Global upgrade, gun mod (as a separate system)
+
+**Slotted project**:
+A project tagged to Neural, Chest, Arms, or Legs. Cybernetics and Control Systems. Worn per operative.
+_Avoid_: Implant, item, unlock (the research already happened)
 
 **Augmentation bay**:
-A label on the global program — Neural, Chest, Arms, or Legs — showing the latest completed Project in that bay. It is not individually installed or swappable cyberware.
-_Avoid_: Slot, implant, loadout, squad bay
+One of four seats on an operative — Neural, Chest, Arms, or Legs — that can wear one completed slotted project whose pattern belongs to that bay. The project is a blueprint: every operative may wear the same one. Death drops that operative's assignment, not the program.
+_Avoid_: Implant (as a unique item), locker, label (the old meaning), slot, squad bay
+
+**Stock issue**:
+An empty augmentation bay. That operative wears no slotted project there.
+_Avoid_: Unequipped, naked, default (current issue is the default)
+
+**Current issue**:
+The latest completed slotted project in a bay. Unpinned bays wear this, including on new hires.
+_Avoid_: Latest, maxed, default loadout
+
+**Pin**:
+A bay setting that holds stock issue or an older completed project when a newer one finishes. Unpinned bays wear current issue.
+_Avoid_: Lock, favorite, freeze, equip
 
 ## Roster and assembly
 
 **Operative**:
-A named person on the Roster. They have a role, health, speed, a primary weapon, and a sidearm. A kill is permanent.
+A named person on the Roster. They have a role, health, speed, a primary weapon, a sidearm, and four augmentation bays. A kill is permanent.
 _Avoid_: Agent, unit (that is any body in the District), soldier, merc, character
 
 **Roster**:
@@ -295,8 +323,12 @@ A named zone in the District — insertion, extraction, target, and archetype ex
 _Avoid_: Marker, waypoint, POI
 
 **Weather**:
-Rain on the mission: heavy, light, or none. It shortens CorpSec sight and quiets weapons. It does not change accuracy or movement.
+Rain on the mission: heavy, light, or none. It shortens CorpSec sight and quiets weapons. It does not change accuracy or movement. The brief prints the opening weather and any coming change.
 _Avoid_: Rain as a separate system, climate
+
+**Weather script**:
+The determined weather for one mission, fixed when the mission is created: opening weather plus at most one adjacent change at a tactical time. Authored contracts carry an explicit script. Generated contracts roll one, including no change. The same contract seed produces the same script.
+_Avoid_: Forecast (the brief is stating a fact), live weather roll, climate
 
 **Difficulty**:
 The player's Standard or Hardened setting. Hardened adds street patrols and civilians. It does not hide minimap information. It survives New Operation.
@@ -315,7 +347,7 @@ The in-mission record of orders, failures, and system lines. Empty or invalid it
 _Avoid_: Chat, radio, console
 
 **Debrief**:
-The invoice after a finished mission. It applies payout, sector movement, intel, influence, and roster changes exactly once, then returns the director to the World Network — or to the Brief to Replay.
+The invoice after a finished mission. It applies payout, sector movement, intel, influence, and roster changes exactly once, then returns the director to the World Network — or to the Brief to Replay. A quiet replay still debriefs: roster and ETA apply; currencies and sector do not.
 _Avoid_: Results screen, score, post-game
 
 **Abort**:

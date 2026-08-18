@@ -12,6 +12,7 @@ import {
   clearRecords,
   exportJson,
   loadRecords,
+  recordAbort,
   recordMissionOutcome,
   saveRecords,
 } from './telemetry'
@@ -175,6 +176,22 @@ describe('recordMissionOutcome', () => {
     const records = loadRecords(storage)
     expect(records).toHaveLength(2)
     expect(records.map((r) => r.outcome)).toEqual(['won', 'lost'])
+    useSettingsStore.setState({ telemetry: false })
+  })
+})
+
+describe('recordAbort', () => {
+  it('writes a thin aborted record and keeps win rate among finished missions', () => {
+    useSettingsStore.setState({ telemetry: true })
+    recordMissionOutcome('m01', outcome(), storage)
+    recordAbort('m01', 12, 20870514, ['assault'], storage)
+    const records = loadRecords(storage)
+    expect(records.map((r) => r.outcome)).toEqual(['won', 'aborted'])
+    const agg = aggregate(records)
+    expect(agg.aborts).toBe(1)
+    expect(agg.abortRate).toBeCloseTo(0.5, 10)
+    expect(agg.winRate).toBe(1)
+    expect(agg.meanDurationSec).toBeCloseTo(265, 10)
     useSettingsStore.setState({ telemetry: false })
   })
 })

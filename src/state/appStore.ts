@@ -22,6 +22,9 @@ export interface MissionOutcome {
   // End-of-mission health of each surviving deployed operative, as a fraction
   // of max HP. The debrief grades injuries from it (campaignStore).
   survivorHp: Record<string, number>
+  // True when this finish is a replay of a contract already won. Stamped at
+  // mission end from contractsWon. A quiet replay pays nothing.
+  quietReplay?: boolean
   // Mission counters for the local telemetry log (state/telemetry.ts). Rides
   // the existing outcome push; the debrief boundary records it when the
   // TELEMETRY setting is on. Optional so hand-built outcomes stay valid.
@@ -37,7 +40,13 @@ export function collateralFine(o: MissionOutcome): number {
 }
 
 export function netPayout(o: MissionOutcome): number {
+  if (o.quietReplay) return 0
   return o.won ? o.reward - collateralFine(o) + o.bonus : 0
+}
+
+export function isQuietReplay(missionId: string | null): boolean {
+  if (!missionId) return false
+  return useCampaignStore.getState().contractsWon.includes(missionId)
 }
 
 export const INITIAL_CREDITS = 128450
@@ -109,10 +118,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({ credits: s.credits - candidate.cost }))
   },
   setOutcome: (o) =>
-    set((s) => ({
-      outcome: o,
-      credits: s.credits + netPayout(o),
-      phase: 'debrief',
-      outcomeSerial: s.outcomeSerial + 1,
-    })),
+    set((s) => {
+      const quiet =
+        o.quietReplay === true || (o.quietReplay !== false && isQuietReplay(s.missionId))
+      o.quietReplay = quiet
+      return {
+        outcome: o,
+        credits: s.credits + netPayout(o),
+        phase: 'debrief',
+        outcomeSerial: s.outcomeSerial + 1,
+      }
+    }),
 }))

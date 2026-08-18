@@ -39,8 +39,8 @@ describe('campaign initialization and intel', () => {
     const state = useCampaignStore.getState()
     expect(state.intelLevel).toBe(1)
     expect(state.intelProgress).toBe(25)
-    expect(state.roster.op5).toEqual({ status: 'INJURED', recoverAtT: 24 * HOUR, xp: 0 })
-    expect(state.roster.op1).toEqual({ status: 'READY', recoverAtT: null, xp: 0 })
+    expect(state.roster.op5).toEqual({ status: 'INJURED', recoverAtT: 24 * HOUR, xp: 0, pins: {} })
+    expect(state.roster.op1).toEqual({ status: 'READY', recoverAtT: null, xp: 0, pins: {} })
   })
 
   it('seeds the live roster from the authored eight and a full candidate pool', () => {
@@ -79,8 +79,19 @@ describe('campaign initialization and intel', () => {
     expect(state.outcomeApplied).toBe(2)
 
     useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 1 }), 0)
-    expect(useCampaignStore.getState().intelProgress).toBe(20)
-    expect(useCampaignStore.getState().intelLevel).toBe(2)
+    expect(useCampaignStore.getState().intelProgress).toBe(80)
+    expect(useCampaignStore.getState().intelLevel).toBe(1)
+  })
+
+  it('a first win after a loss still awards intel', () => {
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ won: false, reward: 0, civiliansHit: 0 }),
+      0,
+    )
+    useCampaignStore.getState().reportMission('m01', outcome(), 0)
+    expect(useCampaignStore.getState().intelProgress).toBe(80)
+    expect(useCampaignStore.getState().contractsWon).toEqual(['m01'])
   })
 })
 
@@ -130,9 +141,10 @@ describe('graded injury recovery', () => {
       status: 'INJURED',
       recoverAtT: worldT + downtime,
       xp: 1,
+      pins: {},
     })
-    expect(state.roster.op2).toEqual({ status: 'READY', recoverAtT: null, xp: 1 })
-    expect(state.roster.op3).toEqual({ status: 'READY', recoverAtT: null, xp: 1 })
+    expect(state.roster.op2).toEqual({ status: 'READY', recoverAtT: null, xp: 1, pins: {} })
+    expect(state.roster.op3).toEqual({ status: 'READY', recoverAtT: null, xp: 1, pins: {} })
     expect(state.lastReport?.injured).toEqual([
       { id: 'op1', codename: 'MARA', downtimeSec: downtime },
     ])
@@ -144,6 +156,7 @@ describe('graded injury recovery', () => {
       status: 'READY',
       recoverAtT: null,
       xp: 1,
+      pins: {},
     })
   })
 })
@@ -159,7 +172,7 @@ describe('recruitment market', () => {
     let state = useCampaignStore.getState()
     expect(state.operatives).toHaveLength(ROSTER_CAP)
     expect(state.operatives.at(-1)?.id).toBe(candidate.id)
-    expect(state.roster[candidate.id]).toEqual({ status: 'READY', recoverAtT: null, xp: 0 })
+    expect(state.roster[candidate.id]).toEqual({ status: 'READY', recoverAtT: null, xp: 0, pins: {} })
     expect(state.candidates.some((c) => c.id === candidate.id)).toBe(false)
 
     // At the cap, and for unknown ids, nothing moves.
@@ -269,5 +282,18 @@ describe('campaign fail state', () => {
     const state = useCampaignStore.getState()
     expect(state.campaignWon).toBe(true)
     expect(state.campaignFailed).toBe(false)
+  })
+})
+
+describe('augmentation bays', () => {
+  it('pins a bay to stock or a project and unpins back to current issue', () => {
+    useCampaignStore.getState().setBay('op1', 'NEURAL', 'STOCK')
+    expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBe('STOCK')
+    useCampaignStore.getState().setBay('op1', 'NEURAL', 'c-interface')
+    expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBe('c-interface')
+    useCampaignStore.getState().setBay('op1', 'NEURAL', null)
+    expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBeUndefined()
+    useCampaignStore.getState().setBay('op1', 'NEURAL', 'b-propellants')
+    expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBeUndefined()
   })
 })

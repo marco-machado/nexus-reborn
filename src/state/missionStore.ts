@@ -3,7 +3,7 @@
 // Fast per frame data (unit positions) is read directly from the world via
 // src/game/runtime.ts getWorld() inside useFrame or rAF loops, never via React.
 import { create } from 'zustand'
-import type { CommEntry } from '../game/types'
+import type { CommEntry, Weather } from '../game/types'
 
 export interface MissionInventory {
   med: number
@@ -79,6 +79,7 @@ export interface MissionUiState {
   alert: number
   result: 'none' | 'won' | 'lost'
   clock: string
+  weather: Weather
   inventory: MissionInventory
   abilities: MissionAbilities
   grenadeTargeting: boolean
@@ -91,6 +92,7 @@ export interface MissionUiState {
   setAlert: (n: number) => void
   setResult: (r: 'none' | 'won' | 'lost') => void
   setClock: (c: string) => void
+  setWeather: (w: Weather) => void
   setInventory: (inventory: MissionInventory) => void
   setAbilities: (abilities: MissionAbilities) => void
   setGrenadeTargeting: (v: boolean) => void
@@ -113,6 +115,7 @@ const initial = {
   alert: 0,
   result: 'none' as const,
   clock: '22:00:00',
+  weather: 'none' as Weather,
   inventory: { med: 0, cell: 0 } as MissionInventory,
   abilities: {
     grenade: emptyAbility(4),
@@ -138,6 +141,7 @@ export const useMissionStore = create<MissionUiState>((set) => ({
   setAlert: (n) => set({ alert: n }),
   setResult: (r) => set({ result: r, ...(r !== 'none' ? { grenadeTargeting: false } : {}) }),
   setClock: (c) => set({ clock: c }),
+  setWeather: (w) => set({ weather: w }),
   setInventory: (inventory) => set({ inventory }),
   setAbilities: (abilities) =>
     set({

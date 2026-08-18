@@ -37,7 +37,7 @@ export interface MissionTelemetry {
 export interface MissionRecord extends MissionTelemetry {
   at: number
   missionId: string
-  outcome: 'won' | 'lost'
+  outcome: 'won' | 'lost' | 'aborted'
   durationSec: number
   kills: number
   kia: number
@@ -113,7 +113,9 @@ export function loadRecords(storage: SettingsStorage | null = browserStorage()):
         typeof r === 'object' &&
         r !== null &&
         typeof (r as MissionRecord).missionId === 'string' &&
-        ((r as MissionRecord).outcome === 'won' || (r as MissionRecord).outcome === 'lost'),
+        ((r as MissionRecord).outcome === 'won' ||
+          (r as MissionRecord).outcome === 'lost' ||
+          (r as MissionRecord).outcome === 'aborted'),
     )
   } catch {
     return []
@@ -147,6 +149,43 @@ export function recordMissionOutcome(
   saveRecords(appendRecord(loadRecords(storage), record), storage)
 }
 
+export function recordAbort(
+  missionId: string,
+  durationSec: number,
+  seed: number,
+  squadRoles: string[],
+  storage: SettingsStorage | null = browserStorage(),
+): void {
+  if (!useSettingsStore.getState().telemetry) return
+  const record: MissionRecord = {
+    at: Date.now(),
+    missionId,
+    outcome: 'aborted',
+    durationSec,
+    seed,
+    firstContactSec: null,
+    objectiveTimes: [],
+    shotsByWeapon: {},
+    damageByWeapon: {},
+    damageDealt: 0,
+    damageTaken: 0,
+    civilianHitsBySquad: 0,
+    civilianHitsByCorpsec: 0,
+    medUsed: 0,
+    cellUsed: 0,
+    abilityUsesByRole: {},
+    squadRoles,
+    kills: 0,
+    kia: 0,
+    civiliansHit: 0,
+    reward: 0,
+    bonus: 0,
+    fine: 0,
+    payout: 0,
+  }
+  saveRecords(appendRecord(loadRecords(storage), record), storage)
+}
+
 export function exportJson(records: MissionRecord[]): string {
   return JSON.stringify({ version: TELEMETRY_VERSION, records }, null, 2)
 }
@@ -162,7 +201,10 @@ export interface ShareRow {
 export interface BalanceAggregate {
   missions: number
   wins: number
+  losses: number
+  aborts: number
   winRate: number
+  abortRate: number
   meanDurationSec: number
   // Over the missions that had a first contact at all.
   meanFirstContactSec: number | null
@@ -192,7 +234,10 @@ function shareRows(totals: Record<string, number>): ShareRow[] {
 export function aggregate(records: MissionRecord[]): BalanceAggregate {
   const n = records.length
   let wins = 0
+  let losses = 0
+  let aborts = 0
   let duration = 0
+  let finished = 0
   let contactSum = 0
   let contactN = 0
   let collateralMissions = 0
@@ -206,7 +251,12 @@ export function aggregate(records: MissionRecord[]): BalanceAggregate {
   const abilities: Record<string, number> = {}
   for (const r of records) {
     if (r.outcome === 'won') wins += 1
-    duration += r.durationSec
+    else if (r.outcome === 'lost') losses += 1
+    else if (r.outcome === 'aborted') aborts += 1
+    if (r.outcome !== 'aborted') {
+      finished += 1
+      duration += r.durationSec
+    }
     if (r.firstContactSec !== null && r.firstContactSec !== undefined) {
       contactSum += r.firstContactSec
       contactN += 1
@@ -228,15 +278,18 @@ export function aggregate(records: MissionRecord[]): BalanceAggregate {
   return {
     missions: n,
     wins,
-    winRate: n > 0 ? wins / n : 0,
-    meanDurationSec: n > 0 ? duration / n : 0,
+    losses,
+    aborts,
+    winRate: finished > 0 ? wins / finished : 0,
+    abortRate: n > 0 ? aborts / n : 0,
+    meanDurationSec: finished > 0 ? duration / finished : 0,
     meanFirstContactSec: contactN > 0 ? contactSum / contactN : null,
-    collateralRate: n > 0 ? collateralMissions / n : 0,
+    collateralRate: finished > 0 ? collateralMissions / finished : 0,
     civiliansHitTotal: civilians,
     kiaTotal: kia,
     medUsedTotal: med,
     cellUsedTotal: cell,
-    meanPayout: n > 0 ? payout / n : 0,
+    meanPayout: finished > 0 ? payout / finished : 0,
     totalPayout: payout,
     totalFines: fines,
     weaponDamage: shareRows(damage),

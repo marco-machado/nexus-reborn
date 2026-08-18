@@ -2,7 +2,8 @@
 // serializable: autosave only commits stable strategy/debrief transitions.
 import { CITIES, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
-import { BRANCH_IDS, NODES } from '../game/research'
+import { AUG_SLOTS, BRANCH_IDS, NODES, nodeById } from '../game/research'
+import type { AugSlot, BayPins } from '../game/research'
 import { DEFAULT_SQUAD, MISSIONS, WEAPONS } from '../game/data'
 import { LOADOUT_SLOTS } from '../game/mass'
 import type { SquadLoadout } from '../game/mass'
@@ -52,7 +53,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 7 as const
+const SAVE_VERSION = 8 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -60,8 +61,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV7 {
-  version: 7
+export interface SaveV8 {
+  version: 8
   app: {
     credits: number
     squad: string[]
@@ -387,13 +388,29 @@ function validRoster(
     if (!isObject(entry) || (entry.status !== 'READY' && entry.status !== 'INJURED')) return false
     if (entry.recoverAtT !== null && !finite(entry.recoverAtT)) return false
     if (!integer(entry.xp) || entry.xp < 0) return false
+    if (!validPins(entry.pins)) return false
     return entry.status === 'READY' ? entry.recoverAtT === null : entry.recoverAtT !== null
   })
 }
 
+function validPins(value: unknown): value is BayPins {
+  if (!isObject(value)) return false
+  for (const [slot, pin] of Object.entries(value)) {
+    if (!AUG_SLOTS.includes(slot as AugSlot)) return false
+    if (pin === 'STOCK') continue
+    if (typeof pin !== 'string') return false
+    try {
+      if (nodeById(pin).augSlot !== slot) return false
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
 const SEEN_ID_SET = new Set<string>(SEEN_IDS)
 
-export function validateSave(value: unknown): value is SaveV7 {
+export function validateSave(value: unknown): value is SaveV8 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -481,7 +498,7 @@ export function validateSave(value: unknown): value is SaveV7 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV7 {
+export function captureSave(): SaveV8 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -659,10 +676,19 @@ function upgraded(value: unknown): unknown {
       campaign: { ...v.campaign, campaignFailed: false, roster },
     }
   }
+  if (isObject(v) && v.version === 7 && isObject(v.campaign) && isObject(v.campaign.roster)) {
+    const roster = Object.fromEntries(
+      Object.entries(v.campaign.roster).map(([id, entry]) => [
+        id,
+        isObject(entry) && !('pins' in entry) ? { ...entry, pins: {} } : entry,
+      ]),
+    )
+    v = { ...v, version: 8, campaign: { ...v.campaign, roster } }
+  }
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV7 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV8 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -681,7 +707,7 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV7
   return null
 }
 
-export function hydrateSave(save: SaveV7): void {
+export function hydrateSave(save: SaveV8): void {
   useTutorialStore.getState().hydrate(save.tutorial.seen)
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,

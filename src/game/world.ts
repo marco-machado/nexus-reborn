@@ -13,6 +13,7 @@ import type {
   Unit,
   Vec2,
   WeaponDef,
+  Weather,
   WorldApi,
   Zone,
 } from './types'
@@ -26,9 +27,9 @@ import {
   weaponNoise,
 } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
-import { missionMods } from './missionParams'
+import { missionMods, weatherAt, weatherMul } from './missionParams'
 import type { MissionMods } from './missionParams'
-import { crewBonus, squadWeapon } from './research'
+import { appliedNodeIds, crewBonus, squadWeapon } from './research'
 import { xpBonus } from './experience'
 import { loadoutPools, massTier, squadMassKg, tierSpeedDelta } from './mass'
 import type { SquadLoadout } from './mass'
@@ -215,9 +216,12 @@ export function createWorld(
     officerCount: mods.officerCount,
     heavyCount: mods.heavyCount,
   })
-  // Weather scales guard sight and shot carry for this whole mission.
-  const vision = ENEMY_VISION * mods.visionMul
-  const vision2 = vision * vision
+  // Weather scales guard sight and shot carry. A scripted front retunes both.
+  let currentWeather: Weather = mission.weather
+  let noiseMul = mods.noiseMul
+  let vision = ENEMY_VISION * mods.visionMul
+  let vision2 = vision * vision
+  let frontLogged = !mission.weatherFront
 
   const units: SimUnit[] = []
   const byId = new Map<string, SimUnit>()
@@ -331,13 +335,19 @@ export function createWorld(
   // The world clock is stopped during a mission, so nothing can finish or
   // award XP while this one runs.
   const researched = useResearchStore.getState().done
-  const bonus = crewBonus(researched)
   const rosterXp = useCampaignStore.getState().roster
+  const appliedByOp: Record<string, string[]> = {}
+  const hpBonusByOp: Record<string, number> = {}
+  for (const op of operatives) {
+    const applied = appliedNodeIds(researched, rosterXp[op.id]?.pins)
+    appliedByOp[op.id] = applied
+    hpBonusByOp[op.id] = crewBonus(applied).maxHp + xpBonus(rosterXp[op.id]?.xp ?? 0).maxHp
+  }
 
   // Deployment-mass tier: one shared speed adjustment for the whole squad,
   // from the same model the assembly screen displays (game/mass.ts).
   const massDelta = tierSpeedDelta(
-    massTier(squadMassKg(operatives, bonus.maxHp, deploy?.loadout)),
+    massTier(squadMassKg(operatives, hpBonusByOp, deploy?.loadout)),
   )
 
   // Stat passives land on the weapon copies at deployment, after research:
@@ -353,8 +363,10 @@ export function createWorld(
   operatives.forEach((op, i) => {
     // Research applies to both slots the same way: each is built through
     // squadWeapon, so a sidearm carries every completed weapon project.
-    const w = roleTuneWeapon(squadWeapon(op.weapon, researched), op.role)
-    const sw = roleTuneWeapon(squadWeapon(op.sidearm, researched), op.role)
+    const applied = appliedByOp[op.id] ?? researched
+    const bonus = crewBonus(applied)
+    const w = roleTuneWeapon(squadWeapon(op.weapon, applied), op.role)
+    const sw = roleTuneWeapon(squadWeapon(op.sidearm, applied), op.role)
     const xp = xpBonus(rosterXp[op.id]?.xp ?? 0)
     const hp = op.maxHp + bonus.maxHp + xp.maxHp
     addUnit({
@@ -894,7 +906,7 @@ export function createWorld(
     noises.push({
       id: noiseSeq,
       pos: { x: u.pos.x, z: u.pos.z },
-      r: weaponNoise(w) * mods.noiseMul,
+      r: weaponNoise(w) * noiseMul,
       t: world.time,
     })
     sfx.gunshot(w.id)
@@ -1797,6 +1809,7 @@ export function createWorld(
       bonus: result === 'won' ? bonusEarned : 0,
       deadIds: deadIds.slice(),
       survivorHp,
+      quietReplay: useCampaignStore.getState().contractsWon.includes(mission.id),
       telemetry,
     })
   }
@@ -1889,6 +1902,7 @@ export function createWorld(
     syncObjectives()
     syncMissionResources()
     useMissionStore.getState().setClock(clockStr())
+    useMissionStore.getState().setWeather(currentWeather)
   }
 
   // Consumes the full frame delta in MAX_DT substeps so mission time tracks
@@ -1915,8 +1929,33 @@ export function createWorld(
     }
   }
 
+  function applyWeatherFront(): void {
+    if (frontLogged) return
+    const next = weatherAt(mission, world.time)
+    if (next === currentWeather) return
+    const from = currentWeather
+    currentWeather = next
+    const mul = weatherMul(next)
+    noiseMul = mul.noiseMul
+    vision = ENEMY_VISION * mul.visionMul
+    vision2 = vision * vision
+    world.weather = next
+    world.vision = vision
+    frontLogged = true
+    const lifts = mul.visionMul > weatherMul(from).visionMul
+    pushLog(
+      'SYS',
+      lifts
+        ? 'WEATHER FRONT. RAIN LIFTS. GUARD SIGHT INCREASED.'
+        : 'WEATHER FRONT. RAIN MOVES IN. GUARD SIGHT REDUCED.',
+      'alert',
+    )
+    useMissionStore.getState().setWeather(next)
+  }
+
   function step(dt: number): void {
     world.time += dt
+    applyWeatherFront()
     updateAbilities(dt)
     updateAgents(dt)
     updateEnemies(dt)
@@ -2371,6 +2410,7 @@ export function createWorld(
     tracers,
     booms,
     time: 0,
+    weather: currentWeather,
     vision,
     scanUntil: 0,
     tick,

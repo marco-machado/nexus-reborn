@@ -6,8 +6,8 @@
 // both weapon slots, ARMOR_KG_PER_HP for every max-HP point above
 // ARMOR_HP_FLOOR (plating is where the extra health comes from), and the two
 // loadout item slots. Research max-HP projects add mass through the same HP
-// term: callers pass crewBonus(done).maxHp so the squad weighs what it
-// fights at.
+// term: callers pass the worn-and-experience HP bonus per operative so
+// the squad weighs what it fights at.
 import type { OperativeDef } from './types'
 import { WEAPONS } from './data'
 
@@ -60,13 +60,13 @@ export function operativeMassKg(
 
 export function squadMassKg(
   ops: readonly OperativeDef[],
-  maxHpBonus: number,
+  maxHpBonus: number | Readonly<Record<string, number>>,
   loadout?: SquadLoadout,
 ): number {
-  return ops.reduce(
-    (sum, op) => sum + operativeMassKg(op, maxHpBonus, operativeItems(loadout, op.id)),
-    0,
-  )
+  return ops.reduce((sum, op) => {
+    const bonus = typeof maxHpBonus === 'number' ? maxHpBonus : (maxHpBonus[op.id] ?? 0)
+    return sum + operativeMassKg(op, bonus, operativeItems(loadout, op.id))
+  }, 0)
 }
 
 export function massTier(kg: number): MassTier {

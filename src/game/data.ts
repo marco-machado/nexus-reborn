@@ -135,6 +135,7 @@ export const MISSIONS: MissionDef[] = [
     reward: 85000,
     etaDays: 2,
     weather: 'heavy',
+    weatherFront: { to: 'light', atSec: 150 },
     variants: [
       { archetype: 'checkpoint', seed: 20870514 },
       { archetype: 'checkpoint', seed: 20870515 },
@@ -147,7 +148,7 @@ export const MISSIONS: MissionDef[] = [
       'The checkpoint garrison answers to Omnicorp. Expect armed response.',
     ],
     notes: [
-      'HEAVY RAIN. VISIBILITY REDUCED.',
+      'HEAVY RAIN. FRONT CLEARS 22:16:38.',
       'CIVILIAN DENSITY MODERATE. COLLATERAL TOLERANCE LOW.',
       'EXTRACTION WINDOW OPENS WHEN THE GARRISON FALLS.',
     ],
@@ -171,6 +172,7 @@ export const MISSIONS: MissionDef[] = [
     reward: 62000,
     etaDays: 4,
     weather: 'light',
+    weatherFront: { to: 'none', atSec: 180 },
     variants: [
       { archetype: 'compound', seed: 20870602 },
       { archetype: 'compound', seed: 20870601 },
@@ -183,7 +185,7 @@ export const MISSIONS: MissionDef[] = [
       'Walk the asset to the extraction pad alive. Helix pays nothing for a body.',
     ],
     notes: [
-      'LIGHT RAIN. GUARD SIGHT MILDLY REDUCED.',
+      'LIGHT RAIN. FRONT CLEARS 22:17:08.',
       'CIVILIAN DENSITY LOW. COLLATERAL TOLERANCE MODERATE.',
       'THE ASSET IS FRAGILE. KEEP IT OUT OF THE CROSSFIRE.',
       'THE COMPOUND GARRISON CAN BE BYPASSED. ENGAGEMENT IS OPTIONAL.',

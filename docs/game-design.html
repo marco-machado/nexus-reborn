@@ -1267,7 +1267,8 @@
         <!-- Document Content -->
         <div id="documentBody">
           <h1 id="nexus-reborn-game-design-document" class="gdd-h1"><span class="h-indicator">#</span> Nexus Reborn — Game Design Document</h1>
-<p class="gdd-p"><strong>Document type:</strong> Codebase-derived design specification  </p>
+<p class="gdd-p"><strong>Superseded snapshot.</strong> This HTML is a styled review of commit <code>29c27ec</code> (2026-08-17). The living spec is <a href="game-design.md"><code>docs/game-design.md</code></a>, the glossary is <a href="../CONTEXT.md"><code>CONTEXT.md</code></a>, and the closed cuts are <a href="adr/0004-quiet-replay.md">ADR-0004</a>, <a href="adr/0005-blueprint-assignment.md">ADR-0005</a>, and <a href="adr/0006-weather-script.md">ADR-0006</a>. Where this page and those files disagree, this page is wrong.</p>
+<p class="gdd-p"><strong>Document type:</strong> Dated styled snapshot — not the spec  </p>
 <p class="gdd-p"><strong>Project version reviewed:</strong> <code>29c27ec</code>  </p>
 <p class="gdd-p"><strong>Review date:</strong> 2026-08-17  </p>
 <p class="gdd-p"><strong>Primary platform:</strong> Desktop web browser  </p>
@@ -1437,7 +1438,7 @@
   <li>Apply completed effects to future deployments.</li>
 </ol>
 <h4 id="campaign-arc" class="gdd-h4">Campaign arc</h4>
-<p class="gdd-p">The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it.</p>
+<p class="gdd-p">The campaign has one explicit end. Winning all three authored contracts sets the campaign-complete state, and the World Network posts a completion banner. A contract stays replayable after a win, so the state marks the campaign rather than closing it. That replay does not pay.</p>
 <p class="gdd-p">Losing every remaining operative is a terminal fail: the World Network posts a failure banner, contracts lock, and the campaign cannot also be marked complete. Sector crisis (section 6.2) remains recoverable pressure below that floor.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
@@ -1547,11 +1548,11 @@
 <p class="gdd-p"><span class="status-tag tag-impl"><span class="tag-dot"></span>IMPLEMENTED</span></p>
 <p class="gdd-p">Influence points are earned three ways and spent on the three sector actions (section 6.2):</p>
 <ul class="gdd-ul">
-  <li><strong>+6</strong> points per contract win, generated or authored.</li>
+  <li><strong>+6</strong> points per contract win that is not a quiet replay.</li>
   <li><strong>+2</strong> more for a clean win (zero civilians hit by the squad).</li>
   <li><strong>+1</strong> per 12 world hours while the influence index holds above <strong>55</strong> (the trickle).</li>
 </ul>
-<p class="gdd-p">Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v7). Every balance number lives in <code>src/game/influence.ts</code>.</p>
+<p class="gdd-p">Costs: STABILIZE 8, LOBBY 10, EXPEDITE 12, each on its own per-sector cooldown (24h / 36h / 24h). The balance, staged spends, cooldowns, crisis states, and pressure timers are all persisted by the versioned save (v8; roster pins ride the campaign roster). Every balance number lives in <code>src/game/influence.ts</code>.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="8-research-program" class="gdd-h2"><span class="h-badge">SEC</span> 8. Research program</h2>
@@ -1637,7 +1638,7 @@
   <li>Arms.</li>
   <li>Legs.</li>
 </ul>
-<p class="gdd-p">The latest completed project associated with each bay is displayed as the installed augmentation for every operative. This is currently presentation logic: projects apply globally to the squad, not as individually installed or swappable hardware.</p>
+<p class="gdd-p">Ballistics is unslotted and squad-wide. Cybernetics and Control Systems are worn: one completed project per bay, current issue by default, pins for stock or an older project. A project is a blueprint — every operative may wear the same one. Death drops the assignment, not the program. See ADR-0005.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="9-operative-assembly" class="gdd-h2"><span class="h-badge">SEC</span> 9. Operative assembly</h2>
@@ -1831,7 +1832,7 @@
   <li>Estimated civilian, patrol, garrison, route, block, and street counts.</li>
 </ul>
 <h3 id="contract-acceptance" class="gdd-h3"><span class="h3-diamond">◆</span> Contract acceptance</h3>
-<p class="gdd-p">There is no contract cost or confirmation dialog. Accepting a contract advances directly to team selection. The contract remains replayable after success or failure.</p>
+<p class="gdd-p">There is no contract cost or confirmation dialog. Accepting a contract advances directly to team selection. Authored contracts remain replayable after success or failure. A replay of a contract already won is a quiet replay: no Credits, Influence, or Intel, and no sector shove. Roster and ETA still apply. See ADR-0004.</p>
 <hr class="gdd-hr" />
 <div class="section-divider"></div>
 <h2 id="11-tactical-mission-design" class="gdd-h2"><span class="h-badge">SEC</span> 11. Tactical mission design</h2>
@@ -2058,11 +2059,11 @@
   <li>Every contract is fully playable end to end through the standard pipeline: each type maps to a district archetype (seizure and suppression to checkpoint, extraction to compound, sabotage to industrial) with an objective set built from the existing reach / eliminate / interact / escort / destroy / extract primitives, and enemy counts scale with threat through the shared mission modifiers.</li>
   <li>Intel gating applies by threat: moderate needs level 1, high level 2, severe level 3.</li>
   <li>Unaccepted offers expire after 24–48 world hours (priority offers 8–16) and post a feed line; a fulfilled or failed generated contract applies the standard debrief consequences and then leaves the market. World Network rows and markers show a GENERATED or PRIORITY tag with an expiry countdown.</li>
-  <li>The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v7), so a reload reproduces the same open contracts.</li>
+  <li>The roll cursor is a serialized rng like the event stream, and every rolled field lands in the versioned save (v8), so a reload reproduces the same open contracts.</li>
 </ul>
 <h3 id="12-2-glass-veil" class="gdd-h3"><span class="h3-diamond">◆</span> 12.2 Glass Veil</h3>
 <h4 id="premise" class="gdd-h4">Premise</h4>
-<p class="gdd-p">CorpSec has sealed District 07 behind an Omnicorp checkpoint. Sable Enterprises wants the district opened for an asset transfer at 23:00. The squad inserts on the south perimeter and advances through market blocks under heavy rain.</p>
+<p class="gdd-p">CorpSec has sealed District 07 behind an Omnicorp checkpoint. Sable Enterprises wants the district opened for an asset transfer at 23:00. The squad inserts on the south perimeter and advances through market blocks under heavy rain. The front clears to light at 22:16:38.</p>
 <h4 id="conditions" class="gdd-h4">Conditions</h4>
 <ul class="gdd-ul">
   <li>Heavy rain: guard sight scales to 0.8 and weapon noise to 0.85.</li>
@@ -2256,13 +2257,13 @@
   <li>Roster inspection and assignment.</li>
   <li>Four squad bays.</li>
   <li>Research-adjusted stats and weapon values.</li>
-  <li>Installed-augmentation presentation.</li>
+  <li>Worn augmentation bays with current issue and pins.</li>
   <li>Two loadout item slots per operative (med kit / power cell / empty).</li>
   <li>Enforced deployment mass with the 400 kg limit and the speed-tier readout.</li>
 </ul>
 <h4 id="mission-hud" class="gdd-h4">Mission HUD</h4>
 <ul class="gdd-ul">
-  <li>District clock and static weather readouts.</li>
+  <li>District clock and live weather readouts (a front retunes the chip and comm log).</li>
   <li>Alert level.</li>
   <li>Account credits.</li>
   <li>Squad cards with HP, magazine, selected/active state, and tactical stances.</li>
@@ -2460,7 +2461,7 @@
   <li>Civilian presence complicates fire lanes.</li>
 </ul>
 <h3 id="economy-pressure" class="gdd-h3"><span class="h3-diamond">◆</span> Economy pressure</h3>
-<p class="gdd-p">Glass Veil pays 85,000 CR. The full research tree costs 779,000 CR, so repeated mission income or additional contracts are required to complete progression. The current build allows unlimited replay of the same contract and has no diminishing rewards.</p>
+<p class="gdd-p">Glass Veil pays 85,000 CR once. The full research tree costs 779,000 CR. The generated market funds the gap. A quiet replay of a won authored contract does not pay.</p>
 <h3 id="recommended-difficulty-vectors" class="gdd-h3"><span class="h3-diamond">◆</span> Recommended difficulty vectors</h3>
 <p class="gdd-p">Difficulty should modify readable systems rather than hide information:</p>
 <ul class="gdd-ul">
@@ -2577,8 +2578,8 @@
 <h3 id="19-2-scaffolded-or-presentation-only" class="gdd-h3"><span class="h3-diamond">◆</span> 19.2 Scaffolded or presentation-only</h3>
 <ul class="gdd-ul">
   <li>Nothing on the contract card. Chance is derived and ETA is spent as world time at the debrief (section 12.1); at intel level 2+ the brief replaces the chance readout with the computed risk index.</li>
-  <li>Weather beyond guard sight and weapon noise. Rain does not change accuracy, movement speed, or the omnidirectional notice radius, and there is no in-mission weather change.</li>
-  <li>Sector assets and black-market values as decision systems. Defense rating and garrison condition feed generated contract threat, and tax yield now falls under unrest pressure; assets and black market stay presentation.</li>
+  <li>Weather beyond guard sight and weapon noise. Rain does not change accuracy, movement speed, or the omnidirectional notice radius. A determined weather script may change once, adjacent, at a known clock (ADR-0006).</li>
+  <li>Sector assets, black-market impact, total forces, and the fake per-sector Influence <code>B</code> number. They are not systems and do not print. Defense, garrison, and tax-as-readout stay.</li>
   <li>Sector-intel view (the dead button; the sector panel's event forecast covers the intel readout).</li>
   <li>Archives and additional navigation tabs.</li>
 </ul>
