@@ -78,6 +78,7 @@ beforeEach(() => {
     objectives: [],
     log: [],
     alert: 0,
+    civiliansHit: 0,
     result: 'none',
     clock: '22:00:00',
     inventory: { med: 0, cell: 0 },
@@ -808,6 +809,7 @@ describe('role abilities', () => {
     const log = useMissionStore.getState().log
     expect(log.some((e) => e.msg.includes('FRAG CHARGE DETONATED'))).toBe(true)
     expect(log.some((e) => e.msg.includes('CIVILIAN'))).toBe(true)
+    expect(useMissionStore.getState().civiliansHit).toBe(1)
   })
 
   it('frag charge with no target in range fails with a comm line and keeps no cooldown', () => {

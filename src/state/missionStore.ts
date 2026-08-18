@@ -77,6 +77,8 @@ export interface MissionUiState {
   objectives: ObjectiveUi[]
   log: CommEntry[]
   alert: number
+  // Unique squad-caused civilian hits this deployment. HUD collateral chip.
+  civiliansHit: number
   result: 'none' | 'won' | 'lost'
   clock: string
   weather: Weather
@@ -90,6 +92,7 @@ export interface MissionUiState {
   setObjectives: (rows: ObjectiveUi[]) => void
   addLog: (e: CommEntry) => void
   setAlert: (n: number) => void
+  setCiviliansHit: (n: number) => void
   setResult: (r: 'none' | 'won' | 'lost') => void
   setClock: (c: string) => void
   setWeather: (w: Weather) => void
@@ -113,6 +116,7 @@ const initial = {
   objectives: [] as ObjectiveUi[],
   log: [] as CommEntry[],
   alert: 0,
+  civiliansHit: 0,
   result: 'none' as const,
   clock: '22:00:00',
   weather: 'none' as Weather,
@@ -139,6 +143,7 @@ export const useMissionStore = create<MissionUiState>((set) => ({
   setObjectives: (rows) => set({ objectives: rows }),
   addLog: (e) => set((s) => ({ log: [...s.log.slice(-60), e] })),
   setAlert: (n) => set({ alert: n }),
+  setCiviliansHit: (n) => set({ civiliansHit: n }),
   setResult: (r) => set({ result: r, ...(r !== 'none' ? { grenadeTargeting: false } : {}) }),
   setClock: (c) => set({ clock: c }),
   setWeather: (w) => set({ weather: w }),

@@ -733,7 +733,7 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 **Assembly.** Inspect, assign, wear or pin augmentation bays, read research-adjusted stats from what is worn, fill two item slots, and pass the 400 kg gate.
 
-**Mission HUD.** District clock, live weather, alert, credits, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim. A weather front writes a comm-log line.
+**Mission HUD.** District clock, live weather, alert, credits, live collateral, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim. A weather front writes a comm-log line.
 
 **Debrief.** The invoice. It applies sector, intel, influence, and roster consequences exactly once. A quiet replay names the zero and still applies roster and ETA.
 

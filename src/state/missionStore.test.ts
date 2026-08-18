@@ -12,6 +12,7 @@ const INITIAL = {
   objectives: [],
   log: [],
   alert: 0,
+  civiliansHit: 0,
   result: 'none',
   clock: '22:00:00',
   inventory: { med: 0, cell: 0 },
@@ -31,6 +32,7 @@ function data() {
     objectives: s.objectives,
     log: s.log,
     alert: s.alert,
+    civiliansHit: s.civiliansHit,
     result: s.result,
     clock: s.clock,
     inventory: s.inventory,
@@ -99,6 +101,7 @@ describe('initial state and reset', () => {
     s.setObjectives([{ id: 'ob1', label: 'REACH THE GATE', done: true, active: false }])
     s.addLog(entry(0))
     s.setAlert(3)
+    s.setCiviliansHit(2)
     s.setResult('won')
     s.setClock('22:14:07')
     s.setInventory({ med: 2, cell: 1 })
@@ -137,6 +140,7 @@ describe('plain setters', () => {
     s.setSquad(rows)
     s.setObjectives(obs)
     s.setAlert(2)
+    s.setCiviliansHit(3)
     s.setClock('22:05:33')
     s.setInventory({ med: 1, cell: 3 })
     const out = useMissionStore.getState()
@@ -145,6 +149,7 @@ describe('plain setters', () => {
     expect(out.squad).toEqual(rows)
     expect(out.objectives).toEqual(obs)
     expect(out.alert).toBe(2)
+    expect(out.civiliansHit).toBe(3)
     expect(out.clock).toBe('22:05:33')
     expect(out.inventory).toEqual({ med: 1, cell: 3 })
   })
