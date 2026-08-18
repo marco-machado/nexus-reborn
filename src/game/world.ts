@@ -27,7 +27,7 @@ import {
   weaponNoise,
 } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
-import { missionMods, weatherAt, weatherMul } from './missionParams'
+import { MISSION_CLOCK_BASE, missionMods, weatherAt, weatherMul } from './missionParams'
 import type { MissionMods } from './missionParams'
 import { appliedNodeIds, crewBonus, squadWeapon } from './research'
 import { xpBonus } from './experience'
@@ -96,7 +96,7 @@ const CIV_FLEE_T = 5
 const OUTCOME_DELAY = 2.5
 const MOVE_CHATTER_GAP = 4
 const FLAVOR_GAP = 6
-const CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
+
 // Seconds after a weapon swap before the drawn weapon can fire.
 const SWAP_DELAY = 0.5
 const MED_KIT_HEAL = 50
@@ -520,7 +520,7 @@ export function createWorld(
   }
 
   function clockStr(): string {
-    const total = (CLOCK_BASE + Math.floor(world.time)) % 86400
+    const total = ((mission.openingHour ?? MISSION_CLOCK_BASE) + Math.floor(world.time)) % 86400
     const h = Math.floor(total / 3600)
     const m = Math.floor((total % 3600) / 60)
     return pad2(h) + ':' + pad2(m) + ':' + pad2(total % 60)
@@ -1951,6 +1951,7 @@ export function createWorld(
       'alert',
     )
     useMissionStore.getState().setWeather(next)
+    sfx.weatherBed(next)
   }
 
   function step(dt: number): void {

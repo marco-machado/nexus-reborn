@@ -16,7 +16,7 @@ When this document and the playable build disagree, treat the disagreement as a 
 
 ### High concept
 
-The player is the **Operations Director** for **Nexus Global**. From the World Network they watch cities change hands, fund a research program, accept deniable contracts, and deploy a four-operative squad into rain-soaked districts.
+The player is the **Operations Director** for **Nexus Global**. From the World Network they watch cities change hands, fund a research program, accept deniable contracts, and deploy a four-operative squad into neon districts.
 
 The fantasy is remote command, not heroics. The player never walks the street. They read a situation, spend a few consequential orders, and live with the corporate cost of every stray round.
 
@@ -123,7 +123,7 @@ Nexus-signed generated work may target any city in its sector. An outside client
 
 ### Tone
 
-Cold, procedural, corporate. Violence is logged, not celebrated. Operatives answer in short professional acknowledgements. Civilians keep the player’s fire morally and financially legible. Spectacle is night, rain, neon, scanlines, and sparse bloom.
+Cold, procedural, corporate. Violence is logged, not celebrated. Operatives answer in short professional acknowledgements. Civilians keep the player’s fire morally and financially legible. **Spectacle** is emissive city light (neon) and the terminal chrome (scanlines, teal, amber, ink, monospace). Night and rain may host it; they are not it. Bloom is a quality setting, not identity.
 
 ---
 
@@ -186,7 +186,7 @@ The World Network is the player’s job between missions. Time is a resource. Le
 
 **Strategic time** runs only on the World Network and Research screens. The campaign begins 14 May 2087, 14:32:17 UTC. At 1×, one real second is sixty strategic seconds. Speeds are 1×, 2×, 4×, and 8×; the default is 2×. The clock can be paused. A rolling 24-hour timeline can be scrubbed without changing live state.
 
-**Tactical time** is an independent clock. Every mission opens at 22:14:08 on that clock. The World Network does not tick while the squad is in the field. After a win, the debrief spends the contract’s ETA in strategic days, and laboratories, injuries, and recruitment catch up to that new time.
+**Tactical time** is an independent clock. Each mission opens at its own **Opening hour** on that clock. The World Network does not tick while the squad is in the field. After a win, the debrief spends the contract’s ETA in strategic days, and laboratories, injuries, and recruitment catch up to that new time. See [ADR-0007](adr/0007-opening-hour.md).
 
 The clocks are independent because the director is either watching the World Network or running a mission, never both.
 
@@ -487,9 +487,9 @@ Generated work is first-class content, not filler. The authored three are the ca
 
 ### The brief
 
-The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the weather script (opening intensity and any coming change with its clock), the sequential objectives, collateral tolerance, a recon image, and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts.
+The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the Opening hour, the weather script (opening intensity and any coming change with its clock), the sequential objectives, collateral tolerance, a recon image, and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts.
 
-If the brief’s geometry does not match the deployed district, the brief is wrong. If the brief’s weather does not match the deployed script, the brief is wrong.
+If the brief’s geometry does not match the deployed district, the brief is wrong. If the brief’s weather or Opening hour does not match the deployed mission, the brief is wrong.
 
 ---
 
@@ -513,7 +513,7 @@ Rain is heavy, light, or none. It shortens CorpSec sight and quiets weapons. It 
 
 Each mission carries a **weather script**, fixed when the mission is created. The same contract seed produces the same script. Opening weather plus at most one change, to an adjacent intensity, at one tactical time from insertion. See [ADR-0006](adr/0006-weather-script.md).
 
-The brief prints the opening and the coming change (`HEAVY RAIN. FRONT CLEARS 22:16:38.`). The comm log fires when the front hits. The HUD weather chip follows. Risk index uses the clearer weather on the script; notes still print both.
+The brief prints the opening and the coming change (`HEAVY RAIN. FRONT CLEARS 22:16:38.`). The comm log fires when the front hits. The HUD weather chip follows. Risk index uses the clearer weather on the script; notes still print both. Clear-weather copy names the period: `CLEAR NIGHT` is only legal at night; dusk uses `CLEAR DUSK`. Rain lines do not name the period.
 
 Authored scripts:
 
@@ -524,6 +524,24 @@ Authored scripts:
 | Rust Haven | None | None |
 
 Generated contracts pick opening weather uniformly. About two in five then roll one front at 90–240s from insertion, direction uniform among the legal adjacent steps. The rest stay static.
+
+### Opening hour
+
+Each mission carries an **Opening hour**, the time of day the tactical clock starts at. Lighting derives from it and is frozen for the deployment: the HUD clock still ticks; the sky does not. Opening hour does not change sight, noise, or risk. It is independent of strategic time and of the weather script. See [ADR-0007](adr/0007-opening-hour.md).
+
+Legal hours are 18:00 inclusive to 01:00 exclusive. Hours in [18:00, 20:00) light as dusk; the rest of the window lights as night. There is no morning, afternoon, or noon. Neon still reads at dusk.
+
+Authored hours:
+
+| Contract | Opening hour | Look |
+|---|---|---|
+| Glass Veil | 22:14:08 | Night |
+| Hollow Crown | 22:14:08 | Night |
+| Rust Haven | 18:14:08 | Dusk |
+
+Generated contracts roll a uniform minute in the window from the contract seed, after the existing cosmetic stream so weather, codename, and map jitter stay put. Night is more common because the night band is longer. Weather is an independent roll, so heavy rain at dusk is legal.
+
+The brief carries the Opening hour. If the printed hour or look does not match the deployed sky, the brief is wrong.
 
 ### Player verbs
 
@@ -674,7 +692,7 @@ The mission is a route choice and an escort. The side wall skips most of the int
 
 ### Rust Haven — drop the grid and hold it
 
-Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. Clear night, no front: full sight, full hearing. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; CorpSec health 1.0 (1.05 if control is above 60). Demolition cells drop devices quickly. Gunfire works, slowly.
+Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. Dusk, 18:14:08, no front: full sight, full hearing, neon still readable. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; CorpSec health 1.0 (1.05 if control is above 60). Demolition cells drop devices quickly. Gunfire works, slowly.
 
 The yard splits into two sub-yards. Seed parity sets the split. Streets are wider than the other archetypes.
 
@@ -811,11 +829,11 @@ Late-1980s / 1990s cyberpunk strategy vocabulary, rebuilt as a crisp modern term
 
 Near-black and dark blue-green ground. Teal operational graphics. Amber focus. Red hostility and failure. Thin technical borders. Monospace uppercase type. Scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes.
 
-The tactical scene is a dark district in heavy weather: wet asphalt, cool window light, warm street lamps, procedural neon, dense towers and industrial slabs, instanced street dressing. Bloom is emissive only. Building ghosting exists so the player can still read the fight.
+The tactical scene is this city at dusk or night, dry or wet: asphalt that reads wet when it is raining, cool window light, warm street lamps, procedural neon, dense towers and industrial slabs, instanced street dressing. Neon stays readable in both looks. Bloom is emissive only, and a quality setting may drop it. Building ghosting exists so the player can still read the fight.
 
 Units are assembled from simple geometry. Operatives are cool armor with personal accent colors, slot tags, health pips, selection rings, and route feedback. CorpSec is dark coats, red visors, rings, garrison marks, alert and suspicion markers. Civilians vary. Hits flash; operatives flash red, everyone else amber, with a brief flinch.
 
-Effects stay sparse and informative: colored tracers, muzzle and impact flashes, dashed routes, destination rings, click marks, objective pulses, two-layer camera-following rain.
+Effects stay sparse and informative: colored tracers, muzzle and impact flashes, dashed routes, destination rings, click marks, objective pulses, and two-layer camera-following rain when the weather is wet. A clear mission mounts no rain.
 
 **No external art assets.** Textures, portraits, figures, icons, unit geometry, the world plate, and UI decoration are generated in code. The constraint is stylistic and production: one hand drew this world. An external pipeline is a deliberate change of project, not a polish pass.
 
@@ -827,7 +845,7 @@ Audio is synthesized at runtime. It confirms orders, marks danger, and prices vi
 
 Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump. An alert-tension drone tracks the mission alert level (0–3), ramps between levels, and releases when the mission ends.
 
-Two beds: a low industrial drone on the World Network and Research (music), a rain-hiss and city-hum on the mission (ambience). Each dies with the screen that owns it.
+Two beds: a low industrial drone on the World Network and Research (music), a city-hum on the mission (ambience) with a rain-hiss that follows weather and is silent when the weather is none. Each dies with the screen that owns it. Opening hour does not get its own bed.
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 
@@ -859,7 +877,7 @@ Single-player. No networking.
 
 The campaign save is versioned and local. It holds the World Network, the laboratories, the roster, tutorial progress, and the campaign result. A mission in progress is memory only. Settings and telemetry live in their own slots so New Operation does not reset the player’s preferences.
 
-Missions and districts are deterministic from the mission seed, including the weather script. Portraits and figures use stable hashes. The World Event stream and the candidate market use serialized random state so a reload continues the same sequence. Rain particles and synthesized noise may be unseeded; they do not change outcomes.
+Missions and districts are deterministic from the mission seed, including the weather script and the Opening hour. Portraits and figures use stable hashes. The World Event stream and the candidate market use serialized random state so a reload continues the same sequence. Rain particles and synthesized noise may be unseeded; they do not change outcomes.
 
 Quality is a player setting (Auto / High / Medium / Low), not a design lever. Building ghosting survives every tier because it is readability.
 

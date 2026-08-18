@@ -16,7 +16,7 @@ import type {
   Weather,
   WeatherFront,
 } from './types'
-import { rollWeatherFront, weatherNote } from './missionParams'
+import { rollOpeningHour, rollWeatherFront, weatherNote } from './missionParams'
 
 /* -------------------------------- constants ------------------------------- */
 
@@ -424,9 +424,14 @@ function briefingFor(c: GeneratedContract, city: string, district: string): stri
   }
 }
 
-function notesFor(c: GeneratedContract, weather: Weather, front?: WeatherFront): string[] {
+function notesFor(
+  c: GeneratedContract,
+  weather: Weather,
+  front: WeatherFront | undefined,
+  openingHour: number,
+): string[] {
   const notes = [
-    weatherNote(weather, front),
+    weatherNote(weather, front, openingHour),
     DENSITY_NOTE[CONTRACT_ARCHETYPE[c.type]],
     c.priority
       ? 'PRIORITY CONTRACT // PREMIUM FEE. OFFER EXPIRES EARLY.'
@@ -491,6 +496,9 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     x: clamp((city.x / PLATE_W) * 100 + (rng() - 0.5) * 6, 3, 97),
     y: clamp((city.y / PLATE_H) * 100 + (rng() - 0.5) * 6, 6, 94),
   }
+  // After the existing cosmetic stream so weather, codename, and map jitter
+  // stay put for seeds already in a campaign.
+  const openingHour = rollOpeningHour(rng)
   const archetype = CONTRACT_ARCHETYPE[contract.type]
   const district = 'DISTRICT ' + pad2(contract.district)
   const def: MissionDef = {
@@ -506,13 +514,14 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     etaDays: CONTRACT_ETA_DAYS[contract.threat],
     weather,
     weatherFront,
+    openingHour,
     variants: [
       { archetype, seed: contract.seed },
       { archetype, seed: (contract.seed + 1) >>> 0 },
     ],
     seed: contract.seed,
     briefing: briefingFor(contract, city.name, district),
-    notes: notesFor(contract, weather, weatherFront),
+    notes: notesFor(contract, weather, weatherFront, openingHour),
     objectives: objectivesFor(contract),
     intelReq: contract.expedited ? 1 : CONTRACT_INTEL_REQ[contract.threat],
     mapPos,

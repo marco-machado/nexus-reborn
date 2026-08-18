@@ -38,6 +38,7 @@ import {
   riskWeather,
   weatherBriefLabel,
   weatherMul,
+  missionPeriod,
 } from '../game/missionParams'
 import { missionRisk } from '../game/forecast'
 import {
@@ -263,15 +264,20 @@ function calloutFor(arch: DistrictArchetype, district: string) {
   const w = Math.max(...lines.map((l) => textWidth(l.text, l.size, l.track))) + CALLOUT_PAD * 2
   return { lines, w, x: RECON_W - 16 - w }
 }
-const COMMS_WEATHER: Record<Weather, string> = {
+const COMMS_WEATHER: Record<Exclude<Weather, 'none'>, string> = {
   heavy: 'WEATHER: HEAVY RAIN. VISIBILITY LOW.',
   light: 'WEATHER: LIGHT RAIN. VISIBILITY REDUCED.',
-  none: 'WEATHER: CLEAR NIGHT. VISIBILITY FULL.',
+}
+function commsWeather(m: MissionDef): string {
+  if (m.weatherFront) return 'WEATHER: ' + weatherBriefLabel(m) + '.'
+  if (m.weather === 'none') {
+    const period = missionPeriod(m.openingHour) === 'dusk' ? 'CLEAR DUSK' : 'CLEAR NIGHT'
+    return 'WEATHER: ' + period + '. VISIBILITY FULL.'
+  }
+  return COMMS_WEATHER[m.weather]
 }
 function commsLog(m: MissionDef): Array<[string, string]> {
-  const weatherLine = m.weatherFront
-    ? 'WEATHER: ' + weatherBriefLabel(m) + '.'
-    : COMMS_WEATHER[m.weather]
+  const weatherLine = commsWeather(m)
   return [
     ['23:40:12', 'INTEL: SECURITY PATROLS INCREASED.'],
     ['23:40:45', weatherLine],

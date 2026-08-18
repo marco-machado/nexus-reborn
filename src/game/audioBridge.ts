@@ -1,7 +1,7 @@
 // Mission-safe bridge to the procedural audio module. The simulation keeps a
 // synchronous API while Rollup can place the implementation in its own lazy
 // chunk. Calls made during the short module load window are safely ignored.
-import type { WeaponId } from './types'
+import type { WeaponId, Weather } from './types'
 
 interface MissionSfx {
   gunshot: (weaponId: WeaponId) => void
@@ -15,6 +15,7 @@ interface MissionSfx {
   abilityCue: () => void
   agentHit: () => void
   threatLevel: (level: number) => void
+  weatherBed: (weather: Weather) => void
 }
 
 let loaded: MissionSfx | null = null
@@ -59,5 +60,8 @@ export const missionSfx: MissionSfx = {
   },
   threatLevel(level) {
     loaded?.threatLevel(level)
+  },
+  weatherBed(weather) {
+    loaded?.weatherBed(weather)
   },
 }

@@ -16,6 +16,7 @@ function makeMission(seed: number): MissionDef {
     reward: 1000,
     etaDays: 1,
     weather: 'none',
+    openingHour: 22 * 3600 + 14 * 60 + 8,
     variants: [{ archetype: 'checkpoint', seed }],
     seed,
     briefing: [],

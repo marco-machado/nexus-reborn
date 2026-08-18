@@ -31,8 +31,12 @@ The clock of the World Network and the laboratories. It does not run during a mi
 _Avoid_: World time, campaign time, game time
 
 **Tactical time**:
-The independent clock of one mission. Every mission opens at the same authored hour. The World Network does not tick while the team is in the field.
+The independent clock of one mission. Each mission opens at its own Opening hour. The World Network does not tick while the team is in the field.
 _Avoid_: Mission timer (that is an objective limit), world time
+
+**Opening hour**:
+The time of day the tactical clock starts at for one mission. Lighting follows from it. It is authored or rolled, independent of strategic time and of Weather.
+_Avoid_: time of day (as a second field), lighting band, night (as a mission type)
 
 **Review time**:
 A historical point on the World Network's 24-hour timeline. Scrubbing it does not change live state.
@@ -507,3 +511,9 @@ _Avoid_: Hold (the stance), survive
 **Time limit**:
 A countdown from an objective's activation. Expiry fails an optional objective and is a Loss on a required one.
 _Avoid_: Tactical time, mission timer, ETA
+
+## Look
+
+**Spectacle**:
+The art-direction identity: emissive city light (neon) and the terminal chrome (scanlines, teal, amber, ink, monospace). Night and rain may host it; they are not it.
+_Avoid_: atmosphere, look, visual style, cyberpunk (as the name of this), night, rain

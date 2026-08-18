@@ -136,6 +136,7 @@ export const MISSIONS: MissionDef[] = [
     etaDays: 2,
     weather: 'heavy',
     weatherFront: { to: 'light', atSec: 150 },
+    openingHour: 22 * 3600 + 14 * 60 + 8,
     variants: [
       { archetype: 'checkpoint', seed: 20870514 },
       { archetype: 'checkpoint', seed: 20870515 },
@@ -173,6 +174,7 @@ export const MISSIONS: MissionDef[] = [
     etaDays: 4,
     weather: 'light',
     weatherFront: { to: 'none', atSec: 180 },
+    openingHour: 22 * 3600 + 14 * 60 + 8,
     variants: [
       { archetype: 'compound', seed: 20870602 },
       { archetype: 'compound', seed: 20870601 },
@@ -228,6 +230,7 @@ export const MISSIONS: MissionDef[] = [
     reward: 41000,
     etaDays: 3,
     weather: 'none',
+    openingHour: 18 * 3600 + 14 * 60 + 8,
     variants: [
       { archetype: 'industrial', seed: 20870618 },
       { archetype: 'industrial', seed: 20870619 },
@@ -240,7 +243,7 @@ export const MISSIONS: MissionDef[] = [
       'CorpSec will push a response wave through the gates. Withdraw once the burn holds.',
     ],
     notes: [
-      'CLEAR NIGHT. GUARDS SEE AND HEAR AT FULL RANGE.',
+      'CLEAR DUSK. GUARDS SEE AND HEAR AT FULL RANGE.',
       'CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.',
       'DEMOLITION CELLS ARE THE FAST TOOL. GUNFIRE WORKS, SLOWLY.',
       'THE YARD GUARD CAN BE BYPASSED ON THE WAY IN.',

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   getAudioLevels,
+  missionRainGain,
   setAudioLevels,
+  setMissionBedWeather,
   startMissionBed,
   startStrategyBed,
   stopMissionBed,
@@ -17,6 +19,14 @@ describe('audio beds', () => {
     expect(() => stopStrategyBed()).not.toThrow()
     expect(() => stopMissionBed()).not.toThrow()
     expect(() => unlockAudio()).not.toThrow()
+    expect(() => setMissionBedWeather('none')).not.toThrow()
+    expect(() => setMissionBedWeather('heavy')).not.toThrow()
+  })
+
+  it('silences the rain-hiss on clear weather and keeps it audible in rain', () => {
+    expect(missionRainGain('none')).toBeLessThan(0.01)
+    expect(missionRainGain('light')).toBeGreaterThan(missionRainGain('none'))
+    expect(missionRainGain('heavy')).toBeGreaterThan(missionRainGain('light'))
   })
 
   it('the pipeline stores independent music and ambience stage factors', () => {

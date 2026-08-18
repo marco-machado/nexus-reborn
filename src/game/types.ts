@@ -184,7 +184,7 @@ export interface DistrictSpec {
 export type Weather = 'heavy' | 'light' | 'none'
 
 // One adjacent intensity change on the weather script, at a tactical time
-// from insertion. Omitted when the night stays static.
+// from insertion. Omitted when the weather stays static.
 export interface WeatherFront {
   to: Weather
   atSec: number
@@ -205,6 +205,9 @@ export interface MissionDef {
   etaDays: number
   weather: Weather
   weatherFront?: WeatherFront
+  // Seconds since midnight the tactical clock starts at. Lighting freezes
+  // from this hour; it does not change sight, noise, or risk.
+  openingHour: number
   // Authored layouts; the first entry is the default, a replay after a won
   // contract rotates to the next.
   variants: DistrictSpec[]

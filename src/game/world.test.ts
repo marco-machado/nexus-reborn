@@ -275,6 +275,15 @@ describe('store sync', () => {
     expect(useMissionStore.getState().clock).toBe('22:14:09')
   })
 
+  it('opens the HUD clock at the mission Opening hour', () => {
+    const dusk = { ...BARE_MISSION, openingHour: 18 * 3600 + 14 * 60 + 8 }
+    const w = createWorld(dusk, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    expect(useMissionStore.getState().clock).toBe('18:14:08')
+    expect(useMissionStore.getState().log[0].t).toBe('18:14:08')
+  })
+
   it('reports role-based inventory bonuses after the first tick', () => {
     // medic +2 med, support +1 med, tech +1 cell on top of the base 2/1.
     const w = createWorld(BARE_MISSION, ops(['op8', 'op7', 'op6']))

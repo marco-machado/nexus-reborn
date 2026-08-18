@@ -143,17 +143,44 @@ export function weatherAt(m: MissionDef, tSec: number): Weather {
   return m.weather
 }
 
-// Tactical clock every mission opens at. Front copy uses this so a brief
-// time and the HUD clock mean the same second.
+// Night default and the authored Glass Veil / Hollow Crown stamp.
 export const MISSION_CLOCK_BASE = 22 * 3600 + 14 * 60 + 8
+// Legal openings: [18:00, 01:00). Dusk is [18:00, 20:00); the rest is night.
+export const OPENING_HOUR_START = 18 * 3600
+export const OPENING_WINDOW_SEC = 7 * 3600
+export const DUSK_END = 20 * 3600
+export const RUST_HAVEN_HOUR = 18 * 3600 + 14 * 60 + 8
 
-export function missionClockAt(atSec: number): string {
-  const total = (MISSION_CLOCK_BASE + Math.max(0, Math.floor(atSec))) % 86400
+export type MissionPeriod = 'dusk' | 'night'
+
+export function wrapDaySec(sec: number): number {
+  return ((Math.floor(sec) % 86400) + 86400) % 86400
+}
+
+export function missionPeriod(openingHour: number): MissionPeriod {
+  const t = wrapDaySec(openingHour)
+  return t >= OPENING_HOUR_START && t < DUSK_END ? 'dusk' : 'night'
+}
+
+export function formatClock(hourSec: number): string {
+  const total = wrapDaySec(hourSec)
   const h = Math.floor(total / 3600)
   const m = Math.floor((total % 3600) / 60)
   const s = total % 60
   const pad = (n: number) => String(n).padStart(2, '0')
   return pad(h) + ':' + pad(m) + ':' + pad(s)
+}
+
+// Front copy uses the mission's Opening hour so a brief time and the HUD
+// clock mean the same second.
+export function missionClockAt(atSec: number, openingHour = MISSION_CLOCK_BASE): string {
+  return formatClock(openingHour + Math.max(0, Math.floor(atSec)))
+}
+
+export function rollOpeningHour(rng: () => number): number {
+  const minutes = OPENING_WINDOW_SEC / 60
+  const minute = Math.floor(rng() * minutes) % minutes
+  return wrapDaySec(OPENING_HOUR_START + minute * 60)
 }
 
 export const FRONT_CHANCE = 0.4
@@ -168,11 +195,20 @@ export function rollWeatherFront(rng: () => number, opening: Weather): WeatherFr
   return { to, atSec: Math.round(FRONT_MIN_SEC + rng() * span) }
 }
 
-export function weatherNote(weather: Weather, front?: WeatherFront): string {
+export function clearWeatherNote(openingHour = MISSION_CLOCK_BASE): string {
+  const period = missionPeriod(openingHour) === 'dusk' ? 'DUSK' : 'NIGHT'
+  return 'CLEAR ' + period + '. GUARDS SEE AND HEAR AT FULL RANGE.'
+}
+
+export function weatherNote(
+  weather: Weather,
+  front?: WeatherFront,
+  openingHour = MISSION_CLOCK_BASE,
+): string {
   if (!front) {
     if (weather === 'heavy') return 'HEAVY RAIN. VISIBILITY REDUCED.'
     if (weather === 'light') return 'LIGHT RAIN. GUARD SIGHT MILDLY REDUCED.'
-    return 'CLEAR NIGHT. GUARDS SEE AND HEAR AT FULL RANGE.'
+    return clearWeatherNote(openingHour)
   }
   const lifts = weatherMul(front.to).visionMul > weatherMul(weather).visionMul
   return (
@@ -180,19 +216,26 @@ export function weatherNote(weather: Weather, front?: WeatherFront): string {
     '. FRONT ' +
     (lifts ? 'CLEARS' : 'ARRIVES') +
     ' ' +
-    missionClockAt(front.atSec) +
+    missionClockAt(front.atSec, openingHour) +
     '.'
   )
 }
 
 export function weatherBriefLabel(m: MissionDef): string {
-  if (!m.weatherFront) return WEATHER_LABEL[m.weather]
+  const hour = m.openingHour ?? MISSION_CLOCK_BASE
+  if (!m.weatherFront) {
+    if (m.weather === 'none') {
+      const period = missionPeriod(hour) === 'dusk' ? 'CLEAR DUSK' : 'CLEAR NIGHT'
+      return period + ' // ' + formatClock(hour)
+    }
+    return WEATHER_LABEL[m.weather] + ' // ' + formatClock(hour)
+  }
   return (
     WEATHER_LABEL[m.weather] +
     ' → ' +
     WEATHER_LABEL[m.weatherFront.to] +
     ' ' +
-    missionClockAt(m.weatherFront.atSec)
+    missionClockAt(m.weatherFront.atSec, hour)
   )
 }
 

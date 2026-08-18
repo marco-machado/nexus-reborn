@@ -22,6 +22,7 @@ import type { ContractSectorInput, ContractType, GeneratedContract } from './con
 import { CITIES, CITIES_BY_SECTOR, HOLDERS } from './atlas'
 import type { CorpId } from './atlas'
 import { MISSIONS, operativeById } from './data'
+import { missionPeriod } from './missionParams'
 import { isWalkable } from './types'
 import { createWorld } from './world'
 
@@ -223,6 +224,27 @@ describe('derived missions', () => {
   it('keeps a stable object identity per record', () => {
     const record = rollContract(INPUTS, 1000, 0x42).contract
     expect(contractMission(record)).toBe(contractMission(record))
+  })
+
+  it('rolls an opening hour after the existing cosmetic stream', () => {
+    const m = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
+    // Weather and map jitter are the prefix of the stream; hour is last.
+    expect(m.weather).toBe('none')
+    expect(m.mapPos).toEqual({ x: 51.11282241260633, y: 20.108530740325268 })
+    const wrapped = m.openingHour < 18 * 3600 ? m.openingHour + 86400 : m.openingHour
+    expect(wrapped).toBeGreaterThanOrEqual(18 * 3600)
+    expect(wrapped).toBeLessThan(18 * 3600 + 7 * 3600)
+    expect(m.openingHour % 60).toBe(0)
+    expect(m.notes[0]).toBeDefined()
+    if (m.weather === 'none' && !m.weatherFront) {
+      expect(m.notes[0]).toBe(
+        missionPeriod(m.openingHour) === 'dusk'
+          ? 'CLEAR DUSK. GUARDS SEE AND HEAR AT FULL RANGE.'
+          : 'CLEAR NIGHT. GUARDS SEE AND HEAR AT FULL RANGE.',
+      )
+    } else {
+      expect(m.notes[0]).not.toMatch(/CLEAR (DUSK|NIGHT)/)
+    }
   })
 
   it('gates intel by threat', () => {

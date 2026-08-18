@@ -1,7 +1,8 @@
 // Procedural WebAudio SFX. No assets: every voice is synthesized on the fly
 // from a shared noise buffer and short oscillator envelopes. All entry points
 // are safe to call when audio is unavailable (construction failure, no ctx).
-import type { WeaponId } from './types'
+import type { WeaponId, Weather } from './types'
+import { getWorld } from './runtime'
 
 type AcCtor = typeof AudioContext
 
@@ -369,6 +370,10 @@ export const sfx = {
     t.filter.frequency.setValueAtTime(Math.max(20, t.filter.frequency.value), now)
     t.filter.frequency.exponentialRampToValueAtTime(THREAT_FREQ[l], now + THREAT_RAMP)
   },
+
+  weatherBed(weather: Weather): void {
+    setMissionBedWeather(weather)
+  },
 }
 
 // Looping beds. Strategy rides the music stage (a low industrial drone);
@@ -378,6 +383,14 @@ interface Bed {
   oscs: OscillatorNode[]
   srcs: AudioBufferSourceNode[]
   gain: GainNode
+  rainGain?: GainNode
+}
+
+// Near-silent on a dry mission so a later front can ramp the hiss in.
+export function missionRainGain(weather: Weather): number {
+  if (weather === 'heavy') return 0.22
+  if (weather === 'light') return 0.14
+  return 0.0001
 }
 
 let strategyBed: Bed | null = null
@@ -454,7 +467,8 @@ export function startMissionBed(): void {
   rainFlt.frequency.value = 1400
   rainFlt.Q.value = 0.5
   const rainGain = live.c.createGain()
-  rainGain.gain.value = 0.22
+  const opening = getWorld()?.weather ?? 'none'
+  rainGain.gain.value = missionRainGain(opening)
   rain.connect(rainFlt).connect(rainGain).connect(gain)
   const hum = live.c.createOscillator()
   hum.type = 'sine'
@@ -468,7 +482,17 @@ export function startMissionBed(): void {
   rain.start(now)
   hum.start(now)
   gain.gain.exponentialRampToValueAtTime(0.16, now + 0.7)
-  missionBed = { oscs: [hum], srcs: [rain], gain }
+  missionBed = { oscs: [hum], srcs: [rain], gain, rainGain }
+}
+
+export function setMissionBedWeather(weather: Weather): void {
+  if (!missionBed?.rainGain || !ctx) return
+  const now = ctx.currentTime
+  const g = missionBed.rainGain.gain
+  const next = missionRainGain(weather)
+  g.cancelScheduledValues(now)
+  g.setValueAtTime(Math.max(0.0001, g.value), now)
+  g.exponentialRampToValueAtTime(Math.max(0.0001, next), now + 0.4)
 }
 
 export function stopMissionBed(): void {
