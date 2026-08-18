@@ -32,6 +32,7 @@ import {
 } from '../game/mass'
 import type { LoadoutItemId } from '../game/mass'
 import {
+  difficultyNote,
   missionChance,
   missionMods,
   missionVariant,
@@ -337,6 +338,7 @@ export function MissionBrief() {
     [m, spec?.archetype],
   )
   if (!m || !tac || !spec || !mods || !callout) return null
+  const profile = difficultyNote(difficulty)
   const initials = m.codename
     .split(' ')
     .map((w) => w.charAt(0))
@@ -859,6 +861,7 @@ export function MissionBrief() {
                 </div>
                 <div className="mb-box">
                   <label>MISSION NOTES:</label>
+                  {profile ? <div className="mb-note dim">{profile}</div> : null}
                   {m.notes.map((n, i) => (
                     <div key={i} className="mb-note dim">
                       {n}

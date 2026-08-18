@@ -278,7 +278,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                 <span className="set-toggle-main">
                   <b>THREAT PROFILE</b>
                   <i className="dim">
-                    HARDENED adds patrols and civilians; minimap information stays
+                    HARDENED: extra patrols, longer confirm, cleaner shots, +1 m sight, tighter optional windows. Minimap stays
                   </i>
                 </span>
                 <span className="set-scale">

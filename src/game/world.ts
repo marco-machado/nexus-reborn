@@ -217,9 +217,11 @@ export function createWorld(
     heavyCount: mods.heavyCount,
   })
   // Weather scales guard sight and shot carry. A scripted front retunes both.
+  // Hardened visionAdd stacks on the weather scale and is reapplied with it.
   let currentWeather: Weather = mission.weather
   let noiseMul = mods.noiseMul
-  let vision = ENEMY_VISION * mods.visionMul
+  const visionAdd = mods.visionAdd
+  let vision = ENEMY_VISION * mods.visionMul + visionAdd
   let vision2 = vision * vision
   let frontLogged = !mission.weatherFront
 
@@ -287,7 +289,9 @@ export function createWorld(
   const interactStarted: boolean[] = objectives.map(() => false)
   const defendLeft: number[] = objectives.map((d) => d.durationSec ?? 0)
   // Time-limit countdowns remaining, per objective; only ticks while active.
-  const failLeft: number[] = objectives.map((d) => d.failSec ?? 0)
+  const failLeft: number[] = objectives.map((d) =>
+    d.optional && d.failSec ? d.failSec * mods.optFailMul : (d.failSec ?? 0),
+  )
   // Completion time of each objective, -1 while unfinished (telemetry).
   const objDoneT: number[] = objectives.map(() => -1)
   // Tags whose device died to non-squad fire: an optional destroy over such a
@@ -1125,7 +1129,7 @@ export function createWorld(
   // fraction of the time one at the edge of the cone does.
   function sightGain(d: number): number {
     const k = Math.min(1, d / vision)
-    return 1 / (SIGHT_NEAR_T + (SIGHT_FAR_T - SIGHT_NEAR_T) * k)
+    return 1 / ((SIGHT_NEAR_T + (SIGHT_FAR_T - SIGHT_NEAR_T) * k) * mods.sightConfirmMul)
   }
 
   function sense(e: SimUnit, elapsed: number): void {
@@ -1241,12 +1245,12 @@ export function createWorld(
           const dest = nearestWalkable(city, back)
           if (dest) e.path = findPath(city, e.pos, dest)
         }
-        tryFire(e, tgt, ENEMY_ACC)
+        tryFire(e, tgt, ENEMY_ACC * mods.enemyAccMul)
       } else if (bestD <= Math.max(1.5, w.range - 1)) {
         e.path.length = 0
         e.stance = 'attacking'
         faceToward(e, tgt.pos, dt)
-        tryFire(e, tgt, ENEMY_ACC)
+        tryFire(e, tgt, ENEMY_ACC * mods.enemyAccMul)
       } else {
         e.stance = 'moving'
         if (world.time >= (e.repathT ?? 0)) {
@@ -1937,7 +1941,7 @@ export function createWorld(
     currentWeather = next
     const mul = weatherMul(next)
     noiseMul = mul.noiseMul
-    vision = ENEMY_VISION * mul.visionMul
+    vision = ENEMY_VISION * mul.visionMul + visionAdd
     vision2 = vision * vision
     world.weather = next
     world.vision = vision

@@ -2,7 +2,8 @@
 // brief and MissionScreen both compute the same numbers here, so briefing
 // counts match the deployed city, and world.ts never reads worldStore.
 // Sector values come from a snapshot taken at deployment. Difficulty is a
-// player setting applied here (patrol count and civilian density).
+// player setting applied here (patrol count, civilian density, CorpSec
+// sight/accuracy, and optional-objective windows).
 import type { DistrictSpec, MissionDef, Weather, WeatherFront } from './types'
 import type { SectorState } from '../state/worldStore'
 
@@ -17,6 +18,14 @@ export interface MissionMods {
   civilianCount: number
   // Scales ENEMY_VISION for this mission.
   visionMul: number
+  // Metres added to CorpSec vision after weather. Stacks; does not replace rain.
+  visionAdd: number
+  // Scales SIGHT_NEAR_T / SIGHT_FAR_T. >1 lengthens confirm.
+  sightConfirmMul: number
+  // Scales ENEMY_ACC. >1 is cleaner CorpSec shooting.
+  enemyAccMul: number
+  // Scales optional-objective failSec. <1 tightens the window.
+  optFailMul: number
   // Scales weaponNoise radii.
   noiseMul: number
   rain: Weather
@@ -68,17 +77,37 @@ export function missionVariant(m: MissionDef, replay: boolean): DistrictSpec {
 }
 
 // Player-facing difficulty. STANDARD is the authored baseline; HARDENED
-// adds street patrols and bystanders — two of the listed vectors — without
-// hiding minimap information.
+// turns the readable knobs (patrols, civilians, confirm, accuracy, sight
+// add-on, optional windows) without hiding minimap information.
 export const DIFFICULTIES = ['standard', 'hardened'] as const
 export type Difficulty = (typeof DIFFICULTIES)[number]
 
-export const DIFFICULTY_FX: Record<
-  Difficulty,
-  { extraPatrol: number; extraCivilians: number }
-> = {
-  standard: { extraPatrol: 0, extraCivilians: 0 },
-  hardened: { extraPatrol: 2, extraCivilians: 6 },
+export interface DifficultyFx {
+  extraPatrol: number
+  extraCivilians: number
+  sightConfirmMul: number
+  enemyAccMul: number
+  visionAdd: number
+  optFailMul: number
+}
+
+export const DIFFICULTY_FX: Record<Difficulty, DifficultyFx> = {
+  standard: {
+    extraPatrol: 0,
+    extraCivilians: 0,
+    sightConfirmMul: 1,
+    enemyAccMul: 1,
+    visionAdd: 0,
+    optFailMul: 1,
+  },
+  hardened: {
+    extraPatrol: 2,
+    extraCivilians: 6,
+    sightConfirmMul: 1.15,
+    enemyAccMul: 1.1,
+    visionAdd: 1,
+    optFailMul: 0.85,
+  },
 }
 
 export function missionMods(
@@ -107,6 +136,10 @@ export function missionMods(
     heavyCount: THREAT_HEAVIES[m.threat],
     civilianCount,
     visionMul: weather.visionMul,
+    visionAdd: fx.visionAdd,
+    sightConfirmMul: fx.sightConfirmMul,
+    enemyAccMul: fx.enemyAccMul,
+    optFailMul: fx.optFailMul,
     noiseMul: weather.noiseMul,
     rain: m.weather,
   }
@@ -195,6 +228,13 @@ export function rollWeatherFront(rng: () => number, opening: Weather): WeatherFr
   return { to, atSec: Math.round(FRONT_MIN_SEC + rng() * span) }
 }
 
+// Brief line for the player setting. Empty on STANDARD so the authored notes
+// stay the only copy. Voice matches weatherNote: uppercase, corporate.
+export function difficultyNote(difficulty: Difficulty): string {
+  if (difficulty !== 'hardened') return ''
+  return 'HARDENED PROFILE. GUARD SIGHT +1M. ACCURACY UP. CONFIRM SLOW. OPTIONAL WINDOWS TIGHT.'
+}
+
 export function clearWeatherNote(openingHour = MISSION_CLOCK_BASE): string {
   const period = missionPeriod(openingHour) === 'dusk' ? 'DUSK' : 'NIGHT'
   return 'CLEAR ' + period + '. GUARDS SEE AND HEAR AT FULL RANGE.'
@@ -251,6 +291,10 @@ export function missionChance(
   chance -= mods.enemyExtra * 3
   chance -= Math.round((mods.enemyHpMul - 1) * 50)
   chance -= mods.heavyCount * 2 + mods.officerCount * 3
+  // Hardened reach, accuracy, and tighter optional windows make the fight worse.
+  chance -= Math.round(mods.visionAdd * 2)
+  chance -= Math.round((mods.enemyAccMul - 1) * 20)
+  chance -= Math.round((1 - mods.optFailMul) * 10)
   // Rain shortens guard sight, which favors the squad.
   chance += Math.round((1 - weatherMul(riskWeather(m)).visionMul) * 25)
   chance += researchedCount * 2
