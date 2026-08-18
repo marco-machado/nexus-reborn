@@ -78,7 +78,7 @@ Everything is generated in code: WebAudio (`game/audio.ts`), CanvasTextures (`sc
 
 ## Commits
 
-Imperative subject line, then a body that says what changed by file, why, and what was verified (lint, build, the click-through). Reference issues with `Closes #N`.
+Imperative subject line, then a body that says what changed by file, why, and what was verified (lint, build, the click-through). Reference issues with `Closes #N`. This section is the commit style — do not run `git log` to infer one.
 
 ## Agent skills
 
