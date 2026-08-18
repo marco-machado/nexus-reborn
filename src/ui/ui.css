@@ -2693,6 +2693,25 @@
 
 .hud-credits { color: #e8fbf2; letter-spacing: 0.1em; font-size: calc(15px * var(--text-scale)); }
 
+.hud-collateral {
+  flex: none;
+}
+
+.hud-collateral.pulse {
+  animation: hud-collateral-pulse 0.55s ease-out;
+}
+
+@keyframes hud-collateral-pulse {
+  0% {
+    background: rgba(240, 180, 69, 0.28);
+    box-shadow: 0 0 10px rgba(240, 180, 69, 0.45);
+  }
+  100% {
+    background: var(--bg-inset);
+    box-shadow: none;
+  }
+}
+
 .hud-btn {
   font: inherit;
   font-size: calc(10.5px * var(--text-scale));
@@ -3612,7 +3631,8 @@ button.hud-slot:focus-visible {
 :root.s-reduce-motion .mb-target,
 :root.s-reduce-motion .mb-route,
 :root.s-reduce-motion .rs-node.active .rs-hex,
-:root.s-reduce-motion .rs-link.live {
+:root.s-reduce-motion .rs-link.live,
+:root.s-reduce-motion .hud-collateral.pulse {
   animation: none;
 }
 

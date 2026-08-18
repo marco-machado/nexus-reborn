@@ -2,7 +2,7 @@
 // panels themselves are interactive so the 3D canvas keeps receiving clicks
 // everywhere else. No keyboard listeners live here (the scene layer owns keys).
 import { useEffect, useRef, useState } from 'react'
-import { useAppStore } from '../state/appStore'
+import { COLLATERAL_FINE, isQuietReplay, useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
 import { resolveMission } from '../state/worldStore'
@@ -93,6 +93,7 @@ export default function Hud() {
   const objectives = useMissionStore((s) => s.objectives)
   const log = useMissionStore((s) => s.log)
   const alert = useMissionStore((s) => s.alert)
+  const civiliansHit = useMissionStore((s) => s.civiliansHit)
   const paused = useMissionStore((s) => s.paused)
   const result = useMissionStore((s) => s.result)
   const clock = useMissionStore((s) => s.clock)
@@ -109,6 +110,10 @@ export default function Hud() {
   const operatives = useCampaignStore((s) => s.operatives)
   const mission = missionId ? resolveMission(missionId) : null
   const district = mission ? mission.district : 'DISTRICT 07'
+  const quietReplay = isQuietReplay(missionId)
+  // Loss and quiet replay pay 0; the chip still shows the count.
+  const collateralBilled = civiliansHit > 0 && result !== 'lost' && !quietReplay
+  const collateralAmt = Math.min(mission?.reward ?? 0, civiliansHit * COLLATERAL_FINE)
 
   const logRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -121,6 +126,17 @@ export default function Hud() {
   const pauseBtnRef = useRef<HTMLButtonElement | null>(null)
 
   const [mmZoom, setMmZoom] = useState(MM_ZOOM_MAX)
+  const [collateralPulse, setCollateralPulse] = useState(false)
+  const prevCollateral = useRef(0)
+  useEffect(() => {
+    if (civiliansHit > prevCollateral.current) {
+      setCollateralPulse(true)
+      const id = window.setTimeout(() => setCollateralPulse(false), 560)
+      prevCollateral.current = civiliansHit
+      return () => window.clearTimeout(id)
+    }
+    prevCollateral.current = civiliansHit
+  }, [civiliansHit])
 
   const online = squad.filter((r) => !r.dead).length
   const firstSelected = selected.length > 0 ? squad.find((r) => r.unitId === selected[0]) : undefined
@@ -189,6 +205,22 @@ export default function Hud() {
           </span>
         </div>
         <div className="hud-top-right">
+          {civiliansHit > 0 && (
+            <span
+              className={
+                'chip amber hud-collateral' + (collateralPulse ? ' pulse' : '')
+              }
+              aria-live="polite"
+              aria-label={
+                collateralBilled
+                  ? 'Collateral ' + civiliansHit + ', minus ' + collateralAmt + ' credits'
+                  : 'Collateral ' + civiliansHit + ', not billed'
+              }
+            >
+              COLLATERAL {civiliansHit}
+              {collateralBilled ? ' · −' + fmt(collateralAmt) + ' CR' : ' · NOT BILLED'}
+            </span>
+          )}
           <span className="dim">CREDITS</span>
           <b className="hud-credits">{fmt(credits)}</b>
           {/* The menu backdrop covers the top bar, so while the menu is up

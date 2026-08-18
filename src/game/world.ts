@@ -751,6 +751,7 @@ export function createWorld(
       billed.add(t.id)
       civiliansHit += 1
       pushLog('SYS', 'CIVILIAN HIT. COLLATERAL COUNT ' + civiliansHit + '.', 'alert')
+      useMissionStore.getState().setCiviliansHit(civiliansHit)
     }
     if (t.kind === 'civilian') {
       if (by.kind === 'agent') civHitsSquad += 1
@@ -1903,6 +1904,7 @@ export function createWorld(
     syncMissionResources()
     useMissionStore.getState().setClock(clockStr())
     useMissionStore.getState().setWeather(currentWeather)
+    useMissionStore.getState().setCiviliansHit(civiliansHit)
   }
 
   // Consumes the full frame delta in MAX_DT substeps so mission time tracks
@@ -1984,6 +1986,7 @@ export function createWorld(
       // Channels and countdowns move every step; push their bars at sync rate.
       if (objectivesTicking()) syncObjectives()
       useMissionStore.getState().setClock(clockStr())
+      useMissionStore.getState().setCiviliansHit(civiliansHit)
       if (result === 'none') checkHints()
     }
   }
