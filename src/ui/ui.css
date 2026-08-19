@@ -1072,6 +1072,24 @@
   transition: border-color 0.12s, color 0.12s;
 }
 
+.wm-marker-label.above {
+  top: auto;
+  bottom: calc(100% - 8px);
+}
+
+.wm-marker-label.right {
+  top: 50%;
+  left: calc(100% - 8px);
+  transform: translateY(-50%);
+}
+
+.wm-marker-label.left {
+  top: 50%;
+  left: auto;
+  right: calc(100% - 8px);
+  transform: translateY(-50%);
+}
+
 .wm-marker.live:hover .wm-marker-core,
 .wm-marker.live:focus-visible .wm-marker-core { background: var(--amber-hot); }
 .wm-marker.live:hover .wm-marker-label,
@@ -1110,7 +1128,8 @@
   font-size: calc(8.5px * var(--text-scale));
   letter-spacing: 0.14em;
   color: var(--ink-dim);
-  z-index: 2;
+  z-index: 4;
+  pointer-events: none;
 }
 
 .wm-ov b { font-size: calc(9.5px * var(--text-scale)); color: var(--cyan); letter-spacing: 0.2em; }
@@ -1128,7 +1147,6 @@
 .wm-ov.threat-severe { border-color: rgba(224, 75, 60, 0.55); }
 .wm-ov.threat-severe .wm-threat-val {
   color: var(--red-hot);
-  animation: blink 1s steps(2) infinite;
 }
 
 .wm-spark { width: 70px; height: 16px; }

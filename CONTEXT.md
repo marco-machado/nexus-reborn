@@ -52,6 +52,10 @@ _Avoid_: Duration, mission length
 The director's job between missions: sectors, ownership, contracts, the strategic clock, the feed, credits, influence, roster, and intel.
 _Avoid_: World, world map, strategy layer, overworld, network (alone)
 
+**Plate**:
+The World Network's flat projection of sectors, cities, and open contracts. Latitude and sector color live on it. It is not the District and it is not a globe.
+_Avoid_: World map, globe, atlas, overworld
+
 **Sector**:
 A continental theatre with its own control, unrest, garrison condition, and generated-contract market. Six sectors are open. Antarctica is locked at every intel level.
 _Avoid_: Continent, region, zone, territory
@@ -167,6 +171,10 @@ _Avoid_: Threat, risk index, alert
 **Contract**:
 Work with a client, a city, a type, a threat, a reward, and an ETA. Accepting it is free. Authored and generated contracts are the same kind of work.
 _Avoid_: Operation, mission (the deployment), job, gig, quest
+
+**Codename**:
+The call-sign the director reads for a contract or an operative. Authored contract codenames are fixed. Generated contract codenames are a rolled word pair. An operative also has a civilian name.
+_Avoid_: Name (alone), title, alias, designation
 
 **Authored contract**:
 One of the three campaign-spine contracts: Glass Veil, Hollow Crown, Rust Haven. Winning all three marks the campaign complete. They stay replayable.

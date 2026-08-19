@@ -63,6 +63,7 @@ import { useWorldClock } from './clock'
 import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
 import { ART_BG, WORLD_GLOW } from './tokens'
+import { layoutPlateMarks } from './plateMarks'
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
@@ -242,6 +243,19 @@ function WorldPlate() {
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
   const marks = useMemo(() => opsFor(null, contracts), [contracts])
+  const layouts = useMemo(
+    () =>
+      layoutPlateMarks(
+        marks.map(({ m, gen }) => ({
+          id: m.id,
+          codename: m.codename,
+          mapPos: m.mapPos,
+          locked: campaignFailed || missionLocked(m, intelLevel),
+          authored: gen === null,
+        })),
+      ),
+    [marks, campaignFailed, intelLevel],
+  )
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -340,14 +354,15 @@ function WorldPlate() {
         <span className="wm-sweep" />
       </span>
 
-      {marks.map(({ m, gen }) => {
+      {marks.map(({ m, gen }, i) => {
         const locked = campaignFailed || missionLocked(m, intelLevel)
+        const lay = layouts[i]
         return (
           <button
             key={m.id}
             type="button"
             className={'wm-marker' + (locked ? ' locked' : ' live')}
-            style={{ left: m.mapPos.x + '%', top: m.mapPos.y + '%' }}
+            style={{ left: lay.pin.x + '%', top: lay.pin.y + '%' }}
             aria-disabled={locked || undefined}
             aria-label={
               locked
@@ -363,7 +378,7 @@ function WorldPlate() {
               </>
             )}
             <span className="wm-marker-core" aria-hidden="true" />
-            <span className="wm-marker-label">
+            <span className={'wm-marker-label ' + lay.side}>
               {locked && <LockGlyph size={8} />}
               {m.codename}
             </span>
