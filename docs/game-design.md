@@ -74,7 +74,7 @@ Combat is fast and noisy. Missed shots continue downrange and hit whoever is in 
 
 ### The two layers feed each other
 
-Credits fund research. Research changes the next deployment. Mission results move the sectors: control, unrest, city ownership, intel, injuries, deaths. The strategic clock is the same clock that finishes laboratories and heals the roster.
+Credits fund research. Research changes the next deployment. Mission results move the sectors: control, unrest, city ownership, intel, injuries, deaths. Ownership decides who collects Tax yield. The strategic clock is the same clock that finishes laboratories, heals the roster, and pays that yield.
 
 *Vetoes:* a World Network that is only a contract picker; research that does not change a later firefight; a win that leaves the World Network looking as it did before.
 
@@ -186,7 +186,7 @@ The World Network is the player’s job between missions. Time is a resource. Le
 
 **Strategic time** runs only on the World Network and Research screens. The campaign begins 14 May 2087, 14:32:17 UTC. At 1×, one real second is sixty strategic seconds. Speeds are 1×, 2×, 4×, and 8×; the default is 2×. The clock can be paused. A rolling 24-hour timeline can be scrubbed without changing live state.
 
-**Tactical time** is an independent clock. Each mission opens at its own **Opening hour** on that clock. The World Network does not tick while the squad is in the field. After a win, the debrief spends the contract’s ETA in strategic days, and laboratories, injuries, and recruitment catch up to that new time. See [ADR-0007](adr/0007-opening-hour.md).
+**Tactical time** is an independent clock. Each mission opens at its own **Opening hour** on that clock. The World Network does not tick while the squad is in the field. After a win, the debrief spends the contract’s ETA in strategic days, and laboratories, injuries, recruitment, and Tax yield catch up to that new time. See [ADR-0007](adr/0007-opening-hour.md).
 
 The clocks are independent because the director is either watching the World Network or running a mission, never both.
 
@@ -194,29 +194,37 @@ The clocks are independent because the director is either watching the World Net
 
 Six sectors are open. Antarctica is locked at every intel level: no survey data.
 
-| Sector | Opening control | Opening unrest | Influence weight |
-|---|---:|---:|---:|
-| North America | 68% | 12% | 1.15 |
-| South America | 41% | 24% | 0.85 |
-| Europe | 62% | 18% | 1.20 |
-| Africa | 37% | 28% | 0.90 |
-| Asia | 55% | 16% | 1.35 |
-| Oceania | 73% | 9% | 0.55 |
-| Antarctica | — | — | — |
+Each open sector shows four numbers: **Control**, **Unrest**, **Tax yield**, and **Garrison condition**. There is no defense rating, no sector weight, and no NETWORK THREAT banner. Black-market impact, total forces, and asset count are not systems and do not print.
 
-Each open sector shows control, unrest, weekly tax yield, garrison condition, and defense rating.
+| Sector | Opening control | Opening unrest | Opening garrison | Opening tax yield |
+|---|---:|---:|---|---:|
+| North America | 68% | 12% | Secure | 4,080 CR / 24h |
+| South America | 41% | 24% | Strained | 1,722 CR / 24h |
+| Europe | 62% | 18% | Secure | 2,468 CR / 24h |
+| Africa | 37% | 28% | Strained | 1,887 CR / 24h |
+| Asia | 55% | 16% | Secure | 4,620 CR / 24h |
+| Oceania | 73% | 9% | Secure | 1,606 CR / 24h |
+| Antarctica | — | — | — | — |
 
-**Influence index** is the weighted average control of the open sectors. Beside it sits a spendable **Influence** balance. Influence income is not a per-sector row: the trickle is global, and the verbs are the influence actions.
+**Control** is a percentage on the sector. It does not belong to a corporation. A win raises it. A loss lowers it. Lobby raises it. Unrest pressure and some World Events lower it. Garrison condition is this number in three bands: **Secure** at 55 or above, **Strained** at 35 or above, **Critical** below 35. Generated-contract Threat is that label: Secure → Moderate, Strained → High, Critical → Severe.
 
-A sector above **60 unrest** is under **unrest pressure**: every 6 strategic hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it keeps its holder colour and reads crisis as a red hatch and stroke, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is always reachable.
+**Unrest** is a percentage on the sector. High unrest pulls World Events and generated contracts toward it. Unrest above **20** adds **6 civilians** and **1 street patrol** to that sector’s missions. Unrest is clamped to 2–96 so Crisis is always reachable.
 
-The plate prints **NETWORK THREAT** from the worst open-sector unrest (Nominal / Guarded / Elevated / Severe) and names that sector. That readout is not a contract's threat rating. Authored contract markers sit on their city. Locked generated offers do not appear on the plate.
+A sector above **60 unrest** is under **unrest pressure**: every 6 strategic hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it keeps its holder colour and reads crisis as a red hatch and stroke, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**.
 
-Defense rating and garrison condition feed generated-contract threat. Tax yield is a readout of unrest strain, not a credit grant. Black-market impact, total forces, and asset count are not systems and do not print.
+**Tax yield** is Credits, paid every 24 strategic hours, from that sector’s Control and Unrest. The panel prints the Credits that tick would pay, with no “B”. Only a **Nexus-held** sector (plate colour Nexus: most of its cities) actually pays. Contested does not pay. Other sectors still show the figure. Missed ticks catch up with the same time-ordered flow as World Events, so a contract ETA jump collects them.
+
+Tax yield = round(base × Control/100 × strain). Strain is 1 at unrest 60 or below, else 1 − 0.02 per unrest point above 60, floored at 0.25. Bases: North America 6,000; South America 4,200; Europe 3,980; Africa 5,100; Asia 8,400; Oceania 2,200.
+
+The campaign opens with **North America** as the only Nexus-held sector, so only that tap pays. The authored three do not, by themselves, turn on three taps: Glass Veil and Hollow Crown each contest their sector; Rust Haven only deepens North America. Extra cities (generated seizures, World Events) take a second sector.
+
+Authored contract markers sit on their city. Locked generated offers do not appear on the plate.
+
+See [ADR-0008](adr/0008-influence-is-a-wallet.md).
 
 ### Influence actions
 
-Three numbered actions per sector, each with a point cost and a per-sector cooldown. Unaffordable actions disable.
+**Influence** is a point wallet for three numbered actions per sector. It is not a standing bar and not an average of Control. Opening balance: **0**. Unaffordable actions disable. One clean win is exactly one Stabilize.
 
 | Action | Cost | Effect | Cooldown |
 |---|---:|---|---:|
@@ -230,13 +238,22 @@ Staged spends ride the same time-ordered catch-up as World Events, so a contract
 
 Eighteen named cities, each with a corporate holder. A sector’s color is the corporation that holds the most of its cities; ties display as contested.
 
+| Sector | Opening cities | Opening colour |
+|---|---|---|
+| North America | New Boston (Nexus), Pacifica (Nexus), Detroit Sprawl (Stratos) | Nexus |
+| South America | Bogota (Nexus), Sao Paulo (Stratos), Lima (Omni) | Contested |
+| Europe | London (Helix), New Carthage (Helix), Oslo (Omni) | Helix |
+| Africa | Cairo (Omni), Lagos (Omni), Johannesburg (Helix) | Omni |
+| Asia | Shingang (Helix), Kitaru (Helix), Neo Kowloon (Stratos) | Helix |
+| Oceania | Sydney (Stratos), Perth (Stratos), Auckland (Nexus) | Stratos |
+
 Ownership changes through seizure events and through missions: a win hands the mission city to Nexus Global; a loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector’s open generated contracts and posts a feed note. City dots on the plate use the city holder; land uses the sector majority. Greenland is North American land. Antarctica is the Unknown sector.
 
-Ownership does not change research prices, tactical layouts, or weapon tables. It changes who is paying, and who holds the cities.
+Ownership does not change research prices, tactical layouts, or weapon tables. It changes who collects Tax yield, and who holds the cities.
 
 ### World Events
 
-World Events fire every 15–45 strategic minutes and favor high-unrest sectors. Crisis doubles a sector’s weight.
+World Events fire every 15–45 strategic minutes and favor high-unrest sectors. Crisis doubles how often events pick that sector.
 
 | Event | World effect | Market effect |
 |---|---|---|
@@ -270,13 +287,13 @@ Intel is earned in the field and spent on access and foresight. That is its whol
 
 ## 6. Economy and progression
 
-Two currencies. **Credits** buy research and candidates. **Influence** buys influence actions. They do not convert.
+Two currencies. **Credits** buy research and candidates. **Influence** buys Influence actions. They do not convert.
 
 ### Credits
 
-Opening balance: **128,450 CR**. Successful contracts add their net payout. A quiet replay and a failed contract pay nothing. Research and hiring cannot overdraw the account; the authorization simply refuses.
+Opening balance: **128,450 CR**. Successful contracts add their net payout. Nexus-held Tax yield adds its 24-hour ticks. A quiet replay and a failed contract pay no contract fee; Tax yield still collects if strategic time advances. Research and hiring cannot overdraw the account; the authorization simply refuses.
 
-One clean pass of the three authored contracts, both optionals included, is **203,000 CR**. The research program costs **779,000 CR**. The gap is the generated market, not authored replay. See [ADR-0004](adr/0004-quiet-replay.md).
+One clean pass of the three authored contracts, both optionals included, is **203,000 CR**. The research program costs **779,000 CR**. The gap is the generated market, not authored replay. Tax yield is a trickle beside that. See [ADR-0004](adr/0004-quiet-replay.md).
 
 ### Collateral
 
@@ -303,9 +320,10 @@ There is no account level, no owned equipment, and no consumable shop. Those are
 
 ### Influence income
 
+- Opening balance: **0**.
 - **+6** on any contract win that is not a quiet replay.
 - **+2** more for a clean win of that kind.
-- **+1** per 12 strategic hours while the influence index holds above **55**.
+- Nothing else. No trickle from Control.
 
 ---
 
@@ -459,7 +477,7 @@ Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 k
 
 A contract is work with a client, a city, a type, a threat, a reward, and an ETA. Accepting it is free. After a win, the debrief spends the ETA as strategic days, including a quiet replay.
 
-Authored chance is not a static field. It is derived from threat, the clearer weather on the weather script, the source sector’s control and unrest, and completed research, then clamped to 35–95. At intel 2+ the brief hides the percentage and shows the risk index instead.
+Authored chance is not a static field. It is derived from threat, the clearer weather on the weather script, the source sector’s unrest, and completed research, then clamped to 35–95. At intel 2+ the brief hides the percentage and shows the risk index instead.
 
 ### Authored contracts
 
@@ -471,14 +489,14 @@ Opening-campaign figures, no research done, sectors at their starting values:
 | Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | Intel 2 | 4 days |
 | Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | Intel 2 | 3 days |
 
-Authored contracts remain replayable after success or failure. After a win, the next deploy uses the other district layout. A replay of a contract already won is a **quiet replay**: 0 Credits, 0 Influence, 0 Intel, no control or unrest shove. It is still a real mission — KIA, injury, experience, and ETA apply. The debrief banner reads `REPLAY // FEE ALREADY COLLECTED`. A loss retry (the contract is not yet won) still pays in full. See [ADR-0004](adr/0004-quiet-replay.md).
+Authored contracts remain replayable after success or failure. After a win, the next deploy uses the other district layout. A replay of a contract already won is a **quiet replay**: 0 Credits from the fee, 0 Influence, 0 Intel, no control or unrest shove. It is still a real mission — KIA, injury, experience, and ETA apply. ETA still advances strategic time, so Tax yield still collects. The debrief banner reads `REPLAY // FEE ALREADY COLLECTED`. A loss retry (the contract is not yet won) still pays in full. See [ADR-0004](adr/0004-quiet-replay.md).
 
 ### Generated market
 
 Beside the authored three, the World Network keeps up to three generated contracts. A new one rolls every 2–6 strategic hours when below target, weighted toward high unrest or low control.
 
-- Threat comes from the sector’s defense rating and garrison condition.
-- Reward comes from threat and influence weight, 30,000–95,000 CR on a 500 CR grid.
+- Threat comes from the sector’s garrison condition: Secure → Moderate, Strained → High, Critical → Severe.
+- Reward comes from threat, 30,000–95,000 CR on a 500 CR grid. Same Threat, same pay in every sector.
 - Client comes from city ownership.
 - Type is seizure, extraction, sabotage, or riot-linked suppression.
 - Each type maps to a district family. The seed picks one of several authored objective sequences from the shared primitives; threat scales CorpSec counts, not the sequence.
@@ -507,7 +525,7 @@ Shared landmarks: insertion and extraction on the south, near (48, 88); a centra
 | Compound | Hollow Crown; generated extraction | 6 interior, bypassable | 4 | 14 | Walled eastern detention block; 7 m streets |
 | Industrial | Rust Haven; generated sabotage | 4 yard CorpSec | 3 | 8 | Fenced eastern yard; 8 m cross streets |
 
-Threat extras, unrest extras, and Hardened add street patrols and civilians on top of those bases. Four operatives deploy every time.
+Threat extras, unrest extras (above 20: +6 civilians and +1 street patrol), and Hardened add street patrols and civilians on top of those bases. Four operatives deploy every time. Control does not add CorpSec hit points.
 
 ### Weather
 
@@ -912,7 +930,7 @@ These were open. They are decided. Do not silently reopen them.
 2. **Sable Enterprises.** A client house. No cities, no color, no generated pool. The corporations table is split so they are not a peer of Stratos and Helix.
 3. **Augmentation bays.** Research is a program. Slotted projects are worn blueprints, one per bay, current issue with pins. Not a locker. [ADR-0005](adr/0005-blueprint-assignment.md).
 4. **Weather.** Sight and noise only. A determined script may change once, adjacent, at a known clock. Brief tells the truth. [ADR-0006](adr/0006-weather-script.md).
-5. **Sector assets and the black market.** Not systems. They do not print. Defense, garrison, and tax-as-readout stay.
+5. **Sector assets and the black market.** Not systems. They do not print. Garrison and Tax yield stay. Defense rating does not.
 6. **Remaining accessibility.** Product backlog. The designed-in list in §12 stands.
 7. **Telemetry depth.** Balance stays a debrief dashboard. Abort is a thin record. Further signals are backlog.
 

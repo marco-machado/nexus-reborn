@@ -57,7 +57,7 @@ The World Network's flat projection of sectors, cities, and open contracts. Lati
 _Avoid_: World map, globe, atlas, overworld
 
 **Sector**:
-A continental theatre with its own control, unrest, garrison condition, and generated-contract market. Six sectors are open. Antarctica is locked at every intel level.
+A continental theatre with its own control, unrest, tax yield, garrison condition, and generated-contract market. Six sectors are open. Antarctica is locked at every intel level.
 _Avoid_: Continent, region, zone, territory
 
 **City**:
@@ -97,8 +97,8 @@ An unsurveyed map state. Not a corporation.
 _Avoid_: Fog, unexplored
 
 **Control**:
-How firmly the current order holds a sector, as a percentage. A mission win raises it. A loss lowers it.
-_Avoid_: Ownership (that is city holders), influence, influence index
+A percentage on each sector. It does not belong to a corporation.
+_Avoid_: Ownership (that is city holders), influence, current order, lid
 
 **Unrest**:
 How unstable a sector is. High unrest weights world events toward that sector, adds street patrols and civilians to its missions, and can open Crisis.
@@ -113,8 +113,12 @@ A sector whose unrest is at 85 or above. It reads red, event frequency doubles, 
 _Avoid_: Collapse, fail state, unrest pressure
 
 **Garrison condition**:
-A sector readout — Secure, Strained, or Critical — that helps set generated-contract Threat. It is not the tactical Garrison.
-_Avoid_: Garrison (alone), defense
+Secure, Strained, or Critical, read from a sector's Control. Generated-contract Threat is this label. It is not the tactical Garrison.
+_Avoid_: Garrison (alone), defense, defense rating
+
+**Tax yield**:
+Credits paid every 24 strategic hours from a Nexus-held sector's Control and Unrest. Other sectors still show a figure; they do not pay.
+_Avoid_: Weekly tax, GDP, income (alone)
 
 **World Event**:
 A dated change on the strategic clock: riot, blackout, CorpSec raid, trade agreement, or seizure, plus contract, crisis, influence, and KIA notices.
@@ -135,20 +139,16 @@ _Avoid_: Control (that is the sector percentage), capture
 ## Currencies and intel
 
 **Credits**:
-The spendable currency for research and recruits. Successful contracts add their net payout. Failed contracts pay nothing. Authorization refuses an overdraw; it does not borrow.
+The spendable currency for research and recruits. Successful contracts and Tax yield add to the account. Failed contracts pay nothing. Authorization refuses an overdraw; it does not borrow.
 _Avoid_: Money, cash, gold, CR as a concept name (CR is the unit)
 
 **Influence**:
-Spendable points for sector actions. They do not convert to or from Credits.
-_Avoid_: Influence index, reputation, favor
-
-**Influence index**:
-The weighted average Control of the open sectors. Above 55 it trickles Influence. It is a readout, not a wallet.
-_Avoid_: Influence, control, global control
+The spendable points for Influence actions. They do not convert to or from Credits.
+_Avoid_: Influence index, global control, reputation, favor, trickle
 
 **Influence action**:
 A numbered sector spend with a cooldown: Stabilize (cuts unrest), Lobby (raises control), or Expedite (waives a generated contract's intel gate and extends its expiry).
-_Avoid_: Policy, edict, button
+_Avoid_: Policy, edict, button, sector action
 
 **Intel**:
 An earned level, filled by progress, that gates contracts and unlocks the Event forecast and the Risk index. A contract win awards progress. A Clean win awards more. A loss awards nothing.
@@ -160,11 +160,7 @@ _Avoid_: Threat, threat level, difficulty, chance
 
 **Threat**:
 The contract band Moderate / High / Severe. It sets extra street patrols, enemy toughness, and which elites appear.
-_Avoid_: Risk index, difficulty, alert, network threat level
-
-**Network threat level**:
-The World Network banner Nominal / Guarded / Elevated / Severe, taken from the worst open-sector unrest. It is not contract Threat and not the mission Alert.
-_Avoid_: Threat, risk index, alert
+_Avoid_: Risk index, difficulty, alert, network threat, defense rating
 
 ## Contracts
 

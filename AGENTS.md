@@ -48,7 +48,7 @@ World time has two advancement paths:
 - Continuous: world map and research mount `ui/clock.ts` (`useWorldClock`). rAF batched to 20Hz, ticks `worldStore`, then `researchStore.sync(t)` and `campaignStore.sync(t)`.
 - Contract ETA: after a win, the debrief calls `worldStore.advanceDays(etaDays)`, then syncs research and campaign to the new time.
 
-Any new way to advance `worldStore.t` must catch up research labs, injury recovery, and recruitment at the resulting time.
+Any new way to advance `worldStore.t` must catch up research labs, injury recovery, recruitment, and Tax yield at the resulting time.
 
 `game/research.ts` carries each node's effects as data, so the screen's benefit lines and the change the mission applies come from one place.
 
