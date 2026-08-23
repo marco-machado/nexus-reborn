@@ -16,6 +16,8 @@ import {
   PLATE_W,
   PLATE_H,
   yOfLat,
+  graticuleY,
+  cityPlatePos,
   LAT_LINES,
   LON_LINES,
   LIGHTS,
@@ -80,6 +82,14 @@ describe('territories', () => {
     }
   })
 
+  it('counts Greenland with North America so Unknown is only Antarctica', () => {
+    const greenland = TERRITORIES.find((t) => t.id === 'gl')
+    expect(greenland?.sector).toBe('na')
+    const unknownLand = TERRITORIES.filter((t) => t.sector === 'an')
+    expect(unknownLand.length).toBeGreaterThanOrEqual(1)
+    expect(TERRITORIES.some((t) => t.sector === null)).toBe(false)
+  })
+
   it('draws each polygon from at least three in-plate points', () => {
     for (const t of TERRITORIES) {
       const pts = parsePts(t.pts)
@@ -112,6 +122,14 @@ describe('cities', () => {
   it('resolves every city through cityById', () => {
     for (const c of CITIES) expect(cityById(c.id)).toBe(c)
     expect(cityById('nb').name).toBe('NEW BOSTON')
+  })
+
+  it('converts city plate pixels to percent for contract pins', () => {
+    const dt = cityById('dt')
+    expect(cityPlatePos('dt')).toEqual({
+      x: (dt.x / PLATE_W) * 100,
+      y: (dt.y / PLATE_H) * 100,
+    })
   })
 
   it('groups CITIES_BY_SECTOR without losing anyone', () => {
@@ -154,9 +172,13 @@ describe('plate geometry', () => {
     expect(yOfLat(80 - 0.269)).toBeCloseTo(1, 10)
   })
 
+  it('includes a southern graticule line on Antarctica', () => {
+    expect(LAT_LINES).toContain(-60)
+  })
+
   it('keeps every graticule line on the plate', () => {
     for (const lat of LAT_LINES) {
-      const y = yOfLat(lat)
+      const y = graticuleY(lat)
       expect(y).toBeGreaterThanOrEqual(0)
       expect(y).toBeLessThanOrEqual(PLATE_H)
     }

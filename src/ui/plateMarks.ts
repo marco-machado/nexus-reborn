@@ -4,8 +4,9 @@
 // cannot cover a HUD chip or run off the plate.
 //
 // Sizes are fitted to the 1280×720 plate (~646×336). The chips are a
-// conservative cover of ORBITAL SCAN, the Network threat level, and the
-// CONTROL KEY.
+// conservative cover of ORBITAL SCAN, the focused-sector caption, NETWORK
+// THREAT, and the CONTROL KEY. Overlays live on the wrap; chips still
+// reserve the corners when the well is exactly the plate aspect.
 
 export type LabelSide = 'below' | 'above' | 'left' | 'right'
 
@@ -45,9 +46,10 @@ const EDGE = 4
 const SIDES: LabelSide[] = ['below', 'above', 'right', 'left']
 
 const CHIPS: Rect[] = [
-  { x: 0, y: 0, w: 23, h: 20 },
-  { x: 0, y: 82, w: 20, h: 18 },
-  { x: 69, y: 54, w: 31, h: 46 },
+  { x: 0, y: 0, w: 24, h: 14 },
+  { x: 32, y: 0, w: 36, h: 10 },
+  { x: 0, y: 86, w: 24, h: 14 },
+  { x: 68, y: 64, w: 32, h: 36 },
 ].map(pctRect)
 
 function pctRect(r: Rect): Rect {
@@ -139,6 +141,13 @@ function scoreLabel(box: Rect, others: Rect[], pins: Rect[]): number {
   for (const o of others) s += overlapArea(box, o) * 20
   for (const p of pins) s += overlapArea(box, p) * 10
   return s
+}
+
+// Authored contracts stay on the plate even when intel-gated. Generated
+// offers only appear once they can be opened, so locked market names do not
+// crowd the live job.
+export function visiblePlateMarks(marks: readonly PlateMark[]): PlateMark[] {
+  return marks.filter((m) => m.authored || !m.locked)
 }
 
 export function layoutPlateMarks(marks: readonly PlateMark[]): PlateMarkLayout[] {

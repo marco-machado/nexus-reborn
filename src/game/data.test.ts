@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { WeaponId } from './types'
+import { cityPlatePos } from './atlas'
 import {
   WEAPONS,
   weaponNoise,
@@ -140,6 +141,12 @@ describe('MISSIONS', () => {
     }
     const open = MISSIONS.filter((m) => m.intelReq <= 1)
     expect(open.length).toBeGreaterThan(0)
+  })
+
+  it('pins each authored contract on its city', () => {
+    expect(missionById('m01').mapPos).toEqual(cityPlatePos('nc'))
+    expect(missionById('m02').mapPos).toEqual(cityPlatePos('sg'))
+    expect(missionById('m03').mapPos).toEqual(cityPlatePos('dt'))
   })
 })
 

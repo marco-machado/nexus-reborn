@@ -166,7 +166,7 @@ export const TERRITORIES: TerritoryDef[] = [
     sector: 'na',
     pts: '40,78 92,54 148,66 205,92 252,88 302,104 344,118 332,148 300,158 286,184 280,214 256,224 232,236 216,252 200,236 176,206 150,176 120,140 86,118 56,100',
   },
-  { id: 'gl', sector: null, pts: '300,56 342,44 366,72 342,98 306,88' },
+  { id: 'gl', sector: 'na', pts: '300,56 342,44 366,72 342,98 306,88' },
   {
     id: 'sa',
     sector: 'sa',
@@ -247,6 +247,16 @@ export function cityById(id: string): CityDef {
   return CITY_BY_ID[id]
 }
 
+// Percent of the plate, the unit mission markers and generated jitter use.
+export function platePos(x: number, y: number): { x: number; y: number } {
+  return { x: (x / PLATE_W) * 100, y: (y / PLATE_H) * 100 }
+}
+
+export function cityPlatePos(id: string): { x: number; y: number } {
+  const c = cityById(id)
+  return platePos(c.x, c.y)
+}
+
 // The corporation holding most cities in a sector. A tie reads as contested,
 // which is how the control key colours it.
 export function sectorCorp(sector: SectorId, owner: Record<string, CorpId>): CorpId {
@@ -287,7 +297,13 @@ export function yOfLat(lat: number): number {
   return (LAT_TOP - lat) / LAT_PER_PX
 }
 
-export const LAT_LINES = [60, 30, 0, -30]
+// Drawing helper: -60 sits a fraction of a pixel past the plate edge.
+export function graticuleY(lat: number): number {
+  const y = yOfLat(lat)
+  return y < 0 ? 0 : y > PLATE_H ? PLATE_H : y
+}
+
+export const LAT_LINES = [60, 30, 0, -30, -60]
 export const LON_LINES = [100, 200, 300, 400, 500, 600, 700, 800, 900]
 
 function parsePts(s: string): number[][] {

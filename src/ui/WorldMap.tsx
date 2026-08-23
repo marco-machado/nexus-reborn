@@ -10,7 +10,7 @@ import {
   hhmm,
   sectorReadout,
   stamp,
-  threatLevel,
+  threatReadout,
   useWorldStore,
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
@@ -54,7 +54,7 @@ import {
   TERRITORIES,
   sectorCorp,
   sectorDef,
-  yOfLat,
+  graticuleY,
 } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { Chip, LockGlyph, Panel, ScrollBox, SegBar, TargetGlyph } from './bits'
@@ -62,11 +62,24 @@ import { NavTabs } from './Nav'
 import { useWorldClock } from './clock'
 import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
-import { ART_BG, WORLD_GLOW } from './tokens'
-import { layoutPlateMarks } from './plateMarks'
+import { ART_BG, RED, WORLD_GLOW } from './tokens'
+import { layoutPlateMarks, visiblePlateMarks } from './plateMarks'
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
+}
+
+const THREAT_PIPS = { NOMINAL: 1, GUARDED: 2, ELEVATED: 3, SEVERE: 4 } as const
+
+// One vertex per open sector, unrest as height, so the scan chip is a live
+// readout rather than a decoration.
+function unrestSpark(sectors: Record<string, SectorState>): string {
+  const n = OPEN_SECTORS.length
+  return OPEN_SECTORS.map((id, i) => {
+    const x = n <= 1 ? 35 : (i / (n - 1)) * 70
+    const y = 14 - clamp01(sectors[id].unrest / 100) * 12
+    return x.toFixed(1) + ',' + y.toFixed(1)
+  }).join(' ')
 }
 
 // Success chance is derived, never authored: it moves with sector state and
@@ -243,9 +256,9 @@ function WorldPlate() {
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
   const marks = useMemo(() => opsFor(null, contracts), [contracts])
-  const layouts = useMemo(
+  const plateMarks = useMemo(
     () =>
-      layoutPlateMarks(
+      visiblePlateMarks(
         marks.map(({ m, gen }) => ({
           id: m.id,
           codename: m.codename,
@@ -256,6 +269,11 @@ function WorldPlate() {
       ),
     [marks, campaignFailed, intelLevel],
   )
+  const layouts = useMemo(() => layoutPlateMarks(plateMarks), [plateMarks])
+  const plateOps = useMemo(() => {
+    const ids = new Set(plateMarks.map((m) => m.id))
+    return marks.filter(({ m }) => ids.has(m.id))
+  }, [marks, plateMarks])
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -267,16 +285,18 @@ function WorldPlate() {
     for (const s of SECTORS) out[corps[s.id]] = (out[corps[s.id]] ?? 0) + 1
     return out
   }, [corps])
-  const threat = threatLevel(sectors)
+  const threat = threatReadout(sectors)
+  const focusDef = sectorDef(selected)
 
   const corpOf = (sector: SectorId | null): CorpId => (sector ? corps[sector] : 'unknown')
 
   return (
+    <>
     <div className="wm-map">
       <svg
         className="wm-map-svg"
         viewBox={`0 0 ${PLATE_W} ${PLATE_H}`}
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
       >
         <defs>
@@ -284,6 +304,15 @@ function WorldPlate() {
             <stop offset="0" stopColor={WORLD_GLOW} stopOpacity="0.5" />
             <stop offset="1" stopColor={WORLD_GLOW} stopOpacity="0" />
           </radialGradient>
+          <pattern
+            id="wm-crisis-hatch"
+            patternUnits="userSpaceOnUse"
+            width="7"
+            height="7"
+            patternTransform="rotate(35)"
+          >
+            <path d="M0 0 H7" stroke={RED} strokeWidth="2" opacity="0.55" />
+          </pattern>
         </defs>
         <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill={ART_BG} />
         <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill="url(#wm-glow)" />
@@ -297,15 +326,15 @@ function WorldPlate() {
               key={'y' + lat}
               className={lat === 0 ? 'strong' : undefined}
               x1={0}
-              y1={yOfLat(lat)}
+              y1={graticuleY(lat)}
               x2={PLATE_W}
-              y2={yOfLat(lat)}
+              y2={graticuleY(lat)}
             />
           ))}
         </g>
         <g className="wm-lat">
-          {LAT_LINES.map((lat) => (
-            <text key={'l' + lat} x={7} y={yOfLat(lat) - 4}>
+          {LAT_LINES.filter((lat) => lat !== -60).map((lat) => (
+            <text key={'l' + lat} x={7} y={Math.max(10, graticuleY(lat) - 4)}>
               {lat}
             </text>
           ))}
@@ -323,6 +352,9 @@ function WorldPlate() {
               }
               points={t.pts}
             />
+          ))}
+          {TERRITORIES.filter((t) => t.sector !== null && crisis.includes(t.sector)).map((t) => (
+            <polygon key={'hatch-' + t.id} className="wm-crisis-hatch" points={t.pts} />
           ))}
         </g>
 
@@ -348,13 +380,16 @@ function WorldPlate() {
             </g>
           ))}
         </g>
+        <text className="wm-an-label" x="310" y="500" textAnchor="middle">
+          ANTARCTICA
+        </text>
       </svg>
 
       <span className="wm-sweep-clip" aria-hidden="true">
         <span className="wm-sweep" />
       </span>
 
-      {marks.map(({ m, gen }, i) => {
+      {plateOps.map(({ m, gen }, i) => {
         const locked = campaignFailed || missionLocked(m, intelLevel)
         const lay = layouts[i]
         return (
@@ -419,17 +454,33 @@ function WorldPlate() {
           </button>
         )
       })}
+    </div>
 
       <div className="wm-ov tl">
         <b>ORBITAL SCAN</b>
         <span className="dim">SAT-16E // LIVE FEED</span>
         <svg viewBox="0 0 70 16" className="wm-spark" aria-hidden="true">
-          <polyline points="0,12 8,10 16,13 24,7 32,9 40,4 48,8 56,3 64,6 70,4" />
+          <polyline points={unrestSpark(sectors)} />
         </svg>
       </div>
-      <div className={'wm-ov bl threat-' + threat.toLowerCase()}>
-        <b>THREAT LEVEL</b>
-        <span className="wm-threat-val">{threat}</span>
+      <div className="wm-ov tc">
+        <b>{focusDef.title}</b>
+        <span className="dim">{CORPS[corps[selected]].name}</span>
+      </div>
+      <div
+        className={'wm-ov bl threat-' + threat.level.toLowerCase()}
+        title={'NETWORK THREAT // WORST OPEN-SECTOR UNREST // ' + sectorDef(threat.sector).name}
+      >
+        <b>NETWORK THREAT</b>
+        <span className="wm-threat-row">
+          <span className="wm-threat-val">{threat.level}</span>
+          <span className="wm-threat-blocks" aria-hidden="true">
+            {[1, 2, 3, 4].map((n) => (
+              <i key={n} className={n <= THREAT_PIPS[threat.level] ? 'on' : undefined} />
+            ))}
+          </span>
+        </span>
+        <span className="dim">{sectorDef(threat.sector).name}</span>
       </div>
       <div className="wm-ov br">
         <b className="wm-key-head">
@@ -437,13 +488,13 @@ function WorldPlate() {
         </b>
         {KEY_ORDER.map((id) => (
           <span key={id} className="wm-key-row">
-            <i style={{ background: CORPS[id].color }} />
+            <i className={'corp-' + id} />
             <span className="wm-key-name">{CORPS[id].name}</span>
             <b className="wm-key-n">{keyCount[id] ?? 0}</b>
           </span>
         ))}
       </div>
-    </div>
+    </>
   )
 }
 
@@ -453,6 +504,7 @@ function SectorInset(props: { id: SectorId }) {
   const owner = useWorldStore((s) => s.owner)
   const step = useWorldStore((s) => s.stepSector)
   const contracts = useWorldStore((s) => s.contracts)
+  const inCrisis = useWorldStore((s) => s.crisis.includes(props.id))
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const def = sectorDef(props.id)
   const corp = sectorCorp(props.id, owner)
@@ -471,11 +523,15 @@ function SectorInset(props: { id: SectorId }) {
             <line key={'x' + x} x1={x} y1={0} x2={x} y2={PLATE_H} />
           ))}
           {LAT_LINES.map((lat) => (
-            <line key={'y' + lat} x1={0} y1={yOfLat(lat)} x2={PLATE_W} y2={yOfLat(lat)} />
+            <line key={'y' + lat} x1={0} y1={graticuleY(lat)} x2={PLATE_W} y2={graticuleY(lat)} />
           ))}
         </g>
         {TERRITORIES.filter((t) => t.sector === props.id).map((t) => (
-          <polygon key={t.id} className={'wm-inset-land corp-' + corp} points={t.pts} />
+          <polygon
+            key={t.id}
+            className={'wm-inset-land corp-' + corp + (inCrisis ? ' crisis' : '')}
+            points={t.pts}
+          />
         ))}
         <g className={'wm-lights corp-' + corp}>
           {lights.map((l, i) => (

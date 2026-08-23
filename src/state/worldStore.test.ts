@@ -8,6 +8,8 @@ import {
   resolveMission,
   sectorReadout,
   stamp,
+  threatLevel,
+  threatReadout,
   useWorldStore,
 } from './worldStore'
 import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
@@ -896,6 +898,36 @@ describe('sector selection', () => {
     useWorldStore.setState({ selected: OPEN_SECTORS[0] })
     useWorldStore.getState().stepSector(-1)
     expect(useWorldStore.getState().selected).toBe(OPEN_SECTORS[OPEN_SECTORS.length - 1])
+  })
+})
+
+describe('network threat', () => {
+  it('opens ELEVATED on Africa, the worst opening unrest', () => {
+    const sectors = useWorldStore.getState().sectors
+    const read = threatReadout(sectors)
+    expect(read.level).toBe('ELEVATED')
+    expect(read.sector).toBe('af')
+    expect(read.unrest).toBe(28)
+    expect(threatLevel(sectors)).toBe('ELEVATED')
+  })
+
+  it('names the sector that crossed SEVERE, not the whole board', () => {
+    const sectors = {
+      ...useWorldStore.getState().sectors,
+      sa: { control: 40, unrest: 51 },
+    }
+    const read = threatReadout(sectors)
+    expect(read.level).toBe('SEVERE')
+    expect(read.sector).toBe('sa')
+    expect(read.unrest).toBe(51)
+  })
+
+  it('uses the same unrest rounding the sector list prints', () => {
+    const sectors = {
+      ...useWorldStore.getState().sectors,
+      sa: { control: 40, unrest: 44.6 },
+    }
+    expect(threatReadout(sectors).level).toBe('SEVERE')
   })
 })
 

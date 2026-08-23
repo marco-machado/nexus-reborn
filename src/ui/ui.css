@@ -783,12 +783,12 @@
 
 /* corporation palette: one variable pair per holder, consumed by the plate,
    the inset, the city lights and the control key */
-.corp-stratos { --corp: #59d6c9; --corp-fill: #0f2b2c; }
-.corp-nexus { --corp: #7de08a; --corp-fill: #15301d; }
-.corp-helix { --corp: #f0b445; --corp-fill: #322810; }
-.corp-omni { --corp: #5d7d75; --corp-fill: #1a2523; }
-.corp-contested { --corp: #e04b3c; --corp-fill: #2c1512; }
-.corp-unknown { --corp: #35504a; --corp-fill: #0d1514; }
+.corp-stratos { --corp: #59d6c9; --corp-fill: #1a5c56; }
+.corp-nexus { --corp: #7de08a; --corp-fill: #1c5a28; }
+.corp-helix { --corp: #f0b445; --corp-fill: #6a4a12; }
+.corp-omni { --corp: #5d7d75; --corp-fill: #2a3d3a; }
+.corp-contested { --corp: #e04b3c; --corp-fill: #6a221c; }
+.corp-unknown { --corp: #35504a; --corp-fill: #121a19; }
 
 .wm-sector-list { gap: 3px; padding-right: 3px; }
 
@@ -901,18 +901,29 @@
 }
 
 .wm-map-wrap {
-  display: grid;
-  place-items: center;
+  position: relative;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  container-type: size;
 }
 
 .wm-map {
-  position: relative;
-  width: 100%;
-  max-height: 100%;
-  aspect-ratio: 1000 / 520;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(100cqw, calc(100cqh * 1000 / 520));
+  height: min(100cqh, calc(100cqw * 520 / 1000));
+  transform: translate(-50%, -50%);
+}
+
+@supports not (width: 1cqw) {
+  .wm-map {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    aspect-ratio: 1000 / 520;
+  }
 }
 
 .wm-map-svg {
@@ -936,22 +947,36 @@
 .wm-land {
   fill: var(--corp-fill);
   stroke: var(--corp);
-  stroke-opacity: 0.45;
-  stroke-width: 1;
+  stroke-opacity: 0.85;
+  stroke-width: 1.2;
   stroke-linejoin: round;
   transition: fill 0.5s linear, stroke-opacity 0.2s;
 }
 
 .wm-land.focus {
   stroke-opacity: 1;
-  stroke-width: 1.6;
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 4px var(--corp));
 }
 
-/* a sector in crisis reads red on the plate regardless of its holder */
+/* Crisis keeps the holder fill and adds a red hatch + pulse. */
 .wm-land.crisis {
-  fill: #2c1512;
   stroke: var(--red-hot);
+  stroke-width: 1.8;
   animation: crisis-pulse 1.6s ease-in-out infinite;
+}
+
+.wm-crisis-hatch {
+  fill: url(#wm-crisis-hatch);
+  stroke: none;
+  pointer-events: none;
+}
+
+.wm-an-label {
+  fill: rgba(126, 240, 212, 0.45);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
 }
 
 @keyframes crisis-pulse {
@@ -1116,46 +1141,76 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* overlays on the map plate */
+/* overlays sit on the wrap so letterbox gutters keep them off the land */
 .wm-ov {
   position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 7px 9px;
-  background: rgba(4, 10, 9, 0.84);
+  gap: 2px;
+  padding: 5px 8px;
+  background: rgba(4, 10, 9, 0.88);
   border: 1px solid var(--line);
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(8px * var(--text-scale));
   letter-spacing: 0.14em;
   color: var(--ink-dim);
   z-index: 4;
   pointer-events: none;
 }
 
-.wm-ov b { font-size: calc(9.5px * var(--text-scale)); color: var(--cyan); letter-spacing: 0.2em; }
+.wm-ov b { font-size: calc(9px * var(--text-scale)); color: var(--cyan); letter-spacing: 0.2em; }
 .wm-ov.tl { top: 8px; left: 8px; }
+.wm-ov.tc { top: 8px; left: 50%; transform: translateX(-50%); text-align: center; }
 .wm-ov.bl { bottom: 8px; left: 8px; }
-.wm-ov.br { bottom: 8px; right: 8px; }
-
-.wm-threat-val { font-size: calc(13px * var(--text-scale)); letter-spacing: 0.2em; }
-.wm-ov.threat-nominal { border-color: rgba(125, 224, 138, 0.45); }
-.wm-ov.threat-nominal .wm-threat-val { color: var(--green); }
-.wm-ov.threat-guarded { border-color: rgba(126, 240, 212, 0.45); }
-.wm-ov.threat-guarded .wm-threat-val { color: var(--teal); }
-.wm-ov.threat-elevated { border-color: rgba(240, 180, 69, 0.5); }
-.wm-ov.threat-elevated .wm-threat-val { color: var(--amber-hot); }
-.wm-ov.threat-severe { border-color: rgba(224, 75, 60, 0.55); }
-.wm-ov.threat-severe .wm-threat-val {
-  color: var(--red-hot);
+.wm-ov.br {
+  bottom: 8px;
+  right: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
 }
 
-.wm-spark { width: 70px; height: 16px; }
+.wm-threat-val { font-size: calc(12px * var(--text-scale)); letter-spacing: 0.2em; }
+.wm-threat-row { display: flex; align-items: center; gap: 8px; }
+.wm-threat-blocks { display: flex; gap: 3px; }
+.wm-threat-blocks i {
+  width: 10px;
+  height: 6px;
+  background: rgba(184, 216, 207, 0.16);
+  border: 1px solid var(--line);
+}
+.wm-ov.threat-nominal { border-color: rgba(125, 224, 138, 0.45); }
+.wm-ov.threat-nominal .wm-threat-val { color: var(--green); }
+.wm-ov.threat-nominal .wm-threat-blocks i.on { background: var(--green); border-color: var(--green); }
+.wm-ov.threat-guarded { border-color: rgba(126, 240, 212, 0.45); }
+.wm-ov.threat-guarded .wm-threat-val { color: var(--teal); }
+.wm-ov.threat-guarded .wm-threat-blocks i.on { background: var(--teal); border-color: var(--teal); }
+.wm-ov.threat-elevated { border-color: rgba(240, 180, 69, 0.5); }
+.wm-ov.threat-elevated .wm-threat-val { color: var(--amber-hot); }
+.wm-ov.threat-elevated .wm-threat-blocks i.on { background: var(--amber-hot); border-color: var(--amber); }
+.wm-ov.threat-severe { border-color: rgba(224, 75, 60, 0.55); }
+.wm-ov.threat-severe .wm-threat-val { color: var(--red-hot); }
+.wm-ov.threat-severe .wm-threat-blocks i.on { background: var(--red-hot); border-color: var(--red); }
+
+.wm-spark { width: 70px; height: 12px; }
 .wm-spark polyline { fill: none; stroke: var(--teal); stroke-width: 1; opacity: 0.8; }
 
-.wm-key-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+.wm-key-head {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+}
 .wm-key-head span { font-size: calc(7.5px * var(--text-scale)); letter-spacing: 0.14em; }
-.wm-key-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 6px; }
-.wm-key-row i { width: 8px; height: 8px; flex: none; }
+.wm-key-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 5px; min-width: 0; }
+.wm-key-row i {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  background: var(--corp-fill);
+  box-shadow: inset 0 0 0 1px var(--corp);
+}
+.wm-key-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wm-key-n { color: var(--ink); font-size: calc(9px * var(--text-scale)); letter-spacing: 0; }
 
 /* right column: focused sector. The inset gave up height to the influence
@@ -1178,6 +1233,8 @@
   stroke-width: 1.4;
   stroke-linejoin: round;
 }
+
+.wm-inset-land.crisis { stroke: var(--red-hot); }
 
 .wm-inset-target circle {
   fill: none;

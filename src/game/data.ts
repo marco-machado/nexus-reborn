@@ -1,5 +1,6 @@
 // CONTRACT FILE. Static game data: weapons, enemy archetypes, operative
 // roster, missions.
+import { cityPlatePos } from './atlas'
 import type { EnemyArchetype, MissionDef, OperativeDef, WeaponDef, WeaponId } from './types'
 
 // Campaign state owns the live values. These are only new-operation seeds.
@@ -159,7 +160,7 @@ export const MISSIONS: MissionDef[] = [
       { id: 'ob3', label: 'EXTRACT THE SQUAD', kind: 'extract' },
     ],
     intelReq: 1,
-    mapPos: { x: 48, y: 30 },
+    mapPos: cityPlatePos('nc'),
   },
   {
     id: 'm02',
@@ -216,7 +217,7 @@ export const MISSIONS: MissionDef[] = [
       { id: 'hc4', label: 'EXTRACT THE SQUAD', kind: 'extract' },
     ],
     intelReq: 2,
-    mapPos: { x: 74, y: 38 },
+    mapPos: cityPlatePos('sg'),
   },
   {
     id: 'm03',
@@ -274,7 +275,7 @@ export const MISSIONS: MissionDef[] = [
       { id: 'rh4', label: 'EXTRACT THE SQUAD', kind: 'extract' },
     ],
     intelReq: 2,
-    mapPos: { x: 22, y: 34 },
+    mapPos: cityPlatePos('dt'),
   },
 ]
 

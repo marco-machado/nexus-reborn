@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { layoutPlateMarks } from './plateMarks'
+import { layoutPlateMarks, visiblePlateMarks } from './plateMarks'
 import type { PlateMark } from './plateMarks'
 
 const REF_W = 646
@@ -49,6 +49,32 @@ describe('layoutPlateMarks', () => {
     expect(out.pin.x).toBeLessThanOrEqual(97)
     expect(out.pin.y).toBeGreaterThanOrEqual(6)
     expect(out.pin.y).toBeLessThanOrEqual(94)
+  })
+
+  it('keeps authored contracts on the plate when they are intel-gated and drops locked generated ones', () => {
+    const out = visiblePlateMarks([
+      mark({ id: 'm01', codename: 'GLASS VEIL', mapPos: { x: 48, y: 30 }, authored: true }),
+      mark({
+        id: 'm02',
+        codename: 'HOLLOW CROWN',
+        mapPos: { x: 74, y: 38 },
+        locked: true,
+        authored: true,
+      }),
+      mark({
+        id: 'g-curtain',
+        codename: 'FERAL CURTAIN',
+        mapPos: { x: 60, y: 28 },
+        locked: true,
+      }),
+      mark({
+        id: 'g-harbor',
+        codename: 'IRON HARBOR',
+        mapPos: { x: 40, y: 40 },
+        locked: false,
+      }),
+    ])
+    expect(out.map((m) => m.id)).toEqual(['m01', 'm02', 'g-harbor'])
   })
 
   it('hangs two stacked North America names on different sides', () => {

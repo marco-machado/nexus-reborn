@@ -208,7 +208,9 @@ Each open sector shows control, unrest, weekly tax yield, garrison condition, an
 
 **Influence index** is the weighted average control of the open sectors. Beside it sits a spendable **Influence** balance. Influence income is not a per-sector row: the trickle is global, and the verbs are the influence actions.
 
-A sector above **60 unrest** is under **unrest pressure**: every 6 strategic hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it reads red, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is always reachable.
+A sector above **60 unrest** is under **unrest pressure**: every 6 strategic hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it keeps its holder colour and reads crisis as a red hatch and stroke, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**. Unrest is clamped to 2–96 so the crisis band is always reachable.
+
+The plate prints **NETWORK THREAT** from the worst open-sector unrest (Nominal / Guarded / Elevated / Severe) and names that sector. That readout is not a contract's threat rating. Authored contract markers sit on their city. Locked generated offers do not appear on the plate.
 
 Defense rating and garrison condition feed generated-contract threat. Tax yield is a readout of unrest strain, not a credit grant. Black-market impact, total forces, and asset count are not systems and do not print.
 
@@ -228,7 +230,7 @@ Staged spends ride the same time-ordered catch-up as World Events, so a contract
 
 Eighteen named cities, each with a corporate holder. A sector’s color is the corporation that holds the most of its cities; ties display as contested.
 
-Ownership changes through seizure events and through missions: a win hands the mission city to Nexus Global; a loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector’s open generated contracts and posts a feed note.
+Ownership changes through seizure events and through missions: a win hands the mission city to Nexus Global; a loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector’s open generated contracts and posts a feed note. City dots on the plate use the city holder; land uses the sector majority. Greenland is North American land. Antarctica is the Unknown sector.
 
 Ownership does not change research prices, tactical layouts, or weapon tables. It changes who is paying, and who holds the cities.
 

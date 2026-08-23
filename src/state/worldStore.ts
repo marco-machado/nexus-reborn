@@ -960,16 +960,33 @@ export function globalInfluence(sectors: Record<string, SectorState>): number {
 
 export type ThreatLevel = 'NOMINAL' | 'GUARDED' | 'ELEVATED' | 'SEVERE'
 
-export function threatLevel(sectors: Record<string, SectorState>): ThreatLevel {
-  let worst = 0
-  for (const s of SECTORS) {
-    if (s.locked) continue
-    worst = Math.max(worst, sectors[s.id].unrest)
+export interface ThreatReadout {
+  level: ThreatLevel
+  sector: SectorId
+  unrest: number
+}
+
+// Worst open-sector unrest. The plate prints this as NETWORK THREAT so it
+// cannot be read as a contract's threat rating.
+export function threatReadout(sectors: Record<string, SectorState>): ThreatReadout {
+  let sector: SectorId = OPEN_SECTORS[0]
+  let unrest = -1
+  for (const id of OPEN_SECTORS) {
+    const u = sectors[id].unrest
+    if (u > unrest) {
+      unrest = u
+      sector = id
+    }
   }
-  if (worst >= 45) return 'SEVERE'
-  if (worst >= 25) return 'ELEVATED'
-  if (worst >= 15) return 'GUARDED'
-  return 'NOMINAL'
+  // Same rounding the sector list prints, so 45 unrest cannot read ELEVATED.
+  const shown = Math.round(Math.max(0, unrest))
+  const level: ThreatLevel =
+    shown >= 45 ? 'SEVERE' : shown >= 25 ? 'ELEVATED' : shown >= 15 ? 'GUARDED' : 'NOMINAL'
+  return { level, sector, unrest: Math.max(0, unrest) }
+}
+
+export function threatLevel(sectors: Record<string, SectorState>): ThreatLevel {
+  return threatReadout(sectors).level
 }
 
 export interface SectorReadout {
