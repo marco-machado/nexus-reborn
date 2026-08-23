@@ -6,11 +6,9 @@ import { useAppStore } from '../state/appStore'
 import {
   DAY,
   SPEEDS,
-  globalInfluence,
   hhmm,
   sectorReadout,
   stamp,
-  threatReadout,
   useWorldStore,
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
@@ -68,8 +66,6 @@ import { layoutPlateMarks, visiblePlateMarks } from './plateMarks'
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
 }
-
-const THREAT_PIPS = { NOMINAL: 1, GUARDED: 2, ELEVATED: 3, SEVERE: 4 } as const
 
 // One vertex per open sector, unrest as height, so the scan chip is a live
 // readout rather than a decoration.
@@ -285,7 +281,6 @@ function WorldPlate() {
     for (const s of SECTORS) out[corps[s.id]] = (out[corps[s.id]] ?? 0) + 1
     return out
   }, [corps])
-  const threat = threatReadout(sectors)
   const focusDef = sectorDef(selected)
 
   const corpOf = (sector: SectorId | null): CorpId => (sector ? corps[sector] : 'unknown')
@@ -466,21 +461,6 @@ function WorldPlate() {
       <div className="wm-ov tc">
         <b>{focusDef.title}</b>
         <span className="dim">{CORPS[corps[selected]].name}</span>
-      </div>
-      <div
-        className={'wm-ov bl threat-' + threat.level.toLowerCase()}
-        title={'NETWORK THREAT // WORST OPEN-SECTOR UNREST // ' + sectorDef(threat.sector).name}
-      >
-        <b>NETWORK THREAT</b>
-        <span className="wm-threat-row">
-          <span className="wm-threat-val">{threat.level}</span>
-          <span className="wm-threat-blocks" aria-hidden="true">
-            {[1, 2, 3, 4].map((n) => (
-              <i key={n} className={n <= THREAT_PIPS[threat.level] ? 'on' : undefined} />
-            ))}
-          </span>
-        </span>
-        <span className="dim">{sectorDef(threat.sector).name}</span>
       </div>
       <div className="wm-ov br">
         <b className="wm-key-head">
@@ -839,8 +819,8 @@ function WorldOnboard() {
             <div className="wm-onboard-row">
               <b>SECTOR COMMAND</b>
               <span>
-                The right panel reads the focused sector: control, unrest, garrison, the numbered
-                influence actions, and the event forecast.
+                The right panel reads the focused sector: control, unrest, tax yield, garrison,
+                the numbered influence actions, and the event forecast.
               </span>
             </div>
             <div className="wm-onboard-row">
@@ -906,7 +886,6 @@ export function WorldMap() {
 
   const def = sectorDef(selected)
   const read = sectorReadout(selected, sectors[selected])
-  const influence = globalInfluence(sectors)
   const ops = useMemo(() => opsFor(selected, contracts), [selected, contracts])
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
 
@@ -950,15 +929,9 @@ export function WorldMap() {
       <div className="wm-main">
         {/* left: influence + sectors */}
         <aside className="wm-left">
-          <Panel title="INFLUENCE INDEX" right={<b className="teal">{influence.toFixed(1)}%</b>}>
-            <SegBar value={influence} />
-            <div className="axis">
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
-            </div>
+          <Panel title="INFLUENCE" right={<b className="amber">{points} PTS</b>}>
             <div className="kv">
-              <span>INFLUENCE POINTS</span>
+              <span>POINTS</span>
               <b className="amber">{points} PTS</b>
             </div>
           </Panel>
@@ -1072,18 +1045,14 @@ export function WorldMap() {
               </div>
             </div>
             <div className="kv">
-              <span>TAX YIELD (WEEKLY)</span>
-              <b>{read.taxYield.toFixed(2)}B CR</b>
+              <span>TAX YIELD</span>
+              <b>{fmt(read.taxYield)} CR / 24h</b>
             </div>
             <div className="kv">
-              <span>GARRISON STATUS</span>
+              <span>GARRISON CONDITION</span>
               <b className={read.garrison === 'SECURE' ? 'teal' : read.garrison === 'STRAINED' ? 'amber' : 'red'}>
                 {read.garrison}
               </b>
-            </div>
-            <div className="kv">
-              <span>DEFENSE RATING</span>
-              <SegBar value={read.defense} tone="green" mini className="wm-defense" />
             </div>
             <div className="wm-actions">
               {INFLUENCE_ACTION_ORDER.map((action) => (

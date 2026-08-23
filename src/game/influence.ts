@@ -6,14 +6,13 @@ import type { SectorId } from './types'
 /* --------------------------------- earning -------------------------------- */
 
 // A fulfilled contract pays influence points beside its fee; a clean win
-// (zero civilians hit by the squad) pays a premium.
+// (zero civilians hit by the squad) pays a premium. Nothing else: there is
+// no Control trickle and no influence index.
 export const INFLUENCE_WIN_PTS = 6
 export const INFLUENCE_CLEAN_PTS = 2
-// While the influence index (weighted average sector control) holds above the
-// threshold, the network trickles one point per interval.
-export const TRICKLE_INTERVAL_SEC = 12 * 3600
-export const TRICKLE_INDEX_MIN = 55
-export const TRICKLE_PTS = 1
+// Nexus-held sectors pay Tax yield on this clock. Missed ticks catch up with
+// World Events, so a contract ETA jump collects them.
+export const TAX_INTERVAL_SEC = 24 * 3600
 
 /* -------------------------------- spending -------------------------------- */
 
@@ -90,6 +89,13 @@ export const PRESSURE_TAX_FLOOR = 0.25
 export function taxStrain(unrest: number): number {
   if (unrest <= PRESSURE_UNREST_MIN) return 1
   return Math.max(PRESSURE_TAX_FLOOR, 1 - (unrest - PRESSURE_UNREST_MIN) * PRESSURE_TAX_PENALTY)
+}
+
+// Credits one 24-hour tick would pay from this sector's Control and Unrest.
+// The plate prints this figure for every open sector; only a Nexus-held
+// sector actually deposits it.
+export function taxYieldCredits(base: number, control: number, unrest: number): number {
+  return Math.round(base * (control / 100) * taxStrain(unrest))
 }
 
 // Crisis: entered at the high mark, cleared under the low mark. In crisis the

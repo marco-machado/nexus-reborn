@@ -24,6 +24,19 @@ import {
   weatherNote,
 } from './missionParams'
 
+describe('sector extras', () => {
+  it('unrest above 20 adds civilians and a street patrol; Control does not raise CorpSec hit points', () => {
+    const mission = MISSIONS[0]
+    const calm = missionMods(mission, { control: 80, unrest: 10 })
+    const hot = missionMods(mission, { control: 80, unrest: 21 })
+    const loose = missionMods(mission, { control: 40, unrest: 10 })
+    expect(hot.civilianCount - calm.civilianCount).toBe(6)
+    expect(hot.enemyExtra - calm.enemyExtra).toBe(1)
+    expect(calm.enemyHpMul).toBe(loose.enemyHpMul)
+    expect(hot.enemyHpMul).toBe(calm.enemyHpMul)
+  })
+})
+
 describe('difficulty modifiers', () => {
   it('HARDENED adds patrols and civilians; STANDARD matches the authored baseline', () => {
     const mission = MISSIONS[0]

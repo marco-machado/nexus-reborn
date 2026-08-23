@@ -78,9 +78,7 @@ export interface ContractSectorInput {
   sector: SectorId
   control: number
   unrest: number
-  defense: number
   garrison: GarrisonState
-  weight: number
   client: CorpId
   // Live city holders at the time of the roll. This is an input snapshot, not
   // part of the serialized contract record.
@@ -135,11 +133,11 @@ export function sectorClient(sector: SectorId, owner: Record<string, CorpId>): C
   return best
 }
 
-// Threat comes from the sector's defense rating and garrison condition: a
-// well-defended, secure sector posts routine work, a crumbling one hard work.
-export function contractThreat(defense: number, garrison: GarrisonState): ContractThreat {
-  if (garrison === 'CRITICAL' || defense < 40) return 'SEVERE'
-  if (garrison === 'STRAINED' || defense < 62) return 'HIGH'
+// Threat is Garrison condition only: Secure work is routine, a crumbling
+// sector posts hard work. Same Threat, same pay in every sector.
+export function contractThreat(garrison: GarrisonState): ContractThreat {
+  if (garrison === 'CRITICAL') return 'SEVERE'
+  if (garrison === 'STRAINED') return 'HIGH'
   return 'MODERATE'
 }
 
@@ -161,15 +159,14 @@ const THREAT_REWARD: Record<ContractThreat, number> = {
   SEVERE: 70000,
 }
 
-// Reward scales with threat and the sector's global influence weight, jittered
-// on a 500 CR grid inside the 30,000-95,000 band.
+// Reward scales with threat only, jittered on a 500 CR grid inside the
+// 30,000-95,000 band. Atlas sector weight is not a surcharge.
 function rollReward(
   threat: ContractThreat,
-  weight: number,
   priority: boolean,
   rng: RngCursor,
 ): number {
-  const base = THREAT_REWARD[threat] * (0.75 + weight * 0.35) * (0.9 + next(rng) * 0.3)
+  const base = THREAT_REWARD[threat] * (0.9 + next(rng) * 0.3)
   const raw = priority ? base * PRIORITY_REWARD_MUL : base
   return clamp(
     Math.round(raw / 500) * 500,
@@ -228,8 +225,8 @@ function finishContract(
   const { client, cities } = citiesForClient(input.sector, input.client, input.ownership)
   const city = pick(cities, rng)
   const district = 2 + Math.floor(next(rng) * 28)
-  const threat = contractThreat(input.defense, input.garrison)
-  const reward = rollReward(threat, input.weight, priority, rng)
+  const threat = contractThreat(input.garrison)
+  const reward = rollReward(threat, priority, rng)
   const seed = Math.floor(next(rng) * 0x100000000) >>> 0
   const life = priority
     ? PRIORITY_EXPIRY_MIN_SEC + next(rng) * PRIORITY_EXPIRY_SPAN_SEC

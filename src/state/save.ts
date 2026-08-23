@@ -27,7 +27,7 @@ import {
   INFLUENCE_ACTIONS,
   PRESSURE_INTERVAL_SEC,
   PRESSURE_UNREST_MIN,
-  TRICKLE_INTERVAL_SEC,
+  TAX_INTERVAL_SEC,
   UNREST_MAX,
 } from '../game/influence'
 import type { InfluenceActionId, PendingSpend } from '../game/influence'
@@ -53,7 +53,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 8 as const
+const SAVE_VERSION = 9 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -61,8 +61,8 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV8 {
-  version: 8
+export interface SaveV9 {
+  version: 9
   app: {
     credits: number
     squad: string[]
@@ -82,7 +82,7 @@ export interface SaveV8 {
     contractRngState: number
     nextContractT: number
     influence: number
-    nextTrickleT: number
+    nextTaxT: number
     spends: PendingSpend[]
     cooldowns: Record<string, number>
     crisis: SectorId[]
@@ -410,7 +410,7 @@ function validPins(value: unknown): value is BayPins {
 
 const SEEN_ID_SET = new Set<string>(SEEN_IDS)
 
-export function validateSave(value: unknown): value is SaveV8 {
+export function validateSave(value: unknown): value is SaveV9 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -463,7 +463,7 @@ export function validateSave(value: unknown): value is SaveV8 {
     !finite(world.nextContractT) ||
     !integer(world.influence) ||
     world.influence < 0 ||
-    !finite(world.nextTrickleT) ||
+    !finite(world.nextTaxT) ||
     !validSpends(world.spends) ||
     !validCooldowns(world.cooldowns) ||
     !validCrisis(world.crisis) ||
@@ -498,7 +498,7 @@ export function validateSave(value: unknown): value is SaveV8 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV8 {
+export function captureSave(): SaveV9 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -525,7 +525,7 @@ export function captureSave(): SaveV8 {
       contractRngState: world.contractRngState,
       nextContractT: world.nextContractT,
       influence: world.influence,
-      nextTrickleT: world.nextTrickleT,
+      nextTaxT: world.nextTaxT,
       spends: structuredClone(world.spends),
       cooldowns: { ...world.cooldowns },
       crisis: [...world.crisis],
@@ -575,7 +575,9 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
 // starts at zero points, marks open contracts unexpedited, and arms a decay
 // timer for any sector already above the pressure threshold. A v5 blob is a
 // v6 blob without the tutorial section: the upgrade starts with nothing seen,
-// so an upgraded campaign gets the prompts once like a new one.
+// so an upgraded campaign gets the prompts once like a new one. A v8 blob is
+// a v9 blob with the influence trickle cursor: the upgrade drops the trickle
+// and arms Tax yield from the saved strategic time.
 function upgraded(value: unknown): unknown {
   let v = value
   if (isObject(v) && v.version === 1 && isObject(v.app) && !('loadout' in v.app)) {
@@ -645,7 +647,7 @@ function upgraded(value: unknown): unknown {
         ...v.world,
         contracts,
         influence: 0,
-        nextTrickleT: worldT + TRICKLE_INTERVAL_SEC,
+        nextTrickleT: worldT + TAX_INTERVAL_SEC,
         spends: [],
         cooldowns: {},
         crisis: [],
@@ -685,10 +687,19 @@ function upgraded(value: unknown): unknown {
     )
     v = { ...v, version: 8, campaign: { ...v.campaign, roster } }
   }
+  if (isObject(v) && v.version === 8 && isObject(v.world)) {
+    const worldT = finite(v.world.t) ? v.world.t : 0
+    const world: Record<string, unknown> = {
+      ...v.world,
+      nextTaxT: worldT + TAX_INTERVAL_SEC,
+    }
+    delete world.nextTrickleT
+    v = { ...v, version: 9, world }
+  }
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV8 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV9 | null {
   if (!storage) return null
   let raw: string | null = null
   try {
@@ -707,7 +718,7 @@ export function readSave(storage: SaveStorage | null = browserStorage()): SaveV8
   return null
 }
 
-export function hydrateSave(save: SaveV8): void {
+export function hydrateSave(save: SaveV9): void {
   useTutorialStore.getState().hydrate(save.tutorial.seen)
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
@@ -833,7 +844,7 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     contractRngState: INITIAL_CONTRACT_RNG,
     nextContractT: INITIAL_NEXT_CONTRACT_T,
     influence: 0,
-    nextTrickleT: TRICKLE_INTERVAL_SEC,
+    nextTaxT: TAX_INTERVAL_SEC,
     spends: [],
     cooldowns: {},
     crisis: [],

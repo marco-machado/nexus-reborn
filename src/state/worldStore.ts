@@ -1,8 +1,10 @@
 // CONTRACT FILE. Strategic layer state: the world clock, per sector control
 // and unrest, city ownership (including mission-result flips), the events
 // feed that moves them, the generated contract market the feed feeds, the
-// spendable influence resource, and the unrest pressure/crisis flow. The
-// world map screen drives tick() while it is mounted; nothing else writes here.
+// spendable influence resource, Tax yield deposits, and the unrest
+// pressure/crisis flow. The world map screen drives tick() while it is
+// mounted; a win's ETA catch-up uses the same flow. Tax yield Credits land
+// on the same balance contract pay uses.
 import { create } from 'zustand'
 import { mulberryStep } from '../game/rng'
 import { MISSIONS } from '../game/data'
@@ -13,6 +15,7 @@ import {
   OPEN_SECTORS,
   SECTORS,
   cityById,
+  sectorCorp,
   sectorDef,
 } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
@@ -50,13 +53,11 @@ import {
   PRESSURE_CONTROL_DROP_MIN,
   PRESSURE_INTERVAL_SEC,
   PRESSURE_UNREST_MIN,
-  TRICKLE_INDEX_MIN,
-  TRICKLE_INTERVAL_SEC,
-  TRICKLE_PTS,
+  TAX_INTERVAL_SEC,
   UNREST_MAX,
   UNREST_MIN,
   cooldownKey,
-  taxStrain,
+  taxYieldCredits,
 } from '../game/influence'
 import type { InfluenceActionId, PendingSpend } from '../game/influence'
 import {
@@ -66,6 +67,7 @@ import {
   sectorEventWeight,
 } from '../game/forecast'
 import type { MissionDef, SectorId } from '../game/types'
+import { useAppStore } from './appStore'
 import type { MissionOutcome } from './appStore'
 
 export const DAY = 86400
@@ -345,12 +347,14 @@ interface WorldFlow {
   contractRngState: number
   nextContractT: number
   influence: number
-  nextTrickleT: number
+  nextTaxT: number
   spends: PendingSpend[]
   crisis: SectorId[]
   // Next decay check per sector holding above the pressure threshold; a
   // sector at or under it carries no entry.
   pressure: Record<string, number>
+  // Credits collected this catch-up; deposited after the flow commits.
+  taxPaid: number
 }
 
 function flowOf(s: WorldStoreState): WorldFlow {
@@ -365,10 +369,11 @@ function flowOf(s: WorldStoreState): WorldFlow {
     contractRngState: s.contractRngState,
     nextContractT: s.nextContractT,
     influence: s.influence,
-    nextTrickleT: s.nextTrickleT,
+    nextTaxT: s.nextTaxT,
     spends: s.spends,
     crisis: s.crisis,
     pressure: s.pressure,
+    taxPaid: 0,
   }
 }
 
@@ -393,22 +398,19 @@ function postContractEvent(
 }
 
 // Snapshot of every open sector as contract-generation input: the readout the
-// world map shows (defense, garrison) plus the atlas weight and the corp
-// holding the most cities, so generated work derives from what the player sees.
+// world map shows (control, unrest, garrison) plus the corp holding the most
+// cities, so generated work derives from what the player sees.
 function contractInputs(
   sectors: Record<string, SectorState>,
   owner: Record<string, CorpId>,
 ): ContractSectorInput[] {
   return OPEN_SECTORS.map((id) => {
-    const def = sectorDef(id)
     const read = sectorReadout(id, sectors[id])
     return {
       sector: id,
       control: read.control,
       unrest: read.unrest,
-      defense: read.defense,
       garrison: read.garrison,
-      weight: def.weight,
       client: sectorClient(id, owner),
       ownership: owner,
     }
@@ -576,9 +578,40 @@ function applyPressure(f: WorldFlow, t: number): void {
   }
 }
 
+function applyTax(f: WorldFlow): void {
+  for (const id of OPEN_SECTORS) {
+    if (sectorCorp(id, f.owner) !== 'nexus') continue
+    f.taxPaid += sectorReadout(id, f.sectors[id]).taxYield
+  }
+  f.nextTaxT += TAX_INTERVAL_SEC
+}
+
+function commitFlow(f: WorldFlow): Omit<WorldFlow, 'taxPaid'> {
+  return {
+    sectors: f.sectors,
+    owner: f.owner,
+    events: f.events,
+    unread: f.unread,
+    nextEventT: f.nextEventT,
+    rngState: f.rngState,
+    contracts: f.contracts,
+    contractRngState: f.contractRngState,
+    nextContractT: f.nextContractT,
+    influence: f.influence,
+    nextTaxT: f.nextTaxT,
+    spends: f.spends,
+    crisis: f.crisis,
+    pressure: f.pressure,
+  }
+}
+
+function depositTax(amount: number): void {
+  if (amount > 0) useAppStore.getState().addCredits(amount)
+}
+
 // Advances every timed world process (event rolls, contract expiry, contract
-// generation, staged influence spends, unrest decay, the influence trickle)
-// to time t in timestamp order. Returns whether anything moved.
+// generation, staged influence spends, unrest decay, Tax yield) to time t in
+// timestamp order. Returns whether anything moved.
 function advanceFlow(f: WorldFlow, t: number): boolean {
   let changed = false
   for (;;) {
@@ -592,7 +625,7 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
       if (at !== undefined && at < pressT) pressT = at
     }
     const stepT = Math.min(
-      f.nextEventT, f.nextContractT, expireT, spendT, pressT, f.nextTrickleT,
+      f.nextEventT, f.nextContractT, expireT, spendT, pressT, f.nextTaxT,
     )
     if (stepT > t) return changed
     changed = true
@@ -650,9 +683,7 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
     } else if (pressT === stepT) {
       applyPressure(f, stepT)
     } else {
-      // Influence trickle: the network pays while the index holds high.
-      if (globalInfluence(f.sectors) > TRICKLE_INDEX_MIN) f.influence += TRICKLE_PTS
-      f.nextTrickleT += TRICKLE_INTERVAL_SEC
+      applyTax(f)
     }
   }
 }
@@ -677,12 +708,11 @@ export interface WorldStoreState {
   contracts: GeneratedContract[]
   contractRngState: number
   nextContractT: number
-  // The spendable influence resource: the point balance, the next trickle
-  // check, staged spends still applying, and per-sector action cooldowns
-  // (readyAtT keyed by cooldownKey). The influence index shown beside it is
-  // always derived (globalInfluence), never stored.
+  // The spendable influence resource: the point balance, staged spends still
+  // applying, and per-sector action cooldowns (readyAtT keyed by cooldownKey).
+  // Tax yield uses nextTaxT on the same catch-up clock.
   influence: number
-  nextTrickleT: number
+  nextTaxT: number
   spends: PendingSpend[]
   cooldowns: Record<string, number>
   // Unrest pressure: sectors in crisis, and the next decay check for each
@@ -733,7 +763,7 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
   contractRngState: INITIAL_CONTRACT_RNG,
   nextContractT: INITIAL_NEXT_CONTRACT_T,
   influence: 0,
-  nextTrickleT: TRICKLE_INTERVAL_SEC,
+  nextTaxT: TAX_INTERVAL_SEC,
   spends: [],
   cooldowns: {},
   crisis: [],
@@ -750,7 +780,8 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       set(review !== s.review ? { t, review } : { t })
       return
     }
-    set({ t, review, ...flow })
+    depositTax(flow.taxPaid)
+    set({ t, review, ...commitFlow(flow) })
   },
 
   // Contract ETA cost: jumps the clock forward whole days and replays every
@@ -764,7 +795,8 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
       const t = s.t + days * DAY
       const flow = flowOf(s)
       advanceFlow(flow, t)
-      return { t, review: null, ...flow }
+      depositTax(flow.taxPaid)
+      return { t, review: null, ...commitFlow(flow) }
     }),
 
   applyMissionResult: (missionId, outcome, kia) =>
@@ -947,58 +979,11 @@ export function resolveMission(id: string): MissionDef | null {
 
 /* -------------------------------- selectors ------------------------------- */
 
-export function globalInfluence(sectors: Record<string, SectorState>): number {
-  let sum = 0
-  let weight = 0
-  for (const s of SECTORS) {
-    if (s.locked) continue
-    sum += sectors[s.id].control * s.weight
-    weight += s.weight
-  }
-  return weight > 0 ? sum / weight : 0
-}
-
-export type ThreatLevel = 'NOMINAL' | 'GUARDED' | 'ELEVATED' | 'SEVERE'
-
-export interface ThreatReadout {
-  level: ThreatLevel
-  sector: SectorId
-  unrest: number
-}
-
-// Worst open-sector unrest. The plate prints this as NETWORK THREAT so it
-// cannot be read as a contract's threat rating.
-export function threatReadout(sectors: Record<string, SectorState>): ThreatReadout {
-  let sector: SectorId = OPEN_SECTORS[0]
-  let unrest = -1
-  for (const id of OPEN_SECTORS) {
-    const u = sectors[id].unrest
-    if (u > unrest) {
-      unrest = u
-      sector = id
-    }
-  }
-  // Same rounding the sector list prints, so 45 unrest cannot read ELEVATED.
-  const shown = Math.round(Math.max(0, unrest))
-  const level: ThreatLevel =
-    shown >= 45 ? 'SEVERE' : shown >= 25 ? 'ELEVATED' : shown >= 15 ? 'GUARDED' : 'NOMINAL'
-  return { level, sector, unrest: Math.max(0, unrest) }
-}
-
-export function threatLevel(sectors: Record<string, SectorState>): ThreatLevel {
-  return threatReadout(sectors).level
-}
-
 export interface SectorReadout {
   control: number
   unrest: number
   taxYield: number
-  influenceIncome: number
-  blackMarket: number
   garrison: 'SECURE' | 'STRAINED' | 'CRITICAL'
-  forces: number
-  assets: number
-  defense: number
 }
 
 export function sectorReadout(id: SectorId, state: SectorState): SectorReadout {
@@ -1008,14 +993,7 @@ export function sectorReadout(id: SectorId, state: SectorState): SectorReadout {
   return {
     control,
     unrest,
-    // Unrest pressure strains the yield: past the threshold the readout falls
-    // with every point of unrest (game/influence.ts).
-    taxYield: ((def.yieldBase * control) / 100) * taxStrain(unrest),
-    influenceIncome: control * 0.0198,
-    blackMarket: -unrest * 0.01,
+    taxYield: taxYieldCredits(def.yieldBase, control, unrest),
     garrison: control >= 55 ? 'SECURE' : control >= 35 ? 'STRAINED' : 'CRITICAL',
-    forces: Math.round((def.forcesBase * control) / 100),
-    assets: def.assets,
-    defense: clamp(Math.round(control - unrest / 2 + 21), 0, 100),
   }
 }

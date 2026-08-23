@@ -116,15 +116,14 @@ export function missionMods(
   difficulty: Difficulty = 'standard',
 ): MissionMods {
   let enemyExtra = THREAT_EXTRA[m.threat]
-  let enemyHpMul = THREAT_HP_MUL[m.threat]
+  const enemyHpMul = THREAT_HP_MUL[m.threat]
   let civilianCount = CIVILIANS[defaultDistrict(m).archetype]
-  // Restless streets are crowded and reinforced; a well-held district is
-  // well-garrisoned.
+  // Restless streets are crowded and reinforced. Garrison condition already
+  // covers a well-held district; Control does not add CorpSec hit points.
   if (sector.unrest > 20) {
     civilianCount += 6
     enemyExtra += 1
   }
-  if (sector.control > 60) enemyHpMul += 0.05
   const fx = DIFFICULTY_FX[difficulty] ?? DIFFICULTY_FX.standard
   enemyExtra += fx.extraPatrol
   civilianCount += fx.extraCivilians

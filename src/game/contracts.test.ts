@@ -33,9 +33,9 @@ const OWNERSHIP: Record<string, CorpId> = {}
 for (const city of CITIES) OWNERSHIP[city.id] = city.corp
 
 const INPUTS: ContractSectorInput[] = [
-  { sector: 'eu', control: 62, unrest: 18, defense: 74, garrison: 'SECURE', weight: 1.2, client: 'helix', ownership: OWNERSHIP },
-  { sector: 'af', control: 37, unrest: 28, defense: 44, garrison: 'STRAINED', weight: 0.9, client: 'omni', ownership: OWNERSHIP },
-  { sector: 'oc', control: 20, unrest: 60, defense: 11, garrison: 'CRITICAL', weight: 0.55, client: 'stratos', ownership: OWNERSHIP },
+  { sector: 'eu', control: 62, unrest: 18, garrison: 'SECURE', client: 'helix', ownership: OWNERSHIP },
+  { sector: 'af', control: 37, unrest: 28, garrison: 'STRAINED', client: 'omni', ownership: OWNERSHIP },
+  { sector: 'oc', control: 20, unrest: 60, garrison: 'CRITICAL', client: 'stratos', ownership: OWNERSHIP },
 ]
 
 function inputFor(sector: string): ContractSectorInput {
@@ -68,7 +68,7 @@ describe('rolling', () => {
     for (const c of rollMany(200)) {
       const input = inputFor(c.sector)
       expect(c.type === 'SEIZURE' || c.type === 'EXTRACTION' || c.type === 'SABOTAGE').toBe(true)
-      expect(c.threat).toBe(contractThreat(input.defense, input.garrison))
+      expect(c.threat).toBe(contractThreat(input.garrison))
       expect(c.client).toBe(input.client)
       expect(c.reward).toBeGreaterThanOrEqual(CONTRACT_REWARD_MIN)
       expect(c.reward).toBeLessThanOrEqual(CONTRACT_REWARD_MAX)
@@ -140,12 +140,27 @@ describe('rolling', () => {
 })
 
 describe('threat and client derivation', () => {
-  it('maps defense and garrison condition onto the threat ladder', () => {
-    expect(contractThreat(80, 'SECURE')).toBe('MODERATE')
-    expect(contractThreat(50, 'SECURE')).toBe('HIGH')
-    expect(contractThreat(80, 'STRAINED')).toBe('HIGH')
-    expect(contractThreat(30, 'SECURE')).toBe('SEVERE')
-    expect(contractThreat(80, 'CRITICAL')).toBe('SEVERE')
+  it('maps garrison condition onto the threat ladder', () => {
+    expect(contractThreat('SECURE')).toBe('MODERATE')
+    expect(contractThreat('STRAINED')).toBe('HIGH')
+    expect(contractThreat('CRITICAL')).toBe('SEVERE')
+  })
+
+  it('pays the same for the same Threat in every sector', () => {
+    const na: ContractSectorInput = {
+      sector: 'na',
+      control: 68,
+      unrest: 12,
+      garrison: 'SECURE',
+      client: 'nexus',
+      ownership: OWNERSHIP,
+    }
+    const as: ContractSectorInput = { ...na, sector: 'as', control: 55, unrest: 16, client: 'helix' }
+    const a = rollContract([na], 1000, 0xabc)
+    const b = rollContract([as], 1000, 0xabc)
+    expect(a.contract.threat).toBe('MODERATE')
+    expect(b.contract.threat).toBe(a.contract.threat)
+    expect(b.contract.reward).toBe(a.contract.reward)
   })
 
   it('names the corporation holding the most cities, ties in holder order', () => {

@@ -8,11 +8,10 @@ import {
   resolveMission,
   sectorReadout,
   stamp,
-  threatLevel,
-  threatReadout,
   useWorldStore,
 } from './worldStore'
-import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS } from '../game/atlas'
+import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS, sectorCorp } from '../game/atlas'
+import { INITIAL_CREDITS, useAppStore } from './appStore'
 import {
   CONTRACT_EXPIRY_MIN_SEC,
   CONTRACT_INTEL_REQ,
@@ -33,7 +32,7 @@ import {
   PRESSURE_CONTROL_DROP_MAX,
   PRESSURE_CONTROL_DROP_MIN,
   PRESSURE_INTERVAL_SEC,
-  TRICKLE_INTERVAL_SEC,
+  TAX_INTERVAL_SEC,
   UNREST_MAX,
   cooldownKey,
 } from '../game/influence'
@@ -68,7 +67,7 @@ const snapshot = structuredClone({
   contractRngState: s0.contractRngState,
   nextContractT: s0.nextContractT,
   influence: s0.influence,
-  nextTrickleT: s0.nextTrickleT,
+  nextTaxT: s0.nextTaxT,
   spends: s0.spends,
   cooldowns: s0.cooldowns,
   crisis: s0.crisis,
@@ -77,6 +76,7 @@ const snapshot = structuredClone({
 
 beforeEach(() => {
   useWorldStore.setState(structuredClone(snapshot))
+  useAppStore.setState({ credits: INITIAL_CREDITS })
 })
 
 // Every field the timed flow moves, for jump-vs-continuous parity checks.
@@ -93,7 +93,7 @@ function flowSnapshot() {
     contractRngState: s.contractRngState,
     nextContractT: s.nextContractT,
     influence: s.influence,
-    nextTrickleT: s.nextTrickleT,
+    nextTaxT: s.nextTaxT,
     spends: s.spends,
     cooldowns: s.cooldowns,
     crisis: s.crisis,
@@ -106,7 +106,7 @@ function pinFlows(): void {
   useWorldStore.setState({
     nextEventT: 1e12,
     nextContractT: 1e12,
-    nextTrickleT: 1e12,
+    nextTaxT: 1e12,
   })
 }
 
@@ -329,6 +329,14 @@ describe('generated contracts', () => {
     expect(s.nextContractT).toBeLessThan(checkT + CONTRACT_MIN_SEC + CONTRACT_SPAN_SEC)
   })
 
+  it('generated-contract Threat follows Garrison condition', () => {
+    const sectors: Record<string, SectorState> = {}
+    for (const id of OPEN_SECTORS) sectors[id] = { control: 20, unrest: 10 }
+    useWorldStore.setState({ sectors, nextEventT: 1e12, nextTaxT: 1e12 })
+    forceGeneration()
+    expect(useWorldStore.getState().contracts[0].threat).toBe('SEVERE')
+  })
+
   it('reproduces the same contract from a restored rng cursor', () => {
     forceGeneration()
     const first = structuredClone({
@@ -447,16 +455,19 @@ describe('generated contracts', () => {
   it('advanceDays lands exactly where continuous ticking would', () => {
     useWorldStore.getState().advanceDays(2)
     const jump = flowSnapshot()
+    const jumpCredits = useAppStore.getState().credits
 
     useWorldStore.setState(structuredClone(snapshot))
+    useAppStore.setState({ credits: INITIAL_CREDITS })
     // 0.25s frames at speed 2 advance exactly 30 world seconds each.
     for (let i = 0; i < (2 * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
     expect(flowSnapshot()).toEqual(jump)
+    expect(useAppStore.getState().credits).toBe(jumpCredits)
   })
 
-  it('day jumps replay staged spends, pressure, crisis and the trickle identically', () => {
+  it('day jumps replay staged spends, pressure, crisis and tax yield identically', () => {
     // High unrest arms decay and can cross into crisis; the pending spend
-    // steps hourly; the trickle checks every 12 hours: all of it must land
+    // steps hourly; Tax yield checks every 24 hours: all of it must land
     // identically whether the two days pass in one jump or in frames.
     const staged = () => {
       useWorldStore.setState(structuredClone(snapshot))
@@ -472,13 +483,18 @@ describe('generated contracts', () => {
     }
 
     staged()
+    const credits0 = useAppStore.getState().credits
     useWorldStore.getState().advanceDays(2)
     const jump = flowSnapshot()
+    const jumpCredits = useAppStore.getState().credits
     expect(jump.spends).toEqual([])
+    expect(jumpCredits).toBeGreaterThan(credits0)
 
     staged()
+    useAppStore.setState({ credits: INITIAL_CREDITS })
     for (let i = 0; i < (2 * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
     expect(flowSnapshot()).toEqual(jump)
+    expect(useAppStore.getState().credits).toBe(jumpCredits)
   })
 })
 
@@ -613,23 +629,13 @@ describe('influence economy', () => {
     expect(useWorldStore.getState().influence).toBe(before)
   })
 
-  it('trickles one point per 12 world hours only while the index holds above 55', () => {
+  it('does not drip Influence from Control', () => {
     pinFlows()
-    useWorldStore.setState({ nextTrickleT: TRICKLE_INTERVAL_SEC })
-    // The atlas start sits just above the threshold.
-    crossTo(TRICKLE_INTERVAL_SEC)
-    let s = useWorldStore.getState()
-    expect(s.influence).toBe(1)
-    expect(s.nextTrickleT).toBe(2 * TRICKLE_INTERVAL_SEC)
-    // Collapse the index below the threshold: the check still advances, the
-    // point is withheld.
-    const low: Record<string, SectorState> = {}
-    for (const sec of SECTORS) low[sec.id] = { control: 10, unrest: 10 }
-    useWorldStore.setState({ sectors: low })
-    crossTo(2 * TRICKLE_INTERVAL_SEC)
-    s = useWorldStore.getState()
-    expect(s.influence).toBe(1)
-    expect(s.nextTrickleT).toBe(3 * TRICKLE_INTERVAL_SEC)
+    useWorldStore.setState({ nextTaxT: TAX_INTERVAL_SEC, influence: 0 })
+    crossTo(TAX_INTERVAL_SEC)
+    expect(useWorldStore.getState().influence).toBe(0)
+    crossTo(2 * TAX_INTERVAL_SEC)
+    expect(useWorldStore.getState().influence).toBe(0)
   })
 
   it('stabilize costs 8 points, arms the sector cooldown, and posts a feed line', () => {
@@ -810,7 +816,7 @@ describe('unrest pressure and crisis', () => {
   it('a sector in crisis draws events at roughly double weight', () => {
     const even: Record<string, SectorState> = {}
     for (const sec of SECTORS) even[sec.id] = { control: 50, unrest: 40 }
-    useWorldStore.setState({ nextContractT: 1e12, nextTrickleT: 1e12 })
+    useWorldStore.setState({ nextContractT: 1e12, nextTaxT: 1e12 })
     const share = (crisis: SectorId[]): number => {
       let eu = 0
       let total = 0
@@ -832,7 +838,7 @@ describe('unrest pressure and crisis', () => {
     useWorldStore.setState({ rngState: 0x1234 })
     const flat = share([])
     useWorldStore.setState(structuredClone(snapshot))
-    useWorldStore.setState({ nextContractT: 1e12, nextTrickleT: 1e12, rngState: 0x1234 })
+    useWorldStore.setState({ nextContractT: 1e12, nextTaxT: 1e12, rngState: 0x1234 })
     const doubled = share(['eu'])
     // Equal weights put eu at 1/6 of events; a doubled eu takes 2/7.
     expect(flat).toBeGreaterThan(1 / 6 - 0.05)
@@ -846,7 +852,7 @@ describe('forecast weights match the generator', () => {
   it('rolled kind frequencies track kindWeights at pinned unrest', () => {
     const pinned: Record<string, SectorState> = {}
     for (const sec of SECTORS) pinned[sec.id] = { control: 50, unrest: 40 }
-    useWorldStore.setState({ nextContractT: 1e12, nextTrickleT: 1e12 })
+    useWorldStore.setState({ nextContractT: 1e12, nextTaxT: 1e12 })
     const counts: Record<string, number> = {}
     let total = 0
     for (let i = 0; i < 600; i++) {
@@ -901,33 +907,100 @@ describe('sector selection', () => {
   })
 })
 
-describe('network threat', () => {
-  it('opens ELEVATED on Africa, the worst opening unrest', () => {
+describe('tax yield', () => {
+  const opening: Record<string, number> = {
+    na: 4080,
+    sa: 1722,
+    eu: 2468,
+    af: 1887,
+    as: 4620,
+    oc: 1606,
+  }
+
+  it('prints the opening table in Credits, not billions', () => {
     const sectors = useWorldStore.getState().sectors
-    const read = threatReadout(sectors)
-    expect(read.level).toBe('ELEVATED')
-    expect(read.sector).toBe('af')
-    expect(read.unrest).toBe(28)
-    expect(threatLevel(sectors)).toBe('ELEVATED')
+    for (const id of OPEN_SECTORS) {
+      const read = sectorReadout(id, sectors[id])
+      expect(read.taxYield).toBe(opening[id])
+      expect(read.garrison).toBe(
+        sectors[id].control >= 55 ? 'SECURE' : sectors[id].control >= 35 ? 'STRAINED' : 'CRITICAL',
+      )
+    }
   })
 
-  it('names the sector that crossed SEVERE, not the whole board', () => {
-    const sectors = {
-      ...useWorldStore.getState().sectors,
-      sa: { control: 40, unrest: 51 },
-    }
-    const read = threatReadout(sectors)
-    expect(read.level).toBe('SEVERE')
-    expect(read.sector).toBe('sa')
-    expect(read.unrest).toBe(51)
+  it('opening collection is North America only', () => {
+    pinFlows()
+    useWorldStore.setState({ nextTaxT: TAX_INTERVAL_SEC })
+    const before = useAppStore.getState().credits
+    expect(sectorCorp('na', useWorldStore.getState().owner)).toBe('nexus')
+    expect(sectorCorp('sa', useWorldStore.getState().owner)).toBe('contested')
+    expect(sectorCorp('as', useWorldStore.getState().owner)).toBe('helix')
+    crossTo(TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBe(before + opening.na)
+    expect(useWorldStore.getState().nextTaxT).toBe(2 * TAX_INTERVAL_SEC)
   })
 
-  it('uses the same unrest rounding the sector list prints', () => {
-    const sectors = {
-      ...useWorldStore.getState().sectors,
-      sa: { control: 40, unrest: 44.6 },
-    }
-    expect(threatReadout(sectors).level).toBe('SEVERE')
+  it('a Contested or rival sector shows Tax yield and pays nothing', () => {
+    const sa = sectorReadout('sa', useWorldStore.getState().sectors.sa)
+    const as = sectorReadout('as', useWorldStore.getState().sectors.as)
+    expect(sa.taxYield).toBe(opening.sa)
+    expect(as.taxYield).toBe(opening.as)
+  })
+
+  it('a quiet replay ETA still collects Tax yield; a loss spends none', () => {
+    pinFlows()
+    useWorldStore.setState({ nextTaxT: TAX_INTERVAL_SEC })
+    const before = useAppStore.getState().credits
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ quietReplay: true, civiliansHit: 0 }))
+    expect(useWorldStore.getState().influence).toBe(0)
+    expect(useAppStore.getState().credits).toBe(before)
+    useWorldStore.getState().advanceDays(2)
+    expect(useAppStore.getState().credits).toBe(before + 2 * opening.na)
+
+    useWorldStore.setState(structuredClone(snapshot))
+    useAppStore.setState({ credits: INITIAL_CREDITS })
+    pinFlows()
+    useWorldStore.setState({ nextTaxT: TAX_INTERVAL_SEC })
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    expect(useAppStore.getState().credits).toBe(INITIAL_CREDITS)
+    expect(useWorldStore.getState().t).toBe(0)
+    expect(useWorldStore.getState().nextTaxT).toBe(TAX_INTERVAL_SEC)
+  })
+
+  it('Glass Veil and Hollow Crown contest their sectors; Rust Haven deepens North America', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 0 }))
+    expect(sectorCorp('eu', useWorldStore.getState().owner)).toBe('contested')
+    useWorldStore.getState().applyMissionResult('m02', outcome({ civiliansHit: 0 }))
+    expect(sectorCorp('as', useWorldStore.getState().owner)).toBe('contested')
+    expect(sectorCorp('na', useWorldStore.getState().owner)).toBe('nexus')
+    useWorldStore.getState().applyMissionResult('m03', outcome({ civiliansHit: 0 }))
+    expect(sectorCorp('na', useWorldStore.getState().owner)).toBe('nexus')
+  })
+
+  it('taking a second city in a rival sector starts that tap; losing majority stops it', () => {
+    pinFlows()
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 0 }))
+    expect(sectorCorp('eu', useWorldStore.getState().owner)).toBe('contested')
+    const owner = { ...useWorldStore.getState().owner, ln: 'nexus' as const }
+    useWorldStore.setState({ owner, nextTaxT: TAX_INTERVAL_SEC })
+    expect(sectorCorp('eu', owner)).toBe('nexus')
+    const na = sectorReadout('na', useWorldStore.getState().sectors.na).taxYield
+    const eu = sectorReadout('eu', useWorldStore.getState().sectors.eu).taxYield
+    const before = useAppStore.getState().credits
+    crossTo(TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBe(before + na + eu)
+
+    useWorldStore.setState({
+      owner: { ...useWorldStore.getState().owner, ln: 'helix' },
+      nextTaxT: 2 * TAX_INTERVAL_SEC,
+    })
+    expect(sectorCorp('eu', useWorldStore.getState().owner)).toBe('contested')
+    const mid = useAppStore.getState().credits
+    const na2 = sectorReadout('na', useWorldStore.getState().sectors.na).taxYield
+    crossTo(2 * TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBe(mid + na2)
   })
 })
 

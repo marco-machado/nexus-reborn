@@ -66,6 +66,8 @@ export interface AppState {
   toggleOperative: (id: string) => void
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
   spendCredits: (amount: number) => void
+  // Tax yield and other income. Does not convert from Influence.
+  addCredits: (amount: number) => void
   hireOperative: (candidateId: string) => void
   setOutcome: (o: MissionOutcome) => void
 }
@@ -107,6 +109,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Funds research. Guarded here so no caller can overdraw the account.
   spendCredits: (amount) =>
     set((s) => (amount > 0 && s.credits >= amount ? { credits: s.credits - amount } : s)),
+  addCredits: (amount) =>
+    set((s) => (amount > 0 ? { credits: s.credits + amount } : s)),
   // Signs a recruitment candidate. The fee clears here first, so a blocked
   // hire (unknown candidate, roster at cap, overdraw) costs nothing.
   hireOperative: (candidateId) => {

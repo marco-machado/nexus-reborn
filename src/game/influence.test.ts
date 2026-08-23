@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { OPEN_SECTORS, sectorDef } from './atlas'
 import {
   CRISIS_UNREST_ENTER,
   CRISIS_UNREST_EXIT,
@@ -9,6 +10,7 @@ import {
   UNREST_MAX,
   cooldownKey,
   taxStrain,
+  taxYieldCredits,
 } from './influence'
 
 describe('action table', () => {
@@ -63,5 +65,27 @@ describe('pressure thresholds', () => {
       taxStrain(PRESSURE_UNREST_MIN + 20),
     )
     expect(taxStrain(UNREST_MAX)).toBeGreaterThanOrEqual(PRESSURE_TAX_FLOOR)
+  })
+
+  it('taxYieldCredits matches the opening sector table', () => {
+    const opening: Record<string, number> = {
+      na: 4080,
+      sa: 1722,
+      eu: 2468,
+      af: 1887,
+      as: 4620,
+      oc: 1606,
+    }
+    for (const id of OPEN_SECTORS) {
+      const def = sectorDef(id)
+      expect(taxYieldCredits(def.yieldBase, def.control, def.unrest)).toBe(opening[id])
+    }
+  })
+
+  it('unrest above 60 cuts tax yield 2% per point, floored at 25%', () => {
+    expect(taxYieldCredits(6000, 100, PRESSURE_UNREST_MIN)).toBe(6000)
+    expect(taxYieldCredits(6000, 100, PRESSURE_UNREST_MIN + 10)).toBe(4800)
+    expect(taxYieldCredits(6000, 100, UNREST_MAX)).toBe(1680)
+    expect(taxYieldCredits(6000, 100, PRESSURE_UNREST_MIN + 40)).toBe(1500)
   })
 })

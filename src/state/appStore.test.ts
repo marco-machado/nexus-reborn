@@ -27,7 +27,7 @@ const worldBoot = structuredClone({
   contractRngState: w0.contractRngState,
   nextContractT: w0.nextContractT,
   influence: w0.influence,
-  nextTrickleT: w0.nextTrickleT,
+  nextTaxT: w0.nextTaxT,
   spends: w0.spends,
   cooldowns: w0.cooldowns,
   crisis: w0.crisis,
@@ -194,6 +194,14 @@ describe('credits', () => {
     useAppStore.getState().spendCredits(0)
     useAppStore.getState().spendCredits(-500)
     expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+
+  it('addCredits deposits income and ignores non-positive amounts', () => {
+    useAppStore.getState().addCredits(4080)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 4080)
+    useAppStore.getState().addCredits(0)
+    useAppStore.getState().addCredits(-10)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 4080)
   })
 })
 

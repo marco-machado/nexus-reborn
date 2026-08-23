@@ -36,13 +36,13 @@ export interface SectorDef {
   name: string
   title: string
   glyph: string
-  // Share of global influence.
+  // Kept on the def; not used for income, standing, or generated pay.
   weight: number
   control: number
   unrest: number
   assets: number
-  // Garrison and weekly tax yield at full control; both scale with control.
   forcesBase: number
+  // Tax yield Credits at 100% Control over 24 strategic hours.
   yieldBase: number
   locked: boolean
 }
@@ -58,7 +58,7 @@ export const SECTORS: SectorDef[] = [
     unrest: 12,
     assets: 31,
     forcesBase: 38800,
-    yieldBase: 6.0,
+    yieldBase: 6000,
     locked: false,
   },
   {
@@ -71,7 +71,7 @@ export const SECTORS: SectorDef[] = [
     unrest: 24,
     assets: 17,
     forcesBase: 34600,
-    yieldBase: 4.2,
+    yieldBase: 4200,
     locked: false,
   },
   {
@@ -84,7 +84,7 @@ export const SECTORS: SectorDef[] = [
     unrest: 18,
     assets: 23,
     forcesBase: 29758,
-    yieldBase: 3.98,
+    yieldBase: 3980,
     locked: false,
   },
   {
@@ -97,7 +97,7 @@ export const SECTORS: SectorDef[] = [
     unrest: 28,
     assets: 14,
     forcesBase: 56700,
-    yieldBase: 5.1,
+    yieldBase: 5100,
     locked: false,
   },
   {
@@ -110,7 +110,7 @@ export const SECTORS: SectorDef[] = [
     unrest: 16,
     assets: 29,
     forcesBase: 74500,
-    yieldBase: 8.4,
+    yieldBase: 8400,
     locked: false,
   },
   {
@@ -123,7 +123,7 @@ export const SECTORS: SectorDef[] = [
     unrest: 9,
     assets: 11,
     forcesBase: 13400,
-    yieldBase: 2.2,
+    yieldBase: 2200,
     locked: false,
   },
   {
