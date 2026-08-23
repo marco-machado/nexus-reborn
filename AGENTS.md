@@ -10,6 +10,8 @@ Scripts live in `package.json`. Run `npm run lint`, `npm run test`, and `npm run
 
 Click-through: [`docs/click-through.md`](docs/click-through.md) — rendering, screen flow, input, or persisted state. Name the screens actually exercised if the run is partial.
 
+Stop every dev server you started (`npm run dev`, `vite preview`) before the turn ends. Confirm the listener on port 4200 is gone.
+
 ## Layers
 
 Boundaries are load-bearing:
