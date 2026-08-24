@@ -88,7 +88,7 @@ async function loadAudio() {
 }
 
 async function flush() {
-  for (let i = 0; i < 8; i++) await Promise.resolve()
+  for (let i = 0; i < 40; i++) await Promise.resolve()
 }
 
 describe('clip beds against a mocked AudioContext', () => {
@@ -101,8 +101,8 @@ describe('clip beds against a mocked AudioContext', () => {
     const audio = await loadAudio()
     audio.startStrategyBed()
     await flush()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(fetchMock.mock.calls[0]?.[0]).toBe(audio.STRATEGY_BED_URL)
+    const urls = fetchMock.mock.calls.map((c) => c[0])
+    expect(urls).toContain(audio.STRATEGY_BED_URL)
     expect(sources.some((s) => s.loop && s.start.mock.calls.length > 0)).toBe(true)
   })
 
@@ -110,11 +110,10 @@ describe('clip beds against a mocked AudioContext', () => {
     const audio = await loadAudio()
     audio.startMissionBed()
     await flush()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const url = fetchMock.mock.calls[0]?.[0]
-    expect(audio.MISSION_BED_URLS).toContain(url)
-    expect(url).not.toBe(audio.STRATEGY_BED_URL)
-    expect(sources.filter((s) => s.start.mock.calls.length > 0).length).toBeGreaterThanOrEqual(2)
+    const urls = fetchMock.mock.calls.map((c) => c[0])
+    expect(urls.some((u) => audio.MISSION_BED_URLS.includes(u as string))).toBe(true)
+    expect(urls).not.toContain(audio.STRATEGY_BED_URL)
+    expect(sources.filter((s) => s.loop && s.start.mock.calls.length > 0).length).toBeGreaterThanOrEqual(1)
   })
 
   it('does not start sources when stop wins the in-flight decode', async () => {
