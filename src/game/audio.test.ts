@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   getAudioLevels,
   gunClipUrl,
+  MISSION_BED_URLS,
   missionRainGain,
+  pickMissionBedUrl,
   setAudioLevels,
   setMissionBedWeather,
   sfx,
@@ -40,6 +42,15 @@ describe('audio beds', () => {
     setAudioLevels({ music: 0, ambience: 1 })
     expect(getAudioLevels().music).toBe(0)
     expect(getAudioLevels().ambience).toBe(1)
+  })
+
+  it('picks the mission bed uniformly from the three clips, with no world arguments', () => {
+    expect(MISSION_BED_URLS).toHaveLength(3)
+    expect(new Set(MISSION_BED_URLS).size).toBe(3)
+    expect(pickMissionBedUrl.length).toBe(0)
+    for (let i = 0; i < 40; i++) {
+      expect(MISSION_BED_URLS).toContain(pickMissionBedUrl())
+    }
   })
 })
 
@@ -87,7 +98,7 @@ type Started = { url: string; loop: boolean; dest: unknown }
 function installMockAudio() {
   const started: Started[] = []
   const sources: unknown[] = []
-  const bufUrl = new WeakMap<ArrayBuffer, string>()
+  const pendingUrls: string[] = []
   const fetched: string[] = []
 
   class FakeParam {
@@ -159,8 +170,8 @@ function installMockAudio() {
     createBiquadFilter() {
       return new FakeFilter()
     }
-    decodeAudioData(ab: ArrayBuffer) {
-      return Promise.resolve({ url: bufUrl.get(ab) ?? '' })
+    decodeAudioData() {
+      return Promise.resolve({ url: pendingUrls.shift() ?? '' })
     }
     resume() {
       return Promise.resolve()
@@ -172,11 +183,10 @@ function installMockAudio() {
   vi.stubGlobal('fetch', (url: string | URL) => {
     const href = String(url)
     fetched.push(href)
-    const ab = new ArrayBuffer(8)
-    bufUrl.set(ab, href)
+    pendingUrls.push(href)
     return Promise.resolve({
       ok: true,
-      arrayBuffer: () => Promise.resolve(ab),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
     })
   })
 
@@ -228,15 +238,14 @@ describe('clip playback', () => {
 
   it('weather none does not start a rain source', async () => {
     vi.resetModules()
-    const { started, sources, fetched } = installMockAudio()
+    const { started, fetched } = installMockAudio()
     const { startMissionBed: start } = await import('./audio')
     start()
     await vi.waitFor(() => {
-      expect(fetched.length).toBeGreaterThan(0)
+      expect(started.some((s) => s.loop)).toBe(true)
     })
     expect(fetched.some((u) => u.includes('rain-'))).toBe(false)
-    expect(sources).toHaveLength(0)
-    expect(started).toHaveLength(0)
+    expect(started.some((s) => s.url.includes('rain-'))).toBe(false)
   })
 
   it('weather light / heavy pick the matching loop', async () => {

@@ -1,6 +1,6 @@
-// Clip-backed one-shots and rain hiss. The alert-tension drone and the
-// strategy / mission beds stay synthesized (beds until the #48 clip set).
-// All entry points are safe to call when audio is unavailable.
+// Clip-backed one-shots, rain hiss, and strategy / mission beds. The
+// alert-tension drone stays synthesized so it can ramp 0–3. All entry
+// points are safe to call when audio is unavailable.
 import type { WeaponId, Weather } from './types'
 import { getWorld } from './runtime'
 import {
@@ -10,9 +10,25 @@ import {
   rainClipUrl,
   type GunSide,
 } from './sfxClips'
+import strategyBedUrl from '../../inspiration/audio/strategy-bed.mp3?url'
+import missionBedUrl from '../../inspiration/audio/mission-bed.mp3?url'
+import missionBedInhabitedUrl from '../../inspiration/audio/mission-bed-inhabited.mp3?url'
+import missionBedSealedUrl from '../../inspiration/audio/mission-bed-sealed.mp3?url'
 
 export type { GunSide }
 export { gunClipUrl }
+
+export const STRATEGY_BED_URL: string = strategyBedUrl
+export const MISSION_BED_URLS: readonly string[] = [
+  missionBedUrl,
+  missionBedInhabitedUrl,
+  missionBedSealedUrl,
+]
+
+export function pickMissionBedUrl(): string {
+  const i = Math.floor(Math.random() * MISSION_BED_URLS.length)
+  return MISSION_BED_URLS[i] ?? missionBedUrl
+}
 
 type AcCtor = typeof AudioContext
 
@@ -39,18 +55,8 @@ let ambienceGain: GainNode | null = null
 let failed = false
 const lastAt: Record<string, number> = {}
 
-// Decode cache lives on the current context. A new context (tests, or a
-// construction retry) drops both the buffers and in-flight fetches.
-let decodeCtx: AudioContext | null = null
-const decoded = new Map<string, AudioBuffer>()
-const inflight = new Map<string, Promise<AudioBuffer | null>>()
-
-function resetDecodeCache(c: AudioContext): void {
-  if (decodeCtx === c) return
-  decoded.clear()
-  inflight.clear()
-  decodeCtx = c
-}
+const decodedClips = new WeakMap<AudioContext, Map<string, AudioBuffer>>()
+const decodingClips = new WeakMap<AudioContext, Map<string, Promise<AudioBuffer | null>>>()
 
 // Alert tension drone: two detuned saws through a lowpass, held while the
 // mission alert level is up. Built lazily on the first nonzero level and kept
@@ -127,7 +133,6 @@ function ensure(): Live | null {
       return null
     }
     ctx = new AC()
-    resetDecodeCache(ctx)
     master = ctx.createGain()
     master.connect(ctx.destination)
     uiGain = ctx.createGain()
@@ -154,17 +159,27 @@ function ensure(): Live | null {
   }
 }
 
-function decodeClip(live: Live, url: string): Promise<AudioBuffer | null> {
-  const hit = decoded.get(url)
+function decodeClip(c: AudioContext, url: string): Promise<AudioBuffer | null> {
+  const cache = decodedClips.get(c) ?? new Map<string, AudioBuffer>()
+  decodedClips.set(c, cache)
+  const hit = cache.get(url)
   if (hit) return Promise.resolve(hit)
+
+  let inflight = decodingClips.get(c)
+  if (!inflight) {
+    inflight = new Map()
+    decodingClips.set(c, inflight)
+  }
   const pending = inflight.get(url)
   if (pending) return pending
+
   const work = (async () => {
     try {
       const res = await fetch(url)
+      if (!res.ok) return null
       const raw = await res.arrayBuffer()
-      const buf = await live.c.decodeAudioData(raw)
-      decoded.set(url, buf)
+      const buf = await c.decodeAudioData(raw.slice(0))
+      cache.set(url, buf)
       return buf
     } catch {
       return null
@@ -177,11 +192,11 @@ function decodeClip(live: Live, url: string): Promise<AudioBuffer | null> {
 }
 
 function preloadOneShots(live: Live): void {
-  for (const url of ONE_SHOT_URLS) void decodeClip(live, url)
+  for (const url of ONE_SHOT_URLS) void decodeClip(live.c, url)
 }
 
 function playOneShot(live: Live, dest: AudioNode, url: string): void {
-  void decodeClip(live, url).then((buf) => {
+  void decodeClip(live.c, url).then((buf) => {
     if (!buf || ctx !== live.c) return
     try {
       const src = live.c.createBufferSource()
@@ -192,6 +207,15 @@ function playOneShot(live: Live, dest: AudioNode, url: string): void {
       // fail silent
     }
   })
+}
+
+function loopedSource(live: Live, buf: AudioBuffer, dest: AudioNode, now: number): AudioBufferSourceNode {
+  const src = live.c.createBufferSource()
+  src.buffer = buf
+  src.loop = true
+  src.connect(dest)
+  src.start(now)
+  return src
 }
 
 // Resume the context on a user gesture. Safe to call repeatedly.
@@ -331,10 +355,11 @@ export const sfx = {
   },
 }
 
-// Looping beds. Strategy rides the music stage (a low industrial drone);
-// mission rides ambience (rain clips + synthesized city hum). Built lazily,
-// torn down on stop. Safe with no AudioContext: ensure() returns null and
-// these no-op.
+// Looping beds. Strategy rides the music stage (a low industrial clip);
+// mission rides ambience (a city-hum clip + rain loops). Built lazily, torn
+// down on stop. Decode is async, so each bed carries a generation token: a
+// stop (Screen remount, mission unmount, Strict Mode) invalidates an
+// in-flight decode and must not start a source afterwards.
 interface RainVoice {
   kind: 'light' | 'heavy'
   src: AudioBufferSourceNode
@@ -342,7 +367,6 @@ interface RainVoice {
 }
 
 interface Bed {
-  oscs: OscillatorNode[]
   srcs: AudioBufferSourceNode[]
   gain: GainNode
   rains: RainVoice[]
@@ -358,6 +382,11 @@ export function missionRainGain(weather: Weather): number {
 
 let strategyBed: Bed | null = null
 let missionBed: Bed | null = null
+let strategyGen = 0
+let missionGen = 0
+let strategyStarting = false
+let missionStarting = false
+let queuedWeather: Weather | undefined
 const BED_FADE = 0.45
 const RAIN_FADE = 0.4
 
@@ -367,13 +396,6 @@ function stopBed(bed: Bed | null): void {
   bed.gain.gain.cancelScheduledValues(now)
   bed.gain.gain.setValueAtTime(Math.max(0.0001, bed.gain.gain.value), now)
   bed.gain.gain.exponentialRampToValueAtTime(0.0001, now + BED_FADE)
-  for (const osc of bed.oscs) {
-    try {
-      osc.stop(now + BED_FADE + 0.05)
-    } catch {
-      // already stopped
-    }
-  }
   for (const src of bed.srcs) {
     try {
       src.stop(now + BED_FADE + 0.05)
@@ -384,52 +406,49 @@ function stopBed(bed: Bed | null): void {
 }
 
 export function startStrategyBed(): void {
-  if (strategyBed) return
+  if (strategyBed || strategyStarting) return
   const live = ensure()
   if (!live) return
-  const now = live.c.currentTime
-  const gain = live.c.createGain()
-  gain.gain.value = 0.0001
-  gain.connect(live.music)
-  const osc1 = live.c.createOscillator()
-  osc1.type = 'sawtooth'
-  osc1.frequency.value = 48
-  const osc2 = live.c.createOscillator()
-  osc2.type = 'triangle'
-  osc2.frequency.value = 72.4
-  const filter = live.c.createBiquadFilter()
-  filter.type = 'lowpass'
-  filter.frequency.value = 180
-  filter.Q.value = 0.7
-  osc1.connect(filter)
-  osc2.connect(filter)
-  filter.connect(gain)
-  osc1.start(now)
-  osc2.start(now)
-  gain.gain.exponentialRampToValueAtTime(0.09, now + 0.8)
-  strategyBed = { oscs: [osc1, osc2], srcs: [], gain, rains: [], rainWant: null }
+  strategyStarting = true
+  const gen = ++strategyGen
+  void (async () => {
+    try {
+      const buf = await decodeClip(live.c, STRATEGY_BED_URL)
+      if (!buf || gen !== strategyGen) return
+      const now = live.c.currentTime
+      const gain = live.c.createGain()
+      gain.gain.value = 0.0001
+      gain.connect(live.music)
+      const clip = loopedSource(live, buf, gain, now)
+      gain.gain.exponentialRampToValueAtTime(0.09, now + 0.8)
+      strategyBed = { srcs: [clip], gain, rains: [], rainWant: null }
+    } catch {
+      // silent: no context decode, fetch, or decode error
+    } finally {
+      if (gen === strategyGen) strategyStarting = false
+    }
+  })()
 }
 
 export function stopStrategyBed(): void {
+  strategyGen++
+  strategyStarting = false
   stopBed(strategyBed)
   strategyBed = null
 }
 
 function startRainVoice(live: Live, bed: Bed, kind: 'light' | 'heavy'): void {
-  void decodeClip(live, rainClipUrl(kind)).then((buf) => {
-    if (!buf || ctx !== live.c || missionBed !== bed) return
+  const gen = missionGen
+  void decodeClip(live.c, rainClipUrl(kind)).then((buf) => {
+    if (!buf || ctx !== live.c || gen !== missionGen || missionBed !== bed) return
     if (bed.rainWant !== kind) return
     if (bed.rains.some((v) => v.kind === kind)) return
     try {
       const gain = live.c.createGain()
       gain.gain.value = 0.0001
       gain.connect(bed.gain)
-      const src = live.c.createBufferSource()
-      src.buffer = buf
-      src.loop = true
-      src.connect(gain)
       const now = live.c.currentTime
-      src.start(0)
+      const src = loopedSource(live, buf, gain, now)
       gain.gain.exponentialRampToValueAtTime(missionRainGain(kind), now + RAIN_FADE)
       bed.rains.push({ kind, src, gain })
       bed.srcs.push(src)
@@ -457,31 +476,7 @@ function fadeOutRain(bed: Bed, keep: 'light' | 'heavy' | null): void {
   bed.rains = keep ? bed.rains.filter((v) => v.kind === keep) : []
 }
 
-export function startMissionBed(): void {
-  if (missionBed) return
-  const live = ensure()
-  if (!live) return
-  const now = live.c.currentTime
-  const gain = live.c.createGain()
-  gain.gain.value = 0.0001
-  gain.connect(live.ambience)
-  const hum = live.c.createOscillator()
-  hum.type = 'sine'
-  hum.frequency.value = 62
-  const humFlt = live.c.createBiquadFilter()
-  humFlt.type = 'lowpass'
-  humFlt.frequency.value = 140
-  const humGain = live.c.createGain()
-  humGain.gain.value = 0.05
-  hum.connect(humFlt).connect(humGain).connect(gain)
-  hum.start(now)
-  gain.gain.exponentialRampToValueAtTime(0.16, now + 0.7)
-  missionBed = { oscs: [hum], srcs: [], gain, rains: [], rainWant: null }
-  const opening = getWorld()?.weather ?? 'none'
-  setMissionBedWeather(opening)
-}
-
-export function setMissionBedWeather(weather: Weather): void {
+function applyMissionWeather(weather: Weather): void {
   if (!missionBed || !ctx) return
   const live = ensure()
   if (!live) return
@@ -502,7 +497,42 @@ export function setMissionBedWeather(weather: Weather): void {
   startRainVoice(live, bed, want)
 }
 
+export function startMissionBed(): void {
+  if (missionBed || missionStarting) return
+  const live = ensure()
+  if (!live) return
+  missionStarting = true
+  const gen = ++missionGen
+  const url = pickMissionBedUrl()
+  void (async () => {
+    try {
+      const buf = await decodeClip(live.c, url)
+      if (!buf || gen !== missionGen) return
+      const now = live.c.currentTime
+      const gain = live.c.createGain()
+      gain.gain.value = 0.0001
+      gain.connect(live.ambience)
+      const clip = loopedSource(live, buf, gain, now)
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.7)
+      missionBed = { srcs: [clip], gain, rains: [], rainWant: null }
+      applyMissionWeather(queuedWeather ?? getWorld()?.weather ?? 'none')
+    } catch {
+      // silent: no context decode, fetch, or decode error
+    } finally {
+      if (gen === missionGen) missionStarting = false
+    }
+  })()
+}
+
+export function setMissionBedWeather(weather: Weather): void {
+  queuedWeather = weather
+  applyMissionWeather(weather)
+}
+
 export function stopMissionBed(): void {
+  missionGen++
+  missionStarting = false
+  queuedWeather = undefined
   if (missionBed) missionBed.rainWant = null
   stopBed(missionBed)
   missionBed = null

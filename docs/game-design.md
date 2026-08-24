@@ -864,11 +864,11 @@ Effects stay sparse and informative: colored tracers, muzzle and impact flashes,
 
 Audio confirms orders, marks danger, and prices violence. It does not narrate.
 
-Combat and UI one-shots, and the mission rain hiss, are committed one-shot and loop clips. The alert-tension drone is synthesized so it can ramp with the mission alert level (0–3) and release when the mission ends. Until the bed-clip set lands, the strategy industrial drone and the mission city-hum stay synthesized.
+Combat and UI one-shots, the mission rain hiss, and the two beds are committed clips. The alert-tension drone is synthesized so it can ramp with the mission alert level (0–3) and release when the mission ends.
 
 Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump.
 
-Two beds: a low industrial drone on the four Screens (music), a city-hum on the mission (ambience) with a rain-hiss that follows weather and is silent when the weather is none. Each dies with the screen that owns it. Opening hour does not get its own bed.
+Two beds: a low industrial loop on the four Screens (music), a city-hum loop on the mission (ambience) — one of three clips, chosen at random when the mission bed starts, not keyed to contract, district, Opening hour, weather, or threat. Rain-hiss is a looping clip that follows weather and is silent when the weather is none. Each bed dies with the screen that owns it. Opening hour does not get its own bed.
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 
