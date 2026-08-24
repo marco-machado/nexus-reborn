@@ -1,7 +1,7 @@
-// DOM screens: MainMenu, MissionBrief, TeamSelect, Debrief. The world map and
-// research screens live in ./WorldMap and ./Research and are re-exported here.
-// Flow: menu -> world -> brief -> team -> mission -> debrief -> world, with
-// research reachable from the world map nav.
+// DOM screens: MainMenu, MissionBrief, TeamSelect, Debrief. World Network and
+// Research live in ./WorldMap and ./Research and are re-exported here.
+// Flow: menu -> world -> brief -> team -> mission -> debrief -> world. The
+// four Screens share desk chrome; Research and Assembly are also on the nav.
 import './ui.css'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -84,6 +84,7 @@ import { Portrait } from './portrait'
 import { Figure } from './figure'
 import SettingsPanel from './Settings'
 import BalancePanel from './Balance'
+import { ScreenChrome } from './Nav'
 import { unlockAudio } from './sound'
 import {
   AMBER,
@@ -337,6 +338,9 @@ export function MissionBrief() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- spec is derived; its inputs are listed
     [m, spec?.archetype],
   )
+  useEffect(() => {
+    if (!m) goto('world')
+  }, [m, goto])
   if (!m || !tac || !spec || !mods || !callout) return null
   const profile = difficultyNote(difficulty)
   const initials = m.codename
@@ -346,16 +350,12 @@ export function MissionBrief() {
   const contractId = '77A-' + m.codename.replace(/\s+/g, '') + '-2087'
   const lz = tac.extraction
   return (
-    <div className="screen mb">
-      <header className="mb-head">
-        <h1 className="screen-title">MISSION BRIEF</h1>
-        <div className="mb-head-right">
-          <Chip tone="dim">NEXUS GLOBAL // OPS</Chip>
-          <Chip tone="dim">DATETIME: 2087.05.14 {clock}</Chip>
-          <Chip tone="dim">USER: OPS_DIRECTOR</Chip>
-          <Chip tone="teal">SECURE CH 7A</Chip>
-        </div>
-      </header>
+    <ScreenChrome
+      current="brief"
+      title="BRIEF"
+      subtitle={<div className="screen-sub">{m.codename} // {m.city}</div>}
+      className="mb"
+    >
       <div className="mb-main">
         <section className="mb-left">
           {/* orbital recon feed */}
@@ -874,14 +874,6 @@ export function MissionBrief() {
       </div>
       {/* bottom action bar */}
       <footer className="mb-foot">
-        <button
-          type="button"
-          className="btn mb-return"
-          aria-label="RETURN TO THE WORLD NETWORK"
-          onClick={act(() => goto('world'))}
-        >
-          &lt; RETURN
-        </button>
         <div className="mb-comms corners">
           <b>COMMS LOG // CH 7A</b>
           {commsLog(m).map(([t, msg]) => (
@@ -908,7 +900,7 @@ export function MissionBrief() {
           <div className="mb-barcode" aria-hidden="true" />
         </div>
       </footer>
-    </div>
+    </ScreenChrome>
   )
 }
 /* =============================== TEAM SELECT ============================== */
@@ -930,7 +922,7 @@ function RecruitPanel(props: { onClose: () => void }) {
         <header className="ts-recruit-head">
           <b>RECRUITMENT MARKET</b>
           <span className="dim">
-            ROSTER {operatives.length} / {ROSTER_CAP} // FUNDS {fmt(credits)} CR
+            ROSTER {operatives.length} / {ROSTER_CAP} // CREDITS {fmt(credits)} CR
           </span>
           <button
             type="button"
@@ -1023,16 +1015,17 @@ export function TeamSelect() {
   // can rebuild it; everything roster-bound waits for the first hire.
   if (!focus) {
     return (
-      <div className="screen ts">
-        <header className="ts-head">
-          <div>
-            <h1 className="screen-title">OPERATIVE ASSEMBLY</h1>
-            <div className="ts-sub">
-              <span className="ts-strike">STRIKE TEAM 04</span>
-              <Chip tone="red">NO OPERATIVES ON FILE</Chip>
-            </div>
+      <ScreenChrome
+        current="assembly"
+        title="ASSEMBLY"
+        subtitle={
+          <div className="ts-sub">
+            <span className="ts-strike">STRIKE TEAM 04</span>
+            <Chip tone="red">NO OPERATIVES ON FILE</Chip>
           </div>
-        </header>
+        }
+        className="ts"
+      >
         <div className="ts-none">
           <b>ROSTER EMPTY</b>
           <span className="dim">RECRUIT REPLACEMENTS TO REBUILD STRIKE TEAM 04</span>
@@ -1044,17 +1037,9 @@ export function TeamSelect() {
           >
             <span className="cta-inner">RECRUIT &gt;&gt;</span>
           </button>
-          <button
-            type="button"
-            className="btn"
-            aria-label="RETURN TO THE WORLD NETWORK"
-            onClick={act(() => goto('world'))}
-          >
-            &lt; RETURN
-          </button>
         </div>
         {recruitOpen && <RecruitPanel onClose={() => setRecruitOpen(false)} />}
-      </div>
+      </ScreenChrome>
     )
   }
   const xp = xpBonus(roster[focus.id]?.xp ?? 0)
@@ -1084,7 +1069,7 @@ export function TeamSelect() {
   const overKg = mass - MASS_LIMIT_KG
   const ready =
     squad.length >= 1 && squad.every((id) => roster[id]?.status === 'READY')
-  const deployable = ready && overKg <= 0
+  const deployable = !!mission && ready && overKg <= 0
   const augs = wornAugs(done, roster[focus.id]?.pins)
   const cycleBay = (slot: AugSlot): void => {
     const options: Array<BayPin | null> = [null]
@@ -1106,28 +1091,18 @@ export function TeamSelect() {
     setLoadout(focus.id, slot, next)
   }
   return (
-    <div className="screen ts">
-      <header className="ts-head">
-        <div>
-          <h1 className="screen-title">OPERATIVE ASSEMBLY</h1>
-          <div className="ts-sub">
-            <span className="ts-strike">STRIKE TEAM 04</span>
-            <Chip tone="amber">SELECT UP TO FOUR OPERATIVES</Chip>
-            <Chip tone="dim">{squad.length} / 4 ASSIGNED</Chip>
-          </div>
+    <ScreenChrome
+      current="assembly"
+      title="ASSEMBLY"
+      subtitle={
+        <div className="ts-sub">
+          <span className="ts-strike">STRIKE TEAM 04</span>
+          <Chip tone="amber">SELECT UP TO FOUR OPERATIVES</Chip>
+          <Chip tone="dim">{squad.length} / 4 ASSIGNED</Chip>
         </div>
-        <div className="ts-head-right">
-          <Chip tone="dim">SYS VER 1.7.6.2</Chip>
-          <Chip tone="teal">NET: SECURE</Chip>
-          <Chip tone="teal">LINK: NOMINAL</Chip>
-          <Chip tone="dim">CORP INTERNAL // EYES ONLY</Chip>
-          {mission && (
-            <Chip tone="dim">
-              PROFILE: {mission.type} // {mission.district}
-            </Chip>
-          )}
-        </div>
-      </header>
+      }
+      className="ts"
+    >
       <div className="ts-main">
         {/* roster */}
         <aside className="ts-roster">
@@ -1519,38 +1494,34 @@ export function TeamSelect() {
         <div className="ts-deploy">
           <button
             type="button"
-            className="btn ts-return"
-            aria-label="RETURN TO THE WORLD NETWORK"
-            onClick={act(() => goto('world'))}
-          >
-            &lt; RETURN
-          </button>
-          <button
-            type="button"
             className="cta big"
             disabled={!deployable}
             aria-label={
               deployable
                 ? 'DEPLOY STRIKE TEAM 04'
-                : !ready
-                  ? 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
-                  : 'DEPLOY TEAM // ' + overKg.toFixed(1) + ' KG OVER THE MASS LIMIT'
+                : !mission
+                  ? 'DEPLOY TEAM // NO CONTRACT SELECTED'
+                  : !ready
+                    ? 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
+                    : 'DEPLOY TEAM // ' + overKg.toFixed(1) + ' KG OVER THE MASS LIMIT'
             }
             onClick={act(() => goto('mission'))}
           >
             <span className="cta-inner">DEPLOY TEAM &gt;&gt;</span>
           </button>
           <div className="dim mini ts-deploy-sub">
-            {!ready
-              ? 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'
-              : overKg > 0
-                ? 'OFFLOAD ' + overKg.toFixed(1) + ' KG BEFORE DEPLOYMENT'
-                : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
+            {!mission
+              ? 'SELECT A CONTRACT ON THE WORLD NETWORK'
+              : !ready
+                ? 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'
+                : overKg > 0
+                  ? 'OFFLOAD ' + overKg.toFixed(1) + ' KG BEFORE DEPLOYMENT'
+                  : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
           </div>
         </div>
       </footer>
       {recruitOpen && <RecruitPanel onClose={() => setRecruitOpen(false)} />}
-    </div>
+    </ScreenChrome>
   )
 }
 /* ================================= DEBRIEF ================================ */
@@ -1565,6 +1536,7 @@ function DebriefRow(props: { label: string; value: ReactNode; index: number; ton
 }
 export function Debrief() {
   const goto = useAppStore((s) => s.goto)
+  const returnFromDebrief = useAppStore((s) => s.returnFromDebrief)
   const outcome = useAppStore((s) => s.outcome)
   const credits = useAppStore((s) => s.credits)
   const missionId = useAppStore((s) => s.missionId)
@@ -1696,7 +1668,7 @@ export function Debrief() {
           ))}
         </div>
         <div className="db-actions">
-          <button type="button" className="btn" onClick={act(() => goto('world'))}>
+          <button type="button" className="btn" onClick={act(returnFromDebrief)}>
             RETURN TO WORLD NETWORK
           </button>
           {/* A generated contract is spent by its debrief; only authored

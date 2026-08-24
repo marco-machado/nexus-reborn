@@ -56,8 +56,7 @@ import {
 } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
 import { Chip, LockGlyph, Panel, ScrollBox, SegBar, TargetGlyph } from './bits'
-import { NavTabs } from './Nav'
-import { useWorldClock } from './clock'
+import { ScreenChrome } from './Nav'
 import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
 import { ART_BG, RED, WORLD_GLOW } from './tokens'
@@ -826,8 +825,7 @@ function WorldOnboard() {
             <div className="wm-onboard-row">
               <b>AVAILABLE OPERATIONS</b>
               <span>
-                Below it, the open contracts for that sector. Opening one moves to the mission
-                brief.
+                Below it, the open contracts for that sector. Opening one moves to the Brief.
               </span>
             </div>
             <div className="wm-onboard-row">
@@ -882,7 +880,6 @@ export function WorldMap() {
   const contracts = useWorldStore((s) => s.contracts)
   const points = useWorldStore((s) => s.influence)
   const crisis = useWorldStore((s) => s.crisis)
-  useWorldClock()
 
   const def = sectorDef(selected)
   const read = sectorReadout(selected, sectors[selected])
@@ -890,21 +887,12 @@ export function WorldMap() {
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
 
   return (
-    <div className="screen wm">
-      <header className="wm-head">
-        <div>
-          <h1 className="screen-title">WORLD NETWORK</h1>
-          <div className="screen-sub">NEXUS GLOBAL // GEOSTRATEGIC COMMAND INTERFACE</div>
-        </div>
-        <div className="wm-head-right">
-          <Chip tone="dim">SYS:GN-7A</Chip>
-          <Chip tone="dim">PRT:ON</Chip>
-          <Chip tone="dim">SEC:LVL 3</Chip>
-          <Chip tone="teal">NETWORK UPLINK: STRONG</Chip>
-          <Chip tone="dim">COORD {SECTOR_COORD[selected]}</Chip>
-        </div>
-      </header>
-
+    <ScreenChrome
+      current="world"
+      title="WORLD NETWORK"
+      subtitle={<div className="screen-sub">NEXUS GLOBAL // GEOSTRATEGIC COMMAND INTERFACE</div>}
+      className="wm"
+    >
       {campaignFailed && (
         <div className="wm-campaign-fail corners" role="status">
           <span className="wm-campaign-sigil fail" aria-hidden="true">◆</span>
@@ -1032,6 +1020,10 @@ export function WorldMap() {
             bodyClassName="wm-sector-panel-body"
           >
             <SectorInset id={selected} />
+            <div className="kv">
+              <span>COORD</span>
+              <b>{SECTOR_COORD[selected]}</b>
+            </div>
             <div className="wm-cu">
               <div>
                 <label>CONTROL</label>
@@ -1162,11 +1154,11 @@ export function WorldMap() {
             <b className="teal">{fmt(credits)} CR</b>
           </div>
           <div className="kv">
-            <span>INFLUENCE PTS</span>
+            <span>INFLUENCE</span>
             <b className="amber">{points}</b>
           </div>
           <div className="kv">
-            <span>OPERATIVES</span>
+            <span>ROSTER</span>
             <b>{operativeCount} / {ROSTER_CAP}</b>
           </div>
           <div className="kv">
@@ -1179,8 +1171,7 @@ export function WorldMap() {
         </Panel>
       </div>
 
-      <NavTabs current="world" />
       <WorldOnboard />
-    </div>
+    </ScreenChrome>
   )
 }

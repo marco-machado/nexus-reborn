@@ -62,6 +62,8 @@ export interface AppState {
   outcome: MissionOutcome | null
   outcomeSerial: number
   goto: (phase: Phase) => void
+  // Debrief → World Network. Drops the selected contract so Brief locks.
+  returnFromDebrief: () => void
   selectMission: (id: string) => void
   toggleOperative: (id: string) => void
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
@@ -81,6 +83,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   outcome: null,
   outcomeSerial: 0,
   goto: (phase) => set({ phase }),
+  returnFromDebrief: () => set({ phase: 'world', missionId: null }),
   selectMission: (id) => {
     const campaign = useCampaignStore.getState()
     const mission = resolveMission(id)

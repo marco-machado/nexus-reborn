@@ -140,7 +140,7 @@ _Avoid_: Control (that is the sector percentage), capture
 
 **Credits**:
 The spendable currency for research and recruits. Successful contracts and Tax yield add to the account. Failed contracts pay nothing. Authorization refuses an overdraw; it does not borrow.
-_Avoid_: Money, cash, gold, CR as a concept name (CR is the unit)
+_Avoid_: Money, cash, gold, Funds, CR as a concept name (CR is the unit)
 
 **Influence**:
 The spendable points for Influence actions. They do not convert to or from Credits.
@@ -194,7 +194,7 @@ _Avoid_: Payout (that is the net after collateral and bonus), gold
 
 **Brief**:
 The translation of a contract into an operational plan. Its city, insertion, target, extraction, patrols, and counts must be the District that will be deployed.
-_Avoid_: Cutscene, briefing room, dossier (the assembly page is the operative dossier)
+_Avoid_: Cutscene, briefing room, Briefing (as the name of this Screen), dossier (the assembly page is the operative dossier)
 
 **Replay**:
 Running a contract again after success or failure. After a win, an authored contract rotates to its other District layout.
@@ -293,8 +293,8 @@ A point awarded to each survivor at debrief. Each point raises that operative's 
 _Avoid_: XP as a concept name, level, rank
 
 **Assembly**:
-The screen where the director inspects operatives, fills the four Squad bays, fills Item slots, and passes the mass gate.
-_Avoid_: Team select, loadout screen, locker, barracks
+The Screen where the director inspects operatives, fills the four Squad bays, fills Item slots, and passes the mass gate.
+_Avoid_: Team select, loadout screen, locker, barracks, Operatives (as the name of this Screen)
 
 **Deployment mass**:
 The squad's carried weight. It is a real gate: over the limit, deploy is refused. It also sets a squad-wide speed tier.
@@ -355,7 +355,7 @@ The in-mission record of orders, failures, and system lines. Empty or invalid it
 _Avoid_: Chat, radio, console
 
 **Debrief**:
-The invoice after a finished mission. It applies payout, sector movement, intel, influence, and roster changes exactly once, then returns the director to the World Network — or to the Brief to Replay. A quiet replay still debriefs: roster and ETA apply; currencies and sector do not.
+The invoice after a finished mission. It applies payout, sector movement, intel, influence, and roster changes exactly once, then returns the director to the World Network — or to the Brief to Replay. A quiet replay still debriefs: roster and ETA apply; currencies and sector do not. It is not a Screen.
 _Avoid_: Results screen, score, post-game
 
 **Abort**:
@@ -515,6 +515,12 @@ _Avoid_: Hold (the stance), survive
 **Time limit**:
 A countdown from an objective's activation. Expiry fails an optional objective and is a Loss on a required one.
 _Avoid_: Tactical time, mission timer, ETA
+
+## The terminal
+
+**Screen**:
+World Network, Research, Brief, or Assembly. Menu, Mission, and Debrief are not this.
+_Avoid_: page
 
 ## Look
 

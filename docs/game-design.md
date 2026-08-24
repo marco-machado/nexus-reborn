@@ -133,9 +133,10 @@ Cold, procedural, corporate. Violence is logged, not celebrated. Operatives answ
 flowchart LR
     Menu --> WorldNetwork[World Network]
     WorldNetwork <--> Research
+    WorldNetwork <--> Assembly
     WorldNetwork --> Brief
+    Brief <--> Assembly
     Brief --> WorldNetwork
-    Brief --> Assembly
     Assembly --> Mission
     Mission --> Debrief
     Debrief --> WorldNetwork
@@ -146,13 +147,13 @@ flowchart LR
 
 1. The menu offers Continue when a campaign save exists, and New Operation behind a two-step erase.
 2. The World Network opens on Europe.
-3. From the World Network the player inspects sectors, runs or pauses the strategic clock, reads the feed, or opens Research.
+3. From the World Network the player inspects sectors, runs or pauses the strategic clock, reads the feed, or opens Research or Assembly from the nav. Brief unlocks on the nav once a contract is selected.
 4. An unlocked contract opens its brief. Intel gates access.
 5. Accepting a contract goes straight to assembly. There is no buy-in and no second confirm.
 6. Exactly four operatives must be assigned before deployment.
 7. The mission ends when the required objectives are done, or when no living operatives remain.
 8. The debrief applies payout, sector movement, intel, influence, and roster changes once, then returns the player to the World Network (or back to the brief to replay). A quiet replay applies roster and ETA only.
-9. The World Network and Research autosave. The mission and the debrief do not. Aborting a mission discards it. There is no mid-mission resume.
+9. The four Screens autosave. The mission and the debrief do not. Aborting a mission discards it. There is no mid-mission resume. Returning from the debrief to the World Network clears the selected contract; Replay is the only path back into that Brief.
 
 The unsaved mission is a design choice, not a limitation. Once the squad is on the ground, the director is committed.
 
@@ -184,7 +185,7 @@ The World Network is the player’s job between missions. Time is a resource. Le
 
 ### Two clocks
 
-**Strategic time** runs only on the World Network and Research screens. The campaign begins 14 May 2087, 14:32:17 UTC. At 1×, one real second is sixty strategic seconds. Speeds are 1×, 2×, 4×, and 8×; the default is 2×. The clock can be paused. A rolling 24-hour timeline can be scrubbed without changing live state.
+**Strategic time** runs on the four Screens: World Network, Research, Brief, and Assembly. The campaign begins 14 May 2087, 14:32:17 UTC. At 1×, one real second is sixty strategic seconds. Speeds are 1×, 2×, 4×, and 8×; the default is 2×. The clock can be paused. A rolling 24-hour timeline can be scrubbed without changing live state.
 
 **Tactical time** is an independent clock. Each mission opens at its own **Opening hour** on that clock. The World Network does not tick while the squad is in the field. After a win, the debrief spends the contract’s ETA in strategic days, and laboratories, injuries, recruitment, and Tax yield catch up to that new time. See [ADR-0007](adr/0007-opening-hour.md).
 
@@ -745,13 +746,13 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 **Menu.** Establishes the secure-system fiction, unlocks audio on the first gesture, offers Continue and New Operation, and opens Settings.
 
-**World Network.** The job between missions: sectors, ownership, contracts, the clock, the 24-hour review timeline, the feed, credits, influence, roster count, intel. Campaign-complete and campaign-failed banners live here. First visit, a one-shot overlay names the panel groups and the Research tab.
+**World Network.** The job between missions: sectors, ownership, contracts, the clock, the 24-hour review timeline, the feed, credits, influence, roster count, intel. Campaign-complete and campaign-failed banners live here. First visit, a one-shot overlay names the panel groups and the Research tab. The four Screens share a header (title, subtitle, Credits, Influence, Intel, Roster, strategic clock) and a nav: World Network, Research, Brief, Assembly.
 
 **Research.** Three branches. Project states: researched, active, available, locked. Authorization is a spend, not a browse.
 
-**Brief.** Plan. The map must be the district.
+**Brief.** Plan. The map must be the district. Locked on the nav until a contract is selected.
 
-**Assembly.** Inspect, assign, wear or pin augmentation bays, read research-adjusted stats from what is worn, fill two item slots, and pass the 400 kg gate.
+**Assembly.** Inspect, assign, wear or pin augmentation bays, read research-adjusted stats from what is worn, fill two item slots, and pass the 400 kg gate. Reachable between contracts; Deploy is refused without a selected contract.
 
 **Mission HUD.** District clock, live weather, alert, credits, live collateral, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim. A weather front writes a comm-log line.
 
@@ -865,7 +866,7 @@ Audio is synthesized at runtime. It confirms orders, marks danger, and prices vi
 
 Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump. An alert-tension drone tracks the mission alert level (0–3), ramps between levels, and releases when the mission ends.
 
-Two beds: a low industrial drone on the World Network and Research (music), a city-hum on the mission (ambience) with a rain-hiss that follows weather and is silent when the weather is none. Each dies with the screen that owns it. Opening hour does not get its own bed.
+Two beds: a low industrial drone on the four Screens (music), a city-hum on the mission (ambience) with a rain-hiss that follows weather and is silent when the weather is none. Each dies with the screen that owns it. Opening hour does not get its own bed.
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 
@@ -942,7 +943,7 @@ Not unresolved design. Not a veto on shipping.
 - Color-vision presets.
 - Captions for audio cues.
 - Screen-reader pass on the tactical HUD.
-- Time on the World Network and Research, strategic-speed use, research order, Alert duration, explicit versus automatic fire, stance use, street patrols bypassed versus killed, replay rate.
+- Time on the four Screens, strategic-speed use, research order, Alert duration, explicit versus automatic fire, stance use, street patrols bypassed versus killed, replay rate.
 
 ---
 

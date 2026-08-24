@@ -1,6 +1,6 @@
-// The world clock, driven by whichever strategy screen is mounted. World time
-// only advances here, and research projects run on the same clock, so the tick
-// that moves the world is also what finishes them.
+// The world clock, driven by whichever Screen is mounted. World time only
+// advances here, and research projects run on the same clock, so the tick that
+// moves the world is also what finishes them.
 import { useEffect } from 'react'
 import { MAX_DT, useWorldStore } from '../state/worldStore'
 import { useResearchStore } from '../state/researchStore'

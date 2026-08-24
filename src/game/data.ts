@@ -6,8 +6,6 @@ import type { EnemyArchetype, MissionDef, OperativeDef, WeaponDef, WeaponId } fr
 // Campaign state owns the live values. These are only new-operation seeds.
 export const INTEL_LEVEL = 1
 export const INTEL_PROGRESS = 25
-// The unbuilt strategy screens stay locked at every intel level for now.
-export const NAV_LOCK = 'SUBSYSTEM OFFLINE'
 
 export const WEAPONS: Record<WeaponId, WeaponDef> = {
   assault: {

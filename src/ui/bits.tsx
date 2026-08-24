@@ -415,7 +415,7 @@ function itemShape(kind: ItemKind): ReactNode {
   }
 }
 
-export type NavKind = 'world' | 'brief' | 'research' | 'operatives' | 'archives'
+export type NavKind = 'world' | 'brief' | 'research' | 'assembly'
 
 export function NavGlyph(props: { kind: NavKind; size?: number }) {
   const size = props.size ?? 14
@@ -452,19 +452,11 @@ function navShape(kind: NavKind): ReactNode {
           <path d="M4.8 10.6h6.4" strokeWidth="0.9" />
         </g>
       )
-    case 'operatives':
+    case 'assembly':
       return (
         <g fill="none" stroke="currentColor" strokeWidth="1.1">
           <circle cx="8" cy="5.4" r="3" />
           <path d="M2.6 14.2c0-3.2 2.4-5 5.4-5s5.4 1.8 5.4 5" />
-        </g>
-      )
-    case 'archives':
-      return (
-        <g fill="none" stroke="currentColor" strokeWidth="1.1">
-          <rect x="2.2" y="2.6" width="11.6" height="4" />
-          <rect x="2.2" y="8" width="11.6" height="5.4" />
-          <path d="M6.4 10.4h3.2" strokeWidth="1.3" />
         </g>
       )
   }

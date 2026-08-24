@@ -1,10 +1,10 @@
-// Research Division screen. Three branch columns of hex nodes over one project
+// Research screen. Three branch columns of hex nodes over one project
 // list, a lab per branch, and a detail panel that funds the selected project.
 // Every benefit line is generated from the effect the mission applies, so the
 // panel cannot promise a change the game does not make.
 import { useMemo, useState } from 'react'
 import { useAppStore } from '../state/appStore'
-import { stamp, useWorldStore } from '../state/worldStore'
+import { useWorldStore } from '../state/worldStore'
 import {
   committedFunds,
   labsRunning,
@@ -26,8 +26,7 @@ import {
 import type { Branch, ResearchNode } from '../game/research'
 import { Chip, LockGlyph, Panel, ScrollBox, SegBar } from './bits'
 import { researchShape, type ResearchGlyphId } from './researchGlyphs'
-import { NavTabs } from './Nav'
-import { useWorldClock } from './clock'
+import { ScreenChrome } from './Nav'
 import { act, fmt, spanLabel } from './util'
 /* ------------------------------- geometry --------------------------------- */
 // One branch column is drawn as a single scaled SVG, so the hexes and the
@@ -197,16 +196,6 @@ function BranchColumn(props: {
   )
 }
 /* -------------------------------- side panels ----------------------------- */
-function TimeChips() {
-  const t = useWorldStore((s) => s.t)
-  const s = stamp(t)
-  return (
-    <>
-      <Chip tone="dim">DATE {s.date}</Chip>
-      <Chip tone="dim">TIME {s.clock}</Chip>
-    </>
-  )
-}
 function LabRow(props: { branch: Branch; run: LabRun | null; onSelect: (id: string) => void }) {
   const t = useWorldStore((s) => s.t)
   const run = props.run
@@ -286,7 +275,7 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
   else if (state === 'active') sub = 'RUNNING IN ' + branch.lab
   else if (state === 'locked') sub = 'PREREQUISITES NOT MET'
   else if (labBusy) sub = branch.lab + ' ENGAGED // ONE PROJECT PER LAB'
-  else if (short) sub = 'INSUFFICIENT FUNDS // ' + fmt(n.cost - credits) + ' CR SHORT'
+  else if (short) sub = 'INSUFFICIENT CREDITS // ' + fmt(n.cost - credits) + ' CR SHORT'
   return (
     <Panel
       title={nodeTitle(n)}
@@ -389,7 +378,6 @@ export function Research() {
   const done = useResearchStore((s) => s.done)
   const labs = useResearchStore((s) => s.labs)
   const [selected, setSelected] = useState(NODES[0].id)
-  useWorldClock()
   const node = nodeById(selected)
   const open = useMemo(
     () => NODES.filter((n) => nodeState(n, done, labs) === 'available').length,
@@ -398,30 +386,23 @@ export function Research() {
   const running = labsRunning(labs)
   const committed = committedFunds(labs)
   return (
-    <div className="screen rs">
-      <header className="rs-head">
-        <div>
-          <h1 className="screen-title">RESEARCH DIVISION</h1>
-          <div className="screen-sub">CORPORATE R&amp;D NETWORK // ADVANCING TOMORROW</div>
-        </div>
-        <div className="rs-head-right">
-          <div className="rs-chips">
-            <TimeChips />
-            <Chip tone="dim">USER: RD_ADMIN_01</Chip>
-            <Chip tone="teal">FUNDS {fmt(credits)} CR</Chip>
-          </div>
-          <div className="rs-level">
-            <span className="rs-level-label">RESEARCH PROGRAM</span>
-            <SegBar value={(done.length / NODES.length) * 100} tone="green" />
-            <b className="rs-level-n">
-              {done.length} / {NODES.length}
-            </b>
-          </div>
-        </div>
-      </header>
+    <ScreenChrome
+      current="research"
+      title="RESEARCH"
+      subtitle={<div className="screen-sub">CORPORATE R&amp;D NETWORK // ADVANCING TOMORROW</div>}
+      className="rs"
+    >
       <div className="rs-main">
         <aside className="rs-left">
-          <Panel title="DIVISION OVERVIEW" className="rs-overview">
+          <Panel
+            title="DIVISION OVERVIEW"
+            right={
+              <b className="green">
+                {done.length} / {NODES.length}
+              </b>
+            }
+            className="rs-overview"
+          >
             <div className="kv">
               <span>PROJECTS COMPLETE</span>
               <b className="green">{done.length}</b>
@@ -435,11 +416,11 @@ export function Research() {
               <b className="teal">{open}</b>
             </div>
             <div className="kv">
-              <span>COMMITTED FUNDS</span>
+              <span>COMMITTED CREDITS</span>
               <b>{fmt(committed)} CR</b>
             </div>
             <div className="kv">
-              <span>AVAILABLE FUNDS</span>
+              <span>AVAILABLE CREDITS</span>
               <b className="teal">{fmt(credits)} CR</b>
             </div>
           </Panel>
@@ -488,7 +469,6 @@ export function Research() {
           <DetailPanel node={node} done={done} labs={labs} />
         </aside>
       </div>
-      <NavTabs current="research" />
-    </div>
+    </ScreenChrome>
   )
 }

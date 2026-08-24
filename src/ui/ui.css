@@ -57,6 +57,23 @@
   margin-top: 3px;
 }
 
+.screen-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex: none;
+}
+
+.screen-head-right {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  max-width: 58vw;
+}
+
 /* panel chrome */
 .panel {
   position: relative;
@@ -299,7 +316,7 @@
 .tip i { display: flex; justify-content: space-between; gap: 12px; }
 .tip i span { color: var(--ink-dim); }
 
-/* nav tabs, shared by the world map and research screens */
+/* nav tabs, shared by the four Screens */
 .navtabs { display: flex; gap: 8px; flex: none; }
 .navtab-wrap { position: relative; flex: 1; display: flex; }
 
@@ -652,22 +669,6 @@
 /* ------------------------------------------------------------------ */
 /* 3. WORLD MAP                                                       */
 /* ------------------------------------------------------------------ */
-
-.wm-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-  flex: none;
-}
-
-.wm-head-right {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 46vw;
-}
 
 .wm-main {
   display: grid;
@@ -1618,22 +1619,6 @@
 /* 4. MISSION BRIEF                                                   */
 /* ------------------------------------------------------------------ */
 
-.mb-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-  flex: none;
-}
-
-.mb-head-right {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 52vw;
-}
-
 .mb-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 380px);
@@ -1994,8 +1979,6 @@
   flex: none;
 }
 
-.mb-return { align-self: center; padding: 12px 20px; }
-
 /* Shrinks with the window rather than dropping out of the footer: the entries
    ellipsize and keep their full text on hover. */
 .mb-comms {
@@ -2052,24 +2035,8 @@
 /* 5. TEAM SELECT                                                     */
 /* ------------------------------------------------------------------ */
 
-.ts-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-  flex: none;
-}
-
 .ts-sub { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
 .ts-strike { color: var(--teal); letter-spacing: 0.26em; font-size: clamp(13px, 1.2vw, 17px); }
-
-.ts-head-right {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 48vw;
-}
 
 .ts-main {
   display: grid;
@@ -2496,7 +2463,6 @@
 
 .ts-deploy { display: flex; flex-direction: column; gap: 5px; justify-content: center; }
 .ts-deploy .cta { width: 100%; }
-.ts-return { padding: 6px 12px; font-size: calc(10px * var(--text-scale)); }
 .ts-deploy-sub { text-align: center; letter-spacing: 0.2em; }
 
 /* recruitment market: roster-panel entry button plus a modal overlay of
@@ -3353,37 +3319,8 @@ button.hud-slot:focus-visible {
 }
 
 /* ------------------------------------------------------------------ */
-/* 8. RESEARCH DIVISION                                               */
+/* 8. RESEARCH                                                        */
 /* ------------------------------------------------------------------ */
-
-.rs-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-  flex: none;
-}
-
-.rs-head-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 7px;
-  max-width: 50vw;
-}
-
-.rs-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-
-.rs-level {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: clamp(240px, 26vw, 340px);
-}
-
-.rs-level-label { font-size: calc(8.5px * var(--text-scale)); letter-spacing: 0.2em; color: var(--ink-dim); white-space: nowrap; }
-.rs-level .segbar { flex: 1; }
-.rs-level-n { font-size: calc(15px * var(--text-scale)); letter-spacing: 0.1em; color: var(--green); white-space: nowrap; }
 
 .rs-main {
   display: grid;

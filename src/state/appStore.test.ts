@@ -132,6 +132,26 @@ describe('screen flow', () => {
     expect(s.phase).toBe('brief')
   })
 
+  it('returnFromDebrief opens the World Network and clears the selected contract', () => {
+    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().setOutcome(outcome())
+    expect(useAppStore.getState().phase).toBe('debrief')
+    expect(useAppStore.getState().missionId).toBe('m01')
+    useAppStore.getState().returnFromDebrief()
+    const s = useAppStore.getState()
+    expect(s.phase).toBe('world')
+    expect(s.missionId).toBeNull()
+  })
+
+  it('Replay keeps the selected contract when leaving debrief for the Brief', () => {
+    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().setOutcome(outcome())
+    useAppStore.getState().goto('brief')
+    const s = useAppStore.getState()
+    expect(s.phase).toBe('brief')
+    expect(s.missionId).toBe('m01')
+  })
+
   it('refuses an intel-locked mission until the campaign reaches its requirement', () => {
     useAppStore.getState().selectMission('m02')
     expect(useAppStore.getState().missionId).toBeNull()
