@@ -1,4 +1,4 @@
-// Shared desk chrome for the four Screens: header (title, subtitle, stats)
+// Shared chrome for the four Screens: header (title, subtitle, stats)
 // and the destination nav. Brief stays locked until a contract is selected.
 import type { ReactNode } from 'react'
 import { useAppStore } from '../state/appStore'

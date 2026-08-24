@@ -78,6 +78,10 @@ Everything is generated in code: WebAudio (`game/audio.ts`), CanvasTextures (`sc
 
 `src/index.css` `:root` holds the CSS design tokens (`--teal`, `--amber`, `--ink`, …) that drive classes; `src/ui/ui.css` holds screen styles. `src/ui/tokens.ts` is the **single source for every colour drawn in TS/SVG**: an inline SVG fill/stroke or a canvas paint must import from there, never write a hex or rgba literal. The two carry the same values — a palette change touches `index.css` AND `tokens.ts`, and nothing else. The only literals allowed are neutral white/black tints (`#ffffff`, `rgba(255,255,255,…)`, `rgba(0,0,0,…)`) for things like rim seams and scanlines. Shared procedural-SVG helpers live in `ui/glyph.ts` (figure/portrait point formatting and visor/scanline/blur defs); shared UI click/time helpers (`act`, `mmss`, `spanLabel`, `agoLabel`, `utcNow`) live in `ui/util.ts`. Screens are checked at 1280×720; clipping or truncation at that size is a bug.
 
+## Language
+
+Name a thing with its `CONTEXT.md` term or the identifier the code already uses. If it has neither, describe it in plain language until a term is resolved. File comments and commit messages are not names.
+
 ## Commits
 
 Imperative subject line, then a body that says what changed by file, why, and what was verified (lint, build, the click-through). Reference issues with `Closes #N`. This section is the commit style — do not run `git log` to infer one.

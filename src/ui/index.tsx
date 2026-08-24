@@ -1,7 +1,7 @@
 // DOM screens: MainMenu, MissionBrief, TeamSelect, Debrief. World Network and
 // Research live in ./WorldMap and ./Research and are re-exported here.
 // Flow: menu -> world -> brief -> team -> mission -> debrief -> world. The
-// four Screens share desk chrome; Research and Assembly are also on the nav.
+// four Screens share ScreenChrome; Research and Assembly are also on the nav.
 import './ui.css'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'

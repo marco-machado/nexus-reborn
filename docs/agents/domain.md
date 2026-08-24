@@ -42,7 +42,9 @@ Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
 
 When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
+If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`). Describe the gap in plain language. Do not title it.
+
+Implementation talk uses the identifier the code already uses. File comments, commit subjects, and scratch labels are not names, and they do not go into `CONTEXT.md`.
 
 ## Flag ADR conflicts
 

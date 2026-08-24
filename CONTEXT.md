@@ -17,8 +17,8 @@ The house name for the tactical asset the director deploys.
 _Avoid_: Party, fireteam, platoon
 
 **Campaign**:
-One persisted playthrough, from first login until it is marked complete or failed. A campaign is complete when all three authored contracts have been won. It is failed when the roster is empty and the campaign is not already complete. It cannot be both.
-_Avoid_: Save, playthrough, run, profile
+One persisted playthrough, from first login until it is marked complete or failed. It is complete when all three authored contracts have been won, failed when the roster is empty and it is not already complete, and it cannot be both — the World Network banners for those states are not an Internal directive.
+_Avoid_: Save, playthrough, run, profile, campaign directive
 
 **New Operation**:
 The menu action that erases the current campaign and starts another. Settings survive it. A mission in progress does not.
@@ -27,8 +27,8 @@ _Avoid_: New game, new campaign, reset — except as informal speech for this ac
 ## Time
 
 **Strategic time**:
-The clock of the World Network and the laboratories. It does not run during a mission. After a win, the contract's ETA is spent here so labs, injuries, and recruitment catch up.
-_Avoid_: World time, campaign time, game time
+The clock of the World Network and the laboratories. It does not run during a mission. After a win, the contract's ETA is spent here so labs, injuries, and recruitment catch up. Clock speed and Pause apply here.
+_Avoid_: World time, campaign time, game time, world clock, world hours
 
 **Tactical time**:
 The independent clock of one mission. Each mission opens at its own Opening hour. The World Network does not tick while the team is in the field.
@@ -38,9 +38,25 @@ _Avoid_: Mission timer (that is an objective limit), world time
 The time of day the tactical clock starts at for one mission. Lighting follows from it. It is authored or rolled, independent of strategic time and of Weather.
 _Avoid_: time of day (as a second field), lighting band, night (as a mission type)
 
+**Clock speed**:
+The multiplier on Strategic time while the director is on a Screen: 1×, 2×, 4×, or 8×.
+_Avoid_: Game speed, time scale, time control
+
+**Pause**:
+Stops Strategic time on the Screens. The in-mission pause menu stops Tactical time instead.
+_Avoid_: Halt, freeze, world pause as a second clock
+
+**Live**:
+The World Network when Review time is unset. The strategic clock is the present.
+_Avoid_: Real time, current (alone), now (the timeline tick)
+
 **Review time**:
-A historical point on the World Network's 24-hour timeline. Scrubbing it does not change live state.
+A historical point on the World Network's Timeline. Scrubbing it does not change live state.
 _Avoid_: Playback, rewind
+
+**Timeline**:
+The World Network's rolling 24-hour strip of World Events. Scrubbing it sets Review time. It does not change live state.
+_Avoid_: Playback, rewind, history bar, time code (the clock readout)
 
 **ETA**:
 The strategic days a won contract costs, including a quiet replay. A loss spends none.
@@ -57,8 +73,12 @@ The World Network's flat projection of sectors, cities, and open contracts. Lati
 _Avoid_: World map, globe, atlas, overworld
 
 **Sector**:
-A continental theatre with its own control, unrest, tax yield, garrison condition, and generated-contract market. Six sectors are open. Antarctica is locked at every intel level.
-_Avoid_: Continent, region, zone, territory
+A continental theatre with its own control, unrest, tax yield, garrison condition, and generated-contract market. Six sectors are open. Antarctica is locked at every intel level and prints no survey data.
+_Avoid_: Continent, region, zone, territory, continental sector (as a second kind)
+
+**Focus**:
+The sector the director is inspecting on the World Network. The plate, the sector readout, Influence actions, the Event forecast, and the open-contract list all read this sector.
+_Avoid_: Selected sector, current sector, target sector (target is a landmark)
 
 **City**:
 A named settlement with a corporate holder. A sector's color is the holder of the most of its cities; a tie is Contested.
@@ -98,7 +118,11 @@ _Avoid_: Fog, unexplored
 
 **Control**:
 A percentage on each sector. It does not belong to a corporation.
-_Avoid_: Ownership (that is city holders), influence, current order, lid
+_Avoid_: Ownership (that is city holders), influence, current order, lid, taking a city (that is Ownership), control key (the holder legend)
+
+**Control key**:
+The plate legend of sector colors — each Holder, Contested, and Unknown — counting sectors, not cities. It is not Control.
+_Avoid_: Legend, faction key, ownership key, color key
 
 **Unrest**:
 How unstable a sector is. High unrest weights world events toward that sector, adds street patrols and civilians to its missions, and can open Crisis.
@@ -121,20 +145,28 @@ Credits paid every 24 strategic hours from a Nexus-held sector's Control and Unr
 _Avoid_: Weekly tax, GDP, income (alone)
 
 **World Event**:
-A dated change on the strategic clock: riot, blackout, CorpSec raid, trade agreement, or seizure, plus contract, crisis, influence, and KIA notices.
+A dated change on the strategic clock. The five rollable Event categories sit here, plus posted contract, crisis, influence, and KIA notices.
 _Avoid_: News, incident, log line
+
+**Event category**:
+One of the five rollable World Event kinds: Riot, Blackout, CorpSec raid, Trade agreement, or Seizure. Seizure here is not Type seizure; contract, crisis, influence, and KIA notices are posted, not rolled.
+_Avoid_: Incident type, news type, seize (as a contract Type)
 
 **Feed**:
 The World Network log of World Events. It is a record, not a verb.
-_Avoid_: Chat, news ticker, event list
+_Avoid_: Chat, news ticker, event list, global events, traffic (the empty state)
 
 **Event forecast**:
-At intel 2+, the chance of each World Event category landing in the focused sector over the next six strategic hours.
-_Avoid_: Prediction, horoscope, threat forecast
+At intel 2+, the chance of each Event category landing in the focused sector over the next six strategic hours.
+_Avoid_: Prediction, horoscope, threat forecast, world hours, forecast (alone)
 
 **Ownership**:
-Which Holder has each city. A mission win hands the mission city to Nexus Global. A loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector's open generated contracts.
+Which Holder has each city. A mission win hands the mission city to Nexus Global. A loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector's open generated contracts. A feed line that a corporation takes a city is this, not Control.
 _Avoid_: Control (that is the sector percentage), capture
+
+**Nexus-held**:
+Said of a city or a sector: a Nexus-held city has Nexus Global as Holder; a Nexus-held sector has Nexus Global as its plate color. Only a Nexus-held sector pays Tax yield.
+_Avoid_: Owned, captured, Nexus sector (the house is Nexus Global)
 
 ## Currencies and intel
 
@@ -143,16 +175,36 @@ The spendable currency for research and recruits. Successful contracts and Tax y
 _Avoid_: Money, cash, gold, Funds, CR as a concept name (CR is the unit)
 
 **Influence**:
-The spendable points for Influence actions. They do not convert to or from Credits.
-_Avoid_: Influence index, global control, reputation, favor, trickle
+The spendable currency for Influence actions. They do not convert to or from Credits. PTS (P) is the unit.
+_Avoid_: Influence index, global control, reputation, favor, trickle, points as a concept name
 
 **Influence action**:
-A numbered sector spend with a cooldown: Stabilize (cuts unrest), Lobby (raises control), or Expedite (waives a generated contract's intel gate and extends its expiry).
-_Avoid_: Policy, edict, button, sector action
+A numbered sector spend with a cooldown: Stabilize, Lobby, or Expedite. A spend in progress reads Active; the spendable row is not operative Ready.
+_Avoid_: Policy, edict, button, sector action, ready (that is an operative)
+
+**Stabilize**:
+The Influence action that cuts Unrest over strategic hours.
+_Avoid_: Calm, suppress (suppression is a contract Type)
+
+**Lobby**:
+The Influence action that raises Control over strategic hours.
+_Avoid_: Diplomacy, standing
+
+**Expedite**:
+The Influence action that waives a generated contract's Intel gate and extends its Expiry.
+_Avoid_: Rush, unlock, boost
 
 **Intel**:
 An earned level, filled by progress, that gates contracts and unlocks the Event forecast and the Risk index. A contract win awards progress. A Clean win awards more. A loss awards nothing.
-_Avoid_: XP, rank, clearance (except as fiction on the login)
+_Avoid_: XP, rank, clearance (except as fiction on the login), sector intel (there is no sector-intel system)
+
+**Intel gate**:
+The intel level a contract requires to open. A contract below it prints Locked. Expedite can waive it on a generated contract.
+_Avoid_: Lock (as a system), clearance, unlock, intel requirement
+
+**Chance**:
+The derived success percentage printed on a contract marker and the open-contract list, moving with Threat, Weather, Unrest, research, and Difficulty. At intel 2+ the Brief replaces it with the Risk index; the World Network still prints the percentage.
+_Avoid_: Odds, success rate, projected success (the Brief's lower-intel label), risk index
 
 **Risk index**:
 Low / Guarded / High / Severe, computed from the live deployment — patrols, garrison, civilians, toughness, and the clearer weather on the weather script — and shown on the brief at intel 2+ in place of a raw success percentage.
@@ -165,8 +217,8 @@ _Avoid_: Risk index, difficulty, alert, network threat, defense rating
 ## Contracts
 
 **Contract**:
-Work with a client, a city, a type, a threat, a reward, and an ETA. Accepting it is free. Authored and generated contracts are the same kind of work.
-_Avoid_: Operation, mission (the deployment), job, gig, quest
+Work with a client, a city, a type, a threat, a reward, and an ETA. Accepting it is free. Authored and generated contracts are the same kind of work. Posted work on the World Network is still this; the operations list is not a second kind.
+_Avoid_: Operation, mission (the deployment), job, gig, quest, available operation
 
 **Codename**:
 The call-sign the director reads for a contract or an operative. Authored contract codenames are fixed. Generated contract codenames are a rolled word pair. An operative also has a civilian name.
@@ -184,8 +236,12 @@ _Avoid_: Side mission, filler, random mission, procedural mission
 A tag on a generated contract: shorter expiry, and often a premium. Crisis and some riots apply it. Expedite can apply it by waiving the intel gate.
 _Avoid_: Urgent, flagged
 
+**Expiry**:
+When a generated contract leaves the market if it is still open. Priority shortens it; Expedite extends it.
+_Avoid_: EXP (that is not Experience), timer, deadline, TTL
+
 **Type**:
-The job family of a contract: seizure, extraction, sabotage, or suppression. Type chooses the District family and the objective set.
+The job family of a contract: seizure, extraction, sabotage, or suppression. Type chooses the District family and the objective set. Type seizure is not the Seizure Event category.
 _Avoid_: Mode, genre
 
 **Reward**:
@@ -278,7 +334,7 @@ _Avoid_: Recruit (the act of hiring), applicant, merc
 
 **Ready**:
 An operative who can be assigned.
-_Avoid_: Available, healthy, active
+_Avoid_: Available, healthy, active, the Influence action row (that row is spendable)
 
 **Injured**:
 A survivor who ended a mission below the injury threshold. They leave the squad at debrief and cannot be assigned until their downtime elapses.
