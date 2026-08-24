@@ -1,8 +1,18 @@
-// Procedural WebAudio SFX. No assets: every voice is synthesized on the fly
-// from a shared noise buffer and short oscillator envelopes. All entry points
-// are safe to call when audio is unavailable (construction failure, no ctx).
+// Clip-backed one-shots and rain hiss. The alert-tension drone and the
+// strategy / mission beds stay synthesized (beds until the #48 clip set).
+// All entry points are safe to call when audio is unavailable.
 import type { WeaponId, Weather } from './types'
 import { getWorld } from './runtime'
+import {
+  CLIPS,
+  gunClipUrl,
+  ONE_SHOT_URLS,
+  rainClipUrl,
+  type GunSide,
+} from './sfxClips'
+
+export type { GunSide }
+export { gunClipUrl }
 
 type AcCtor = typeof AudioContext
 
@@ -26,9 +36,21 @@ let uiGain: GainNode | null = null
 let combatGain: GainNode | null = null
 let musicGain: GainNode | null = null
 let ambienceGain: GainNode | null = null
-let noise: AudioBuffer | null = null
 let failed = false
 const lastAt: Record<string, number> = {}
+
+// Decode cache lives on the current context. A new context (tests, or a
+// construction retry) drops both the buffers and in-flight fetches.
+let decodeCtx: AudioContext | null = null
+const decoded = new Map<string, AudioBuffer>()
+const inflight = new Map<string, Promise<AudioBuffer | null>>()
+
+function resetDecodeCache(c: AudioContext): void {
+  if (decodeCtx === c) return
+  decoded.clear()
+  inflight.clear()
+  decodeCtx = c
+}
 
 // Alert tension drone: two detuned saws through a lowpass, held while the
 // mission alert level is up. Built lazily on the first nonzero level and kept
@@ -105,6 +127,7 @@ function ensure(): Live | null {
       return null
     }
     ctx = new AC()
+    resetDecodeCache(ctx)
     master = ctx.createGain()
     master.connect(ctx.destination)
     uiGain = ctx.createGain()
@@ -116,7 +139,9 @@ function ensure(): Live | null {
     ambienceGain = ctx.createGain()
     ambienceGain.connect(master)
     applyLevels()
-    return { c: ctx, ui: uiGain, combat: combatGain, music: musicGain, ambience: ambienceGain }
+    const live = { c: ctx, ui: uiGain, combat: combatGain, music: musicGain, ambience: ambienceGain }
+    preloadOneShots(live)
+    return live
   } catch {
     failed = true
     ctx = null
@@ -127,6 +152,46 @@ function ensure(): Live | null {
     ambienceGain = null
     return null
   }
+}
+
+function decodeClip(live: Live, url: string): Promise<AudioBuffer | null> {
+  const hit = decoded.get(url)
+  if (hit) return Promise.resolve(hit)
+  const pending = inflight.get(url)
+  if (pending) return pending
+  const work = (async () => {
+    try {
+      const res = await fetch(url)
+      const raw = await res.arrayBuffer()
+      const buf = await live.c.decodeAudioData(raw)
+      decoded.set(url, buf)
+      return buf
+    } catch {
+      return null
+    } finally {
+      inflight.delete(url)
+    }
+  })()
+  inflight.set(url, work)
+  return work
+}
+
+function preloadOneShots(live: Live): void {
+  for (const url of ONE_SHOT_URLS) void decodeClip(live, url)
+}
+
+function playOneShot(live: Live, dest: AudioNode, url: string): void {
+  void decodeClip(live, url).then((buf) => {
+    if (!buf || ctx !== live.c) return
+    try {
+      const src = live.c.createBufferSource()
+      src.buffer = buf
+      src.connect(dest)
+      src.start(0)
+    } catch {
+      // fail silent
+    }
+  })
 }
 
 // Resume the context on a user gesture. Safe to call repeatedly.
@@ -148,242 +213,68 @@ function gate(key: string, minGap: number): Live | null {
   return live
 }
 
-function noiseBuffer(c: AudioContext): AudioBuffer {
-  if (noise) return noise
-  const len = c.sampleRate
-  const buf = c.createBuffer(1, len, c.sampleRate)
-  const d = buf.getChannelData(0)
-  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
-  noise = buf
-  return buf
-}
-
-interface BurstOpts {
-  dur: number
-  type: BiquadFilterType
-  freq: number
-  q: number
-  gain: number
-  freqEnd?: number
-  at?: number
-}
-
-function burst(live: Live, out: AudioNode, o: BurstOpts): void {
-  const t0 = live.c.currentTime + (o.at ?? 0)
-  const src = live.c.createBufferSource()
-  src.buffer = noiseBuffer(live.c)
-  src.loop = true
-  src.playbackRate.value = 0.85 + Math.random() * 0.3
-  const flt = live.c.createBiquadFilter()
-  flt.type = o.type
-  flt.Q.value = o.q
-  flt.frequency.setValueAtTime(o.freq, t0)
-  if (o.freqEnd !== undefined) {
-    flt.frequency.exponentialRampToValueAtTime(Math.max(20, o.freqEnd), t0 + o.dur)
-  }
-  const g = live.c.createGain()
-  g.gain.setValueAtTime(o.gain, t0)
-  g.gain.exponentialRampToValueAtTime(0.001, t0 + o.dur)
-  src.connect(flt).connect(g).connect(out)
-  src.start(t0, Math.random() * 0.9)
-  src.stop(t0 + o.dur + 0.05)
-}
-
-interface ToneOpts {
-  dur: number
-  type: OscillatorType
-  f0: number
-  f1?: number
-  gain: number
-  at?: number
-}
-
-function tone(live: Live, out: AudioNode, o: ToneOpts): void {
-  const t0 = live.c.currentTime + (o.at ?? 0)
-  const osc = live.c.createOscillator()
-  osc.type = o.type
-  osc.frequency.setValueAtTime(o.f0, t0)
-  if (o.f1 !== undefined) {
-    osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.f1), t0 + o.dur)
-  }
-  const g = live.c.createGain()
-  g.gain.setValueAtTime(o.gain, t0)
-  g.gain.exponentialRampToValueAtTime(0.001, t0 + o.dur)
-  osc.connect(g).connect(out)
-  osc.start(t0)
-  osc.stop(t0 + o.dur + 0.03)
-}
-
-interface GunVoice {
-  noise: BurstOpts
-  punch: ToneOpts
-  sub?: ToneOpts
-}
-
-const GUNS: Record<WeaponId, GunVoice> = {
-  assault: {
-    noise: { dur: 0.09, type: 'bandpass', freq: 1700, q: 0.9, gain: 0.5, freqEnd: 480 },
-    punch: { dur: 0.05, type: 'square', f0: 330, f1: 95, gain: 0.3 },
-  },
-  smg: {
-    noise: { dur: 0.05, type: 'bandpass', freq: 2500, q: 1.1, gain: 0.34, freqEnd: 900 },
-    punch: { dur: 0.03, type: 'triangle', f0: 520, f1: 170, gain: 0.2 },
-  },
-  pistol: {
-    noise: { dur: 0.07, type: 'bandpass', freq: 1500, q: 0.9, gain: 0.42, freqEnd: 420 },
-    punch: { dur: 0.045, type: 'square', f0: 400, f1: 120, gain: 0.26 },
-  },
-  longrifle: {
-    noise: { dur: 0.3, type: 'lowpass', freq: 700, q: 0.7, gain: 0.95, freqEnd: 120 },
-    punch: { dur: 0.06, type: 'square', f0: 260, f1: 70, gain: 0.4 },
-    sub: { dur: 0.28, type: 'sine', f0: 110, f1: 34, gain: 0.5 },
-  },
-  shotgun: {
-    noise: { dur: 0.2, type: 'lowpass', freq: 520, q: 0.6, gain: 0.85, freqEnd: 110 },
-    punch: { dur: 0.07, type: 'square', f0: 210, f1: 60, gain: 0.42 },
-    sub: { dur: 0.18, type: 'sine', f0: 95, f1: 40, gain: 0.4 },
-  },
-}
-
-export type GunSide = 'squad' | 'corpsec'
-
-// Test-facing radio-ack recipe. confirmBlip() plays this on the UI bus.
-export const RADIO_BLIP = {
-  bus: 'ui' as const,
-  // Whole click stays under 120 ms so a flurry of orders does not pile up.
-  dur: 0.09,
-  lowpassHz: 2600,
-  bandpassHz: 1750,
-  bandpassQ: 0.85,
-  tone: { dur: 0.055, type: 'square' as const, f0: 1320, f1: 880, gain: 0.1 },
-  hiss: { dur: 0.04, type: 'bandpass' as const, freq: 2200, q: 1.6, gain: 0.055 },
-}
-
-// Test-facing alert identity. Combat body plus a UI pip; objective stays on UI.
-export const ALERT_STING = {
-  bus: 'combat' as const,
-  pipBus: 'ui' as const,
-  objectiveBus: 'ui' as const,
-  pip: { dur: 0.045, type: 'square' as const, f0: 1560, f1: 2100, gain: 0.09 },
-}
-
-// Squad voice as authored; CorpSec is darker, narrower, lower punch.
-export function gunVoiceFor(weaponId: WeaponId, side: GunSide = 'squad'): GunVoice {
-  const base = GUNS[weaponId] ?? GUNS.pistol
-  if (side !== 'corpsec') return base
-  return {
-    noise: {
-      ...base.noise,
-      freq: base.noise.freq * 0.58,
-      freqEnd: (base.noise.freqEnd ?? base.noise.freq * 0.35) * 0.52,
-      gain: base.noise.gain * 0.68,
-      q: base.noise.q * 1.4,
-    },
-    punch: {
-      ...base.punch,
-      f0: base.punch.f0 * 0.76,
-      f1: (base.punch.f1 ?? base.punch.f0 * 0.3) * 0.76,
-      gain: base.punch.gain * 0.58,
-    },
-    sub: base.sub
-      ? {
-          ...base.sub,
-          f0: base.sub.f0 * 0.76,
-          f1: (base.sub.f1 ?? base.sub.f0 * 0.3) * 0.76,
-          gain: base.sub.gain * 0.5,
-        }
-      : undefined,
-  }
-}
-
 export const sfx = {
   gunshot(weaponId: WeaponId, side: GunSide = 'squad'): void {
     const live = gate('shot-' + side + '-' + weaponId, 0.025)
     if (!live) return
-    const v = gunVoiceFor(weaponId, side)
-    burst(live, live.combat, v.noise)
-    tone(live, live.combat, v.punch)
-    if (v.sub) tone(live, live.combat, v.sub)
+    playOneShot(live, live.combat, gunClipUrl(weaponId, side))
   },
 
   reload(): void {
     const live = gate('reload', 0.15)
     if (!live) return
-    burst(live, live.combat, { dur: 0.025, type: 'bandpass', freq: 2800, q: 3, gain: 0.22 })
-    burst(live, live.combat, { dur: 0.03, type: 'bandpass', freq: 2100, q: 3, gain: 0.26, at: 0.11 })
-    tone(live, live.combat, { dur: 0.05, type: 'square', f0: 240, f1: 130, gain: 0.12, at: 0.11 })
+    playOneShot(live, live.combat, CLIPS.reload)
   },
 
   confirmBlip(): void {
     const live = gate('blip', 0.05)
     if (!live) return
-    const p = RADIO_BLIP
-    const bp = live.c.createBiquadFilter()
-    bp.type = 'bandpass'
-    bp.frequency.value = p.bandpassHz
-    bp.Q.value = p.bandpassQ
-    const lp = live.c.createBiquadFilter()
-    lp.type = 'lowpass'
-    lp.frequency.value = p.lowpassHz
-    const mix = live.c.createGain()
-    mix.gain.value = 1
-    bp.connect(lp).connect(mix).connect(live.ui)
-    tone(live, bp, p.tone)
-    burst(live, lp, p.hiss)
+    playOneShot(live, live.ui, CLIPS.confirm)
   },
 
   alertSting(): void {
     const live = gate('alert', 0.25)
     if (!live) return
-    tone(live, live.combat, { dur: 0.3, type: 'sawtooth', f0: 480, f1: 190, gain: 0.22 })
-    tone(live, live.combat, { dur: 0.3, type: 'sawtooth', f0: 604, f1: 240, gain: 0.14 })
-    // UI pip so the sting still cuts through a dense firefight.
-    tone(live, live.ui, ALERT_STING.pip)
+    playOneShot(live, live.combat, CLIPS.alertSting)
   },
 
   objectiveChime(): void {
     const live = gate('objective', 0.25)
     if (!live) return
-    tone(live, live.ui, { dur: 0.14, type: 'sine', f0: 660, gain: 0.22 })
-    tone(live, live.ui, { dur: 0.16, type: 'sine', f0: 880, gain: 0.22, at: 0.09 })
-    tone(live, live.ui, { dur: 0.3, type: 'sine', f0: 1320, gain: 0.18, at: 0.18 })
+    playOneShot(live, live.ui, CLIPS.objective)
   },
 
   deathThud(): void {
     const live = gate('thud', 0.06)
     if (!live) return
-    tone(live, live.combat, { dur: 0.3, type: 'sine', f0: 130, f1: 38, gain: 0.5 })
-    burst(live, live.combat, { dur: 0.12, type: 'lowpass', freq: 260, q: 0.7, gain: 0.3 })
+    playOneShot(live, live.combat, CLIPS.death)
   },
 
   blast(): void {
     const live = gate('blast', 0.12)
     if (!live) return
-    burst(live, live.combat, { dur: 0.42, type: 'lowpass', freq: 620, q: 0.55, gain: 1, freqEnd: 80 })
-    tone(live, live.combat, { dur: 0.45, type: 'sine', f0: 105, f1: 28, gain: 0.62 })
-    burst(live, live.combat, { dur: 0.12, type: 'bandpass', freq: 1800, q: 0.8, gain: 0.34, at: 0.025 })
+    playOneShot(live, live.combat, CLIPS.blast)
   },
 
-  // Role ability activation: a short rising double blip, brighter than the
-  // order confirm so an ability firing reads as its own event.
+  // Role ability activation: a short mark on combat so an ability firing
+  // reads as its own event, not an order confirm.
   abilityCue(): void {
     const live = gate('ability', 0.12)
     if (!live) return
-    tone(live, live.combat, { dur: 0.09, type: 'square', f0: 620, f1: 990, gain: 0.16 })
-    tone(live, live.combat, { dur: 0.12, type: 'sine', f0: 1240, f1: 1560, gain: 0.12, at: 0.06 })
+    playOneShot(live, live.combat, CLIPS.ability)
   },
 
   uiClick(): void {
     const live = gate('ui', 0.03)
     if (!live) return
-    tone(live, live.ui, { dur: 0.02, type: 'square', f0: 1500, f1: 900, gain: 0.12 })
+    playOneShot(live, live.ui, CLIPS.uiClick)
   },
 
   // One short data blip per second of interact channel progress.
   interactTick(): void {
     const live = gate('interact', 0.2)
     if (!live) return
-    tone(live, live.ui, { dur: 0.05, type: 'square', f0: 1180, f1: 1420, gain: 0.14 })
+    playOneShot(live, live.ui, CLIPS.interact)
   },
 
   // A round landing on one of ours: a dull body thump under the gunshot, so a
@@ -391,8 +282,7 @@ export const sfx = {
   agentHit(): void {
     const live = gate('agenthit', 0.12)
     if (!live) return
-    tone(live, live.combat, { dur: 0.12, type: 'sine', f0: 180, f1: 55, gain: 0.3 })
-    burst(live, live.combat, { dur: 0.06, type: 'lowpass', freq: 420, q: 0.8, gain: 0.18 })
+    playOneShot(live, live.combat, CLIPS.agentHit)
   },
 
   // Sets the tension drone to the mission alert level, 0..3. Level 0 ramps to
@@ -442,13 +332,21 @@ export const sfx = {
 }
 
 // Looping beds. Strategy rides the music stage (a low industrial drone);
-// mission rides ambience (rain hiss + city hum). Built lazily, torn down on
-// stop. Safe with no AudioContext: ensure() returns null and these no-op.
+// mission rides ambience (rain clips + synthesized city hum). Built lazily,
+// torn down on stop. Safe with no AudioContext: ensure() returns null and
+// these no-op.
+interface RainVoice {
+  kind: 'light' | 'heavy'
+  src: AudioBufferSourceNode
+  gain: GainNode
+}
+
 interface Bed {
   oscs: OscillatorNode[]
   srcs: AudioBufferSourceNode[]
   gain: GainNode
-  rainGain?: GainNode
+  rains: RainVoice[]
+  rainWant: 'light' | 'heavy' | null
 }
 
 // Near-silent on a dry mission so a later front can ramp the hiss in.
@@ -461,6 +359,7 @@ export function missionRainGain(weather: Weather): number {
 let strategyBed: Bed | null = null
 let missionBed: Bed | null = null
 const BED_FADE = 0.45
+const RAIN_FADE = 0.4
 
 function stopBed(bed: Bed | null): void {
   if (!bed || !ctx) return
@@ -508,12 +407,54 @@ export function startStrategyBed(): void {
   osc1.start(now)
   osc2.start(now)
   gain.gain.exponentialRampToValueAtTime(0.09, now + 0.8)
-  strategyBed = { oscs: [osc1, osc2], srcs: [], gain }
+  strategyBed = { oscs: [osc1, osc2], srcs: [], gain, rains: [], rainWant: null }
 }
 
 export function stopStrategyBed(): void {
   stopBed(strategyBed)
   strategyBed = null
+}
+
+function startRainVoice(live: Live, bed: Bed, kind: 'light' | 'heavy'): void {
+  void decodeClip(live, rainClipUrl(kind)).then((buf) => {
+    if (!buf || ctx !== live.c || missionBed !== bed) return
+    if (bed.rainWant !== kind) return
+    if (bed.rains.some((v) => v.kind === kind)) return
+    try {
+      const gain = live.c.createGain()
+      gain.gain.value = 0.0001
+      gain.connect(bed.gain)
+      const src = live.c.createBufferSource()
+      src.buffer = buf
+      src.loop = true
+      src.connect(gain)
+      const now = live.c.currentTime
+      src.start(0)
+      gain.gain.exponentialRampToValueAtTime(missionRainGain(kind), now + RAIN_FADE)
+      bed.rains.push({ kind, src, gain })
+      bed.srcs.push(src)
+    } catch {
+      // fail silent
+    }
+  })
+}
+
+function fadeOutRain(bed: Bed, keep: 'light' | 'heavy' | null): void {
+  if (!ctx) return
+  const now = ctx.currentTime
+  for (const voice of bed.rains) {
+    if (voice.kind === keep) continue
+    const g = voice.gain.gain
+    g.cancelScheduledValues(now)
+    g.setValueAtTime(Math.max(0.0001, g.value), now)
+    g.exponentialRampToValueAtTime(0.0001, now + RAIN_FADE)
+    try {
+      voice.src.stop(now + RAIN_FADE + 0.05)
+    } catch {
+      // already stopped
+    }
+  }
+  bed.rains = keep ? bed.rains.filter((v) => v.kind === keep) : []
 }
 
 export function startMissionBed(): void {
@@ -524,17 +465,6 @@ export function startMissionBed(): void {
   const gain = live.c.createGain()
   gain.gain.value = 0.0001
   gain.connect(live.ambience)
-  const rain = live.c.createBufferSource()
-  rain.buffer = noiseBuffer(live.c)
-  rain.loop = true
-  const rainFlt = live.c.createBiquadFilter()
-  rainFlt.type = 'highpass'
-  rainFlt.frequency.value = 1400
-  rainFlt.Q.value = 0.5
-  const rainGain = live.c.createGain()
-  const opening = getWorld()?.weather ?? 'none'
-  rainGain.gain.value = missionRainGain(opening)
-  rain.connect(rainFlt).connect(rainGain).connect(gain)
   const hum = live.c.createOscillator()
   hum.type = 'sine'
   hum.frequency.value = 62
@@ -544,23 +474,36 @@ export function startMissionBed(): void {
   const humGain = live.c.createGain()
   humGain.gain.value = 0.05
   hum.connect(humFlt).connect(humGain).connect(gain)
-  rain.start(now)
   hum.start(now)
   gain.gain.exponentialRampToValueAtTime(0.16, now + 0.7)
-  missionBed = { oscs: [hum], srcs: [rain], gain, rainGain }
+  missionBed = { oscs: [hum], srcs: [], gain, rains: [], rainWant: null }
+  const opening = getWorld()?.weather ?? 'none'
+  setMissionBedWeather(opening)
 }
 
 export function setMissionBedWeather(weather: Weather): void {
-  if (!missionBed?.rainGain || !ctx) return
-  const now = ctx.currentTime
-  const g = missionBed.rainGain.gain
-  const next = missionRainGain(weather)
-  g.cancelScheduledValues(now)
-  g.setValueAtTime(Math.max(0.0001, g.value), now)
-  g.exponentialRampToValueAtTime(Math.max(0.0001, next), now + 0.4)
+  if (!missionBed || !ctx) return
+  const live = ensure()
+  if (!live) return
+  const want: 'light' | 'heavy' | null = weather === 'none' ? null : weather
+  const bed = missionBed
+  bed.rainWant = want
+  fadeOutRain(bed, want)
+  if (!want) return
+  const current = bed.rains.find((v) => v.kind === want)
+  if (current) {
+    const now = live.c.currentTime
+    const g = current.gain.gain
+    g.cancelScheduledValues(now)
+    g.setValueAtTime(Math.max(0.0001, g.value), now)
+    g.exponentialRampToValueAtTime(missionRainGain(want), now + RAIN_FADE)
+    return
+  }
+  startRainVoice(live, bed, want)
 }
 
 export function stopMissionBed(): void {
+  if (missionBed) missionBed.rainWant = null
   stopBed(missionBed)
   missionBed = null
 }

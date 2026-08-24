@@ -862,15 +862,17 @@ Effects stay sparse and informative: colored tracers, muzzle and impact flashes,
 
 ## 15. Audio direction
 
-Audio is synthesized at runtime. It confirms orders, marks danger, and prices violence. It does not narrate.
+Audio confirms orders, marks danger, and prices violence. It does not narrate.
 
-Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump. An alert-tension drone tracks the mission alert level (0–3), ramps between levels, and releases when the mission ends.
+Combat and UI one-shots, and the mission rain hiss, are committed one-shot and loop clips. The alert-tension drone is synthesized so it can ramp with the mission alert level (0–3) and release when the mission ends. Until the bed-clip set lands, the strategy industrial drone and the mission city-hum stay synthesized.
+
+Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump.
 
 Two beds: a low industrial drone on the four Screens (music), a city-hum on the mission (ambience) with a rain-hiss that follows weather and is silent when the weather is none. Each dies with the screen that owns it. Opening hour does not get its own bed.
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 
-There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Clearer separation among squad, CorpSec, UI, and objective voices, and an optional synthetic radio treatment on acknowledgements, are welcome polish inside the current system. Acknowledgements are a short band-limited radio click on the UI bus; CorpSec gunshots are a darker, narrower restatement of the squad voice; the alert sting keeps a combat body plus a brief UI pip so it stays audible in a firefight.
+There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Acknowledgements are a short radio click on the UI bus; CorpSec gunshots are a darker, narrower restatement of the squad voice as a separate clip; the alert sting is one combat clip that already includes the UI pip so it stays audible in a firefight.
 
 ---
 
