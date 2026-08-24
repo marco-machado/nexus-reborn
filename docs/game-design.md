@@ -862,11 +862,11 @@ Effects stay sparse and informative: colored tracers, muzzle and impact flashes,
 
 ## 15. Audio direction
 
-Audio is synthesized at runtime. It confirms orders, marks danger, and prices violence. It does not narrate.
+Voices, rain hiss, and the alert-tension drone are synthesized at runtime. The two beds are looped clips. Audio confirms orders, marks danger, and prices violence. It does not narrate.
 
 Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump. An alert-tension drone tracks the mission alert level (0–3), ramps between levels, and releases when the mission ends.
 
-Two beds: a low industrial drone on the four Screens (music), a city-hum on the mission (ambience) with a rain-hiss that follows weather and is silent when the weather is none. Each dies with the screen that owns it. Opening hour does not get its own bed.
+Two beds: a low industrial loop on the four Screens (music), a city-hum loop on the mission (ambience) — one of three clips, chosen at random when the mission bed starts, not keyed to contract, district, Opening hour, weather, or threat. Rain-hiss stays synthesized, follows weather, and is silent when the weather is none. Each bed dies with the screen that owns it. Opening hour does not get its own bed.
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
 

@@ -72,7 +72,7 @@ Any new way to advance `worldStore.t` must catch up research labs, injury recove
 
 ## Assets and styling
 
-Everything is generated in code: WebAudio (`game/audio.ts`), CanvasTextures (`scene/textures.ts`), SVG portraits and figures (`ui/portrait.tsx`, `ui/figure.tsx`), UI glyphs (`ui/bits.tsx`). Add no files under a `public/` dir.
+Everything is generated in code: WebAudio voices, rain hiss, and the alert-tension drone (`game/audio.ts`), CanvasTextures (`scene/textures.ts`), SVG portraits and figures (`ui/portrait.tsx`, `ui/figure.tsx`), UI glyphs (`ui/bits.tsx`). The strategy and mission beds are the exception: looped mp3s in `inspiration/audio/`, imported as Vite URLs — do not delete them, do not add a `public/` dir, and do not replace rain, the alert drone, or one-shot voices with files.
 
 `ui/sound.ts` loads the audio module lazily and swallows failure; it must not import `game/audio.ts` at typecheck time.
 

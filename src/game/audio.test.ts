@@ -3,7 +3,9 @@ import {
   ALERT_STING,
   getAudioLevels,
   gunVoiceFor,
+  MISSION_BED_URLS,
   missionRainGain,
+  pickMissionBedUrl,
   RADIO_BLIP,
   setAudioLevels,
   setMissionBedWeather,
@@ -39,6 +41,15 @@ describe('audio beds', () => {
     setAudioLevels({ music: 0, ambience: 1 })
     expect(getAudioLevels().music).toBe(0)
     expect(getAudioLevels().ambience).toBe(1)
+  })
+
+  it('picks the mission bed uniformly from the three clips, with no world arguments', () => {
+    expect(MISSION_BED_URLS).toHaveLength(3)
+    expect(new Set(MISSION_BED_URLS).size).toBe(3)
+    expect(pickMissionBedUrl.length).toBe(0)
+    for (let i = 0; i < 40; i++) {
+      expect(MISSION_BED_URLS).toContain(pickMissionBedUrl())
+    }
   })
 })
 
