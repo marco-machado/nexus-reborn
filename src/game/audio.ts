@@ -45,6 +45,9 @@ interface Live {
 
 // The authored output level a full master slider maps to.
 const BASE_MASTER = 0.25
+const dbGain = (db: number): number => 10 ** (db / 20)
+const BASE_UI = dbGain(-3)
+const BASE_COMBAT = dbGain(-1.5)
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -57,6 +60,11 @@ const lastAt: Record<string, number> = {}
 
 const decodedClips = new WeakMap<AudioContext, Map<string, AudioBuffer>>()
 const decodingClips = new WeakMap<AudioContext, Map<string, Promise<AudioBuffer | null>>>()
+const activeOneShots = new Set<{ src: AudioBufferSourceNode; dest: AudioNode }>()
+const MAX_COMBAT_VOICES = 8
+const MAX_GUN_VOICES = 6 // Leave two combat voices available for impacts / warnings.
+const MAX_UI_VOICES = 3
+const MAX_CUE_DELAY = 0.12
 
 // Alert tension drone: two detuned saws through a lowpass, held while the
 // mission alert level is up. Built lazily on the first nonzero level and kept
@@ -85,8 +93,8 @@ function clamp01(v: number): number {
 function applyLevels(): void {
   if (!master || !uiGain || !combatGain || !musicGain || !ambienceGain) return
   master.gain.value = BASE_MASTER * levels.master
-  uiGain.gain.value = levels.ui
-  combatGain.gain.value = levels.combat
+  uiGain.gain.value = BASE_UI * levels.ui
+  combatGain.gain.value = BASE_COMBAT * levels.combat
   musicGain.gain.value = levels.music
   ambienceGain.gain.value = levels.ambience
 }
@@ -134,7 +142,15 @@ function ensure(): Live | null {
     }
     ctx = new AC()
     master = ctx.createGain()
-    master.connect(ctx.destination)
+    // A final safety net for coincident impacts; the authored mix retains
+    // headroom before this compressor and does not depend on it for balance.
+    const limiter = ctx.createDynamicsCompressor()
+    limiter.threshold.value = -3
+    limiter.knee.value = 3
+    limiter.ratio.value = 12
+    limiter.attack.value = 0.003
+    limiter.release.value = 0.15
+    master.connect(limiter).connect(ctx.destination)
     uiGain = ctx.createGain()
     uiGain.connect(master)
     combatGain = ctx.createGain()
@@ -195,16 +211,37 @@ function preloadOneShots(live: Live): void {
   for (const url of ONE_SHOT_URLS) void decodeClip(live.c, url)
 }
 
-function playOneShot(live: Live, dest: AudioNode, url: string): void {
+function playOneShot(live: Live, dest: AudioNode, url: string, gun = false): void {
+  if (live.c.state !== 'running') return
+  const requestedAt = live.c.currentTime
   void decodeClip(live.c, url).then((buf) => {
-    if (!buf || ctx !== live.c) return
+    if (!buf || ctx !== live.c || live.c.state !== 'running') return
+    // Loading must not turn earlier input / combat into a delayed burst.
+    if (live.c.currentTime - requestedAt > MAX_CUE_DELAY) return
+    const limit = dest === live.ui ? MAX_UI_VOICES : gun ? MAX_GUN_VOICES : MAX_COMBAT_VOICES
+    let count = 0
+    for (const voice of activeOneShots) if (voice.dest === dest) count++
+    if (count >= limit) return
+    let voice: { src: AudioBufferSourceNode; dest: AudioNode } | undefined
     try {
       const src = live.c.createBufferSource()
+      const currentVoice = { src, dest }
+      voice = currentVoice
       src.buffer = buf
+      // Presentation-only variation. Keep the weapon's identity and cadence.
+      if (gun) src.playbackRate.value = 0.97 + Math.random() * 0.06
+      src.onended = () => {
+        activeOneShots.delete(currentVoice)
+        src.disconnect()
+      }
       src.connect(dest)
+      activeOneShots.add(currentVoice)
       src.start(0)
     } catch {
-      // fail silent
+      if (voice) {
+        activeOneShots.delete(voice)
+        voice.src.disconnect()
+      }
     }
   })
 }
@@ -241,7 +278,7 @@ export const sfx = {
   gunshot(weaponId: WeaponId, side: GunSide = 'squad'): void {
     const live = gate('shot-' + side + '-' + weaponId, 0.025)
     if (!live) return
-    playOneShot(live, live.combat, gunClipUrl(weaponId, side))
+    playOneShot(live, live.combat, gunClipUrl(weaponId, side), true)
   },
 
   reload(): void {

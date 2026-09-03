@@ -36,6 +36,12 @@ class FakeAudioContext {
   createGain() {
     return { gain: fakeParam(), connect: (dest: unknown) => dest }
   }
+  createDynamicsCompressor() {
+    return {
+      threshold: fakeParam(), knee: fakeParam(), ratio: fakeParam(),
+      attack: fakeParam(), release: fakeParam(), connect: (dest: unknown) => dest,
+    }
+  }
   createBiquadFilter() {
     return {
       type: 'lowpass',

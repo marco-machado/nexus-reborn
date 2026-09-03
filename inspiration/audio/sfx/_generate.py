@@ -1,219 +1,75 @@
-# One-shot generator. Not imported by the game.
+"""Generate unmastered SFX with ElevenLabs; run _prepare.py before shipping.
+
+ELEVENLABS_API_KEY stays in the environment. Requires Python 3.9+.
+Usage: python _generate.py --out /tmp/nexus-sfx-raw
+Existing outputs are skipped so an interrupted run can be resumed.
+"""
+import argparse
 import json
-import ssl
-import time
+import os
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-ENV = Path("/Users/machado/.hermes/profiles/sound-engineer/.env")
-URL = "https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_44100_192"
+URL = 'https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_44100_192'
+MODEL = 'eleven_text_to_sound_v2'
+INFLUENCE = 0.7
+DRY = ' Isolated dry studio game sound, immediate attack, natural short decay, no speech, no music, no background, no distortion or digital glitches.'
 
+# name, generation duration, loop, source description. CorpSec is derived from
+# these same weapon recordings in _prepare.py to keep one coherent sound set.
 JOBS = [
-    (
-        "gun-assault.mp3",
-        0.6,
-        False,
-        "Dry mid-caliber assault rifle gunshot, single round, mechanical, close, no echo hall, no ricochet, no music, no voice. Tight crack then short mechanical decay. Corporate 2087 firearm.",
-    ),
-    (
-        "gun-smg.mp3",
-        0.5,
-        False,
-        "Dry small SMG gunshot, single round, thin and fast, high and light, close, no echo, no music, no voice. Short tick-crack. Compact close-quarters firearm.",
-    ),
-    (
-        "gun-pistol.mp3",
-        0.5,
-        False,
-        "Dry 9mm-class pistol gunshot, single round, crisp short crack, close, no echo hall, no music, no voice. Precise light sidearm.",
-    ),
-    (
-        "gun-longrifle.mp3",
-        0.9,
-        False,
-        "Dry heavy longrifle gunshot, single round, deep punch and longer low tail, close, no canyon echo, no music, no voice. Precision anti-personnel rifle.",
-    ),
-    (
-        "gun-shotgun.mp3",
-        0.8,
-        False,
-        "Dry combat shotgun blast, single shot, wide body, short-range, close, no hall reverb, no music, no voice. Thick mechanical thump.",
-    ),
-    (
-        "gun-assault-corpsec.mp3",
-        0.6,
-        False,
-        "Darker narrower restatement of an assault rifle gunshot. Muffled, cheaper, band-limited, slightly distant, no music, no voice. Same weapon class, worse radio.",
-    ),
-    (
-        "gun-smg-corpsec.mp3",
-        0.5,
-        False,
-        "Darker narrower restatement of a small SMG gunshot. Muffled, thin, band-limited, no music, no voice. Corporate security sidearm chatter.",
-    ),
-    (
-        "gun-pistol-corpsec.mp3",
-        0.5,
-        False,
-        "Darker narrower restatement of a pistol gunshot. Muffled, band-limited, cheaper crack, no music, no voice.",
-    ),
-    (
-        "gun-longrifle-corpsec.mp3",
-        0.9,
-        False,
-        "Darker narrower restatement of a longrifle gunshot. Muffled heavy punch, band-limited tail, no music, no voice. Garrison marksman.",
-    ),
-    (
-        "gun-shotgun-corpsec.mp3",
-        0.8,
-        False,
-        "Darker narrower restatement of a shotgun blast. Muffled, thicker, band-limited, no music, no voice. Corporate heavy.",
-    ),
-    (
-        "reload.mp3",
-        0.6,
-        False,
-        "Short mechanical magazine reload: two dry metal clicks, no voice, no music, close, no hall. Firearm handling only.",
-    ),
-    (
-        "confirm.mp3",
-        0.5,
-        False,
-        "Short band-limited radio acknowledgement click, synthetic, under 120 milliseconds of useful sound, no speech, no words, no music. Tiny comms tick.",
-    ),
-    (
-        "ui-click.mp3",
-        0.5,
-        False,
-        "Tiny dry corporate terminal UI click, digital tick, no reverb, no music, no voice. Secure OS button.",
-    ),
-    (
-        "alert-sting.mp3",
-        0.6,
-        False,
-        "Alert sting: dark combat body plus a brief high UI pip on top. No speech, no siren loop, no music. Danger mark, not an alarm song.",
-    ),
-    (
-        "objective.mp3",
-        0.7,
-        False,
-        "Short three-tone objective-complete chime, clean sine-like, rising, corporate terminal, no voice, no music bed. Confirmation, not fanfare.",
-    ),
-    (
-        "death.mp3",
-        0.6,
-        False,
-        "Dull body death thud, low and short, no scream, no voice, no music. A body hitting pavement.",
-    ),
-    (
-        "agent-hit.mp3",
-        0.5,
-        False,
-        "Dull operative body thump under a hit, low short impact, no voice, no music, no scream. Wounded body, not a gunshot.",
-    ),
-    (
-        "blast.mp3",
-        0.8,
-        False,
-        "Short grenade blast, close, dry urban, low body and brief crack, no hall, no music, no voice. One explosion.",
-    ),
-    (
-        "ability.mp3",
-        0.5,
-        False,
-        "Short rising double digital blip, brighter than a UI click, no voice, no music. Role ability arming.",
-    ),
-    (
-        "interact.mp3",
-        0.5,
-        False,
-        "One short data-progress blip, square digital, corporate terminal, no voice, no music. Channel tick.",
-    ),
-    (
-        "rain-light.mp3",
-        8.0,
-        True,
-        "Seamless looping light rain hiss on city pavement, high-frequency only, no thunder, no music, no voice, no traffic. Thin wet hiss.",
-    ),
-    (
-        "rain-heavy.mp3",
-        8.0,
-        True,
-        "Seamless looping heavy rain hiss on city pavement and metal, high-frequency wash, no thunder, no music, no voice. Dense wet hiss.",
-    ),
+    ('gun-assault', 0.6, False, 'Exactly one single assault rifle round. Solid sharp midrange ballistic crack, compact low chest punch, tiny steel action click. Tight outdoor report, no automatic burst, no shell bounce.'),
+    ('gun-smg', 0.5, False, 'Exactly one single suppressed submachine gun round. Compact dry pneumatic pop with a crisp metal bolt tick and a small bass knock. Very short, no burst, no sustained hiss.'),
+    ('gun-pistol', 0.5, False, 'Exactly one single pistol shot. Tight punchy ballistic pop with a dry slide snap. Clean distinct transient, modest low body, very short tail, no repeated shots.'),
+    ('gun-longrifle', 0.9, False, 'Exactly one single heavy precision rifle shot. Weighty low punch beneath a firm ballistic crack, short outdoor low resonance fading away. No ricochet, no repeated shot, no bolt cycling.'),
+    ('gun-shotgun', 0.8, False, 'Exactly one single combat shotgun discharge. Thick compressed air thump with a broad crunchy ballistic crack, brief low tail. No pump action, no second shot, no metallic ringing.'),
+    ('reload', 0.6, False, 'Close firearm foley: a small magazine locking click followed by a short smooth metal slide clack. Two precise muted mechanical movements. Soft dry handling, no firing.'),
+    ('blast', 1.2, False, 'One compact tactical grenade explosion. Immediate deep rounded pressure thump, brief coarse debris crack, low rumble that dies quickly. Weighty and controlled, outdoor perspective, no ringing, no second explosion.'),
+    ('death', 0.6, False, 'One heavy clothed body dropping onto concrete. Soft low thud with a tiny equipment rattle and fabric movement. Restrained game foley, no vocalization, no splatter, no sharp crack.'),
+    ('agent-hit', 0.5, False, 'One short dull impact into padded tactical body armor. Tight low leather thump and faint fabric crunch. Small controlled hit, no bullet report, no voice, no metallic ringing.'),
+    ('ability', 0.5, False, 'A miniature powered mechanism engaging: soft relay click followed by a smooth short warm electrical pulse. Subtle advanced tactical equipment activation, low-mid register, no zapping, no laser sweep, no sharp beep.'),
+    ('alert-sting', 0.6, False, 'A restrained tactical warning: two short low rounded electronic pulses, second slightly lower. Soft firm attack with a tiny dry relay click. Serious quiet terminal cue, no siren, no alarm loop, no rising shriek.'),
+    ('confirm', 0.5, False, 'One tiny muted radio squelch click to acknowledge a tactical command. Soft compact midrange tactile tick, useful sound under 100 milliseconds, no sustained static, no beep, no voice.'),
+    ('ui-click', 0.5, False, 'One tiny soft tactile terminal button click. Muted polymer switch with a warm low tick. Useful sound under 60 milliseconds, very dry and understated, no bright ping, no beep, no ringing.'),
+    ('objective', 0.7, False, 'Two soft rounded electronic notes gently rising, warm sine tone with a short smooth release. Understated secure-terminal success cue in a low register, no bright bells, no fanfare, no glitter.'),
+    ('interact', 0.5, False, 'One barely audible warm data tick. Soft wooden-like digital tap, tiny rounded transient under 60 milliseconds. Subtle terminal progress feedback, no tonal beep, no sustained note.'),
+    ('rain-light', 8.0, True, 'Seamless quiet light rain ambience on city pavement, soft dispersed drops, warm filtered wash, distant perspective. No sharp foreground drops, no thunder, no traffic, no music, no voices, no electronic hiss.'),
+    ('rain-heavy', 8.0, True, 'Seamless steady dense rain on city pavement, smooth low-mid wash with soft scattered drops. Warm distant rain texture, no harsh high-frequency hiss, no thunder, no traffic, no music, no voices.'),
 ]
 
 
-def load_key() -> str:
-    for line in ENV.read_text().splitlines():
-        s = line.strip()
-        if s.startswith("ELEVENLABS_API_KEY="):
-            return s.split("=", 1)[1].strip().strip('"').strip("'")
-    raise SystemExit("missing ELEVENLABS_API_KEY")
-
-
-def generate(key: str, name: str, seconds: float, loop: bool, text: str) -> None:
-    dest = ROOT / name
-    if dest.exists() and dest.stat().st_size > 1000:
-        print(f"skip {name} (exists)", flush=True)
-        return
-    body = json.dumps(
-        {
-            "text": text,
-            "duration_seconds": seconds,
-            "prompt_influence": 0.75,
-            "loop": loop,
-            "model_id": "eleven_text_to_sound_v2",
-        }
-    ).encode()
-    ctx = ssl.create_default_context()
-    delay = 2.0
-    for attempt in range(6):
-        req = urllib.request.Request(
-            URL,
-            data=body,
-            method="POST",
-            headers={
-                "xi-api-key": key,
-                "Content-Type": "application/json",
-                "Accept": "audio/mpeg",
-            },
-        )
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--only', help='Generate just this stem')
+    args = parser.parse_args()
+    key = os.environ.get('ELEVENLABS_API_KEY')
+    if not key:
+        raise SystemExit('ELEVENLABS_API_KEY=MISSING')
+    args.out.mkdir(parents=True, exist_ok=True)
+    jobs = [job for job in JOBS if args.only is None or job[0] == args.only]
+    if not jobs:
+        raise SystemExit('Unknown sound name')
+    for name, seconds, loop, prompt in jobs:
+        path = args.out / (name + '.mp3')
+        if path.exists():
+            print(f'skip {name}', flush=True)
+            continue
+        payload = {'text': prompt + ('' if loop else DRY), 'duration_seconds': seconds,
+                   'loop': loop, 'model_id': MODEL, 'prompt_influence': INFLUENCE}
+        req = urllib.request.Request(URL, data=json.dumps(payload).encode(), method='POST',
+                                     headers={'xi-api-key': key, 'Content-Type': 'application/json'})
         try:
-            with urllib.request.urlopen(req, timeout=90, context=ctx) as resp:
-                data = resp.read()
-            if len(data) < 500:
-                raise RuntimeError(f"tiny payload {len(data)}")
-            dest.write_bytes(data)
-            print(f"wrote {name} bytes={len(data)}", flush=True)
-            return
-        except urllib.error.HTTPError as e:
-            err = e.read().decode("utf-8", "replace")
-            print(f"fail {name} HTTP {e.code} try={attempt + 1}: {err[:240]}", flush=True)
-            if e.code in (429, 500, 502, 503) and attempt < 5:
-                time.sleep(delay)
-                delay = min(delay * 2, 30)
-                continue
-            raise SystemExit(f"stopped on {name}")
-        except Exception as e:
-            print(f"fail {name} {type(e).__name__} try={attempt + 1}: {e}", flush=True)
-            if attempt < 5:
-                time.sleep(delay)
-                delay = min(delay * 2, 30)
-                continue
-            raise SystemExit(f"stopped on {name}")
+            with urllib.request.urlopen(req, timeout=90) as response:
+                data = response.read()
+        except urllib.error.HTTPError as error:
+            raise SystemExit(f'{name}: provider HTTP {error.code}') from None
+        if len(data) < 500:
+            raise SystemExit(f'{name}: invalid audio response')
+        path.write_bytes(data)
+        print(f'generated {name} ({len(data)} bytes)', flush=True)
 
 
-def main() -> None:
-    key = load_key()
-    ROOT.mkdir(parents=True, exist_ok=True)
-    for name, seconds, loop, text in JOBS:
-        generate(key, name, seconds, loop, text)
-        time.sleep(0.4)
-    print("done", flush=True)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

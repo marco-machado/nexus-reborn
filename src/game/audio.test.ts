@@ -118,6 +118,7 @@ function installMockAudio() {
       this.dest = next
       return next
     }
+    disconnect = vi.fn()
   }
 
   class FakeGain extends FakeNode {
@@ -125,9 +126,10 @@ function installMockAudio() {
   }
 
   class FakeSource extends FakeNode {
-    buffer: { url: string } | null = null
+    buffer: { url: string; duration: number } | null = null
     loop = false
     playbackRate = { value: 1 }
+    onended: (() => void) | null = null
     start() {
       started.push({
         url: this.buffer?.url ?? '',
@@ -135,7 +137,7 @@ function installMockAudio() {
         dest: this.dest,
       })
     }
-    stop() {}
+    stop = vi.fn()
   }
 
   class FakeOsc extends FakeNode {
@@ -159,6 +161,12 @@ function installMockAudio() {
     createGain() {
       return new FakeGain()
     }
+    createDynamicsCompressor() {
+      return Object.assign(new FakeNode(), {
+        threshold: new FakeParam(), knee: new FakeParam(), ratio: new FakeParam(),
+        attack: new FakeParam(), release: new FakeParam(),
+      })
+    }
     createBufferSource() {
       const src = new FakeSource()
       sources.push(src)
@@ -171,15 +179,15 @@ function installMockAudio() {
       return new FakeFilter()
     }
     decodeAudioData() {
-      return Promise.resolve({ url: pendingUrls.shift() ?? '' })
+      return Promise.resolve({ url: pendingUrls.shift() ?? '', duration: 0.5 })
     }
     resume() {
       return Promise.resolve()
     }
   }
 
-  vi.stubGlobal('AudioContext', FakeCtx)
-  vi.stubGlobal('webkitAudioContext', FakeCtx)
+  const context = new FakeCtx()
+  vi.stubGlobal('AudioContext', class { constructor() { return context } })
   vi.stubGlobal('fetch', (url: string | URL) => {
     const href = String(url)
     fetched.push(href)
@@ -190,13 +198,58 @@ function installMockAudio() {
     })
   })
 
-  return { started, sources, fetched }
+  return { started, sources: sources as FakeSource[], fetched, context }
 }
 
 describe('clip playback', () => {
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
     vi.resetModules()
+  })
+
+  it('bounds overlapping gunfire across both sides while leaving room for an alert', async () => {
+    vi.resetModules()
+    const { sources, context } = installMockAudio()
+    const audio = await import('./audio')
+    audio.unlockAudio()
+    for (let i = 0; i < 20; i++) await Promise.resolve()
+    for (let i = 0; i < 30; i++) {
+      context.currentTime = i * 0.03
+      audio.sfx.gunshot(WEAPONS[i % WEAPONS.length], i % 2 ? 'corpsec' : 'squad')
+      for (let j = 0; j < 4; j++) await Promise.resolve()
+    }
+    await vi.waitFor(() => expect(sources.length).toBeGreaterThan(0))
+    expect(sources.filter((s) => s.stop.mock.calls.length === 0).length).toBeLessThanOrEqual(6)
+    const before = sources.length
+    audio.sfx.alertSting()
+    await vi.waitFor(() => expect(sources.length).toBe(before + 1))
+  })
+
+  it('drops sounds that finish loading after their event is stale', async () => {
+    vi.resetModules()
+    const { started, context } = installMockAudio()
+    const audio = await import('./audio')
+    audio.sfx.uiClick()
+    context.currentTime = 2
+    for (let i = 0; i < 20; i++) await Promise.resolve()
+    expect(started).toHaveLength(0)
+  })
+
+  it('varies repeated gunshots and releases their audio nodes when they end', async () => {
+    vi.resetModules()
+    const { sources, context } = installMockAudio()
+    const audio = await import('./audio')
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(1)
+    audio.sfx.gunshot('pistol')
+    await vi.waitFor(() => expect(sources).toHaveLength(1))
+    context.currentTime = 0.1
+    audio.sfx.gunshot('pistol')
+    await vi.waitFor(() => expect(sources).toHaveLength(2))
+    expect(sources[0].playbackRate.value).not.toBe(sources[1].playbackRate.value)
+    expect(sources.every((s) => s.playbackRate.value >= 0.96 && s.playbackRate.value <= 1.04)).toBe(true)
+    sources[0].onended?.()
+    expect(sources[0].disconnect).toHaveBeenCalled()
   })
 
   it("gunshot with 'corpsec' requests the corpsec file, not the squad file", async () => {
