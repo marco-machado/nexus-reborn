@@ -213,13 +213,13 @@ Each open sector shows four numbers: **Control**, **Unrest**, **Tax yield**, and
 
 A sector above **60 unrest** is under **unrest pressure**: every 6 strategic hours it loses 1–2 control, and its tax yield falls 2% per unrest point above the threshold, floored at 25%. At **85+ unrest** the sector enters **crisis**: it keeps its holder colour and reads crisis as a red hatch and stroke, a red feed event posts, event frequency doubles, and its open generated contracts gain the priority tag. Crisis clears, with a green feed event, once unrest falls under **70**.
 
-**Tax yield** is Credits, paid every 24 strategic hours, from that sector’s Control and Unrest. The panel prints the Credits that tick would pay, with no “B”. Only a **Nexus-held** sector (plate colour Nexus: most of its cities) actually pays. Contested does not pay. Other sectors still show the figure. Missed ticks catch up with the same time-ordered flow as World Events, so a contract ETA jump collects them.
+**Tax yield** is Credits, paid every 24 strategic hours, from that sector’s Control and Unrest. The panel prints the Credits that tick would pay, with no “B”. Only a **Nexus-held** sector (scan color Nexus: most of its cities) actually pays. Contested does not pay. Other sectors still show the figure. Missed ticks catch up with the same time-ordered flow as World Events, so a contract ETA jump collects them.
 
 Tax yield = round(base × Control/100 × strain). Strain is 1 at unrest 60 or below, else 1 − 0.02 per unrest point above 60, floored at 0.25. Bases: North America 6,000; South America 4,200; Europe 3,980; Africa 5,100; Asia 8,400; Oceania 2,200.
 
 The campaign opens with **North America** as the only Nexus-held sector, so only that tap pays. The authored three do not, by themselves, turn on three taps: Glass Veil and Hollow Crown each contest their sector; Rust Haven only deepens North America. Extra cities (generated seizures, World Events) take a second sector.
 
-Authored contract markers sit on their city. Locked generated offers do not appear on the plate.
+Authored contract markers sit on their city. Locked generated offers do not appear on the Scan.
 
 See [ADR-0008](adr/0008-influence-is-a-wallet.md).
 
@@ -248,7 +248,7 @@ Eighteen named cities, each with a corporate holder. A sector’s color is the c
 | Asia | Shingang (Helix), Kitaru (Helix), Neo Kowloon (Stratos) | Helix |
 | Oceania | Sydney (Stratos), Perth (Stratos), Auckland (Nexus) | Stratos |
 
-Ownership changes through seizure events and through missions: a win hands the mission city to Nexus Global; a loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector’s open generated contracts and posts a feed note. City dots on the plate use the city holder; land uses the sector majority. Greenland is North American land. Antarctica is the Unknown sector.
+Ownership changes through seizure events and through missions: a win hands the mission city to Nexus Global; a loss of a Nexus-held city returns it to its default holder. A flip re-clients that sector’s open generated contracts and posts a feed note. City dots on the Scan use the city holder; land uses the sector majority. Greenland is North American land. Antarctica is the Unknown sector.
 
 Ownership does not change research prices, tactical layouts, or weapon tables. It changes who collects Tax yield, and who holds the cities.
 
@@ -856,7 +856,7 @@ Units are assembled from simple geometry. Operatives are cool armor with persona
 
 Effects stay sparse and informative: colored tracers, muzzle and impact flashes, dashed routes, destination rings, click marks, objective pulses, and two-layer camera-following rain when the weather is wet. A clear mission mounts no rain.
 
-**No external art assets.** Textures, portraits, figures, icons, unit geometry, the world plate, and UI decoration are generated in code. The constraint is stylistic and production: one hand drew this world. An external pipeline is a deliberate change of project, not a polish pass.
+**No external art assets.** Textures, portraits, figures, icons, unit geometry, the Scan, and UI decoration are generated in code. The constraint is stylistic and production: one hand drew this world. An external pipeline is a deliberate change of project, not a polish pass.
 
 ---
 

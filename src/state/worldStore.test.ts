@@ -435,7 +435,8 @@ describe('generated contracts', () => {
     expect(after.sectors.eu.unrest).toBeLessThan(before.unrest)
     expect(after.events.at(-2)?.tone).toBe('green')
     expect(after.events.at(-2)?.text).toContain('STRIKE TEAM 04 OPENS')
-    expect(after.events.at(-1)?.text).toContain('TAKES CONTROL OF')
+    expect(after.events.at(-1)?.text).toContain('TAKES')
+    expect(after.events.at(-1)?.text).not.toContain('TAKES CONTROL OF')
   })
 
   it('resolveMission finds authored, open generated, and just-fulfilled missions', () => {
@@ -522,7 +523,7 @@ describe('mission results', () => {
       sector: 'eu',
       kind: 'seizure',
       tone: 'green',
-      text: 'NEXUS GLOBAL TAKES CONTROL OF NEW CARTHAGE',
+      text: 'NEXUS GLOBAL TAKES NEW CARTHAGE',
     })
     expect(after.unread).toBe(before.unread + 2)
   })

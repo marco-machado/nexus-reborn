@@ -1,7 +1,7 @@
-// CONTRACT FILE. Strategic atlas for the world map: corporations, continental
-// sectors, the territory polygons of the plate, and the cities that carry
-// ownership. The plate is a stylised 1000x520 projection; latitude on it is
-// lat = 80 - 0.269 * y, so the graticule labels line up with the landmasses.
+// CONTRACT FILE. Corporations, sectors, the territory polygons of the Scan,
+// and the cities that carry ownership. The Scan is a stylised 1000x520
+// projection; latitude on it is lat = 80 - 0.269 * y, so the graticule labels
+// line up with the landmasses.
 import type { SectorId } from './types'
 import { mulberry32 } from './rng'
 
@@ -247,14 +247,14 @@ export function cityById(id: string): CityDef {
   return CITY_BY_ID[id]
 }
 
-// Percent of the plate, the unit mission markers and generated jitter use.
-export function platePos(x: number, y: number): { x: number; y: number } {
-  return { x: (x / PLATE_W) * 100, y: (y / PLATE_H) * 100 }
+// Percent of the Scan, the unit mission markers and generated jitter use.
+export function scanPos(x: number, y: number): { x: number; y: number } {
+  return { x: (x / SCAN_W) * 100, y: (y / SCAN_H) * 100 }
 }
 
-export function cityPlatePos(id: string): { x: number; y: number } {
+export function cityScanPos(id: string): { x: number; y: number } {
   const c = cityById(id)
-  return platePos(c.x, c.y)
+  return scanPos(c.x, c.y)
 }
 
 // The corporation holding most cities in a sector. A tie reads as contested,
@@ -283,10 +283,10 @@ export function sectorCorp(sector: SectorId, owner: Record<string, CorpId>): Cor
   return tied ? 'contested' : best
 }
 
-/* ------------------------------ plate geometry ---------------------------- */
+/* ------------------------------ Scan geometry ----------------------------- */
 
-export const PLATE_W = 1000
-export const PLATE_H = 520
+export const SCAN_W = 1000
+export const SCAN_H = 520
 
 // lat = LAT_TOP - LAT_PER_PX * y, fitted so the landmasses sit near their real
 // latitudes. Inverted here to place the graticule.
@@ -297,10 +297,10 @@ export function yOfLat(lat: number): number {
   return (LAT_TOP - lat) / LAT_PER_PX
 }
 
-// Drawing helper: -60 sits a fraction of a pixel past the plate edge.
+// Drawing helper: -60 sits a fraction of a pixel past the Scan edge.
 export function graticuleY(lat: number): number {
   const y = yOfLat(lat)
-  return y < 0 ? 0 : y > PLATE_H ? PLATE_H : y
+  return y < 0 ? 0 : y > SCAN_H ? SCAN_H : y
 }
 
 export const LAT_LINES = [60, 30, 0, -30, -60]
@@ -355,7 +355,7 @@ export interface Light {
 }
 
 // Scattered settlement glow over the land, seeded so every session draws the
-// same plate. Denser near the named cities, thin everywhere else.
+// same Scan. Denser near the named cities, thin everywhere else.
 function buildLights(): Light[] {
   const rng = mulberry32(0x5ec7043)
   const out: Light[] = []
@@ -425,7 +425,7 @@ function arcPath(a: CityDef, b: CityDef): string {
   const my = (a.y + b.y) / 2
   const dist = Math.hypot(b.x - a.x, b.y - a.y)
   const lift = Math.min(90, dist * 0.24)
-  const dir = my < PLATE_H / 2 ? -1 : 1
+  const dir = my < SCAN_H / 2 ? -1 : 1
   return `M${a.x},${a.y} Q${mx},${(my + dir * lift).toFixed(1)} ${b.x},${b.y}`
 }
 
@@ -453,7 +453,7 @@ function sectorBox(id: SectorId): [number, number, number, number] {
     x1 = Math.max(x1, c)
     y1 = Math.max(y1, d)
   }
-  if (!isFinite(x0)) return [0, 0, PLATE_W, PLATE_H]
+  if (!isFinite(x0)) return [0, 0, SCAN_W, SCAN_H]
   const padX = (x1 - x0) * 0.1 + 6
   const padY = (y1 - y0) * 0.1 + 6
   x0 -= padX
@@ -476,7 +476,7 @@ for (const s of SECTORS) {
   const [x, y, w, h] = sectorBox(s.id)
   SECTOR_VIEW[s.id] = `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`
   const lat = LAT_TOP - LAT_PER_PX * (y + h / 2)
-  const lon = (x + w / 2 - PLATE_W / 2) * 0.36
+  const lon = (x + w / 2 - SCAN_W / 2) * 0.36
   SECTOR_COORD[s.id] =
     Math.abs(lat).toFixed(2) + (lat >= 0 ? 'N ' : 'S ') + Math.abs(lon).toFixed(2) + (lon >= 0 ? 'E' : 'W')
 }

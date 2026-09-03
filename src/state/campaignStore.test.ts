@@ -126,7 +126,7 @@ describe('graded injury recovery', () => {
     expect(injuryRecoverySec(0.1)).toBeGreaterThan(injuryRecoverySec(0.2))
   })
 
-  it('injures survivors below the threshold and recovers them on the world clock', () => {
+  it('injures survivors below the threshold and recovers them on Strategic time', () => {
     const worldT = 9000
     useCampaignStore
       .getState()

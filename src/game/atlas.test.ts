@@ -13,11 +13,11 @@ import {
   CITIES_BY_SECTOR,
   cityById,
   sectorCorp,
-  PLATE_W,
-  PLATE_H,
+  SCAN_W,
+  SCAN_H,
   yOfLat,
   graticuleY,
-  cityPlatePos,
+  cityScanPos,
   LAT_LINES,
   LON_LINES,
   LIGHTS,
@@ -90,7 +90,7 @@ describe('territories', () => {
     expect(TERRITORIES.some((t) => t.sector === null)).toBe(false)
   })
 
-  it('draws each polygon from at least three in-plate points', () => {
+  it('draws each polygon from at least three in-Scan points', () => {
     for (const t of TERRITORIES) {
       const pts = parsePts(t.pts)
       expect(pts.length).toBeGreaterThanOrEqual(3)
@@ -98,24 +98,24 @@ describe('territories', () => {
         expect(Number.isFinite(x)).toBe(true)
         expect(Number.isFinite(y)).toBe(true)
         expect(x).toBeGreaterThanOrEqual(0)
-        expect(x).toBeLessThanOrEqual(PLATE_W)
+        expect(x).toBeLessThanOrEqual(SCAN_W)
         expect(y).toBeGreaterThanOrEqual(0)
-        expect(y).toBeLessThanOrEqual(PLATE_H)
+        expect(y).toBeLessThanOrEqual(SCAN_H)
       }
     }
   })
 })
 
 describe('cities', () => {
-  it('has unique ids, valid sectors, holder corps, and in-plate coordinates', () => {
+  it('has unique ids, valid sectors, holder corps, and in-Scan coordinates', () => {
     expect(new Set(CITIES.map((c) => c.id)).size).toBe(CITIES.length)
     for (const c of CITIES) {
       expect(SECTOR_IDS).toContain(c.sector)
       expect(HOLDERS).toContain(c.corp)
       expect(c.x).toBeGreaterThanOrEqual(0)
-      expect(c.x).toBeLessThanOrEqual(PLATE_W)
+      expect(c.x).toBeLessThanOrEqual(SCAN_W)
       expect(c.y).toBeGreaterThanOrEqual(0)
-      expect(c.y).toBeLessThanOrEqual(PLATE_H)
+      expect(c.y).toBeLessThanOrEqual(SCAN_H)
     }
   })
 
@@ -124,11 +124,11 @@ describe('cities', () => {
     expect(cityById('nb').name).toBe('NEW BOSTON')
   })
 
-  it('converts city plate pixels to percent for contract pins', () => {
+  it('converts city Scan pixels to percent for contract pins', () => {
     const dt = cityById('dt')
-    expect(cityPlatePos('dt')).toEqual({
-      x: (dt.x / PLATE_W) * 100,
-      y: (dt.y / PLATE_H) * 100,
+    expect(cityScanPos('dt')).toEqual({
+      x: (dt.x / SCAN_W) * 100,
+      y: (dt.y / SCAN_H) * 100,
     })
   })
 
@@ -166,7 +166,7 @@ describe('sectorCorp', () => {
   })
 })
 
-describe('plate geometry', () => {
+describe('Scan geometry', () => {
   it('anchors the graticule: lat 80 at y 0, one pixel per 0.269 degrees', () => {
     expect(yOfLat(80)).toBe(0)
     expect(yOfLat(80 - 0.269)).toBeCloseTo(1, 10)
@@ -176,27 +176,27 @@ describe('plate geometry', () => {
     expect(LAT_LINES).toContain(-60)
   })
 
-  it('keeps every graticule line on the plate', () => {
+  it('keeps every graticule line on the Scan', () => {
     for (const lat of LAT_LINES) {
       const y = graticuleY(lat)
       expect(y).toBeGreaterThanOrEqual(0)
-      expect(y).toBeLessThanOrEqual(PLATE_H)
+      expect(y).toBeLessThanOrEqual(SCAN_H)
     }
     for (const x of LON_LINES) {
       expect(x).toBeGreaterThan(0)
-      expect(x).toBeLessThan(PLATE_W)
+      expect(x).toBeLessThan(SCAN_W)
     }
   })
 })
 
 describe('city lights', () => {
-  it('scatters lights inside the plate with sane radii and sector refs', () => {
+  it('scatters lights inside the Scan with sane radii and sector refs', () => {
     expect(LIGHTS.length).toBeGreaterThan(0)
     for (const l of LIGHTS) {
       expect(l.x).toBeGreaterThanOrEqual(0)
-      expect(l.x).toBeLessThanOrEqual(PLATE_W)
+      expect(l.x).toBeLessThanOrEqual(SCAN_W)
       expect(l.y).toBeGreaterThanOrEqual(0)
-      expect(l.y).toBeLessThanOrEqual(PLATE_H)
+      expect(l.y).toBeLessThanOrEqual(SCAN_H)
       expect(l.r).toBeGreaterThan(0)
       expect(l.r).toBeLessThan(1.5)
       if (l.sector !== null) expect(SECTOR_IDS).toContain(l.sector)

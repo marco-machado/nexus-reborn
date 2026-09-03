@@ -200,7 +200,7 @@ export interface MissionDef {
   client: string
   threat: 'MODERATE' | 'HIGH' | 'SEVERE'
   reward: number
-  // Time to the extraction window; the debrief advances the world clock by it.
+  // Time to the extraction window; the debrief advances Strategic time by it.
   // Success chance is derived (game/missionParams.ts), never authored.
   etaDays: number
   weather: Weather

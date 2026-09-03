@@ -92,7 +92,7 @@ export function taxStrain(unrest: number): number {
 }
 
 // Credits one 24-hour tick would pay from this sector's Control and Unrest.
-// The plate prints this figure for every open sector; only a Nexus-held
+// The Scan prints this figure for every open sector; only a Nexus-held
 // sector actually deposits it.
 export function taxYieldCredits(base: number, control: number, unrest: number): number {
   return Math.round(base * (control / 100) * taxStrain(unrest))

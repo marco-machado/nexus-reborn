@@ -1,10 +1,10 @@
-// CONTRACT FILE. Strategic layer state: the world clock, per sector control
-// and unrest, city ownership (including mission-result flips), the events
-// feed that moves them, the generated contract market the feed feeds, the
-// spendable influence resource, Tax yield deposits, and the unrest
-// pressure/crisis flow. The world map screen drives tick() while it is
-// mounted; a win's ETA catch-up uses the same flow. Tax yield Credits land
-// on the same balance contract pay uses.
+// CONTRACT FILE. Strategic layer state: Strategic time, per sector control
+// and unrest, city ownership (including mission-result flips), the Feed that
+// moves them, the generated contract market the Feed feeds, the spendable
+// Influence resource, Tax yield deposits, and the unrest pressure/crisis
+// flow. The World Network screen drives tick() while it is mounted; a win's
+// ETA catch-up uses the same flow. Tax yield Credits land on the same
+// balance contract pay uses.
 import { create } from 'zustand'
 import { mulberryStep } from '../game/rng'
 import { MISSIONS } from '../game/data'
@@ -154,7 +154,7 @@ const SEED_EVENTS: WorldEvent[] = [
     sector: 'sa',
     kind: 'seizure',
     tone: 'green',
-    text: 'NEXUS GLOBAL TAKES CONTROL OF BOGOTA',
+    text: 'NEXUS GLOBAL TAKES BOGOTA',
   },
   {
     id: 3,
@@ -253,7 +253,7 @@ const LINES: Record<EventKind, string[]> = {
   blackout: ['GRID BLACKOUT ACROSS ', 'DATA RELAYS DOWN IN ', 'TRANSIT NETWORK STALLED IN '],
   raid: ['CORPSEC RAID SWEEPS ', 'CURFEW ENFORCED IN ', 'CORPSEC RETAKES THE DOCKS IN '],
   trade: [' SECURES TRADE AGREEMENT IN ', ' OPENS A FREE PORT IN ', ' BUYS THE UTILITY GRID IN '],
-  seizure: [' TAKES CONTROL OF ', ' SEIZES THE COUNCIL IN ', ' ANNEXES THE HOLDINGS OF '],
+  seizure: [' TAKES ', ' SEIZES THE COUNCIL IN ', ' ANNEXES THE HOLDINGS OF '],
   // Never rolled: KIA events are posted by applyMissionResult alone, contract
   // events by the market flow, crisis lines by the pressure flow, and
   // influence lines by the spend actions.
@@ -857,7 +857,7 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
             sector: mission.sector,
             kind: 'seizure' as const,
             tone: outcome.won ? 'green' : 'red',
-            text: CORPS[nextHolder].name + ' TAKES CONTROL OF ' + mission.city,
+            text: CORPS[nextHolder].name + ' TAKES ' + mission.city,
           },
         ]
         added += 1

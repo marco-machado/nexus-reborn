@@ -86,12 +86,12 @@ export const RIM = 'rgba(232, 251, 242, 0.4)'
 // Near-black canvases behind the procedural art. One per role so a minimap
 // ground and a recon frame cannot drift apart again.
 
-export const ART_BG = '#030a08' // minimap ground + world-map plate
+export const ART_BG = '#030a08' // minimap ground + World Network Scan
 export const ART_BG_DEEP = '#020708' // recon vignette
 export const ART_BG_PANEL = '#05090b' // recon / satellite frames
 export const ART_BG_TILE = '#04090a' // tactical tiles
 export const ART_BG_INSET = '#070d0c' // nested panel fills
-export const WORLD_GLOW = '#0e2c26' // world-map plate glow
+export const WORLD_GLOW = '#0e2c26' // Scan glow
 export const PANEL_GRAD_A = '#0d1a17' // mission-list panel gradient top
 export const PANEL_GRAD_B = '#050b0a' // mission-list panel gradient bottom
 

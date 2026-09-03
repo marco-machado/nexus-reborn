@@ -1,6 +1,6 @@
-// World Network screen. The sector list, the strategic plate, the sector
-// readout and the operations list all read the same world state, and the
-// transport under the map is what moves it.
+// World Network screen. The sector list, the Scan, the sector readout and the
+// open-contract list all read the same world state, and the transport under
+// the Scan is what moves Strategic time.
 import { useCallback, useMemo, useRef } from 'react'
 import { useAppStore } from '../state/appStore'
 import {
@@ -44,8 +44,8 @@ import {
   LIGHTS_BY_SECTOR,
   LON_LINES,
   OPEN_SECTORS,
-  PLATE_H,
-  PLATE_W,
+  SCAN_H,
+  SCAN_W,
   SECTORS,
   SECTOR_COORD,
   SECTOR_VIEW,
@@ -60,7 +60,7 @@ import { ScreenChrome } from './Nav'
 import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
 import { ART_BG, RED, WORLD_GLOW } from './tokens'
-import { layoutPlateMarks, visiblePlateMarks } from './plateMarks'
+import { layoutScanMarks, visibleScanMarks } from './scanMarks'
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
@@ -157,7 +157,7 @@ function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId })
         ? 'NO TARGET'
         : short
           ? 'LOW PTS'
-          : 'READY'
+          : 'CLEAR'
   return (
     <button
       type="button"
@@ -178,7 +178,7 @@ function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId })
         <i
           className={
             'wm-act-status ' +
-            (status === 'READY' ? 'teal' : status === 'ACTIVE' ? 'amber' : 'dim')
+            (status === 'CLEAR' ? 'teal' : status === 'ACTIVE' ? 'amber' : 'dim')
           }
         >
           {status}
@@ -198,17 +198,17 @@ const FORECAST_LABEL: Record<ForecastKind, string> = {
   seizure: 'SEIZE',
 }
 
-// Next-6-world-hours event risk for the focused sector, derived from the same
-// weights the generator rolls from. The second strategic use of intel: the
-// readout needs level 2.
+// Next-six-strategic-hours Event forecast for the focused sector, derived from
+// the same weights the generator rolls from. The second strategic use of
+// intel: the readout needs level 2.
 function SectorForecast(props: { id: SectorId }) {
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const sectors = useWorldStore((s) => s.sectors)
   const crisis = useWorldStore((s) => s.crisis)
   if (intelLevel < 2) {
     return (
-      <div className="wm-fc" title="EVENT FORECAST // NEXT 6 WORLD HOURS">
-        <label>FORECAST 6H</label>
+      <div className="wm-fc" title="EVENT FORECAST // NEXT 6 STRATEGIC HOURS">
+        <label>EVENT FORECAST</label>
         <span className="wm-fc-lock dim">{intelGate(2)}</span>
       </div>
     )
@@ -224,9 +224,9 @@ function SectorForecast(props: { id: SectorId }) {
   return (
     <div
       className="wm-fc"
-      title="EVENT FORECAST // CHANCE PER CATEGORY OVER THE NEXT 6 WORLD HOURS"
+      title="EVENT FORECAST // CHANCE PER CATEGORY OVER THE NEXT 6 STRATEGIC HOURS"
     >
-      <label>FORECAST 6H</label>
+      <label>EVENT FORECAST</label>
       {rows.map((r) => (
         <span key={r.kind} className="wm-fc-chip">
           <i>{FORECAST_LABEL[r.kind]}</i>
@@ -237,9 +237,9 @@ function SectorForecast(props: { id: SectorId }) {
   )
 }
 
-/* ------------------------------- map plate -------------------------------- */
+/* ---------------------------------- Scan ---------------------------------- */
 
-function WorldPlate() {
+function WorldScan() {
   const sectors = useWorldStore((s) => s.sectors)
   const owner = useWorldStore((s) => s.owner)
   const selected = useWorldStore((s) => s.selected)
@@ -251,9 +251,9 @@ function WorldPlate() {
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
   const marks = useMemo(() => opsFor(null, contracts), [contracts])
-  const plateMarks = useMemo(
+  const scanMarks = useMemo(
     () =>
-      visiblePlateMarks(
+      visibleScanMarks(
         marks.map(({ m, gen }) => ({
           id: m.id,
           codename: m.codename,
@@ -264,11 +264,11 @@ function WorldPlate() {
       ),
     [marks, campaignFailed, intelLevel],
   )
-  const layouts = useMemo(() => layoutPlateMarks(plateMarks), [plateMarks])
-  const plateOps = useMemo(() => {
-    const ids = new Set(plateMarks.map((m) => m.id))
+  const layouts = useMemo(() => layoutScanMarks(scanMarks), [scanMarks])
+  const scanOps = useMemo(() => {
+    const ids = new Set(scanMarks.map((m) => m.id))
     return marks.filter(({ m }) => ids.has(m.id))
-  }, [marks, plateMarks])
+  }, [marks, scanMarks])
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -289,7 +289,7 @@ function WorldPlate() {
     <div className="wm-map">
       <svg
         className="wm-map-svg"
-        viewBox={`0 0 ${PLATE_W} ${PLATE_H}`}
+        viewBox={`0 0 ${SCAN_W} ${SCAN_H}`}
         preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
       >
@@ -308,12 +308,12 @@ function WorldPlate() {
             <path d="M0 0 H7" stroke={RED} strokeWidth="2" opacity="0.55" />
           </pattern>
         </defs>
-        <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill={ART_BG} />
-        <rect x="0" y="0" width={PLATE_W} height={PLATE_H} fill="url(#wm-glow)" />
+        <rect x="0" y="0" width={SCAN_W} height={SCAN_H} fill={ART_BG} />
+        <rect x="0" y="0" width={SCAN_W} height={SCAN_H} fill="url(#wm-glow)" />
 
         <g className="wm-grat">
           {LON_LINES.map((x) => (
-            <line key={'x' + x} x1={x} y1={0} x2={x} y2={PLATE_H} />
+            <line key={'x' + x} x1={x} y1={0} x2={x} y2={SCAN_H} />
           ))}
           {LAT_LINES.map((lat) => (
             <line
@@ -321,7 +321,7 @@ function WorldPlate() {
               className={lat === 0 ? 'strong' : undefined}
               x1={0}
               y1={graticuleY(lat)}
-              x2={PLATE_W}
+              x2={SCAN_W}
               y2={graticuleY(lat)}
             />
           ))}
@@ -383,7 +383,7 @@ function WorldPlate() {
         <span className="wm-sweep" />
       </span>
 
-      {plateOps.map(({ m, gen }, i) => {
+      {scanOps.map(({ m, gen }, i) => {
         const locked = campaignFailed || missionLocked(m, intelLevel)
         const lay = layouts[i]
         return (
@@ -452,7 +452,7 @@ function WorldPlate() {
 
       <div className="wm-ov tl">
         <b>ORBITAL SCAN</b>
-        <span className="dim">SAT-16E // LIVE FEED</span>
+        <span className="dim">SAT-16E // LIVE</span>
         <svg viewBox="0 0 70 16" className="wm-spark" aria-hidden="true">
           <polyline points={unrestSpark(sectors)} />
         </svg>
@@ -499,10 +499,10 @@ function SectorInset(props: { id: SectorId }) {
       <svg viewBox={SECTOR_VIEW[props.id]} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <g className="wm-inset-grid">
           {LON_LINES.map((x) => (
-            <line key={'x' + x} x1={x} y1={0} x2={x} y2={PLATE_H} />
+            <line key={'x' + x} x1={x} y1={0} x2={x} y2={SCAN_H} />
           ))}
           {LAT_LINES.map((lat) => (
-            <line key={'y' + lat} x1={0} y1={graticuleY(lat)} x2={PLATE_W} y2={graticuleY(lat)} />
+            <line key={'y' + lat} x1={0} y1={graticuleY(lat)} x2={SCAN_W} y2={graticuleY(lat)} />
           ))}
         </g>
         {TERRITORIES.filter((t) => t.sector === props.id).map((t) => (
@@ -525,10 +525,10 @@ function SectorInset(props: { id: SectorId }) {
         ))}
         {mission && !missionLocked(mission, intelLevel) && (
           <g className="wm-inset-target">
-            <circle cx={(mission.mapPos.x / 100) * PLATE_W} cy={(mission.mapPos.y / 100) * PLATE_H} r="7" />
+            <circle cx={(mission.mapPos.x / 100) * SCAN_W} cy={(mission.mapPos.y / 100) * SCAN_H} r="7" />
             <circle
-              cx={(mission.mapPos.x / 100) * PLATE_W}
-              cy={(mission.mapPos.y / 100) * PLATE_H}
+              cx={(mission.mapPos.x / 100) * SCAN_W}
+              cy={(mission.mapPos.y / 100) * SCAN_H}
               r="2"
               className="core"
             />
@@ -685,7 +685,7 @@ function TimeControl() {
           className={'wm-tbtn' + (paused ? ' on' : '')}
           onClick={act(togglePause)}
           aria-pressed={paused}
-          aria-label={paused ? 'RESUME WORLD CLOCK' : 'PAUSE WORLD CLOCK'}
+          aria-label={paused ? 'RESUME STRATEGIC CLOCK' : 'PAUSE STRATEGIC CLOCK'}
         >
           <svg viewBox="0 0 12 12" aria-hidden="true">
             {paused ? (
@@ -705,14 +705,14 @@ function TimeControl() {
             className={'wm-tbtn' + (!paused && speed === s ? ' on' : '')}
             onClick={act(() => setSpeed(s))}
             aria-pressed={!paused && speed === s}
-            aria-label={'GAME SPEED ' + s + 'X'}
+            aria-label={'CLOCK SPEED ' + s + 'X'}
           >
             {s}X
           </button>
         ))}
       </div>
       <div className="wm-speed">
-        GAME SPEED: <b className={paused ? 'red' : 'amber'}>{paused ? 'PAUSED' : speed + 'X'}</b>
+        CLOCK SPEED: <b className={paused ? 'red' : 'amber'}>{paused ? 'PAUSED' : speed + 'X'}</b>
       </div>
     </div>
   )
@@ -809,9 +809,9 @@ function WorldOnboard() {
         <Panel title="WORLD NETWORK // ORIENTATION" right={<span className="dim">FIRST UPLINK</span>}>
           <div className="wm-onboard-rows">
             <div className="wm-onboard-row">
-              <b>CONTINENTAL SECTORS</b>
+              <b>SECTORS</b>
               <span>
-                The left column lists every sector; pick one to focus it on the plate. Crisis
+                The left column lists every sector; pick one to focus it on the scan. Crisis
                 states flag themselves in red.
               </span>
             </div>
@@ -823,7 +823,7 @@ function WorldOnboard() {
               </span>
             </div>
             <div className="wm-onboard-row">
-              <b>AVAILABLE OPERATIONS</b>
+              <b>OPEN CONTRACTS</b>
               <span>
                 Below it, the open contracts for that sector. Opening one moves to the Brief.
               </span>
@@ -831,15 +831,15 @@ function WorldOnboard() {
             <div className="wm-onboard-row">
               <b>TIME AND EVENTS</b>
               <span>
-                The bottom strip runs the world clock, reviews the last 24 hours, and carries the
-                global events feed and your resource pool.
+                The bottom strip runs Strategic time, reviews the last 24 hours, and carries the
+                Feed and your resource pool.
               </span>
             </div>
             <div className="wm-onboard-row">
               <b>RESEARCH</b>
               <span>
-                The RESEARCH tab on the bottom navigation opens the lab programs; labs run on the
-                same world clock.
+                The RESEARCH tab on the bottom navigation opens the lab programs; labs run on
+                Strategic time.
               </span>
             </div>
           </div>
@@ -897,8 +897,8 @@ export function WorldMap() {
         <div className="wm-campaign-fail corners" role="status">
           <span className="wm-campaign-sigil fail" aria-hidden="true">◆</span>
           <span>
-            <b>CAMPAIGN DIRECTIVE FAILED</b>
-            <i>STRIKE ROSTER WIPED // NETWORK COMMAND SUSPENDED</i>
+            <b>CAMPAIGN FAILED</b>
+            <i>ROSTER EMPTY // NETWORK COMMAND SUSPENDED</i>
           </span>
           <strong>0 / {MISSIONS.length}</strong>
         </div>
@@ -907,8 +907,8 @@ export function WorldMap() {
         <div className="wm-campaign-win corners" role="status">
           <span className="wm-campaign-sigil" aria-hidden="true">◆</span>
           <span>
-            <b>CAMPAIGN DIRECTIVE COMPLETE</b>
-            <i>ALL THREE AUTHORIZED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE</i>
+            <b>CAMPAIGN COMPLETE</b>
+            <i>ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE</i>
           </span>
           <strong>{contractsWon.length} / {MISSIONS.length}</strong>
         </div>
@@ -924,7 +924,7 @@ export function WorldMap() {
             </div>
           </Panel>
           <Panel
-            title="CONTINENTAL SECTORS"
+            title="SECTORS"
             right={
               <span className="dim">
                 {OPEN_SECTORS.length} / {SECTORS.length}
@@ -999,10 +999,10 @@ export function WorldMap() {
           </Panel>
         </aside>
 
-        {/* center: world plate + mission markers */}
+        {/* center: Scan + mission markers */}
         <section className="wm-center corners">
           <div className="wm-map-wrap">
-            <WorldPlate />
+            <WorldScan />
           </div>
         </section>
 
@@ -1054,7 +1054,7 @@ export function WorldMap() {
             <SectorForecast id={selected} />
           </Panel>
           <Panel
-            title="AVAILABLE OPERATIONS"
+            title="OPEN CONTRACTS"
             right={
               <span className="dim">
                 {openOps} / {ops.length}
@@ -1113,8 +1113,8 @@ export function WorldMap() {
                         </span>
                         <span className="chip dim">ETA {m.etaDays}D</span>
                         {gen && (
-                          <span className="chip dim">
-                            EXP <ExpiryHours at={gen.expiresAtT} />
+                          <span className="chip dim" title="EXPIRES">
+                            EXPIRY <ExpiryHours at={gen.expiresAtT} />
                           </span>
                         )}
                       </span>
@@ -1123,15 +1123,6 @@ export function WorldMap() {
                 })
               )}
             </ScrollBox>
-            <button
-              type="button"
-              className="btn wide"
-              disabled
-              aria-label="VIEW SECTOR INTEL // REQUIRES A SECTOR INTEL LINK"
-              title="REQUIRES A SECTOR INTEL LINK"
-            >
-              VIEW SECTOR INTEL &gt;
-            </button>
           </Panel>
         </aside>
       </div>
@@ -1141,11 +1132,11 @@ export function WorldMap() {
         <Panel title="TIME CODE" className="wm-time">
           <TimeCode />
         </Panel>
-        <Panel title="TIME CONTROL" className="wm-timectl">
+        <Panel title="TIMELINE" className="wm-timectl">
           <Timeline />
           <TimeControl />
         </Panel>
-        <Panel title="GLOBAL EVENTS FEED" right={<UnreadBadge />} className="wm-feed" bodyClassName="wm-feed-body">
+        <Panel title="FEED" right={<UnreadBadge />} className="wm-feed" bodyClassName="wm-feed-body">
           <EventsFeed />
         </Panel>
         <Panel title="RESOURCE POOL" className="wm-pool">

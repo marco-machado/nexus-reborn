@@ -9,7 +9,7 @@
 // separate from the cosmetic rng, so re-derived missions keep their
 // codename, weather, Opening hour, and map jitter.
 import { mulberry32, mulberryStep } from './rng'
-import { CITIES_BY_SECTOR, CORPS, HOLDERS, PLATE_H, PLATE_W, cityById } from './atlas'
+import { CITIES_BY_SECTOR, CORPS, HOLDERS, SCAN_H, SCAN_W, cityById } from './atlas'
 import type { CorpId } from './atlas'
 import type {
   DistrictArchetype,
@@ -572,8 +572,8 @@ export function contractMission(contract: GeneratedContract): MissionDef {
   const weatherFront = rollWeatherFront(rng, weather)
   const city = cityById(contract.cityId)
   const mapPos = {
-    x: clamp((city.x / PLATE_W) * 100 + (rng() - 0.5) * 6, 3, 97),
-    y: clamp((city.y / PLATE_H) * 100 + (rng() - 0.5) * 6, 6, 94),
+    x: clamp((city.x / SCAN_W) * 100 + (rng() - 0.5) * 6, 3, 97),
+    y: clamp((city.y / SCAN_H) * 100 + (rng() - 0.5) * 6, 6, 94),
   }
   // After the existing cosmetic stream so weather, codename, and map jitter
   // stay put for seeds already in a campaign.

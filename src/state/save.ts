@@ -772,7 +772,7 @@ function cancelPendingAutosave(): void {
 function scheduleAutosave(): void {
   const phase = useAppStore.getState().phase
   if (phase === 'mission' || phase === 'debrief') return
-  // The world clock writes at 20Hz. Keep the first pending flush so continuous
+  // Strategic time writes at 20Hz. Keep the first pending flush so continuous
   // ticking still persists the latest snapshot every half second.
   if (autosaveTimer !== null) return
   autosaveTimer = setTimeout(() => {

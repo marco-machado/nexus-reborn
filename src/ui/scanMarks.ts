@@ -1,16 +1,16 @@
-// Display layout for World Network plate markers. mapPos stays the derived
+// Display layout for World Network Scan markers. mapPos stays the derived
 // city + jitter; this only decides where the pin is drawn and which side the
 // label hangs off, so two open contracts do not share a point and a name
-// cannot cover a HUD chip or run off the plate.
+// cannot cover a HUD chip or run off the Scan.
 //
-// Sizes are fitted to the 1280×720 plate (~646×336). The chips are a
+// Sizes are fitted to the 1280×720 Scan (~646×336). The chips are a
 // conservative cover of ORBITAL SCAN, the focused-sector caption, and the
 // CONTROL KEY. Overlays live on the wrap; chips still reserve the corners
-// when the well is exactly the plate aspect.
+// when the well is exactly the Scan aspect.
 
 export type LabelSide = 'below' | 'above' | 'left' | 'right'
 
-export interface PlateMark {
+export interface ScanMark {
   id: string
   codename: string
   mapPos: { x: number; y: number }
@@ -18,7 +18,7 @@ export interface PlateMark {
   authored: boolean
 }
 
-export interface PlateMarkLayout {
+export interface ScanMarkLayout {
   id: string
   pin: { x: number; y: number }
   side: LabelSide
@@ -142,14 +142,14 @@ function scoreLabel(box: Rect, others: Rect[], pins: Rect[]): number {
   return s
 }
 
-// Authored contracts stay on the plate even when intel-gated. Generated
+// Authored contracts stay on the Scan even when intel-gated. Generated
 // offers only appear once they can be opened, so locked market names do not
 // crowd the live job.
-export function visiblePlateMarks(marks: readonly PlateMark[]): PlateMark[] {
+export function visibleScanMarks(marks: readonly ScanMark[]): ScanMark[] {
   return marks.filter((m) => m.authored || !m.locked)
 }
 
-export function layoutPlateMarks(marks: readonly PlateMark[]): PlateMarkLayout[] {
+export function layoutScanMarks(marks: readonly ScanMark[]): ScanMarkLayout[] {
   const authored = marks.filter((m) => m.authored)
   const generated = marks.filter((m) => !m.authored)
   const order = [...authored, ...generated]

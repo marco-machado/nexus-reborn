@@ -782,7 +782,7 @@
   min-width: 0;
 }
 
-/* corporation palette: one variable pair per holder, consumed by the plate,
+/* corporation palette: one variable pair per holder, consumed by the Scan,
    the inset, the city lights and the control key */
 .corp-stratos { --corp: #59d6c9; --corp-fill: #1a5c56; }
 .corp-nexus { --corp: #7de08a; --corp-fill: #1c5a28; }
@@ -890,7 +890,7 @@
 
 .wm-unrest { width: 42px; margin-left: auto; }
 
-/* center map plate */
+/* center Scan */
 .wm-center {
   position: relative;
   display: grid;
@@ -1011,7 +1011,7 @@
 .wm-city .core { fill: currentColor; }
 .wm-cities { filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.25)); }
 
-/* slow radar sweep over the plate */
+/* slow radar sweep over the Scan */
 .wm-sweep-clip {
   position: absolute;
   inset: 0;
@@ -1709,12 +1709,13 @@
 .mb-readout text { fill: rgba(126, 240, 212, 0.72); font-size: 8.5px; letter-spacing: 1px; font-family: inherit; }
 .mb-brieflines text { fill: rgba(126, 240, 212, 0.5); font-size: 8.5px; letter-spacing: 0.8px; font-family: inherit; }
 
-/* tactical map: readout rail, square district plate, legend */
+/* tactical map: readout rail, square District plan, legend */
 .mb-tac { flex: 1; }
 .mb-tac-body { flex-direction: row; gap: 12px; padding: 9px 10px; align-items: stretch; }
 
-/* Rail and legend take the slack either side of the square district plate, so
-   the two rules stay against the map and the spare width falls to the edges. */
+/* Rail and legend take the slack either side of the square District plan, so
+   the two rules stay against the map and the spare width falls to the edges.
+   .mb-tac-plate is the District plan, not the Scan. */
 .mb-tac-rail {
   flex: 1;
   min-width: 0;

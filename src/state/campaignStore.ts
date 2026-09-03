@@ -225,7 +225,7 @@ export const useCampaignStore = create<CampaignState>((set) => ({
         : state.contractsWon
 
       // A death is final: the operative leaves the roster for good. A survivor
-      // who ended below the injury threshold recovers on the world clock, for
+      // who ended below the injury threshold recovers on Strategic time, for
       // a downtime scaled by the missing health.
       const dead = new Set(outcome.deadIds)
       const kia = state.operatives

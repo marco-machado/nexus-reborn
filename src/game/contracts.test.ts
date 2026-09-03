@@ -20,7 +20,7 @@ import {
   sequenceVariant,
 } from './contracts'
 import type { ContractSectorInput, ContractType, GeneratedContract } from './contracts'
-import { CITIES, CITIES_BY_SECTOR, HOLDERS, PLATE_H, PLATE_W, cityById } from './atlas'
+import { CITIES, CITIES_BY_SECTOR, HOLDERS, SCAN_H, SCAN_W, cityById } from './atlas'
 import type { CorpId } from './atlas'
 import { MISSIONS, operativeById } from './data'
 import { missionPeriod, rollOpeningHour, rollWeatherFront } from './missionParams'
@@ -463,8 +463,8 @@ describe('objective sequence variants', () => {
       const weatherFront = rollWeatherFront(rng, weather)
       const city = cityById(record.cityId)
       const mapPos = {
-        x: clamp((city.x / PLATE_W) * 100 + (rng() - 0.5) * 6, 3, 97),
-        y: clamp((city.y / PLATE_H) * 100 + (rng() - 0.5) * 6, 6, 94),
+        x: clamp((city.x / SCAN_W) * 100 + (rng() - 0.5) * 6, 3, 97),
+        y: clamp((city.y / SCAN_H) * 100 + (rng() - 0.5) * 6, 6, 94),
       }
       const openingHour = rollOpeningHour(rng)
       const m = contractMission(record)

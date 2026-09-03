@@ -1,13 +1,13 @@
-// The world clock, driven by whichever Screen is mounted. World time only
+// Strategic time, driven by whichever Screen is mounted. It only
 // advances here, and research projects run on the same clock, so the tick that
-// moves the world is also what finishes them.
+// moves the World Network is also what finishes them.
 import { useEffect } from 'react'
 import { MAX_DT, useWorldStore } from '../state/worldStore'
 import { useResearchStore } from '../state/researchStore'
 import { useCampaignStore } from '../state/campaignStore'
 import { startStrategyBed, stopStrategyBed } from './sound'
 
-// Batched to 20Hz so the clock, the timeline and the lab bars repaint smoothly
+// Batched to 20Hz so the clock, the Timeline and the lab bars repaint smoothly
 // without a render every frame.
 export function useWorldClock(): void {
   const tick = useWorldStore((s) => s.tick)

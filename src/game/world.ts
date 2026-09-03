@@ -336,7 +336,7 @@ export function createWorld(
   }
 
   // Completed research and roster experience are read once, at deployment.
-  // The world clock is stopped during a mission, so nothing can finish or
+  // Strategic time is stopped during a mission, so nothing can finish or
   // award XP while this one runs.
   const researched = useResearchStore.getState().done
   const rosterXp = useCampaignStore.getState().roster

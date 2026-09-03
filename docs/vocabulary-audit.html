@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus Reborn — vocabulary audit</title>
+<style>
+  :root {
+    --bg: #0c1210;
+    --panel: #121a17;
+    --ink: #d7ebe3;
+    --dim: #7e9a90;
+    --line: #24332e;
+    --teal: #7ef0d4;
+    --amber: #f0b445;
+    --red: #e04b3c;
+    --rec: #1a2e24;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 ui-sans-serif, system-ui, sans-serif; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+  a { color: var(--teal); }
+  header.top {
+    position: sticky; top: 0; z-index: 8;
+    background: rgba(12,18,16,0.94); border-bottom: 1px solid var(--line);
+    padding: 14px 22px 12px;
+  }
+  header.top h1 { margin: 0 0 4px; font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; }
+  header.top p { margin: 0; color: var(--dim); font-size: 13px; max-width: 72rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  .bar button, .opt {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+    padding: 6px 10px; cursor: pointer; font: inherit; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .bar button:hover, .opt:hover { border-color: var(--teal); }
+  .bar button.on, .opt.on { border-color: var(--amber); color: var(--amber); }
+  .count { color: var(--dim); font-size: 12px; margin-left: auto; }
+  main { max-width: 52rem; margin: 0 auto; padding: 20px 22px 180px; }
+  h2 { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--teal); margin: 28px 0 10px; }
+  .intro { color: var(--dim); font-size: 14px; }
+  .intro ul { margin: 8px 0 0; padding-left: 1.2em; }
+  .search { width: 100%; background: var(--panel); color: var(--ink); border: 1px solid var(--line); padding: 8px 10px; font: inherit; margin: 8px 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; letter-spacing: 0.08em; font-size: 11px; text-transform: uppercase; }
+  .avoid { color: var(--dim); }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); padding: 14px 16px 12px; margin: 0 0 12px;
+  }
+  .card.hidden { display: none; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+  .tag { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--line); color: var(--dim); padding: 2px 6px; }
+  .ex, .sug { margin: 0 0 8px; font-size: 14px; }
+  .sug { background: var(--rec); border-left: 3px solid var(--teal); padding: 8px 10px; }
+  .sug b { color: var(--teal); font-weight: 600; }
+  .why { color: var(--dim); font-size: 13px; margin: 0 0 10px; }
+  label.choice {
+    display: block; border: 1px solid var(--line); padding: 8px 10px 8px 32px; margin: 0 0 6px;
+    position: relative; cursor: pointer;
+  }
+  label.choice.rec { border-color: #3d5a4a; }
+  label.choice input { position: absolute; left: 10px; top: 11px; }
+  label.choice .badge { color: var(--amber); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; margin-left: 8px; }
+  label.choice small { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; }
+  label.choice.other textarea {
+    display: block; width: 100%; margin-top: 6px; min-height: 56px; resize: vertical;
+    background: var(--bg); color: var(--ink); border: 1px solid var(--line);
+    padding: 6px 8px; font: inherit; font-size: 13px;
+  }
+  .cite { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  footer.prompt {
+    position: sticky; bottom: 0; z-index: 9;
+    background: #0a100e; border-top: 1px solid var(--line); padding: 12px 22px 16px;
+  }
+  footer.prompt textarea {
+    width: 100%; min-height: 88px; max-height: 40vh; background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line); padding: 8px; font: 12px/1.4 ui-monospace, Menlo, monospace;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Vocabulary audit</h1>
+  <p>
+    Inventory of <code>CONTEXT.md</code> terms against <code>docs/game-design.md</code> and <code>src/</code>.
+    No glossary or source edits in this file. Issue <code>#47</code> is one proposed resolution of several rows below.
+    Canonical rule: a name is the glossary term or the identifier the code already uses. Comments are not names.
+  </p>
+  <div class="bar">
+    <button type="button" class="filter on" data-cat="all">All</button>
+    <button type="button" class="filter" data-cat="noun">Noun fights</button>
+    <button type="button" class="filter" data-cat="copy">Player copy</button>
+    <button type="button" class="filter" data-cat="id">Identifiers / docs</button>
+    <button type="button" class="filter" data-cat="scope">Is this a term?</button>
+    <button type="button" id="pick-rec">Select all recommended</button>
+    <span class="count" id="stats"></span>
+  </div>
+</header>
+<main>
+  <section>
+    <h2>How to use this</h2>
+    <div class="intro">
+      <ul>
+        <li>The glossary table is the inventory of terms. An inconsistency is a second name for one of those things, or one name for two things.</li>
+        <li>Each card is one decision. The amber mark is the recommended option. Change any of them. Other lets you type. Skip leaves that card unchanged.</li>
+        <li>The button at the bottom builds a prompt of every selected decision, including skips and other text. Paste it back into the agent. Nothing is applied until you do that.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Glossary inventory</h2>
+    <p class="intro">Every <code>CONTEXT.md</code> term. Search filters this table only.</p>
+    <input class="search" id="g-search" placeholder="Filter glossary…" autocomplete="off">
+    <div style="overflow:auto; max-height: 320px; border: 1px solid var(--line);">
+      <table>
+        <thead><tr><th>Term</th><th>Section</th><th>Avoid</th></tr></thead>
+        <tbody id="glossary"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Inconsistencies</h2>
+    <div id="cards"></div>
+  </section>
+</main>
+<footer class="prompt">
+  <div class="row">
+    <button type="button" id="build">Generate prompt from selected decisions</button>
+    <button type="button" id="copy">Copy</button>
+    <span class="count" id="deviate"></span>
+  </div>
+  <textarea id="out" readonly placeholder="Select options, then generate."></textarea>
+</footer>
+<script>
+const GLOSSARY = [
+  ["Operations Director","The house","Commander, hero, avatar, player character"],
+  ["Nexus Global","The house","The company, the faction, the player team"],
+  ["Strike Team 04","The house","Party, fireteam, platoon"],
+  ["Campaign","The house","Save, playthrough, run, profile, campaign directive"],
+  ["New Operation","The house","New game, new campaign, reset"],
+  ["Strategic time","Time","World time, campaign time, game time, world clock, world hours"],
+  ["Tactical time","Time","Mission timer, world time"],
+  ["Opening hour","Time","time of day, lighting band, night (as a mission type)"],
+  ["Clock speed","Time","Game speed, time scale, time control"],
+  ["Pause","Time","Halt, freeze, world pause as a second clock"],
+  ["Live","Time","Real time, current (alone), now (the timeline tick)"],
+  ["Review time","Time","Playback, rewind"],
+  ["Timeline","Time","Playback, rewind, history bar, time code (the clock readout)"],
+  ["ETA","Time","Duration, mission length"],
+  ["World Network","The World Network","World, world map, strategy layer, overworld, network (alone)"],
+  ["Plate","The World Network","World map, globe, atlas, overworld"],
+  ["Sector","The World Network","Continent, region, zone, territory, continental sector"],
+  ["Focus","The World Network","Selected sector, current sector, target sector"],
+  ["City","The World Network","District, node, tile"],
+  ["District","The World Network","City, level, map, arena"],
+  ["Corporation","The World Network","Faction, team, color"],
+  ["Holder","The World Network","Owner, occupier"],
+  ["Client","The World Network","Employer, contractor, issuer"],
+  ["Client house","The World Network","Peer corporation, holder"],
+  ["Internal directive","The World Network","Self-contract, house job"],
+  ["Contested","The World Network","Warzone, disputed"],
+  ["Unknown","The World Network","Fog, unexplored"],
+  ["Control","The World Network","Ownership, influence, current order, lid, taking a city, control key"],
+  ["Control key","The World Network","Legend, faction key, ownership key, color key"],
+  ["Unrest","The World Network","Chaos, heat, threat"],
+  ["Unrest pressure","The World Network","Crisis, bleed"],
+  ["Crisis","The World Network","Collapse, fail state, unrest pressure"],
+  ["Garrison condition","The World Network","Garrison (alone), defense, defense rating"],
+  ["Tax yield","The World Network","Weekly tax, GDP, income (alone)"],
+  ["World Event","The World Network","News, incident, log line"],
+  ["Event category","The World Network","Incident type, news type, seize (as a contract Type)"],
+  ["Feed","The World Network","Chat, news ticker, event list, global events, traffic"],
+  ["Event forecast","The World Network","Prediction, horoscope, threat forecast, world hours, forecast (alone)"],
+  ["Ownership","The World Network","Control, capture"],
+  ["Nexus-held","The World Network","Owned, captured, Nexus sector"],
+  ["Credits","Currencies","Money, cash, gold, Funds, CR as a concept"],
+  ["Influence","Currencies","Influence index, global control, reputation, favor, trickle, points as a concept"],
+  ["Influence action","Currencies","Policy, edict, button, sector action, ready"],
+  ["Stabilize","Currencies","Calm, suppress"],
+  ["Lobby","Currencies","Diplomacy, standing"],
+  ["Expedite","Currencies","Rush, unlock, boost"],
+  ["Intel","Currencies","XP, rank, clearance, sector intel"],
+  ["Intel gate","Currencies","Lock (as a system), clearance, unlock, intel requirement"],
+  ["Chance","Currencies","Odds, success rate, projected success, risk index"],
+  ["Risk index","Currencies","Threat, threat level, difficulty, chance"],
+  ["Threat","Currencies","Risk index, difficulty, alert, network threat, defense rating"],
+  ["Contract","Contracts","Operation, mission (the deployment), job, gig, quest, available operation"],
+  ["Codename","Contracts","Name (alone), title, alias, designation"],
+  ["Authored contract","Contracts","Main mission, story mission, operation"],
+  ["Generated contract","Contracts","Side mission, filler, random mission, procedural mission"],
+  ["Priority","Contracts","Urgent, flagged"],
+  ["Expiry","Contracts","EXP, timer, deadline, TTL"],
+  ["Type","Contracts","Mode, genre"],
+  ["Reward","Contracts","Payout, gold"],
+  ["Brief","Contracts","Cutscene, briefing room, Briefing, dossier"],
+  ["Replay","Contracts","New Game Plus, grind"],
+  ["Quiet replay","Contracts","Practice, sandbox, diminished payout"],
+  ["Research","Research","Loadout, skill tree, tech tree, upgrades, locker"],
+  ["Branch","Research","Tree, path, school"],
+  ["Laboratory","Research","Queue, bench, workshop"],
+  ["Project","Research","Node, upgrade, card, tech, implant"],
+  ["Unslotted project","Research","Global upgrade, gun mod"],
+  ["Slotted project","Research","Implant, item, unlock"],
+  ["Augmentation bay","Research","Implant, locker, label, slot, squad bay"],
+  ["Stock issue","Research","Unequipped, naked, default"],
+  ["Current issue","Research","Latest, maxed, default loadout"],
+  ["Pin","Research","Lock, favorite, freeze, equip"],
+  ["Operative","Roster","Agent, unit, soldier, merc, character"],
+  ["Roster","Roster","Squad, bench, team, pool"],
+  ["Squad","Roster","Roster, party, loadout"],
+  ["Squad bay","Roster","Augmentation bay, slot"],
+  ["Role","Roster","Class, job, specialist"],
+  ["Role ability","Roster","Skill, spell, power, ultimate"],
+  ["Candidate","Roster","Recruit, applicant, merc"],
+  ["Ready","Roster","Available, healthy, active, Influence action row"],
+  ["Injured","Roster","Wounded, downed, disabled"],
+  ["KIA","Roster","Dead, casualty, wiped"],
+  ["Experience","Roster","XP as a concept name, level, rank"],
+  ["Assembly","Roster","Team select, loadout screen, locker, barracks, Operatives"],
+  ["Deployment mass","Roster","Weight, encumbrance, cargo"],
+  ["Mass tier","Roster","Weight class, mobility"],
+  ["Item","Roster","Consumable, equipment, inventory, loot"],
+  ["Item slot","Roster","Loadout, inventory slot, augmentation bay"],
+  ["Mission","The mission","Contract, operation, night, level, match"],
+  ["Insertion","The mission","Spawn, start"],
+  ["Extraction","The mission","Exit, evac"],
+  ["Landmark","The mission","Marker, waypoint, POI"],
+  ["Weather","The mission","Rain as a separate system, climate"],
+  ["Weather script","The mission","Forecast, live weather roll, climate"],
+  ["Difficulty","The mission","Threat, risk index, hardened as a contract band"],
+  ["Alert","The mission","Alarm, wanted, threat"],
+  ["Awareness","The mission","Alert, detection, stealth meter"],
+  ["Comm log","The mission","Chat, radio, console"],
+  ["Debrief","The mission","Results screen, score, post-game"],
+  ["Abort","The mission","Resign, quit, surrender, lose"],
+  ["Win","The mission","Success, extract"],
+  ["Loss","The mission","Fail, wipe, abort"],
+  ["Clean win","The mission","Perfect, no-kill, ghost"],
+  ["Collateral","The mission","Fine, penalty, murder count"],
+  ["CorpSec","Opposition","Enemy, hostile, guard, cop"],
+  ["CorpSec state","Opposition","AI state, alert state, stance"],
+  ["Archetype","Opposition","Class, type, elite (alone)"],
+  ["Garrison","Opposition","Garrison condition, defenders, bosses"],
+  ["Street patrol","Opposition","Patrol (the CorpSec state), wanderer, extra"],
+  ["Civilian","Opposition","NPC, extra, crowd"],
+  ["VIP","Opposition","Asset, hostage, target"],
+  ["Device","Opposition","Prop, objective item, bomb"],
+  ["Unit","Opposition","Actor, entity, pawn, agent"],
+  ["Select","Orders","Focus, target"],
+  ["Move","Orders","Path, walk, go"],
+  ["Attack","Orders","Fire, shoot, engage"],
+  ["Stop","Orders","Cancel, halt, idle"],
+  ["Hold Ground","Orders","Hold (alone), overwatch, wait, stance"],
+  ["Hold Fire","Orders","Cease fire, weapons hold, passive"],
+  ["Stance","Orders","Posture, unit stance"],
+  ["Explicit target","Orders","Soft target, aggro"],
+  ["Fire lane","Orders","Bullet, projectile path, stray"],
+  ["Primary","Orders","Gun, loadout"],
+  ["Sidearm","Orders","Pistol, secondary"],
+  ["Drawn weapon","Orders","Active gun, equipped"],
+  ["Grenade","Orders","Frag, explosive (alone)"],
+  ["Objective","Objectives","Goal, task, quest step"],
+  ["Optional objective","Objectives","Side objective, bonus, optional (alone)"],
+  ["Tagged enemy","Objectives","Marked, named enemy, boss"],
+  ["Reach zone","Objectives","Touch, arrive"],
+  ["Eliminate tag","Objectives","Kill all, exterminate"],
+  ["Extract","Objectives","Escape, evac"],
+  ["Interact","Objectives","Hack, use, hold"],
+  ["Escort","Objectives","Rescue, walk"],
+  ["Destroy","Objectives","Sabotage, bomb"],
+  ["Defend","Objectives","Hold, survive"],
+  ["Time limit","Objectives","Tactical time, mission timer, ETA"],
+  ["Screen","The terminal","page"],
+  ["Spectacle","Look","atmosphere, look, visual style, cyberpunk, night, rain"]
+];
+
+function rec(label, text) { return { rec: true, label, text }; }
+function opt(label, text) { return { rec: false, label, text }; }
+
+const ISSUES = [
+  {
+    id: "plate-noun", cat: "noun",
+    title: "Plate — the World Network projection",
+    layers: ["glossary", "gdd", "player", "code"],
+    cite: "CONTEXT.md Plate. GDD 216/222/251/859. WorldPlate, PLATE_W, plateMarks.ts. Player: ORBITAL SCAN; onboard “focus it on the plate”.",
+    explanation: "The glossary names the flat projection Plate. Identifiers match (WorldPlate, PLATE_W, platePos). The player almost never reads that word. The Screen prints ORBITAL SCAN. Issue #47 wants to replace Plate with Scan because Plate is a nickname and collides with armor plating and unit nameplates.",
+    suggestion: "Keep Plate as the glossary term and as the identifiers that already exist. Do not print Plate to the player. Do not add Scan.",
+    rationale: "Plate is already the glossary term and the code identifier. Scan collides with Pulse Scan, the CorpSec Suspicious sweep, and scanlines. ORBITAL SCAN can stay a caption without becoming a domain noun. Comments are not a reason to mint a third name.",
+    options: [
+      rec("Keep Plate; do not add Scan",
+        "Keep Plate as the CONTEXT.md term and as identifiers (WorldPlate, PLATE_W, PLATE_H, platePos, cityPlatePos, PlateMark, plateMarks.ts). Player-facing copy does not print Plate. ORBITAL SCAN stays a caption on the World Network Screen. Do not add Scan to the glossary."),
+      opt("Replace Plate with Scan everywhere (#47)",
+        "Replace the glossary term Plate with Scan. Rename identifiers WorldPlate→WorldScan, plateMarks.ts→scanMarks.ts, PLATE_W/H→SCAN_W/H, platePos→scanPos. Rewrite GDD, ADR-0008, AGENTS.md, comments, and onboard copy. Avoid: Plate, world map, globe, atlas, overworld."),
+      opt("Drop the short noun; identifiers stay Plate",
+        "Remove Plate from CONTEXT.md. Docs say “the World Network's flat projection” with no proper noun. Identifiers stay Plate because they already exist. Player copy keeps ORBITAL SCAN. Do not add Scan."),
+      opt("Scan in glossary and docs only; identifiers stay Plate",
+        "Glossary and GDD say Scan. Identifiers stay WorldPlate / PLATE_W / plateMarks. Player copy keeps ORBITAL SCAN.")
+    ]
+  },
+  {
+    id: "scan-collision", cat: "noun",
+    title: "Scan already means four things",
+    layers: ["glossary", "player", "code"],
+    cite: "PULSE SCAN abilities.ts:69. scanUntil types.ts:317. CorpSec scanT/scanYaw world.ts. Scanlines Spectacle. ORBITAL SCAN WorldMap.tsx:454.",
+    explanation: "Pulse Scan is the Recon active. CorpSec Suspicious ends in a scan. Spectacle includes scanlines. The World Network caption is ORBITAL SCAN. Promoting Scan as the Plate's name makes a fifth sense of the same syllable.",
+    suggestion: "Leave Pulse Scan, CorpSec scan, scanlines, and ORBITAL SCAN as they are. Do not add a glossary term Scan.",
+    rationale: "If Plate is kept or dropped (card plate-noun), this card is a constraint on that choice: Scan is not free.",
+    options: [
+      rec("Do not add Scan as a domain noun",
+        "Do not add Scan to CONTEXT.md. Pulse Scan stays the Recon active. CorpSec Suspicious may still say “scan” in docs. Scanlines stay Spectacle. ORBITAL SCAN stays a World Network caption only."),
+      opt("Add Scan; rename Pulse Scan",
+        "Add Scan as the World Network projection. Rename the Recon active so it does not use Scan. Update abilities, tutorial, HUD, and GDD."),
+      opt("Add Scan anyway; live with the collision",
+        "Add Scan as the projection. Pulse Scan, CorpSec scan, and scanlines stay. Glossary _Avoid_ must list those other senses.")
+    ]
+  },
+  {
+    id: "world-modules", cat: "noun",
+    title: "World, WorldMap, worldStore, useWorldClock",
+    layers: ["glossary", "code"],
+    cite: "World Network avoid: World, world map. Phase 'world'. WorldMap.tsx, worldStore.ts, useWorldClock, clock.ts “world clock”.",
+    explanation: "The glossary forbids calling the Screen “world” or “world map”. The router, file, store, and clock hook all say world. Issue #47 keeps those module names.",
+    suggestion: "Keep the module names. Player copy and comments that mean Strategic time or the World Network use those glossary words, not “world clock” or “world map”.",
+    rationale: "The identifiers already exist. Renaming worldStore / WorldMap / useWorldClock is a wide churn that does not change what the director reads. Comments and CONTRACT headers that teach the nickname should follow the glossary.",
+    options: [
+      rec("Keep modules; fix comments and copy",
+        "Do not rename worldStore, WorldMap.tsx, useWorldClock, Phase 'world', or NavKind 'world'. Comments, CONTRACT headers, AGENTS.md, tests, and player copy that mean Strategic time say Strategic time (or Clock speed / Pause). Those that mean the Screen say World Network. Stop saying world clock, world time, world hours, and world map in comments and copy."),
+      opt("Rename modules to World Network / Strategic time",
+        "Rename WorldMap, worldStore, useWorldClock, and Phase 'world' to identifiers built from World Network and Strategic time. Update every import."),
+      opt("Leave comments as world clock / world map",
+        "Keep module names and keep comment nicknames. Only player-facing copy changes.")
+    ]
+  },
+  {
+    id: "atlas-name", cat: "noun",
+    title: "atlas.ts vs Plate (avoid: atlas)",
+    layers: ["glossary", "code"],
+    cite: "CONTEXT.md Plate avoid atlas. src/game/atlas.ts CONTRACT header: “Strategic atlas for the world map”.",
+    explanation: "The module that holds corporations, sectors, Plate polygons, and cities is named atlas. The glossary lists atlas as a word not to use for the Plate.",
+    suggestion: "Keep the filename atlas.ts. Rewrite the CONTRACT header so it names Plate and the World Network, not atlas or world map.",
+    rationale: "atlas.ts is the identifier the code already uses. The header is a comment, so it should not teach a forbidden name.",
+    options: [
+      rec("Keep atlas.ts; fix the header",
+        "Keep src/game/atlas.ts as the filename. Rewrite its CONTRACT header (and comments that say “world map”) to name Plate and sectors. Do not call the Plate an atlas in docs."),
+      opt("Rename atlas.ts to match Plate",
+        "Rename src/game/atlas.ts and its exports' home to a Plate-based module name. Update imports."),
+      opt("Leave header language",
+        "Keep atlas.ts and keep “atlas” / “world map” in its header.")
+    ]
+  },
+  {
+    id: "control-ownership", cat: "noun",
+    title: "Control vs Ownership vs Control key vs Control Systems",
+    layers: ["glossary", "player", "code"],
+    cite: "CONTROL readout; CONTROL KEY; Branch Control Systems; feed TAKES CONTROL OF; Lobby “CONTROL OVER nH”.",
+    explanation: "Control is a sector percentage and does not belong to a corporation. Ownership is who Holds a city. Control key is the holder legend. Control Systems is a research Branch. The Feed says a house TAKES CONTROL OF a city, which teaches the wrong meter (ADR-0008).",
+    suggestion: "Keep Control, Control key, and Control Systems. Change Ownership feed lines to TAKES {city}. Lobby copy may still say CONTROL because that action raises Control.",
+    rationale: "Three of the four senses are already distinct glossary terms. Only the Feed line is lying. Issue #47's TAKES {city} is the Ownership fix. Do not rename Control Systems.",
+    options: [
+      rec("Keep the three terms; Feed says TAKES {city}",
+        "Control stays the sector percentage. Control key stays the holder legend. Control Systems stays the Branch. Lobby copy may say CONTROL. Feed lines that mean Ownership use TAKES {city} (seed, mission flip, rolled seizure template). Keep SEIZES THE COUNCIL IN and ANNEXES THE HOLDINGS OF. Do not rename Type seizure or the forecast chip SEIZE."),
+      opt("Also rename Control Systems",
+        "Same as recommended, and rename the research Branch so it does not use Control."),
+      opt("Keep TAKES CONTROL OF in the Feed",
+        "Leave feed copy as TAKES CONTROL OF. Control vs Ownership stays a docs-only distinction.")
+    ]
+  },
+  {
+    id: "live-senses", cat: "noun",
+    title: "Live — Review time unset, plus three others",
+    layers: ["glossary", "player", "code"],
+    cite: "LIVE chip WorldMap.tsx:576. SAT-16E // LIVE FEED :455. missionStore.live. wm-marker.live (unlocked contract).",
+    explanation: "Live is the World Network when Review time is unset. The same letters mark the satellite caption, the running mission sim, and an unlocked contract marker.",
+    suggestion: "Player Live stays the Timeline state. Change SAT-16E // LIVE FEED so it does not say Feed or steal Live. Do not rename missionStore.live.",
+    rationale: "The LIVE chip is the glossary term. LIVE FEED uses both Live and Feed for a caption that is neither. missionStore.live is an identifier the player never reads.",
+    options: [
+      rec("LIVE chip stays; caption drops LIVE FEED",
+        "The World Network LIVE chip / GO LIVE / RETURN TO LIVE keep meaning Review time unset. Change SAT-16E // LIVE FEED to SAT-16E // LIVE or SAT-16E (not Feed). Do not rename missionStore.live or CSS wm-marker.live."),
+      opt("Rename missionStore.live too",
+        "Same caption change, and rename missionStore.live to an identifier that does not use Live."),
+      opt("Leave all Live strings",
+        "Keep SAT-16E // LIVE FEED and all Live identifiers.")
+    ]
+  },
+  {
+    id: "pause-two", cat: "noun",
+    title: "Pause — Strategic time vs Tactical time",
+    layers: ["glossary", "player"],
+    cite: "CONTEXT.md Pause. worldStore.paused vs missionStore.paused. PAUSE WORLD CLOCK vs HUD PAUSE.",
+    explanation: "One glossary term covers both clocks. Player copy currently says PAUSE WORLD CLOCK on the World Network and PAUSE on the mission. The glossary already says they are not a second clock with a second name.",
+    suggestion: "Keep one term, Pause. Player copy: PAUSE / RESUME on the World Network, aria names Strategic time. Mission HUD stays PAUSE.",
+    rationale: "Inventing “world pause” is on the avoid list. Two buttons can share Pause if the aria/context names the clock.",
+    options: [
+      rec("One term; World Network PAUSE/RESUME with strategic-clock aria",
+        "Pause remains one glossary term. World Network buttons print PAUSE / RESUME. Aria names the strategic clock. Mission HUD stays PAUSE. Do not add a second pause term."),
+      opt("Split into two glossary terms",
+        "Add a distinct term for pausing Strategic time, separate from the mission pause menu."),
+      opt("Keep PAUSE WORLD CLOCK",
+        "Leave the World Network aria and labels as WORLD CLOCK.")
+    ]
+  },
+  {
+    id: "ready-clear", cat: "noun",
+    title: "Ready vs Influence status vs FEED CLEAR",
+    layers: ["glossary", "player"],
+    cite: "Operative READY (allowed). Influence status READY WorldMap.tsx:160. FEED CLEAR :779. Issue #47 wants CLEAR for the spendable row.",
+    explanation: "Ready is an operative who can be assigned. The Influence action row prints READY when spendable. Issue #47 would print CLEAR. The empty Feed already prints FEED CLEAR. Weather also uses CLEAR DUSK / CLEAR NIGHT. Telemetry has a CLEAR button.",
+    suggestion: "When the Influence action is spendable, print no status word — name and cost are enough. Keep ACTIVE / CD nH / NO TARGET / LOW PTS. Keep FEED CLEAR.",
+    rationale: "The glossary forbids Ready on that row and does not name a replacement. CLEAR would collide with FEED CLEAR. Silence is not a new noun.",
+    options: [
+      rec("No status word when spendable; keep FEED CLEAR",
+        "Influence action row: print no READY/CLEAR when spendable. Keep ACTIVE, CD nH, NO TARGET, LOW PTS. Operative Ready unchanged. FEED CLEAR stays the empty Feed. Do not add Clear to the glossary."),
+      opt("Print CLEAR; rename empty Feed",
+        "Spendable Influence row prints CLEAR. Change FEED CLEAR to a phrase that does not use Clear (glossary already avoids “traffic”)."),
+      opt("Keep Influence READY",
+        "Leave the spendable row as READY.")
+    ]
+  },
+  {
+    id: "focus-senses", cat: "noun",
+    title: "Focus — sector vs operative dossier vs Select",
+    layers: ["glossary", "player", "code"],
+    cite: "Focus = inspected sector. Store field is selected. Chip FOCUS. Assembly dossier stat FOCUS. Select is an order.",
+    explanation: "Focus is the inspected sector. The store calls it selected (on the Focus avoid list). Assembly prints FOCUS as an operative stat. Select is a different term (choosing who receives an order).",
+    suggestion: "Player Focus stays the sector. Rename the store field only if you want identifiers to match; not required. Change the Assembly stat label so it is not Focus.",
+    rationale: "The chip FOCUS on the sector panel is the glossary term. The dossier stat is a fake number that stole the word. selected in the store is an existing identifier the player does not see.",
+    options: [
+      rec("Sector Focus stays; rename the dossier stat; leave store field selected",
+        "Focus remains the inspected sector (chip, aria FOCUS PREVIOUS/NEXT SECTOR, feed aria). Do not rename worldStore.selected. Change the Assembly dossier stat labeled FOCUS to a word that is not Focus or Select."),
+      opt("Rename worldStore.selected to focus",
+        "Same as recommended, and rename the store field selected → focus to match the glossary."),
+      opt("Leave the dossier FOCUS stat",
+        "Keep the Assembly FOCUS stat.")
+    ]
+  },
+  {
+    id: "authorization", cat: "noun",
+    title: "Authorization vs AUTHORIZED contracts vs UNAUTHORIZED",
+    layers: ["glossary", "player"],
+    cite: "Research: authorization is a spend. Banner: AUTHORIZED CONTRACTS. Menu: UNAUTHORIZED ACCESS. Authored contract is the spine.",
+    explanation: "Spending Credits on a Project is authorization. An authored contract is one of the three campaign-spine contracts. The complete-campaign banner says AUTHORIZED CONTRACTS. Login flavor says UNAUTHORIZED ACCESS.",
+    suggestion: "Banner uses AUTHORED. Research keeps AUTHORIZE / NO PROJECT AUTHORIZED. Login UNAUTHORIZED ACCESS stays flavor.",
+    rationale: "The banner is the only place that teaches the wrong word for Authored contract. Research authorization is real. Login flavor is already excepted for clearance; leave it.",
+    options: [
+      rec("Banner AUTHORED; research authorization unchanged; login flavor stays",
+        "Campaign-complete banner: ALL THREE AUTHORED CONTRACTS FULFILLED. Research keeps AUTHORIZE PROJECT, NO PROJECT AUTHORIZED, READY TO AUTHORIZE. Menu UNAUTHORIZED ACCESS stays."),
+      opt("Also drop research AUTHORIZE",
+        "Same banner change, and rename research spend copy so it does not say authorize."),
+      opt("Keep AUTHORIZED CONTRACTS",
+        "Leave the campaign banner as AUTHORIZED CONTRACTS.")
+    ]
+  },
+  {
+    id: "forecast-weather", cat: "noun",
+    title: "Event forecast vs Weather script (avoid: Forecast)",
+    layers: ["glossary", "player"],
+    cite: "Event forecast. Weather script avoid Forecast. Copy FORECAST 6H; tooltip WORLD HOURS. Forecast chip SEIZE.",
+    explanation: "Event forecast is a World Network term. Weather script's avoid list includes Forecast so the Brief does not pretend to predict rain. Player copy still says FORECAST 6H and WORLD HOURS.",
+    suggestion: "Print EVENT FORECAST. Tooltip NEXT 6 STRATEGIC HOURS. Keep the SEIZE chip as Event category Seizure, not Type seizure.",
+    rationale: "The glossary already has the words. The Brief must not start saying Forecast for Weather.",
+    options: [
+      rec("EVENT FORECAST; strategic hours; SEIZE chip stays",
+        "World Network label EVENT FORECAST (not FORECAST 6H). Tooltip/title NEXT 6 STRATEGIC HOURS (not WORLD HOURS). Keep RIOT/BLKOUT/RAID/TRADE/SEIZE chips. Weather copy must not say Forecast."),
+      opt("Rename the SEIZE chip too",
+        "Same, and change the Event forecast chip SEIZE so it cannot be read as Type seizure."),
+      opt("Keep FORECAST 6H",
+        "Leave FORECAST 6H and WORLD HOURS.")
+    ]
+  },
+  {
+    id: "type-seizure", cat: "noun",
+    title: "Type seizure vs Event category Seizure",
+    layers: ["glossary", "player", "code"],
+    cite: "Contract Type seizure. EventKind 'seizure'. Feed SEIZES THE COUNCIL. Forecast SEIZE.",
+    explanation: "Two different things share seizure. The glossary already says they are not the same. Code uses 'seizure' for both. Player forecast chip is SEIZE.",
+    suggestion: "Keep both glossary terms. Do not merge them. Identifiers may keep 'seizure' in each module. Player chips stay as they are unless forecast-weather says otherwise.",
+    rationale: "This is an allowed collision the glossary already documents. Do not “fix” it by inventing a third word.",
+    options: [
+      rec("Keep both; do not invent a third word",
+        "Type seizure and Event category Seizure remain distinct glossary terms. Do not rename either. EventKind 'seizure' and ContractType SEIZURE may stay. Player forecast chip stays SEIZE unless a separate decision changes it."),
+      opt("Rename Event category Seizure",
+        "Pick a new Event category name that is not Seizure. Update forecast, feed kinds, and glossary."),
+      opt("Rename Type seizure",
+        "Pick a new contract Type name that is not seizure.")
+    ]
+  },
+  {
+    id: "lock-senses", cat: "noun",
+    title: "Locked — Intel gate, Antarctica, Project, Brief nav, Pin",
+    layers: ["glossary", "player"],
+    cite: "Intel gate prints Locked. Pin avoid Lock. Research LOCKED. Brief nav LOCKED. Antarctica locked.",
+    explanation: "Locked is the Intel gate print. Pin must not be called lock. Research, Brief nav, and Antarctica also print or code as locked.",
+    suggestion: "Keep Locked as the Intel gate print. Do not call Pin a lock. Research/Brief/Antarctica may keep locked as a state word without adding a new term.",
+    rationale: "One player word for “you cannot open this yet” is fine. Pin is a different object and already has a name.",
+    options: [
+      rec("Locked stays Intel gate print; Pin is never lock",
+        "Intel gate keeps printing Locked. Pin stays Pin (UI PIN / AUTO / STOCK). Research node LOCKED, Brief nav LOCKED, and Antarctica locked may stay as state copy without new glossary terms."),
+      opt("Different word per gate",
+        "Give Research, Brief nav, Antarctica, and Intel gate four different player words."),
+      opt("Call Pin lock in the UI",
+        "Print LOCK for a pinned bay.")
+    ]
+  },
+  {
+    id: "terminal-screen", cat: "noun",
+    title: "Screen vs “terminal” vs ScreenChrome",
+    layers: ["glossary", "gdd", "code"],
+    cite: "Screen = World Network, Research, Brief, Assembly. GDD: “same terminal”. Component ScreenChrome. Desk was rejected.",
+    explanation: "Screen is the glossary term. GDD calls the OS a terminal. The shared header+nav is ScreenChrome. Desk was a comment nickname and is not a term.",
+    suggestion: "Keep Screen. Keep ScreenChrome as the component identifier. Do not add Desk or Terminal as glossary terms. GDD may keep “terminal” as Spectacle flavor.",
+    rationale: "Screen already names the four. ScreenChrome is the identifier the code uses. Terminal in Spectacle is chrome (scanlines), not a fifth Screen.",
+    options: [
+      rec("Screen + ScreenChrome; no Desk; terminal stays flavor",
+        "Glossary term remains Screen. Component remains ScreenChrome. Do not add Desk or Terminal to CONTEXT.md. GDD “module of the same terminal” may stay as look/flavor. Do not say desk in comments."),
+      opt("Add Terminal as a glossary term",
+        "Add Terminal as the OS that hosts Screens. Define it against Screen and Spectacle."),
+      opt("Rename ScreenChrome",
+        "Rename ScreenChrome to a Screen-based identifier.")
+    ]
+  },
+  {
+    id: "wn-copy-batch", cat: "copy",
+    title: "World Network chrome — print the glossary",
+    layers: ["player", "gdd"],
+    cite: "WorldMap.tsx panels, banners, transport, onboard. Issue #47 copy table.",
+    explanation: "The glossary already has Clock speed, Pause, Timeline, Feed, Event forecast, Sector, Contract, Campaign, Authored contract, Expiry, Roster empty. The Screen still prints GAME SPEED, WORLD CLOCK, TIME CONTROL, GLOBAL EVENTS FEED, FORECAST 6H, CONTINENTAL SECTORS, AVAILABLE OPERATIONS, CAMPAIGN DIRECTIVE, AUTHORIZED, WIPED, EXP, POINTS, VIEW SECTOR INTEL.",
+    suggestion: "Align that chrome with the glossary. Do not wait on the Plate/Scan noun. TIME CODE stays (it is the clock readout, which Timeline's avoid list already names).",
+    rationale: "These are not new terms. They are the existing terms, unprinted. TIME CODE is the one label the glossary already set aside.",
+    options: [
+      rec("Print the glossary on the World Network; keep TIME CODE; drop VIEW SECTOR INTEL",
+        "Player copy: OPEN CONTRACTS (not AVAILABLE OPERATIONS); SECTORS (not CONTINENTAL SECTORS); CLOCK SPEED / CLOCK SPEED nX (not GAME SPEED); PAUSE / RESUME with strategic-clock aria (not WORLD CLOCK); EVENT FORECAST and NEXT 6 STRATEGIC HOURS (not FORECAST 6H / WORLD HOURS); FEED (not GLOBAL EVENTS FEED); TIMELINE (not TIME CONTROL); TIME CODE kept; CAMPAIGN COMPLETE / CAMPAIGN FAILED (not CAMPAIGN DIRECTIVE); ALL THREE AUTHORED CONTRACTS FULFILLED; ROSTER EMPTY (not STRIKE ROSTER WIPED); EXPIRY nH (tooltip EXPIRES stays); Influence PTS not POINTS; remove VIEW SECTOR INTEL. Onboard headings and body use the same words (SECTORS, OPEN CONTRACTS, Strategic time, Feed). Do not print Plate. This is issue #47's copy table minus Scan."),
+      opt("Apply issue #47 copy table including Scan language",
+        "Same copy table as #47 including “focus it on the scan” and Scan in onboard, plus the identifier renames in that ticket."),
+      opt("Change nothing on the World Network chrome",
+        "Leave GAME SPEED, WORLD CLOCK, TIME CONTROL, GLOBAL EVENTS FEED, AVAILABLE OPERATIONS, CONTINENTAL SECTORS, banners, EXP, POINTS, VIEW SECTOR INTEL.")
+    ]
+  },
+  {
+    id: "takes-copy", cat: "copy",
+    title: "Feed: TAKES CONTROL OF {city}",
+    layers: ["player", "code"],
+    cite: "worldStore.ts:157, 256, 860. Tests expect TAKES CONTROL OF.",
+    explanation: "Ownership flips print TAKES CONTROL OF. Control is the sector percentage.",
+    suggestion: "TAKES {city}. Update matching tests.",
+    rationale: "Same as control-ownership. Split out so it can be accepted even if other Control names stay.",
+    options: [
+      rec("TAKES {city}; update tests",
+        "Seed, mission-result, and rolled seizure template: TAKES {city}, not TAKES CONTROL OF. Keep SEIZES THE COUNCIL IN and ANNEXES THE HOLDINGS OF. Update worldStore.test.ts."),
+      opt("Keep TAKES CONTROL OF",
+        "Leave feed templates unchanged.")
+    ]
+  },
+  {
+    id: "world-time-other", cat: "copy",
+    title: "“World time” on Research, Assembly, recruits",
+    layers: ["player"],
+    cite: "Research.tsx:464 PROJECTS RUN ON WORLD TIME. index.tsx:987 WORLD HOURS / WORLD TIME. :1166 ADVANCE WORLD TIME TO RECOVER.",
+    explanation: "Those screens mean Strategic time. The glossary forbids world time / world hours.",
+    suggestion: "Print Strategic time (or CLOCK / 24 STRATEGIC HOURS as the UI needs).",
+    rationale: "Same forbidden nickname as the World Network transport, on two other Screens.",
+    options: [
+      rec("Say Strategic time on Research, Assembly, recruits",
+        "Replace WORLD TIME / WORLD HOURS in Research, Assembly injury copy, and the recruitment market with Strategic time (or STRATEGIC HOURS)."),
+      opt("Leave those strings",
+        "Keep WORLD TIME / WORLD HOURS on Research and Assembly.")
+    ]
+  },
+  {
+    id: "operation-copy", cat: "copy",
+    title: "Operation — New Operation vs Continue vs Brief",
+    layers: ["glossary", "player"],
+    cite: "New Operation is a term. CONTINUE SAVED OPERATION. Brief OPERATION:. Contract avoid Operation.",
+    explanation: "New Operation is the menu erase. Continue's aria says SAVED OPERATION. The Brief labels the contract OPERATION. Contract's avoid list includes Operation.",
+    suggestion: "New Operation stays. Continue does not say Operation. Brief prints CONTRACT or CODENAME, not OPERATION.",
+    rationale: "One allowed use (New Operation). The others teach that a contract is an operation.",
+    options: [
+      rec("New Operation only; Continue and Brief drop Operation",
+        "Keep the menu action New Operation. Continue aria/copy must not say Operation (CONTINUE is enough). Brief label OPERATION: becomes CONTRACT: or CODENAME:. Do not rename New Operation."),
+      opt("Allow Operation as a synonym for Contract",
+        "Add Operation as allowed flavor for a Contract. Keep OPERATION: on the Brief."),
+      opt("Leave Continue and Brief as Operation",
+        "Keep SAVED OPERATION and OPERATION:.")
+    ]
+  },
+  {
+    id: "assembly-copy", cat: "copy",
+    title: "Assembly — LOADOUT, SECONDARY, DEPLOY TEAM, XP, FOCUS",
+    layers: ["player"],
+    cite: "LOADOUT index.tsx:1383. SECONDARY :1396 and Hud:410. DEPLOY TEAM :1510. XP :1616. FOCUS stat :1305.",
+    explanation: "Item slot / Research / Squad avoid loadout. Sidearm avoids secondary. Roster/Squad avoid team. Experience avoids XP as a concept name. Focus is a sector.",
+    suggestion: "LOADOUT → weapons without that word (PRIMARY already exists). SECONDARY → SIDEARM. DEPLOY TEAM → DEPLOY SQUAD. Debrief XP → Experience. FOCUS stat: see focus-senses.",
+    rationale: "These are printed avoids, not new systems.",
+    options: [
+      rec("Print Sidearm, Squad, Experience; drop LOADOUT",
+        "Assembly: remove the LOADOUT label or replace it with PRIMARY / SIDEARM only. SECONDARY becomes SIDEARM on Assembly and HUD. DEPLOY TEAM becomes DEPLOY SQUAD. Debrief “+n XP” becomes Experience (not XP). Assembly FOCUS stat follows the focus-senses decision."),
+      opt("Allow LOADOUT / TEAM / XP / SECONDARY as UI flavor",
+        "Leave those strings. Do not add them to the glossary."),
+      opt("Add Loadout as a glossary term",
+        "Define Loadout in CONTEXT.md and keep the label.")
+    ]
+  },
+  {
+    id: "brief-copy", cat: "copy",
+    title: "Brief — PROJECTED SUCCESS, CONTRACT DOSSIER, MISSION TYPE, HOSTILE ZONE",
+    layers: ["player"],
+    cite: "PROJECTED SUCCESS index.tsx:553 (Chance avoid). CONTRACT DOSSIER :727 (Brief avoid dossier). MISSION TYPE :740. HOSTILE ZONE :713.",
+    explanation: "At low intel the Brief prints PROJECTED SUCCESS for Chance. Dossier is the operative page. Mission is the deployment, not the contract Type. Hostile is only allowed as a click target.",
+    suggestion: "Low intel: CHANCE. Title: not dossier. Type: TYPE. Drop HOSTILE ZONE or say something that is not Hostile.",
+    rationale: "Risk index already replaces Chance at intel 2+. The low-intel label should still be Chance.",
+    options: [
+      rec("CHANCE; no dossier; TYPE; no HOSTILE ZONE",
+        "Brief low-intel label CHANCE (not PROJECTED SUCCESS). Do not title the Brief CONTRACT DOSSIER. MISSION TYPE: becomes TYPE: (contract Type). HOSTILE ZONE is removed or rewritten without Hostile."),
+      opt("Keep PROJECTED SUCCESS as the low-intel label",
+        "Leave PROJECTED SUCCESS, CONTRACT DOSSIER, MISSION TYPE, HOSTILE ZONE.")
+    ]
+  },
+  {
+    id: "research-copy", cat: "copy",
+    title: "Research — FUNDING, AVAILABLE, READY TO AUTHORIZE",
+    layers: ["player"],
+    cite: "FUNDING Research.tsx:311 (Credits avoid Funds). AVAILABLE :71 (Ready avoid Available). READY TO AUTHORIZE :415.",
+    explanation: "Credits avoid Funds. Available is on Ready's avoid list. READY TO AUTHORIZE stacks Ready with authorization.",
+    suggestion: "FUNDING → CREDITS. AVAILABLE can stay as a Project state if we do not add it to the glossary — or print OPEN / CAN AUTHORIZE. READY TO AUTHORIZE → AUTHORIZE or CAN AUTHORIZE.",
+    rationale: "Project states (researched, active, available, locked) are GDD language, not glossary terms. Funds is a hard avoid.",
+    options: [
+      rec("CREDITS not FUNDING; drop READY TO AUTHORIZE",
+        "Research: FUNDING becomes CREDITS (or AVAILABLE CREDITS stays only if it means Credits, not Ready). READY TO AUTHORIZE becomes AUTHORIZE or CAN AUTHORIZE. Project state AVAILABLE may stay as GDD state copy without becoming a glossary term."),
+      opt("Add Available as a Project state term",
+        "Define Available in CONTEXT.md as a Project state. Keep the Research legend."),
+      opt("Leave Research copy",
+        "Keep FUNDING, AVAILABLE, READY TO AUTHORIZE.")
+    ]
+  },
+  {
+    id: "hud-pause-settings", cat: "copy",
+    title: "HUD / Pause / Settings leftover avoids",
+    layers: ["player"],
+    cite: "HOLD Hud.tsx:316. OPTIONAL :349. MISSION DIRECTIVES :333. SIM HALTED PauseMenu.tsx:86. THREAT PROFILE Settings.tsx:279. COLLATERAL PENALTY Debrief. PAYOUT.",
+    explanation: "Hold Ground avoids Hold alone. Optional objective avoids optional alone. Pause avoids Halt. Difficulty avoids Threat. Collateral avoids penalty. Reward avoids Payout (payout is the net).",
+    suggestion: "HOLD → GROUND or HOLD GROUND. OPTIONAL → OPTIONAL OBJECTIVE or a mark that is not the whole word sitting alone if space allows. SIM HALTED → MISSION PAUSED only. THREAT PROFILE → DIFFICULTY. Penalty/Payout: Debrief may say COLLATERAL and the net as the invoice, not PAYOUT as a concept.",
+    rationale: "Small strings, same rule: print the term.",
+    options: [
+      rec("Print the glossary on HUD, pause, settings, debrief",
+        "HUD Hold Ground chip is not HOLD alone (HOLD GROUND or GROUND). Optional objective is not the word OPTIONAL alone if a fuller label fits; otherwise keep a mark plus the objective name. Pause menu drops SIM HALTED (MISSION PAUSED is enough). Settings THREAT PROFILE becomes DIFFICULTY. Debrief COLLATERAL PENALTY becomes COLLATERAL. Debrief PAYOUT: the invoice may print the net without naming a Payout concept (Reward vs net is already in the glossary)."),
+      opt("Leave HUD / pause / settings / debrief flavor",
+        "Keep HOLD, OPTIONAL, SIM HALTED, THREAT PROFILE, COLLATERAL PENALTY, PAYOUT.")
+    ]
+  },
+  {
+    id: "empty-feed", cat: "copy",
+    title: "Empty Feed — NO TRAFFIC vs FEED CLEAR",
+    layers: ["player"],
+    cite: "NO TRAFFIC IN THIS WINDOW WorldMap.tsx:768 (Feed avoid traffic). FEED CLEAR :779.",
+    explanation: "Two empty states. Traffic is forbidden. FEED CLEAR is the unread badge empty string.",
+    suggestion: "Drop TRAFFIC. FEED CLEAR may stay unless ready-clear says otherwise.",
+    rationale: "Do not add Traffic. Do not add a new empty-state noun.",
+    options: [
+      rec("No TRAFFIC; FEED CLEAR depends on ready-clear",
+        "Replace NO TRAFFIC IN THIS WINDOW with copy that uses Feed and does not use traffic (e.g. NO EVENTS IN THIS WINDOW, using World Event). FEED CLEAR follows the ready-clear decision."),
+      opt("Keep NO TRAFFIC",
+        "Leave NO TRAFFIC IN THIS WINDOW.")
+    ]
+  },
+  {
+    id: "now-axis", cat: "copy",
+    title: "Timeline axis NOW vs Live",
+    layers: ["glossary", "player"],
+    cite: "Live avoid: now (the timeline tick). Axis prints NOW WorldMap.tsx:669. LIVE chip already exists.",
+    explanation: "The glossary forbids calling the Timeline origin Now because that is Live. The axis still prints NOW.",
+    suggestion: "Axis origin LIVE (same word as the chip), or keep NOW as a tick mark and accept the avoid-list hit.",
+    rationale: "Recommended: print LIVE so there is one word for “Review time unset”.",
+    options: [
+      rec("Axis origin LIVE",
+        "Timeline axis right label LIVE, not NOW. The LIVE chip and GO LIVE already use that term."),
+      opt("Keep NOW on the axis",
+        "Leave NOW. Do not add Now to the glossary.")
+    ]
+  },
+  {
+    id: "recruit-copy", cat: "copy",
+    title: "Recruit vs Candidate",
+    layers: ["glossary", "player"],
+    cite: "Candidate avoid Recruit (the act of hiring). Buttons RECRUIT, RECRUITMENT MARKET.",
+    explanation: "The person is a Candidate. The act of hiring is what Recruit was reserved not to name as the person. The buttons name the act, which the avoid list called out as the act.",
+    suggestion: "Keep RECRUIT as the verb on the button. Do not call the people recruits. Market title can stay if it means the act.",
+    rationale: "The avoid is “Recruit (the act of hiring)” under Candidate — meaning do not use Recruit as the noun for the person. A verb button is the act. This one is already aligned if we do not rename the people.",
+    options: [
+      rec("RECRUIT stays the verb; people stay Candidates",
+        "Keep RECRUIT / RECRUITMENT MARKET as the hiring act. Do not label a person Recruit. Candidate remains the noun."),
+      opt("Rename the market so Recruit never prints",
+        "Replace RECRUIT buttons and RECRUITMENT MARKET with Candidate-based copy."),
+      opt("Call the people recruits",
+        "Add Recruit as a synonym for Candidate.")
+    ]
+  },
+  {
+    id: "plate-ids", cat: "id",
+    title: "Plate identifiers — rename or keep",
+    layers: ["code"],
+    cite: "WorldPlate, plateMarks.ts, PLATE_W/H, platePos, cityPlatePos. atlas.ts is a CONTRACT FILE.",
+    explanation: "Issue #47 renames these so Plate cannot grow back. The language rule says the identifier the code already uses is a name.",
+    suggestion: "Keep Plate identifiers. Outcome follows plate-noun if that card chose Scan.",
+    rationale: "Renaming PLATE_W in a CONTRACT FILE is churn to erase a name we are keeping. If plate-noun chose Scan, this card should follow it.",
+    options: [
+      rec("Keep WorldPlate / PLATE_* / plateMarks",
+        "Do not rename WorldPlate, plateMarks.ts, PlateMark, layoutPlateMarks, visiblePlateMarks, PLATE_W, PLATE_H, platePos, or cityPlatePos unless plate-noun chose a Scan identifier rename."),
+      opt("Rename to Scan identifiers (#47)",
+        "WorldPlate→WorldScan, plateMarks.ts→scanMarks.ts, PlateMark→ScanMark, PLATE_W/H→SCAN_W/H, platePos→scanPos, cityPlatePos→cityScanPos. atlas.ts CONTRACT FILE: read the header before editing."),
+      opt("Rename to neither Plate nor Scan",
+        "Pick identifiers from “projection” language. (Conflicts with #47's “do not invent projection/chart/plot/board/atlas”.)")
+    ]
+  },
+  {
+    id: "store-field-names", cat: "id",
+    title: "worldStore.selected, TIME_SCALE, opsFor, TeamSelect, MissionBrief",
+    layers: ["code"],
+    cite: "selected vs Focus. TIME_SCALE vs Clock speed avoid time scale. opsFor vs Contract. TeamSelect vs Assembly. MissionBrief vs Brief.",
+    explanation: "Component and field names that the player never sees, built from avoided words.",
+    suggestion: "Keep them. New code uses glossary words. Do not rename TeamSelect/MissionBrief unless you are already in those files for another reason.",
+    rationale: "Same as world-modules. File-level churn without a player-facing win.",
+    options: [
+      rec("Keep these identifiers",
+        "Keep worldStore.selected, TIME_SCALE, opsFor/OpEntry, TeamSelect, MissionBrief, Phase 'team'. New identifiers use glossary words (Focus, Clock speed, Contract, Assembly, Brief). Comments in those files should not teach team select / time scale / operations list."),
+      opt("Rename them all to glossary words",
+        "Rename selected→focus (or equivalent), TIME_SCALE, opsFor, TeamSelect→Assembly component, MissionBrief→Brief component, Phase 'team'→ a Brief/Assembly-safe phase name as needed."),
+      opt("Rename only TeamSelect and MissionBrief",
+        "Rename the Screen components to Assembly and Brief. Leave store fields.")
+    ]
+  },
+  {
+    id: "css-names", cat: "id",
+    title: "CSS classes — .wm-map, .mb-tac-plate, .wm-ops, .wm-timectl",
+    layers: ["code"],
+    cite: "Issue #47: CSS class names stay. Comment .mb-tac-plate as the District plan, not the Plate.",
+    explanation: "Classes encode map / plate / ops / time control. Renaming them is a visual-risk churn.",
+    suggestion: "Do not rename classes. Fix comments that say “map plate” to Plate or District as appropriate.",
+    rationale: "Issue #47 got this right. Classes are not player copy and not glossary terms.",
+    options: [
+      rec("Keep CSS classes; fix comments only",
+        "Do not rename .wm-map, .mb-tac-plate, .wm-ops, .wm-timectl, or other classes. Comment .mb-tac-plate as the District plan, not the Plate. Comments that say “map plate” for the World Network projection say Plate."),
+      opt("Rename classes to glossary words",
+        "Rename CSS classes that say map/plate/ops/time-control to Screen/Plate/Contract/Timeline words.")
+    ]
+  },
+  {
+    id: "docs-comments", cat: "id",
+    title: "GDD, ADR-0008, AGENTS.md, tests — plate / world clock",
+    layers: ["gdd", "code"],
+    cite: "GDD 216, 222, 251, 859 plate. ADR-0008 “Credits from the plate”. AGENTS.md “world map plate”. Tests “on the plate” / “world clock”.",
+    explanation: "Docs and tests teach Plate (good, if we keep it) mixed with world map / world clock (forbidden).",
+    suggestion: "GDD/ADR may say Plate if Plate stays the term. Replace world map / world clock with World Network / Strategic time. AGENTS.md atlas line follows atlas-name.",
+    rationale: "GDD already says the glossary wins when they disagree.",
+    options: [
+      rec("Docs follow the glossary; Plate stays a legal doc word if plate-noun keeps it",
+        "docs/game-design.md, docs/adr/0008, AGENTS.md, and test titles: world map → World Network or Plate as the sentence requires; world clock / world time / world hours → Strategic time; game speed → Clock speed. Leave docs/game-design.html (dated snapshot). If plate-noun dropped Plate, those Plate sentences become “the World Network's flat projection”."),
+      opt("Leave docs and tests",
+        "Do not touch GDD, ADRs, AGENTS.md, or test titles.")
+    ]
+  },
+  {
+    id: "mb-tac-plate", cat: "id",
+    title: "Brief .mb-tac-plate vs Plate",
+    layers: ["code"],
+    cite: "ui.css .mb-tac-plate — District plan on the Brief, not the World Network Plate.",
+    explanation: "The Brief's district diagram uses a class with plate in the name. Armor and nameplates also use plate in comments.",
+    suggestion: "Do not rename. Comment it as the District plan. Armor/nameplate comments may say plating/nameplate.",
+    rationale: "Those are not the glossary Plate. Comments should not point at the wrong object.",
+    options: [
+      rec("Keep class; comment District plan",
+        "Keep .mb-tac-plate. Comment it as the District plan, not the Plate. figure.tsx plated torso and Units.tsx nameplate mesh stay; comments must not mean the World Network Plate."),
+      opt("Rename .mb-tac-plate",
+        "Rename the Brief District plan class so it does not say plate.")
+    ]
+  },
+  {
+    id: "resource-pool", cat: "scope",
+    title: "RESOURCE POOL — new panel noun?",
+    layers: ["player"],
+    cite: "Panel title RESOURCE POOL WorldMap.tsx:1151. Duplicates header Credits, Influence, Roster, Intel.",
+    explanation: "Not a glossary term. Header already prints those instruments. Onboard calls it “your resource pool”.",
+    suggestion: "Do not add Resource pool to CONTEXT.md. Either leave the panel as layout or drop the title later; that is layout, not language.",
+    rationale: "CONTEXT.md is a glossary, not a UI inventory. Duplicated chrome is a layout question.",
+    options: [
+      rec("Not a glossary term",
+        "Do not add Resource pool to CONTEXT.md. The panel may keep or lose that title in a later layout pass. Onboard should not teach “resource pool” as a system."),
+      opt("Add Resource pool to the glossary",
+        "Define Resource pool as the World Network panel of Credits, Influence, Roster, Intel."),
+      opt("Retitle the panel with existing terms",
+        "Rename RESOURCE POOL to something built from Credits / Influence only, still without a new term.")
+    ]
+  },
+  {
+    id: "orbital-scan-term", cat: "scope",
+    title: "ORBITAL SCAN — caption or term?",
+    layers: ["player"],
+    cite: "WorldMap.tsx:454 ORBITAL SCAN. plateMarks.ts reserves space for it.",
+    explanation: "Issue #47 keeps the caption and wants Scan as the noun. The caption can exist without a glossary entry (like SAT-16E).",
+    suggestion: "Keep the caption. Do not add Orbital scan or Scan to CONTEXT.md.",
+    rationale: "SAT-16E is flavor. ORBITAL SCAN is the same kind of chrome. The object under it is Plate (or unnamed).",
+    options: [
+      rec("Caption only; not a glossary term",
+        "Keep ORBITAL SCAN as World Network chrome. Do not add Orbital scan to CONTEXT.md. The projection's glossary name is whatever plate-noun decided."),
+      opt("Add Orbital scan as the term (instead of Plate/Scan)",
+        "Replace Plate with Orbital scan in CONTEXT.md. Player caption stays ORBITAL SCAN."),
+      opt("Remove the caption",
+        "Drop ORBITAL SCAN from the Screen.")
+    ]
+  },
+  {
+    id: "time-code-term", cat: "scope",
+    title: "TIME CODE — already reserved as the clock readout",
+    layers: ["glossary", "player"],
+    cite: "Timeline avoid: time code (the clock readout). Panel title TIME CODE.",
+    explanation: "The glossary already says TIME CODE is the readout, not the Timeline. The panel title matches.",
+    suggestion: "Keep TIME CODE. Do not add a glossary heading unless you want the readout named in the inventory — it is already in Timeline's avoid note.",
+    rationale: "This one is consistent. Listed so it is not “fixed” into TIMELINE.",
+    options: [
+      rec("Keep TIME CODE; do not fold it into Timeline",
+        "The clock readout panel stays TIME CODE. Timeline is the 24-hour strip. Do not retitle TIME CODE to TIMELINE or CLOCK."),
+      opt("Retitle TIME CODE to STRATEGIC CLOCK or similar",
+        "Rename the readout panel using Strategic time / Clock speed words."),
+      opt("Add Time code as its own glossary term",
+        "Promote Time code from Timeline's avoid note to a full CONTEXT.md term.")
+    ]
+  },
+  {
+    id: "surfaces-missing", cat: "scope",
+    title: "Menu, Settings, Minimap, Balance, Mission HUD — glossary or not?",
+    layers: ["gdd"],
+    cite: "GDD Surfaces. Screen excludes Menu, Mission, Debrief. Settings is an overlay. Balance is telemetry.",
+    explanation: "GDD names Menu, Settings, Mission HUD, Minimap, Pause, Balance. CONTEXT.md only names Screen (four) plus Debrief as not a Screen.",
+    suggestion: "Do not add them. They are surfaces, not in-world nouns. Screen's definition already excludes Menu, Mission, Debrief.",
+    rationale: "CONTEXT.md is not a UI sitemap. Adding Menu/Settings/Minimap would turn the glossary into the GDD Surfaces list.",
+    options: [
+      rec("Leave them out of CONTEXT.md",
+        "Do not add Menu, Settings, Minimap, Balance, or Mission HUD as glossary terms. Screen stays World Network, Research, Brief, Assembly. Debrief remains defined and is not a Screen. Settings remains an overlay in AGENTS.md / GDD."),
+      opt("Add them as glossary terms under The terminal",
+        "Add Menu, Settings, Minimap, Balance, Mission HUD (and maybe Pause as the overlay name) to CONTEXT.md."),
+      opt("Add Settings only",
+        "Add Settings as a glossary term (player preferences, not a Screen). Leave Menu/Minimap/Balance out.")
+    ]
+  },
+  {
+    id: "sector-continental", cat: "scope",
+    title: "Sector definition still says “continental theatre”",
+    layers: ["glossary", "player"],
+    cite: "Sector: “A continental theatre…”. Avoid: continent, continental sector. UI CONTINENTAL SECTORS. Atlas titles NORTH AMERICAN SECTOR.",
+    explanation: "The definition uses continental as geography. The avoid list forbids continental as a second kind of theatre. Player copy made it a title anyway. Atlas titles are “NORTH AMERICAN SECTOR”.",
+    suggestion: "Keep Sector. Drop continental from the definition if it keeps teaching the UI title. Atlas titles may stay as proper names of sectors.",
+    rationale: "The avoid is “do not print a second kind”. The definition can describe landmasses without the word continental.",
+    options: [
+      rec("Tighten the Sector definition; UI says SECTORS; atlas titles stay",
+        "Rewrite Sector so the definition does not say continental. Player list title SECTORS. Keep atlas titles like NORTH AMERICAN SECTOR as the sector's name, not as a second kind."),
+      opt("Allow CONTINENTAL SECTORS as the panel title",
+        "Keep the panel title. Soften the avoid list."),
+      opt("Rename atlas titles too",
+        "NORTH AMERICAN SECTOR becomes NORTH AMERICA (or similar) with no Sector word in the title.")
+    ]
+  },
+  {
+    id: "gdd-trickle-wipe", cat: "scope",
+    title: "GDD flavor: trickle, wipes, plating",
+    layers: ["gdd"],
+    cite: "GDD 297 “Tax yield is a trickle”. 707 “The server wipes 90 seconds later”. 466 “plating follows the body”.",
+    explanation: "Influence avoids trickle as a concept. KIA avoids wiped. Plate is the projection. These GDD sentences are metaphor, not UI.",
+    suggestion: "Tax yield sentence: drop trickle. Hollow Crown “wipes” can stay as mission fiction. Mass “plating” is armor, not Plate — say armor if needed.",
+    rationale: "GDD promised the glossary wins on names. Trickle is the one that reopens a removed economy. Wipe in a contract beat is flavor. Armor plating is not the projection.",
+    options: [
+      rec("GDD: no trickle; mission “wipes” may stay; armor ≠ Plate",
+        "Rewrite the Tax yield “trickle” sentence so it does not use trickle. Hollow Crown “server wipes” may stay as authored fiction. Mass/HP “plating” in the GDD means armor, not Plate; say armor if the sentence is next to Plate."),
+      opt("Strip all three metaphors",
+        "Remove trickle, wipes, and plating from the GDD."),
+      opt("Leave GDD flavor",
+        "Keep those sentences.")
+    ]
+  }
+];
+
+const gBody = document.getElementById("glossary");
+GLOSSARY.forEach(([term, section, avoid]) => {
+  const tr = document.createElement("tr");
+  tr.dataset.hay = (term + " " + section + " " + avoid).toLowerCase();
+  tr.innerHTML = "<td><strong>" + term + "</strong></td><td>" + section + "</td><td class='avoid'>" + avoid + "</td>";
+  gBody.appendChild(tr);
+});
+document.getElementById("g-search").addEventListener("input", (e) => {
+  const q = e.target.value.toLowerCase().trim();
+  [...gBody.rows].forEach((r) => { r.style.display = !q || r.dataset.hay.includes(q) ? "" : "none"; });
+});
+
+const cards = document.getElementById("cards");
+ISSUES.forEach((issue, i) => {
+  const el = document.createElement("article");
+  el.className = "card";
+  el.dataset.cat = issue.cat;
+  el.id = issue.id;
+  const opts = issue.options.map((o, j) => {
+    return "<label class='choice" + (o.rec ? " rec" : "") + "'>" +
+      "<input type='radio' name='" + issue.id + "' value='" + j + "'" + (o.rec ? " checked" : "") + ">" +
+      "<span>" + o.label + (o.rec ? "<span class='badge'>Recommended</span>" : "") + "</span>" +
+      "<small>" + o.text + "</small></label>";
+  }).join("") +
+    "<label class='choice skip'>" +
+      "<input type='radio' name='" + issue.id + "' value='skip'>" +
+      "<span>Skip</span>" +
+      "<small>Leave this unchanged. Do not apply the recommended option.</small></label>" +
+    "<label class='choice other'>" +
+      "<input type='radio' name='" + issue.id + "' value='other'>" +
+      "<span>Other</span>" +
+      "<textarea id='other-" + issue.id + "' rows='3' placeholder='Type the decision…'></textarea></label>";
+  el.innerHTML =
+    "<h3>" + (i + 1) + ". " + issue.title + "</h3>" +
+    "<div class='tags'>" + issue.layers.map((t) => "<span class='tag'>" + t + "</span>").join("") + "</div>" +
+    "<p class='cite mono'>" + issue.cite + "</p>" +
+    "<p class='ex'>" + issue.explanation + "</p>" +
+    "<p class='sug'><b>Suggestion.</b> " + issue.suggestion + "</p>" +
+    "<p class='why'>" + issue.rationale + "</p>" +
+    opts;
+  cards.appendChild(el);
+  const otherBox = el.querySelector("#other-" + issue.id);
+  otherBox.addEventListener("focus", () => {
+    el.querySelector("input[value='other']").checked = true;
+  });
+  otherBox.addEventListener("input", () => {
+    el.querySelector("input[value='other']").checked = true;
+  });
+});
+
+document.getElementById("stats").textContent =
+  GLOSSARY.length + " glossary terms · " + ISSUES.length + " decisions";
+
+document.querySelectorAll(".filter").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter").forEach((b) => b.classList.remove("on"));
+    btn.classList.add("on");
+    const cat = btn.dataset.cat;
+    document.querySelectorAll(".card").forEach((c) => {
+      c.classList.toggle("hidden", cat !== "all" && c.dataset.cat !== cat);
+    });
+  });
+});
+
+document.getElementById("pick-rec").addEventListener("click", () => {
+  ISSUES.forEach((issue) => {
+    const idx = issue.options.findIndex((o) => o.rec);
+    const input = document.querySelector("input[name='" + issue.id + "'][value='" + idx + "']");
+    if (input) input.checked = true;
+  });
+});
+
+function currentDecisions() {
+  return ISSUES.map((issue) => {
+    const picked = document.querySelector("input[name='" + issue.id + "']:checked");
+    const val = picked ? picked.value : String(issue.options.findIndex((o) => o.rec));
+    if (val === "skip") {
+      return {
+        id: issue.id, title: issue.title, rec: false, kind: "skip", label: "Skip",
+        text: "Skip. Leave this unchanged. Do not apply the recommended option."
+      };
+    }
+    if (val === "other") {
+      const note = (document.getElementById("other-" + issue.id).value || "").trim();
+      return {
+        id: issue.id, title: issue.title, rec: false, kind: "other", label: "Other",
+        text: note || "Other selected, but no text was entered. Ask before changing this."
+      };
+    }
+    const o = issue.options[Number(val)];
+    return { id: issue.id, title: issue.title, rec: !!o.rec, kind: "pick", text: o.text, label: o.label };
+  });
+}
+
+function buildPrompt() {
+  const ds = currentDecisions();
+  const nSkip = ds.filter((d) => d.kind === "skip").length;
+  const nOther = ds.filter((d) => d.kind === "other").length;
+  const nOff = ds.filter((d) => d.kind === "pick" && !d.rec).length;
+  const bits = [];
+  if (nSkip) bits.push(nSkip + " skipped");
+  if (nOther) bits.push(nOther + " other");
+  if (nOff) bits.push(nOff + " off recommended");
+  document.getElementById("deviate").textContent = bits.length ? bits.join(" · ") : "all recommended";
+  const lines = [
+    "Vocabulary decisions for nexus-reborn, from docs/vocabulary-audit.html.",
+    "Apply these. Do not invent further names. A name is the CONTEXT.md term or the identifier the code already uses; comments are not names.",
+    "Do not change layout, geometry, economy numbers, or mission rules except where a decision requires copy, comments, identifiers, or glossary text.",
+    "Leave docs/game-design.html (dated snapshot).",
+    "Skip means leave that item unchanged — do not apply the recommended option for it.",
+    "",
+    "## Decisions",
+    ""
+  ];
+  ds.forEach((d, i) => {
+    const tag = d.kind === "skip" ? " [skip]" : d.kind === "other" ? " [other]" : "";
+    lines.push((i + 1) + ". [" + d.id + "] " + d.title + tag);
+    lines.push("   " + d.text);
+    lines.push("");
+  });
+  lines.push("After applying: CONTEXT.md remains a glossary (no implementation notes). Run lint, test, and build. Click-through the World Network at 1280×720 if player copy changed. Stop any dev server on 4200.");
+  document.getElementById("out").value = lines.join("\n");
+}
+
+document.getElementById("build").addEventListener("click", buildPrompt);
+document.getElementById("copy").addEventListener("click", async () => {
+  if (!document.getElementById("out").value) buildPrompt();
+  const t = document.getElementById("out").value;
+  try {
+    await navigator.clipboard.writeText(t);
+    document.getElementById("copy").textContent = "Copied";
+    setTimeout(() => { document.getElementById("copy").textContent = "Copy"; }, 1500);
+  } catch (err) {
+    document.getElementById("out").select();
+  }
+});
+</script>
+</body>
+</html>

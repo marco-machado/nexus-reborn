@@ -16,7 +16,7 @@ Stop every dev server you started (`npm run dev`, `vite preview`) before the tur
 
 Boundaries are load-bearing:
 
-- `src/game/` — simulation and static data. Pure TypeScript, no React, no three.js. `world.ts` is the mission sim; `pathfind.ts` is routing; `atlas.ts` is the world map plate. Deploy mass, mission variants, abilities, and quality live in sibling modules.
+- `src/game/` — simulation and static data. Pure TypeScript, no React, no three.js. `world.ts` is the mission sim; `pathfind.ts` is routing; `atlas.ts` is the Scan projection (sectors, cities, polygons). Deploy mass, mission variants, abilities, and quality live in sibling modules.
 - `src/world/citygen.ts` — procedural city, deterministic from `mission.seed`. Owns road geometry and the walk grid.
 - `src/state/` — Zustand stores and the versioned campaign save.
 - `src/scene/` — three.js under r3f. Reads the world imperatively every frame.

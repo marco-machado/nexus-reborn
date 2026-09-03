@@ -225,7 +225,7 @@ describe('save validation', () => {
     expect(loaded.campaign.nextCandidateT).toBe(5000 + CANDIDATE_REFRESH_SEC)
   })
 
-  it('upgrades a v3 blob by starting an empty contract market on the world clock', () => {
+  it('upgrades a v3 blob by starting an empty contract market on Strategic time', () => {
     useWorldStore.setState({ t: 9000 })
     const v3 = downgradeToV3(captureSave())
     storage.setItem(SAVE_KEY, JSON.stringify(v3))

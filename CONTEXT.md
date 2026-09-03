@@ -68,16 +68,16 @@ _Avoid_: Duration, mission length
 The director's job between missions: sectors, ownership, contracts, the strategic clock, the feed, credits, influence, roster, and intel.
 _Avoid_: World, world map, strategy layer, overworld, network (alone)
 
-**Plate**:
+**Scan**:
 The World Network's flat projection of sectors, cities, and open contracts. Latitude and sector color live on it. It is not the District and it is not a globe.
-_Avoid_: World map, globe, atlas, overworld
+_Avoid_: Plate, world map, globe, atlas, overworld
 
 **Sector**:
 A continental theatre with its own control, unrest, tax yield, garrison condition, and generated-contract market. Six sectors are open. Antarctica is locked at every intel level and prints no survey data.
 _Avoid_: Continent, region, zone, territory, continental sector (as a second kind)
 
 **Focus**:
-The sector the director is inspecting on the World Network. The plate, the sector readout, Influence actions, the Event forecast, and the open-contract list all read this sector.
+The sector the director is inspecting on the World Network. The Scan, the sector readout, Influence actions, the Event forecast, and the open-contract list all read this sector.
 _Avoid_: Selected sector, current sector, target sector (target is a landmark)
 
 **City**:
@@ -121,7 +121,7 @@ A percentage on each sector. It does not belong to a corporation.
 _Avoid_: Ownership (that is city holders), influence, current order, lid, taking a city (that is Ownership), control key (the holder legend)
 
 **Control key**:
-The plate legend of sector colors — each Holder, Contested, and Unknown — counting sectors, not cities. It is not Control.
+The Scan legend of sector colors — each Holder, Contested, and Unknown — counting sectors, not cities. It is not Control.
 _Avoid_: Legend, faction key, ownership key, color key
 
 **Unrest**:
@@ -165,7 +165,7 @@ Which Holder has each city. A mission win hands the mission city to Nexus Global
 _Avoid_: Control (that is the sector percentage), capture
 
 **Nexus-held**:
-Said of a city or a sector: a Nexus-held city has Nexus Global as Holder; a Nexus-held sector has Nexus Global as its plate color. Only a Nexus-held sector pays Tax yield.
+Said of a city or a sector: a Nexus-held city has Nexus Global as Holder; a Nexus-held sector has Nexus Global as its scan color. Only a Nexus-held sector pays Tax yield.
 _Avoid_: Owned, captured, Nexus sector (the house is Nexus Global)
 
 ## Currencies and intel
