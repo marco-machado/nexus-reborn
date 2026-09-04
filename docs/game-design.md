@@ -864,15 +864,15 @@ Effects stay sparse and informative: colored tracers, muzzle and impact flashes,
 
 Audio confirms orders, marks danger, and prices violence. It does not narrate.
 
-Combat and UI one-shots, the mission rain hiss, and the two beds are committed clips. The alert-tension drone is synthesized so it can ramp with the mission alert level (0–3) and release when the mission ends.
+Combat and UI one-shots and the mission rain use CC0 sound libraries: recorded firearms and reload handling, authored interface, impact, and explosion cues, and recorded rain. The set contains 20 one-shots and two rain loops. Sources, credits, licenses, mastering, and runtime details live in the [audio README](../inspiration/audio/sfx/README.md). These and the strategy and mission beds are committed clips. The alert-tension drone is synthesized so it can ramp with the mission alert level (0–3) and release when the mission ends.
 
-Voices that must exist: weapon-specific gunshots, reload, confirmation, UI click, alert sting, objective-complete, death thud, operative-hit thump.
+Voices that must exist: weapon-specific gunshots, reload, blast, ability activation, confirmation, UI click, interaction progress, alert sting, objective-complete, death thud, operative-hit thump.
 
-Two beds: a low industrial loop on the four Screens (music), a city-hum loop on the mission (ambience) — one of three clips, chosen at random when the mission bed starts, not keyed to contract, district, Opening hour, weather, or threat. Rain-hiss is a looping clip that follows weather and is silent when the weather is none. Each bed dies with the screen that owns it. Opening hour does not get its own bed.
+Two beds: a low industrial loop on the four Screens (music), a city-hum loop on the mission (ambience) — one of three clips, chosen at random when the mission bed starts, not keyed to contract, district, Opening hour, weather, or threat. Separate light and heavy rain recordings crossfade as weather changes; rain is silent when the weather is none. Each bed dies with the screen that owns it. Opening hour does not get its own bed.
 
-Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. Dense combat is rate-limited so the mix does not collapse into noise.
+Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. UI cues sit below weapon reports. Event rate limits and overlap caps keep dense combat readable, with room reserved for impacts and warnings when gunfire fills the mix. Small playback-rate variations soften repeated gunshots; a final compressor catches coincident peaks. Late-loading one-shots are dropped so earlier actions do not sound as a delayed burst.
 
-There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Acknowledgements are a short radio click on the UI bus; CorpSec gunshots are a darker, narrower restatement of the squad voice as a separate clip; the alert sting is one combat clip that already includes the UI pip so it stays audible in a firefight.
+There is no spoken operative dialogue and no spatial audio model. Those are out of scope unless reopened. Acknowledgements are a short selection click on the UI bus; CorpSec gunshots use quieter, narrower versions of the same firearm recordings as the squad; the alert sting is a dedicated warning cue on the combat bus.
 
 ---
 
@@ -900,7 +900,7 @@ Single-player. No networking.
 
 The campaign save is versioned and local. It holds the World Network, the laboratories, the roster, tutorial progress, and the campaign result. A mission in progress is memory only. Settings and telemetry live in their own slots so New Operation does not reset the player’s preferences.
 
-Missions and districts are deterministic from the mission seed, including the weather script and the Opening hour. Portraits and figures use stable hashes. The World Event stream and the candidate market use serialized random state so a reload continues the same sequence. Rain particles and synthesized noise may be unseeded; they do not change outcomes.
+Missions and districts are deterministic from the mission seed, including the weather script and the Opening hour. Portraits and figures use stable hashes. The World Event stream and the candidate market use serialized random state so a reload continues the same sequence. Presentation-only rain particles, gunshot playback-rate variation, and mission-bed selection may be unseeded; they do not change outcomes.
 
 Quality is a player setting (Auto / High / Medium / Low), not a design lever. Building ghosting survives every tier because it is readability.
 
@@ -920,7 +920,7 @@ These are not unfinished features. They are not this game.
 - Player-as-operative, rotatable tactical camera, click-per-shot combat.
 - Equipment ownership, a consumable shop, account levels.
 - Mid-mission save and resume.
-- External art or licensed audio pipelines.
+- External art pipelines.
 - Spoken VO and a spatial audio model, unless explicitly reopened.
 
 ---

@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "retrieved": "2026-09-03",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "packages": {
+    "firearms": {
+      "title": "The Free Firearm Sound Library",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "format": "7z",
+      "license": "CC0-1.0",
+      "url": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z",
+      "file": "firearms.7z",
+      "sha256": "cc1ab5a99a0a365105c7c5dd783f4b0b1fe90938114d3ceec53856bfe005f7d6"
+    },
+    "interface": {
+      "title": "Interface Sounds 1.0",
+      "author": "Kenney",
+      "page": "https://kenney.nl/assets/interface-sounds",
+      "format": "zip",
+      "license": "CC0-1.0",
+      "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+      "file": "interface.zip",
+      "sha256": "f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232"
+    },
+    "impact": {
+      "title": "Impact Sounds 1.0",
+      "author": "Kenney",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "format": "zip",
+      "license": "CC0-1.0",
+      "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "file": "impact.zip",
+      "sha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8"
+    },
+    "rain": {
+      "title": "Rain (loopable)",
+      "author": "Ylmir",
+      "page": "https://opengameart.org/content/rain-loopable",
+      "format": "zip",
+      "license": "CC0-1.0",
+      "url": "https://opengameart.org/sites/default/files/Rain%20MP3.zip",
+      "file": "rain.zip",
+      "sha256": "89c275fda7759584b471985af370386eff25a87ee7babfccd4e9d0ac2210c6df"
+    },
+    "explosion": {
+      "title": "Chunky Explosion",
+      "author": "Joth",
+      "page": "https://opengameart.org/content/chunky-explosion",
+      "format": "file",
+      "license": "CC0-1.0",
+      "url": "https://opengameart.org/sites/default/files/Chunky%20Explosion.mp3",
+      "file": "explosion.mp3",
+      "sha256": "4de53bffac187e59d3f5b43096df2f8fcb4160076b65b71a67074947950e025f"
+    },
+    "reload": {
+      "title": "Handgun Reload Sound Effect",
+      "author": "zer0_sol",
+      "page": "https://opengameart.org/content/handgun-reload-sound-effect",
+      "format": "file",
+      "license": "CC0-1.0",
+      "url": "https://opengameart.org/sites/default/files/reload.wav",
+      "file": "reload.wav",
+      "sha256": "091399145b174ac3b2e0df245b4712a13ce85df072e37256b0fc32658718be53"
+    }
+  },
+  "clips": {
+    "gun-assault": {
+      "package": "firearms",
+      "member": "Prepared SFX Library/AR-15/D_32P.wav",
+      "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812",
+      "start_seconds": 0.695,
+      "duration_seconds": 0.6,
+      "loop": false
+    },
+    "gun-smg": {
+      "package": "firearms",
+      "member": "Prepared SFX Library/Carl Gustav M45/G_31P.wav",
+      "sha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158",
+      "start_seconds": 0.3,
+      "duration_seconds": 0.34,
+      "loop": false
+    },
+    "gun-pistol": {
+      "package": "firearms",
+      "member": "Prepared SFX Library/Walther PPQ/X_39P.wav",
+      "sha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f",
+      "start_seconds": 1.395,
+      "duration_seconds": 0.48,
+      "loop": false
+    },
+    "gun-longrifle": {
+      "package": "firearms",
+      "member": "Prepared SFX Library/Tikka/W_29P.wav",
+      "sha256": "b1ffe3c104391bf8ceb8337aa4d5a2ca47938fb88ccbd051cdd2b2e205d9e72b",
+      "start_seconds": 0.565,
+      "duration_seconds": 0.85,
+      "loop": false
+    },
+    "gun-shotgun": {
+      "package": "firearms",
+      "member": "Prepared SFX Library/Nova/O_21P.wav",
+      "sha256": "5661d0625e4634f19e6e316c13693b80c8e28cd9f716cf9c75c465153ae40815",
+      "start_seconds": 0.42,
+      "duration_seconds": 0.72,
+      "loop": false
+    },
+    "reload": {
+      "package": "reload",
+      "member": "reload.wav",
+      "sha256": "091399145b174ac3b2e0df245b4712a13ce85df072e37256b0fc32658718be53",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "blast": {
+      "package": "explosion",
+      "member": "explosion.mp3",
+      "sha256": "4de53bffac187e59d3f5b43096df2f8fcb4160076b65b71a67074947950e025f",
+      "start_seconds": 0,
+      "duration_seconds": 1.8,
+      "loop": false
+    },
+    "death": {
+      "package": "impact",
+      "member": "Audio/impactSoft_heavy_000.ogg",
+      "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "agent-hit": {
+      "package": "impact",
+      "member": "Audio/impactPunch_medium_000.ogg",
+      "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "ability": {
+      "package": "interface",
+      "member": "Audio/switch_006.ogg",
+      "sha256": "2676ddc4e341ee557b4d1dc8767ef8655540d66fb3ded6a1614080dbc4dc6f18",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "alert-sting": {
+      "package": "interface",
+      "member": "Audio/error_005.ogg",
+      "sha256": "3f75b11df5b06d68d2c25fbf0e9c9d9e7dd9250562a4007ee34856b8a309a2ae",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "confirm": {
+      "package": "interface",
+      "member": "Audio/select_007.ogg",
+      "sha256": "cd4390dd2b24f09016a5fa1be63334fa0f1859811f4cf29c02e8e2750f6a2cd0",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "ui-click": {
+      "package": "interface",
+      "member": "Audio/click_004.ogg",
+      "sha256": "09e2c1b643b71b9aff9932b4e02d78db116446b9a14b00a5b2a9b28d2668fd8e",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "objective": {
+      "package": "interface",
+      "member": "Audio/confirmation_002.ogg",
+      "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "interact": {
+      "package": "interface",
+      "member": "Audio/tick_001.ogg",
+      "sha256": "9d057b918024c787bbe6c00beed13a7ef72a3fa0c259add3cef36582792f4230",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": false
+    },
+    "rain-light": {
+      "package": "rain",
+      "member": "1.mp3",
+      "sha256": "da5f63758a4d74e10ab9dd1b0bed62aa4c06fd960af6a7cdb83266354d75204f",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": true
+    },
+    "rain-heavy": {
+      "package": "rain",
+      "member": "2.mp3",
+      "sha256": "5c67d3f347a990446e0027a1ceb990f0fbb4cf82f4cedca2b528c64a96ddab50",
+      "start_seconds": 0,
+      "duration_seconds": null,
+      "loop": true
+    }
+  },
+  "derived": {
+    "gun-assault-corpsec": {
+      "source": "gun-assault",
+      "processing": "Narrowed to 180\u20134200 Hz; 3 dB lower RMS, subject to peak ceiling."
+    },
+    "gun-smg-corpsec": {
+      "source": "gun-smg",
+      "processing": "Narrowed to 180\u20134200 Hz; 3 dB lower RMS, subject to peak ceiling."
+    },
+    "gun-pistol-corpsec": {
+      "source": "gun-pistol",
+      "processing": "Narrowed to 180\u20134200 Hz; 3 dB lower RMS, subject to peak ceiling."
+    },
+    "gun-longrifle-corpsec": {
+      "source": "gun-longrifle",
+      "processing": "Narrowed to 180\u20134200 Hz; 3 dB lower RMS, subject to peak ceiling."
+    },
+    "gun-shotgun-corpsec": {
+      "source": "gun-shotgun",
+      "processing": "Narrowed to 180\u20134200 Hz; 3 dB lower RMS, subject to peak ceiling."
+    }
+  }
+}

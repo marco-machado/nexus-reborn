@@ -1,6 +1,6 @@
 # Click-through
 
-Run this when a change can affect rendering, screen flow, input, or persisted state.
+Run this when a change can affect rendering, screen flow, input, audio, or persisted state.
 
 `npm run dev`, open the app at exactly 1280×720, console visible. Use a clean browser profile if the check must not alter an existing local save.
 
@@ -12,3 +12,16 @@ A full click-through is all six steps. A partial run names the screens and inter
 4. In the mission, select an operative, issue a move order, use the minimap, pause, open and close Settings, and resume. Confirm the canvas, HUD, minimap, and input remain live without console errors. On Glass Veil, wait through 22:16:38 and confirm the comm log and HUD weather retune. Abort from pause writes nothing to the campaign; with telemetry on, Balance should show an abort.
 5. Finish the mission and inspect the debrief. Continue back to the World Network; after a first win, confirm the contract ETA advanced world time and research, injuries, recruitment, and Tax yield caught up to the new time. Confirm BRIEF is locked again after return. Replay the same authored contract, win again: debrief reads `REPLAY // FEE ALREADY COLLECTED`, the contract fee and Influence do not move, roster and ETA still apply, and Tax yield still collects because the clock advanced. A loss spends no ETA.
 6. On every visited screen, check for clipping, unintended overlap, unreadable text, and broken focus or keyboard navigation at 1280×720.
+
+## Audio changes
+
+For sound replacements or mixer changes, also check the following. Record the
+cues and transitions actually exercised when coverage is partial.
+
+1. In Settings, exercise master, UI, combat, music, ambience, and mute with relevant sounds playing. Confirm each control affects its channel, unmuting restores the chosen levels, and settings survive a reload.
+2. Listen to each replacement cue individually and during play. Check that weapon identities remain distinct, CorpSec gunfire sits below squad gunfire, interface cues stay unobtrusive, and impacts and warnings remain readable during overlapping fire. Include reload, blast, ability, confirmation, click, interaction progress, objective completion, death, and operative hit.
+3. Exercise light rain, heavy rain, and dry weather. Listen across a full rain loop and weather transitions for clicks, gaps, or abrupt level changes. Leave the mission while audio is loading and after it starts; confirm its bed fades out and does not restart after departure.
+4. Check the browser console for loading or decoding failures. With a cold cache, confirm earlier clicks or combat events do not replay as a delayed burst. When inspecting the audio graph, confirm finished one-shot sources disconnect and overlapping playback remains bounded.
+
+Source provenance, rebuilding, and decoded-file checks are documented in the
+[audio README](../inspiration/audio/sfx/README.md).

@@ -1,85 +1,122 @@
 # Mission and Screen sounds
 
-These clips are wired through `src/game/sfxClips.ts` and loaded lazily by
-`src/game/audio.ts`. Beds stay in the parent folder.
+This directory contains 22 mastered MP3s from free CC0 libraries: 20 one-shots
+(five weapons with squad and CorpSec variants, plus ten other cues) and two
+recorded rain loops. Music / city beds in the parent directory and the
+synthesized alert-tension layer are separate from this set.
 
-The September 2026 pass replaces all 20 one-shots and remasters both rain loops.
-The direction is dry mechanical weapons, restrained tactile terminal cues, and
-soft impacts. Squad / CorpSec weapons now share a source recording: CorpSec is
-band-limited and 3 dB lower in RMS, rather than a separately generated unrelated
-sound. Original squad / CorpSec RMS differences reached 42 dB.
+## Sources and credits
 
-| Files | Runtime event / channel | Maximum duration |
+All source pages were checked on 2026-09-03 and list **CC0 1.0**.
+The source URLs, original archive members, SHA-256 hashes, excerpt timestamps,
+and derivative mappings are recorded in [sources.json](sources.json).
+These credits are retained even though CC0 does not require attribution.
+
+| Shipping files | Original asset | Creator / source |
 | --- | --- | --- |
-| `gun-assault[-corpsec].mp3` | RFC-27 / combat | 240 ms |
-| `gun-smg[-corpsec].mp3` | K-9 Rattler / combat | 160 ms |
-| `gun-pistol[-corpsec].mp3` | S-18 / combat | 200 ms |
-| `gun-longrifle[-corpsec].mp3` | VK-88 / combat | 400 ms |
-| `gun-shotgun[-corpsec].mp3` | M6 Breacher / combat | 340 ms |
-| `reload.mp3` | reload / combat | 400 ms |
-| `blast.mp3` | grenade / charge / combat | 850 ms |
-| `death.mp3` | death thud / combat | 280 ms |
-| `agent-hit.mp3` | operative hit / combat | 160 ms |
-| `ability.mp3` | role ability / combat | 240 ms |
-| `alert-sting.mp3` | alert / combat | 420 ms |
-| `confirm.mp3` | order acknowledgement / UI | 90 ms |
-| `ui-click.mp3` | terminal click / UI | 55 ms |
-| `objective.mp3` | objective completion / UI | 550 ms |
-| `interact.mp3` | channel progress / UI | 45 ms |
-| `rain-light.mp3`, `rain-heavy.mp3` | weather / ambience | 7.88 s loops |
+| `gun-assault*.mp3` | AR-15, `D_32P.wav`, first single shot | [Free Firearm Sound Library](https://opengameart.org/content/the-free-firearm-sound-library) — Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney |
+| `gun-smg*.mp3` | Carl Gustav M45, `G_31P.wav`, first single shot | Free Firearm Sound Library |
+| `gun-pistol*.mp3` | Walther PPQ, `X_39P.wav`, first single shot | Free Firearm Sound Library |
+| `gun-longrifle*.mp3` | Tikka T3, `W_29P.wav`, first single shot | Free Firearm Sound Library |
+| `gun-shotgun*.mp3` | Benelli Nova, `O_21P.wav`, first single shot | Free Firearm Sound Library |
+| `reload.mp3` | `reload.wav`: magazine removal / insertion and slide | [Handgun Reload Sound Effect](https://opengameart.org/content/handgun-reload-sound-effect) — zer0_sol |
+| `blast.mp3` | opening 1.8 seconds of `Chunky Explosion.mp3` | [Chunky Explosion](https://opengameart.org/content/chunky-explosion) — Joth |
+| `death.mp3` | `impactSoft_heavy_000.ogg` | [Impact Sounds 1.0](https://kenney.nl/assets/impact-sounds) — Kenney |
+| `agent-hit.mp3` | `impactPunch_medium_000.ogg` | Impact Sounds 1.0 — Kenney |
+| `ui-click.mp3` | `click_004.ogg` | [Interface Sounds 1.0](https://kenney.nl/assets/interface-sounds) — Kenney |
+| `confirm.mp3` | `select_007.ogg` | Interface Sounds 1.0 — Kenney |
+| `interact.mp3` | `tick_001.ogg` | Interface Sounds 1.0 — Kenney |
+| `objective.mp3` | `confirmation_002.ogg` | Interface Sounds 1.0 — Kenney |
+| `alert-sting.mp3` | `error_005.ogg` | Interface Sounds 1.0 — Kenney |
+| `ability.mp3` | `switch_006.ogg` | Interface Sounds 1.0 — Kenney |
+| `rain-light.mp3`, `rain-heavy.mp3` | `1.mp3`, `2.mp3` | [Rain (loopable)](https://opengameart.org/content/rain-loopable) — Ylmir |
 
-All outputs are mono 44.1 kHz MP3 at 192 kbps. One-shots have trimmed onsets,
-short release fades, band limiting, and peak / RMS ceilings. The exact mastering
-settings live in `_prepare.py`; its `--check` mode measures decoded MP3 output
-so codec overshoot is included. Rain uses a 120 ms seam crossfade and reduced
-high frequencies. Weather `none` is silent. The alert-tension drone remains
-synthesized so it can ramp with alert level.
+The firearms are recordings identified by the library's Prepared Master Sheet.
+Rain is a window field recording. Interface / impact effects and the explosion
+are authored sound effects. No generated audio is used in these 22 files.
+See [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) and the original
+Kenney license notices in [licenses](licenses/).
 
-The runtime retains the four user volume controls and master / mute. Authored
-UI and combat gains are −3 and −1.5 dB beneath the existing master. Gunshots
-vary playback rate by ±3%. At most eight combat one-shots and three UI cues
-can overlap; gunfire stops admitting new voices at six combat voices so other
-combat events have room. Sources disconnect on completion. Cues that load more
-than 120 ms after their event are dropped. A master compressor catches summed
-peaks (−3 dB threshold, 12:1 ratio, 3 ms attack, 150 ms release).
+## Runtime integration
 
-## Reproduction and provenance
+The game bundles the mastered MP3s through
+[`src/game/sfxClips.ts`](../../../src/game/sfxClips.ts).
+[`src/game/audio.ts`](../../../src/game/audio.ts) fetches those local asset URLs,
+decodes and caches buffers per AudioContext, and preloads all 20 one-shots when
+the context is created. Source-library downloads and preparation run offline.
+[`src/ui/sound.ts`](../../../src/ui/sound.ts) loads the audio module lazily and
+swallows failures so unavailable audio does not block the game.
 
-`_generate.py` records every prompt, requested duration, loop flag, model
-(`eleven_text_to_sound_v2`), and prompt influence (0.7). It reads
-`ELEVENLABS_API_KEY` from the environment; credentials never enter the game.
-One-shot sources were generated with ElevenLabs. Use of generated assets remains
-subject to the account's provider terms; no new subscription was purchased.
+| Channel | Sounds |
+| --- | --- |
+| UI | Selection confirmation, menu click, objective completion, interaction progress |
+| Combat | Gunfire, reload, blast, ability activation, alert sting, death, operative hit, synthesized alert-tension drone |
+| Music | Strategy bed |
+| Ambience | Mission city bed and weather-driven light / heavy rain |
+
+Channel gains feed the master and a final compressor. UI and combat have
+authored gain reductions beneath their sliders; player levels and mute persist
+in settings separately from the campaign. The mixer allows eight simultaneous
+combat one-shots and three UI one-shots. Gunshots are admitted only while fewer
+than six combat one-shots are active, leaving room for impacts and warnings.
+Loops and the drone do not consume these one-shot slots.
+
+Per-event rate limits further reduce stacking. Each gunshot varies its playback
+rate by up to ±3%. One-shots require a running AudioContext and are dropped if
+decoding delays them by more than 120 ms. Finished sources disconnect and leave
+the active-voice set. Bed stop operations invalidate pending decodes so a late
+load cannot restart a departed screen's loop. Rain crossfades with weather and
+fades out in dry conditions.
+
+## Edits and reproduction
+
+Preparation extracts one shot from each firearm recording, trims empty lead-in,
+uses gentle peak compression to retain the body of the report, and applies a
+short release fade. The source's upper frequencies are retained. CorpSec uses
+the same recording, narrowed to 180–4200 Hz and about 3 dB lower in RMS. UI / foley
+clips retain their original shape and sequence, including the whole reload.
+Each cue has peak and RMS ceilings so quiet interface sounds stay below combat
+reports. Rain keeps its longer
+recorded texture, with a 120 ms seam crossfade (26.88 / 25.88 second loops).
+Outputs: mono 44.1 kHz MP3, 192 kbps. Exact profiles and processing are in
+[`_prepare.py`](_prepare.py).
+
+From this directory, using a Python environment with `numpy`, `scipy`, and
+`imageio-ffmpeg` (only needed to rebuild assets):
 
 ```sh
-python3 _generate.py --out /tmp/nexus-sfx-raw
-# Offline mastering dependencies: numpy scipy imageio-ffmpeg, in a local venv.
-python3 _prepare.py --source /tmp/nexus-sfx-raw --rain /path/to/original-rain --out /tmp/nexus-sfx-mastered
+python3 _fetch.py --out /tmp/nexus-free-sfx
+python3 _prepare.py --source /tmp/nexus-free-sfx --out /tmp/nexus-sfx-mastered
 python3 _prepare.py --check /tmp/nexus-sfx-mastered
 ```
 
-The raw generation directory must be separate from the shipping directory.
-For this pass, `--rain` used the two existing committed rain clips. The attempted
-new light-rain source had insufficient sustained texture, and heavy-rain
-generation returned HTTP 401. Both shipping rain files were therefore remastered
-from the original sources. Rerunning generation makes new takes, not byte-identical
-recordings; mastering fixed source bytes is deterministic.
+[`_fetch.py`](_fetch.py) uses `bsdtar` with 7z support (included on macOS). The firearm archive
+is approximately 194 MB; it is cached outside the repository. Only the selected
+sources are extracted. Every archive and source is checksum-verified before use.
+Listen to the mastered files individually and in the mix, then copy the reviewed
+MP3s into this directory and run `python3 _prepare.py --check .`. Always rebuild
+from the original sources to avoid accumulating lossy encoding and processing.
 
-Reference ledger: `audio-design/SKILL.md`,
-`threejs-audio-generator/SKILL.md`, and its `references/audio-workflows.md`.
-Credential probe: `ELEVENLABS_API_KEY=SET`.
+For replacements, update the source URLs, license, archive and extracted-file
+checksums, excerpt ranges, and output mappings in `sources.json`, and retain
+source credits here. Update the preparation profiles if a cue needs different
+timing or mastering. Keep the clip URL map in sync when adding or renaming a
+shipping file.
 
-Validation: `_prepare.py --check` passes for all 22 decoded shipping clips,
-including duration limits, at least 3 dB peak headroom, and faction RMS balance.
-Audio tests cover overlap limits with reserved alert capacity, expired decode
-requests, pitch variation, node cleanup, channel controls, and bed lifecycle.
-Final tonal preference needs a listening check on the player's output device.
+## Validation
 
-Browser verification (1280×720): Menu, Settings, World Network, Brief, Assembly,
-and Mission. Exercised deployment, gunfire, operative selection, move order,
-ability activation, minimap, pause / resume, combat volume, and mute. The isolated
-Web Audio harness decoded and played all 20 one-shots, admitted six simultaneous
-gunshots plus an alert, and confirmed every completed source disconnected.
-No browser errors; the renderer emitted its existing THREE.Clock deprecation
-warning. Research, debrief, and the scheduled weather front were not exercised.
-Repository gates: lint, 528 tests, and production build passed.
+`_prepare.py --check` decodes all 22 outputs and checks finite samples, peak
+headroom, cue lengths, and squad / CorpSec level differences. Source checksums
+are checked during fetching and preparation. These checks complement listening
+to the result; they do not establish sound quality.
+
+After integrating assets or changing the mixer, run the repository's lint,
+test, and build scripts and the audio checks in
+[`docs/click-through.md`](../../../docs/click-through.md#audio-changes).
+
+Replacement verification on 2026-09-03: lint, all 528 tests, and production build passed. All
+22 shipping files differ from the previous generated set and map to verified
+CC0 source bytes. The browser harness played all 20 one-shots, exercised light
+rain → heavy rain → stop, and confirmed source completion and one-shot node
+cleanup without console errors. Partial click-through at 1280×720: Menu and
+Settings (open / close). No mission playthrough was run for this asset-only pass.
