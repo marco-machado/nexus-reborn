@@ -4070,7 +4070,7 @@ button.hud-slot:focus-visible {
 .wm-map .wm-cities { filter: none; pointer-events: none; }
 .wm-map-wrap .wm-ov { background: transparent; border: 0; padding: 4px; }
 .wm-map-wrap .wm-ov.tl { left: 5px; top: 3px; }
-.wm-map-wrap .wm-ov.tl .dim, .wm-map-wrap .wm-ov.tl .wm-spark { display: none; }
+.wm-map-wrap .wm-ov.tl .wm-spark { display: none; }
 .wm-map-wrap .wm-ov.tc { left: auto; right: 4px; top: 3px; transform: none; text-align: right; }
 .wm-map-wrap .wm-ov.tc b { display: none; }
 .wm-map-wrap .wm-ov.br { bottom: 3px; left: 3px; right: auto; width: calc(165px * var(--text-scale)); display: flex; border: 1px solid var(--line); background: var(--bg-inset); padding: 7px; gap: 3px; }
