@@ -20,13 +20,23 @@ const TABS: Array<{ key: NavKind; label: string; phase: Phase }> = [
 
 const BRIEF_LOCK = 'NO CONTRACT SELECTED'
 
-function ScreenStats() {
+function ScreenStats(props: { world: boolean }) {
   const t = useWorldStore((s) => s.t)
   const credits = useAppStore((s) => s.credits)
   const influence = useWorldStore((s) => s.influence)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const rosterN = useCampaignStore((s) => s.operatives.length)
   const s = stamp(t)
+  if (props.world) {
+    return (
+      <div className="wm-resources" aria-label="CAMPAIGN RESOURCES">
+        <div className="wm-resource"><NavGlyph kind="world" size={22} /><span><small>CREDITS</small><b className="amber">{fmt(credits)} CR</b></span></div>
+        <div className="wm-resource"><NavGlyph kind="research" size={22} /><span><small>INFLUENCE</small><b>{influence} PTS</b></span></div>
+        <div className="wm-resource"><NavGlyph kind="brief" size={22} /><span><small>INTEL</small><b>{intelLevel}</b></span></div>
+        <div className="wm-resource"><NavGlyph kind="assembly" size={22} /><span><small>ROSTER</small><b>{rosterN} <em>/ {ROSTER_CAP}</em></b></span></div>
+      </div>
+    )
+  }
   return (
     <div className="screen-head-right">
       <Chip tone="dim">
@@ -93,7 +103,7 @@ export function ScreenChrome(props: {
           <h1 className="screen-title">{props.title}</h1>
           {props.subtitle}
         </div>
-        <ScreenStats />
+        <ScreenStats world={props.current === 'world'} />
       </header>
       {props.children}
       <NavTabs current={props.current} />

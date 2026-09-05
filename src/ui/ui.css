@@ -4031,3 +4031,53 @@ button.hud-slot:focus-visible {
   text-align: center;
   letter-spacing: 0.08em;
 }
+
+/* The three annotated World Network regions only: sector list, Scan contents,
+   and resource readout. Shared screen chrome and panel layout stay above. */
+.wm-resources { display: grid; grid-template-columns: 1.35fr 1.1fr .7fr .85fr; width: 490px; min-height: 38px; flex: none; border: 1px solid var(--line); }
+.wm-resource { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 3px 8px; color: var(--cyan); }
+.wm-resource + .wm-resource { border-left: 1px solid var(--line); }
+.wm-resource > span { display: flex; flex-direction: column; gap: 3px; }
+.wm-resource small { font-size: calc(8px * var(--text-scale)); letter-spacing: .04em; }
+.wm-resource b { font-size: calc(12px * var(--text-scale)); white-space: nowrap; letter-spacing: .02em; }
+.wm-resource em { font-size: calc(8px * var(--text-scale)); font-style: normal; color: var(--ink-dim); }
+
+.wm-sectors-body { padding: 0; gap: 0; }
+.wm-sector-list { gap: 0; padding: 0; min-height: 100%; }
+.wm-sector { grid-template-columns: 44px minmax(0, 1fr); flex: 1; min-height: 46px; padding: 4px 7px; border-width: 0 0 1px; gap: 8px; }
+.wm-sector.sel { border: 1px solid var(--line-amber); }
+.wm-sector-glyph svg { width: 44px; height: 44px; display: block; }
+.wm-sector-main { gap: 2px; }
+.wm-sector-reading { display: flex; justify-content: space-between; align-items: center; font-size: calc(8px * var(--text-scale)); letter-spacing: 0; }
+.wm-sector-reading > span { color: var(--ink-dim); }
+.wm-sector-reading b { font-size: calc(10px * var(--text-scale)); color: var(--teal); }
+.wm-sector.sel .wm-sector-reading b { color: var(--amber); }
+.wm-sector-warning { display: flex; align-items: center; gap: 4px; font-size: calc(7.5px * var(--text-scale)); letter-spacing: 0; }
+.wm-sector-warning svg { width: 11px; height: 11px; }
+.wm-sector-bar { width: 48px; margin-left: auto; }
+.wm-sector .wm-sector-reading b.red { color: var(--red-hot); }
+.wm-sector .wm-sector-reading b.amber { color: var(--amber); }
+
+.wm-map { width: 100%; height: 84%; }
+.wm-map .wm-land { fill: color-mix(in srgb, var(--cyan) 16%, var(--bg)); stroke: var(--corp); stroke-opacity: .65; stroke-width: .7; cursor: pointer; }
+.wm-map .wm-land.focus { fill: color-mix(in srgb, var(--amber) 18%, var(--bg)); stroke: var(--amber); stroke-opacity: .95; stroke-width: 1; filter: none; }
+.wm-map .wm-land.crisis { stroke: var(--red-hot); }
+.wm-map .wm-land:hover { stroke: var(--teal); stroke-opacity: 1; }
+.wm-map .wm-lights { opacity: .27; filter: none; pointer-events: none; }
+.wm-map .wm-city .halo { fill: none; stroke: currentColor; stroke-width: 1; opacity: .6; }
+.wm-map .wm-city .core { fill: var(--bg); stroke: currentColor; stroke-width: 1.3; }
+.wm-map .wm-city text { fill: var(--ink); font-family: var(--font-mono); font-size: 15px; letter-spacing: 0; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+.wm-map .wm-cities { filter: none; pointer-events: none; }
+.wm-map-wrap .wm-ov { background: transparent; border: 0; padding: 4px; }
+.wm-map-wrap .wm-ov.tl { left: 5px; top: 3px; }
+.wm-map-wrap .wm-ov.tl .dim, .wm-map-wrap .wm-ov.tl .wm-spark { display: none; }
+.wm-map-wrap .wm-ov.tc { left: auto; right: 4px; top: 3px; transform: none; text-align: right; }
+.wm-map-wrap .wm-ov.tc b { display: none; }
+.wm-map-wrap .wm-ov.br { bottom: 3px; left: 3px; right: auto; width: calc(165px * var(--text-scale)); display: flex; border: 1px solid var(--line); background: var(--bg-inset); padding: 7px; gap: 3px; }
+.wm-map-wrap .wm-ov b { font-size: calc(8px * var(--text-scale)); letter-spacing: .05em; }
+.wm-map-wrap .wm-key-name { font-size: calc(8px * var(--text-scale)); }
+.wm-map-wrap .wm-key-head span { font-size: calc(6px * var(--text-scale)); }
+.wm-map .wm-marker-core { width: 10px; height: 10px; background: var(--bg); border: 1px solid var(--amber); transform: rotate(45deg); }
+.wm-map .wm-marker-ring { display: none; }
+.wm-map .wm-marker-label { opacity: 0; pointer-events: none; }
+.wm-map .wm-marker:hover .wm-marker-label, .wm-map .wm-marker:focus-visible .wm-marker-label { opacity: 1; }

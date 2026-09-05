@@ -167,9 +167,9 @@ describe('sectorCorp', () => {
 })
 
 describe('Scan geometry', () => {
-  it('anchors the graticule: lat 80 at y 0, one pixel per 0.269 degrees', () => {
-    expect(yOfLat(80)).toBe(0)
-    expect(yOfLat(80 - 0.269)).toBeCloseTo(1, 10)
+  it('anchors the graticule: lat 85 at y 0, one pixel per 0.28 degrees', () => {
+    expect(yOfLat(85)).toBe(0)
+    expect(yOfLat(85 - 0.28)).toBeCloseTo(1, 10)
   })
 
   it('includes a southern graticule line on Antarctica', () => {

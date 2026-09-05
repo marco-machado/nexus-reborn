@@ -1,9 +1,10 @@
 // CONTRACT FILE. Corporations, sectors, the territory polygons of the Scan,
 // and the cities that carry ownership. The Scan is a stylised 1000x520
-// projection; latitude on it is lat = 80 - 0.269 * y, so the graticule labels
+// projection of Natural Earth outlines; latitude is lat = 85 - 0.28 * y, so labels
 // line up with the landmasses.
 import type { SectorId } from './types'
 import { mulberry32 } from './rng'
+import { SCAN_TERRITORIES } from './scanTerritories'
 
 /* ------------------------------ corporations ------------------------------ */
 
@@ -160,50 +161,7 @@ export interface TerritoryDef {
   pts: string
 }
 
-export const TERRITORIES: TerritoryDef[] = [
-  {
-    id: 'na',
-    sector: 'na',
-    pts: '40,78 92,54 148,66 205,92 252,88 302,104 344,118 332,148 300,158 286,184 280,214 256,224 232,236 216,252 200,236 176,206 150,176 120,140 86,118 56,100',
-  },
-  { id: 'gl', sector: 'na', pts: '300,56 342,44 366,72 342,98 306,88' },
-  {
-    id: 'sa',
-    sector: 'sa',
-    pts: '286,268 320,262 352,284 396,308 406,338 386,378 356,418 330,458 312,490 300,470 294,430 284,388 274,344 270,304',
-  },
-  {
-    id: 'eu',
-    sector: 'eu',
-    pts: '470,158 488,138 504,124 518,112 540,94 562,78 586,88 612,104 642,120 652,140 630,154 600,164 574,174 552,180 528,178 506,180 488,182 476,176',
-  },
-  { id: 'uk', sector: 'eu', pts: '484,106 500,98 506,118 492,126 482,118' },
-  {
-    id: 'af',
-    sector: 'af',
-    pts: '478,196 512,186 546,190 586,200 612,216 640,264 630,300 602,330 586,368 570,404 556,428 540,404 526,368 514,330 504,300 490,264 478,230',
-  },
-  {
-    id: 'as',
-    sector: 'as',
-    pts: '652,138 664,110 700,84 762,64 832,58 902,58 962,70 976,90 950,114 920,130 890,150 862,170 840,190 820,206 800,216 786,240 770,256 750,240 736,262 720,282 706,254 694,228 670,214 648,208 630,194 626,174 636,154',
-  },
-  { id: 'ar', sector: 'as', pts: '606,204 640,202 658,234 636,256 612,242' },
-  { id: 'jp', sector: 'as', pts: '898,140 914,134 920,152 908,170 896,158' },
-  { id: 'id1', sector: 'as', pts: '780,286 812,292 824,304 800,308 776,296' },
-  { id: 'id2', sector: 'as', pts: '836,300 862,306 852,318 830,312' },
-  {
-    id: 'au',
-    sector: 'oc',
-    pts: '814,368 846,348 882,344 912,364 926,394 916,424 890,440 858,434 834,418 818,394',
-  },
-  { id: 'nz', sector: 'oc', pts: '940,440 962,450 954,472 938,458' },
-  {
-    id: 'an',
-    sector: 'an',
-    pts: '60,508 200,498 400,492 600,496 800,492 950,500 950,518 60,518',
-  },
-]
+export const TERRITORIES: TerritoryDef[] = SCAN_TERRITORIES
 
 /* --------------------------------- cities --------------------------------- */
 
@@ -217,24 +175,24 @@ export interface CityDef {
 }
 
 export const CITIES: CityDef[] = [
-  { id: 'nb', name: 'NEW BOSTON', sector: 'na', x: 272, y: 148, corp: 'nexus' },
-  { id: 'pc', name: 'PACIFICA', sector: 'na', x: 155, y: 172, corp: 'nexus' },
-  { id: 'dt', name: 'DETROIT SPRAWL', sector: 'na', x: 220, y: 177, corp: 'stratos' },
-  { id: 'bg', name: 'BOGOTA', sector: 'sa', x: 298, y: 288, corp: 'nexus' },
-  { id: 'sp', name: 'SAO PAULO', sector: 'sa', x: 380, y: 372, corp: 'stratos' },
-  { id: 'lm', name: 'LIMA', sector: 'sa', x: 312, y: 340, corp: 'omni' },
-  { id: 'ln', name: 'LONDON', sector: 'eu', x: 494, y: 114, corp: 'helix' },
-  { id: 'nc', name: 'NEW CARTHAGE', sector: 'eu', x: 506, y: 134, corp: 'helix' },
-  { id: 'os', name: 'OSLO', sector: 'eu', x: 540, y: 120, corp: 'omni' },
-  { id: 'cr', name: 'CAIRO', sector: 'af', x: 590, y: 204, corp: 'omni' },
-  { id: 'lg', name: 'LAGOS', sector: 'af', x: 516, y: 284, corp: 'omni' },
-  { id: 'jb', name: 'JOHANNESBURG', sector: 'af', x: 556, y: 404, corp: 'helix' },
-  { id: 'sg', name: 'SHINGANG', sector: 'as', x: 830, y: 150, corp: 'helix' },
-  { id: 'kt', name: 'KITARU', sector: 'as', x: 906, y: 152, corp: 'helix' },
-  { id: 'nk', name: 'NEO KOWLOON', sector: 'as', x: 712, y: 242, corp: 'stratos' },
-  { id: 'sy', name: 'SYDNEY', sector: 'oc', x: 903, y: 400, corp: 'stratos' },
-  { id: 'pr', name: 'PERTH', sector: 'oc', x: 838, y: 392, corp: 'stratos' },
-  { id: 'ak', name: 'AUCKLAND', sector: 'oc', x: 950, y: 456, corp: 'nexus' },
+  { id: 'nb', name: 'NEW BOSTON', sector: 'na', x: 302.6, y: 152.3, corp: 'nexus' },
+  { id: 'pc', name: 'PACIFICA', sector: 'na', x: 159.9, y: 168.7, corp: 'nexus' },
+  { id: 'dt', name: 'DETROIT SPRAWL', sector: 'na', x: 269.3, y: 152.4, corp: 'stratos' },
+  { id: 'bg', name: 'BOGOTA', sector: 'sa', x: 294.3, y: 286.8, corp: 'nexus' },
+  { id: 'sp', name: 'SAO PAULO', sector: 'sa', x: 370.5, y: 387.6, corp: 'stratos' },
+  { id: 'lm', name: 'LIMA', sector: 'sa', x: 286.0, y: 346.6, corp: 'omni' },
+  { id: 'ln', name: 'LONDON', sector: 'eu', x: 499.6, y: 119.6, corp: 'helix' },
+  { id: 'nc', name: 'NEW CARTHAGE', sector: 'eu', x: 506.5, y: 129.1, corp: 'helix' },
+  { id: 'os', name: 'OSLO', sector: 'eu', x: 529.9, y: 89.6, corp: 'omni' },
+  { id: 'cr', name: 'CAIRO', sector: 'af', x: 586.8, y: 196.3, corp: 'omni' },
+  { id: 'lg', name: 'LAGOS', sector: 'af', x: 509.4, y: 280.3, corp: 'omni' },
+  { id: 'jb', name: 'JOHANNESBURG', sector: 'af', x: 577.9, y: 397.1, corp: 'helix' },
+  { id: 'sg', name: 'SHINGANG', sector: 'as', x: 837.4, y: 192.0, corp: 'helix' },
+  { id: 'kt', name: 'KITARU', sector: 'as', x: 888.0, y: 176.2, corp: 'helix' },
+  { id: 'nk', name: 'NEO KOWLOON', sector: 'as', x: 817.1, y: 223.8, corp: 'stratos' },
+  { id: 'sy', name: 'SYDNEY', sector: 'oc', x: 920.0, y: 424.5, corp: 'stratos' },
+  { id: 'pr', name: 'PERTH', sector: 'oc', x: 821.8, y: 417.7, corp: 'stratos' },
+  { id: 'ak', name: 'AUCKLAND', sector: 'oc', x: 985.4, y: 435.2, corp: 'nexus' },
 ]
 
 export const CITIES_BY_SECTOR: Record<string, CityDef[]> = {}
@@ -290,14 +248,14 @@ export const SCAN_H = 520
 
 // lat = LAT_TOP - LAT_PER_PX * y, fitted so the landmasses sit near their real
 // latitudes. Inverted here to place the graticule.
-const LAT_TOP = 80
-const LAT_PER_PX = 0.269
+const LAT_TOP = 85
+const LAT_PER_PX = 0.28
 
 export function yOfLat(lat: number): number {
   return (LAT_TOP - lat) / LAT_PER_PX
 }
 
-// Drawing helper: -60 sits a fraction of a pixel past the Scan edge.
+// Clamp the graticule to the visible projection.
 export function graticuleY(lat: number): number {
   const y = yOfLat(lat)
   return y < 0 ? 0 : y > SCAN_H ? SCAN_H : y
@@ -440,13 +398,15 @@ export const ARCS: Arc[] = LINKS.map(([a, b, hot]) => ({
 // aspect so every sector fills the frame the same way.
 const INSET_ASPECT = 2.5
 
-function sectorBox(id: SectorId): [number, number, number, number] {
+function sectorBox(id: SectorId, aspect = INSET_ASPECT): [number, number, number, number] {
   let x0 = Infinity
   let y0 = Infinity
   let x1 = -Infinity
   let y1 = -Infinity
   for (const t of TERRITORIES) {
     if (t.sector !== id) continue
+    if ((id === 'na' && t.id.startsWith('usa-') && parsePts(t.pts).every(([x]) => x > 900)) ||
+        ((id === 'as' || id === 'oc') && parsePts(t.pts).every(([x]) => x < 100))) continue
     const [a, b, c, d] = bbox(parsePts(t.pts))
     x0 = Math.min(x0, a)
     y0 = Math.min(y0, b)
@@ -464,15 +424,18 @@ function sectorBox(id: SectorId): [number, number, number, number] {
   let h = y1 - y0
   const cx = (x0 + x1) / 2
   const cy = (y0 + y1) / 2
-  if (w / h < INSET_ASPECT) w = h * INSET_ASPECT
-  else h = w / INSET_ASPECT
+  if (w / h < aspect) w = h * aspect
+  else h = w / aspect
   return [cx - w / 2, cy - h / 2, w, h]
 }
 
 export const SECTOR_VIEW: Record<string, string> = {}
+// Square silhouettes for sector rows; the existing readout inset stays wide.
+export const SECTOR_GLYPH_VIEW: Record<string, string> = {}
 export const SECTOR_COORD: Record<string, string> = {}
 
 for (const s of SECTORS) {
+  SECTOR_GLYPH_VIEW[s.id] = sectorBox(s.id, 1).map((v) => v.toFixed(1)).join(' ')
   const [x, y, w, h] = sectorBox(s.id)
   SECTOR_VIEW[s.id] = `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`
   const lat = LAT_TOP - LAT_PER_PX * (y + h / 2)

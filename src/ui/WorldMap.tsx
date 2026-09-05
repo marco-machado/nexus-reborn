@@ -20,6 +20,7 @@ import {
   INFLUENCE_ACTIONS,
   INFLUENCE_ACTION_ORDER,
   cooldownKey,
+  PRESSURE_UNREST_MIN,
 } from '../game/influence'
 import type { InfluenceActionId } from '../game/influence'
 import { eventForecast } from '../game/forecast'
@@ -35,7 +36,6 @@ import { WORLD_ONBOARD_ID } from '../game/tutorial'
 import type { MissionDef, SectorId } from '../game/types'
 import type { SectorState } from '../state/worldStore'
 import {
-  ARCS,
   CITIES,
   CITIES_BY_SECTOR,
   CORPS,
@@ -49,6 +49,7 @@ import {
   SECTORS,
   SECTOR_COORD,
   SECTOR_VIEW,
+  SECTOR_GLYPH_VIEW,
   TERRITORIES,
   sectorCorp,
   sectorDef,
@@ -61,6 +62,10 @@ import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
 import { ART_BG, RED, WORLD_GLOW } from './tokens'
 import { layoutScanMarks, visibleScanMarks } from './scanMarks'
+
+function WarningGlyph() {
+  return <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 2 19 18H1Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M10 7v5m0 2v1" stroke="currentColor" strokeWidth="1.8" /></svg>
+}
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
@@ -290,7 +295,7 @@ function WorldScan() {
       <svg
         className="wm-map-svg"
         viewBox={`0 0 ${SCAN_W} ${SCAN_H}`}
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="none"
         aria-hidden="true"
       >
         <defs>
@@ -335,7 +340,7 @@ function WorldScan() {
         </g>
 
         <g className="wm-land-g">
-          {TERRITORIES.map((t) => (
+          {TERRITORIES.filter((t) => t.sector !== 'an').map((t) => (
             <polygon
               key={t.id}
               className={
@@ -345,6 +350,7 @@ function WorldScan() {
                 (t.sector !== null && crisis.includes(t.sector) ? ' crisis' : '')
               }
               points={t.pts}
+              onClick={t.sector && !sectorDef(t.sector).locked ? act(() => useWorldStore.getState().select(t.sector!)) : undefined}
             />
           ))}
           {TERRITORIES.filter((t) => t.sector !== null && crisis.includes(t.sector)).map((t) => (
@@ -360,23 +366,15 @@ function WorldScan() {
           </g>
         ))}
 
-        <g className="wm-arcs">
-          {ARCS.map((a, i) => (
-            <path key={i} className={a.hot ? 'hot' : undefined} d={a.d} />
-          ))}
-        </g>
-
         <g className="wm-cities">
           {CITIES.map((c) => (
             <g key={c.id} className={'wm-city corp-' + (owner[c.id] ?? c.corp)}>
               <circle cx={c.x} cy={c.y} r="5.5" className="halo" />
-              <circle cx={c.x} cy={c.y} r="1.7" className="core" />
+              <rect x={c.x - 3} y={c.y - 3} width="6" height="6" className="core" />
+              {['nb', 'pc', 'bg', 'sp', 'ln', 'cr', 'lg', 'sg', 'kt', 'sy'].includes(c.id) && <text x={c.x + (c.id === 'kt' || c.id === 'sy' ? -9 : 9)} y={c.y + (c.id === 'nb' ? -12 : -7)} textAnchor={c.id === 'kt' || c.id === 'sy' ? 'end' : 'start'}>{c.name}</text>}
             </g>
           ))}
         </g>
-        <text className="wm-an-label" x="310" y="500" textAnchor="middle">
-          ANTARCTICA
-        </text>
       </svg>
 
       <span className="wm-sweep-clip" aria-hidden="true">
@@ -938,6 +936,7 @@ export function WorldMap() {
                 const st = sectors[sec.id]
                 const sel = sec.id === selected
                 const inCrisis = crisis.includes(sec.id)
+                const pressure = !sec.locked && st.unrest > PRESSURE_UNREST_MIN
                 return (
                   <button
                     key={sec.id}
@@ -959,38 +958,27 @@ export function WorldMap() {
                           '% // UNREST ' +
                           Math.round(st.unrest) +
                           '%' +
-                          (inCrisis ? ' // CRISIS' : '')
+                          (inCrisis ? ' // CRISIS' : pressure ? ' // UNREST PRESSURE' : '')
                     }
                     onClick={sec.locked ? undefined : act(() => select(sec.id))}
                   >
                     <span className="wm-sector-glyph">
-                      <svg viewBox="0 0 22 16" aria-hidden="true">
-                        <polygon points={sec.glyph} />
+                      <svg viewBox={SECTOR_GLYPH_VIEW[sec.id]} aria-hidden="true">
+                        {TERRITORIES.filter((t) => t.sector === sec.id).map((t) => <polygon key={t.id} points={t.pts} />)}
                       </svg>
                     </span>
                     <span className="wm-sector-main">
                       <span className="wm-sector-top">
                         <b className="wm-sector-name">{sec.name}</b>
-                        {sec.locked ? (
-                          <span className="wm-sector-lock">
-                            <LockGlyph size={10} />
-                          </span>
-                        ) : (
-                          <b className="wm-sector-pct">{Math.round(st.control)}%</b>
-                        )}
+                        {sec.locked && <span className="wm-sector-lock"><LockGlyph size={12} /></span>}
                       </span>
-                      <span className="wm-sector-sub">
-                        {sec.locked ? (
-                          <i className="dim">NO SURVEY DATA</i>
-                        ) : (
-                          <>
-                            <i className="dim">CTRL {Math.round(st.control)}</i>
-                            <i className="dim">UNREST {Math.round(st.unrest)}</i>
-                            {inCrisis && <i className="wm-sector-crisis">CRISIS</i>}
-                            <SegBar value={st.unrest * 2.4} tone="red" mini className="wm-unrest" />
-                          </>
-                        )}
-                      </span>
+                      {sec.locked ? <span className="wm-sector-sub dim">NO SURVEY DATA</span> : (
+                        <>
+                          <span className="wm-sector-reading"><span>CONTROL</span><b>{Math.round(st.control)}%</b></span>
+                          <span className="wm-sector-reading"><span>UNREST</span><b className={inCrisis ? 'red' : pressure ? 'amber' : undefined}>{Math.round(st.unrest)}%</b></span>
+                          {pressure || inCrisis ? <span className={'wm-sector-warning ' + (inCrisis ? 'red' : 'amber')}><WarningGlyph />{inCrisis ? 'CRISIS' : 'UNREST PRESSURE'}</span> : <SegBar value={st.control} mini className="wm-sector-bar" />}
+                        </>
+                      )}
                     </span>
                   </button>
                 )

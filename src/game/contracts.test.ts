@@ -248,7 +248,7 @@ describe('derived missions', () => {
     const m = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
     // Weather and map jitter are the prefix of the stream; hour is last.
     expect(m.weather).toBe('none')
-    expect(m.mapPos).toEqual({ x: 51.11282241260633, y: 20.108530740325268 })
+    expect(m.mapPos).toEqual({ x: 51.67282241260634, y: 21.185453817248344 })
     const wrapped = m.openingHour < 18 * 3600 ? m.openingHour + 86400 : m.openingHour
     expect(wrapped).toBeGreaterThanOrEqual(18 * 3600)
     expect(wrapped).toBeLessThan(18 * 3600 + 7 * 3600)
@@ -478,7 +478,7 @@ describe('objective sequence variants', () => {
   it('keeps the pinned cosmetic snapshot for the 0x42 seed', () => {
     const m = contractMission(rollContract(INPUTS, 1000, 0x42).contract)
     expect(m.weather).toBe('none')
-    expect(m.mapPos).toEqual({ x: 51.11282241260633, y: 20.108530740325268 })
+    expect(m.mapPos).toEqual({ x: 51.67282241260634, y: 21.185453817248344 })
   })
 
   it('briefs the sequence that will deploy', () => {
