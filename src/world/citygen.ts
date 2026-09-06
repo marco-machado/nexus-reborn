@@ -1,7 +1,7 @@
 // Procedural city generator. Deterministic from the district seed, dispatched
 // over three archetypes:
-// - checkpoint: a 7-wide north-south avenue feeds a walled checkpoint plaza in
-//   the north (Glass Veil). This is the original layout, unchanged.
+// - checkpoint: a 7-wide north-south avenue passes through the checkpoint plaza
+//   in the north (Glass Veil), then turns east into the secondary street.
 // - compound: a walled detention compound between the first two cross streets
 //   in the east, one gated entry and one breachable side entry. The side flank
 //   comes from seed parity, so the two authored variants mirror each other.
@@ -132,14 +132,23 @@ export function generateCity(
     const c = ri(a, b)
     vSecondary.push({ x0: c, x1: c + vroadW, z0: firstHz, z1: 94 })
   }
+  // The checkpoint controls a through avenue, not a cul-de-sac against the
+  // northern skyline. Beyond its plaza a six-wide cross street turns east and
+  // joins the secondary street; approaching around this flank is a detour.
+  const checkpointExit = arch === 'checkpoint' ? vSecondary[1] : null
+  if (checkpointExit) checkpointExit.z0 = AVE.z0
+  const checkpointCross: RoadRect | null = checkpointExit
+    ? { x0: AVE.x0, z0: AVE.z0, x1: checkpointExit.x1, z1: AVE.z0 + vroadW }
+    : null
   const avenue: VSpan = { x0: AVE.x0, x1: AVE.x1, z0: AVE.z0, z1: AVE.z1 }
   const roadRects: RoadRect[] = [
     ...hStreets.map((s) => ({ x0: 2, z0: s.z0, x1: 94, z1: s.z1 })),
     ...[avenue, ...vSecondary].map((v) => ({ x0: v.x0, z0: v.z0, x1: v.x1, z1: v.z1 })),
+    ...(checkpointCross ? [checkpointCross] : []),
   ]
 
-  // Road mask, used for sampling civilian and patrol positions and by nothing
-  // else. The plaza is walkable but not a road.
+  // Road mask for street populations and keeping cover off the through lane.
+  // The plaza margins are walkable without being roads.
   const road = new Uint8Array(size * size)
   for (const r of roadRects) {
     for (let z = r.z0; z < r.z1; z++) for (let x = r.x0; x < r.x1; x++) road[idx(x, z)] = 1
@@ -312,6 +321,14 @@ export function generateCity(
     })
   }
   for (const band of bands) {
+    if (band.z0 < firstHz && checkpointExit && checkpointCross) {
+      // Fit the northern buildings around all three sides of the onward road.
+      // Rendering, the walk grid, and painted/minimap roadRects share this gap.
+      fillBlock(2, band.z0, PLAZA.x0, band.z1, false, true, true, false)
+      fillBlock(PLAZA.x1, checkpointCross.z1, checkpointExit.x0, band.z1, true, true, true, true)
+      fillBlock(checkpointExit.x1, band.z0, 94, band.z1, false, true, false, true)
+      continue
+    }
     const act: VSpan[] =
       band.z0 < firstHz
         ? arch === 'checkpoint'
@@ -423,6 +440,8 @@ export function generateCity(
     const splitVertical = district.seed % 2 === 0
     let aCenter: Vec2
     let bCenter: Vec2
+    let aInterior: AlleyRect
+    let bInterior: AlleyRect
     if (splitVertical) {
       const xm = (YARD.x0 + YARD.x1) >> 1
       const zm = (YARD.z0 + YARD.z1) >> 1
@@ -430,6 +449,8 @@ export function generateCity(
       pushWall(xm, zm + 2, xm + 1, wallZ1, 2.2)
       aCenter = { x: (YARD.x0 + xm) / 2, z: zm }
       bCenter = { x: (xm + YARD.x1) / 2, z: zm }
+      aInterior = { x0: YARD.x0 + 1, z0: wallZ0 + 1, x1: xm, z1: wallZ1 }
+      bInterior = { x0: xm + 1, z0: wallZ0 + 1, x1: YARD.x1 - 1, z1: wallZ1 }
     } else {
       const zm = (YARD.z0 + YARD.z1) >> 1
       const xm = (YARD.x0 + YARD.x1) >> 1
@@ -437,6 +458,8 @@ export function generateCity(
       pushWall(xm + 2, zm, YARD.x1 - 1, zm + 1, 2.2)
       aCenter = { x: xm, z: (zm + YARD.z1) / 2 } // south sub-yard, nearer insertion
       bCenter = { x: xm, z: (YARD.z0 + zm) / 2 }
+      aInterior = { x0: YARD.x0 + 1, z0: zm + 1, x1: YARD.x1 - 1, z1: wallZ1 }
+      bInterior = { x0: YARD.x0 + 1, z0: wallZ0 + 1, x1: YARD.x1 - 1, z1: zm }
     }
 
     target = { x: (YARD.x0 + YARD.x1) / 2, z: (YARD.z0 + YARD.z1) / 2, r: 8 }
@@ -446,18 +469,27 @@ export function generateCity(
     landmarks['waveEntry-a'] = { x: gA0 + 2, z: hStreets[1] ? hStreets[1].z0 + 1.5 : YARD.z1 + 2, r: 1 }
     landmarks['waveEntry-b'] = { x: gB0 + 2, z: hStreets[0].z1 - 1.5, r: 1 }
 
-    devices.push({ pos: { x: aCenter.x - 4, z: aCenter.z - 2 }, tag: 'relay' })
-    devices.push({ pos: { x: aCenter.x + 4, z: aCenter.z + 2 }, tag: 'relay' })
-    devices.push({ pos: { x: bCenter.x, z: bCenter.z }, tag: 'relay' })
-    devices.push({ pos: { x: bCenter.x + 5, z: bCenter.z + 3 }, tag: 'transformer' })
+    // Narrow north/south sub-yards cannot fit every fixed offset. Keep each
+    // device inside its own fence before props and connectivity repair, which
+    // otherwise carve a walkable cell through a visibly solid fence.
+    const devicePoint = (x: number, z: number, interior: AlleyRect): Vec2 => ({
+      x: Math.max(interior.x0, Math.min(interior.x1 - 1, Math.floor(x))) + 0.5,
+      z: Math.max(interior.z0, Math.min(interior.z1 - 1, Math.floor(z))) + 0.5,
+    })
+    devices.push({ pos: devicePoint(aCenter.x - 4, aCenter.z - 2, aInterior), tag: 'relay' })
+    devices.push({ pos: devicePoint(aCenter.x + 4, aCenter.z + 2, aInterior), tag: 'relay' })
+    devices.push({ pos: devicePoint(bCenter.x, bCenter.z, bInterior), tag: 'relay' })
+    devices.push({ pos: devicePoint(bCenter.x + 5, bCenter.z + 3, bInterior), tag: 'transformer' })
 
-    // Crates as fighting cover for the burn, kept off the device spots.
+    // Keep cover off devices and landmark centers. A blocked landmark would
+    // make connectivity repair carve an unnecessary passage through a fence.
     let yardCrates = 0
     for (let guard = 0; guard < 40 && yardCrates < 8; guard++) {
       const cx = ri(YARD.x0 + 2, YARD.x1 - 3)
       const cz = ri(YARD.z0 + 2, YARD.z1 - 3)
       if (walk[idx(cx, cz)] !== 1) continue
       if (devices.some((d) => Math.abs(d.pos.x - cx) < 2 && Math.abs(d.pos.z - cz) < 2)) continue
+      if ([target, aCenter, bCenter].some((p) => Math.floor(p.x) === cx && Math.floor(p.z) === cz)) continue
       const blocking = rnd() < 0.5
       props.push({ x: cx + 0.5, z: cz + 0.5, kind: 'crate', rot: rnd() * Math.PI, blocking })
       if (blocking) walk[idx(cx, cz)] = 0
@@ -478,6 +510,7 @@ export function generateCity(
       const cz = alongX ? sz : sz + k
       if (cx < 2 || cz < 2 || cx >= 94 || cz >= 94) return
       if (walk[idx(cx, cz)] !== 1) return
+      if (inReserved(cx, cz, cx + 1, cz + 1)) return
       if (cz > 82 && cx > 42 && cx < 54) return
       if (cz <= PLAZA.z1 + 2) return
       if (alongX) {
@@ -534,7 +567,7 @@ export function generateCity(
     for (let guard = 0; guard < 80 && crates < 10; guard++) {
       const cx = ri(PLAZA.x0 + 1, PLAZA.x1 - 2)
       const cz = ri(PLAZA.z0 + 1, PLAZA.z1 - 2)
-      if (cx >= AVE.x0 && cx < AVE.x1 && cz >= 15) continue
+      if (road[idx(cx, cz)] === 1) continue
       if (walk[idx(cx, cz)] !== 1) continue
       const blocking = rnd() < 0.5
       props.push({ x: cx + 0.5, z: cz + 0.5, kind: 'crate', rot: rnd() * Math.PI, blocking })
@@ -543,15 +576,15 @@ export function generateCity(
     }
   }
 
-  // Dumpsters and crates in alleys. A dumpster is longer than it is wide, so
-  // it lies along the alley: unrotated it runs north-south, which suits an
-  // alley narrower across x than across z.
+  // Dumpsters and crates in alleys. Reserved compounds/yards place their own
+  // cover; candidate block-split alleys there must not add props onto devices
+  // or gate approaches. A dumpster's long axis follows the alley.
   for (const a of alleys) {
     if (props.length > 200) break
     if (rnd() < 0.6) {
       const dx = ri(a.x0, a.x1 - 1)
       const dz = ri(a.z0, a.z1 - 1)
-      if (dx >= 2 && dz >= 2 && dx < 94 && dz < 94 && walk[idx(dx, dz)] === 1) {
+      if (dx >= 2 && dz >= 2 && dx < 94 && dz < 94 && walk[idx(dx, dz)] === 1 && !inReserved(dx, dz, dx + 1, dz + 1)) {
         const rot = a.x1 - a.x0 <= a.z1 - a.z0 ? 0 : Math.PI / 2
         props.push({ x: dx + 0.5, z: dz + 0.5, kind: 'dumpster', rot, blocking: true })
         walk[idx(dx, dz)] = 0
@@ -560,7 +593,7 @@ export function generateCity(
     if (rnd() < 0.5) {
       const dx = ri(a.x0, a.x1 - 1)
       const dz = ri(a.z0, a.z1 - 1)
-      if (dx >= 2 && dz >= 2 && dx < 94 && dz < 94 && walk[idx(dx, dz)] === 1) {
+      if (dx >= 2 && dz >= 2 && dx < 94 && dz < 94 && walk[idx(dx, dz)] === 1 && !inReserved(dx, dz, dx + 1, dz + 1)) {
         const blocking = rnd() < 0.4
         props.push({ x: dx + 0.5, z: dz + 0.5, kind: 'crate', rot: rnd() * Math.PI, blocking })
         if (blocking) walk[idx(dx, dz)] = 0
@@ -887,7 +920,10 @@ export function generateCity(
     props,
     lights,
     roadRects,
-    roadsH: hStreets.map((s) => s.z0 + Math.floor(streetW / 2)),
+    roadsH: [
+      ...(checkpointCross ? [checkpointCross.z0 + Math.floor(vroadW / 2)] : []),
+      ...hStreets.map((s) => s.z0 + Math.floor(streetW / 2)),
+    ],
     roadsV: [
       AVE.x0 + Math.floor((AVE.x1 - AVE.x0) / 2),
       ...vSecondary.map((v) => v.x0 + Math.floor(vroadW / 2)),
