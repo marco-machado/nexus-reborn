@@ -1,6 +1,6 @@
 # Nexus Reborn
 
-The player is the Operations Director of Nexus Global: they read a corporate world, fund research, accept contracts, and command a four-operative strike team. This glossary is the language of that world. It is not a ruleset.
+The player is the Operations Director of Nexus Global: they read a corporate world, fund research, accept contracts, and command a strike team of one to four operatives. This glossary is the language of that world. It is not a ruleset.
 
 ## The house
 
@@ -310,14 +310,14 @@ _Avoid_: Agent, unit (that is any body in the District), soldier, merc, characte
 
 **Roster**:
 The campaign's living operatives, capped at eight. The dead are gone. The injured cannot be assigned until strategic time finishes their recovery.
-_Avoid_: Squad (that is the four), bench, team, pool
+_Avoid_: Squad (the one to four assigned operatives), bench, team, pool
 
 **Squad**:
-The four operatives assigned to the current contract. Every mission deploys exactly four. Inspection and assignment are separate; at least one operative stays assigned while the player edits.
+The one to four operatives assigned to the current contract. Every mission deploys one to four Ready operatives. Inspection and assignment are separate; at least one operative stays assigned while the player edits.
 _Avoid_: Roster, party, loadout
 
 **Squad bay**:
-One of the four assignment seats on Assembly. A KIA leaves a bay empty. Deploy is disabled until all four are filled.
+One of the four assignment seats on Assembly. A KIA leaves a bay empty. Empty bays do not block deployment; at least one operative must be assigned, and every assigned operative must be Ready.
 _Avoid_: Augmentation bay, slot, slot 1–4 (those are in-mission selection keys)
 
 **Role**:
@@ -349,7 +349,7 @@ A point awarded to each survivor at debrief. Each point raises that operative's 
 _Avoid_: XP as a concept name, level, rank
 
 **Assembly**:
-The Screen where the director inspects operatives, fills the four Squad bays, fills Item slots, and passes the mass gate.
+The Screen where the director inspects operatives, assigns one to four operatives to Squad bays, fills Item slots, and passes the mass gate.
 _Avoid_: Team select, loadout screen, locker, barracks, Operatives (as the name of this Screen)
 
 **Deployment mass**:

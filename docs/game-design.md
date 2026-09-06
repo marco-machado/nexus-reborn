@@ -16,13 +16,13 @@ When this document and the playable build disagree, treat the disagreement as a 
 
 ### High concept
 
-The player is the **Operations Director** for **Nexus Global**. From the World Network they watch cities change hands, fund a research program, accept deniable contracts, and deploy a four-operative squad into neon districts.
+The player is the **Operations Director** for **Nexus Global**. From the World Network they watch cities change hands, fund a research program, accept deniable contracts, and deploy a squad of one to four operatives into neon districts.
 
 The fantasy is remote command, not heroics. The player never walks the street. They read a situation, spend a few consequential orders, and live with the corporate cost of every stray round.
 
 ### Player promise
 
-Read a hostile corporate world, invest in the right research, deploy the right four-operative squad, and execute a precise mission where every shot can change both the firefight and the contract payout.
+Read a hostile corporate world, invest in the right research, deploy the right squad of one to four operatives, and execute a precise mission where every shot can change both the firefight and the contract payout.
 
 ### Product
 
@@ -32,7 +32,7 @@ Read a hostile corporate world, invest in the right research, deploy the right f
 | Perspective | Fixed-angle isometric 3D |
 | Player role | Operations Director |
 | Setting | Corporate-controlled Earth, 14 May 2087 |
-| Core unit | Four cybernetically enhanced operatives |
+| Core unit | One to four cybernetically enhanced operatives |
 | Input | Keyboard and mouse |
 | Display | Desktop browser, 1280×720 minimum |
 | Session | Plan on the World Network → brief → assembly → mission → debrief |
@@ -150,7 +150,7 @@ flowchart LR
 3. From the World Network the player inspects sectors, runs or pauses the strategic clock, reads the feed, or opens Research or Assembly from the nav. Brief unlocks on the nav once a contract is selected.
 4. An unlocked contract opens its brief. Intel gates access.
 5. Accepting a contract goes straight to assembly. There is no buy-in and no second confirm.
-6. Exactly four operatives must be assigned before deployment.
+6. One to four Ready operatives must be assigned before deployment. Empty squad bays do not block deployment; a selected contract and the deployment mass gate still apply.
 7. The mission ends when the required objectives are done, or when no living operatives remain.
 8. The debrief applies payout, sector movement, intel, influence, and roster changes once, then returns the player to the World Network (or back to the brief to replay). A quiet replay applies roster and ETA only.
 9. The four Screens autosave. The mission and the debrief do not. Aborting a mission discards it. There is no mid-mission resume. Returning from the debrief to the World Network clears the selected contract; Replay is the only path back into that Brief.
@@ -159,7 +159,7 @@ The unsaved mission is a design choice, not a limitation. Once the squad is on t
 
 ### The strategic loop
 
-Monitor the World Network. Spend or hold time. Fund research. Take a contract. Pick four. Execute. Collect the invoice, less collateral. Reinvest.
+Monitor the World Network. Spend or hold time. Fund research. Take a contract. Pick one to four. Execute. Collect the invoice, less collateral. Reinvest.
 
 ### The tactical loop
 
@@ -173,7 +173,7 @@ Inspect a branch. Commit credits to one project in that laboratory. Let strategi
 
 Winning all three authored contracts marks the campaign complete. The World Network posts a banner. The contracts stay replayable; completion is a mark, not a lock. A replay after that first win does not pay; see Replay.
 
-Losing every remaining operative is a campaign fail. The World Network posts a failure banner, contracts lock, and the campaign cannot also be marked complete.
+Losing every remaining operative is a campaign fail unless the campaign is already complete. On failure, the World Network posts a failure banner and contracts lock. A completed campaign stays complete after a roster wipe; it is not also marked failed.
 
 Sector crisis sits below that floor. It is recoverable.
 
@@ -281,6 +281,8 @@ The campaign opens at intel **1**, with 25/100 progress.
 - Expedite can waive a generated contract’s intel gate.
 
 At intel 2+ the brief replaces a raw success percentage with a computed **risk index** (Low / Guarded / High / Severe), derived from the actual deployment: street-patrol, garrison, and civilian counts, weighted by CorpSec toughness and the **clearer** weather on the weather script.
+
+Risk index = `round(((4p + 5g) × h + 0.5c) × (0.7 + 0.3v))`, where `p`, `g`, and `c` are nonnegative integer counts of street patrols, garrison, and civilians in the deployment; `h` is the Threat HP multiplier (1.0 / 1.1 / 1.2); and `v` is the clearer scripted weather's sight multiplier (none 1.0, light 0.9, heavy 0.8). Bands are Low below 30, Guarded from 30 to below 50, High from 50 to below 75, and Severe at 75 or above. The index is not a percentage and is not capped at 100. For example, `p=8`, `g=7`, `c=22`, `h=1.2`, `v=0.9` gives 89, Severe. Source: `missionRisk` in [forecast.ts](../src/game/forecast.ts).
 
 Intel is earned in the field and spent on access and foresight. That is its whole job.
 
@@ -397,19 +399,23 @@ The assembly dossier shows the four bays for the focused operative: worn project
 ### Deployment rules
 
 - Roster cap: eight. The campaign starts full.
-- Every mission deploys exactly four.
+- Every mission deploys one to four Ready operatives.
 - Default four: Mara, Ghost, Dart, Torq.
 - Inspection and assignment are separate. At least one operative stays assigned while the player edits.
 - Augmentation bays are worn or pinned at assembly. Unpinned bays follow current issue.
-- Deploy is disabled until all four squad bays are filled.
+- Deploy requires at least one assigned operative, with every assigned operative Ready. Empty squad bays do not block it. A selected contract and the deployment mass gate still apply.
 
 The eight are a starting roster, not a protected cast.
 
 ### Death, injury, replacement
 
-A kill is permanent. The debrief removes the operative, lists them under KIA, and the feed posts a red loss naming them. Their squad bay is empty. The next deployment cannot leave until it is filled.
+A kill is permanent. The debrief removes the operative, lists them under KIA, and the feed posts a red loss naming them. Their squad bay is empty. The next deployment may use the remaining Ready operatives or replacements, provided at least one operative is assigned.
 
 A survivor who ends a mission below 35% of maximum health returns **Injured**. Downtime scales with missing health: 12 strategic hours just under the threshold, up to 48 at near-death. Everyone else stays Ready. Newly injured operatives leave the squad at debrief and cannot be assigned until the strategic clock finishes their recovery. Raven opens the campaign Injured and recovers after 24 strategic hours.
+
+For a living survivor with end-health fraction `f` in `(0, 0.35)`, recovery duration in strategic seconds is `D = round(43200 + (1 − clamp(f, 0, 0.35) / 0.35) × 129600)`. The helper bounds its input; the injury rule invokes it only below 0.35. A dead operative is KIA, not an injury with `f=0`. At `f=0.175`, `D=108000` seconds (30 hours); at 0.35 or above, no new injury is applied. Source: `injuryRecoverySec` in [campaignStore.ts](../src/state/campaignStore.ts).
+
+Debrief records injury and clears the newly injured operative's squad assignment at strategic time `t0`, setting recovery to `t0 + D`. A win then advances ETA and catches up recovery at `t1`; remaining downtime is `max(0, t0 + D − t1)`. A loss spends no ETA. Thus a winning mission, including a quiet replay, can finish recovery during the same debrief. The injury line reports the original duration, rounded up to hours, not the remaining downtime after ETA. Recovery does not restore the cleared squad assignment. This ordering follows [the two-clock decision](adr/0001-two-clocks.md) and the debrief in [ui/index.tsx](../src/ui/index.tsx).
 
 Hiring replaces losses. Assembly offers three procedural candidates at a time, one new candidate every 24 strategic hours on the same clock injuries recover on. A candidate has a stable name, face, one of the eight roles, health and speed inside the authored ranges, and that role’s primary weapon. They arrive on current issue in every bay. Hiring costs 16,000–34,000 CR by quality and is refused on overdraw or a full roster.
 
@@ -464,11 +470,13 @@ Deployment mass is a real gate, not a flavor number.
 - 60 kg base per operative.
 - Authored weapon masses: assault 4.2, SMG 3.1, pistol 1.2, longrifle 6.8, shotgun 4.9.
 - 0.25 kg per max-HP point above 90, including worn health projects and experience, so plating follows the body that deploys.
-- 8 kg per med kit, 6 kg per power cell.
+- 8 kg per med kit and 6 kg per power cell in explicit item slots. The base and role-granted mission pools do not add separate mass.
 
 Each operative has two extra item slots on the assembly screen. Filled slots add their items to the mission pools.
 
-**400 kg** blocks deployment. The button names the overage.
+Per-operative mass in kg is `60 + Wprimary + Wsidearm + 0.25 × max(0, H − 90) + 8m + 6c`. `Wprimary` and `Wsidearm` are the two authored weapon masses; `H` is deployment max HP including worn research and experience; `m` and `c` are nonnegative integer counts of med kits and power cells in that operative's two item slots, with `m + c ≤ 2`. Squad mass is the sum across the one to four assigned operatives. The default four with no research, experience, or filled item slots weigh 286.1 kg. Source: [mass.ts](../src/game/mass.ts).
+
+Mass **over 400 kg** blocks deployment; exactly 400 kg is allowed. The button names the overage.
 
 Mass also sets a squad-wide speed tier, applied at deployment: at or under 340 kg, +0.15 m/s; over 380 kg, −0.15 m/s. The assembly screen shows the active tier beside the mass readout.
 
@@ -497,7 +505,7 @@ Authored contracts remain replayable after success or failure. After a win, the 
 Beside the authored three, the World Network keeps up to three generated contracts. A new one rolls every 2–6 strategic hours when below target, weighted toward high unrest or low control.
 
 - Threat comes from the sector’s garrison condition: Secure → Moderate, Strained → High, Critical → Severe.
-- Reward comes from threat, 30,000–95,000 CR on a 500 CR grid. Same Threat, same pay in every sector.
+- Reward comes from Threat, random variation, and an initial priority premium, within 30,000–95,000 CR on a 500 CR grid. The same Threat uses the same Reward calculation in every sector; this does not mean every offer pays an identical amount.
 - Client comes from city ownership.
 - Type is seizure, extraction, sabotage, or riot-linked suppression.
 - Each type maps to a district family. The seed picks one of several authored objective sequences from the shared primitives; threat scales CorpSec counts, not the sequence.
@@ -505,6 +513,8 @@ Beside the authored three, the World Network keeps up to three generated contrac
 - A fulfilled or failed generated contract applies the standard debrief consequences and leaves the market.
 
 Generated work is first-class content, not filler. The authored three are the campaign spine; the market is the world’s ongoing demand.
+
+For a newly rolled offer, `Reward = clamp(500 × round(B × (0.9 + 0.3u) × P / 500), 30000, 95000)`. `B` is 34,000 / 52,000 / 70,000 CR for Moderate / High / Severe; `u` is a seeded random draw in `[0, 1)`; and `P` is 1.4 for an initially priority offer, otherwise 1. For example, a High offer with `u=0.5` pays 54,500 CR normally or 76,500 CR with the initial priority premium. This is the creation-time calculation, not a rule to recalculate pay whenever an existing offer's tag changes. Source: `rollReward` in [contracts.ts](../src/game/contracts.ts).
 
 ### The brief
 
@@ -526,7 +536,7 @@ Shared landmarks: insertion and extraction on the south, near (48, 88); a centra
 | Compound | Hollow Crown; generated extraction | 6 interior, bypassable | 4 | 14 | Walled eastern detention block; 7 m streets |
 | Industrial | Rust Haven; generated sabotage | 4 yard CorpSec | 3 | 8 | Fenced eastern yard; 8 m cross streets |
 
-Threat extras, unrest extras (above 20: +6 civilians and +1 street patrol), and Hardened add street patrols and civilians on top of those bases. Four operatives deploy every time. Control does not add CorpSec hit points.
+Threat extras, unrest extras (above 20: +6 civilians and +1 street patrol), and Hardened add street patrols and civilians on top of those bases. One to four operatives deploy. Control does not add CorpSec hit points.
 
 ### Weather
 
@@ -627,7 +637,7 @@ Combat is real-time and resolves itself after the player’s placement and targe
 
 A shot requires a living shooter, a drawn weapon, a round in the magazine, no reload in progress, a finished cooldown, the target in range, and line of sight.
 
-Hit chance is approximately `(0.78 − 0.28 × distance/range + jitter) × accuracy`, clamped 5–95%. Operative accuracy is 1.0. CorpSec accuracy is 0.45. Weapon spread shapes the path of a miss; it is not the hit roll.
+Hit chance is `clamp((0.78 − 0.28 × d/r + (u − 0.5) × 0.1) × a, 0.05, 0.95)`. `d` is target distance in meters, `r` is the drawn weapon's positive range in meters, and a valid shot has `0 ≤ d ≤ r`. `u` is a seeded random draw in `[0, 1)`, giving jitter in `[-0.05, 0.05)`. Accuracy `a` is 1.0 for operatives, 0.45 for Standard CorpSec, and 0.495 for Hardened CorpSec. A separate seeded draw resolves the hit; an armed Deadeye shot bypasses that roll. At half range with zero jitter, chance is 64% for an operative and 28.8% for Standard CorpSec. Weapon spread shapes the path of a miss; it is not the hit roll. Source: `tryFire` in [world.ts](../src/game/world.ts).
 
 Operatives deal full weapon damage. CorpSec deals 70% and fires at 1.75× the authored cooldown. Magazines reload from an unlimited reserve.
 
@@ -689,7 +699,7 @@ Each authored contract is a designed problem, not a reskin. Generated contracts 
 
 Sable wants District 07 opened for an asset transfer at 23:00. Omnicorp CorpSec has sealed it behind a checkpoint. The squad inserts on the south perimeter and advances through market blocks under heavy rain. The front clears to light at 22:16:38. The 23:00 transfer is contract fiction, not mission length.
 
-Heavy rain is the squad’s ally on the approach: the largest sight penalty in the game, which is why a Severe contract is still workable. At 22:16:38 that ally lifts one step. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Collateral tolerance is low. Severe threat adds three extra street patrols (four if unrest is high), scales CorpSec health to 1.2 (1.25 if control is above 60), and upgrades one garrison member to an officer and one to a heavy.
+Heavy rain is the squad’s ally on the approach: the largest sight penalty in the game, which is why a Severe contract is still workable. At 22:16:38 that ally lifts one step. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Collateral tolerance is low. Severe threat adds three extra street patrols (four if unrest is high), scales CorpSec health to 1.2, and upgrades one garrison member to an officer and one to a heavy.
 
 1. Reach the checkpoint gate.
 2. Eliminate the seven-garrison (street patrols are optional unless they threaten the squad).
@@ -701,10 +711,10 @@ The mission is a read-and-commit: bypass or break eight street patrols in the ra
 
 Helix pays for a neurochem architect, alive. CorpSec means to move the asset before the next maglev window. Light rain on insertion; the front clears to none at 22:17:08. The compound can be bypassed; the interior garrison is optional.
 
-High threat: two extra street patrols (three if unrest is high), CorpSec health 1.1 (1.15 if control is above 60), one garrison heavy. Fourteen civilians, twenty if unrest is high. The compound is a walled eastern detention block with one gated south entry and one breachable side entry; seed parity mirrors the flank. Cell blocks on the north wall, records hut at the server corner.
+High threat: two extra street patrols (three if unrest is high), CorpSec health 1.1, one garrison heavy. Fourteen civilians, twenty if unrest is high. The compound is a walled eastern detention block with one gated south entry and one breachable side entry; seed parity mirrors the flank. Cell blocks on the north wall, records hut at the server corner.
 
 1. Reach the compound gate.
-2. *(Optional, +9,000 CR)* Pull the detention server — a four-second channel at the records hut. Activates with objective 1. The server wipes 90 seconds later; expiry fails only the bonus.
+2. *(Optional, +9,000 CR)* Pull the detention server — a four-second channel at the records hut. Activates after objective 1 completes, alongside objective 3 (override the cell-block locks). The server wipes 90 seconds after activation on Standard; Hardened shortens the window. Expiry fails only the bonus.
 3. Override the cell-block locks — a five-second channel at the console.
 4. Walk the freed VIP to extraction alive.
 5. Extract the squad.
@@ -713,7 +723,7 @@ The mission is a route choice and an escort. The side wall skips most of the int
 
 ### Rust Haven — drop the grid and hold it
 
-Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. Dusk, 18:14:08, no front: full sight, full hearing, neon still readable. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; CorpSec health 1.0 (1.05 if control is above 60). Demolition cells drop devices quickly. Gunfire works, slowly.
+Stratos has found an Omnicorp relay yard feeding the Detroit Sprawl security grid. Three fuel relays sit in a fenced yard behind two gates. Dusk, 18:14:08, no front: full sight, full hearing, neon still readable. Sparse civilians (8, or 14 if unrest is high). Moderate threat: the three base street patrols, one more if unrest is high; CorpSec health 1.0. Demolition cells drop devices quickly. Gunfire works, slowly.
 
 The yard splits into two sub-yards. Seed parity sets the split. Streets are wider than the other archetypes.
 
@@ -868,7 +878,7 @@ Combat and UI one-shots and the mission rain use CC0 sound libraries: recorded f
 
 Voices that must exist: weapon-specific gunshots, reload, blast, ability activation, confirmation, UI click, interaction progress, alert sting, objective-complete, death thud, operative-hit thump.
 
-Two beds: a low industrial loop on the four Screens (music), a city-hum loop on the mission (ambience) — one of three clips, chosen at random when the mission bed starts, not keyed to contract, district, Opening hour, weather, or threat. Separate light and heavy rain recordings crossfade as weather changes; rain is silent when the weather is none. Each bed dies with the screen that owns it. Opening hour does not get its own bed.
+Two beds: a low industrial loop on the four Screens (music), a city-hum loop on the mission (ambience) — one of three clips, chosen at random when the mission bed starts, not keyed to contract, district, Opening hour, weather, or threat. Separate light and heavy rain recordings crossfade as weather changes; rain is silent when the weather is none. The strategy bed keeps the same source playing while navigating among World Network, Research, Brief, and Assembly; it stops when leaving that group. The mission bed stops when leaving the mission. Opening hour does not get its own bed. Strategy ownership is defined in [strategyAudio.ts](../src/ui/strategyAudio.ts).
 
 Four channels under a master — UI, combat, music, ambience — plus mute. Levels persist with player settings, not the campaign. UI cues sit below weapon reports. Event rate limits and overlap caps keep dense combat readable, with room reserved for impacts and warnings when gunfire fills the mix. Small playback-rate variations soften repeated gunshots; a final compressor catches coincident peaks. Late-loading one-shots are dropped so earlier actions do not sound as a delayed burst.
 
@@ -880,11 +890,22 @@ There is no spoken operative dialogue and no spatial audio model. Those are out 
 
 The player’s advantages are information, quality, and pause. CorpSec’s advantages are numbers, coverage, and propagation.
 
-The player has four operatives, full weapon damage, higher accuracy, faster weapon cooldowns, automatic acquisition, a tactical pause, visible CorpSec states and sight cones, and a research program that permanently improves later missions.
+The player can deploy up to four operatives, with full weapon damage, higher accuracy, faster weapon cooldowns, automatic acquisition, a tactical pause, visible CorpSec states and sight cones, and a research program that permanently improves later missions.
 
 CorpSec has numerical superiority (12 on the baseline checkpoint before extras), street-patrol coverage, awareness propagation, a longrifle garrison marksman, and civilians in the lane.
 
 **Standard** is the authored baseline. **Hardened** adds two street patrols and six civilians, lengthens sight confirmation, raises CorpSec accuracy, adds one metre of guard vision, and tightens optional-objective windows. It does not hide minimap information. The choice lives in player settings and survives New Operation.
+
+| Difficulty modifier | Standard | Hardened |
+|---|---:|---:|
+| Extra street patrols | 0 | 2 |
+| Extra civilians | 0 | 6 |
+| Sight-confirmation duration multiplier | 1.0 | 1.15 |
+| CorpSec accuracy multiplier | 1.0 | 1.1 |
+| Vision added after weather | 0 m | 1 m |
+| Optional time-limit multiplier | 1.0 | 0.85 |
+
+These are the supported discrete profiles, not validated ranges for arbitrary tuning. For example, Hollow Crown's 90-second optional window becomes 76.5 seconds on Hardened. Values come from `DIFFICULTY_FX` in [missionParams.ts](../src/game/missionParams.ts). Changing them requires checking brief/live agreement and the affected encounters. The derived Chance readout uses `missionChance` in that same module; the Event forecast uses the current sector/category weights and mean event interval in [forecast.ts](../src/game/forecast.ts), rather than simulating future changes to those weights.
 
 Difficulty should turn readable knobs: sight confirmation time, accuracy and cooldown, street-patrol count and overlap, garrison mix, civilian density, economy, awareness range, optional-objective pressure. It must not turn off the minimap without giving the player a compensating tool.
 
@@ -951,20 +972,53 @@ Not unresolved design. Not a veto on shipping.
 
 ## 20. Acceptance
 
-The design is doing its job when all of the following are true.
+The deterministic checks below have observable outcomes. The playtest tasks describe evidence to collect, not results already obtained. Participant counts, success thresholds, and performance budgets remain pending approval; no pass or release gate is implied for those pending criteria.
 
-**Campaign.** A win visibly changes at least two strategic values. A loss is costly and recoverable, unless the roster is gone. Intel has at least two earn sources and at least two uses. A save and reload reproduces strategic and roster state.
+**Campaign.** A first win awards 40 Intel progress and 6 Influence; a clean first win awards 55 Intel progress and 8 Influence. Its sector result follows the Control, Unrest, and Ownership rules. A quiet replay awards no contract payout, Intel, or Influence and applies no direct Control or Unrest change; roster consequences still apply, and a replay win spends ETA with the normal strategic catch-up. A loss pays no contract fee, awards no Intel or Influence, and spends no ETA. An empty roster fails an incomplete campaign, but does not change a completed campaign to failed. Intel gates contracts and unlocks the Event forecast and Risk index. A save and reload reproduces strategic and roster state.
 
-**Mission.** Every mission has at least one route choice. Not every street patrol must die. Civilians create risk without making collateral feel random. Mission notes match live modifiers. The brief’s district is the deployed district.
+**Mission.** For each authored district variant and each generated objective-sequence variant under test, record the seed, Threat, sector snapshot, Difficulty, and squad. Identify two walkable approaches that differ in street-patrol or garrison exposure, not merely in path coordinates. Verify that untagged street patrols do not gate an eliminate objective and that the required sequence can complete with an untagged street patrol alive. Compare the brief and deployment for insertion, objectives, extraction, force/civilian counts, Opening hour, and weather-front timing. Use controlled fire-lane fixtures to verify first squad-caused civilian hit, repeated hits, CorpSec-caused harm, and cover interruption against the Collateral rules. Report sampled seeds and variants explicitly; a sample does not establish coverage of every generated district.
 
-**Squad.** Every role changes at least one decision. Every active has readable range, targeting, cooldown, and feedback. A four-operative squad has identifiable strengths and holes.
+**Squad.** For each role, use a fixture with a valid recipient or affected target and verify the active's stated effect, duration, range where applicable, cooldown, and HUD/comm-log feedback against §8. For targeted actives, repeat with no valid target and verify the stated refusal and cooldown behavior. Compare a tactical situation with and without the passive's conditions satisfied. With a selected contract and mass within the limit, one, two, three, and four assigned Ready operatives are valid deployments; no assigned operatives or any assigned Injured operative blocks deployment. Check mass boundaries at 340, 380, and 400 kg and immediately above each: tier changes at the documented inequalities, and deployment is refused only above 400 kg.
 
-**UX.** A new player can discover Select, Move, Attack, Hold Ground, Hold Fire, objectives, and extraction without opening this document. Critical state uses more than color. Text holds at 1280×720.
+**UX.** At 1280×720 and every supported text scale, check every screen for clipping, unintended overlap, and access to scrolled content. Enumerate critical selection, focus, injury/KIA, lock, objective, alert, and result states and verify that each has a readable non-color cue. Exercise the documented keyboard activation and focus behavior for Research, Timeline, Pause, and Settings, including nested Settings return. Follow [click-through.md](click-through.md) and name any unexercised screens or interactions.
 
-**Feel.** Four powerful operatives through a populated district, managing information, awareness, fire lanes, and an invoice. If a session is only a firefight or only a spreadsheet, a pillar was ignored.
+### Playtest tasks — thresholds pending
+
+- **Discovery:** Give a player unfamiliar with the controls the goals of selecting one operative and the squad, moving, attacking, using Hold Ground and Hold Fire, identifying the active objective, and extracting. Allow the in-game tutorial, pause help, and current bindings, but no GDD or moderator instruction. Record completion, time, in-game help used, mistakes, and any moderator intervention per task.
+- **Role decisions:** Ask the player to choose personnel for a contract, use a role active in a relevant situation, and explain what that role or passive changed about the plan. Record the choice, observed effect, and explanation; do not infer understanding from activation alone.
+- **Collateral:** After a firefight and its invoice, ask the player to identify which civilian hits counted, explain the deduction, and name a different placement or order that could have reduced exposure. Compare the account with recorded fire-lane events. Record unexpected or untraceable hits separately from whether the player considered the outcome fair.
+- **Session experience:** Observe a complete planning-to-debrief session. Ask what strategic information informed deployment, what tactical information changed an order, and how the outcome affects the next contract or research choice. Record missed connections as well as successful ones.
+
+Participant count, recruitment criteria, task-time limits, acceptable intervention rate, and pass thresholds are not yet approved. Report observations without converting them into an overall usability or fairness pass. These tasks assess the remote-command fantasy; they do not reopen the explicitly backlogged accessibility features.
+
+### Performance validation — targets pending
+
+Before judging performance, approve the hardware/OS, browser/version and graphics backend, viewport/device-pixel ratio, quality tier, mission/seed and combat stress fixture, run duration, cold/warm-cache procedure, and budgets for load time, frame-time distribution, and memory. Capture cold deployment separately from warmed combat and identify the tool and metric used. No numerical product-level budget or release gate is established here. The architecture pass's relative budget in [city-architecture.md](city-architecture.md) remains scoped to that pass and does not establish whole-game acceptance.
 
 ---
 
 ## 21. Glossary
 
 Canonical language lives in [`CONTEXT.md`](../CONTEXT.md). If a sentence here disagrees with that glossary on a name, the glossary wins.
+
+---
+
+## 22. Dependencies and sources
+
+This consolidated GDD describes both sides of the interactions below; separate per-system GDDs are not required. The source links locate the existing implementation, not a second set of rules to copy independently. The glossary owns names, existing ADRs own their recorded decisions, and code establishes current behavior when the specification has drifted.
+
+| System | Depends on / feeds back to | GDD sections and authoritative sources |
+|---|---|---|
+| World Network | Contracts consume sector state; mission results change it. Strategic time advances research, recovery, recruitment, and Tax yield. | §5–7, §9; [worldStore.ts](../src/state/worldStore.ts), [forecast.ts](../src/game/forecast.ts), [two clocks](adr/0001-two-clocks.md), [Influence and Tax yield](adr/0008-influence-is-a-wallet.md) |
+| Economy and contracts | World Network state generates offers and pays Tax yield. Mission outcomes determine fees, Collateral, Intel, and Influence; Credits fund research and candidates. | §5–9, §10; [contracts.ts](../src/game/contracts.ts), [appStore.ts](../src/state/appStore.ts), [one contract kind](adr/0003-one-contract-kind.md), [quiet replay](adr/0004-quiet-replay.md) |
+| Research | Credits and strategic time complete projects; roster bay assignments determine their deployment effects on weapons, HP, speed, and mass. | §6–8; [research.ts](../src/game/research.ts), [researchStore.ts](../src/state/researchStore.ts), [blueprint assignment](adr/0005-blueprint-assignment.md) |
+| Roster and Assembly | Research, Credits, and strategic time affect readiness and worn effects. Mission outcomes return KIA, injury, and experience; Assembly supplies the next squad and items. | §6–8, §10; [campaignStore.ts](../src/state/campaignStore.ts), [experience.ts](../src/game/experience.ts), [mass.ts](../src/game/mass.ts), [ui/index.tsx](../src/ui/index.tsx) |
+| Tactical mission | Contract and sector snapshots, Difficulty, research, roster, and items determine deployment. Objectives and combat produce outcomes consumed by the World Network and roster. | §8–11, §16; [missionParams.ts](../src/game/missionParams.ts), [world.ts](../src/game/world.ts), [citygen.ts](../src/world/citygen.ts), [weather script](adr/0006-weather-script.md), [Opening hour](adr/0007-opening-hour.md) |
+| Interface and audio | Read and control the same campaign/mission state; briefs use deployment geometry and modifiers, feedback follows actions and outcomes, and screen flow owns audio lifetimes. | §12–15; [ui/index.tsx](../src/ui/index.tsx), [MissionScreen.tsx](../src/ui/MissionScreen.tsx), [strategyAudio.ts](../src/ui/strategyAudio.ts), [audio README](../inspiration/audio/sfx/README.md) |
+| Persistence and validation | Persist stable campaign state across the World Network, research, and roster; exclude the running mission. Validation exercises those boundaries and the player-facing rules above. | §17, §20; [save.ts](../src/state/save.ts), [unsaved mission](adr/0002-unsaved-mission.md), [click-through.md](click-through.md) |
+
+### Tuning ownership
+
+In the formulas above, `clamp(x, lo, hi) = min(hi, max(lo, x))`; `round` is nearest-integer rounding with half ties toward positive infinity, matching JavaScript `Math.round`. Each formula defines its own variables and units; a symbol reused in another section is local to that formula.
+
+The tables and formulas in §5–10 and §16 describe current authored values and supported discrete choices. [data.ts](../src/game/data.ts) owns authored weapons/contracts, [abilities.ts](../src/game/abilities.ts) role effects, [research.ts](../src/game/research.ts) project effects, [mass.ts](../src/game/mass.ts) mass thresholds, and [missionParams.ts](../src/game/missionParams.ts) deployment modifiers. Mathematical input bounds are not evidence of balanced tuning ranges. No additional safe adjustment ranges are approved by this document; a proposed change must identify affected dependencies and validate the resulting behavior.
