@@ -4,6 +4,8 @@ Browser game inspired by Syndicate: React 19 + Vite for the DOM screens, react-t
 
 Design: [`docs/game-design.md`](docs/game-design.md) — economy, contracts, research tree, or mission rules. Code wins when they disagree.
 
+Setup and documentation map: [`README.md`](README.md). QA records and evidence format: [`docs/qa/README.md`](docs/qa/README.md).
+
 ## Done
 
 Scripts live in `package.json`. Run `npm run lint`, `npm run test`, and `npm run build` before calling code work done. Tests sit next to their module and cover `src/game/`, `src/world/`, `src/state/`.
@@ -33,7 +35,7 @@ Contracts: files whose header starts `CONTRACT FILE` — shared types, static da
 Two-tier:
 
 - Fast, per-frame: `getWorld()` inside `useFrame` or a rAF loop.
-- Slow, ~5Hz: `world.ts` pushes squad rows, objectives, clock, weather, and log into `missionStore` every `SYNC_INTERVAL` (0.2s). HUD components subscribe there. The canvas minimap reads the live world on its own throttled loop; imperative HUD controls call the world directly.
+- Slow, ~5Hz: `world.ts` pushes squad rows, resources, clock, civilian-hit count, and active objective progress into `missionStore` every `SYNC_INTERVAL` (0.2s). Startup also seeds the HUD; logs, weather fronts, and objective transitions write when their events occur rather than waiting for that interval. HUD components subscribe to the store. The canvas minimap reads the live world on its own throttled loop; imperative HUD controls call the world directly.
 
 `MissionScreen` snapshots sector, replay, and loadout into `createWorld`, then resets `missionStore`. `world.ts` defers every store write to the first tick (`startup()`).
 
@@ -43,11 +45,11 @@ Seven stores, split by lifetime and rate: `appStore` (flow, squad, outcome), `mi
 
 ## Time
 
-`world.tick(rawDt)` clamps to `MAX_CATCHUP` (5s) and spends the remainder in whole `MAX_DT` (0.05s) steps. `worldStore` exports its own `MAX_DT` (0.25s) for the strategy clock; the two names are unrelated. Frames arrive seconds apart while WebGPU pipelines compile, and dropping the remainder froze the mission clock. During the first world second it takes one step per frame so the opening is not simulated off screen. Keep both behaviours if you touch `tick`.
+`world.tick(rawDt)` clamps to `MAX_CATCHUP` (5s) and consumes it in steps of at most `MAX_DT` (0.05s), including any shorter final remainder. `worldStore` exports its own `MAX_DT` (0.25s) for the strategy clock; the two names are unrelated. Frames arrive seconds apart while WebGPU pipelines compile, and dropping the remainder froze the mission clock. During the first world second it takes at most one step per frame so the opening is not simulated off screen. Keep both behaviours if you touch `tick`.
 
-World time has two advancement paths:
+Strategic time has two advancement paths:
 
-- Continuous: world map and research mount `ui/clock.ts` (`useWorldClock`). rAF batched to 20Hz, ticks `worldStore`, then `researchStore.sync(t)` and `campaignStore.sync(t)`.
+- Continuous: shared `ScreenChrome` in `ui/Nav.tsx` mounts `useWorldClock` from `ui/clock.ts` for all four Screens: World Network, Research, Brief, and Assembly. rAF batched to 20Hz ticks `worldStore`, then `researchStore.sync(t)` and `campaignStore.sync(t)`. Menu, mission, and debrief do not mount that chrome.
 - Contract ETA: after a win, the debrief calls `worldStore.advanceDays(etaDays)`, then syncs research and campaign to the new time.
 
 Any new way to advance `worldStore.t` must catch up research labs, injury recovery, recruitment, and Tax yield at the resulting time.

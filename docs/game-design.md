@@ -10,6 +10,33 @@ When this document and the playable build disagree, treat the disagreement as a 
 
 [`docs/game-design.html`](game-design.html) is a dated styled snapshot. This file, [`CONTEXT.md`](../CONTEXT.md), and [`docs/adr/`](adr/) are the spec.
 
+## Contents
+
+- [1. The game](#1-the-game)
+- [2. Design pillars](#2-design-pillars)
+- [3. Fantasy and world](#3-fantasy-and-world)
+- [4. Structure of play](#4-structure-of-play)
+- [5. The World Network](#5-the-world-network)
+- [6. Economy and progression](#6-economy-and-progression)
+- [7. Research](#7-research)
+- [8. Roster and assembly](#8-roster-and-assembly)
+- [9. Contracts](#9-contracts)
+- [10. The tactical mission](#10-the-tactical-mission)
+- [11. The three authored contracts](#11-the-three-authored-contracts)
+- [12. Interface](#12-interface)
+- [13. Controls](#13-controls)
+- [14. Art direction](#14-art-direction)
+- [15. Audio direction](#15-audio-direction)
+- [16. Difficulty and balance](#16-difficulty-and-balance)
+- [17. Platform and persistence](#17-platform-and-persistence)
+- [18. Out of scope](#18-out-of-scope)
+- [19. Closed questions](#19-closed-questions)
+- [20. Acceptance](#20-acceptance)
+- [21. Glossary](#21-glossary)
+- [22. Dependencies and sources](#22-dependencies-and-sources)
+
+For setup, engineering guidance, and historical evidence, use the [documentation map](../README.md#documentation-map).
+
 ---
 
 ## 1. The game

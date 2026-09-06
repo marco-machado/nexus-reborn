@@ -1,6 +1,10 @@
 # Scoped World Network correction
 
-Final result: passed
+Historical reported result: passed within the scope below; not a current-checkout verification.
+
+## Record limitations
+
+The run date/timezone, exact tested commit and working-tree patch, hardware/GPU, OS/browser versions, and Node/npm versions were not recorded. The viewport and device-pixel ratio are recorded below. The screenshot reference is an original machine-local path, not repository-bundled evidence; it is retained for provenance but is not portable or verified by this documentation update. The removed audio fixture is not retained as a reproduction artifact. These omissions limit independent reproduction of the reported pass. New runs use the [QA record format](docs/qa/README.md); do not substitute current environment details for missing historical metadata.
 
 The latest user instruction limits visual edits to the annotated sector list,
 central Scan and top-right resource readout. The prior whole-screen mockup is

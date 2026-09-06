@@ -2,9 +2,11 @@
 
 Run this when a change can affect rendering, screen flow, input, audio, or persisted state.
 
-`npm run dev`, open the app at exactly 1280×720, console visible. Use a clean browser profile if the check must not alter an existing local save.
+Follow the [local setup](../README.md#run-locally), then run `npm run dev -- --strictPort` and open the printed URL at exactly 1280×720, console visible. Use a clean browser profile if the check must not alter an existing local save. To test the production bundle instead, build first and use the [preview command](../README.md#verify-a-change).
 
 A full click-through is all six steps. A partial run names the screens and interactions actually exercised, in the handoff or commit body.
+
+Record the tested revision and working-tree changes, exact environment, starting state, steps, observations, and portable evidence using the [QA record format](qa/README.md). Capture the actual renderer backend from the mission console. After the run, stop every dev/preview server you started and record that its listener is gone, including port 4200 if used. Do not stop unrelated services.
 
 1. Load the main menu, open and close Settings, then start a New Operation or Continue a saved one.
 2. On the World Network, pause and resume the strategic clock, change Clock speed, open Research from the bottom navigation, inspect a project, and return to the World Network. Confirm the focused sector shows control, unrest, tax yield in Credits per 24 hours, and garrison condition — not defense, an Influence index, NETWORK THREAT, influence income, black-market impact, or total forces. Opening North America tax yield is 4,080 CR / 24h. Influence is a point wallet (0 on a new operation). Confirm the shared header (Credits, Influence, Intel, Roster, strategic clock) and the four nav tabs: WORLD NETWORK, RESEARCH, BRIEF (locked with no contract), ASSEMBLY. Confirm SECTORS, Scan (ORBITAL SCAN still up), OPEN CONTRACTS, CLOCK SPEED, Pause/Resume, TIMELINE, FEED, TIME CODE, Control key, Event forecast wording at intel 2+, and no VIEW SECTOR INTEL, GAME SPEED, or WORLD CLOCK in the chrome.

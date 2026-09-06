@@ -2,6 +2,24 @@
 
 Tested at **1280×720** in the Codex in-app browser on this machine, using the actual WebGPU renderer. The development review mounts the production scene, camera, input, units, effects and HUD through `GameCanvas`. It omits campaign save bootstraps. Production checks use a separate `city-review-20260905.localhost:4200` origin so existing campaigns are preserved.
 
+## Record metadata and reproducibility
+
+This is retained historical evidence, not a new run or a current-checkout pass. The observations and measurements below are unchanged. New runs use the [QA record format](../README.md).
+
+| Field | Recorded value |
+| --- | --- |
+| Run date | 2026-09-05; timezone not recorded |
+| Baseline revision | `23b4bab0dc884fdd9505454c758d2004a8b8d214` |
+| Tested final revision / working-tree patch | Not recorded; references to “final source” below do not identify an exact checkout |
+| Hardware, GPU, OS version | Not recorded; “this machine” is not a portable environment identifier |
+| Browser and version | Codex in-app browser; browser/engine version not recorded |
+| Node/npm versions | Not recorded |
+| Renderer and viewport | WebGPU, 1280×720; device-pixel ratio not recorded |
+| Quality and display pacing | High/medium/low samples below; approximately 120Hz pacing |
+| Evidence | Repository-relative screenshots and [raw timings](timings.json) |
+
+The retained current-scene harness is opened at `/tools/city-review.html` on the development server; see [local setup](../../../README.md#run-locally). The matching-view coordinates, layout/quality matrix, fixture interventions, and timing protocol are recorded below. Baseline source copies were outside the repository and are not bundled with this record, so the retained harness alone cannot reproduce the original before/after comparison. Missing metadata must not be inferred from a later machine or checkout.
+
 ## Matching views
 
 Baseline renderer and generator were copied before implementation from commit `23b4bab0dc884fdd9505454c758d2004a8b8d214`. Both sides use Glass Veil variant 0, high quality, a frozen initial simulation, the same camera yaw and distance 72. Fixed world coordinates avoid changes to road-array indices after the northern connection was added. The city layout itself intentionally changes around that new connection.
