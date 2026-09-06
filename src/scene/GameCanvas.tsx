@@ -9,7 +9,7 @@
 // against a torn down hooks dispatcher and log "Invalid hook call" while the
 // scene recovers (pmndrs/react-three-fiber#3782). One createRoot, one
 // configure and one render per canvas keeps the mount single flight.
-import { StrictMode, useEffect, useRef } from 'react'
+import { StrictMode, useEffect, useRef, type ReactNode } from 'react'
 import * as THREE from 'three/webgpu'
 import { createRoot, events, extend, useFrame, type ThreeToJSXElements } from '@react-three/fiber'
 import { getWorld } from '../game/runtime'
@@ -104,7 +104,11 @@ function WorldTicker() {
   return null
 }
 
-function SceneTree() {
+interface ReviewScene {
+  diagnostics?: ReactNode
+}
+
+function SceneTree({ diagnostics }: ReviewScene) {
   return (
     <StrictMode>
       <WorldTicker />
@@ -112,6 +116,7 @@ function SceneTree() {
       <CameraRig />
       <Atmosphere />
       <CityView />
+      {diagnostics}
       <Units />
       <Fx />
       <Rain />
@@ -131,7 +136,10 @@ interface Mount {
 // cache keeps that second pass from starting a second configure.
 const mounts = new WeakMap<HTMLCanvasElement, Mount>()
 
-export default function GameCanvas() {
+export default function GameCanvas({ review }: { review?: ReviewScene } = {}) {
+  // Review components are accepted only by a separate development entrypoint.
+  // Keep the initial scene immutable for the lifetime of the renderer.
+  const reviewRef = useRef(import.meta.env.DEV ? review : undefined)
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -163,7 +171,7 @@ export default function GameCanvas() {
       // The gl factory has resolved the tier by now; apply its DPR bound
       // before the first render so no frame draws at the boot ratio.
       await m.root.configure({ size: size(), dpr: tierDpr() })
-      if (m.alive) m.root.render(<SceneTree />)
+      if (m.alive) m.root.render(<SceneTree {...reviewRef.current} />)
     })
     const ro = new ResizeObserver(() => {
       void m.ready.then(() => {

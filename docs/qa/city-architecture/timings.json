@@ -1,0 +1,97 @@
+{
+  "baselineCommit": "23b4bab0dc884fdd9505454c758d2004a8b8d214",
+  "viewport": "1280x720",
+  "backend": "WebGPU",
+  "protocol": "Same browser/machine, live Glass Veil variant 0 at default insertion camera; 15-second warmup followed by 30 seconds of r3f frame-delta samples. End-of-sample renderer.info draw calls/triangles vary with runtime units and effects. Hardware display pacing was approximately 120Hz; this is a frame-pacing comparison, not a GPU timestamp measurement.",
+  "measurements": [
+    {
+      "sample": "baseline-glass-high",
+      "status": "Complete",
+      "samples": 3617,
+      "medianMs": 8.299999952316284,
+      "p95Ms": 9.200000047683716,
+      "calls": 164,
+      "triangles": 7691,
+      "geometries": 39,
+      "textures": 30
+    },
+    {
+      "sample": "baseline-glass-low",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.299999952316284,
+      "p95Ms": 10.099999904632568,
+      "calls": 177,
+      "triangles": 8651,
+      "geometries": 39,
+      "textures": 18
+    },
+    {
+      "sample": "baseline-glass-medium",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.300000190734863,
+      "p95Ms": 10,
+      "calls": 197,
+      "triangles": 9015,
+      "geometries": 39,
+      "textures": 31
+    },
+    {
+      "sample": "current-glass-high",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.300000190734863,
+      "p95Ms": 10.099999904632568,
+      "calls": 195,
+      "triangles": 18517,
+      "geometries": 38,
+      "textures": 41
+    },
+    {
+      "sample": "current-glass-low",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.299999952316284,
+      "p95Ms": 10.100000143051147,
+      "calls": 152,
+      "triangles": 17261,
+      "geometries": 38,
+      "textures": 29
+    },
+    {
+      "sample": "current-glass-medium",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.300000190734863,
+      "p95Ms": 10.099999904632568,
+      "calls": 200,
+      "triangles": 18577,
+      "geometries": 38,
+      "textures": 41
+    },
+    {
+      "sample": "current-glass-high-final",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.300000190734863,
+      "p95Ms": 10,
+      "calls": 164,
+      "triangles": 17249,
+      "geometries": 38,
+      "textures": 41
+    },
+    {
+      "sample": "current-route-active-frozen",
+      "protocol": "Final source with additive route probes. Frozen cleared-hostiles fixture, four active paths; camera focus (74,11), distance115. 15s warmup plus30s frames. Render stress sample only; not directly comparable to the live insertion baseline.",
+      "status": "Complete",
+      "samples": 3591,
+      "medianMs": 8.300000190734863,
+      "p95Ms": 10,
+      "calls": 248,
+      "triangles": 19601,
+      "geometries": 40,
+      "textures": 43
+    }
+  ]
+}
