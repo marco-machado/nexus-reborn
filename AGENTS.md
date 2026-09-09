@@ -6,6 +6,19 @@ Design: [`docs/game-design.md`](docs/game-design.md) — economy, contracts, res
 
 Setup and documentation map: [`README.md`](README.md). QA records and evidence format: [`docs/qa/README.md`](docs/qa/README.md).
 
+## Technology Stack
+
+- **Engine**: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
+- **Language**: TypeScript 5.8.3
+- **Build System**: Vite + `tsc -b` (`npm run build`)
+- **Asset Pipeline**: Code-generated geometry and materials; no `public/` art assets
+- **State**: Zustand 5.0.14
+- **Physics**: None — mission sim is custom TypeScript in `src/game/`
+
+## Engine Version Reference
+
+Before suggesting three.js, r3f, or React APIs, read `docs/engine-reference/web/VERSION.md`. Do not invent post-cutoff APIs. Knowledge risk is HIGH (cutoff May 2025; pin is three.js r185 / React 19.2.8).
+
 ## Done
 
 Scripts live in `package.json`. Run `npm run lint`, `npm run test`, and `npm run build` before calling code work done. Tests sit next to their module and cover `src/game/`, `src/world/`, `src/state/`.
