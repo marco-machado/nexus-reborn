@@ -1,0 +1,387 @@
+# Game World Entity Registry
+#
+# Cross-system facts only. Living spec docs/game-design.md remains source of
+# truth for tables. This file aliases extracted GDD names so later extracts
+# do not fork numbers.
+#
+# WRITTEN BY: /design-system Phase 5. READ BY: /design-system, /consistency-check.
+
+version: 1
+last_updated: "2026-09-08"
+
+entities: []
+
+items: []
+
+formulas:
+  - name: injuryRecoverySec
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/world-network.md
+      - design/gdd/persistence-and-validation.md
+    variables:
+      - f
+    output_range: [43200, 172800]
+    expression: "round(43200 + (1 - clamp(f, 0, 0.35) / 0.35) * 129600)"
+    notes: "Invoke only for living survivors with f in (0, 0.35). Dead is KIA, not f=0. Canonical: docs/game-design.md §8."
+    added: 2026-09-08
+    revised: ""
+
+  - name: operative_mass
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    variables:
+      - Wprimary
+      - Wsidearm
+      - H
+      - m
+      - c
+    output_range: [0, 400]
+    expression: "60 + Wprimary + Wsidearm + 0.25 * max(0, H - 90) + 8m + 6c"
+    notes: "m+c ≤ 2. Unassigned bodies are not in this term. Canonical: docs/game-design.md §8."
+    added: 2026-09-08
+    revised: ""
+
+  - name: squad_mass
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    variables:
+      - operative_mass
+    output_range: [0, 400]
+    expression: "sum of operative_mass over assigned (1-4)"
+    notes: "Empty bays add 0. Gate is separate. Canonical: docs/game-design.md §8."
+    added: 2026-09-08
+    revised: ""
+
+  - name: mass_gate
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/persistence-and-validation.md
+    variables:
+      - squad_mass
+    output_range: [0, 1]
+    expression: "squad_mass <= 400"
+    notes: "Over 400 kg blocks Deploy; exactly 400 kg is allowed."
+    added: 2026-09-08
+    revised: ""
+
+  - name: mass_tier
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    variables:
+      - squad_mass
+    output_range: [-0.15, 0.15]
+    expression: "+0.15 if squad_mass <= 340; -0.15 if squad_mass > 380; else 0"
+    notes: "Squad-wide m/s at deploy. 380 exact is 0 (not heavy)."
+    added: 2026-09-08
+    revised: ""
+
+  - name: remaining_downtime
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/world-network.md
+    variables:
+      - t0
+      - D
+      - t1
+    output_range: [0, 172800]
+    expression: "max(0, t0 + D - t1)"
+    notes: "Win (including quiet replay) only. Loss spends no ETA. Recovery does not restore Squad assignment."
+    added: 2026-09-08
+    revised: ""
+
+  - name: win_rate
+    status: active
+    source: design/gdd/persistence-and-validation.md
+    referenced_by:
+      - design/gdd/persistence-and-validation.md
+      - design/gdd/interface.md
+    variables:
+      - won
+      - lost
+    output_range: [0, 1]
+    expression: "won / (won + lost)"
+    notes: "Abort excluded from denominator. Defined only when won+lost > 0; zero-denominator is Open Question 2. Canonical: docs/game-design.md §17."
+    added: 2026-09-08
+    revised: ""
+
+  - name: hit_chance
+    status: active
+    source: design/gdd/tactical-mission.md
+    referenced_by:
+      - design/gdd/tactical-mission.md
+    variables:
+      - d
+      - r
+      - u
+      - a
+    output_range: [0.05, 0.95]
+    expression: "clamp((0.78 - 0.28 * d/r + (u - 0.5) * 0.1) * a, 0.05, 0.95)"
+    notes: "Valid shot 0 ≤ d ≤ r. Separate seeded draw resolves the hit. Deadeye bypasses that roll. Spread is miss path, not this roll. a: 1.0 operative / 0.45 Standard CorpSec / 0.495 Hardened. Half-range zero jitter: 0.64 / 0.288. Canonical: docs/game-design.md §10; tryFire in world.ts."
+    added: 2026-09-08
+    revised: ""
+
+  - name: risk_index
+    status: active
+    source: design/gdd/tactical-mission.md
+    referenced_by:
+      - design/gdd/tactical-mission.md
+      - design/gdd/world-network.md
+      - design/gdd/interface.md
+    variables:
+      - p
+      - g
+      - c
+      - h
+      - v
+    output_range: [0, null]
+    expression: "round(((4p + 5g) * h + 0.5c) * (0.7 + 0.3v))"
+    notes: "Tactical/Brief compute; World Network only gates intel 2+ display. Interface presents Brief bands vs Chance. Not a percentage, not capped at 100. Bands: Low <30, Guarded [30,50), High [50,75), Severe ≥75. v is clearer scripted weather (none 1.0, light 0.9, heavy 0.8), not live front, not Opening hour. Example p=8,g=7,c=22,h=1.2,v=0.9 → 89 Severe. Canonical: docs/game-design.md §5; missionRisk in forecast.ts."
+    added: 2026-09-08
+    revised: ""
+
+  - name: abort_confirm_hold
+    status: active
+    source: design/gdd/interface.md
+    referenced_by:
+      - design/gdd/interface.md
+    variables:
+      - abort_confirm_hold
+    output_range: [3, 3]
+    expression: "3"
+    notes: "Two-step Abort confirm hold in seconds. Armed does not discard. Canonical: docs/game-design.md §12."
+    added: 2026-09-08
+    revised: ""
+
+  - name: text_scale
+    status: active
+    source: design/gdd/interface.md
+    referenced_by:
+      - design/gdd/interface.md
+    variables:
+      - text_scale
+    output_range: [0.90, 1.25]
+    expression: "∈ {0.90, 1.00, 1.10, 1.25}"
+    notes: "Discrete Settings steps (90/100/110/125%). Not a continuous slider. Overflow scrolls. Canonical: docs/game-design.md §12."
+    added: 2026-09-08
+    revised: ""
+
+  - name: staged_gain
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    variables:
+      - muted
+      - master
+      - channel
+    output_range: [0, 1]
+    expression: "0 if muted else master * channel"
+    notes: "Mute zeroes every channel; unmute restores chosen levels. Authored per-bus bases sit under this factor — do not register those bases. Slider chrome scale is Audio Open Question 1 — do not register 0-100. Canonical: docs/game-design.md §15."
+    added: 2026-09-08
+    revised: ""
+
+  - name: rain_voice
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    variables:
+      - weather
+    output_range: [0, 1]
+    expression: "silent if weather = none; else matching light or heavy recording (adjacent change crossfades)"
+    notes: "Follows live Weather, not Brief, not mission_bed_pick. Dry mission is silent. Canonical: docs/game-design.md §15; ADR-0006."
+    added: 2026-09-08
+    revised: ""
+
+  - name: alert_tension
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    variables:
+      - Alert
+    output_range: [0, 3]
+    expression: "silent if Alert = 0 or mission ended; else synthesized drone ramped to Alert"
+    notes: "Alert is Tactical (living CorpSec in Combat), not Awareness, not Threat. Do not register oscillator Hz/gain tables. Canonical: docs/game-design.md §15."
+    added: 2026-09-08
+    revised: ""
+
+  - name: mission_bed_pick
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    variables:
+      - mission_bed_pick
+    output_range: [1, 3]
+    expression: "unseeded choice among 3 committed city-hum clips at mission-bed start"
+    notes: "Not keyed to contract, district, Opening hour, weather, or Threat. Unseeded; does not change outcomes. Canonical: docs/game-design.md §15, §17."
+    added: 2026-09-08
+    revised: ""
+
+constants:
+  - name: roster_cap
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/persistence-and-validation.md
+    value: 8
+    unit: operatives
+    added: 2026-09-08
+    revised: ""
+
+  - name: squad_assigned_min
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    value: 1
+    unit: operatives
+    added: 2026-09-08
+    revised: ""
+
+  - name: squad_assigned_max
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    value: 4
+    unit: operatives
+    added: 2026-09-08
+    revised: ""
+
+  - name: injury_hp_frac
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    value: 0.35
+    unit: fraction
+    added: 2026-09-08
+    revised: ""
+
+  - name: mass_limit_kg
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/interface.md
+    value: 400
+    unit: kg
+    added: 2026-09-08
+    revised: ""
+
+  - name: hire_min_cost
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/economy-and-contracts.md
+      - design/gdd/persistence-and-validation.md
+    value: 16000
+    unit: CR
+    added: 2026-09-08
+    revised: ""
+
+  - name: hire_max_cost
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+      - design/gdd/economy-and-contracts.md
+      - design/gdd/persistence-and-validation.md
+    value: 34000
+    unit: CR
+    added: 2026-09-08
+    revised: ""
+
+  - name: experience_per_survivor
+    status: active
+    source: design/gdd/roster-and-assembly.md
+    referenced_by:
+      - design/gdd/roster-and-assembly.md
+    value: 1
+    unit: points
+    notes: "HP/speed per point are not authored in §8 — do not register XP_HP_PER / XP_SPEED_PER."
+    added: 2026-09-08
+    revised: ""
+
+  - name: telemetry_record_cap
+    status: active
+    source: design/gdd/persistence-and-validation.md
+    referenced_by:
+      - design/gdd/persistence-and-validation.md
+    value: 60
+    unit: records
+    notes: "Living spec §17 cap. Eviction policy is Open Question 3 — do not register FIFO."
+    added: 2026-09-08
+    revised: ""
+
+  - name: layout_min_width
+    status: active
+    source: design/gdd/interface.md
+    referenced_by:
+      - design/gdd/interface.md
+    value: 1280
+    unit: px
+    notes: "Clipping or truncation at this width is a bug. Canonical: docs/game-design.md §12, §17."
+    added: 2026-09-08
+    revised: ""
+
+  - name: layout_min_height
+    status: active
+    source: design/gdd/interface.md
+    referenced_by:
+      - design/gdd/interface.md
+    value: 720
+    unit: px
+    notes: "Paired with layout_min_width. Canonical: docs/game-design.md §12, §17."
+    added: 2026-09-08
+    revised: ""
+
+  - name: one_shot_count
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    value: 20
+    unit: clips
+    notes: "Committed CC0 combat/UI one-shots. Two rain loops are separate. Canonical: docs/game-design.md §15."
+    added: 2026-09-08
+    revised: ""
+
+  - name: rain_loop_count
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    value: 2
+    unit: clips
+    notes: "Light and heavy. Silent when weather is none. Canonical: docs/game-design.md §15."
+    added: 2026-09-08
+    revised: ""
+
+  - name: mission_bed_count
+    status: active
+    source: design/gdd/audio.md
+    referenced_by:
+      - design/gdd/audio.md
+    value: 3
+    unit: clips
+    notes: "Unseeded pick at mission-bed start. Canonical: docs/game-design.md §15, §17."
+    added: 2026-09-08
+    revised: ""
