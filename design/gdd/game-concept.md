@@ -171,7 +171,7 @@ Not authored in the living spec. Product table is the constraint: keyboard and m
 
 | Consideration | Assessment |
 | ---- | ---- |
-| **Recommended Engine** | React 19 + Vite + react-three-fiber + three.js 0.185 WebGPU (WebGL2 fallback). `/setup-engine` still pending |
+| **Recommended Engine** | React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU (WebGL2 fallback). Pin: `docs/technical-preferences.md`, `docs/engine-reference/` |
 | **Key Technical Challenges** | Deterministic citygen and mission seed; two clocks; unsaved mission vs strategy autosave |
 | **Art Style** | 3D isometric; geometry assembled in code; no external art assets |
 | **Art Pipeline Complexity** | Low by constraint — generated in code |
@@ -192,7 +192,6 @@ Not authored in the living spec. Product table is the constraint: keyboard and m
 
 ### Technical Risks
 
-- Engine prefs and `docs/engine-reference/` still missing
 - Product-level performance budgets in GDD §20 are pending approval
 
 ### Market Risks
@@ -247,7 +246,7 @@ Documentation stop-ladder, not product cuts. See `design/gdd/systems-index.md`.
 ## Next Steps
 
 - [x] Systems index written (`/map-systems`)
-- [ ] `/setup-engine`
+- [x] `/setup-engine` — pin in `docs/technical-preferences.md` and `docs/engine-reference/`
 - [ ] D2 extracts in design order, starting with World Network
 - [ ] `/design-review` in a **fresh session** after each GDD
 - [ ] Do not rewrite `docs/game-design.md`

@@ -2,12 +2,12 @@
 
 > **Status**: Designed (pending independent `/design-review`)
 > **Author**: extract from docs/game-design.md §10, §11, §16
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-10 (ADR-0009 wear owner + quietReplay stamp)
 > **Implements Pillar**: Command, do not micromanage; Information is operational power; Violence has corporate consequences
 > **Living spec**: `docs/game-design.md` §10, §11, §16 — this file aliases them; do not fork rules
 > **Specialists (full)**: creative-director (fantasy); game-designer (rules); systems-designer (formulas/edges/knobs); qa-lead (acceptance)
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-09-08
-> **Wear dual-home**: Research GDD puts resolved worn slotted ids on the Research slice; Roster GDD forbids that and puts resolved wear on the Roster slice. This extract names both slices and does not invent a third cut. See Open Question 1.
+> **Wear owner**: Roster slice owns resolved wear and ordered `appliedIds`; Research slice is unslotted only ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)).
 
 ## Overview
 
@@ -115,8 +115,8 @@ Partitioned **deploy snapshot**, frozen at mission create. Do not pass live stor
 |---|---|---|---|
 | **World Network** | **WN slice:** sector id; Control; Unrest. Intel 2+ only **gates display** of Risk index | **Outcome:** `won`; `quietReplay`; `civiliansHit`; mission/city/sector identity. Tactical **derives** Unrest extras (above 20: +6 civilians +1 street patrol) and Threat extras. Risk index math is Tactical/Brief; WN does not compute it | Neither live-queries the other. WN applies Control/Unrest/ownership/Influence/Intel/Feed after Debrief. Tactical does not shove sectors |
 | **Economy** | **Economy slice:** contract id; authored vs generated; Reward; optional bonus **defs**; ETA days (WN spends later); `quietReplay` from authored `contractsWon` | **Outcome:** `civiliansHit` (unique squad-caused first hits); `won`; completed optionals (`bonus` amounts are priced by Economy from defs + completion); `reward` | Tactical **counts**; Economy **prices** Collateral and net payout. No live Credits writes. Quiet replay still Debriefs ([ADR-0004](../architecture/adr-0004-quiet-replay.md)) |
-| **Research** | **Research slice** frozen at create: completed **unslotted** set. Pins are Roster-owned | — (applies the freeze; does not complete labs) | Weather front does **not** re-sample Research. Completions after freeze apply to the **next** deploy. Worn slotted ids: see Open Question 1 |
-| **Roster / Assembly** | **Roster slice:** assigned ids (1–4); **resolved wear**; Item slots of the assigned; mass (squad kg + Mass tier); sampled HP/speed (body + unslotted + worn slotted + Experience; Mass-tier speed applied here) | **Outcome Roster fields:** `deadIds`; `survivorHp` (end fraction, survivors only); kia names resolved at Debrief t0; new injuries are Roster-graded from `survivorHp` | Q fires actives of current selection; Tactical **executes**, Roster **owns kit**. Power cells arm Grenades (same pool). Empty/invalid item use → Comm log, spend nothing |
+| **Research** | **Research slice** frozen at create: completed **unslotted** set | — (applies the freeze; does not complete labs) | Weather front does **not** re-sample Research. Completions after freeze apply to the **next** deploy. Wear / `appliedIds` are on the Roster slice ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)) |
+| **Roster / Assembly** | **Roster slice:** assigned ids (1–4); **resolved wear**; ordered **`appliedIds`**; Item slots of the assigned; mass (squad kg + Mass tier); sampled HP/speed | **Outcome Roster fields:** `deadIds`; `survivorHp` (end fraction, survivors only); kia names resolved at Debrief t0; new injuries are Roster-graded from `survivorHp` | Q fires actives of current selection; Tactical **executes**, Roster **owns kit**. Power cells arm Grenades (same pool). Empty/invalid item use → Comm log, spend nothing. Tactical copies `appliedIds` and sampled HP/speed; it does not union or re-run `appliedNodeIds` |
 | **Persistence** | — | Nothing live. Mission is memory only. Outcome payload (including telemetry counters) is emitted at Debrief; Persistence commits campaign once on the next Screen. Enabled Abort may append a **thin** telemetry record — not a campaign write | No mid-mission save. Seed is not a resume checkpoint |
 | **Interface** (not extracted) | Input: Select / Move / Attack / Stop / stances / camera pan-zoom / pause / Abort confirm chrome / Q / items / grenade / swap | HUD: tactical clock, Weather chip, Alert, live Collateral count, squad cards, objectives, Comm log, minimap (up = screen up), result banner, 2.5 s then Debrief | Presentation only. Difficulty must not strip minimap. Brief geometry, Opening hour, and weather-front timing must match this District |
 | **Audio** (not extracted) | — | Order confirms, danger, weapon reports, weather rain, mission bed start/stop | Mix ownership is Audio. Tactical does not own channels |
@@ -127,7 +127,7 @@ Partitioned **deploy snapshot**, frozen at mission create. Do not pass live stor
 
 **Sibling conflicts (do not silently resolve):**
 
-1. **Worn ids dual-home.** Research GDD Research slice = unslotted set **+ resolved worn slotted ids**. Roster GDD: Research slice = **unslotted only**; resolved wear on the Roster slice. This extract consumes **sampled HP/speed and resolved wear from the Roster slice** and **unslotted set from the Research slice**. It does not invent a third cut (Open Question 1).
+1. **Worn ids.** Research slice = unslotted set. Roster slice = resolved wear + ordered `appliedIds` + sampled HP/speed ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Tactical does not union in the sim.
 2. **Experience magnitudes.** Research GDD Formulas cites +2 HP / +0.05 m/s as Roster-owned; Roster GDD forbids forking §8-absent magnitudes. Tactical samples HP/speed from the Roster slice only.
 3. **Attack vs Device.** Living spec Attack = living hostile. Code accepts devices as Explicit targets for slow demolition. Extract aliases living spec; Destroy / Fire lane still let gunfire reduce Devices. Do not add a “Demolish” verb.
 4. **Hold Fire vs Explicit target.** Living spec: clears automatic targets; later Attack still fires. Code also nulls a standing Explicit target when Hold Fire is turned on. Extract aliases living spec.
@@ -399,10 +399,10 @@ Tactical owns unique squad-caused civilian first-hits (`civiliansHit`). Economy 
 
 ## Open Questions
 
-1. **Worn slotted ids dual-home.** Research GDD puts resolved worn slotted ids on the Research slice. Roster GDD: Research slice is unslotted only; resolved wear lives on the Roster slice. This extract consumes Roster-slice wear + sampled HP/speed and Research-slice unslotted set. Do **not** invent a third cut. Owner: Research + Roster extracts; not Tactical.
+1. **Worn slotted ids.** Resolved by [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md): Research slice = unslotted only; Roster owns resolved wear and ordered `appliedIds`. Implementation still samples inside `createWorld` today — migrate to the composer.
 2. **Hold Fire vs standing Explicit target.** Living spec: clears automatic targets; later Attack still fires. Code also nulls a standing Explicit target when Hold Fire turns on. Extract aliases living spec. Owner: living spec vs `world.ts` — treat as a defect in one of them; do not fork here.
 3. **Attack vs Device.** Living spec Attack = living hostile. Code accepts devices as Explicit targets. Extract aliases living spec. Do not add a Demolish verb. Owner: living spec vs `world.ts`.
-4. **`quietReplay` stamp.** Economy freezes it on the snapshot. Code restamps from live `contractsWon` at outcome time. Extract keeps the frozen-slice rule. Owner: Economy + Tactical implementation.
+4. **`quietReplay` stamp.** Frozen on the Economy slice as a boolean at create ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Code still restamps from live `contractsWon` at outcome time (`maybeOutcome`, `setOutcome`, `reportMission`) — implementation debt, not an open owner cut.
 5. **Same-step wipe vs required-complete.** Living spec does not name a tiebreak. Do not invent one. Owner: living spec §10 if it should name it.
 6. **`missionChance` expression.** §16 points at `missionParams.ts`; clamp 35–95 is named. Do not promote code bases into this GDD. Owner: living spec if Chance should become a named formula.
 7. **Sight-confirm interpolation** between ~0.45 s and ~1.7 s, **weaponNoise / rain noiseMul** magnitudes, and **threat-extra numeric tables** are code-owned. §10 names the behaviors. Do not copy code constants here.

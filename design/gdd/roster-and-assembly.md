@@ -2,7 +2,7 @@
 
 > **Status**: In Design
 > **Author**: extract from docs/game-design.md §8
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-10 (ADR-0009 appliedIds on Roster slice)
 > **Implements Pillar**: Command, do not micromanage; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §8 — this file aliases it; do not fork rules
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-09-08
@@ -123,7 +123,7 @@ This serves **Command, do not micromanage** and **The two layers feed each other
 | **Interface** | Assign / inspect / pin / item slots / hire / deploy | Dossier, bays, mass/tier, gate reason, market, debrief roster lines | Presentation only |
 | **Persistence** | — | Living roster, pins, Experience, injuries, candidates, campaign flags | Strategy autosave. Mission + debrief not saved |
 
-**Deploy snapshot — Roster slice (frozen):** assigned ids (1–4); **resolved wear** per assigned operative (at most one slotted project per bay); loadout (two Item slots of the assigned); mass (squad kg + tier); sampled HP/speed (body + unslotted + worn slotted + Experience; squad-wide mass-tier speed applied here). Do not pass live store handles. Do not put worn ids on the Research slice.
+**Deploy snapshot — Roster slice (frozen):** assigned ids (1–4); **resolved wear** per assigned operative (at most one slotted project per bay); per-assigned ordered **`appliedIds`** (`appliedNodeIds` at freeze, `done` order); loadout (two Item slots of the assigned); mass (squad kg + tier); sampled HP/speed (body + unslotted + worn slotted + Experience; squad-wide mass-tier speed applied here). Do not pass live store handles. Do not put worn ids on the Research slice. Tactical copies `appliedIds` and sampled HP/speed; it does not union or re-run `appliedNodeIds` ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)).
 
 **Outcome DTO — Roster fields (apply once):** `deadIds`; `survivorHp` (end fraction, survivors only); kia names (resolved at t0); new injuries (id, original D). Abort is **absence of an outcome**. Economy does not read these fields. World Network reads **kia names** only.
 
@@ -303,7 +303,7 @@ Open Questions (no outcome in this section): hire-on-failed-campaign; post-hire 
 |---|---|---|---|
 | Hard, upstream | World Network | Strategic `t` after Screen tick or win ETA; Feed banners | Roster emits **kia names** on the outcome DTO. Squad is not World Network state. World Network must not live-query Roster. Campaign fail/complete flags for banners |
 | Hard, upstream | Economy and contracts | Credits refuse on hire | Roster owns bodies and the 16,000–34,000 CR range. Economy owns the ledger debit/refuse. Exact-balance spend is Economy. Abort: both write nothing |
-| Hard, upstream | Research | Program, home bay, current-issue identity | Roster owns pins/wear/bodies. Death drops assignment, not the program. New hires unpinned. Research deploy slice is the **unslotted set only**; resolved wear lives on the Roster slice. Research GDD is Overview-only — this edge is provisional |
+| Hard, upstream | Research | Program, home bay, current-issue identity | Roster owns pins/wear/bodies. Death drops assignment, not the program. New hires unpinned. Research deploy slice is the **unslotted set only**; resolved wear and ordered `appliedIds` live on the Roster slice ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)) |
 | Hard, downstream | Tactical mission | Roster slice at deploy; outcome DTO at debrief | Neither live-queries the other. Tactical executes role actives and item use; this system owns the kit and frozen pools |
 | Hard, downstream | Persistence and validation | Strategy autosave of the roster blob | Living roster, pins, Experience, injuries, candidates, campaign flags. Mission and debrief not saved ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)) |
 | Soft, downstream | Interface | Presentation | Dossier, Squad bays, mass/tier, gate reason, candidate market, debrief roster lines |
@@ -481,4 +481,4 @@ Do not lock these from code. Alias §8 until a later stub decision.
 | 5 | Win ETA spanning more than one 24 h candidate interval: one offer vs one-per-interval, still cap 3 | Roster + World Network (clock) | Same catch-up protocol as ADR-0001; do not invent a bulk table here |
 | 6 | Experience HP/speed per point are not authored in §8 (`XP_HP_PER` / `XP_SPEED_PER` live in code) | Roster | Leave unauthored here; do not fork code constants |
 
-Research GDD is Overview-only. The Research deploy slice = unslotted set (resolved wear on the Roster slice) is provisional until that GDD is filled. World Network Interactions still list `deadIds` / `survivorHp`; this GDD emits **kia names** only — reconcile on `/consistency-check`.
+Research deploy slice = unslotted set; resolved wear and `appliedIds` live on the Roster slice ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). World Network Interactions still list `deadIds` / `survivorHp`; this GDD emits **kia names** only — reconcile on `/consistency-check`.

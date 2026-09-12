@@ -2,7 +2,7 @@
 
 > **Status**: Designed (pending independent `/design-review`)
 > **Author**: extract from docs/game-design.md §17, §20
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-10
 > **Implements Pillar**: Violence has corporate consequences; The two layers feed each other; One corporate operating system
 > **Living spec**: `docs/game-design.md` §17, §4 session/end, §20 campaign sentence — this file aliases them; do not fork rules
 > **Specialists (full)**: creative-director (fantasy); systems-designer (rules/formulas/edges); gameplay-programmer (feasibility FEASIBLE); qa-lead (acceptance)
@@ -34,7 +34,7 @@ This serves **Violence has corporate consequences**, **The two layers feed each 
    - **Campaign blob** — versioned, local. World Network, laboratories, roster, tutorial progress, campaign result.
    - **Settings slot** — audio, remaps, accessibility, quality, difficulty, telemetry toggle.
    - **Telemetry slot** — records.
-   Settings and telemetry are not fields of the campaign blob. New Operation does not reset preferences. Whether the telemetry **log** survives New Operation is Open Question 1.
+   Settings and telemetry are not fields of the campaign blob. New Operation does not reset preferences. The telemetry **log** survives New Operation. Two-step Clear empties the log ([ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md)).
 
 5. **Campaign blob (by design content; owners unchanged).**
    - Economy: Credits; generated contract records; authored `contractsWon`.
@@ -68,9 +68,9 @@ This serves **Violence has corporate consequences**, **The two layers feed each 
 
 16. **Quality.** Auto / High / Medium / Low is a **player setting** in the settings slot, not a design lever. Building ghosting by tier is Interface / rendering — not owned here.
 
-17. **Telemetry.** Opt-in, local, **off by default**, never leaves the machine. When enabled, each debrief appends **one** record (**cap 60**) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, deployed roles. Abort writes a thin record: `aborted`, duration, mission id, seed, deployed roles. Balance dashboard aggregates. Export is a local JSON download. Clear is a two-step confirm. Further playstyle signals are backlog (`docs/game-design.md` §19.7), not open design.
+17. **Telemetry.** Opt-in, local, **off by default**, never leaves the machine ([ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md)). When enabled, each debrief appends **one** record (**cap 60**, FIFO: oldest out at 61) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, deployed roles. Abort writes a thin record: `aborted`, duration, mission id, seed, deployed roles. The log survives New Operation. It is a session log, not a campaign transaction: reload on Debrief may keep a row the campaign rolled back. Balance dashboard aggregates. Export is a local JSON download. Clear is a two-step confirm. Further playstyle signals are backlog (`docs/game-design.md` §19.7), not open design.
 
-18. **Forbidden.** Mid-mission save / resume; cloud / account / leaderboard; half-load; second apply of one debrief; campaign write on Abort; hydrating into mission or debrief; Quality as a design lever; offline hours on reload; storage keys / save-version integers / autosave delay as GDD rules; pricing Credits / applying Control–Unrest / ticking labs here; resolving Item-slot persistence or hire-on-failed-campaign; copying §12 chrome or §20 playtest / UX / performance; inventing FIFO eviction or an `abort_rate` denominator; forking `injuryRecoverySec`, `mass_gate`, hire 16,000–34,000 CR, or `roster_cap` 8.
+18. **Forbidden.** Mid-mission save / resume; cloud / account / leaderboard; half-load; second apply of one debrief; campaign write on Abort; hydrating into mission or debrief; Quality as a design lever; offline hours on reload; storage keys / save-version integers / autosave delay as GDD rules; pricing Credits / applying Control–Unrest / ticking labs here; resolving Item-slot persistence or hire-on-failed-campaign; copying §12 chrome or §20 playtest / UX / performance; inventing an `abort_rate` denominator; network / beacon / analytics on the telemetry envelope; forking `injuryRecoverySec`, `mass_gate`, hire 16,000–34,000 CR, or `roster_cap` 8.
 
 ### States and Transitions
 
@@ -79,7 +79,7 @@ This serves **Violence has corporate consequences**, **The two layers feed each 
 | Campaign blob | absent / valid / invalid | Valid exists → Continue offered. Invalid or unreadable → treat as absent; Continue unavailable; do not half-load. New Operation (two-step) → erase blob, start another Campaign. Four Screens → autosave. Mission / Debrief → no campaign write |
 | Settings slot | present (independent) | Survives New Operation and campaign erase. Not in the campaign blob |
 | Telemetry toggle | off (default) / on | Settings slot. Opt-in. Off → no records appended |
-| Telemetry log | empty / records (cap 60) | Enabled debrief → append one full record. Enabled Abort → append thin record. Clear (two-step) → empty. New Operation vs log: Open Question 1. Eviction at cap: Open Question 3 |
+| Telemetry log | empty / records (cap 60, FIFO) | Enabled debrief → append one full record. Enabled Abort → append thin record. At 61 the oldest leaves. Clear (two-step) → empty. New Operation does not touch the log |
 | Session phase on hydrate | menu | Restore strategy / roster / research / tutorial. Mission and debrief outcome **not** restored. Continue → World Network, never the field |
 | Mission coupling | Strategy / Deployed / Debrief apply-once (memory) / Abort discarded | Screens autosave. Field is memory only. Debrief: owners apply once in memory; durable commit on next Screen. Abort: no campaign write; thin telemetry only if enabled |
 | Selected contract | none / selected / cleared-after-debrief | Screens may hold a selection (autosave). Debrief → World Network clears it. Replay is the only path back into that Brief |
@@ -123,7 +123,7 @@ Abort is **excluded** from the denominator.
 
 **Named, not specified:** `abort_rate` — living spec: abort count and abort rate sit beside win rate. No expression, no denominator. Alias the name. Do not invent (Open Question 4).
 
-**Constant, not a curve:** telemetry record cap **60** (`docs/game-design.md` §17). Eviction at the cap is **not** authored. Do not import FIFO from code (Open Question 3).
+**Constant, not a curve:** telemetry record cap **60** (`docs/game-design.md` §17). At 61 the oldest record leaves (FIFO). [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md).
 
 **Not owned here:** `tax_yield` (World Network); `collateral` / `net_payout` (Economy); `endT` / `appliedNodeIds` / `currentIssue` (Research); `injuryRecoverySec` / `remaining_downtime` / `operative_mass` / `squad_mass` / `mass_gate` / `mass_tier` (Roster); hire 16,000–34,000 CR and `roster_cap` 8 (Roster / registry); Control / Unrest / Intel awards / ETA (World Network); authored chance / Risk index (Tactical / Brief).
 
@@ -131,11 +131,11 @@ Abort is **excluded** from the denominator.
 
 - **If no valid campaign blob exists:** Continue is unavailable. Menu still offers New Operation and Settings.
 - **If the campaign blob is unreadable or invalid:** treat as no campaign. Continue unavailable. Do not half-load strategy, roster, or laboratories. Drop the whole blob.
-- **If New Operation is confirmed (two-step):** campaign blob erased; another Campaign starts. Settings survive. Mission in progress does not. Telemetry **toggle** is a preference (survives). Telemetry **log**: Open Question 1.
+- **If New Operation is confirmed (two-step):** campaign blob erased; another Campaign starts. Settings survive. Mission in progress does not. Telemetry **toggle** is a preference (survives). Telemetry **log** survives. Clear is the erase.
 - **If New Operation is cancelled:** campaign blob unchanged.
 - **If the director is on a Screen (World Network, Research, Brief, Assembly):** campaign blob autosaves. Strategic time may run (World Network owns the clock).
 - **If the director is in a mission:** campaign blob does not write. Mission is memory only. No mid-mission resume.
-- **If the director is on Debrief:** campaign blob does not autosave. Owners have applied once in session memory. Reload on Debrief restores the last Screen snapshot (pre-mission). A second apply of the same outcome does not run.
+- **If the director is on Debrief:** campaign blob does not autosave. Owners have applied once in session memory. Reload on Debrief restores the last Screen snapshot (pre-mission). A second apply of the same outcome does not run. An opt-in telemetry row for that outcome may still exist (session log, not a campaign transaction).
 - **If Debrief returns to the World Network:** selected contract is cleared; that clear persists; the applied result is now eligible for Screen autosave.
 - **If Abort is confirmed:** no debrief; no campaign write; roster / Credits / sector / intel / influence / laboratories unchanged. If telemetry is on: append the thin abort record. If telemetry is off: no record.
 - **If hydrate runs:** strategy / roster / research / tutorial restore; phase is menu; mission id and outcome are not restored; Research and Roster `sync(t)` to saved Strategic time (no offline hours).
@@ -147,7 +147,7 @@ Abort is **excluded** from the denominator.
 - **If living roster reaches 0 and the Campaign is incomplete:** failed persists; World Network banner and contract lock (Roster + WN). Persistence stores the flag.
 - **If living roster reaches 0 after the Campaign is complete:** complete stays complete; not also failed.
 - **If telemetry is off:** no debrief record and no abort record. Toggle remains off across New Operation (settings slot).
-- **If telemetry is on and a debrief completes:** append one full record. Cap 60. Behavior at 61 is Open Question 3.
+- **If telemetry is on and a debrief completes:** append one full record. Cap 60. At 61 the oldest record leaves.
 - **If telemetry Clear is confirmed (two-step):** log empty. Campaign blob unchanged.
 - **If telemetry Export is used:** local JSON download. Records never leave the machine by design (no network channel).
 - **If Quality is changed:** settings slot only. Not a design lever. Not a campaign blob field.
@@ -217,24 +217,25 @@ Menu: Continue iff a valid campaign blob exists; New Operation behind a two-step
 - **GIVEN** recorded candidate identities / costs at a known strategic time, **WHEN** reload + Continue, **THEN** the market matches that list; the next refresh continues that market, not the opening pool.
 - **GIVEN** a new origin (no settings blob), **WHEN** Settings and Balance are opened after a finished mission with no telemetry change, **THEN** telemetry is off and Balance has no mission records.
 - **GIVEN** telemetry on, N records, a mission that reaches Debrief, **WHEN** the invoice applies, **THEN** Balance count is N+1 (not N+2), and the new row’s outcome is won or lost (not aborted).
-- **GIVEN** telemetry on and 60 records, **WHEN** another Debrief or Abort is logged, **THEN** Balance still shows 60 records (does not become 61).
+- **GIVEN** telemetry on and 60 records whose oldest `at` is known, **WHEN** another Debrief or Abort is logged, **THEN** Balance still shows 60 records (does not become 61) and that oldest row is gone.
+- **GIVEN** telemetry on, snapshot S, records present, **WHEN** New Operation is confirmed, **THEN** the campaign is a new Operation and the telemetry toggle and log still match the pre-erase values.
 - **GIVEN** telemetry on, snapshot S, **WHEN** Abort from pause, **THEN** campaign still equals S; abort count increases by 1; that row is `aborted` plus duration, mission id, seed, deployed roles — not a full combat invoice.
 - **GIVEN** telemetry records: 2 won, 1 lost, 3 aborted, **WHEN** Balance is opened, **THEN** win rate is 2 / (2 + 1); abort count is 3; aborts are not in the win-rate denominator.
 - **GIVEN** at least one telemetry record, **WHEN** Export JSON is used, **THEN** a local JSON file downloads and the action does not upload to an app origin.
 - **GIVEN** records present, **WHEN** Clear is activated once, **THEN** records remain and the control arms a confirm. **WHEN** confirmed, **THEN** Balance is empty and the campaign blob is untouched.
 - **GIVEN** telemetry on and a non-abort Debrief, **WHEN** JSON is exported, **THEN** that record includes outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, deployed roles.
 
-Do not treat quiet-replay payouts, mass gate, clipping, playtest thresholds, or performance budgets as Persistence criteria. Do not pass/fail telemetry-log survival across New Operation until Open Question 1 is closed. Do not pass/fail which row leaves at cap 60 until Open Question 3 is closed. “Never leaves the machine” is proxied by no network request on Debrief, Abort, Balance, Export, or Clear.
+Do not treat quiet-replay payouts, mass gate, clipping, playtest thresholds, or performance budgets as Persistence criteria. “Never leaves the machine” is proxied by no network request from `telemetry.ts` or Balance export on Debrief, Abort, Balance, Export, or Clear. UI click / SFX `fetch` is not a telemetry channel.
 
 ## Open Questions
 
-1. **Telemetry log vs New Operation.** Toggle is a preference and survives. §17 gives telemetry its own slot “so New Operation does not reset the player’s preferences.” CONTEXT.md New Operation names Settings only. Do **not** decide whether the log survives campaign erase. Owner: Persistence extract; resolve with Interface / Balance if a player-facing rule is needed.
+1. **Closed — Telemetry log vs New Operation.** Log survives. Clear is the erase. [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md).
 2. **`win_rate` when `won + lost = 0`.** Living spec silent. Do not invent hide / 0 / undefined. Owner: Interface / Balance.
-3. **Cap 60 eviction.** Living spec: capped at 60. FIFO is code. Do not author eviction. Owner: Persistence; leave unnamed until the living spec does.
+3. **Closed — Cap 60 eviction.** FIFO: oldest out at 61. [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md).
 4. **`abort_rate` formula.** Named beside win rate. No denominator. Do not invent. Owner: Interface / Balance.
 5. **Item-slot persistence across Assembly visits** — Roster Open Question 3. Do not resolve.
 6. **Hire-on-failed-campaign** — Roster + World Network Open Question 1. Do not resolve.
-7. **Reload on Debrief vs telemetry row.** Apply-once is not durable until a Screen autosaves; an opt-in telemetry row may exist for an outcome the campaign rolled back. Unspecified. Do not pass/fail either way. Owner: Persistence + Interface.
+7. **Closed — Reload on Debrief vs telemetry row.** Accepted mismatch: telemetry is a session log, not a campaign transaction. [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md).
 
 ---
 

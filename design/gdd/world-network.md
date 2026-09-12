@@ -2,7 +2,7 @@
 
 > **Status**: In Design
 > **Author**: extract from docs/game-design.md §5
-> **Last Updated**: 2026-09-07
+> **Last Updated**: 2026-09-10 (ADR-0009 four named slices)
 > **Implements Pillar**: Information is operational power; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §5 — this file aliases it; do not fork rules
 > **Owners (2026-09-07)**: Credits = Economy; Influence wallet+spends = World Network; Tax emit = World Network → Economy; generated contract instances = Economy; Intel access resource = World Network
@@ -29,11 +29,11 @@ This serves **Information is operational power** and **The two layers feed each 
 4. **Catch-up.** Fire one next due at its timestamp. Rearm from the due timestamp, not from “now.” Equal timestamps use a fixed collision order (current sim: expiry → World Event → contract generation → staged spend → pressure → Tax yield). Do not author a new order here; do not bulk-apply “N hours of effects” at the jump instant. Debrief: mission write-back at frozen `t0`, **then** ETA jump.
 5. **Sectors.** Six open. Antarctica locked at every intel level. Four printed numbers only: Control, Unrest, Tax yield, Garrison condition. No defense rating, no standing bar, no NETWORK THREAT.
 6. **Influence.** World Network owns the wallet **and** Stabilize / Lobby / Expedite. Opening 0. Income arrives on the debrief outcome DTO; this GDD applies it. Economy does not keep a second Influence ledger. No trickle from Control ([ADR-0008](../architecture/adr-0008-influence-is-a-wallet.md)).
-7. **Intel.** World Network owns level + progress as an access resource: gates, Event forecast unlock (intel 2+), authored/generated intel gates, Expedite waiver of a **generated** gate. Earn-on-win / clean bonus / loss=0 / quiet=0 apply from the outcome DTO. Does not own Risk index math (Tactical / Brief). Store placement on `campaignStore` today is a later ADR, not a second owner.
+7. **Intel.** World Network owns level + progress as an access resource: gates, Event forecast unlock (intel 2+), authored/generated intel gates, Expedite waiver of a **generated** gate. Earn-on-win / clean bonus / loss=0 / quiet=0 apply from the outcome DTO. Does not own Risk index math (Tactical / Brief). Zustand home is `campaignStore.intelLevel` / `intelProgress` — not a second owner ([ADR-0012](../architecture/adr-0012-store-placement.md)).
 8. **Tax.** World Network **computes** Tax yield and **emits** Credits amount + sector + tick time into Economy. Only Nexus-held sectors pay. Contested does not. Economy owns the Credits ledger.
 9. **Ownership.** City holders; sector color = majority; ties = Contested. Win/loss flip at debrief or seizure event; a flip re-clients Economy’s market via a hook.
 10. **Contracts on Scan.** Economy owns instances, Reward, expiry math. World Network presents. Locked generated offers do not appear. Expedite is a World Network verb on Economy records.
-11. **Deploy / debrief cut.** Snapshot DTO at deploy; outcome DTO at debrief; abort = no debrief ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)). World Network must not query live Roster or the running mission.
+11. **Deploy / debrief cut.** WN slice at deploy; outcome DTO at debrief; abort = no debrief ([ADR-0002](../architecture/adr-0002-unsaved-mission.md), [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). World Network must not query live Roster or the running mission. Do not call the WN slice “the Snapshot DTO.”
 12. **Forbidden.** Influence index, standing bar, tax from non-Nexus, defense rating, NETWORK THREAT.
 
 ### States and Transitions
@@ -61,11 +61,11 @@ This serves **Information is operational power** and **The two layers feed each 
 | **Economy** | Contract records, Reward, quiet/pay flags | Tax emit; garrison→Threat input; Expedite/priority/re-client/withdraw/post hooks; Scan list | Economy owns instances/payouts/Credits; WN owns clock/board/hooks |
 | **Research** | — | Strategic `t` after tick or ETA jump | Research `sync(t)` |
 | **Roster / Assembly** | Outcome DTO: deadIds, survivorHp, kia names (emitted, not queried live) | Strategic `t`; squad is not WN state | Roster owns bodies; WN posts KIA Feed |
-| **Tactical** | Snapshot DTO at deploy | Outcome DTO at debrief | Neither side live-queries the other |
+| **Tactical** | **WN slice** at deploy | Outcome DTO at debrief | Neither side live-queries the other |
 | **Interface** | Focus, clock, Feed, four readouts, action enablement | Input: Focus, Pause, speed, spends, contract select | Presentation only |
 | **Persistence** | — | Strategy autosave of WN blob; mission/debrief not saved | [ADR-0002](../architecture/adr-0002-unsaved-mission.md) |
 
-**Snapshot DTO (deploy, frozen):** sector id; Control; Unrest. Tactical derives extras. Do not pass live store handles.
+**WN slice (deploy, frozen):** sector id; Control; Unrest. Tactical derives extras. Do not pass live store handles. Do not call this slice “the Snapshot DTO.” ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md))
 
 **Outcome DTO (debrief, apply once):** won; quietReplay; civiliansHit; mission/city/sector identity; kia names from Roster. World Network uses these for Control/Unrest shove, ownership flip, Influence award, Intel award, Feed, generated removal. Economy uses won/quiet/civiliansHit/Reward for Credits. World Network does not compute collateral.
 
@@ -163,5 +163,5 @@ Focus, Scan, sector readout (four numbers), clock/Pause/speed, Timeline, Influen
 
 - Collision order and “rearm from due `t`” are load-bearing in code and unnamed as a table in §5. Named here as a constraint; do not fork a new table until the living spec does.
 - Mission-result Control/Unrest integer deltas are qualitative in §5 and numeric in code. Do not copy code numbers into this extract.
-- `campaignStore` still holds intel progress in code. GDD owner is World Network; store move is a later ADR.
-- Generated market physically sits in `worldStore` while Economy owns instances. Keep that split explicit in the Economy extract.
+- `campaignStore` holds intel progress in code. GDD owner is World Network; Zustand home is stamped — do not move ([ADR-0012](../architecture/adr-0012-store-placement.md)).
+- Generated market physically sits in `worldStore` while Economy owns instances. Split is stamped — do not move ([ADR-0012](../architecture/adr-0012-store-placement.md)).

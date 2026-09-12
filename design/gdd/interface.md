@@ -2,7 +2,7 @@
 
 > **Status**: Designed (pending independent `/design-review`)
 > **Author**: extract from docs/game-design.md §12, §13, §14 (session rules §4; Settings/Quality/UX §17, §20)
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-10
 > **Implements Pillar**: One corporate operating system; Information is operational power; Command, do not micromanage
 > **Living spec**: `docs/game-design.md` §12, §13, §14 — this file aliases them; do not fork rules
 > **Specialists (full)**: D2 extract — rules already live in the spec
@@ -131,8 +131,8 @@ Presentation only. Do not live-query the running mission to price or shove. Do n
 1. **Zero-value invoice rows.** Economy GDD: hide/show unspecified. Do not author always-print-zeros here (Open Question 1).
 2. **`win_rate` at `won + lost = 0`.** Persistence GDD Open Question 2. Interface presents Balance; do not invent hide / 0 / “—”.
 3. **`abort_rate`.** Named beside win rate. No denominator. Do not invent (Open Question 3).
-4. **Telemetry log vs New Operation.** Persistence Open Question 1. Toggle survives. Log survival unspecified.
-5. **Reload on Debrief vs telemetry row.** Persistence Open Question 7. Do not pass/fail either way.
+4. **Telemetry log vs New Operation.** Persistence OQ 1 closed: log survives; Clear is the erase ([ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md)).
+5. **Reload on Debrief vs telemetry row.** Persistence OQ 7 closed: accepted mismatch — session log, not a campaign transaction ([ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md)).
 6. **Worn ids dual-home.** Research vs Roster. Assembly chrome shows what Roster/Research already resolved. Do not invent a third cut.
 7. **Stale sibling footnotes** (“Interface not extracted yet”) are documentation drift after this file exists.
 
@@ -200,7 +200,7 @@ The `ability_ready_advisory` formula is defined as:
 - **If Accept Contract is used:** go straight to Assembly. No buy-in. No second confirm. Accepting is free (Economy).
 - **If Deploy is pressed with mass &gt; 400 kg, or zero assigned, or any assigned Injured, or no selected contract:** refuse; show the gate reason; do not start a mission.
 - **If Continue is offered with no valid campaign blob:** Continue is absent. Menu still offers New Operation and Settings.
-- **If New Operation is activated once:** arm confirm; campaign unchanged. On confirm: erase campaign; Settings (including Difficulty, Quality, remaps, telemetry **toggle**) survive. Telemetry **log** survival is Open Question 4.
+- **If New Operation is activated once:** arm confirm; campaign unchanged. On confirm: erase campaign; Settings (including Difficulty, Quality, remaps, telemetry **toggle**) survive. Telemetry **log** survives. Clear is the erase.
 - **If Abort is activated once:** arm 3 s two-step; mission still live (paused). On confirm: no Debrief, no invoice, no campaign write. On cancel: stay paused.
 - **If pause is open:** sim and camera freeze; remappable bindings print from the live table; focus trapped; Settings nested inside the freeze; nested Settings return restores pause focus (§20).
 - **If a remap changes a bind:** pause, tutorial, and handlers all show the new bind. Pause, slots 1–4, and mouse cannot be remapped.
@@ -334,7 +334,7 @@ Living spec §20 UX plus click-through.md. Criteria are independently verifiable
 
 20. **GIVEN** a click-through at 1280×720 following `docs/click-through.md`, **WHEN** the run is recorded, **THEN** the record names every unexercised screen or interaction. A partial run is not a pass of the unexercised set.
 
-**Flagged — not Interface pass/fail:** Tactical five-verb validity; Economy CR math; World Network Control/Unrest; Persistence hydrate except Continue chrome; `win_rate` at 0/0; `abort_rate`; telemetry log vs New Operation; zero-value invoice row visibility; §20 playtest thresholds; §20 performance budgets.
+**Flagged — not Interface pass/fail:** Tactical five-verb validity; Economy CR math; World Network Control/Unrest; Persistence hydrate except Continue chrome; `win_rate` at 0/0; `abort_rate`; zero-value invoice row visibility; §20 playtest thresholds; §20 performance budgets.
 
 ## Open Questions
 
@@ -343,8 +343,8 @@ Living spec §20 UX plus click-through.md. Criteria are independently verifiable
 | 1 | Hide/show of zero-value Debrief money rows | Interface / Economy | Invent always-print-zeros |
 | 2 | `win_rate` chrome when `won + lost = 0` | Interface / Balance; Persistence OQ 2 | Invent hide / 0 / “—” |
 | 3 | `abort_rate` expression and denominator | Interface / Balance; Persistence OQ 4 | Invent a formula |
-| 4 | Telemetry **log** vs New Operation (toggle already survives) | Persistence OQ 1; Interface if player-facing | Decide in this extract |
-| 5 | Reload on Debrief vs an opt-in telemetry row | Persistence OQ 7 + Interface | Pass/fail either way |
+| 4 | Closed — telemetry **log** vs New Operation | Persistence OQ 1; [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md) | Log survives; Clear is the erase |
+| 5 | Closed — reload on Debrief vs an opt-in telemetry row | Persistence OQ 7; [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md) | Accepted mismatch (session log) |
 | 6 | Minimap three zoom **metres** | Living spec §12 | Import code distances |
 | 7 | Equating tutorial “under 35%” with registry `injury_hp_frac` 0.35 | Living spec §12 vs §8 | Silently merge the constants |
 

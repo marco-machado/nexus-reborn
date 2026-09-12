@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: extract from docs/game-design.md §6, §9, §11
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-10 (ADR-0009 four named slices)
 > **Implements Pillar**: Violence has corporate consequences; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §6, §9, §11 — this file aliases them; do not fork rules
 > **Owners (2026-09-07)**: Credits = Economy; contract instances / Reward / expiry / collateral / net payout = Economy; Influence wallet+spends = World Network; Tax emit = World Network → Economy; Intel access resource = World Network
@@ -42,7 +42,7 @@ This serves **Violence has corporate consequences** and **The two layers feed ea
 
 9. **ETA is not a Credits spend.** A **win** debrief spends contract ETA as strategic days, including quiet replay. A **loss** spends none ([ADR-0001](../architecture/adr-0001-two-clocks.md)). Economy does not run the clock. Tax still ticks on a quiet-replay win because ETA catch-up still runs.
 
-10. **Debrief cut.** One partitioned **deploy snapshot** (two named slices; no live store handles); outcome DTO at debrief; apply once ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)). Interface presents the invoice; Economy prices Credits; World Network applies sector/unrest/ownership/Influence/Intel from the same outcome DTO; Persistence applies once. **Abort = no debrief = Economy writes nothing.** Do not live-query the running mission or roster to price.
+10. **Debrief cut.** One partitioned **deploy snapshot** (four named slices; this GDD owns the Economy slice; no live store handles); outcome DTO at debrief; apply once ([ADR-0002](../architecture/adr-0002-unsaved-mission.md), [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Interface presents the invoice; Economy prices Credits; World Network applies sector/unrest/ownership/Influence/Intel from the same outcome DTO; Persistence applies once. **Abort = no debrief = Economy writes nothing.** Do not live-query the running mission or roster to price.
 
 11. **Generated market (Economy instance, WN clock/hooks).** Up to 3 open. New roll every 2–6 strategic hours when below target. Sector pick weighted toward high unrest / low control lives in §9 — do not fork the weights here. Threat from garrison (Secure→Moderate / Strained→High / Critical→Severe). Reward **clamp** 30,000–95,000 CR on a 500 CR grid, stamped at creation — do not recalculate when tags change. The 30,000 floor never binds (Moderate, u=0, P=1 → 30,500). Reachable stamps are discrete 500-grid values, not every amount from 30,500 to 95,000. Expire 24–48h (priority 8–16). Types: seizure / extraction / sabotage / riot-linked suppression. **Sable Enterprises** is not in the generated client pool (§19.2). World Network: Expedite, re-client, raid withdraw, riot post, Scan. Economy: Reward, expiry timestamps, payout, leave-market.
 
@@ -77,10 +77,11 @@ This serves **Violence has corporate consequences** and **The two layers feed ea
 
 Downstream Research / Roster / Tactical / Persistence / Interface GDDs are not extracted yet. Edges above vs living spec + World Network GDD; provisional until those files exist.
 
-**Deploy snapshot (partitioned, frozen):** one snapshot, two named slices. Do not pass live store handles. Do not call either slice “the Snapshot DTO” as if it carried the other system’s fields.
+**Deploy snapshot (partitioned, frozen):** one snapshot, four named slices ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). This GDD owns the Economy slice. Do not pass live store handles. Do not call any slice “the Snapshot DTO.”
 
-- **Economy slice:** contract id; authored vs generated; Reward; optional bonus defs; ETA days (World Network spends later); `quietReplay` from authored `contractsWon`.
+- **Economy slice:** contract id; authored vs generated; Reward; optional bonus defs; ETA days (World Network spends later); `quietReplay` from authored `contractsWon` (boolean at create; do not restamp from live `contractsWon`).
 - **World Network slice:** sector id; Control; Unrest — defined in the World Network GDD. Not an Economy schema.
+- **Research slice / Roster slice:** unslotted set and resolved wear / `appliedIds` — not Economy schema.
 
 **Outcome DTO (debrief, apply once):** `won`; `quietReplay`; `civiliansHit` (unique squad-caused first hits); `reward`; `bonus` (completed optionals). Abort is **absence of an outcome**, not a field. World Network also reads this DTO for Control/Unrest/ownership/Influence/Intel/Feed/generated removal. World Network does **not** compute collateral.
 
@@ -235,6 +236,6 @@ Credits header on strategy screens. Overdraft: research/hire authorization disab
 ## Open Questions
 
 - Locked generated “do not appear” (World Network Core Rule 10) vs OPEN CONTRACTS list still showing locked generated in code. Economy holds the instance either way. Presentation split belongs to Interface / World Network — do not resolve a hide rule here.
-- Generated market physically sits in `worldStore` while Economy owns instances. Keep that split explicit; store move is a later ADR.
+- Generated market physically sits in `worldStore` while Economy owns instances. Split is stamped — do not move ([ADR-0012](../architecture/adr-0012-store-placement.md)).
 - Loss outcome DTO may stamp `reward: 0` in code; `net_payout` is also 0 if `!won`. Alias the payout rule; do not copy a second Reward.
 - Downstream Research / Roster / Tactical / Persistence / Interface template GDDs are not extracted yet. Interfaces here are vs the living spec and World Network GDD.

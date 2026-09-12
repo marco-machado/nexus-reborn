@@ -2,7 +2,7 @@
 
 > **Status**: Designed (pending independent `/design-review`)
 > **Author**: extract from docs/game-design.md §7
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-10 (ADR-0009 Research slice = unslotted only)
 > **Implements Pillar**: The two layers feed each other
 > **Living spec**: `docs/game-design.md` §7 — this file aliases it; do not fork rules
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-09-08
@@ -41,7 +41,7 @@ This serves **The two layers feed each other** and **Command, do not micromanage
 
 9. **Sample.** Unslotted apply to the whole squad. Slotted apply only to who wears them. Effects stack in completion order among what actually applies. Sampled when the mission is created. Cannot change a squad already on the ground. Experience is Roster, not Research.
 
-10. **Deploy cut.** One partitioned snapshot; no live store handles ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)). **Research slice:** completed unslotted set + per-operative **resolved worn** slotted ids (at most one per bay). Pins are Roster-owned and are not fields of this slice. Do not extend the World Network snapshot schema. Tactical applies the freeze. Abort = no debrief = program unchanged (that mission does not jump `t`). Completions after this freeze apply to the **next** deploy.
+10. **Deploy cut.** One partitioned snapshot; no live store handles ([ADR-0002](../architecture/adr-0002-unsaved-mission.md), [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). **Research slice:** completed **unslotted** set only (Ballistics, `done` order). Pins and **resolved wear** are Roster-owned and are not fields of this slice. The composer runs `appliedNodeIds` at freeze and stores ordered `appliedIds` on the Roster slice. Do not extend the World Network snapshot schema. Tactical applies the freeze. Abort = no debrief = program unchanged (that mission does not jump `t`). Completions after this freeze apply to the **next** deploy.
 
 11. **Chance.** Authored chance uses completed research. Tactical / Brief owns the math. Research only exposes the completed set. Research does not compute chance, Risk index, or Event forecast.
 
@@ -65,8 +65,8 @@ This serves **The two layers feed each other** and **Command, do not micromanage
 |---|---|---|---|
 | **World Network** | Strategic `t` after Screen tick or **win** ETA | — | WN owns clocks and ETA. Research `sync(t)`. |
 | **Economy** | Refuse or debit | Authorize request + cost | Economy owns Credits. Research owns start, occupancy, graph, effects, `sync(t)`. |
-| **Roster / Assembly** | Pins; hire; death drops assignment | Current issue; completed program; home bay | Roster owns bodies/pins/wear. Provisional until Roster GDD. |
-| **Tactical** | — | **Research slice** at deploy | Neither live-queries the other. |
+| **Roster / Assembly** | Pins; hire; death drops assignment | Current issue; completed program; home bay | Roster owns bodies/pins/wear and the deploy freeze of resolved wear + `appliedIds` ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). |
+| **Tactical** | — | **Research slice** at deploy (unslotted ids only) | Neither live-queries the other. Wear / `appliedIds` ride the Roster slice. |
 | **Interface** | Authorize (a spend) | States, occupancy, progress, home bay | Presentation only. |
 | **Persistence** | — | Laboratories (`done` + lab runs) | Strategy autosave includes laboratories; mission excluded. Pins on the roster blob. |
 
@@ -108,7 +108,7 @@ The `appliedNodeIds` formula is defined as:
 | worn slotted id | worn | id or none | at most one per bay | stock → none; valid pin → that id; else `currentIssue` |
 | applied ids | appliedNodeIds | ordered list | subset of done | What actually applies to one operative at deploy |
 
-**Output Range:** Subset of `done`. Unslotted Ballistics always included when completed. At most one slotted id per bay. Frozen into the Research slice as resolved ids.
+**Output Range:** Subset of `done`. Unslotted Ballistics always included when completed. At most one slotted id per bay. Computed at freeze by the composer; frozen onto the **Roster** slice as `appliedIds` ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Not a Research-slice field.
 **Example:** `done` = [Advanced Propellants, Neural Interface I, Neural Accelerator Mk II]. Unpinned → [Advanced Propellants, Neural Accelerator Mk II]. Pin Neural stock → [Advanced Propellants]. Pin Neural to Neural Interface I → [Advanced Propellants, Neural Interface I].
 
 The `currentIssue` formula is defined as:
@@ -177,7 +177,7 @@ The `crewBonus` formula is defined as:
 - **If a bay is pinned to an older completed project and a newer same-bay project completes:** the pin still wears the older id; `currentIssue` advances; unpinned bays wear the new current issue; prerequisites do not gate that older wear.
 - **If a lab is running and a sibling in that branch already has its prerequisites researched:** the sibling stays `available`; authorize of the sibling is a no-op; Credits unchanged.
 - **If a project becomes researched and is the listed prerequisite of another:** the dependent becomes `available` if every listed prerequisite is now researched. It does not auto-start.
-- **If a mission is created while labs are still running:** the Research slice freezes completed unslotted ids plus resolved worn slotted ids. Later `sync(t)` does not rewrite that freeze. Completions after the freeze apply on the next deploy. The field does not tick labs and cannot authorize.
+- **If a mission is created while labs are still running:** the Research slice freezes completed unslotted ids only. Resolved wear and ordered `appliedIds` freeze on the Roster slice. Later `sync(t)` does not rewrite that freeze. Completions after the freeze apply on the next deploy. The field does not tick labs and cannot authorize.
 - **If `appliedNodeIds` is empty:** `squadWeapon` is the weapon-table base; `crewBonus` is (0, 0). Neither formula clamps.
 - **If a pin names stock issue:** worn for that bay is none; `currentIssue` is not applied on that bay.
 - **If a pin names an id that is not in `done` or whose home bay is not that bay:** worn falls through to `currentIssue` (none if that bay has no slotted completion).
@@ -190,8 +190,8 @@ The `crewBonus` formula is defined as:
 |---|---|---|---|
 | Hard, upstream | World Network | Strategic `t` | Research `sync(t)`. WN does not own project formulas |
 | Hard, upstream | Economy and contracts | Credits authorize | Economy owns refuse/debit. Research owns start, occupancy, graph, effects |
-| Hard, downstream | Roster and Assembly | Pins/wear in; current issue / home bay out | Provisional until Roster GDD |
-| Hard, downstream | Tactical mission | Research slice at deploy | No live query |
+| Hard, downstream | Roster and Assembly | Pins/wear in; current issue / home bay out | Roster freeze owns resolved wear + `appliedIds` ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)) |
+| Hard, downstream | Tactical mission | Research slice at deploy (unslotted only) | No live query |
 | Soft, downstream | Interface | Presentation | Research screen |
 | Hard, downstream | Persistence and validation | Laboratories blob | Strategy autosave; mission excluded. Pins on roster blob |
 
@@ -258,7 +258,7 @@ Research screen: branch inspect; project states locked / available / active / re
 - **GIVEN** `appliedNodeIds` = [Pain Inhibitor], **WHEN** `crewBonus` is computed, **THEN** maxHp **14**, speed **0**.
 - **GIVEN** `appliedNodeIds` = [Synaptic Enhancement, Neural Cache Array], **WHEN** `crewBonus` is computed, **THEN** maxHp **18**, speed **0.55**.
 - **GIVEN** Experience bonuses on a survivor, **WHEN** `crewBonus` is computed from `appliedNodeIds`, **THEN** Experience **+2 HP / +0.05 m/s** are not included.
-- **GIVEN** Advanced Propellants **researched**, Neural Interface I worn, Chest **STOCK**, **WHEN** a mission is created, **THEN** the Research slice has unslotted ids + resolved worn slotted ids (Neural Interface I, no Chest id) and **no pin-map field**.
+- **GIVEN** Advanced Propellants **researched**, Neural Interface I worn, Chest **STOCK**, **WHEN** a mission is created, **THEN** the Research slice has unslotted ids only (Advanced Propellants) and **no pin-map field**; Neural Interface I is on the Roster slice as resolved wear / `appliedIds`.
 - **GIVEN** a mission created while Neural Interface I is **active**, **WHEN** it later becomes **researched** before that mission ends, **THEN** that freeze still excludes it.
 - **GIVEN** a mission in progress and Advanced Propellants **available**, **WHEN** it is authorized, **THEN** Ballistics stays idle and the project stays **available**.
 - **GIVEN** Advanced Propellants **researched**, Neural Interface I **active**, **WHEN** Abort is confirmed, **THEN** `done` still has Advanced Propellants only, Neural Interface I stays **active**, no research refund.
@@ -279,7 +279,7 @@ Research screen: branch inspect; project states locked / available / active / re
 ## Open Questions
 
 - **`done` insertion when two labs complete in one `sync(t)`** — both become researched; stacking order follows `done`. Owner: Research (code today). Resolve when Roster / Tactical extracts need a frozen order. Do not invent a table here.
-- **Pin/wear edge** — provisional until Roster GDD. Owner: Roster extract.
+- **Pin/wear edge** — Roster GDD + [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md). Research slice is unslotted only.
 - **Which completed nodes enter authored chance** — living spec says “completed research”; mapping is Tactical / Brief. Owner: Tactical extract.
 - **Research-screen chrome** (progress, authorize disable, hex labels) — Interface. Owner: Interface extract.
 - **Store placement** (`researchStore` vs campaign blob for pins) — implementation; GDD owners stay Research vs Roster. Later ADR if a move is needed.
