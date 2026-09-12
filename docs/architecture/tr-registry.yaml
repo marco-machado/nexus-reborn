@@ -1,0 +1,587 @@
+# Technical requirement registry for /architecture-review
+# IDs are stable. Never renumber or delete entries; mark status: deprecated instead.
+version: 4
+last_updated: "2026-09-11"
+source_review: docs/architecture/architecture-review-2026-09-11.md
+engine: "React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU"
+
+requirements:
+  - id: TR-world-network-001
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Strategic and tactical clocks are independent; the World Network does not tick in the field
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001]
+
+  - id: TR-world-network-002
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Only two advancement paths exist — Screen ticking and win-ETA catch-up; a loss spends none
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001]
+
+  - id: TR-world-network-003
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Catch-up fires one next due at its timestamp, rearms from due t, and uses a fixed collision order
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0018]
+
+  - id: TR-world-network-004
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Debrief write-back happens at frozen t0, then the ETA jump
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0001, ADR-0002]
+
+  - id: TR-world-network-005
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Influence is a spendable wallet (Stabilize, Lobby, Expedite) with no index or standing bar
+    domain: Data
+    status: active
+    coverage: covered
+    adr: [ADR-0008]
+
+  - id: TR-world-network-006
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Tax yield is computed by World Network and emitted to Economy; only Nexus-held sectors pay
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0008]
+
+  - id: TR-world-network-007
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Intel is World Network's access resource; live home is campaignStore.intelLevel / intelProgress
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0012]
+    revised: "2026-09-10"
+
+  - id: TR-world-network-008
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Deploy snapshot World Network slice; no live store handles; no live mission or roster query
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0009]
+
+  - id: TR-world-network-009
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Outcome DTO is applied once at debrief; abort writes nothing
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0002]
+
+  - id: TR-world-network-010
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Quiet replay awards 0 Influence and Intel and does not shove Control/Unrest; ETA still catch-up
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0004]
+
+  - id: TR-world-network-011
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Timeline Review is not an advancement path
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0014]
+
+  - id: TR-world-network-012
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: Strategic clock runs only on the four Screens
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001]
+
+  - id: TR-economy-001
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Credits ledger never goes negative; overdraft refuses; exact-balance spend is allowed
+    domain: Economy
+    status: active
+    coverage: covered
+    adr: [ADR-0013]
+
+  - id: TR-economy-002
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Economy does not keep an Influence ledger and does not award Influence
+    domain: Data
+    status: active
+    coverage: covered
+    adr: [ADR-0008]
+
+  - id: TR-economy-003
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Authored and generated contracts share brief → assembly → mission → debrief
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0003]
+
+  - id: TR-economy-004
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Quiet replay zeros the whole net payout, including optional bonuses
+    domain: Economy
+    status: active
+    coverage: covered
+    adr: [ADR-0004]
+
+  - id: TR-economy-005
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Partitioned deploy snapshot Economy slice (Reward, bonus defs, quietReplay)
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0009]
+
+  - id: TR-economy-006
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Economy owns generated contract instances; live home is worldStore.contracts / contractRngState / nextContractT
+    domain: Data
+    status: active
+    coverage: covered
+    adr: [ADR-0012]
+    revised: "2026-09-10"
+
+  - id: TR-economy-007
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Tactical counts civiliansHit; Economy prices collateral and net_payout
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0009]
+
+  - id: TR-economy-008
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Debrief Credits apply once; abort writes nothing
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0002]
+
+  - id: TR-economy-009
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Tax deposit is the emitted amount; Economy does not recompute yield
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0008]
+
+  - id: TR-research-001
+    system: research
+    gdd: design/gdd/research.md
+    requirement: Research sync(t) after Screen tick or win ETA; laboratories are frozen in the field
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001]
+
+  - id: TR-research-002
+    system: research
+    gdd: design/gdd/research.md
+    requirement: Ballistics is unslotted and squad-wide; slotted bays wear one blueprint; effects sample at deploy
+    domain: Data
+    status: active
+    coverage: covered
+    adr: [ADR-0005]
+
+  - id: TR-research-003
+    system: research
+    gdd: design/gdd/research.md
+    requirement: Death drops assignment, not the program; unpinned bays follow current issue
+    domain: Data
+    status: active
+    coverage: covered
+    adr: [ADR-0005]
+
+  - id: TR-research-004
+    system: research
+    gdd: design/gdd/research.md
+    requirement: Research deploy-slice is the completed unslotted set only; resolved wear is not on this slice
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0009]
+    revised: "2026-09-10"
+
+  - id: TR-research-005
+    system: research
+    gdd: design/gdd/research.md
+    requirement: Authorize via Economy debit; Research has no Credits ledger; abort does not refund
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0013]
+
+  - id: TR-research-006
+    system: research
+    gdd: design/gdd/research.md
+    requirement: Completions after the deploy freeze apply on the next deploy only
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0005, ADR-0009]
+
+  - id: TR-persistence-001
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: A mission in progress is memory-only; there is no mid-mission resume
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0002]
+
+  - id: TR-persistence-002
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: Three slots — campaign blob, settings, telemetry; New Operation does not reset preferences
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0011]
+
+  - id: TR-persistence-003
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: Four Screens autosave; mission and debrief do not
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0011]
+
+  - id: TR-persistence-004
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: Debrief applies once in session memory; durable commit is the next Screen autosave
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0011]
+
+  - id: TR-persistence-005
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: Hydrate opens at menu; Research and Roster sync(t) to saved t; reload grants no offline hours
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001, ADR-0002, ADR-0011]
+
+  - id: TR-persistence-006
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: An invalid or unreadable campaign blob is dropped all-or-nothing; no half-load
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0011]
+
+  - id: TR-persistence-007
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: World Event stream and candidate market serialize RNG across reload
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0011]
+
+  - id: TR-persistence-008
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: Telemetry is opt-in, local, capped at 60 records, and never leaves the machine
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0015]
+
+  - id: TR-roster-001
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: Deploy gate requires 1–4 Ready operatives; empty bays are legal; squad mass must be ≤ 400 kg
+    domain: Gameplay
+    status: active
+    coverage: covered
+    adr: [ADR-0019]
+
+  - id: TR-roster-002
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: Wear, Experience, items, mass, and mass tier freeze when the mission is created
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0005, ADR-0009]
+
+  - id: TR-roster-003
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: Injury recovery and the candidate market run on strategic t; a win ETA can finish recovery
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001]
+
+  - id: TR-roster-004
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: Quiet replay still applies KIA, injury, and Experience
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0004]
+
+  - id: TR-roster-005
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: Roster slice owns resolved wear and ordered appliedIds; Research slice is the unslotted set only
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0009]
+    revised: "2026-09-10"
+
+  - id: TR-roster-006
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: Abort writes no roster; debrief applies roster once
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0002]
+
+  - id: TR-roster-007
+    system: roster-and-assembly
+    gdd: design/gdd/roster-and-assembly.md
+    requirement: An empty incomplete roster fails the campaign; a completed campaign stays complete after a wipe
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0020]
+
+  - id: TR-tactical-001
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: District, weather script, Opening hour, and objectives share one seed and one unsaved lifetime
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0006, ADR-0007]
+
+  - id: TR-tactical-002
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Five verbs plus auto-acquire; custom TypeScript sim with no physics engine
+    domain: Gameplay
+    status: active
+    coverage: covered
+    adr: [ADR-0016]
+
+  - id: TR-tactical-003
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Weather is a determined script with at most one adjacent change; the brief tells the truth
+    domain: Gameplay
+    status: active
+    coverage: covered
+    adr: [ADR-0006]
+
+  - id: TR-tactical-004
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Opening hour is per-mission; lighting is frozen; it does not change sight, noise, or risk
+    domain: Rendering
+    status: active
+    coverage: covered
+    adr: [ADR-0007]
+
+  - id: TR-tactical-005
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Tactical clock is independent of strategic time; in-mission pause freezes it
+    domain: Timing
+    status: active
+    coverage: covered
+    adr: [ADR-0001]
+
+  - id: TR-tactical-006
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: A missed round continues down the fire lane; the first Unit before cover is hit; Tactical counts N
+    domain: Gameplay
+    status: active
+    coverage: covered
+    adr: [ADR-0016]
+
+  - id: TR-tactical-007
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Deterministic 96×96 m citygen and one-metre walk grid from the mission seed
+    domain: Geometry
+    status: active
+    coverage: covered
+    adr: [ADR-0016]
+
+  - id: TR-tactical-008
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Camera is fixed 45° yaw / 55° elevation / 25° FOV, zoom 44–115 m; no rotate or tilt; minimap up equals screen up
+    domain: Rendering
+    status: active
+    coverage: covered
+    adr: [ADR-0016]
+
+  - id: TR-tactical-009
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Hardened is a discrete profile; it must not hide minimap information
+    domain: Gameplay
+    status: active
+    coverage: covered
+    adr: [ADR-0016]
+
+  - id: TR-tactical-010
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: Win or Loss shows a HUD result then debriefs after 2.5 s; abort emits no outcome DTO
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0002]
+
+  - id: TR-tactical-011
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: quietReplay is stamped from the frozen Economy slice, not live contractsWon
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0009]
+
+  - id: TR-interface-001
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: One corporate OS; palette from index.css and tokens.ts; no public/ art; DOM around the 3D scene
+    domain: Rendering
+    status: active
+    coverage: covered
+    adr: [ADR-0017]
+
+  - id: TR-interface-002
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: 1280×720 must not clip or truncate; critical state is never color-only; Quality is not a design lever
+    domain: UI
+    status: active
+    coverage: covered
+    adr: [ADR-0010, ADR-0017]
+
+  - id: TR-interface-003
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: Session phase router is Menu, four Screens, Mission, and Debrief
+    domain: UI
+    status: active
+    coverage: covered
+    adr: [ADR-0017]
+
+  - id: TR-interface-004
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: Per-frame unit data stays out of React state; the scene reads the world imperatively
+    domain: Rendering
+    status: active
+    coverage: covered
+    adr: [ADR-0010]
+
+  - id: TR-interface-005
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: Mission canvas uses WebGPURenderer, await init(), and r3f createRoot — not stock Canvas
+    domain: Rendering
+    status: active
+    coverage: covered
+    adr: [ADR-0010]
+
+  - id: TR-interface-006
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: Pause Abort is two-step; there is no mid-mission save chrome
+    domain: UI
+    status: active
+    coverage: covered
+    adr: [ADR-0002]
+
+  - id: TR-interface-007
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: One remap table; pause, operative slots, and mouse are reserved; keyboard and mouse, desktop only
+    domain: Input
+    status: active
+    coverage: covered
+    adr: [ADR-0017]
+
+  - id: TR-audio-001
+    system: audio
+    gdd: design/gdd/audio.md
+    requirement: Four channels plus master and mute live in the settings slot, not the campaign blob
+    domain: Audio
+    status: active
+    coverage: covered
+    adr: [ADR-0011, ADR-0017]
+
+  - id: TR-audio-002
+    system: audio
+    gdd: design/gdd/audio.md
+    requirement: Strategy bed owns the four Screens; mission bed owns the district; rain follows live weather
+    domain: Audio
+    status: active
+    coverage: covered
+    adr: [ADR-0006, ADR-0017]
+
+  - id: TR-audio-003
+    system: audio
+    gdd: design/gdd/audio.md
+    requirement: Unavailable or late audio must not block play or dump as a delayed burst; unseeded jitter must not change outcomes
+    domain: Audio
+    status: active
+    coverage: covered
+    adr: [ADR-0017]
+
+  - id: TR-audio-004
+    system: audio
+    gdd: design/gdd/audio.md
+    requirement: No spoken VO, no spatial shooter mix, and no payout celebration sting
+    domain: Audio
+    status: active
+    coverage: covered
+    adr: [ADR-0017]
