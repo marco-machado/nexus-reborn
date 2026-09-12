@@ -10,7 +10,7 @@
 - TR baseline: 64 requirements in `docs/architecture/tr-registry.yaml` (architecture-review 2026-09-11: 64 covered, 0 gaps)
 - Technical Director Sign-Off: 2026-09-11 — APPROVED WITH CONDITIONS
 - Lead Programmer Feasibility: REVISED
-- TD-ARCHITECTURE: CONCERNS (API Boundaries abbreviated) → revised 2026-09-11 → APPROVED WITH CONDITIONS (QQ-01 budgets; QQ-02 implement ADR-0009/0019)
+- TD-ARCHITECTURE: CONCERNS (API Boundaries abbreviated) → revised 2026-09-11 → APPROVED WITH CONDITIONS (QQ-01 budgets; QQ-02 is implementation debt on Accepted ADR-0009/0019, not a missing ADR)
 - LP-FEASIBILITY: CONCERNS → REVISED 2026-09-11
 
 ## Engine Knowledge Gap Summary
@@ -219,7 +219,7 @@ Hydrate never lands in a running mission. `createWorld` does not read live store
 
 Contracts programmers implement against. Engine types appear only on the canvas host. ⚠️ HIGH where noted.
 
-Code still lags two Accepted ADRs: `DeployParams` in `world.ts` is `{ mods, district, loadout }` (ADR-0009 names four slices); Team Deploy still `goto('mission')` (ADR-0019 names `canDeploy` + `startMission` no-op). The boundaries below are the ADR contracts, not the lag.
+Code still lags two Accepted ADRs (**QQ-02 — implementation debt, not a missing ADR**): `DeployParams` in `world.ts` is `{ mods, district, loadout }` (ADR-0009 names four slices); Team Deploy still `goto('mission')` (ADR-0019 names `canDeploy` + `startMission` no-op). The boundaries below are the ADR contracts, not the lag. Do not mint a new ADR. Do not re-decide.
 
 ### Tactical — `WorldApi` (`src/game/types.ts`)
 
@@ -365,7 +365,7 @@ All 20 ADRs are **Accepted**. None are Proposed. None conflict with the layer or
 
 This document synthesizes existing ADRs. It does not mint a new Foundation decision.
 
-Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log stops at 0008; Forbidden Patterns still empty; performance budgets PENDING (`docs/game-design.md` §20).
+Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; Forbidden Patterns are filled from ADR-0010 / ADR-0016 / ADR-0017; performance budgets still PENDING (`docs/game-design.md` §20).
 
 ## Required ADRs
 
@@ -375,8 +375,7 @@ Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log stops at 0008; F
 
 **Can defer:**
 - Numeric performance budgets (GDD §20 still pending) — prefs, not a new ADR
-- Prefs ADR-log + forbidden-pattern sync with ADR-0010 / ADR-0017
-- Extract `canDeploy` / four-slice `DeployParams` — implement Accepted ADRs, do not re-decide
+- **QQ-02 implementation debt** — extract `canDeploy` / four-slice `DeployParams` to match Accepted ADR-0009 / ADR-0019. Not a missing ADR. Do not re-decide.
 
 ## Architecture Principles
 
@@ -391,6 +390,6 @@ Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log stops at 0008; F
 | ID | Summary | Priority | Resolution Path |
 |---|---|---|---|
 | QQ-01 | Performance budgets still PENDING in prefs / GDD §20 | Medium | Prefs update after §20; not a new ADR |
-| QQ-02 | `DeployParams` / `startMission` code lags ADR-0009 / ADR-0019 | High | Implementation stories; do not re-decide |
+| QQ-02 | `DeployParams` / `startMission` code lags ADR-0009 / ADR-0019 | High | **Implementation debt.** Not a missing ADR. Stories implement the Accepted contracts; do not re-decide |
 | QQ-03 | Stub vs keep `docs/game-design.md` after D2 extracts | Low | Design process; not architecture |
 | QQ-04 | Hire-on-failed (Roster OQ1) | Low | Roster GDD; not ADR-0020 |

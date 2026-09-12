@@ -1,8 +1,9 @@
 # Technical requirement registry for /architecture-review
 # IDs are stable. Never renumber or delete entries; mark status: deprecated instead.
-version: 4
+version: 5
 last_updated: "2026-09-11"
 source_review: docs/architecture/architecture-review-2026-09-11.md
+# Third full pass: no new TR-IDs; no requirement text changes; no deprecations.
 engine: "React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU"
 
 requirements:

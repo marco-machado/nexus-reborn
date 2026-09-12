@@ -1,9 +1,10 @@
 # Architecture Traceability Index
-Last Updated: 2026-09-11 (second pass)
+Last Updated: 2026-09-11 (third full pass)
 Engine: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU
 Source review: `docs/architecture/architecture-review-2026-09-11.md`
 TR registry: `docs/architecture/tr-registry.yaml`
-Prior index: 2026-09-10 (44 covered / 4 partial / 16 gaps)
+Master architecture: `docs/architecture/architecture.md`
+Prior index: 2026-09-11 second pass (64 covered / 0 partial / 0 gaps; architecture.md not yet in tree)
 
 ## Coverage Summary
 - Total requirements: 64
@@ -11,7 +12,7 @@ Prior index: 2026-09-10 (44 covered / 4 partial / 16 gaps)
 - Partial: 0
 - Gaps: 0
 
-ADRs 0001–0008 cite `docs/game-design.md`. ADRs 0009–0020 cite `design/gdd/*.md` TR-IDs. Coverage is from ADR decision text (implicit counts as covered). All covering ADRs are Accepted (second pass: ADR-0013, ADR-0016, ADR-0017, ADR-0019, ADR-0020 Accepted).
+ADRs 0001–0008 cite `docs/game-design.md`. ADRs 0009–0020 cite `design/gdd/*.md` TR-IDs. Coverage is from ADR decision text (implicit counts as covered). All covering ADRs are Accepted. Master architecture exists.
 
 ## Full Matrix
 
@@ -42,7 +43,7 @@ ADRs 0001–0008 cite `docs/game-design.md`. ADRs 0009–0020 cite `design/gdd/*
 | TR-research-002 | research.md | Research | Ballistics unslotted/squad-wide; slotted bays wear one blueprint; sample at deploy | ADR-0005 | ✅ |
 | TR-research-003 | research.md | Research | Death drops assignment, not the program; unpinned follow current issue | ADR-0005 | ✅ |
 | TR-research-004 | research.md | Research | Research deploy-slice is the completed unslotted set only; resolved wear is not on this slice | ADR-0009 | ✅ |
-| TR-research-005 | research.md | Research | Authorize via Economy debit; no research Credits ledger; no refund on abort | ADR-0013 | ✅ |
+| TR-research-005 | research.md | Research | Authorize via Economy debit; no research Credits ledger; no refund on abort | ADR-0002, ADR-0013 | ✅ |
 | TR-research-006 | research.md | Research | Completions after freeze apply on the next deploy only | ADR-0002, ADR-0005, ADR-0009 | ✅ |
 | TR-persistence-001 | persistence-and-validation.md | Persistence | Mission in progress is memory-only; no mid-mission resume | ADR-0002 | ✅ |
 | TR-persistence-002 | persistence-and-validation.md | Persistence | Three slots: campaign blob, settings, telemetry; New Operation does not reset prefs | ADR-0011 | ✅ |
@@ -86,12 +87,16 @@ ADRs 0001–0008 cite `docs/game-design.md`. ADRs 0009–0020 cite `design/gdd/*
 
 None. All 64 TRs have an Accepted ADR.
 
-Remaining documentation (not TR gaps): no master `docs/architecture/architecture.md`; ADR-0010 References Consulted omit `modules/tsl.md`; `docs/technical-preferences.md` ADR log stops at ADR-0008 and still lists drei while ADR-0010/0016 forbid drei camera/view kits.
+Remaining documentation (not TR gaps):
+- World Network GDD AC leftover “snapshot DTO” vs Core Rule 11.
+- Several GDD sibling-extract footnotes still say files “are not extracted yet.”
+- QQ-02: **implementation debt** (not a missing ADR) — live `DeployParams` / Team Deploy lag Accepted ADR-0009 / ADR-0019. Do not re-decide.
+- QQ-01: performance budgets still PENDING in prefs / GDD §20.
+
+`docs/architecture/architecture.md` ADR Audit hygiene now matches prefs (ADR log 0001–0020; Forbidden Patterns filled).
 
 ## Superseded Requirements
 
 None. No registry entry was marked deprecated.
 
-No requirement text revised this run. Coverage/ADR fields updated 2026-09-11 for the former 16 gaps and 4 partials. Second pass confirmed all 20 covering ADRs Accepted.
-
-Game-concept still says engine-reference is missing. Documentation drift versus `docs/engine-reference/` (2026-09-08), not a superseded TR.
+No requirement text revised this run. No new TR-IDs. Third pass confirmed master architecture present, prefs ADR log 0001–0020, ADR-0010 References Consulted include `modules/tsl.md`, and `game-concept.md` engine-reference checkbox is done. Follow-up: architecture.md ADR Audit hygiene aligned with prefs.
