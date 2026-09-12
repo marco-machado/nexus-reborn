@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Aesir ephemeral session artifacts
+production/session-state/
+production/session-logs/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
