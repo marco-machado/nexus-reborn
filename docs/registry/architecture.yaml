@@ -1,0 +1,853 @@
+# Architecture Decision Registry
+#
+# PURPOSE: Single source of truth for key architectural stances that all ADRs
+# must agree on. Skills check this before writing new ADRs to detect conflicts
+# at authoring time — before stories are created against contradictory decisions.
+#
+# RULES:
+#   - Register a stance when it constrains how OTHER systems must be built.
+#   - Never delete entries — set status: superseded_by: ADR-NNNN instead.
+#   - adr: is the authoritative source. Dependents list themselves in referenced_by.
+#
+# WRITTEN BY: /architecture-decision (after ADR write + user approval)
+# READ BY:    /architecture-decision, /architecture-review, /create-stories, /dev-story
+
+version: 1
+last_updated: "2026-09-11"
+
+# ─── STATE OWNERSHIP ─────────────────────────────────────────────────────────
+
+state_ownership:
+  - state: roster_resolved_wear
+    status: active
+    owner_system: roster-and-assembly
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    interface: "Roster deploy slice: per-assigned wear (at most one node id per AugSlot) and ordered appliedIds from appliedNodeIds at freeze; sampled HP/speed"
+    write_access: composer-at-mission-create
+    referenced_by:
+      - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: research_unslotted_set
+    status: active
+    owner_system: research
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    interface: "Research deploy slice: readonly string[] of completed unslotted (Ballistics) ids, done order. No pins, no worn ids."
+    write_access: composer-at-mission-create
+    referenced_by:
+      - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: economy_quietReplay_stamp
+    status: active
+    owner_system: economy-and-contracts
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    interface: "Economy deploy slice quietReplay: boolean sampled from authored contractsWon at create; copied onto MissionOutcome. Never undefined."
+    write_access: composer-at-mission-create
+    referenced_by:
+      - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: campaign_blob
+    status: active
+    owner_system: persistence-and-validation
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    interface: "save.ts captureSave/hydrateSave; Screens coalesced autosave; mission/debrief skip; New Operation erases this envelope only"
+    write_access: save.ts-only
+    referenced_by:
+      - docs/architecture/adr-0011-campaign-persistence-envelope.md
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: settings_envelope
+    status: active
+    owner_system: persistence-and-validation
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    interface: "settingsStore SETTINGS_KEY; survives New Operation; quality persist ≠ live renderer rebuild"
+    write_access: settingsStore
+    referenced_by:
+      - docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: telemetry_envelope
+    status: superseded_by
+    superseded_by: ADR-0015
+    owner_system: persistence-and-validation
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    interface: "telemetry.ts TELEMETRY_KEY; may write on debrief/abort while campaign autosave is suspended. Cap/privacy not decided here."
+    write_access: telemetry.ts
+    referenced_by:
+      - docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+    revised: "2026-09-10"
+
+  - state: intel_access
+    status: active
+    owner_system: world-network
+    adr: docs/architecture/adr-0012-store-placement.md
+    interface: "useCampaignStore intelLevel/intelProgress; missionLocked(mission, intelLevel); persist SaveV9.campaign.intel*"
+    write_access: campaignStore
+    referenced_by:
+      - docs/architecture/adr-0012-store-placement.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: generated_contract_instances
+    status: active
+    owner_system: economy-and-contracts
+    adr: docs/architecture/adr-0012-store-placement.md
+    interface: "useWorldStore contracts/contractRngState/nextContractT; persist SaveV9.world.contracts*; Expedite writes contracts[].expedited"
+    write_access: worldStore.advanceFlow
+    referenced_by:
+      - docs/architecture/adr-0012-store-placement.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: credits_ledger
+    status: active
+    owner_system: economy-and-contracts
+    adr: docs/architecture/adr-0013-credits-never-overdraw.md
+    interface: "useAppStore.credits / SaveV9.app.credits; opening INITIAL_CREDITS 128450; never < 0"
+    write_access: spendCredits-hireOperative-addCredits-setOutcome-hydrate
+    referenced_by:
+      - docs/architecture/adr-0013-credits-never-overdraw.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: timeline_review_pin
+    status: active
+    owner_system: world-network
+    adr: docs/architecture/adr-0014-timeline-review-is-a-view.md
+    interface: "useWorldStore.review: number | null; not in SaveV9.world; TimeCode/Timeline/Feed display pin"
+    write_access: setReview
+    referenced_by:
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: telemetry_envelope
+    status: active
+    owner_system: persistence-and-validation
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    interface: "telemetry.ts TELEMETRY_KEY; opt-in default off; FIFO cap 60; may write on debrief/abort while campaign skip; log survives New Operation; no network"
+    write_access: telemetry.ts
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    revised: ""
+
+  - state: campaign_end_flags
+    status: active
+    owner_system: roster-and-assembly
+    adr: docs/architecture/adr-0020-campaign-fail-flags.md
+    interface: "campaignStore.campaignWon / campaignFailed; isCampaignFailed(length, allWonThisDebrief); persist SaveV9.campaign.campaignWon/campaignFailed"
+    write_access: reportMission-and-hydrate
+    referenced_by:
+      - docs/architecture/adr-0020-campaign-fail-flags.md
+    added: 2026-09-11
+    revised: ""
+
+# ─── INTERFACE CONTRACTS ──────────────────────────────────────────────────────
+
+interfaces:
+  - contract: partitioned_deploy_snapshot
+    status: active
+    pattern: shared_resource
+    producer: mission-mount-composer
+    consumers:
+      - tactical-mission
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    signal_signature: "DeployParams { wn, economy, research, roster, mods, district } — no SnapshotDTO type; loadout folded into roster.items"
+    referenced_by:
+      - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: mission_world_access
+    status: active
+    pattern: direct_call
+    producer: tactical-mission
+    consumers:
+      - mission-scene
+      - mission-hud
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    signal_signature: "getWorld/setWorld (runtime.ts); WorldApi.tick(rawDt) owned by world.ts (MAX_DT/MAX_CATCHUP/SYNC_INTERVAL); camera set/getCameraFootprint, set/getCameraFocus, panCameraTo, takeCameraPan"
+    referenced_by:
+      - docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: campaign_blob_writer
+    status: active
+    pattern: shared_resource
+    producer: persistence-and-validation
+    consumers:
+      - world-network
+      - economy-and-contracts
+      - research
+      - roster-and-assembly
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    signal_signature: "save.ts is the only campaign-blob writer; hydrate → menu + research.sync(saved t) + campaign.sync(saved t); no zustand persist middleware on composed campaign stores"
+    referenced_by:
+      - docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: credits_refuse_debit
+    status: active
+    pattern: direct_call
+    producer: economy-and-contracts
+    consumers:
+      - research
+      - roster-and-assembly
+    adr: docs/architecture/adr-0013-credits-never-overdraw.md
+    signal_signature: "spendCredits(amount): void identity no-op unless amount > 0 && credits >= amount; hireOperative: check → acceptHire → decrement (does not call spendCredits); addCredits ignores non-positive"
+    referenced_by:
+      - docs/architecture/adr-0013-credits-never-overdraw.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: timeline_review_cursor
+    status: active
+    pattern: direct_call
+    producer: world-network
+    consumers:
+      - interface
+    adr: docs/architecture/adr-0014-timeline-review-is-a-view.md
+    signal_signature: "setReview(t: number | null): void — pin-only, unclamped; Timeline writers clamp to [t-DAY, t] or Live; null = Live"
+    referenced_by:
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: telemetry_local_log
+    status: active
+    pattern: shared_resource
+    producer: persistence-and-validation
+    consumers:
+      - interface
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    signal_signature: "recordMissionOutcome / recordAbort gated by settings.telemetry; appendRecord FIFO cap 60; clearRecords; New Operation does not touch TELEMETRY_KEY"
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: tactical_command_language
+    status: active
+    pattern: direct_call
+    producer: tactical-mission
+    consumers:
+      - interface
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    signal_signature: "WorldApi.orderMove/orderAttack/orderHold/orderHoldFire/orderStop; Select = missionStore.setSelected (not WorldApi.orderSelect); kit methods are not verbs"
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: tactical_camera_pose
+    status: active
+    pattern: direct_call
+    producer: tactical-mission
+    consumers:
+      - mission-scene
+      - mission-hud
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    signal_signature: "CAMERA_YAW=π/4 shared with Minimap; CameraRig ELEV 55°, fov 25, zoom 44–115 m; useFrame priority 0 after WorldTicker; ADR-0010 owns helpers not pose"
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: fire_lane_resolve
+    status: active
+    pattern: direct_call
+    producer: tactical-mission
+    consumers:
+      - economy-and-contracts
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    signal_signature: "tryFire / strayVictim / pathfind.hasLos (walk-grid DDA); Tactical counts civilianHits; Economy prices; not cityOcclusion or THREE.Raycaster"
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: one_os_palette
+    status: active
+    pattern: shared_resource
+    producer: interface
+    consumers:
+      - mission-scene
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    signal_signature: "tokens.ts + index.css :root dual owner; TS/SVG/canvas from tokens.ts; high-contrast CSS vars only"
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: remap_table
+    status: active
+    pattern: shared_resource
+    producer: interface
+    consumers:
+      - tactical-mission
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    signal_signature: "BINDINGS / BindingId / remappable / applyOverrides; pause+selectSlot+empty codes not remappable; BindingId ≠ WorldApi"
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: mixer_graph
+    status: active
+    pattern: shared_resource
+    producer: audio
+    consumers:
+      - interface
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    signal_signature: "setAudioLevels / stagedGain / unlockAudio; GainNodes ui,combat,music,ambience → master → createDynamicsCompressor; bindStrategyBed; pickMissionBedUrl unseeded"
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    revised: ""
+
+  - contract: world_network_catchup
+    status: active
+    pattern: direct_call
+    producer: world-network
+    consumers:
+      - economy-and-contracts
+      - research
+      - roster-and-assembly
+    adr: docs/architecture/adr-0018-catch-up-collision-order.md
+    signal_signature: "private advanceFlow(flow, t): boolean; only tick(dt) and advanceDays(days) jump strategic t through it; collision expiry→event→contract→spend→pressure→tax; rearm from due t"
+    referenced_by:
+      - docs/architecture/adr-0018-catch-up-collision-order.md
+    added: 2026-09-11
+    revised: ""
+
+  - contract: deploy_gate
+    status: active
+    pattern: direct_call
+    producer: roster-and-assembly
+    consumers:
+      - interface
+    adr: docs/architecture/adr-0019-deploy-gate.md
+    signal_signature: "canDeploy({ missionSelected, assignedIds, statusById, massKg }) → { ok, reason: 'no-contract'|'none-assigned'|'not-ready'|'over-mass'|null, overKg }; startMission() no-op unless ok; goto('mission') is not a public start API"
+    referenced_by:
+      - docs/architecture/adr-0019-deploy-gate.md
+    added: 2026-09-11
+    revised: ""
+
+  - contract: campaign_end_flags
+    status: active
+    pattern: direct_call
+    producer: roster-and-assembly
+    consumers:
+      - persistence-and-validation
+      - world-network
+    adr: docs/architecture/adr-0020-campaign-fail-flags.md
+    signal_signature: "isCampaignFailed(operatives.length, allWonThisDebrief); reportMission writes campaignWon/campaignFailed; hydrate restores stored flags; selectMission no-op when failed"
+    referenced_by:
+      - docs/architecture/adr-0020-campaign-fail-flags.md
+    added: 2026-09-11
+    revised: ""
+
+# ─── PERFORMANCE BUDGETS ──────────────────────────────────────────────────────
+
+performance_budgets: []
+
+# ─── API DECISIONS ───────────────────────────────────────────────────────────
+
+api_decisions:
+  - purpose: research_apply_at_deploy
+    status: active
+    api: "composer runs appliedNodeIds(done, pins) at freeze; createWorld consumes roster.appliedIds"
+    not: "appliedNodeIds(researchStore.done, campaignStore.pins) or unslotted∪wear inside createWorld"
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    reason: "Preserves done order; single consumption path; src/game must not read Zustand"
+    referenced_by:
+      - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+    revised: ""
+
+  - purpose: mission_canvas
+    status: active
+    api: "createRoot + WebGPURenderer from three/webgpu; await init(); RenderPipeline + TSL bloom"
+    not: "stock r3f <Canvas>, PostProcessing, WebGLRenderer, EffectComposer, @react-three/postprocessing"
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    reason: "r3f#3782 races init; r181 deprecated renderAsync; r183 renamed PostProcessing; pin is r185 WebGPU"
+    referenced_by:
+      - docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+    revised: ""
+
+  - purpose: campaign_storage
+    status: active
+    api: "window.localStorage + JSON via save.ts / settingsStore / telemetry.ts (three envelopes)"
+    not: "zustand/middleware persist, cookies, sessionStorage, IndexedDB, OPFS"
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    reason: "persist middleware would durable-commit debrief in-memory apply and write at clock rate; cookies leave the machine"
+    referenced_by:
+      - docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+    revised: ""
+
+  - purpose: timeline_review
+    status: active
+    api: "worldStore.review session cursor; setReview writes only review"
+    not: "write t / reverse advanceDays; SaveV9.world.review; THREE.Timer; React local pin; GameCanvas ReviewScene"
+    adr: docs/architecture/adr-0014-timeline-review-is-a-view.md
+    reason: "TR-world-network-011 — Review is not an advancement path"
+    referenced_by:
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    revised: ""
+
+  - purpose: telemetry_storage
+    status: active
+    api: "window.localStorage TELEMETRY_KEY + JSON; Balance export is local data: JSON download"
+    not: "fetch, sendBeacon, WebSocket, cookies, analytics SDK, IndexedDB, OPFS, zustand persist on the log"
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    reason: "TR-persistence-008 — records never leave the machine"
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    revised: ""
+
+  - purpose: tactical_sim
+    status: active
+    api: "custom TypeScript world.ts + generateCity(mission, spec?, gen?) RNG district.seed; CITY_SIZE 96; DIFFICULTY_FX pointer in missionParams.ts"
+    not: "physics engine; OrbitControls; WorldApi.orderSelect; THREE.Raycaster as LOS; forked DIFFICULTY_FX table"
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    reason: "TR-tactical-002/006/007/008/009 — one sim contract, no physics, fixed camera"
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    revised: ""
+
+  - purpose: one_os_mixer
+    status: active
+    api: "Phase union in App.tsx; BINDINGS remappable(); Web Audio four buses + compressor; sound.ts lazy no typecheck import of game/audio.ts"
+    not: "public/ art; React 19.2 Activity; THREE.Audio/PannerNode; LimiterNode; mission bed keyed to district"
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    reason: "TR-interface-001/003/007 and TR-audio-001–004 — one OS, one table, four buses"
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    revised: ""
+
+# ─── FORBIDDEN PATTERNS ──────────────────────────────────────────────────────
+
+forbidden_patterns:
+  - pattern: live_store_handles_into_sim
+    status: active
+    description: "src/game must not read researchStore, campaignStore, or worldStore for deploy inputs. No silent getState() fallback in createWorld. Do not Object.freeze() live getState() arrays — clone first."
+    why: "Live handles make Abort a reload and let later lab completions or roster writes mutate a mission already on the ground."
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+      - docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: worn_ids_on_research_slice
+    status: active
+    description: "Resolved worn slotted ids and appliedIds live on the Roster slice only. Research slice is completed unslotted ids only."
+    why: "Wear is assignment on bodies (ADR-0005). Dual-homing ids produces two incompatible deploy DTOs."
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+
+  - pattern: quietReplay_live_restamp
+    status: active
+    description: "maybeOutcome, setOutcome, and reportMission must not restamp quietReplay from live contractsWon. Stamp is the Economy-slice boolean."
+    why: "A live restamp makes the freeze a lie and can disagree with district rotation sampled at create."
+    adr: docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+    added: 2026-09-10
+
+  - pattern: stock_r3f_canvas
+    status: active
+    description: "Do not mount stock r3f <Canvas> or drei Canvas/View for the mission view. Use createRoot in GameCanvas.tsx."
+    why: "Stock Canvas re-runs configure() on commit and races WebGPURenderer.init (r3f#3782)."
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+
+  - pattern: per_frame_pose_in_react
+    status: active
+    description: "Do not put unit positions, tracers, or camera pose into React state or missionStore each frame. Scene and minimap read getWorld()."
+    why: "Per-frame React reconciliation of poses is the failure mode TR-interface-004 exists to forbid."
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: extra_gpu_submit_beside_pipeline
+    status: active
+    description: "Effects useFrame priority 1 is the only GPU submit (RenderPipeline.render). Do not also call gl.render() / renderer.render(). A second positive-priority subscriber must not render."
+    why: "r3f 9.6.1 disables auto gl.render() while any subscriber has priority>0; a second submit wipes bloom."
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: three_timer_as_game_clock
+    status: active
+    description: "src/ui/clock.ts, missionStore.setClock, and Opening hour are game clocks. Do not migrate them to THREE.Clock or THREE.Timer. r3f's internal Clock is frame dt only."
+    why: "ADR-0001 clocks are simulation time, not the renderer timer."
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+
+  - pattern: live_quality_teardown
+    status: active
+    description: "AUTO quality step-down persists for the next mission. Do not tear the live createRoot pipeline mid-fight."
+    why: "Manual r3f root makes live pipeline rebuild unsafe; Rain/bloom/DPR are mount-time."
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+
+  - pattern: three_import_in_scene
+    status: active
+    description: "src/scene/ must import from three/webgpu, not from 'three'."
+    why: "WebGPURenderer and TSL live on the webgpu entry as of r171; the 'three' default is the training-data trap."
+    adr: docs/architecture/adr-0010-mission-renderer-and-frame-loop.md
+    added: 2026-09-10
+
+  - pattern: zustand_persist_on_campaign_stores
+    status: active
+    description: "Do not attach zustand/middleware persist, createJSONStorage, or persist.rehydrate() to app/world/research/campaign/tutorial. save.ts is the only campaign-blob writer."
+    why: "Middleware persist would durable-commit the in-memory debrief apply and stringify on every Screen tick."
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+
+  - pattern: campaign_blob_half_load
+    status: active
+    description: "Unreadable or invalid campaign JSON is drop-all. Continue unavailable. Do not half-load. Settings/telemetry garbage falls back independently."
+    why: "A half-house boots a lie: labs without a roster, or Credits without a clock."
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+
+  - pattern: durable_campaign_write_at_debrief
+    status: active
+    description: "Debrief applies once in session memory. First durable campaign write of that result is the next Screen autosave. Mission and Debrief skip the campaign blob."
+    why: "A debrief checkpoint makes Abort/reload a second apply path and contradicts ADR-0002."
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+
+  - pattern: serialize_deploy_freeze
+    status: active
+    description: "Do not write ADR-0009 DeployParams / running mission into the campaign blob."
+    why: "Serializing the freeze makes Abort a reload."
+    adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
+    added: 2026-09-10
+
+  - pattern: economyStore_module
+    status: active
+    description: "Do not add src/state/economyStore.ts for generated contracts or Credits. Generated instances live on worldStore; Credits stay on appStore (separate ADR)."
+    why: "Splitting generated catch-up out of advanceFlow desyncs ADR-0001; owner≠Zustand home is the cut."
+    adr: docs/architecture/adr-0012-store-placement.md
+    added: 2026-09-10
+
+  - pattern: second_intel_ledger
+    status: active
+    description: "Do not keep intelLevel/intelProgress on worldStore or appStore. Do not move them off campaignStore without superseding ADR-0012."
+    why: "A second ledger dual-homes the access resource the way worn ids were dual-homed before ADR-0009."
+    adr: docs/architecture/adr-0012-store-placement.md
+    added: 2026-09-10
+
+  - pattern: clamp_negative_credits_hydrate
+    status: active
+    description: "Do not clamp SaveV9.app.credits < 0 to 0 and continue. Invalid or non-finite credits is campaign-blob drop-all."
+    why: "A repaired wallet on a half-house is the Credits face of campaign_blob_half_load."
+    adr: docs/architecture/adr-0013-credits-never-overdraw.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0013-credits-never-overdraw.md
+
+  - pattern: unguarded_credits_setState
+    status: active
+    description: "Production must not useAppStore.setState({ credits }) except hydrate. Debit/deposit go through spendCredits, hireOperative, addCredits, or setOutcome(+netPayout)."
+    why: "Unguarded set bypasses overdraft refuse and can write a negative ledger."
+    adr: docs/architecture/adr-0013-credits-never-overdraw.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0013-credits-never-overdraw.md
+
+  - pattern: review_writes_strategic_t
+    status: active
+    description: "setReview must not write t, run advanceFlow, sync(t) labs/injuries, emit Tax, or reverse advanceDays. Review is a view cursor."
+    why: "Writing t would make Timeline scrub a third strategic advancement path (TR-world-network-011)."
+    adr: docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+
+  - pattern: persist_review_in_campaign_blob
+    status: active
+    description: "Do not add review to SaveV9.world. captureSave omits it; hydrateSave and New Operation force review: null."
+    why: "Persisting the pin makes Continue open in Review and treats a view as live state (ADR-0011)."
+    adr: docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+
+  - pattern: worldstore_review_into_gamecanvas
+    status: active
+    description: "Do not pass worldStore.review into GameCanvas({ review?: ReviewScene }). That prop is a DEV scene overlay (diagnostics), not the Timeline pin."
+    why: "Homonym: a number pin is not ReviewScene; wiring it would type-error or overload the mission canvas."
+    adr: docs/architecture/adr-0014-timeline-review-is-a-view.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0014-timeline-review-is-a-view.md
+
+  - pattern: telemetry_network_channel
+    status: active
+    description: "Do not fetch, sendBeacon, open a WebSocket, or write cookies from telemetry.ts or Balance export."
+    why: "TR-persistence-008 — records never leave the machine. UI SFX fetch is not a telemetry channel."
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+
+  - pattern: telemetry_default_on
+    status: active
+    description: "settingsStore.telemetry defaults false. Do not ship the log on."
+    why: "Opt-in is the TR-persistence-008 gate. On-by-default is not a preference."
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+
+  - pattern: new_operation_clears_telemetry_log
+    status: active
+    description: "startNewOperation must not removeItem(TELEMETRY_KEY). Clear (clearRecords) is how the log dies."
+    why: "New Operation erases the campaign envelope only (ADR-0011). The log is a session log across Operations."
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+
+  - pattern: src_game_value_import_telemetry
+    status: active
+    description: "src/game must not value-import telemetry.ts or call recordMissionOutcome / recordAbort. A type-only MissionTelemetry import in world.ts is allowed."
+    why: "Mission hot path keeps numeric counters and hands them once on the outcome. Persistence I/O stays in src/state/."
+    adr: docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md
+
+  - pattern: physics_engine_in_tactical
+    status: active
+    description: "Do not add cannon, rapier, or three.js physics to the mission sim. world.ts is the custom TypeScript sim."
+    why: "TR-tactical-002 — a physics addon breaks seed determinism and the no-physics pin."
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: rotate_tilt_tactical_camera
+    status: active
+    description: "Do not add OrbitControls, MapControls, CameraControls, OrthographicCamera, or JSX PerspectiveCamera makeDefault. No rotate/tilt in play."
+    why: "TR-tactical-008 — pose is CameraRig + CAMERA_YAW; minimap up must stay screen up."
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: raycaster_as_fire_lane
+    status: active
+    description: "Fire-lane and LOS authority is strayVictim / hasLos on the walk grid. Do not use THREE.Raycaster, Mesh.raycast, or GPU picking for hits."
+    why: "WebGPU mesh raycast is not the seeded sim; stray fire would disagree with the invoice count N."
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: hardened_hides_minimap
+    status: active
+    description: "Hardened must not hide minimap cones, patrols, civilians, or objective pulse. Minimap.tsx must not read difficulty to strip Tactical data."
+    why: "TR-tactical-009 — Hardened is extra patrols and confirmation, not fog-of-war."
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: unify_hasLos_cityOcclusion
+    status: active
+    description: "Do not reuse cityOcclusion.ts (visual cutaway) as combat or path LOS. hasLos is walk-grid DDA in pathfind.ts."
+    why: "Ghosting buildings is presentation; fire-lane N must match the sim grid."
+    adr: docs/architecture/adr-0016-tactical-sim-contract.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0016-tactical-sim-contract.md
+
+  - pattern: public_art_assets
+    status: active
+    description: "Do not add public/ art. Audio and beds load via Vite ?url from inspiration/audio/."
+    why: "TR-interface-001 — screens are code-generated chrome plus the mission canvas."
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+
+  - pattern: three_spatial_audio
+    status: active
+    description: "Do not use THREE.Audio, PositionalAudio, AudioListener, PannerNode, or StereoPannerNode."
+    why: "TR-audio-004 — no spatial shooter mix; mixer is GainNodes under master."
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+
+  - pattern: react_activity_for_phase
+    status: active
+    description: "Do not hide App.tsx phases with React 19.2 <Activity>. Route with conditionals so GameCanvas and beds unmount."
+    why: "Keeping the canvas and beds alive across phase hide breaks ADR-0010 init and bed generation tokens."
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+
+  - pattern: mission_bed_keyed_to_district
+    status: active
+    description: "pickMissionBedUrl is unseeded 1-of-3 at bed start. Do not key the city-hum clip to district, contract, hour, weather, or Threat."
+    why: "TR-audio-002 — mission bed owns district lifetime, not a per-district soundtrack."
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+
+  - pattern: sound_ts_typecheck_import_audio
+    status: active
+    description: "src/ui/sound.ts must not typecheck-import game/audio.ts. Lazy import and swallow."
+    why: "TR-audio-003 — UI typecheck must not pull the mixer; late audio must not block play."
+    adr: docs/architecture/adr-0017-one-os-input-audio-mixer.md
+    added: 2026-09-10
+    referenced_by:
+      - docs/architecture/adr-0017-one-os-input-audio-mixer.md
+
+  - pattern: bulk_rate_catchup
+    status: active
+    description: "Do not bulk-apply N hours of World Network effects at an ETA jump. tick and advanceDays must share advanceFlow."
+    why: "TR-world-network-003 — both advancement paths are the same time-ordered catch-up; bulk rates skip per-due RNG and Feed."
+    adr: docs/architecture/adr-0018-catch-up-collision-order.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0018-catch-up-collision-order.md
+
+  - pattern: rearm_from_now
+    status: active
+    description: "Catch-up must rearm process timers from the due timestamp, not from now / catch-up t."
+    why: "Rearming from now after a jump skips intervals that continuous ticking would have fired."
+    adr: docs/architecture/adr-0018-catch-up-collision-order.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0018-catch-up-collision-order.md
+
+  - pattern: export_collision_order_table
+    status: active
+    description: "Keep advanceFlow module-private. Do not export a ProcessKind enum or a public collision-order table for Research or Roster to import."
+    why: "Labs complete in one sync(t); roster dues apply independently. Importing the WN table forks completion rules."
+    adr: docs/architecture/adr-0018-catch-up-collision-order.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0018-catch-up-collision-order.md
+
+  - pattern: third_t_jump_without_advanceFlow
+    status: active
+    description: "Do not add a third caller that jumps worldStore.t without advanceFlow. setReview must not write t."
+    why: "A third jump desyncs Screen tick vs win-ETA and contradicts ADR-0001 / ADR-0014."
+    adr: docs/architecture/adr-0018-catch-up-collision-order.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0018-catch-up-collision-order.md
+
+  - pattern: mathmin_due_without_branch
+    status: active
+    description: "Do not add a seventh due to advanceFlow Math.min without an explicit collision-order branch. Implicit else is Tax."
+    why: "A new kind without a branch is silently treated as Tax yield and reorders catch-up."
+    adr: docs/architecture/adr-0018-catch-up-collision-order.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0018-catch-up-collision-order.md
+
+  - pattern: require_four_filled_bays
+    status: active
+    description: "Do not refuse Deploy because a Squad bay is empty. 1–4 Ready is valid. Empty bays are a command, not a fail."
+    why: "TR-roster-001 — sending fewer than four is command, not a fail."
+    adr: docs/architecture/adr-0019-deploy-gate.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0019-deploy-gate.md
+
+  - pattern: soft_cap_mass
+    status: active
+    description: "Squad mass over MASS_LIMIT_KG (400) refuses Deploy. Equal is allowed. massTier (light/standard/heavy) is not the gate."
+    why: "TR-roster-001 — over refuses and names the overage; tier is a separate speed band."
+    adr: docs/architecture/adr-0019-deploy-gate.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0019-deploy-gate.md
+
+  - pattern: mass_limit_in_world_ts
+    status: active
+    description: "Do not import MASS_LIMIT_KG in world.ts. createWorld uses squadMassKg only for massTier / tierSpeedDelta."
+    why: "Tactical must not re-own the 400 kg refuse. Kilogram functions stay in mass.ts."
+    adr: docs/architecture/adr-0019-deploy-gate.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0019-deploy-gate.md
+
+  - pattern: canDeploy_in_scene
+    status: active
+    description: "canDeploy / deployGate lives in src/game. Do not put it in src/scene. Do not start a mission with raw goto('mission')."
+    why: "A scene helper or unguarded goto skips Roster's four checks."
+    adr: docs/architecture/adr-0019-deploy-gate.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0019-deploy-gate.md
+
+  - pattern: fail_completed_campaign_on_wipe
+    status: active
+    description: "Do not set campaignFailed when the authored spine is already complete. Empty living roster fails incomplete campaigns only."
+    why: "TR-roster-007 / AC 39 — a completed campaign stays complete after a roster wipe."
+    adr: docs/architecture/adr-0020-campaign-fail-flags.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0020-campaign-fail-flags.md
+
+  - pattern: both_won_and_failed
+    status: active
+    description: "campaignWon and campaignFailed cannot both be true. save.ts drop-alls that blob."
+    why: "TR-roster-007 — cannot be both; Persistence persist-do-not-re-own still refuses a lie."
+    adr: docs/architecture/adr-0020-campaign-fail-flags.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0020-campaign-fail-flags.md
+
+  - pattern: rederive_fail_on_hydrate
+    status: active
+    description: "hydrateSave must restore stored campaignWon/campaignFailed. Do not set campaignFailed from operatives.length === 0."
+    why: "Re-deriving fail from empty roster false-fails a completed wipe (AC 39)."
+    adr: docs/architecture/adr-0020-campaign-fail-flags.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0020-campaign-fail-flags.md
+
+  - pattern: generated_wins_mark_complete
+    status: active
+    description: "Only first wins of authored MISSIONS ids join contractsWon for campaignWon. Generated wins do not mark complete."
+    why: "Complete is the authored spine, not the generated market."
+    adr: docs/architecture/adr-0020-campaign-fail-flags.md
+    added: 2026-09-11
+    referenced_by:
+      - docs/architecture/adr-0020-campaign-fail-flags.md
