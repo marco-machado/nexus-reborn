@@ -46,13 +46,25 @@
 
 ## Forbidden Patterns
 
-<!-- Add patterns that should never appear in this project's codebase -->
-- [None configured yet — add as architectural decisions are made]
+<!-- Stamped from ADR-0010, ADR-0016, ADR-0017. Do not invent FPS here. -->
+- Mission canvas: stock r3f `<Canvas>`, drei `Canvas` / `View`, `new THREE.WebGLRenderer()`
+- `renderAsync` / `waitForGPU` / `new PostProcessing` / EffectComposer / `@react-three/postprocessing` / `AnamorphicNode`
+- GLSL `ShaderMaterial` / `onBeforeCompile` on the WebGPU path
+- Per-frame unit poses in React state
+- `THREE.Clock` / `THREE.Timer` as game clocks (do not migrate r3f’s internal `Clock` to silence the r183 warning)
+- Vite alias `three` → `three/webgpu`
+- Extra `useFrame` priority > 0 that calls `render()`, or `gl.render()` beside `pipeline.render()`
+- drei `OrbitControls` / `MapControls` / `CameraControls` / `Html` / `PositionalAudio`
+- Physics addons; `OrthographicCamera` / rotate-tilt camera in play
+- React 19.2 `<Activity>` / `useEffectEvent` to hide phases
+- `THREE.Audio` / `PositionalAudio` / `AudioListener` / `PannerNode` / `StereoPannerNode`
+- `public/` art; spoken VO; spatial shooter mix; payout celebration sting
 
 ## Allowed Libraries / Addons
 
 <!-- Add approved third-party dependencies here -->
-- react, react-dom, three, @react-three/fiber, @react-three/drei, zustand
+- react, react-dom, three (`three/webgpu` in `src/scene/`), @react-three/fiber, zustand
+- @react-three/drei — lockfile only; not a mission-canvas kit. Forbidden exports listed above.
 - (dev) vite, typescript, vitest, eslint
 
 ## Architecture Decisions Log
@@ -66,6 +78,18 @@
 - [ADR-0006](architecture/adr-0006-weather-script.md) — weather script
 - [ADR-0007](architecture/adr-0007-opening-hour.md) — Opening hour
 - [ADR-0008](architecture/adr-0008-influence-is-a-wallet.md) — Influence is a wallet
+- [ADR-0009](architecture/adr-0009-partitioned-deploy-snapshot.md) — partitioned deploy snapshot
+- [ADR-0010](architecture/adr-0010-mission-renderer-and-frame-loop.md) — mission renderer and frame loop
+- [ADR-0011](architecture/adr-0011-campaign-persistence-envelope.md) — campaign persistence envelope
+- [ADR-0012](architecture/adr-0012-store-placement.md) — store placement (Intel, generated contracts)
+- [ADR-0013](architecture/adr-0013-credits-never-overdraw.md) — Credits never overdraw
+- [ADR-0014](architecture/adr-0014-timeline-review-is-a-view.md) — Timeline Review is a view
+- [ADR-0015](architecture/adr-0015-telemetry-never-leaves-the-machine.md) — telemetry never leaves the machine
+- [ADR-0016](architecture/adr-0016-tactical-sim-contract.md) — tactical sim contract
+- [ADR-0017](architecture/adr-0017-one-os-input-audio-mixer.md) — one OS / input / audio mixer
+- [ADR-0018](architecture/adr-0018-catch-up-collision-order.md) — catch-up collision order
+- [ADR-0019](architecture/adr-0019-deploy-gate.md) — deploy gate
+- [ADR-0020](architecture/adr-0020-campaign-fail-flags.md) — campaign fail flags
 
 ## Engine Specialists
 
