@@ -714,6 +714,10 @@ Required objectives are strictly sequential. Optional objectives activate with t
 
 **Loss:** no living operatives remain; a required escort VIP dies; or a required time limit expires.
 
+**Same-step tiebreak:** if the last living operative dies and the final required objective completes in the same simulation step, the required completion wins — the mission is a Win. The deaths still grade KIA at debrief and injuries still apply; the win does not resurrect the squad. A required VIP death or a required time-limit expiry in the same step as the final completion is a Loss; only the wipe-vs-completion collision is tiebroken toward completion.
+
+**Pyrrhic win.** A tiebreak Win that empties the living roster on an **incomplete** campaign still fails the campaign in the same debrief (§4 Campaign: an empty roster fails an incomplete campaign) — this combined beat is a **pyrrhic win**. Every rule that reads `won` reads a Win: full net payout, Intel, Influence, ETA spend, ownership shove, KIA grading. Presentation is authored, not free: the **CAMPAIGN FAILED banner takes precedence** — posted first and visually dominant — and the invoice still prints the full net payout with the explicit note `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`. Hire-after-failed remains Roster Open Question 1 (no recovery path is authored here).
+
 The HUD shows the result immediately. After 2.5 seconds the game enters the debrief, which reports target, eliminations, KIA, new injuries and recovery times, survivor experience, civilian collateral, tactical time elapsed, Reward, optional bonus, Collateral, ETA spent, net payout, and the new balance. A quiet replay still debriefs: the banner is `REPLAY // FEE ALREADY COLLECTED`; currency and sector lines read as not paid; roster and ETA still print.
 
 ---

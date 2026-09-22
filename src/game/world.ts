@@ -1764,15 +1764,21 @@ export function createWorld(
   }
 
   function checkEnd(): void {
-    if (livingAgents().length === 0) {
-      setResultNow('lost')
-      pushLog('SYS', 'SQUAD ELIMINATED. UPLINK LOST.', 'alert')
-      return
-    }
-    if (requiredOrder.length > 0 && reqPtr >= requiredOrder.length) {
+    // Same-step tiebreak (docs/game-design.md §10): if the final required
+    // objective completes in the same simulation step that wipes the squad,
+    // the completion wins and the deaths still grade KIA at the debrief.
+    // A wipe on any earlier step already set the result, so ordering the
+    // required-complete check first only changes the collision case.
+    const requiredDone = requiredOrder.length > 0 && reqPtr >= requiredOrder.length
+    if (requiredDone) {
       setResultNow('won')
       noteTutorial('extract')
       pushLog('SYS', 'MISSION COMPLETE. EXTRACTION CONFIRMED.', 'ok')
+      return
+    }
+    if (livingAgents().length === 0) {
+      setResultNow('lost')
+      pushLog('SYS', 'SQUAD ELIMINATED. UPLINK LOST.', 'alert')
     }
   }
 
