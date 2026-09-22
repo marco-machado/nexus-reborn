@@ -1,27 +1,25 @@
 # Audio
 
-> **Status**: Designed (pending independent `/design-review`)
+> **Status**: Independent review tracked in [review log](reviews/audio-review-log.md); live system status in [systems index](systems-index.md)
 > **Author**: extract from docs/game-design.md §15 (beds/settings §17; out of scope §18; backlog captions §19.6; click-through audio checks)
-> **Last Updated**: 2026-09-08
+> **Last Updated**: 2026-09-16
 > **Implements Pillar**: One corporate operating system; Violence has corporate consequences; Information is operational power
 > **Living spec**: `docs/game-design.md` §15 — this file aliases it; do not fork rules
 > **Runtime / credits**: `inspiration/audio/sfx/README.md` — sources, mastering, overlap caps. Do not copy those integers here.
-> **Specialists (full)**: D2 extract — rules already live in the spec
+> **Specialists (full)**: audio-director, systems-designer, game-designer, qa-lead, ux-designer, ui-programmer, gameplay-programmer, performance-analyst, lead-programmer; senior synthesis: creative-director. Scoring passes and runtime-verification limits are recorded in the review log.
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-09-08
 
 ## Overview
 
-Audio is the terminal’s ear: it confirms orders, marks danger, and prices violence. It does not narrate. Four channels (UI, combat, music, ambience) sit under a master, plus mute. Strategy music owns the four **Screens**; mission ambience (city hum plus weather rain) owns the district. Acknowledgements are a short selection click on the UI bus, not spoken operative dialogue. Weapon reports sit above UI. CorpSec uses quieter, narrower versions of the same firearm recordings. The alert-tension drone is synthesized so it can ramp with mission **Alert** (0–3) and release when the mission ends. Without this system the OS is a silent slideshow, danger has no sting, and violence has no body — a second, cinematic mix would also break **One corporate operating system**.
+Audio is the terminal’s ear: it confirms orders, marks danger, and prices violence. It does not narrate. Four channels (UI, combat, music, ambience) sit under a master, plus mute. Strategy music owns the four **Screens**; mission ambience (city hum plus weather rain) owns the district. Acknowledgements are a short selection click on the UI bus, not spoken operative dialogue. Weapon reports sit above UI in the authored/reference mix; player channel overrides take precedence. CorpSec uses quieter, narrower versions of the same firearm recordings. The alert-tension drone is synthesized so it can ramp with mission **Alert** (0–3) and release when the mission ends. Without this system the OS is a silent slideshow, danger has no sting, and violence has no body — a second, cinematic mix would also break **One corporate operating system**.
 
 Rules stay in `docs/game-design.md` §15. Runtime details, credits, and overlap caps stay in the [audio README](../../inspiration/audio/sfx/README.md). Strategy-bed ownership is defined in [`strategyAudio.ts`](../../src/ui/strategyAudio.ts). This overview does not fork them.
 
 ## Player Fantasy
 
-You sit the desk. The mix is the same corporate OS as the chrome: industrial bed on the four Screens, city hum on the district, rain only when the weather is wet. A click acknowledges a selection. Gunfire is a report, not a trailer. CorpSec is the same weapon, quieter and narrower. Danger is a sting and a tension drone that follows **Alert**, not a VO callout of every contact. Mute and the four channel levels are yours; they survive **New Operation**. The fantasy fails if operatives talk, if gunfire is spatialized like a shooter, if UI clicks sit on top of weapon reports, if rain plays on a dry mission, if Opening hour gets its own bed, if a late-loading click dumps as a delayed burst, or if payout plays a celebration sting.
+You sit the desk. The mix is the same corporate OS as the chrome: industrial bed on the four Screens, city hum on the district, rain only when the weather is wet. A click acknowledges a selection. Gunfire is a report, not a trailer. CorpSec is the same weapon, quieter and narrower. Danger has discrete warning stings and a sustained tension drone that follows **Alert**, not a VO callout of every contact. Master, the four channel levels, and mute are yours; they survive **New Operation**. The fantasy fails if operatives talk, if gunfire is spatialized like a shooter, if the authored/reference mix puts UI clicks on top of weapon reports (deliberate player overrides are not a failure), if rain plays on a dry mission, if Opening hour gets its own bed, if a late-loading click dumps as a delayed burst, or if payout plays a celebration sting.
 
 This serves **One corporate operating system** (one mix, four channels, strategy bed on the four Screens), **Violence has corporate consequences** (audio prices violence; it does not celebrate it), and **Information is operational power** (cues mark danger; they do not narrate the board). Secondary: **Command, do not micromanage** (acknowledgements are a short selection click, not VO banter) and **The two layers feed each other** (strategy bed vs mission bed follow screen ownership). It does not own verb validity (Tactical), Alert derivation (Tactical: living CorpSec in Combat), Weather math (Tactical / ADR-0006), Settings chrome (Interface), or the settings slot (Persistence).
-
-`creative-director` not spawned for Player Fantasy — D2 extract; tone locked by living spec §15 and pillar department tables. Review manually before production.
 
 ## Detailed Design
 
@@ -35,7 +33,7 @@ This serves **One corporate operating system** (one mix, four channels, strategy
 
 | Module | Owns in this system | Does not own |
 |---|---|---|
-| Mixer | Four channels, master, mute; UI below weapon reports; event rate limits and overlap caps; late-load drop; final compressor as a safety net | Settings chrome (Interface); settings slot (Persistence); Alert integer (Tactical) |
+| Mixer | Four channels, master, mute; authored/reference UI below weapon reports; event rate limits and overlap caps; late-load drop; final compressor as a safety net | Settings chrome (Interface); settings slot (Persistence); Alert integer (Tactical) |
 | Voices | Required one-shots; CorpSec quieter/narrower same firearms; synthesized alert-tension drone | What Select/Attack **mean** (Tactical); invoice pricing (Economy) |
 | Strategy bed | One industrial loop on the four Screens (music). Same source while navigating World Network, Research, Brief, Assembly. Stops when leaving that group | Opening hour (Tactical / ADR-0007); Scan vs District (Interface) |
 | Mission bed | City-hum loop (ambience): one of three clips, chosen at random when the bed starts | Contract, district, Opening hour, weather, Threat, Alert as keys — none of these pick the clip |
@@ -54,7 +52,9 @@ This serves **One corporate operating system** (one mix, four channels, strategy
 | Strategy industrial loop | Music |
 | Mission city-hum; light/heavy rain | Ambience |
 
-Acknowledgements are a short selection click on the **UI** bus. The alert sting is a dedicated warning cue on the **combat** bus. UI cues sit below weapon reports.
+Acknowledgements are a short selection click on the **UI** bus. The alert sting is a dedicated event-driven warning cue on the **combat** bus: existing Tactical triggers are first combat contact, an answered officer reinforcement call, and a defend wave (`enterCombat`, officer-call handling, and defend-wave handling in [`world.ts`](../../src/game/world.ts)). The sustained tension drone separately follows HUD **Alert**. Ordinary suspicion alone does not trigger either cue; an answered officer call can cause suspicion and emit its warning sting. Not every Alert rise emits a sting.
+
+UI cues sit below weapon reports in the authored/reference mix described by the audio README. Master scales all four buses; each channel control scales only its own bus; mute silences all buses without discarding chosen levels. Player overrides take precedence over authored hierarchy and warning audibility; no cue bypasses a muted or zero-level bus.
 
 7. **Beds and lifetimes.**
 
@@ -68,7 +68,7 @@ Opening hour does not get its own bed. Menu and Debrief take neither strategy no
 
 8. **Unlock and failure.** Browser audio unlocks on first gesture (Interface Menu fiction). One-shots require a running context. Unavailable audio must not block the game (`ui/sound.ts` loads lazily and swallows failure).
 
-9. **Persistence.** Levels persist with player settings, not the campaign. Mute and the four channel levels survive New Operation. Persistence owns the settings slot; Audio owns mix correctness.
+9. **Persistence.** Levels persist with player settings, not the campaign. Master, the four channel levels, and mute survive reload and New Operation. Persistence owns the settings slot; Audio owns mix correctness.
 
 10. **Determinism.** Mission outcomes are seeded. Gunshot playback-rate variation and mission-bed selection **may be unseeded**; they do not change outcomes (`docs/game-design.md` §17). Do not key the mission bed to contract, district, Opening hour, weather, or Threat to “fix” that.
 
@@ -76,15 +76,13 @@ Opening hour does not get its own bed. Menu and Debrief take neither strategy no
 
 12. **Forbidden.** Spoken VO; spatial audio model (unless §18 is explicitly reopened); forking README overlap caps into this GDD; importing authored base gains or compressor numbers from code; a celebration sting on invoice or quiet replay; Opening hour bed; captions as a ship gate (backlog).
 
-Specialist agents not consulted for Detailed Design — D2 extract. Review manually before production.
-
 ### States and Transitions
 
 | Entity | States | Transitions |
 |---|---|---|
 | Mixer | Unavailable / locked (no gesture) / running | First gesture unlocks. Failure stays unavailable and does not block play |
 | Mute | Off / On | On folds every channel to silence. Off restores the chosen levels |
-| Channel levels | Player-set; persist in settings slot | Independent of campaign blob. New Operation keeps them |
+| Master and channel levels | Player-set; persist in settings slot | Independent of campaign blob. New Operation keeps them |
 | Strategy bed | Stopped / starting / playing | Start on enter four Screens. Same source across Screen nav. Stop on leave. In-flight decode discarded on stop |
 | Mission bed | Stopped / starting / playing (clip A/B/C) | Start on enter mission; pick 1 of 3 unseeded. Stop on leave (Abort, result→Debrief, unmount). In-flight decode discarded on stop |
 | Rain voice | Silent / light / heavy | Follows live weather. None → silent. Adjacent change crossfades. Stop with the mission bed |
@@ -99,14 +97,14 @@ Mix ownership is Audio. Do not live-query the running mission to pick a bed.
 |---|---|---|---|
 | **Interface** | Phase (four Screens vs Menu/Mission/Debrief); first-gesture unlock; Settings slider/mute chrome; UI click / confirm / overlay open-close / authorize | Audible cues on the UI bus; strategy bed lifetime | Interface presents sliders. Audio mixes. No celebration sting on Debrief chrome |
 | **Tactical mission** | Weapon id + side (squad/CorpSec); reload/blast/ability; Alert 0–3; live Weather; objective complete; death; operative hit; interact progress | Combat bus reports; alert sting; tension drone; mission bed + rain | Tactical owns Alert, Weather, verbs. Audio does not derive Alert from chrome |
-| **Persistence** | Settings slot hydrate (levels + mute) | Mix applies staged levels | Persistence stores. Audio does not write the campaign blob |
+| **Persistence** | Settings slot hydrate (master + four channel levels + mute) | Mix applies staged levels | Persistence stores. Audio does not write the campaign blob |
 | **World Network / Economy / Research / Roster** | — | — | No direct mix. Strategy bed is Screen-owned, not sector-owned |
 
-**Sibling conflicts (do not silently resolve):**
+**Ownership boundaries:**
 
-1. **Settings slider numeric scale** (0–100 vs 0–1). Unnamed in §15. Do not import code percents (Open Question 1).
-2. **Overlap / rate-limit integers.** Named in the audio README as runtime. Do not fork them into this GDD as design knobs (Open Question 2).
-3. **Interface “Audio not extracted” footnotes.** Documentation drift after this file exists. Do not edit siblings in this pass.
+1. **Settings representation.** Interface owns slider chrome, Persistence owns stored settings, and the mixer receives normalized factors. These are distinct layers, not competing scales; [ADR-0017](../../docs/architecture/adr-0017-one-os-input-audio-mixer.md#5-mixer) and `settingsStore.ts` own the conversion. Do not promote UI/store integers into GDD tuning rules.
+2. **Overlap / rate-limit integers.** The audio README owns runtime caps and freshness; this is not an unresolved design choice. Do not fork them into this GDD as design knobs.
+3. **Interface dependency.** The current Interface GDD links Audio as mix owner; its former unextracted-Audio notice is no longer a conflict. Sibling files remain outside this changeset.
 4. **Reduced-motion rain.** Interface drops **visual** rain to minimum. Do not invent an Audio mute-rain rule from that sentence.
 
 ## Formulas
@@ -125,7 +123,7 @@ The `staged_gain` formula is defined as:
 | master | master | float | 0–1 | Master stage factor after mute fold |
 | channel | channel | float | 0–1 | One of UI, combat, music, ambience |
 
-**Output Range:** 0 to 1 under normal play; mute is 0 regardless of sliders. Authored per-bus base levels (UI below combat) sit **under** this factor — do not import those bases here.
+**Output Range:** 0 to 1 for the combined player-control factor; mute is 0 regardless of sliders. This is neither final waveform amplitude after authored gains/compression nor a value to assign to every channel node beneath an already-scaled master. The graph applies master/mute once at the master stage and each channel factor once at its bus ([ADR-0017](../../docs/architecture/adr-0017-one-os-input-audio-mixer.md#5-mixer)). Authored per-bus base levels establish the reference hierarchy beneath independent player controls; do not import those bases here.
 **Example:** mute on, master and combat at full → combat output 0. Mute off → chosen master × combat restored (click-through: unmuting restores the chosen levels).
 
 The `rain_voice` formula is defined as:
@@ -172,8 +170,6 @@ The `mission_bed_pick` formula is defined as:
 
 **Constants, not curves:** 20 one-shots; 2 rain loops; 3 mission-bed clips; 4 channels + master + mute; Alert domain 0–3 (Tactical-owned integer).
 
-`systems-designer` not consulted — D2 extract. Review manually before production.
-
 ## Edge Cases
 
 - **If mute is on:** every channel is silent, including beds, rain, drone, and one-shots. Chosen levels are kept. Unmute restores them.
@@ -191,12 +187,10 @@ The `mission_bed_pick` formula is defined as:
 - **If gunshot playback rate varies:** presentation-only; weapon identity and cadence remain. Unseeded. Does not change hit_chance or the sim.
 - **If Debrief or quiet replay shows the invoice:** no celebration sting. Quiet banner copy is Interface; Audio stays paperwork-quiet.
 - **If Abort is armed:** no mission-end sting. Confirm discards the mission; stop the mission bed as on any leave.
-- **If New Operation is confirmed:** campaign erases; mute and channel levels survive (Persistence settings slot).
+- **If New Operation is confirmed:** campaign erases; master, four channel levels, and mute survive (Persistence settings slot).
 - **If reduced motion is on:** Interface drops visual rain to minimum. Audio still follows live weather unless a later living-spec sentence says otherwise — do not invent a link.
 - **If captions backlog is requested as a ship gate:** product backlog (§19.6), not a missing AC.
 - **If spoken VO or spatial audio is proposed:** out of scope unless §18 is explicitly reopened.
-
-`systems-designer` not consulted for Edge Cases — D2 extract. Review manually before production.
 
 ## Dependencies
 
@@ -204,10 +198,10 @@ The `mission_bed_pick` formula is defined as:
 |---|---|---|---|
 | Hard, upstream | Interface | Phase, unlock, Settings chrome, UI events | Four Screens vs Menu/Mission/Debrief; first gesture; slider/mute chrome; UI click/confirm. Interface does not mix |
 | Hard, upstream | Tactical mission | Combat and mission events | Weapon+side, Alert 0–3, live Weather, objective, death, hit, interact, ability, blast, reload. Tactical does not mix |
-| Hard, upstream | Persistence and validation | Settings slot | Hydrate mute + four channel levels. Not the campaign blob |
+| Hard, cycle | Persistence and validation | Settings slot | Hydrate master + four channel levels + mute. Not the campaign blob. Declared cycle (systems-index Circular Dependencies): Persistence stores; Audio owns mix correctness |
 | Soft, none | World Network, Economy, Research, Roster | — | No bed keyed to sector, payout, program, or dossier |
 
-Bidirectional intent: Interface already lists Audio as mix owner (soft, downstream). Tactical already lists mix ownership as Audio. Persistence already lists audio in the settings slot. This file lists Interface and Tactical as hard upstream, Persistence as hard upstream for the slot. Do not edit sibling files in this pass.
+Bidirectional intent: Interface lists Audio as hard downstream (mix). Tactical lists Audio as hard downstream. Persistence ↔ Audio is a declared cycle (`Hard, cycle` both sides, per systems-index Circular Dependencies): Persistence stores the settings slot; Audio owns mix correctness and hydrates from it.
 
 **Not dependencies:** `hit_chance` (Tactical); collateral CR (Economy); Opening hour lighting (Tactical); palette tokens (Interface / engineering contract).
 
@@ -218,7 +212,7 @@ All knobs are owned by `docs/game-design.md` §15, §17, and the audio README fo
 | Knob | Owner | Too high / too low |
 |---|---|---|
 | Four channels + master + mute | §15 | A fifth “gameplay” bus; mute that discards stored levels |
-| UI below weapon reports | §15 | UI clicks masking gunfire; combat so loud the OS vanishes |
+| Authored/reference UI below weapon reports | §15 / audio README | Authored clicks masking gunfire; authored combat overwhelming the OS. Deliberate player channel overrides take precedence |
 | Required voice set | §15 | Missing alert sting or operative-hit; extra VO lines |
 | CorpSec quieter/narrower same firearm | §15 | CorpSec as a different weapon; CorpSec as loud as squad |
 | Strategy bed = four Screens only | §15 / `strategyAudio.ts` | Restart per Screen; bed into Menu/Mission/Debrief |
@@ -241,7 +235,9 @@ This **is** the audio system. Spectacle remains neon + terminal chrome (Interfac
 | Menu / Settings / authorize | UI click / confirm | Interface chrome | High |
 | Gunfire | Weapon-specific report on combat bus; CorpSec quieter/narrower | Tracers / muzzle (Tactical / Interface) | High |
 | Reload / blast / ability | Combat bus; ability is not an order confirm | HUD / VFX | High |
-| Alert / suspicion | Alert sting + tension drone on combat bus | HUD Alert, cones, markers | High |
+| First combat contact / answered officer call / defend wave | Event-driven alert sting on combat bus; Tactical owns triggers (Core Rule 6) | Tactical events / Interface markers and Comm log | High |
+| HUD Alert 0–3 | Sustained tension drone follows Alert on combat bus; not a sting on every change | HUD Alert | High |
+| Ordinary suspicion | No cue triggered by suspicion alone; separate warning events can coincide with it | Cones / suspicion markers | High |
 | Operative hit / death | Thump / thud on combat bus | Red flash / pips | High |
 | Objective complete | UI-bus objective cue | Amber → green | Med |
 | Weather front | Rain crossfade; no new bed | HUD Weather; Comm log | High |
@@ -256,7 +252,7 @@ No spoken operative dialogue. No spatial audio model. No second musical language
 
 ## UI Requirements
 
-Screens and HUD belong to Interface. This GDD only requires that Settings expose master, UI, combat, music, ambience, and mute; that each control affects its channel; that unmuting restores chosen levels; and that those settings survive reload and New Operation. No Audio-owned screen. Captions are backlog, not a Settings row.
+Screens and HUD belong to Interface. This GDD only requires that Settings expose master, UI, combat, music, ambience, and mute; that master affects all four buses and each channel control affects only its own bus; that mute preserves chosen levels and unmuting restores them; and that those settings survive reload and New Operation. No Audio-owned screen. Captions are backlog, not a Settings row.
 
 | Information | Display location | Update | Condition |
 |---|---|---|---|
@@ -269,17 +265,15 @@ Screens and HUD belong to Interface. This GDD only requires that Settings expose
 
 Living spec §15 plus `docs/click-through.md` Audio changes. Criteria are independently verifiable without the rest of this GDD. Open Questions are not ACs. Do not invent product performance budgets. Do not convert §20 playtest tasks into pass/fail gates. Do not re-own Tactical Alert math or Interface layout ACs except where the mix is the observable.
 
-`qa-lead` not consulted — D2 extract. Review manually before production.
-
 ### Mixer and settings
 
-1. **GIVEN** Settings with relevant sounds playing, **WHEN** master, UI, combat, music, ambience, and mute are each exercised, **THEN** each control affects its channel, mute silences all channels, and unmuting restores the chosen levels.
-2. **GIVEN** mute and channel levels changed from defaults, **WHEN** the session reloads, **THEN** those audio settings match. **WHEN** New Operation is confirmed, **THEN** they still match (Persistence settings slot).
+1. **GIVEN** running/unlocked audio and an identifiable source on each bus, **WHEN** master and each channel control are exercised independently in Settings, **THEN** master scales all four buses, each channel control changes only its own bus control factor without changing other stored levels, mute silences all buses while preserving the chosen values, and unmuting restores those values. Deliberately silencing combat while retaining UI is valid; authored hierarchy is not enforced over player overrides.
+2. **GIVEN** recorded nondefault master, four channel levels, and mute in writable Settings storage, **WHEN** the session reloads, **THEN** all recorded audio settings match. **WHEN** New Operation is confirmed and the session reloads again, **THEN** all those settings still match (Persistence settings slot, not campaign).
 3. **GIVEN** audio unavailable, **WHEN** the game is played, **THEN** play is not blocked.
 
 ### Voices and buses
 
-4. **GIVEN** a live mission, **WHEN** selection, UI click, confirmation, interaction progress, objective-complete, reload, blast, ability, alert sting, death, operative hit, and each weapon gunshot (squad and CorpSec) are exercised, **THEN** each required voice exists, weapon identities remain distinct, CorpSec gunfire sits below squad gunfire, interface cues stay below weapon reports, and impacts/warnings remain readable during overlapping fire.
+4. **GIVEN** decoded clips, a running context, mute off, and the existing default player levels over the authored mix (record the settings with the evidence), **WHEN** selection, UI click, confirmation, interaction progress, objective-complete, reload, blast, ability, alert sting, death, operative hit, and each weapon gunshot (squad and CorpSec) are exercised individually and in a recorded overlapping-fire scenario, **THEN** each required voice exists, weapon identities remain distinct, CorpSec versions of matching firearms are quieter/narrower, interface cues stay below weapon reports, and impacts/warnings remain readable. These listening comparisons apply to that reference mix, not deliberate player overrides. Independently exercise first combat contact, an answered officer call, and a defend wave: each requests its warning sting through existing admission rules. Ordinary suspicion without a separate warning event requests no sting and does not independently raise the drone; the drone follows HUD Alert rather than generic suspicion.
 5. **GIVEN** overlapping gunfire, **WHEN** the mix is inspected, **THEN** stacking remains bounded and finished one-shot sources disconnect. Exact cap integers are README runtime, not this AC’s pass numbers.
 
 ### Beds, rain, Alert
@@ -291,8 +285,8 @@ Living spec §15 plus `docs/click-through.md` Audio changes. Criteria are indepe
 
 ### Late load, determinism, out of scope
 
-10. **GIVEN** a cold cache, **WHEN** UI or combat fires before clips are decoded, **THEN** earlier events do not replay as a delayed burst. Console shows no loading/decoding failure that still plays late.
-11. **GIVEN** two deploys of the same seeded contract, **WHEN** mission-bed clip and gunshot playback-rate jitter are compared, **THEN** they may differ, and the sim outcome (hits, weather script, Opening hour) does not.
+10. **GIVEN** a running context, audible test settings and deliberately deferred UI/combat clip decoding, **WHEN** completion is held beyond the runtime-owned freshness window documented in the audio README, **THEN** observing source-start calls shows no playback for those stale events, even a single stale cue. A fresh event after successful decoding and after the existing rate gate clears remains playable. Repeat with decoding rejected: no source starts and play remains usable. Separately defer UI module loading so an originating click is already stale when the module becomes usable; it must not be replayed as a fresh click. Record module-load and clip-decode evidence separately. Retain cold-cache play as smoke coverage and console inspection as diagnostics, not as proof of cue admission/drop. No timeout integers are duplicated here; these are verification requirements, not a claim that the current lazy bridge passes them.
+11. **GIVEN** identical initial mission state and seed, deployment/research snapshots, modifiers/difficulty, district variant, loadout, commands and their timing, and simulation timestep schedule, **WHEN** those inputs are replayed while only presentation-only mission-bed selection and gunshot playback-rate jitter are varied in a controlled fixture, **THEN** hit/outcome state, weather script, and Opening hour match at equivalent simulation points. Presentation choices may differ; two uncontrolled random draws are not required to differ, and two independently played deploys are not equivalent fixtures.
 12. **GIVEN** Debrief (including quiet replay) or Abort-armed pause, **WHEN** the mix is heard, **THEN** there is no celebration sting and no mission-end sting on Abort arm.
 13. **GIVEN** the shipping mix, **WHEN** spoken VO or a spatial-panned shooter model is listened for, **THEN** neither is present.
 
@@ -300,9 +294,6 @@ Living spec §15 plus `docs/click-through.md` Audio changes. Criteria are indepe
 
 ## Open Questions
 
-| # | Question | Owner | Do not |
-|---|---|---|---|
-| 1 | Settings slider numeric scale (percent vs 0–1) | Interface Settings chrome / Persistence slot | Import 0–100 from code into this GDD |
-| 2 | Overlap cap / rate-limit / late-load window integers | audio README runtime | Fork them here as design knobs |
+No unresolved Audio design choice is established by this review. Settings chrome/store representation versus normalized mixer factors is an existing ownership boundary (ADR-0017), not a choice between conflicting scales. Overlap caps, rate limits, and the late-load window remain audio README / implementation facts, not new GDD knobs. Runtime compliance still requires separate execution evidence; document review does not certify it.
 
 Living spec §19 closed questions stay closed. Spoken VO and spatial audio stay out of scope unless reopened. Captions for audio cues stay product backlog (§19.6).

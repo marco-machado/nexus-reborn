@@ -1,15 +1,15 @@
 # Roster and Assembly
 
-> **Status**: In Design
+> **Status**: Approved (2026-09-22 scoring re-review: APPROVED; pass-1 blockers verified resolved)
 > **Author**: extract from docs/game-design.md §8
-> **Last Updated**: 2026-09-10 (ADR-0009 appliedIds on Roster slice)
+> **Last Updated**: 2026-09-22 (pass-2 blockers patched; scoring re-review APPROVED — see reviews/roster-and-assembly-review-log.md)
 > **Implements Pillar**: Command, do not micromanage; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §8 — this file aliases it; do not fork rules
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-09-08
 
 ## Overview
 
-The roster is the house’s living operatives — cap eight, campaign starts full — and **Assembly** is where the director inspects dossiers, assigns **one to four Ready** operatives to Squad bays, wears or pins augmentation bays, fills Item slots, and passes the **deployment mass gate**. Inspection and assignment are separate; at least one operative stays assigned while the player edits. Empty squad bays do not block deploy; every assigned operative must be Ready; a selected contract and mass **over 400 kg** still refuse. A kill is permanent (KIA at debrief). Injury recovery and the candidate market run on **strategic time**; a win’s ETA catch-up can finish recovery in the same debrief ([ADR-0001](../architecture/adr-0001-two-clocks.md)). Quiet replay still applies roster ([ADR-0004](../architecture/adr-0004-quiet-replay.md)). Worn blueprints and experience are sampled at deploy, not mid-mission ([ADR-0005](../architecture/adr-0005-blueprint-assignment.md), [ADR-0002](../architecture/adr-0002-unsaved-mission.md)). Without this system the director has no personnel choice, research has nowhere to land on a later firefight, and a kill is not a campaign cost.
+The roster is the house’s living operatives — cap eight, campaign starts full — and **Assembly** is where the director inspects dossiers, assigns **one to four Ready** operatives to Squad bays, wears or pins augmentation bays, fills Item slots, and passes the **deployment mass gate**. Inspection and assignment are separate; at least one operative stays assigned while the player edits. Empty squad bays do not block deploy; every assigned operative must be Ready; a selected contract and mass **over 400 kg** still refuse. A kill is permanent (KIA at debrief). Injury recovery and the candidate market run on **strategic time**; a win’s ETA catch-up can finish recovery in the same debrief ([ADR-0001](../../docs/architecture/adr-0001-two-clocks.md)). Quiet replay still applies roster ([ADR-0004](../../docs/architecture/adr-0004-quiet-replay.md)). Worn blueprints and experience are sampled at deploy, not mid-mission ([ADR-0005](../../docs/architecture/adr-0005-blueprint-assignment.md), [ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). Without this system the director has no personnel choice, research has nowhere to land on a later firefight, and a kill is not a campaign cost.
 
 Rules and numbers stay in `docs/game-design.md` §8. This overview does not fork them.
 
@@ -33,7 +33,7 @@ This serves **Command, do not micromanage** and **The two layers feed each other
 
 4. **Deploy gate (all required).** (a) a selected contract; (b) at least one assigned operative; (c) every assigned operative **Ready**; (d) squad Deployment mass **not over** the §8 limit (exactly the limit is allowed; over refuses and the button names the overage). Assembly is reachable between contracts; Deploy is refused without a selected contract.
 
-5. **Sample at mission create.** Worn slotted blueprints, unslotted research, Experience, item pools, and mass/speed tier freeze when the mission is created. They cannot change a squad already on the ground ([ADR-0002](../architecture/adr-0002-unsaved-mission.md), [ADR-0005](../architecture/adr-0005-blueprint-assignment.md)). Abort = no debrief = roster unchanged.
+5. **Sample at mission create.** Worn slotted blueprints, unslotted research, Experience, item pools, and mass/speed tier freeze when the mission is created. They cannot change a squad already on the ground ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md), [ADR-0005](../../docs/architecture/adr-0005-blueprint-assignment.md)). Abort = no debrief = roster unchanged.
 
 6. **Cut.** Partitioned deploy snapshot; no live store handles. World Network must not query live Roster or the running mission. Outcome DTO at debrief is the only roster write-back, applied once.
 
@@ -43,21 +43,21 @@ This serves **Command, do not micromanage** and **The two layers feed each other
 
 8. **Injury.** A **living** survivor whose end HP is below the §8 threshold of maximum health returns **Injured**. A dead operative is KIA, not an injury at zero health. Newly injured leave the squad at debrief and cannot be assigned until strategic time finishes recovery. Recovery does not restore the cleared Squad assignment. Duration, bounds, and the injury line (original duration, rounded up to hours — not remaining downtime after ETA) stay in §8. Raven opens Injured on the §8 opening downtime.
 
-9. **Injury vs ETA.** Debrief records injury and clears assignment at strategic `t0`. A **win** (quiet replay included) then spends ETA and catches up recovery at `t1` ([ADR-0001](../architecture/adr-0001-two-clocks.md)). Remaining downtime is `max(0, t0 + D − t1)`. A **loss** spends no ETA.
+9. **Injury vs ETA.** Debrief records injury and clears assignment at strategic `t0`. A **win** (quiet replay included) then spends ETA and catches up recovery at `t1` ([ADR-0001](../../docs/architecture/adr-0001-two-clocks.md)). Remaining downtime is `max(0, t0 + D − t1)`. A **loss** spends no ETA. Every authored contract ETA (48–96 h) is ≥ the maximum D (48 h), so a win's catch-up erases every injury at that debrief — the injury clock bites on losses only (Open Question 8, closed 2026-09-22 at living spec §19 #8).
 
-10. **Experience.** Each survivor is awarded Experience at debrief, including quiet replay ([ADR-0004](../architecture/adr-0004-quiet-replay.md)). Bonuses apply on the **next** deployment, sampled with research. Magnitudes are not authored in §8 — do not fork code constants here. KIA receive none. Abort awards none.
+10. **Experience.** Each survivor is awarded Experience at debrief, including quiet replay ([ADR-0004](../../docs/architecture/adr-0004-quiet-replay.md)). Bonuses apply on the **next** deployment, sampled with research. Per-point magnitudes are living spec §6: **+2 max HP** and **+0.05 m/s**. They enter `H` and sampled speed. Do not copy `XP_HP_PER` / `XP_SPEED_PER`. KIA receive none. Abort awards none.
 
-11. **Hire.** Assembly offers **three** procedural candidates, one new candidate every **24 strategic hours** on the same clock injuries recover on. A candidate has a stable name, face, one of the eight roles, health and speed inside the authored starting-roster ranges (§8), and that role’s primary weapon. They arrive **Ready** on **current issue** in every bay. Cost is the §8 Credits range by quality. Roster owns the market and the body; **Economy owns the Credits refuse**. Hire is also refused on a full roster.
+11. **Hire.** Assembly offers **three** procedural candidates at a time (cap 3; a new campaign starts at 3). One new candidate every **24 strategic hours** on the same clock injuries recover on. Hire removes that offer (count may drop below 3). Post-hire backfill is Open Question 2; a win ETA that spans more than one 24 h interval is Open Question 5 — do not AC either. A candidate has a stable name, a hash figure from id + codename, one of the eight roles, health and speed inside the authored starting-roster ranges (§8), and that role’s primary weapon. They arrive **Ready** on **current issue** in every bay, with the §8 sidearm (S-18 Pistol, 1.2 kg) and empty Item slots, so `operative_mass` is computable for a hire from authored values alone. Cost is the §8 Credits range by quality. Roster owns the market and the body; **Economy owns the Credits refuse**. Hire is also refused on a full roster.
 
 #### Roster
 
 12. **Living eight.** Cap eight; the campaign starts full. The eight are a **starting roster, not a protected cast**. Living conditions are **Ready** or **Injured** only. The dead are gone.
 
-13. **Wear / pin** ([ADR-0005](../architecture/adr-0005-blueprint-assignment.md)). Research owns the program, home bay, and current-issue identity. Assembly wears and pins. Four augmentation bays. A bay wears at most one completed slotted project that belongs to it. Blueprints, not instances. Unpinned bays, including new hires, wear current issue. A pin holds stock issue or an older completed project. A new completion updates unpinned bays only. Prerequisites gate research, not wear.
+13. **Wear / pin** ([ADR-0005](../../docs/architecture/adr-0005-blueprint-assignment.md)). Research owns the program, home bay, and current-issue identity. Assembly wears and pins. Four augmentation bays. A bay wears at most one completed slotted project that belongs to it. Blueprints, not instances. Unpinned bays, including new hires, wear current issue. A pin holds stock issue or an older completed project. A new completion updates unpinned bays only. Prerequisites gate research, not wear.
 
-14. **Campaign fail.** An empty Roster fails an **incomplete** campaign. World Network posts the failure banner and locks contracts. A **completed** campaign stays complete after a roster wipe; it is not also marked failed.
+14. **Campaign fail.** An empty Roster fails an **incomplete** campaign — including when the emptying event is a same-step tiebreak **Win** (pyrrhic win, living spec §10): the mission grades a Win and the campaign still fails. World Network posts the failure banner (it takes precedence over the win invoice) and locks contracts. A **completed** campaign stays complete after a roster wipe; it is not also marked failed.
 
-15. **Clock and save.** Strategic time runs on Assembly. Injury recovery and the candidate market catch up after a Screen tick or a **win** ETA jump. Persistence saves the roster blob. Mission and debrief are not saved.
+15. **Clock and save.** Strategic time runs on Assembly. Injury recovery and the candidate market catch up after a Screen tick or a **win** ETA jump. Persistence saves the roster blob, including Item slots (Open Question 3 narrows to slots across missions and Assembly visits). Mission and debrief are not saved.
 
 #### Roles
 
@@ -108,7 +108,7 @@ This serves **Command, do not micromanage** and **The two layers feed each other
 | Candidate market | 0–3 offers | One new every 24 strategic hours on the injury clock. Hire removes that offer. Post-hire backfill is an Open Question |
 | Deploy gate | blocked / clear | Clear iff selected contract ∧ ≥1 assigned ∧ all assigned Ready ∧ mass not over §8 limit |
 | Campaign | live / complete / failed-empty-roster | Complete = all three authored won. Failed = living roster empty **and** not already complete. Cannot be both. Hire-on-failed is an Open Question |
-| Mission coupling | Strategy / Deployed / Debrief apply-once / Abort discarded | Deploy copies Roster slice; field does not tick injuries or the market; abort writes nothing |
+| Mission coupling | Strategy / Deployed / Debrief apply-once / Abort discarded | Deploy copies Roster slice; field does not tick injuries or the market; abort writes nothing (free of roster consequence — accepted at living spec §19 #8; Open Question 6 closed 2026-09-22) |
 
 **Debrief clock order:** (1) **t0** apply Roster from outcome DTO once — KIA, new injuries + bay clear, survivor Experience, kia names out, campaign flags. (2) If **win** (including quiet replay): ETA → **t1**; `sync(t1)` catches recovery and candidate refresh. (3) **Loss:** stop after t0. (4) **Abort:** skip 1–3.
 
@@ -123,17 +123,17 @@ This serves **Command, do not micromanage** and **The two layers feed each other
 | **Interface** | Assign / inspect / pin / item slots / hire / deploy | Dossier, bays, mass/tier, gate reason, market, debrief roster lines | Presentation only |
 | **Persistence** | — | Living roster, pins, Experience, injuries, candidates, campaign flags | Strategy autosave. Mission + debrief not saved |
 
-**Deploy snapshot — Roster slice (frozen):** assigned ids (1–4); **resolved wear** per assigned operative (at most one slotted project per bay); per-assigned ordered **`appliedIds`** (`appliedNodeIds` at freeze, `done` order); loadout (two Item slots of the assigned); mass (squad kg + tier); sampled HP/speed (body + unslotted + worn slotted + Experience; squad-wide mass-tier speed applied here). Do not pass live store handles. Do not put worn ids on the Research slice. Tactical copies `appliedIds` and sampled HP/speed; it does not union or re-run `appliedNodeIds` ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)).
+**Deploy snapshot — Roster slice (frozen):** assigned ids (1–4); **resolved wear** per assigned operative (at most one slotted project per bay); per-assigned ordered **`appliedIds`** (`appliedNodeIds` at freeze, `done` order); loadout (two Item slots of the assigned); mass (squad kg + tier); sampled HP/speed (body + unslotted + worn slotted + Experience; squad-wide mass-tier speed applied here). Do not pass live store handles. Do not put worn ids on the Research slice. Tactical copies `appliedIds` and sampled HP/speed; it does not union or re-run `appliedNodeIds` ([ADR-0009](../../docs/architecture/adr-0009-partitioned-deploy-snapshot.md)).
 
 **Outcome DTO — Roster fields (apply once):** `deadIds`; `survivorHp` (end fraction, survivors only); kia names (resolved at t0); new injuries (id, original D). Abort is **absence of an outcome**. Economy does not read these fields. World Network reads **kia names** only.
 
-Provisional: Research GDD is Overview-only. Persistence / Tactical / Interface GDDs are not extracted.
+Research, Tactical, Persistence, and Interface GDDs exist (`research.md`, `tactical-mission.md`, `persistence-and-validation.md`, `interface.md`). Edges above vs those files + living spec + World Network / Economy GDDs. Research is Approved (2026-09-22 scored pass).
 
 ## Formulas
 
 Do not fork. Canonical expressions and worked examples: `docs/game-design.md` §8.
 
-Roster owns six live formulas: `injuryRecoverySec`, `operative_mass`, `squad_mass`, `mass_gate`, `mass_tier`, `remaining_downtime`. Hire cost is a **range constant**, not a formula. Experience award is a **named rule** without §8 magnitudes. `net_payout` and the Credits refuse are Economy.
+Roster owns six live formulas: `injuryRecoverySec`, `operative_mass`, `squad_mass`, `mass_gate`, `mass_tier`, `remaining_downtime`. Hire cost is a **range constant**, not a formula. Experience award is a **named rule**; per-point magnitudes live in §6 (not §8). `net_payout` and the Credits refuse are Economy.
 
 The `injuryRecoverySec` formula is defined as:
 
@@ -245,12 +245,12 @@ Debrief records injury and clears assignment at strategic `t0`, with recovery `t
 | post-ETA time | t1 | int | strategic seconds after win ETA | Catch-up instant; win only |
 | remaining downtime | remaining_downtime | int | ≥ 0 | Strategic seconds still Injured after catch-up |
 
-**Output Range:** ≥ 0. If `t1 ≥ t0 + D`, remaining is 0 (a win, including quiet replay, can finish recovery in the same debrief). Recovery does not restore the cleared Squad assignment. Loss: no `t1` jump at debrief.  
+**Output Range:** ≥ 0. If `t1 ≥ t0 + D`, remaining is 0 (a win, including quiet replay, can finish recovery in the same debrief). Recovery does not restore the cleared Squad assignment. Loss: no `t1` jump at debrief. Authored ETAs (48–96 h) are all ≥ max D, so a win erases any injury at that debrief (Open Question 8, closed 2026-09-22 at living spec §19 #8).  
 **Example:** Remaining can hit 0 on the same win debrief; the injury line still prints original D rounded up to hours.
 
 **Hire — range constant, not a formula.** Cost is **16,000–34,000 CR** by quality (§8). Roster owns the range and the body; Economy owns the Credits refuse (overdraw) and does not own a second hire curve here. Full roster also refuses. Do not import the quality curve from `recruits.ts`.
 
-**Experience award — named rule, not a magnitude formula.** Each survivor is awarded one Experience point at debrief (CONTEXT **Experience**), including quiet replay. KIA receive none. Abort awards none. Points apply on the **next** deployment, sampled with research. HP and speed **per point** are not authored in §8 — do not copy `XP_HP_PER` or `XP_SPEED_PER`.
+**Experience award — named rule; magnitudes in §6.** Each survivor is awarded one Experience point at debrief (CONTEXT **Experience**), including quiet replay. KIA receive none. Abort awards none. Points apply on the **next** deployment, sampled with research. Per-point magnitudes are living spec §6: **+2 max HP** and **+0.05 m/s**. They enter `H` in `operative_mass` and sampled speed on the Roster slice. Do not copy `XP_HP_PER` or `XP_SPEED_PER`.
 
 **Not owned:** `net_payout` / Credits ledger / overdraft refuse (Economy); `tax_yield` (World Network); current-issue identity (Research); authored chance / Risk index (Tactical / Brief).
 
@@ -274,7 +274,7 @@ Debrief records injury and clears assignment at strategic `t0`, with recovery `t
 - **If the last assigned is newly Injured**: bay cleared; recovery does not restore it.
 - **If a win’s ETA finishes recovery in the same debrief** (`t1 ≥ t0 + D`, including quiet replay): remaining `0`; Ready; assignment stays empty; injury line still prints original `D` in hours.
 - **If Loss**: KIA/injury/XP at `t0`; no `t1` jump.
-- **If Abort**: no debrief; roster writes nothing.
+- **If Abort**: no debrief; roster writes nothing. Abort costs nothing roster-side; scout-and-abort strictly dominates taking a loss — accepted consequence of the unsaved-mission cut (living spec §19 #8; Open Question 6 closed 2026-09-22).
 - **If quiet replay**: still KIA / injury / Experience; win still spends ETA.
 - **If Credits equal hire cost and roster is not full**: hire succeeds; Credits → 0.
 - **If Credits are 1 below hire cost**: Economy refuse; roster unchanged.
@@ -289,13 +289,13 @@ Debrief records injury and clears assignment at strategic `t0`, with recovery `t
 - **If a hire duplicates a living role**: not forbidden.
 - **If living Roster reaches 0 and campaign is incomplete**: campaign fails; World Network banner and contract lock.
 - **If living Roster reaches 0 after campaign complete**: stays complete; not also failed.
-- **If always deploying 1 Ready**: legal. Light-tier cheese is allowed. If that body is still >400 kg, refuse as usual.
+- **If always deploying 1 Ready**: legal. If that body is still >400 kg, refuse as usual. No owned rule currently makes 3–4 bodies the better command — see Open Question 7.
 - **If never hiring**: legal. Empty incomplete Roster still fails.
 - **If wiping the Roster after campaign complete**: complete stays complete.
 - **If wear/pins/items/assignment/Experience change after mission create**: ignored for that squad.
 - **If World Network would query live Roster or the running mission**: forbidden.
 
-Open Questions (no outcome in this section): hire-on-failed-campaign; post-hire market backfill; Item-slot persistence across Assembly visits; hire quality curve; win ETA spanning more than one 24 h candidate interval.
+Open Questions (no outcome in this section): hire-on-failed-campaign; post-hire market backfill; Item-slot persistence across Assembly visits; hire quality curve; win ETA spanning more than one 24 h candidate interval. Closed 2026-09-22 at §19 #8–9: abort counterweight, squad-size coupling, injury vs ETA floor, uncapped Experience / gate anti-synergy / personnel sink.
 
 ## Dependencies
 
@@ -303,19 +303,19 @@ Open Questions (no outcome in this section): hire-on-failed-campaign; post-hire 
 |---|---|---|---|
 | Hard, upstream | World Network | Strategic `t` after Screen tick or win ETA; Feed banners | Roster emits **kia names** on the outcome DTO. Squad is not World Network state. World Network must not live-query Roster. Campaign fail/complete flags for banners |
 | Hard, upstream | Economy and contracts | Credits refuse on hire | Roster owns bodies and the 16,000–34,000 CR range. Economy owns the ledger debit/refuse. Exact-balance spend is Economy. Abort: both write nothing |
-| Hard, upstream | Research | Program, home bay, current-issue identity | Roster owns pins/wear/bodies. Death drops assignment, not the program. New hires unpinned. Research deploy slice is the **unslotted set only**; resolved wear and ordered `appliedIds` live on the Roster slice ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)) |
+| Hard, upstream | Research | Program, home bay, current-issue identity | Roster owns pins/wear/bodies. Death drops assignment, not the program. New hires unpinned. Research deploy slice is the **unslotted set only**; resolved wear and ordered `appliedIds` live on the Roster slice ([ADR-0009](../../docs/architecture/adr-0009-partitioned-deploy-snapshot.md)) |
 | Hard, downstream | Tactical mission | Roster slice at deploy; outcome DTO at debrief | Neither live-queries the other. Tactical executes role actives and item use; this system owns the kit and frozen pools |
-| Hard, downstream | Persistence and validation | Strategy autosave of the roster blob | Living roster, pins, Experience, injuries, candidates, campaign flags. Mission and debrief not saved ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)) |
-| Soft, downstream | Interface | Presentation | Dossier, Squad bays, mass/tier, gate reason, candidate market, debrief roster lines |
+| Hard, downstream | Persistence and validation | Strategy autosave of the roster blob | Living roster, pins, Experience, injuries, candidates, campaign flags, Item slots. Mission and debrief not saved ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)) |
+| Hard, downstream | Interface | Presentation | Dossier, Squad bays, mass/tier, gate reason, candidate market, debrief roster lines |
 | — | Audio | None | Screen beds belong to Interface |
 
 **Not dependencies:** authored chance / Risk index (Tactical/Brief); Tax yield (World Network → Economy); `net_payout` (Economy).
 
-Tactical / Persistence / Interface template GDDs are not extracted yet. Interfaces above are vs the living spec and are provisional until those files exist.
+World Network, Economy, Research, Tactical, Persistence, and Interface GDDs exist and list Roster. Bidirectional on those six. Audio is not a rule dependency.
 
 ## Tuning Knobs
 
-All knobs are owned by `docs/game-design.md` §8. This GDD does not add ranges. Changing a knob requires checking the living spec, not this pointer. Do not add HP/speed-per-Experience or a hire quality curve.
+All knobs are owned by `docs/game-design.md` §8. This GDD does not add ranges. Changing a knob requires checking the living spec, not this pointer. Do not add a hire quality curve. Experience per-point magnitudes are §6, not extra knobs here.
 
 | Knob | Owner | Too high / too low |
 |---|---|---|
@@ -328,7 +328,7 @@ All knobs are owned by `docs/game-design.md` §8. This GDD does not add ranges. 
 | Mass gate 400 kg | §8 | Gate below default four (286.1) blocks the opening squad; gate never binding makes mass flavor |
 | Mass tier 340 / 380 / ±0.15 m/s | §8 | If light/heavy never fire, the readout is copy. Per-operative speed would punish heavy roles twice |
 | Item slot masses 8 / 6 kg; m+c ≤ 2 | §8 | Slot mass 0 makes extra kits free; huge slot mass makes filling a trap vs the 400 kg gate |
-| Experience: 1 point per survivor | CONTEXT / §8 award rule | Magnitudes per point are **not** a knob in this GDD |
+| Experience: 1 point per survivor | CONTEXT / §8 award; §6 magnitudes | Magnitudes +2 HP / +0.05 m/s are living spec §6 — do not fork code identifiers |
 | Role active CDs / effects | §8 tables | A role that does not change a tactical decision is unfinished — retune in §8, do not fork rows here |
 
 **Interacts:** mass gate × HP plating × Experience × Item slots (all feed `operative_mass`). Injury D × win ETA (`remaining_downtime`). Hire range × Economy Credits. Candidate cadence × same clock as injury.
@@ -379,13 +379,13 @@ No spoken VO, banter, or spatial model. Acknowledgements = short **UI click** on
 
 Assembly is one of the four Screens. Shared header: title, Credits, Influence, Intel, Roster, strategic clock. Nav among World Network, Research, Brief, Assembly. Brief unlocks when a contract is selected. Accepting a contract goes straight to Assembly; Assembly remains reachable between contracts; Deploy is refused without a selected contract.
 
-Must support: inspect a dossier (paperwork fields — codename, civilian name as an identity line, role, Ready|Injured, HP/speed/weapons, specialty as one operational line, four augmentation bays, Experience as numeric deltas — not a character sheet); assign 1–4 Ready to Squad bays (inspect does not assign; cannot empty the last assigned while editing); wear/pin four augmentation bays (current issue vs pin vs stock issue readable); two Item slots; Deployment mass readout + active mass tier (light / standard / heavy); Deploy gate with overage named when mass refuses; candidate market of 3; hire authorize disabled on overdraw or a full roster (Economy owns the Credits refuse). Injured is readable including a non-color cue. An empty Squad bay is not a fail state.
+Must support: inspect a dossier (paperwork fields — codename, civilian name as an identity line, role, Ready|Injured, HP/speed/weapons, specialty as one operational line, four augmentation bays, Experience as numeric deltas — not a character sheet); assign 1–4 Ready to Squad bays (inspect does not assign; cannot empty the last assigned while editing); wear/pin four augmentation bays (current issue vs pin vs stock issue readable); two Item slots; Deployment mass readout + active mass tier (light / standard / heavy); Deploy gate with overage named when mass refuses; candidate market (cap 3; a new campaign starts at 3); hire authorize disabled on overdraw or a full roster (Economy owns the Credits refuse). Injured is readable including a non-color cue. An empty Squad bay is not a fail state.
 
 1280×720 without clipping or truncation. Keyboard+mouse. Pause, operative slots, and mouse are reserved from remap. Screens and HUD belong to Interface. This GDD only requires that Ready|Injured, Deployment mass and mass tier, Deploy gate reason, wear/pin, hire cost vs Credits, and empty-bay-as-command are visible and actionable (pillar 2 veto: undecorated numbers).
 
 ## Acceptance Criteria
 
-Living spec §20 Squad plus this GDD. No invented product performance budgets. Open Questions are not ACs.
+Living spec §20 Squad plus this GDD. No invented product performance budgets. Open Questions are not ACs. Numbering note: the sequence skips 50. ACs 44 and 49 were restored by the 2026-09-22 review pass for previously uncovered rules (Experience into H/sampled speed; filled Item slots into mission pools). No other rule in this GDD lacks mapped coverage.
 
 1. **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 1 assigned Ready operative (other Squad bays empty), **WHEN** Deploy is requested, **THEN** Deploy is allowed.
 2. **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 2 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed.
@@ -396,7 +396,7 @@ Living spec §20 Squad plus this GDD. No invented product performance budgets. O
 7. **GIVEN** all 4 Squad bays empty after KIA or new injury and at least 1 Ready still on Roster, **WHEN** Assembly is opened, **THEN** all 4 bays stay empty (no auto-assign).
 8. **GIVEN** Assembly is reachable with no selected contract, **WHEN** Deploy is requested, **THEN** Deploy is refused.
 9. **GIVEN** a selected contract and 0 assigned operatives, **WHEN** Deploy is requested, **THEN** Deploy is refused.
-10. **GIVEN** a selected contract and at least one assigned Injured operative, **WHEN** Deploy is requested, **THEN** Deploy is refused.
+10. **GIVEN** a selected contract and an assignment set containing an Injured operative — reachable only by direct state construction or save drift, since Injured cannot be assigned through Assembly — **WHEN** Deploy is requested, **THEN** Deploy is refused (defensive invariant).
 11. **GIVEN** a mission already created (wear, unslotted research, Experience, item pools, mass, and mass tier sampled), **WHEN** wear, pins, items, assignment, or Experience later change on campaign, **THEN** the on-ground squad keeps the sampled freeze.
 12. **GIVEN** a mission in progress and living roster R, **WHEN** Abort is confirmed, **THEN** there is no debrief and roster state is still R.
 13. **GIVEN** a debrief that already applied the outcome DTO once, **WHEN** the same outcome is applied again, **THEN** those roster writes occur only once.
@@ -413,13 +413,13 @@ Living spec §20 Squad plus this GDD. No invented product performance budgets. O
 24. **GIVEN** a loss debrief that recorded injury at `t0` with duration D, **WHEN** that debrief finishes, **THEN** no ETA `t1` jump runs and remaining downtime is still D.
 25. **GIVEN** S living survivors and K KIA at debrief, **WHEN** the outcome is applied once, **THEN** each survivor’s Experience increases by exactly 1 and each KIA is awarded 0.
 26. **GIVEN** Experience awarded at debrief, **WHEN** the next mission is created, **THEN** that Experience is sampled into that deploy; later awards do not change an on-ground squad.
-27. **GIVEN** Assembly, **WHEN** the candidate market is read, **THEN** there are exactly 3 candidates, each with a stable name, a face, one of the 8 roles, that role’s primary weapon, Ready, and current issue in every bay.
+27. **GIVEN** a new campaign with no hires, **WHEN** the candidate market is read, **THEN** offer count is 3; each candidate has a name that matches after save/reload, a hash figure derived from id + codename, one of the 8 roles, that role’s primary weapon, Ready, current issue in all 4 bays, and HP/speed inside §8 starting-roster ranges. Post-hire count is Open Question 2 — do not assert 3 after a hire.
 28. **GIVEN** the market already has 3 offers, **WHEN** 24 strategic hours elapse with no hire, **THEN** offer count stays 3.
 29. **GIVEN** a candidate, **WHEN** hire cost is read, **THEN** it is in 16000–34000 CR inclusive.
 30. **GIVEN** living roster count = 8, **WHEN** hire is authorized, **THEN** hire is refused, living count stays 8, and Credits are unchanged.
 31. **GIVEN** Credits below that candidate’s hire cost, **WHEN** hire is authorized, **THEN** the living roster is unchanged.
 32. **GIVEN** living count ≤ 7 and hire succeeds, **WHEN** the new body is read, **THEN** living count increased by 1, the hire is Ready, and all 4 bays are unpinned wearing current issue.
-33. **GIVEN** a candidate whose role already exists on a living operative, **WHEN** hire succeeds, **THEN** the hire is allowed.
+33. **GIVEN** a non-failed campaign with 7 living operatives including an Assault, an offered Assault candidate whose id is distinct from every living operative, and Credits at least equal to that candidate’s hire cost, **WHEN** hire is authorized, **THEN** living count is 8, both Assault ids are present on the Roster, and the hired candidate’s id is absent from the offers. Post-hire offer count and backfill remain Open Question 2.
 34. **GIVEN** a new campaign, **WHEN** the living roster is read, **THEN** living count = 8, each operative is Ready or Injured only, Raven is Injured, and the other 7 are Ready.
 35. **GIVEN** any operative, **WHEN** augmentation bays are listed, **THEN** there are 4 bays and each bay wears at most 1 completed slotted project that belongs to that bay.
 36. **GIVEN** unpinned bays (including a new hire), **WHEN** wear is resolved, **THEN** each unpinned bay wears current issue.
@@ -427,17 +427,16 @@ Living spec §20 Squad plus this GDD. No invented product performance budgets. O
 38. **GIVEN** campaign is not complete and living roster count reaches 0, **WHEN** campaign flags are read, **THEN** the campaign is failed-empty-roster, it is not also complete, and contracts are locked.
 39. **GIVEN** campaign already complete, **WHEN** living roster count reaches 0, **THEN** campaign stays complete and is not marked failed.
 40. **GIVEN** Injured with `recoverAtT = T`, **WHEN** a strategy Screen tick (including Assembly) reaches `t ≥ T`, **THEN** the operative is Ready and the cleared Squad bay stays empty.
-41. **GIVEN** living roster, pins, Experience, injuries, candidates, and campaign flags, **WHEN** strategy save and reload, **THEN** those values match the pre-save roster blob and running mission/debrief are not restored.
+41. **GIVEN** living roster, pins, Experience, injuries, candidates, Item slots, and campaign flags, **WHEN** strategy save and reload, **THEN** those values match the pre-save roster blob and running mission/debrief are not restored.
 42. **GIVEN** each of the 8 roles, **WHEN** that role’s kit is read, **THEN** it has exactly 1 active and 1 passive. Do not assert §8 effect rows here.
-43. **GIVEN** a current selection of living operatives, **WHEN** Q is pressed, **THEN** the actives of the current selection fire.
-44. **GIVEN** a targeted active and no valid target, **WHEN** Q is pressed, **THEN** the comm log reports it and that active’s cooldown does not start.
-45. **GIVEN** med-kit and power-cell pools sampled at mission create, **WHEN** the mission runs, **THEN** uses spend those sampled pools.
+43. **GIVEN** assigned operatives supplied through the established deployment inputs, **WHEN** each operative’s kit is resolved from its operative definition’s role, **THEN** it resolves to that role’s canonical 1 active and 1 passive (§8). This does not require active/passive identifier fields on the Roster slice. Q keypress execution is Tactical — do not AC it here.
+44. **GIVEN** an operative with deployment max HP `H0` and 1 Experience awarded at the prior debrief, **WHEN** the next mission is created, **THEN** `operative_mass` computes the plating term from `H0 + 2` and the sampled speed includes +0.05 m/s (magnitudes per living spec §6 — not restated here).
+45. **GIVEN** mission created with sampled med-kit pool M and power-cell pool C, **WHEN** Assembly item slots later change, **THEN** snapshot pools remain M and C.
 46. **GIVEN** base and role-granted mission pools, **WHEN** `operative_mass` is computed, **THEN** those pools add 0 kg.
 47. **GIVEN** explicit Item slots with m med kits and c power cells and `m + c ≤ 2`, **WHEN** `operative_mass` is computed, **THEN** slot mass = `8m + 6c` kg.
-48. **GIVEN** `m + c = 2`, **WHEN** slots are filled, **THEN** the fill is legal.
-49. **GIVEN** empty or invalid med-kit or power-cell use, **WHEN** use is requested, **THEN** the comm log reports it and both pools are unchanged.
-50. **GIVEN** a sampled power-cell pool of P, **WHEN** a grenade is armed, **THEN** that same pool becomes P − 1.
-51. **GIVEN** `squad_mass = 400` kg, a selected contract, and ≥1 assigned Ready, **WHEN** Deploy is requested, **THEN** Deploy is allowed and `mass_tier_delta = −0.15` m/s.
+48. **GIVEN** `m + c = 2`, **WHEN** slots are filled, **THEN** both slots stay occupied and neither fill is refused.
+49. **GIVEN** an assigned operative with one med kit and one power cell in Item slots, **WHEN** the mission is created, **THEN** the sampled mission pools are base + role grants + 1 med kit + 1 power cell from those slots.
+51. **GIVEN** `squad_mass = 400` kg, a selected contract, and 1–4 distinct assigned operatives who are all Ready, **WHEN** Deploy is requested, **THEN** Deploy is allowed and `mass_tier_delta = −0.15` m/s.
 52. **GIVEN** `squad_mass = 400.1` kg, **WHEN** Deploy is requested, **THEN** Deploy is refused and the button names the overage (0.1 kg).
 53. **GIVEN** `squad_mass = 340` kg, **WHEN** mass tier is sampled at deploy, **THEN** `mass_tier_delta = +0.15` m/s for the whole squad and Deploy is allowed (other gates passing).
 54. **GIVEN** `squad_mass = 340.1` kg, **WHEN** mass tier is sampled, **THEN** delta is 0 m/s and Deploy is allowed (other gates passing).
@@ -463,10 +462,10 @@ Living spec §20 Squad plus this GDD. No invented product performance budgets. O
 74. **GIVEN** a quiet-replay win with `deadIds`, living `f` in (0, 0.35), and survivors, **WHEN** debrief applies, **THEN** KIA, injury (bay clear + D), Experience +1 per survivor, and ETA `t1` catch-up all still apply.
 75. **GIVEN** Assembly editing, **WHEN** assign would exceed 4, assign the same operative twice, assign Injured, or assign KIA, **THEN** that assign is refused.
 76. **GIVEN** one operative id listed as both dead and injured on an outcome, **WHEN** debrief applies, **THEN** that id is KIA only.
-77. **GIVEN** the director never hires, **WHEN** the campaign is played, **THEN** play remains legal; an empty incomplete living roster still fails per AC 38.
-78. **GIVEN** an injury `recoverAtT` and a candidate due sharing the same strategic timestamp, **WHEN** `sync(t)` reaches that instant, **THEN** each due applies independently.
+77. **GIVEN** the director never hires and living roster count reaches 0 on an incomplete campaign, **WHEN** campaign flags are read, **THEN** the campaign is failed-empty-roster and is not also complete.
+78. **GIVEN** Injured with `recoverAtT = T` and a candidate due at T with market count N just before that sync, **WHEN** `sync(T)`, **THEN** the operative is Ready and market count is `min(3, N + 1)`. Both dues complete in that sync; apply order is unspecified.
 
-Not ACed here: Open Questions; HP/speed per Experience point; product performance budgets; §8 role effect/duration/range/CD rows (Tactical fixtures); Feed copy (World Network).
+Not ACed here: Open Questions 1–5; product performance budgets; §8 role effect/duration/range/CD rows; Q execution, targeted-active miss, empty/invalid item use, grenade cell spend (Tactical); Feed copy (World Network).
 
 ## Open Questions
 
@@ -479,6 +478,11 @@ Do not lock these from code. Alias §8 until a later stub decision.
 | 3 | Item-slot persistence across Assembly visits (and across missions) | Roster + Interface | `/ux-design assembly`; freeze at deploy is already locked |
 | 4 | Hire quality curve inside 16,000–34,000 CR (`hireCost` / 500 CR grid) | Roster + Economy | Do not extract `recruits.ts` unless living spec authors it |
 | 5 | Win ETA spanning more than one 24 h candidate interval: one offer vs one-per-interval, still cap 3 | Roster + World Network (clock) | Same catch-up protocol as ADR-0001; do not invent a bulk table here |
-| 6 | Experience HP/speed per point are not authored in §8 (`XP_HP_PER` / `XP_SPEED_PER` live in code) | Roster | Leave unauthored here; do not fork code constants |
+| 6 | ~~Abort counterweight~~ **Closed 2026-09-22** — no counterweight will be authored. Abort, quit-to-desktop, and reload all escape every ledger; that is one accepted consequence of the unsaved-mission cut (living spec §19 #8, [ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). Attrition bites only on honest losses | — | §19 #8 |
+| 7 | ~~Squad-size coupling~~ **Closed 2026-09-22** — squad size is a player choice; contracts do not scale with it. Solo deployment is legal Command play, not an exploit; roster/hire/injury/wear serve players who choose larger squads (living spec §19 #9) | — | §19 #9 |
+| 8 | ~~Injury vs ETA floor~~ **Closed 2026-09-22** — win-erases-wounds stands as intended mercy; every authored ETA is at least the longest recovery and no floor is authored (living spec §19 #8) | — | §19 #8 |
+| 9 | ~~Uncapped Experience / gate anti-synergy / personnel sink~~ **Closed 2026-09-22** — Experience stays uncapped and untaxed; the 400 kg gate is its slow brake (~57 wins from 286.1 kg). Veteran drift into the gate is a feature, not an accident; hire exists for recovery after KIA, and post-cap Credits are inert score (living spec §19 #8, #10) | — | §19 #8, #10 |
 
-Research deploy slice = unslotted set; resolved wear and `appliedIds` live on the Roster slice ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). World Network Interactions still list `deadIds` / `survivorHp`; this GDD emits **kia names** only — reconcile on `/consistency-check`.
+Closed: Experience per-point magnitudes are living spec §6 (+2 max HP, +0.05 m/s). This GDD does not fork `XP_HP_PER` / `XP_SPEED_PER`.
+
+Research deploy slice = unslotted set; resolved wear and `appliedIds` live on the Roster slice ([ADR-0009](../../docs/architecture/adr-0009-partitioned-deploy-snapshot.md)). World Network reads **kia names** only. `deadIds` / `survivorHp` stay Roster-owned (Tactical emits; Roster applies).

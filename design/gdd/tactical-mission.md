@@ -1,8 +1,9 @@
 # Tactical Mission
 
-> **Status**: Designed (pending independent `/design-review`)
+> **Status**: Approved
 > **Author**: extract from docs/game-design.md §10, §11, §16
-> **Last Updated**: 2026-09-10 (ADR-0009 wear owner + quietReplay stamp)
+> **Last Updated**: 2026-09-16 (header Status aligned to independent `/design-review` APPROVED 2026-09-16)
+> **Independent `/design-review`**: 2026-09-16 APPROVED
 > **Implements Pillar**: Command, do not micromanage; Information is operational power; Violence has corporate consequences
 > **Living spec**: `docs/game-design.md` §10, §11, §16 — this file aliases them; do not fork rules
 > **Specialists (full)**: creative-director (fantasy); game-designer (rules); systems-designer (formulas/edges/knobs); qa-lead (acceptance)
@@ -41,16 +42,20 @@ This serves **Command, do not micromanage**, **Information is operational power*
 | Opening hour | Per-mission tactical start hour; lighting frozen dusk/night; independent of strategic now and of Weather ([ADR-0001](../architecture/adr-0001-two-clocks.md), [ADR-0007](../architecture/adr-0007-opening-hour.md)) | Sight, noise, Risk index |
 | Difficulty extras | Standard vs Hardened discrete profiles (`DIFFICULTY_FX`); extra street patrols/civilians, confirmation, accuracy, +1 m vision, tighter optional windows | Hiding the minimap; free-range tuning; Threat (contract band) |
 
-4. **Five verbs (lead).** The mission opens with every living operative selected. The dead are never valid order recipients. These five are the protected core (`design/gdd/game-pillars.md` Pillar 1):
+4. **Five verbs (lead).** The mission opens with every living operative selected. The dead are never valid order recipients. Empty selection is legal; orders on an empty selection are no-ops. These five are the protected core (`design/gdd/game-pillars.md` Pillar 1):
    - **Select.** Choose which living operatives receive the next order.
-   - **Move.** Walk to ground. Clears Explicit target and **releases Hold Ground**. Along the route, operatives stop to engage visible CorpSec when weapons are free, then resume.
-   - **Attack.** Sets an Explicit target. **Overrides Hold Fire.** Hold Ground prevents the chase but keeps the target.
-   - **Hold Ground.** Stance. Pins the operative. An active path is parked and restored on release. Separation will not shove them off their tile. They may still fire.
-   - **Hold Fire.** Stance. Clears automatic targets. The operative will not auto-acquire. A later Attack still fires.
+   - **Move.** Walk to a **compact ring** so the selection does not stack (living spec §10). Clears Explicit target and **releases Hold Ground**. Along the route, operatives stop to engage visible CorpSec when weapons are free **and Hold Fire is off**, then resume. Hold Fire blocks this auto-engage.
+   - **Attack.** Sets an Explicit target on a **living hostile** only. They **chase until line of sight and range** (living spec §10). Hold Ground prevents the chase but keeps the target. The explicit shot **fires through** Hold Fire; the Hold Fire **stance bit stays on** (auto-acquire stays blocked after that target dies). ([ADR-0016](../architecture/adr-0016-tactical-sim-contract.md))
+   - **Hold Ground.** Stance. Pins the operative. An active path is parked and restored on release. Separation will not shove them off their tile. They may still fire, including auto-acquire when weapons are free.
+   - **Hold Fire.** Stance. Clears automatic targets. The operative will not auto-acquire — including Move stop-to-engage. A later Attack still fires through; the bit stays. Does **not** null a standing Explicit target (code that does is a defect; [ADR-0016](../architecture/adr-0016-tactical-sim-contract.md)).
 
-5. **Stop is command language, not a sixth verb.** Stop clears pathing and targeting. Hold Ground and Hold Fire stay. New verbs need a pillar reason. The living spec’s command language is these five plus the ability key; Stop sits in that language without becoming a new fantasy verb.
+   **Idle auto-acquire (Pillar 1; ADR-0016 tick).** Operatives with no walking path (idle, Hold Ground, or Stopped) auto-acquire visible CorpSec when weapons are free. Babysitting an idle seer is a pillar veto. Hold Fire is the gate, not a missing order.
 
-6. **Kit is not a new verb.** **Q** fires actives of the **current selection**. Tactical **executes**; Roster **owns the kit**. Power cells arm Grenades (same pool). Empty or invalid item use reports on the Comm log and spends nothing. Empty grenade cells or a running squad grenade cooldown **disable the control**. Drawn-weapon swap is kit, not a stance.
+   **Weapons-free** (alias §10 shot requirements, for auto-acquire and Move stop-to-engage): living shooter; drawn weapon; round in magazine; no reload in progress; finished cooldown; not Drawing (0.5 s). Hold Fire is **not** weapons-free for auto-acquire.
+
+5. **Stop is command language, not a sixth verb.** Stop clears pathing and targeting, **including any parked Hold Ground path**. Hold Ground and Hold Fire stance bits stay; release after Stop does **not** resume a cancelled walk. New verbs need a pillar reason. The living spec’s command language is these five plus the ability key; Stop sits in that language without becoming a new fantasy verb.
+
+6. **Kit is not a new verb.** **Q** fires actives of the **current selection**, including the opening all-living set. Empty selection no-ops Q. Tactical **executes**; Roster **owns the kit**. Power cells arm Grenades (same pool). Empty or invalid item use reports on the Comm log and spends nothing. Empty grenade cells or a running squad grenade cooldown **disable the control**. Drawn-weapon swap is kit, not a stance.
 
 7. **Typical use.** Deploy → every living operative selected → read cones, street patrols, civilians, Weather, and the active Objective → spend few orders (Select / Move / Attack / Hold Ground / Hold Fire, and Stop as needed) → Win or Loss → Debrief. Quiet replay is still a real mission ([ADR-0004](../architecture/adr-0004-quiet-replay.md)).
 
@@ -62,18 +67,18 @@ This serves **Command, do not micromanage**, **Information is operational power*
 
 11. **Camera.** Fixed 45° yaw, 55° elevation, 25° field of view. Zoom 44–115 m. No rotate/tilt in play. Minimap up = screen up. That shared orientation is load-bearing. Pan and recenter are camera steering, not verbs.
 
-12. **Opposition.** CorpSec states: **patrol** (authored route), **suspicious** (last seen or heard point, then a scan), **combat** (pursue and fire). Combat does not fall straight back to patrol. Archetypes: Trooper, Heavy, Marksman, Officer. Threat sets the elite mix (pointer §10 — do not copy HP/speed rows). Officer radio: **4 s / 22 m**; killing or calming the Officer inside the delay cancels the call. Vision: **14 / 12.6 / 11.2 m** (clear / light rain / heavy rain), **110°** cone, **4.5 m** omnidirectional notice **weather-invariant**. Vision needs clear grid line of sight. Ranges follow **live** Weather: when a front hits, sight and weapon noise retune. Hearing: gunshots through walls; sound alone raises Awareness only to **85%** (investigation, not fire). Civilians wander; gunfire within **10 m** makes them flee for **5 s** after the latest nearby shot. They exist for Fire lanes and the invoice. Placement that makes Collateral feel arbitrary is a content bug.
+12. **Opposition.** CorpSec states: **patrol** (authored route), **suspicious** (last seen or heard point, then a scan), **combat** (pursue and fire). Combat does not fall straight back to patrol. After six seconds without sight → suspicious investigation, not patrol. Awareness can pass from one CorpSec to another within **9 m** if they can see each other; combat awareness does **not** propagate through walls (living spec §10). Archetypes: Trooper, Heavy, Marksman, Officer. Threat sets the elite mix (pointer §10 — do not copy HP/speed rows). Officer radio: **4 s / 22 m**; killing or calming the Officer inside the delay cancels the call. Vision: **14 / 12.6 / 11.2 m** (clear / light rain / heavy rain), **110°** cone, **4.5 m** omnidirectional notice **weather-invariant**. Vision needs clear grid line of sight. Ranges follow **live** Weather: when a front hits, sight and weapon noise retune. Hearing: gunshots through walls; sound alone raises Awareness only to **85%** (investigation, not fire). Civilians wander; gunfire within **10 m** makes them flee for **5 s** after the latest nearby shot. They exist for Fire lanes and the invoice. Placement that makes Collateral feel arbitrary is a content bug.
 
-13. **Combat.** Real-time after placement and targeting. A missed round continues down the Fire lane to weapon range. The **first Unit** in that lane before cover is hit, regardless of side. Cover stops the lane. Tracers, Comm log, and Debrief must make this readable. Hit-chance and weapon rows stay in §10 / Formulas — do not copy them here.
+13. **Combat.** Real-time after placement and targeting. A missed round continues down the Fire lane to weapon range. The **first Unit** in that lane before cover is hit, regardless of side. Cover stops the lane. Tracers, Comm log, and Debrief must make this readable. Hit-chance and weapon rows stay in §10 / Formulas — do not copy them here. **Destroy apply (no Demolish verb):** Attack does not target Devices. Fire lane, grenade, and demolition charges **may still reduce Devices** ([ADR-0016](../architecture/adr-0016-tactical-sim-contract.md)). `grenade_damage` in Formulas is living units only; charge/fire-lane Device HP is living spec §10 / code — do not invent a Device HP table here. Exact Device-as-Unit vs charge-only channel is Open Question 3 remainder (escalate to §10; do not add a sixth verb).
 
-14. **Objectives.** Seven kinds: Reach zone, Eliminate tag, Extract, Interact, Escort, Destroy, Defend. Required objectives are strictly sequential. An optional Objective activates with the required Objective it precedes, never blocks the sequence, never gates Win. Ignoring or failing an optional costs nothing (bonus unpaid). Interact and Defend advance only while a living operative stands in the zone; empty pauses, does not reset. A dead VIP voids every unfinished Escort. An optional Destroy whose Device dies to non-squad fire **fails** rather than completing. Time limit from activation: expiry fails an optional and is a **Loss** on a required one.
+14. **Objectives.** Seven kinds: Reach zone, Eliminate tag, Extract, Interact, Escort, Destroy, Defend. Required objectives are strictly sequential. An optional Objective activates with the required Objective it precedes, never blocks the sequence, never gates Win. Ignoring or failing an optional costs nothing (bonus unpaid). Interact and Defend advance only while a living operative stands in the zone; empty pauses, does not reset. **Defend carries a wave:** unit count, weapons, and named entry landmarks; the wave appears when the objective activates (living spec §10 — do not copy the authored numbers). A VIP is **not** an order recipient; they are fragile and walk the escort (living spec §11 — do not invent follow radius, leash, or speed here). A dead VIP voids every unfinished Escort. An optional Destroy whose Device dies to non-squad fire **fails** rather than completing. Whether an optional Destroy stays completable after the required sequence has moved on is unnamed — do not invent it (Open Question 9). Time limit from activation: expiry fails an optional and is a **Loss** on a required one.
 
 15. **Win / Loss / Abort.** **Win:** every required Objective complete. **Loss:** no living operatives remain; a required Escort VIP dies; or a required time limit expires. The HUD shows the result immediately; after **2.5 s** the game enters Debrief. **Abort:** no Debrief, no campaign write. Clean win is `civiliansHit = 0` on a Win (World Network awards; Economy prices Collateral from the same count).
 
-16. **Authored three (tactical problems owned here).** Economy owns fees. Do not copy §11 prose beyond one-line problems and sequence names.
-    - **Glass Veil** — checkpoint read-and-commit. Reach the checkpoint gate → Eliminate the seven-Garrison (untagged street patrols optional) → Extract south.
-    - **Hollow Crown** — compound escort. Reach the compound gate → *(optional)* pull the detention server → Override the cell-block locks → Walk the freed VIP to Extraction alive → Extract the Squad.
-    - **Rust Haven** — yard invert. Reach the relay yard → *(optional)* destroy the backup transformer → Destroy the three fuel relays → Defend/hold the yard → Extract.
+16. **Authored three (tactical problems owned here).** Economy owns fees. Do not copy §11 beat-by-beat walkthroughs. Landmark **relationships** (not coordinates — the generator owns those) are required so these are not family reskins:
+    - **Glass Veil** — checkpoint read-and-commit. Reach the checkpoint gate → Eliminate the seven-Garrison (untagged street patrols optional) → Extract south. Northern plaza is the honest commit versus a longer flank; officer / longrifle posts are that commit space.
+    - **Hollow Crown** — compound escort. Reach the compound gate → *(optional)* pull the detention server → Override the cell-block locks → Walk the freed VIP to Extraction alive → Extract the Squad. South gate versus side breach; the optional server sits away from the console (bonus paid in exposure). VIP is fragile, not an order recipient, and walks through whatever the squad already woke — do not invent follow/leash numbers.
+    - **Rust Haven** — yard invert. Reach the relay yard → *(optional)* destroy the backup transformer → Destroy the three fuel relays → Defend/hold the yard → Extract. Two gates and two sub-yards; optional in the far yard. Defend wave (count, weapons, named entry landmarks) appears when Defend activates (§10).
     Generated contracts reuse families and the objective vocabulary; they do not replace these three as the campaign’s argument.
 
 17. **Weather script.** Rain is heavy, light, or none. It shortens CorpSec sight and quiets weapons. It does not change accuracy, movement, or the 4.5 m omni notice. Script is fixed at mission create: opening Weather plus **at most one** adjacent change at one tactical time. Same seed → same script. Authored contracts carry an explicit script (pointer §10 / ADR-0006 — **do not copy the authored table**). Generated contracts roll one, including no change. Brief prints opening and coming change. Comm log fires when the front hits. Risk index uses the **clearer** Weather on the script; notes still print both. A front retunes sight/noise; it does **not** re-sample Research.
@@ -92,14 +97,14 @@ This serves **Command, do not micromanage**, **Information is operational power*
 |---|---|---|
 | Mission coupling | Strategy / Deployed (memory only) / Result shown / Debrief apply-once / Abort discarded | Deploy copies the partitioned snapshot and starts tactical time. Field does not tick World Network, labs, injuries, or the candidate market. Win or Loss → HUD result → 2.5 s → Debrief (outcome DTO once). Abort → discard, no outcome, no campaign write ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)) |
 | Tactical clock | Running / Paused (in-mission pause) | Independent of strategic time. Opening hour is the start stamp; HUD ticks; lighting does not. Pause freezes tactical time |
-| Selection | Empty / one or more living operatives | Opens with **every living operative** selected. Dead never join. Click / shift / box / keys 1–4 / select-all living / clear — input map is Interface; validity is this rule |
-| Pathing | No path / walking / parked (Hold Ground) | **Move** writes a path, clears Explicit target, releases Hold Ground. **Stop** clears path and target; stances stay. **Hold Ground** parks the path and restores it on release |
-| Explicit target | None / assigned by Attack | **Attack** sets it and overrides Hold Fire. **Move** and **Stop** clear it. Hold Ground keeps it but prevents chase. Hold Fire (living spec) clears **automatic** targets; a later Attack still fires. *Flag:* code also drops a standing Explicit target when Hold Fire is turned on — do not silently promote that into this GDD |
-| Hold Ground | Off / On | Toggle on selection. Move releases it. Stop does not. Separation will not shove a held operative off their tile. Fire still allowed |
-| Hold Fire | Off / On | Toggle on selection. Clears auto-acquire. Attack overrides (fires through). Stop does not clear it |
+| Selection | Empty / one or more living operatives | Opens with **every living operative** selected. Dead never join. Empty is legal; orders (including Q) on empty are no-ops. Click / shift / box / keys 1–4 / select-all living / clear — input map is Interface; validity is this rule |
+| Pathing | No path / walking / parked (Hold Ground) / chasing (Attack) | **Move** writes a compact-ring path, clears Explicit target, releases Hold Ground. **Attack** writes a chase until LOS and range unless Hold Ground is on. **Stop** clears path, chase, parked path, and target; stance bits stay. **Hold Ground** parks a Move path and restores it on release; Stop discards that parked path |
+| Explicit target | None / assigned by Attack on a living hostile | **Attack** sets it and fires through Hold Fire; the Hold Fire **bit stays**. **Move** and **Stop** clear it. Hold Ground keeps it but prevents chase. Hold Fire clears **automatic** targets only; does **not** null a standing Explicit (ADR-0016; code that nulls is a defect) |
+| Hold Ground | Off / On | Toggle on selection. Move releases it. Stop does not. Separation will not shove a held operative off their tile. Auto-acquire still allowed when weapons are free |
+| Hold Fire | Off / On | Toggle on selection. Clears auto-acquire, including Move stop-to-engage and idle seers. Attack fires through; bit stays. Stop does not clear it |
 | Operative body | Living / dead (invalid order recipient) | HP to 0 in the District → dead, never a valid recipient. Debrief grades KIA / injury from the outcome DTO (Roster) |
 | Drawn weapon | Primary / Sidearm; Ready / Drawing / Reloading | V swaps the selection. Drawing cannot fire for 0.5 s. Each slot keeps its magazine; swap cancels in-progress reload of the stowed weapon |
-| CorpSec | patrol / suspicious / combat | Sight and hearing raise Awareness. Combat does not fall straight to patrol. After six seconds without sight → suspicious investigation. Officer radio 4 s / 22 m unless cancelled |
+| CorpSec | patrol / suspicious / combat | Sight and hearing raise Awareness. Combat does not fall straight to patrol. After six seconds without sight → suspicious investigation. Awareness passes within 9 m if they can see each other; combat awareness does not propagate through walls. Officer radio 4 s / 22 m unless cancelled |
 | Civilian | calm wander / flee | Gunfire within 10 m → flee 5 s after the latest nearby shot, at +50% speed. A direct hit forces a flee from the shooter |
 | Weather | heavy / light / none; script static or one front | Front at a fixed tactical time, adjacent intensity only. Live sight/noise retune; accuracy/movement/omni notice do not |
 | Opening hour | dusk / night (derived, frozen) | Set at create. Legal 18:00 inclusive–01:00 exclusive; dusk [18:00, 20:00). HUD clock ticks; sky does not |
@@ -114,14 +119,14 @@ Partitioned **deploy snapshot**, frozen at mission create. Do not pass live stor
 | Other system | In (Tactical receives) | Out (Tactical emits) | Interface owner |
 |---|---|---|---|
 | **World Network** | **WN slice:** sector id; Control; Unrest. Intel 2+ only **gates display** of Risk index | **Outcome:** `won`; `quietReplay`; `civiliansHit`; mission/city/sector identity. Tactical **derives** Unrest extras (above 20: +6 civilians +1 street patrol) and Threat extras. Risk index math is Tactical/Brief; WN does not compute it | Neither live-queries the other. WN applies Control/Unrest/ownership/Influence/Intel/Feed after Debrief. Tactical does not shove sectors |
-| **Economy** | **Economy slice:** contract id; authored vs generated; Reward; optional bonus **defs**; ETA days (WN spends later); `quietReplay` from authored `contractsWon` | **Outcome:** `civiliansHit` (unique squad-caused first hits); `won`; completed optionals (`bonus` amounts are priced by Economy from defs + completion); `reward` | Tactical **counts**; Economy **prices** Collateral and net payout. No live Credits writes. Quiet replay still Debriefs ([ADR-0004](../architecture/adr-0004-quiet-replay.md)) |
+| **Economy** | **Economy slice:** contract id; authored vs generated; Reward; optional bonus **defs**; ETA days (WN spends later); `quietReplay` from authored `contractsWon` | **Outcome:** `civiliansHit` (unique squad-caused first hits); `won`; completed optional **ids** (Economy prices `bonus` from frozen defs + those ids) | Tactical **counts** `N` and completion; Economy **prices** Collateral and net payout. Do not emit priced `reward` / `bonus` CR from Tactical. No live Credits writes. Quiet replay still Debriefs ([ADR-0004](../architecture/adr-0004-quiet-replay.md)) |
 | **Research** | **Research slice** frozen at create: completed **unslotted** set | — (applies the freeze; does not complete labs) | Weather front does **not** re-sample Research. Completions after freeze apply to the **next** deploy. Wear / `appliedIds` are on the Roster slice ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)) |
 | **Roster / Assembly** | **Roster slice:** assigned ids (1–4); **resolved wear**; ordered **`appliedIds`**; Item slots of the assigned; mass (squad kg + Mass tier); sampled HP/speed | **Outcome Roster fields:** `deadIds`; `survivorHp` (end fraction, survivors only); kia names resolved at Debrief t0; new injuries are Roster-graded from `survivorHp` | Q fires actives of current selection; Tactical **executes**, Roster **owns kit**. Power cells arm Grenades (same pool). Empty/invalid item use → Comm log, spend nothing. Tactical copies `appliedIds` and sampled HP/speed; it does not union or re-run `appliedNodeIds` |
 | **Persistence** | — | Nothing live. Mission is memory only. Outcome payload (including telemetry counters) is emitted at Debrief; Persistence commits campaign once on the next Screen. Enabled Abort may append a **thin** telemetry record — not a campaign write | No mid-mission save. Seed is not a resume checkpoint |
-| **Interface** (not extracted) | Input: Select / Move / Attack / Stop / stances / camera pan-zoom / pause / Abort confirm chrome / Q / items / grenade / swap | HUD: tactical clock, Weather chip, Alert, live Collateral count, squad cards, objectives, Comm log, minimap (up = screen up), result banner, 2.5 s then Debrief | Presentation only. Difficulty must not strip minimap. Brief geometry, Opening hour, and weather-front timing must match this District |
-| **Audio** (not extracted) | — | Order confirms, danger, weapon reports, weather rain, mission bed start/stop | Mix ownership is Audio. Tactical does not own channels |
+| **Interface** | Input: Select / Move / Attack / Stop / stances / camera pan-zoom / pause / Abort confirm chrome / Q / items / grenade / swap | HUD: tactical clock, Weather chip, Alert, live Collateral **count** (not CR), squad cards, objectives, Comm log, minimap (up = screen up), result banner, 2.5 s then Debrief | Presentation only (`design/gdd/interface.md`). Difficulty must not strip minimap. Brief geometry, Opening hour, and weather-front timing must match this District |
+| **Audio** | — | Order confirms, danger, weapon reports, weather rain, mission bed start/stop | Mix ownership is Audio (`design/gdd/audio.md`). Tactical does not own channels |
 
-**Outcome DTO — fields Tactical owns (apply once at Debrief):** `won`; `civiliansHit`; completed optionals (Economy prices `bonus`); `deadIds`; `survivorHp`; `timeSec` (tactical elapsed); mission identity needed by WN/Economy. `quietReplay` is stamped from the Economy slice (already-won authored), not from a live query mid-mission. *Flag:* current code restamps `quietReplay` from live `contractsWon` at outcome time — extract keeps the frozen-slice rule.
+**Outcome DTO — fields Tactical owns (apply once at Debrief):** `won`; `civiliansHit`; completed optional **ids** (Economy prices `bonus` CR from frozen defs); `deadIds`; `survivorHp`; `timeSec` (tactical elapsed); mission identity needed by WN/Economy. Tactical does **not** emit priced `reward` or `bonus` Credits. `quietReplay` is stamped from the Economy slice (already-won authored), not from a live query mid-mission. *Flag:* current code restamps `quietReplay` from live `contractsWon` at outcome time — extract keeps the frozen-slice rule.
 
 **Risk index:** Tactical/Brief compute from the **actual** deployment (street patrols, Garrison, civilians, Threat HP multiplier, clearer scripted Weather). World Network only gates the Brief display at intel 2+. Formula stays in living spec §5 / Formulas.
 
@@ -129,8 +134,8 @@ Partitioned **deploy snapshot**, frozen at mission create. Do not pass live stor
 
 1. **Worn ids.** Research slice = unslotted set. Roster slice = resolved wear + ordered `appliedIds` + sampled HP/speed ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Tactical does not union in the sim.
 2. **Experience magnitudes.** Research GDD Formulas cites +2 HP / +0.05 m/s as Roster-owned; Roster GDD forbids forking §8-absent magnitudes. Tactical samples HP/speed from the Roster slice only.
-3. **Attack vs Device.** Living spec Attack = living hostile. Code accepts devices as Explicit targets for slow demolition. Extract aliases living spec; Destroy / Fire lane still let gunfire reduce Devices. Do not add a “Demolish” verb.
-4. **Hold Fire vs Explicit target.** Living spec: clears automatic targets; later Attack still fires. Code also nulls a standing Explicit target when Hold Fire is turned on. Extract aliases living spec.
+3. **Attack vs Device.** Living spec Attack = living hostile. Code accepts devices as Explicit targets. Extract aliases living spec and ADR-0016: no Demolish verb; fire lane / grenade / charge may still reduce Devices. Exact Device-as-Unit vs charge-only channel is OQ3 remainder — escalate to §10; do not invent it here.
+4. **Hold Fire vs Explicit target.** Resolved by [ADR-0016](../architecture/adr-0016-tactical-sim-contract.md): living spec wins (standing Explicit stays; later Attack fires through; bit stays). Code that nulls Explicit on Hold Fire is a defect, not an open owner cut.
 5. **Stale sibling footnotes** (World Network / Economy / Roster “Tactical not extracted yet”) are documentation drift, not rule forks.
 
 **Forbidden (interactions).** Live-query World Network, Credits, laboratories, or Roster during the mission. Mid-mission Research re-sample. Campaign write on Abort. Optional gating Win. Economy computing `civiliansHit`. World Network computing Collateral or Risk index. Persistence saving the running mission. Copying weapon / archetype / authored weather-hour tables into this GDD. Splitting the internal module map into new systems.
@@ -185,7 +190,7 @@ The `civilian_first_hits` count (Tactical counts; Economy prices) is defined as:
 
 `N = number of unique civilian units first-hit by the squad this deployment`
 
-Hit, not death. First squad-caused hit only. Repeats do not stack. CorpSec-caused hits do not increment `N`. Grenade damage applied by a squad throw **does** increment `N` (squad-caused). Do not re-price: `collateral = min(Reward, 5000 × N)` stays Economy.
+Hit, not death. First squad-caused hit only. Repeats do not stack. CorpSec-caused hits do not increment `N`. Grenade damage applied by a squad throw **does** increment `N` (squad-caused). Economy prices Collateral from `N` at Debrief — **do not reprint** that Credits expression here.
 
 **Variables:**
 
@@ -193,7 +198,7 @@ Hit, not death. First squad-caused hit only. Repeats do not stack. CorpSec-cause
 |----------|--------|------|-------|-------------|
 | unique squad first-hits | N | int | ≥ 0 | Count handed on the outcome DTO as `civiliansHit` |
 
-**Output Range:** Unbounded nonnegative integer. Loss/abort do not re-price it here.
+**Output Range:** Unbounded nonnegative integer. Loss still emits `N`. Abort emits no DTO (no `N`).
 **Example:** Two different civilians each first-hit by the squad → N=2. Same civilian hit twice → N=1. CorpSec-only civilian harm → N=0.
 
 The `guard_vision` formula (alias of §10 distances + §16 add) is defined as:
@@ -216,7 +221,9 @@ The `guard_vision` formula (alias of §10 distances + §16 add) is defined as:
 
 The `grenade_damage` formula is defined as linear falloff between the two §10 endpoints, LoS only:
 
-`grenade_damage = 70 − 35 × min(1, d / 3.5)` for a living unit with LoS and d ≤ 3.5 m; else no blast damage.
+`grenade_damage = 70 − 35 × min(1, d / 3.5)` for a **living** unit with LoS and d ≤ 3.5 m; else **no blast damage to that living unit**.
+
+This formula does **not** decide Device HP. Devices are Rule 13 / OQ3 (fire lane / charge / grenade-as-channel remainder) — do not read the living-unit `else` as Device-zero.
 
 Throw: spends one power cell; pavement snap ≤ 2.5 m; land ≤ 18 m; 24 m noise; 4 s **squad** cooldown. Empty cells or a running cooldown disable the control.
 
@@ -249,17 +256,20 @@ Operatives deal full weapon damage and use authored cooldown. Magazines reload f
 
 ## Edge Cases
 
-- **If Abort:** discard the mission with no debrief ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)). No outcome DTO. Credits, roster, sectors, labs unchanged. Not a Loss.
+- **If Abort:** discard the mission with no debrief ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)). No outcome DTO. Credits, roster, sectors, labs unchanged. Not a Loss. Quit-to-desktop and reload escape every ledger the same way — accepted consequence of the unsaved-mission cut (living spec §19 #8); pricing abort is out of spec.
 - **If Win:** every required objective complete. Optionals do not gate the win. HUD result, then debrief after 2.5 s.
-- **If Loss:** no living operatives remain; **or** a required escort VIP dies; **or** a required time limit expires. `net_payout` is Economy (0); Tactical still emits the outcome DTO with won=false.
-- **If wipe and required-complete would both be eligible in the same step:** living spec does not name a tiebreak — do not invent one (Open Question 5).
+- **If Loss:** no living operatives remain; **or** a required escort VIP dies; **or** a required time limit expires. Tactical still emits the outcome DTO with `won=false`, `civiliansHit`, and completed optional **ids**. Economy prices the invoice (including zeros). Do not reprint `net_payout` here.
+- **If wipe and required-complete would both be eligible in the same step:** the required completion wins — a Win ([§10 Same-step tiebreak](../../docs/game-design.md)); the deaths still grade KIA at debrief. A required VIP death or time-limit expiry in the same step is a Loss. (Open Question 5 resolved 2026-09-22.) If that Win empties the Roster on an **incomplete** campaign, it is a **pyrrhic win**: the mission is still a Win and the campaign still fails in the same debrief; banner precedence and invoice copy are owned by living spec §10 — do not restyle them here.
 - **If quiet replay still wins:** debrief **runs**. Banner `REPLAY // FEE ALREADY COLLECTED`. Roster/ETA still print. Currency and sector lines unpaid (Economy / World Network). Not an Abort.
 - **If a shot misses the intended target:** the round continues along the fire lane to weapon range. The first Unit in that lane before cover is hit, regardless of side (operatives, civilians, other CorpSec all legal).
 - **If that continued miss first-hits a civilian and the shooter is squad:** increment `N` once for that civilian. Tracers / comm log / debrief must make the stray readable.
 - **If CorpSec-caused civilian hit or death:** do **not** increment `N`. Pillar veto: CorpSec harm is not the player’s collateral.
 - **If cover is on the lane before a body:** cover stops the lane. The body behind cover is not the stray victim.
 - **If Hold Ground vs explicit Attack:** Hold Ground prevents the chase but **keeps** the target. The operative may still fire. A Move clears Explicit target and releases Hold Ground. Stop clears pathing and targeting; Hold Ground and Hold Fire stay.
-- **If Hold Fire vs explicit Attack:** Hold Fire clears automatic targets and blocks auto-acquire. A later explicit Attack still fires (overrides Hold Fire).
+- **If Hold Fire vs explicit Attack:** Hold Fire clears automatic targets and blocks auto-acquire (including Move stop-to-engage and idle seers). A later explicit Attack still fires through; the Hold Fire bit stays. Standing Explicit is not nulled (ADR-0016).
+- **If an idle / Hold Ground / Stopped operative can see CorpSec and weapons are free:** they auto-acquire. Hold Fire is the gate. No extra order is required.
+- **If Hold Fire is on during Move:** stop-to-engage does **not** fire; the path continues.
+- **If selection is empty:** Move / Attack / Q / grenade confirm are no-ops.
 - **If the officer is killed (or calmed, e.g. EM burst) inside 4 s of entering combat:** the radio call is cancelled. After the delay, every CorpSec within 22 m not already fighting is put on the squad’s last seen position at investigation-level awareness (sound-alone cap 85% still applies to the call’s awareness).
 - **If an optional destroy’s device dies to non-squad fire:** the optional **fails**, it does not complete.
 - **If the interact or defend zone is empty:** the channel/hold **pauses**; it does **not** reset.
@@ -282,13 +292,13 @@ Operatives deal full weapon damage and use authored cooldown. Magazines reload f
 |---|---|---|---|
 | Hard, upstream | World Network | Snapshot in; extras derived; outcome out | WN slice: sector id, Control, Unrest. Tactical derives unrest extras and Threat extras. Outcome: `won`, `quietReplay`, `civiliansHit`, identity |
 | Hard, upstream | Economy and contracts | Snapshot in; counts out | Economy slice: contract id, Reward, bonus defs, `quietReplay`. Tactical counts `N` / completed optionals; Economy prices |
-| Hard, upstream | Research | Freeze in | Unslotted completed set. Worn ids dual-home — Open Question 1. Front does not re-sample |
+| Hard, upstream | Research | Freeze in | Unslotted completed set. Worn ids: ADR-0009 (Roster owns `appliedIds`). Front does not re-sample |
 | Hard, upstream | Roster and Assembly | Freeze in; roster fields out | Roster slice: 1–4, resolved wear, items, mass/tier, sampled HP/speed. Outcome: `deadIds`, `survivorHp` |
-| Hard, downstream | Persistence and validation | Unsaved lifetime | Mission memory only. Abort = no campaign write. Debrief apply-once; durable on next Screen |
-| Soft, downstream | Interface | Presentation | Five-verb input, HUD, minimap, brief/deploy agreement. Not extracted |
-| Soft, downstream | Audio | Mix | Order confirms, danger, weapon reports, rain, mission bed. Not extracted |
+| Hard, upstream | Persistence and validation | Unsaved lifetime | Mission memory only. Abort = no campaign write. Debrief apply-once; durable on next Screen |
+| Hard, downstream | Interface | Presentation | Five-verb input, HUD, minimap, brief/deploy agreement. GDD: `interface.md` |
+| Hard, downstream | Audio | Mix | Order confirms, danger, weapon reports, rain, mission bed. GDD: `audio.md` |
 
-World Network, Economy, Research, Roster, and Persistence already list Tactical. Bidirectional on those five. Interface and Audio template GDDs are not extracted; edges vs living spec §12–15.
+World Network, Economy, Research, and Roster already list Tactical. Persistence lists Tactical as hard downstream (unsaved lifetime); this file lists Persistence as hard upstream. Bidirectional on those six. Interface (`interface.md`) and Audio (`audio.md`) exist; edges vs living spec §12–15 and those GDDs.
 
 **Not dependencies:** `tax_yield` math (World Network); `net_payout` / `collateral` price (Economy); mass gate (Roster); Credits ledger.
 
@@ -314,7 +324,8 @@ All knobs are owned by `docs/game-design.md` §10, §16, and §5 (`risk_index`).
 | Civilian flee 10 m / 5 s / +50% speed | §10 | Decorative civilians vs lanes the player cannot read |
 | `risk_index` weights 4/5/0.5, bands 30/50/75, `h` 1.0/1.1/1.2, `v` 1.0/0.9/0.8 | §5 | Treating the index as a percent or capping at 100; using Opening hour or live front as `v` |
 | Chance readout clamp 35–95 | §9 names clamp; expression is `missionChance` (code) | Do not retune by pasting code bases into this GDD |
-| Collateral 5,000 CR × `N` | Economy §6 | **Not a Tactical knob** — Tactical only counts `N` |
+| Result delay 2.5 s of Tactical elapsed time | §10; basis defined in Interface Rule 18 | Wall-clock timer instead of sim-elapsed (pause must stop it; catch-up may cross the boundary) |
+| Collateral CR from `N` | Economy §6 | **Not a Tactical knob** — Tactical only counts `N`; do not reprint the Credits expression |
 | Injury 0.35 / mass 400 kg / squad 1–4 / XP +1 | Roster registry | **Not Tactical knobs** — consume snapshot/outcome only |
 
 **Interacts:** Hardened acc mul × `hit_chance` `a`; Hardened visionAdd × live `guard_vision`; unrest extras + Hardened extras + archetype bases → `p`/`c` into `risk_index`; clearer-script `v` into `risk_index` (not live front); `N` → Economy `collateral`. Difficulty must turn readable knobs (sight confirm, accuracy/cooldown, patrols, garrison mix, civilians, optional pressure) — not the minimap.
@@ -341,18 +352,30 @@ Living spec §20 Mission + Squad (tactical parts). Criteria are independently ve
 
 ### Command verbs
 
-1. **GIVEN** a just-opened mission with at least one living operative and at least one dead operative, **WHEN** the mission starts, then Select-all (0 / backtick) is issued, then an order names the dead id, **THEN** the opening selection is exactly the living set, Select-all is exactly the living set, the dead id is never a valid order recipient (no-op), and keys 1–4 select a slot only if that operative is living.
-2. **GIVEN** a selected living operative with an Explicit target and Hold Ground on, weapons free, **WHEN** Move is issued to walkable ground, **THEN** the Explicit target is cleared, Hold Ground is released, and along the route the operative stops to engage visible CorpSec when weapons are free, then resumes.
-3. **GIVEN** a selected living operative with Hold Fire on and Hold Ground on, **WHEN** Attack is issued on a living hostile out of range, **THEN** the Explicit target is set and Hold Fire is overridden so the explicit shot still fires when in range and LOS, and Hold Ground prevents the chase while keeping that target.
-4. **GIVEN** a selected living operative walking a path, **WHEN** Hold Ground is set, **THEN** the operative is pinned on the current tile, the active path is parked (restored on release), separation does not shove them off that tile, and they may still fire.
-5. **GIVEN** a selected living operative who would auto-acquire a visible CorpSec in range, **WHEN** Hold Fire is set, then a later Attack is issued on a living hostile, **THEN** automatic targets are cleared and the operative does not auto-acquire, and the later explicit Attack still fires.
-6. **GIVEN** a selected living operative with a path, an Explicit target, Hold Ground on, and Hold Fire on, **WHEN** Stop is issued, **THEN** pathing and targeting are cleared, and Hold Ground and Hold Fire stay on.
+1a. **GIVEN** a just-opened mission with at least one living operative and at least one dead operative, **WHEN** the mission starts, **THEN** the opening selection is exactly the living set.
+1b. **GIVEN** that mission, **WHEN** Select-all (0 / backtick) is issued, **THEN** selection is exactly the living set.
+1c. **GIVEN** a dead id, **WHEN** an order names that id, **THEN** it is a no-op (dead never a valid recipient).
+1d. **GIVEN** keys 1–4, **WHEN** the slot is dead, **THEN** it is not selected; **WHEN** the slot is living, **THEN** that slot is selected.
+1e. **GIVEN** empty selection, **WHEN** Move, Attack, or Q is issued, **THEN** the order is a no-op.
+2. **GIVEN** a selected living operative with an Explicit target and Hold Ground on, **WHEN** Move is issued to walkable ground, **THEN** the Explicit target is cleared and Hold Ground is released.
+2b. **GIVEN** a Move path that passes a visible in-range CorpSec, Hold Fire off, weapons-free (not drawing, not reloading, magazine > 0, cooldown idle), **WHEN** the operative reaches LOS, **THEN** they stop, engage, then resume the path.
+2c. **GIVEN** a selected living operative walking a Move path with Hold Fire on, **WHEN** they pass a visible in-range CorpSec, **THEN** they do not stop-to-engage; the path continues.
+2d. **GIVEN** an idle (no path) living operative, Hold Fire off, weapons-free, with a visible in-range CorpSec, **WHEN** no new order is issued, **THEN** they auto-acquire and fire. Hold Ground and Stopped with no walking path behave the same.
+3. **GIVEN** a selected living operative with Hold Fire on and Hold Ground on, **WHEN** Attack is issued on a living hostile out of range, **THEN** the Explicit target is set, Hold Fire stays on, Hold Ground prevents the chase while keeping that target, and the explicit shot still fires when later in range and LOS.
+4. **GIVEN** a selected living operative walking a path, **WHEN** Hold Ground is set, **THEN** the operative is pinned on the current tile, the active path is parked (restored on release), and separation does not shove them off that tile.
+5. **GIVEN** a selected living operative who would auto-acquire a visible CorpSec in range, **WHEN** Hold Fire is set, **THEN** automatic targets are cleared and the operative does not auto-acquire.
+5b. **GIVEN** Hold Fire still on, **WHEN** a later Attack is issued on a living hostile, **THEN** the explicit Attack still fires through and the Hold Fire bit stays on.
+5c. **GIVEN** a selected living operative with a standing Explicit target on a living hostile, **WHEN** Hold Fire is turned on, **THEN** that Explicit target is not nulled (automatic targets may clear; the standing Explicit remains).
+5d. **GIVEN** a selected living operative, **WHEN** Attack is issued on a Device, **THEN** no Explicit target is set (no-op). Do not assert Device HP or a fire-lane-vs-charge channel (OQ3).
+6. **GIVEN** a selected living operative with a path, an Explicit target, Hold Ground on, and Hold Fire on, **WHEN** Stop is issued, **THEN** pathing (including any parked Hold Ground path), chase, and targeting are cleared, and Hold Ground and Hold Fire stance bits stay on.
 
 ### Seed, brief, weather, Opening hour
 
 7. **GIVEN** the same mission seed, **WHEN** the district, weather script, and Opening hour are built twice, **THEN** both builds match: same district, same weather script, same Opening hour.
 8. **GIVEN** a selected contract’s brief and the deployed mission from that seed, **WHEN** insertion, sequential objectives, extraction, force/civilian counts, Opening hour, and weather-front timing are compared, **THEN** brief and deploy agree on all six. A mismatch is a Tactical/brief bug, not a sample of generated coverage.
-9. **GIVEN** live weather none vs light vs heavy, then a scripted front at its fixed tactical time, **WHEN** CorpSec sight, weapon noise, accuracy, movement, and the 4.5 m omnidirectional notice radius are read before and after the front, **THEN** rain shortens CorpSec sight (14 / 12.6 / 11.2 m) and quiets weapons only; accuracy, movement, and notice radius are unchanged; the front retunes live sight and weapon noise; the comm log fires when the front hits.
+9a. **GIVEN** Standard difficulty and live weather none vs light vs heavy, **WHEN** CorpSec cone range is read, **THEN** it is 14 / 12.6 / 11.2 m respectively.
+9b. **GIVEN** the same Standard deployments, **WHEN** accuracy, movement, and omni notice are read, **THEN** accuracy and movement equal the clear-weather values and omni notice is 4.5 m.
+9c. **GIVEN** a scripted front at its fixed tactical time, **WHEN** the front hits, **THEN** live sight retunes, weapon-noise radius strictly decreases as rain intensity increases (do not paste `noiseMul`), a comm-log line is written, and accuracy / movement / 4.5 m notice do not change.
 10. **GIVEN** two deployments that differ only by Opening hour (dusk vs night) with the same weather script, **WHEN** CorpSec sight, weapon noise, and `risk_index` are computed, **THEN** sight, noise, and risk are unchanged; lighting is frozen from Opening hour (HUD clock still ticks; sky does not). Opening hour is independent of strategic time and of the weather script.
 
 ### Fire lane and collateral count (Tactical count, not Credits)
@@ -369,9 +392,10 @@ Tactical owns unique squad-caused civilian first-hits (`civiliansHit`). Economy 
 15. **GIVEN** an eliminate-tag required objective whose tag is garrison (street patrols untagged), **WHEN** every tagged Unit is dead and at least one untagged street patrol is still alive, **THEN** the eliminate objective completes and the required sequence can complete with that untagged patrol alive. Untagged street patrols do not gate eliminate.
 16. **GIVEN** every required objective complete and every optional ignored or failed, **WHEN** the mission result is read, **THEN** the result is Win; optionals never gate the win; failing or ignoring an optional costs nothing to the win (bonus may be 0).
 17. **GIVEN** a live mission, **WHEN** (a) no living operatives remain, or (b) a required escort VIP dies, or (c) a required objective timer expires, **THEN** the result is Loss.
-18. **GIVEN** a mission in progress, **WHEN** Abort is confirmed, **THEN** there is no debrief, Tactical does not emit an outcome DTO, and there is no campaign write.
-19. **GIVEN** an already-won authored contract replayed to a finish, **WHEN** the mission ends, **THEN** it is still a real mission that enters debrief; Tactical still emits an outcome DTO with `quietReplay` true. Economy/World Network zero currencies and sector shoves — do not re-own those zeros here.
-20. **GIVEN** a mission already created (research, wear, Experience sampled), **WHEN** later research completes, wear/pins change, or a weather front hits, **THEN** on-ground weapons, HP, speed, and the Research slice stay at the sampled freeze; the weather front retunes sight/noise only and does not re-sample research.
+18. **GIVEN** a mission in progress, **WHEN** Abort is confirmed, **THEN** there is no debrief, Tactical emits no outcome DTO, Credits / roster / sectors / labs are unchanged, and the result is not Loss. **GIVEN** abort telemetry enabled, **THEN** at most a thin telemetry record is appended and that record is not a campaign write. **GIVEN** telemetry disabled, **THEN** no telemetry record.
+19. **GIVEN** an already-won authored contract replayed to a finish, **WHEN** the mission ends, **THEN** it is still a real mission that enters debrief; Tactical still emits an outcome DTO with `quietReplay` true (frozen Economy-slice boolean). Economy/World Network zero currencies and sector shoves — do not re-own those zeros here.
+20a. **GIVEN** a created mission with sampled research / wear / Experience, **WHEN** later research completes or wear/pins change, **THEN** on-ground weapons, HP, speed, and the Research slice stay at the sampled freeze.
+20b. **GIVEN** that mission, **WHEN** a weather front hits, **THEN** sight/noise retune and Research is not re-sampled.
 
 ### Difficulty and camera
 
@@ -400,11 +424,13 @@ Tactical owns unique squad-caused civilian first-hits (`civiliansHit`). Economy 
 ## Open Questions
 
 1. **Worn slotted ids.** Resolved by [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md): Research slice = unslotted only; Roster owns resolved wear and ordered `appliedIds`. Implementation still samples inside `createWorld` today — migrate to the composer.
-2. **Hold Fire vs standing Explicit target.** Living spec: clears automatic targets; later Attack still fires. Code also nulls a standing Explicit target when Hold Fire turns on. Extract aliases living spec. Owner: living spec vs `world.ts` — treat as a defect in one of them; do not fork here.
-3. **Attack vs Device.** Living spec Attack = living hostile. Code accepts devices as Explicit targets. Extract aliases living spec. Do not add a Demolish verb. Owner: living spec vs `world.ts`.
+2. **Hold Fire vs standing Explicit target.** Resolved by [ADR-0016](../architecture/adr-0016-tactical-sim-contract.md): living spec wins (standing Explicit stays; later Attack fires through; Hold Fire bit stays). Code that nulls Explicit is a defect vs spec — not an open owner cut.
+3. **Attack vs Device.** Attack = living hostile; no Demolish verb ([ADR-0016](../architecture/adr-0016-tactical-sim-contract.md)). Fire lane / grenade / charge may still reduce Devices. Remainder: whether a Device is a fire-lane Unit vs charge-only. Escalate to living spec §10; do not invent the channel here. Code that accepts Attack-on-device is a defect.
 4. **`quietReplay` stamp.** Frozen on the Economy slice as a boolean at create ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Code still restamps from live `contractsWon` at outcome time (`maybeOutcome`, `setOutcome`, `reportMission`) — implementation debt, not an open owner cut.
-5. **Same-step wipe vs required-complete.** Living spec does not name a tiebreak. Do not invent one. Owner: living spec §10 if it should name it.
+5. **Same-step wipe vs required-complete.** Resolved 2026-09-22 at living spec §10 ("Same-step tiebreak"): required completion wins, deaths still grade KIA; VIP death or time expiry in the same step is a Loss. Alias it in the If-Loss/If-Win edges above; do not retune the tiebreak in this GDD.
 6. **`missionChance` expression.** §16 points at `missionParams.ts`; clamp 35–95 is named. Do not promote code bases into this GDD. Owner: living spec if Chance should become a named formula.
 7. **Sight-confirm interpolation** between ~0.45 s and ~1.7 s, **weaponNoise / rain noiseMul** magnitudes, and **threat-extra numeric tables** are code-owned. §10 names the behaviors. Do not copy code constants here.
+8. **Stop vs parked Hold Ground path.** Resolved: Stop clears pathing, including any parked Hold Ground path (living spec §10 “clears pathing”). Stance bits stay; release after Stop does not resume the walk. AC 6 asserts this.
+9. **Optional Destroy after the required sequence moves on.** Living spec never deactivates an optional. Whether Rust Haven’s transformer remains completable after Destroy/Defend pressure is unnamed. Do not invent it here.
 
 ---

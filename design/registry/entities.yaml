@@ -7,7 +7,7 @@
 # WRITTEN BY: /design-system Phase 5. READ BY: /design-system, /consistency-check.
 
 version: 1
-last_updated: "2026-09-08"
+last_updated: "2026-09-22"
 
 entities: []
 
@@ -40,11 +40,11 @@ formulas:
       - H
       - m
       - c
-    output_range: [0, 400]
+    output_range: [0, null]
     expression: "60 + Wprimary + Wsidearm + 0.25 * max(0, H - 90) + 8m + 6c"
-    notes: "m+c ≤ 2. Unassigned bodies are not in this term. Canonical: docs/game-design.md §8."
+    notes: "No named clamp in §8. m+c ≤ 2. Unassigned bodies are not in this term. Gate is mass_gate on the squad sum. Canonical: docs/game-design.md §8."
     added: 2026-09-08
-    revised: ""
+    revised: "2026-09-16"
 
   - name: squad_mass
     status: active
@@ -53,11 +53,11 @@ formulas:
       - design/gdd/roster-and-assembly.md
     variables:
       - operative_mass
-    output_range: [0, 400]
+    output_range: [0, null]
     expression: "sum of operative_mass over assigned (1-4)"
-    notes: "Empty bays add 0. Gate is separate. Canonical: docs/game-design.md §8."
+    notes: "Empty bays add 0. No named clamp in §8. Gate is separate mass_gate (400 kg). 400.1 kg is legal mass that fails Deploy. Canonical: docs/game-design.md §8."
     added: 2026-09-08
-    revised: ""
+    revised: "2026-09-16"
 
   - name: mass_gate
     status: active
@@ -189,7 +189,7 @@ formulas:
       - channel
     output_range: [0, 1]
     expression: "0 if muted else master * channel"
-    notes: "Mute zeroes every channel; unmute restores chosen levels. Authored per-bus bases sit under this factor — do not register those bases. Slider chrome scale is Audio Open Question 1 — do not register 0-100. Canonical: docs/game-design.md §15."
+    notes: "Mute zeroes every channel; unmute restores chosen levels. Authored per-bus bases sit under this factor — do not register those bases. Slider chrome scale (0-100) is not registered; audio.md records no open slider-scale choice. Canonical: docs/game-design.md §15."
     added: 2026-09-08
     revised: ""
 
@@ -230,6 +230,64 @@ formulas:
     expression: "unseeded choice among 3 committed city-hum clips at mission-bed start"
     notes: "Not keyed to contract, district, Opening hour, weather, or Threat. Unseeded; does not change outcomes. Canonical: docs/game-design.md §15, §17."
     added: 2026-09-08
+    revised: ""
+
+  - name: tax_yield
+    status: active
+    source: design/gdd/world-network.md
+    referenced_by:
+      - design/gdd/world-network.md
+      - design/gdd/economy-and-contracts.md
+      - design/gdd/persistence-and-validation.md
+      - design/gdd/tactical-mission.md
+      - design/gdd/interface.md
+    variables:
+      - base
+      - Control
+      - strain
+    output_range: [null, null]
+    expression: "round(base × Control/100 × strain)"
+    notes: "World Network computes; Economy deposits only A > 0. strain = 1 at unrest ≤ 60, else 1 − 0.02/unrest point above 60, floored 0.25. Printed for every open sector; paid only if Nexus-held. Do not claim ≥ 0 until §5 names a Control floor. Canonical: docs/game-design.md §5–6."
+    added: 2026-09-22
+    revised: ""
+
+  - name: collateral
+    status: active
+    source: design/gdd/economy-and-contracts.md
+    referenced_by:
+      - design/gdd/economy-and-contracts.md
+      - design/gdd/persistence-and-validation.md
+      - design/gdd/tactical-mission.md
+      - design/gdd/interface.md
+      - design/gdd/audio.md
+    variables:
+      - Reward
+      - civiliansHit
+    output_range: [0, "Reward"]
+    expression: "N = max(0, floor(civiliansHit)); collateral = min(Reward, 5000 × N)"
+    notes: "Unique squad first-hits only; CorpSec hits excluded; repeats do not stack. Loss still prices this line from stored Reward and N. Canonical: docs/game-design.md §6."
+    added: 2026-09-22
+    revised: ""
+
+  - name: net_payout
+    status: active
+    source: design/gdd/economy-and-contracts.md
+    referenced_by:
+      - design/gdd/economy-and-contracts.md
+      - design/gdd/persistence-and-validation.md
+      - design/gdd/tactical-mission.md
+      - design/gdd/interface.md
+      - design/gdd/audio.md
+    variables:
+      - won
+      - quiet
+      - Reward
+      - completed_bonus
+      - collateral
+    output_range: [0, null]
+    expression: "0 if quiet replay or not a Win; else Reward + max(0, completed_bonus) − collateral"
+    notes: "Quiet replay pays 0 CR but stores Reward. Optional bonus collapses at max(0, completed_bonus). Canonical: docs/game-design.md §6."
+    added: 2026-09-22
     revised: ""
 
 constants:
@@ -327,9 +385,10 @@ constants:
       - design/gdd/persistence-and-validation.md
     value: 60
     unit: records
-    notes: "Living spec §17 cap. Eviction policy is Open Question 3 — do not register FIFO."
+    # note was: "Eviction policy is Open Question 3 — do not register FIFO." before 2026-09-22
+    notes: "Living spec §17 cap. Eviction closed by source GDD + ADR-0015: FIFO, oldest out at 61."
     added: 2026-09-08
-    revised: ""
+    revised: "2026-09-22"
 
   - name: layout_min_width
     status: active

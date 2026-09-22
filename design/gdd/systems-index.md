@@ -2,7 +2,7 @@
 
 > **Status**: Draft
 > **Created**: 2026-09-07
-> **Last Updated**: 2026-09-08 (Audio D2 extract)
+> **Last Updated**: 2026-09-22 (Roster and Assembly approved by `/design-review` pass 2; all eight systems now Approved)
 > **Source Concept**: `design/gdd/game-concept.md` (extract from `docs/game-design.md` §§1–4)
 > **Technical Director Review (TD-SYSTEM-BOUNDARY)**: CONCERNS (accepted) 2026-09-07
 > **Producer Review (PR-SCOPE)**: OPTIMISTIC 2026-09-07
@@ -22,14 +22,14 @@ This is a brownfield index of the shipping cut. All eight systems are already sp
 
 | # | System Name | Layer | Category | Priority | Status | Design Doc | Depends On |
 |---|-------------|-------|----------|----------|--------|------------|------------|
-| 1 | World Network | Foundation | Core | MVP | Designed | design/gdd/world-network.md | — |
+| 1 | World Network | Foundation | Core | MVP | Approved | design/gdd/world-network.md | — |
 | 2 | Economy and contracts | Core | Economy | MVP | Approved | design/gdd/economy-and-contracts.md | World Network |
-| 3 | Research | Core | Progression | MVP | Designed | design/gdd/research.md | World Network, Economy and contracts |
-| 4 | Persistence and validation | Core | Persistence | MVP | Designed | design/gdd/persistence-and-validation.md | World Network, Economy and contracts, Research, Roster and Assembly |
-| 5 | Roster and Assembly | Feature | Gameplay | MVP | Designed | design/gdd/roster-and-assembly.md | World Network, Economy and contracts, Research |
-| 6 | Tactical mission | Feature | Gameplay | MVP | Designed | design/gdd/tactical-mission.md | World Network, Economy and contracts, Research, Roster and Assembly |
-| 7 | Interface | Presentation | UI | MVP | Designed | design/gdd/interface.md | World Network, Economy and contracts, Research, Roster and Assembly, Tactical mission, Persistence and validation |
-| 8 | Audio | Presentation | Audio | MVP | Designed | design/gdd/audio.md | Interface, Tactical mission |
+| 3 | Research | Core | Progression | MVP | Approved | design/gdd/research.md | World Network, Economy and contracts |
+| 4 | Persistence and validation | Core | Persistence | MVP | Approved | design/gdd/persistence-and-validation.md | World Network, Economy and contracts, Research, Roster and Assembly, Audio |
+| 5 | Roster and Assembly | Feature | Gameplay | MVP | Approved | design/gdd/roster-and-assembly.md | World Network, Economy and contracts, Research |
+| 6 | Tactical mission | Feature | Gameplay | MVP | Approved | design/gdd/tactical-mission.md | World Network, Economy and contracts, Research, Roster and Assembly, Persistence and validation |
+| 7 | Interface | Presentation | UI | MVP | Approved | design/gdd/interface.md | World Network, Economy and contracts, Research, Roster and Assembly, Tactical mission, Persistence and validation |
+| 8 | Audio | Presentation | Audio | MVP | Approved | design/gdd/audio.md | Interface, Tactical mission, Persistence and validation |
 
 Status tokens are exact: `Not Started`, `In Progress`, `In Review`, `Designed`, `Approved`, `Needs Revision`. `Designed` means `design/gdd/<system>.md` exists with the eight required headings (D2 alias of the living spec). Do not mark `Approved` until independent `/design-review` passes.
 
@@ -92,17 +92,17 @@ Design and extract from top to bottom. Systems at the top are foundations.
 
 1. Economy and contracts — depends on: World Network
 2. Research — depends on: World Network, Economy and contracts
-3. Persistence and validation — depends on: World Network, Economy and contracts, Research, Roster and Assembly
+3. Persistence and validation — depends on: World Network, Economy and contracts, Research, Roster and Assembly, Audio (settings slot; store vs mix)
 
 ### Feature Layer (depends on core)
 
 1. Roster and Assembly — depends on: World Network, Economy and contracts, Research
-2. Tactical mission — depends on: World Network, Economy and contracts, Research, Roster and Assembly
+2. Tactical mission — depends on: World Network, Economy and contracts, Research, Roster and Assembly, Persistence and validation (unsaved lifetime)
 
 ### Presentation Layer (depends on features)
 
 1. Interface — depends on: all gameplay systems plus persistence
-2. Audio — depends on: Interface, Tactical mission
+2. Audio — depends on: Interface, Tactical mission, Persistence and validation (settings slot)
 
 ### Polish Layer (depends on everything)
 
@@ -136,6 +136,8 @@ Also required before `/design-system`: `design/gdd/game-concept.md` and `design/
 ## Circular Dependencies
 
 - World Network ↔ Economy and contracts ↔ Tactical mission: mission results change the network; contracts consume sector state. **Resolution:** deploy takes a snapshot; debrief is the only campaign write-back (ADR-0001, ADR-0002). Do not re-own that protocol per GDD.
+- Persistence and validation ↔ Audio: settings-slot mixer values. **Resolution:** Persistence stores; Audio owns mix correctness. Do not keep a second mixer ledger.
+- Tactical mission → Persistence (unsaved lifetime): not a behavior cycle. Tactical depends on the no-save cut; Persistence lists Tactical as downstream.
 
 ---
 
@@ -157,8 +159,8 @@ Also required before `/design-system`: `design/gdd/game-concept.md` and `design/
 |--------|-------|
 | Total systems identified | 8 |
 | Design docs started | 8 |
-| Design docs reviewed | 1 |
-| Design docs approved | 1 |
+| Design docs reviewed | 8 |
+| Design docs approved | 8 |
 | MVP systems designed | 8/8 template-path files; 8/8 living-spec |
 | Vertical Slice systems designed | 0/0 |
 
@@ -168,13 +170,14 @@ Also required before `/design-system`: `design/gdd/game-concept.md` and `design/
 
 - [x] Extract `design/gdd/game-concept.md` and `design/gdd/game-pillars.md` (D1 remainder)
 - [x] World Network + Economy and contracts D2 extracts (`design/gdd/world-network.md`, `design/gdd/economy-and-contracts.md`)
-- [x] Research D2 extract (`design/gdd/research.md`) — CD-GDD-ALIGN APPROVED; pending independent `/design-review`
-- [x] Roster and Assembly D2 extract (`design/gdd/roster-and-assembly.md`) — CD-GDD-ALIGN APPROVED; pending independent `/design-review`
-- [x] Persistence and validation D2 extract (`design/gdd/persistence-and-validation.md`) — CD-GDD-ALIGN APPROVED; pending independent `/design-review`
-- [x] Tactical mission D2 extract (`design/gdd/tactical-mission.md`) — CD-GDD-ALIGN APPROVED; pending independent `/design-review`
-- [x] Interface D2 extract (`design/gdd/interface.md`) — CD-GDD-ALIGN APPROVED; pending independent `/design-review`
-- [x] Audio D2 extract (`design/gdd/audio.md`) — CD-GDD-ALIGN APPROVED; pending independent `/design-review`
-- [ ] Run `/design-review` on each completed template GDD (fresh session each)
-- [ ] Run `/setup-engine` — technical preferences still unconfigured
+- [x] Research D2 extract (`design/gdd/research.md`) — CD-GDD-ALIGN APPROVED; blockers patched 2026-09-14; live `/design-review` verdict unscored (review log)
+- [x] Roster and Assembly D2 extract (`design/gdd/roster-and-assembly.md`) — CD-GDD-ALIGN APPROVED; blockers patched 2026-09-15; live `/design-review` verdict unscored (review log)
+- [x] Persistence and validation D2 extract (`design/gdd/persistence-and-validation.md`) — CD-GDD-ALIGN APPROVED; independent `/design-review` APPROVED 2026-09-15
+- [x] Tactical mission D2 extract (`design/gdd/tactical-mission.md`) — CD-GDD-ALIGN APPROVED; independent `/design-review` APPROVED 2026-09-16
+- [x] Interface D2 extract (`design/gdd/interface.md`) — independent full `/design-review` pass 3 APPROVED 2026-09-16 for D2 alias reconciliation; prior scored blockers resolved. Campaign-failure recovery and implementation/runtime verification remain separate; see `design/gdd/reviews/interface-review-log.md`.
+- [x] Audio D2 extract (`design/gdd/audio.md`) — independent full `/design-review` pass 2 APPROVED 2026-09-16 for D2 handoff; all four prior blockers resolved. Runtime verification and companion consistency work remain separate; see `design/gdd/reviews/audio-review-log.md`.
+- [x] Run `/design-review` on Research (scored pass on patched text — APPROVED 2026-09-22 after mechanical patch + spot-check exit; review log)
+- [x] Run `/design-review` on Roster (scored pass 2 on patched text — APPROVED 2026-09-22; review log)
+- [x] Run `/setup-engine` — pin in `docs/technical-preferences.md` and `docs/engine-reference/`
 - [ ] Run `/gate-check systems-design` — D2 MVP files now exist
 - [ ] Do not regenerate `docs/game-design.md`; alias it until a later stub decision
