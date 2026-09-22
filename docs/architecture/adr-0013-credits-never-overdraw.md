@@ -68,7 +68,7 @@ Stamp the existing ledger. No migration. No envelope change. No `SAVE_VERSION` b
 
 ### Debit sites (two; both refuse overdraft)
 
-1. `spendCredits(amount)` — `amount > 0 && credits >= amount` then subtract, else identity no-op (`return s`, so refused spends do not notify Zustand subscribers). Research production path (`Research.tsx`): re-read `credits`; if short, return; `if (start(node, t)) spendCredits(cost)`. `researchStore.start` is occupancy only and does not read Credits.
+1. `spendCredits(amount)` — `amount > 0 && credits >= amount` then subtract, else identity no-op (`return s`, so refused spends do not notify Zustand subscribers). Research production path (`Research.tsx`): re-read `credits`; if short, return; `if (start(node, t)) spendCredits(cost)`. `researchStore.start` is occupancy only and does not read Credits. **Rider:** `design/gdd/research.md` Core Rule 3 extends this protocol with a post-spend `getState()` verification read, an internal occupancy undo, and a visible mismatch sentence — Unsatisfied in code until closed; this ADR's three-step path is the floor, not the ceiling.
 2. `hireOperative(candidateId)` — unknown candidate or `credits < cost` → return. Then `acceptHire`; if that fails, return (no debit). Then decrement by `candidate.cost`. Does **not** call `spendCredits`. Do not invert to spend-then-hire (charges a refused roster) or hire-then-`spendCredits` (free hire if spend no-ops).
 
 ### Deposits
