@@ -415,7 +415,7 @@ Ballistics projects are **unslotted**: always on, squad-wide. Cybernetics and Co
 
 Each operative has those four bays. A bay wears at most one completed slotted project that belongs to it. The project is a blueprint: every operative may wear the same one. Wearing a project applies all of its effects to that operative only. Prerequisites gate research, not wear.
 
-Unpinned bays, including new hires, wear **current issue** — the latest completed project in that bay. The director may **pin** a bay to an older completed project or to **stock issue**. A new completion updates unpinned bays only. Death drops that operative’s assignment, not the program.
+Unpinned bays, including new hires, wear **current issue** — the latest completed project in that bay. When two same-bay completions share an `endT`, house order (Ballistics, Cybernetics, Control) decides current issue, and the non-issue project of that tie counts as an older completed project. The director may **pin** a bay to an older completed project or to **stock issue**. A new completion updates unpinned bays only. Death drops that operative’s assignment, not the program.
 
 The assembly dossier shows the four bays for the focused operative: worn project or stock issue, and whether the bay is pinned. The research screen still names a project’s home bay. This is not a locker and not individually owned hardware.
 
@@ -984,6 +984,10 @@ These were open. They are decided. Do not silently reopen them.
 5. **Sector assets and the black market.** Not systems. They do not print. Garrison and Tax yield stay. Defense rating does not.
 6. **Remaining accessibility.** Product backlog. The designed-in list in §12 stands.
 7. **Telemetry depth.** Balance stays a debrief dashboard. Abort is a thin record. Further signals are backlog.
+8. **Attrition and the unsaved mission.** Abort, quit-to-desktop, and reload all escape every ledger — no fee, no injury, no unrest, no telemetry beyond the thin abort record. That is one accepted consequence of the unsaved-mission cut (§17; [ADR-0002](adr/0002-unsaved-mission.md)): pricing abort is theater while reload is free, and checkpointing the mission would violate the anti-pillar. Attrition is real only for players who push through and lose honestly. Win-erases-wounds stands: every authored ETA is at least the longest recovery, and that mercy is intended. Experience stays uncapped; the 400 kg mass gate is its own slow brake on veteran drift.
+9. **Squad size is a player choice.** Contracts do not scale with squad size. A solo deployment is legal Command play, not an exploit; the game does not bend maps or payouts to rescue it, and item pools stay squad-shared.
+10. **No win state.** The game is an endless sandbox; it ends when the player puts it down. Milestones only: the campaign-complete mark at the three authored contracts, and a research-program completion line on the Feed (a owed Interface obligation). After the program is complete and the roster sits at cap, Credits and Intel are intentionally inert — post-cap Credits read as score, nothing more.
+11. **Difficulty arc.** The intended arc is that the house becomes unstoppable: squad power grows uncapped while garrisons improve and threat extras retire with Control. Control never adds CorpSec HP. No counterweight is authored; late-campaign ease is the fantasy, not a defect.
 
 ### Backlog
 

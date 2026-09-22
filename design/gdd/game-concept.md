@@ -190,6 +190,23 @@ Not authored in the living spec. Product table is the constraint: keyboard and m
 - Five-verb command language buried under citygen chrome (pillar 1 veto)
 - Dual-homed Credits / Influence / intel making the two-layer loop unreadable
 
+### Shipping-cut holism (decided 2026-09-22 — §19 items 8–11)
+
+Recorded by `/review-all-gdds` 2026-09-16; decided in living spec §19 on 2026-09-22. These are accepted design facts now, not open tensions. D2 aliases must not fork numbers.
+
+- No win state: endless sandbox; ends when the player puts it down (§19 #10). Milestones: authored three = campaign complete; the 21-node program posts a completion Feed line (owed Interface obligation). Not a second core loop.
+- Mission attention peak (verbs, board, objectives, Alert, weather, kit, collateral count) is accepted; strategy is frozen in the field.
+- 1 Ready deploy and opening-four light tier are legal Command — squad size is a player choice and contracts do not scale with it (§19 #9).
+- Collateral caps at Reward; further N still feeds Unrest / clean-win Influence+Intel.
+- Quiet replay: 0 fee; XP, KIA, injury, and ETA still apply. Uncapped XP is intended veteran drift; the 400 kg gate is its slow brake (§19 #8).
+- Abort, quit, and reload all escape the ledger — one accepted consequence of the unsaved-mission cut (§19 #8). Attrition bites only on honest losses.
+- Generated market funds the research gap and may outpay the spine; that is the faucet.
+- After the program is complete and roster cap 8, Credits and Intel are intentionally inert — post-cap Credits are score (§19 #10).
+- Experience is uncapped per living spec §6; Control does not add CorpSec HP. The house becoming unstoppable is the authored arc (§19 #11).
+- Intel is an access resource with no spend-down after gates; intentional (§19 #10).
+- Control/Tax/Threat can snowball; dirty-win net Unrest is unnamed in §5.
+- Loss spends no ETA; KIA is permanent; hire-on-failed remains an Open Question.
+
 ### Technical Risks
 
 - Product-level performance budgets in GDD §20 are pending approval
