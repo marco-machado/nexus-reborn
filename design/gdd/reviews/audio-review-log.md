@@ -45,3 +45,18 @@ Prior verdict resolved: Yes
 - Structure and relative-link checks passed; scoped `git diff --check` passed. Specialist formula-domain/model checks support specification consistency, not mixer execution.
 - Audio is Approved in systems-index; no implementation, sibling GDD, registry, living-spec, asset or tuning changes were authorized or made.
 
+## Review — 2026-09-22 — Verdict: APPROVED
+
+Scope signal: L
+Specialists: none (--depth lean); prior full-depth APPROVED on same text 2026-09-16
+Passes: one scored pass; 0 blockers found → no fixes
+Suggestions: 1 (prior full-pass nonblocking recommendations remain: QA operationalization, runtime verification, companion consistency authorization)
+Decisions: none
+
+## Review — 2026-09-22 — Verdict: APPROVED WITH SUGGESTIONS
+Scope signal: L
+Specialists: none (--depth lean)
+Passes: one scored pass; 0 blockers found → no fixes
+Suggestions: 2 (carryover: runtime verification of static risks; QA operationalization)
+Decisions: none
+
