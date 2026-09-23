@@ -1,9 +1,10 @@
 # Technical requirement registry for /architecture-review
 # IDs are stable. Never renumber or delete entries; mark status: deprecated instead.
-version: 5
-last_updated: "2026-09-11"
+version: 6
+last_updated: "2026-09-22"
 source_review: docs/architecture/architecture-review-2026-09-11.md
 # Third full pass: no new TR-IDs; no requirement text changes; no deprecations.
+# v6 delta (2026-09-22): +TR-tactical-012, +TR-interface-008 from GDD cross-review 2026-09-22 v2 (living spec §10).
 engine: "React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU"
 
 requirements:
@@ -586,3 +587,23 @@ requirements:
     status: active
     coverage: covered
     adr: [ADR-0017]
+
+  - id: TR-tactical-012
+    system: tactical-mission
+    gdd: design/gdd/tactical-mission.md
+    requirement: A Win and a total squad wipe in the same step resolve as the Win — required completion wins; deaths still grade KIA
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0016]
+    revised: "2026-09-22"
+
+  - id: TR-interface-008
+    system: interface
+    gdd: design/gdd/interface.md
+    requirement: A pyrrhic win (same-step wipe-Win on an incomplete campaign) pays the full win outcome; the CAMPAIGN FAILED banner takes precedence and the invoice notes PYRRHIC — SQUAD LOST // CAMPAIGN FAILED
+    domain: UI
+    status: active
+    coverage: covered
+    adr: [ADR-0020]
+    revised: "2026-09-22"

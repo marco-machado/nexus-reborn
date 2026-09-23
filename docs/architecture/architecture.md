@@ -2,12 +2,12 @@
 
 ## Document Status
 - Version: 1.0
-- Last Updated: 2026-09-11
+- Last Updated: 2026-09-22
 - Engine: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
 - Review mode: full
 - GDDs Covered: `design/gdd/game-concept.md`, `game-pillars.md`, `systems-index.md`, `world-network.md`, `economy-and-contracts.md`, `research.md`, `persistence-and-validation.md`, `roster-and-assembly.md`, `tactical-mission.md`, `interface.md`, `audio.md` (living spec remains `docs/game-design.md`)
 - ADRs Referenced: ADR-0001 … ADR-0020 (all Accepted)
-- TR baseline: 64 requirements in `docs/architecture/tr-registry.yaml` (architecture-review 2026-09-11: 64 covered, 0 gaps)
+- TR baseline: 66 requirements in `docs/architecture/tr-registry.yaml` (registry v6 — 2026-09-22 refresh from the GDD cross-review: +TR-tactical-012, +TR-interface-008; 66 covered, 0 gaps)
 - Technical Director Sign-Off: 2026-09-11 — APPROVED WITH CONDITIONS
 - Lead Programmer Feasibility: REVISED
 - TD-ARCHITECTURE: CONCERNS (API Boundaries abbreviated) → revised 2026-09-11 → APPROVED WITH CONDITIONS (QQ-01 budgets; QQ-02 is implementation debt on Accepted ADR-0009/0019, not a missing ADR)
@@ -361,7 +361,7 @@ All 20 ADRs are **Accepted**. None are Proposed. None conflict with the layer or
 
 ### Traceability
 
-64 / 64 covered, 0 partial, 0 gaps (`docs/architecture/tr-registry.yaml`; architecture-review 2026-09-11). No Required New ADR from uncovered TRs.
+66 / 66 covered, 0 partial, 0 gaps (`docs/architecture/tr-registry.yaml` v6 — 2026-09-22 refresh from the GDD cross-review: TR-tactical-012, TR-interface-008; prior full pass architecture-review 2026-09-11). No Required New ADR from uncovered TRs.
 
 This document synthesizes existing ADRs. It does not mint a new Foundation decision.
 
@@ -393,3 +393,4 @@ Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; 
 | QQ-02 | `DeployParams` / `startMission` code lags ADR-0009 / ADR-0019 | High | **Implementation debt.** Not a missing ADR. Stories implement the Accepted contracts; do not re-decide |
 | QQ-03 | Stub vs keep `docs/game-design.md` after D2 extracts | Low | Design process; not architecture |
 | QQ-04 | Hire-on-failed (Roster OQ1) | Low | Roster GDD; not ADR-0020 |
+| QQ-05 | Pyrrhic-win HUD presentation (banner precedence + PYRRHIC invoice note) authored in living spec §10, not yet implemented | Medium | Implementation debt — small dev task; not a missing ADR |
