@@ -1,6 +1,6 @@
 # HUD Design
 
-> **Status**: In Design (all sections written; pending /ux-review)
+> **Status**: Approved (/ux-review hud 2026-09-29; 2 advisory items open: objective-mark accessible names, null-data handling)
 > **Author**: user + ux-designer
 > **Last Updated**: 2026-09-29
 > **Template**: HUD Design
