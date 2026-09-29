@@ -2,9 +2,9 @@
 
 ## Document Status
 - **Version**: 1.0
-- **Last Updated**: 2026-09-07
-- **Approved By**: pending — extracted from living spec; CD-SYSTEMS CONCERNS 2026-09-07
-- **Status**: Draft
+- **Last Updated**: 2026-09-29
+- **Approved By**: project owner 2026-09-29 (CD-SYSTEMS CONCERNS 2026-09-07 cleared at the Technical Setup gate hygiene pass)
+- **Status**: Approved
 - **Source**: `docs/game-design.md` §2. Living spec remains source of truth.
 
 ---

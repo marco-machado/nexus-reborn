@@ -16,6 +16,7 @@
 export const BG = '#04070a'
 export const BG_PANEL_SOLID = '#0a1412'
 export const INK = '#b8d8cf'
+export const PRINT_WHITE = '#e2f6ee' // settled record; same value as --ink under :root.s-high-contrast
 export const INK_DIM = '#5d7d75'
 export const INK_FAINT = '#35504a'
 export const TEAL = '#7ef0d4'
