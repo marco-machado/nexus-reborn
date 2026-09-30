@@ -2,7 +2,7 @@
 
 > **Status**: In Design (batches 1–3 written; all Interface GDD surfaces covered; pending `/ux-review`)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-09-29
+> **Last Updated**: 2026-09-30
 > **Template**: Interaction Pattern Library
 > **Sources**: `design/gdd/interface.md` Rules 4–19; UI Requirements of all eight system GDDs; `design/art/art-bible.md` §7.1–7.5; `design/accessibility-requirements.md` (Standard tier); `src/ui/PauseMenu.tsx`
 
@@ -53,6 +53,7 @@ One terminal, one interaction language (Interface Rule 4). Input is keyboard + m
 - First activation arms: the control relabels and shows a non-color armed state (label text plus a ≥2 px double-line frame; red may reinforce, never carries alone).
 - Second activation while armed confirms immediately.
 - Timeout disarms; the next activation only re-arms. No timing pressure is placed on the player.
+- Escape disarms; it never confirms. Same outcome as timeout. See Escape.
 - Library default arming window is 3 real seconds (the Abort value, Interface Rule 12). Screen specs may not shorten it.
 - Accessibility: keyboard-activatable both steps; armed state announced in the control's accessible label.
 
@@ -116,7 +117,7 @@ One terminal, one interaction language (Interface Rule 4). Input is keyboard + m
 **Specification**:
 - Focus is trapped while open and restored to the invoking control on close; nested Settings returns to Pause.
 - In a mission the sim and camera freeze; the feed stays visible behind a translucent panel. No drop shadow or glow separates panel from feed (art bible §7.1).
-- Pause opens with Space or Escape; Escape closes overlays.
+- Pause opens with Space or Escape. Escape is consumed by remap capture, then by the top overlay, before it toggles Pause. See Escape.
 - Tutorial toasts are not modal: they never block input or pause the sim.
 
 **When to Use**: pause, settings, opt-in dashboards.
@@ -161,7 +162,7 @@ One terminal, one interaction language (Interface Rule 4). Input is keyboard + m
 
 **Specification**:
 - The explicit-target reticle and the grenade reticle are different shapes, both non-color-backed, strokes ≥2 px (§7.5 #4).
-- G arms and cancels grenade targeting (Interface Rule 15). Escape is bound to Pause (`src/game/bindings.ts:96`); whether Escape also cancels targeting is Open Question 4.
+- G arms and cancels grenade targeting and does not open Pause (Interface Rule 15). Escape does not cancel targeting in place: it opens Pause, and entering Pause clears targeting. See Escape.
 - First frame ≤100 ms after the state change; no print animation on targeting.
 
 **When to Use**: any mode where the next click picks a target.
@@ -342,6 +343,54 @@ One terminal, one interaction language (Interface Rule 4). Input is keyboard + m
 
 ---
 
+## Animation Standards
+
+Source: art bible §7.4–§7.5. Banned: bounce, overshoot, scale-pop, slide-and-fade panels, hover glow, parallax, spring, looping shimmer on idle chrome. Easing is linear or one hard ease-out. Nothing in the UI exceeds 500 ms except a tick that is tracking a real value.
+
+| Motion | Duration | Easing | Applies to | Reduced motion |
+|---|---|---|---|---|
+| Urgent state, first frame | ≤100 ms from input or state change; final state first, no entrance | none | Order marks (P-07), reticles (P-08), selection, Alert, red toast (P-11) | Same. No decoration follows |
+| Bracket snap, focus ink-step | ≤150 ms | linear or one ease-out | Focus brackets (P-04), panel frame drawing on | Static brackets. No travel |
+| Print, record surfaces only | ~110 ms per row (`index * 110 ms`); row fade ≤120 ms; panel frame ≤150 ms | linear or one ease-out | Invoice rows (P-18), list and document panes | Static right-aligned column. Rows are present, not staggered |
+| Scan | One pass, ≤400 ms, once per open. Never an idle loop | linear | Dossier, World Network Scan | Sweep absent. Content is already there |
+| Tick | Discrete steps matched to the value. Never an eased tween toward a number the sim does not hold | linear | Money (`CR`), remaining time | Static figure. The number stays |
+| Blink / breathe | Alarm ~2 Hz. Selection breathes slow. Threat markers use their own cadence. Only permitted loops | n/a | Alert, selection (P-04), threat marks | Alarm → static hatch + edge glow + printed word. Selection → closed double ring. Threat → static marker |
+| Arm window | 3 real seconds. Not a motion | n/a | P-01 | Same window. Armed state is the double-line frame plus label, not a pulse |
+| Alert toast hold | Prints in one frame, holds ≥3 s, then collapses | none | P-11 | Same hold. No collapse animation required |
+
+Print never runs on urgent state. At most one idle motion on Menu, Research, Assembly, and Debrief. In a mission, at most ~6 chrome readouts animate at once, and alarm is the only red-cadence motion.
+
+## Sound Standards
+
+Audio owns the clips and the mix. This table only names the event, the existing voice, and the bus. No new cue.
+
+| Pattern event | Voice | Bus | Do not |
+|---|---|---|---|
+| Selection or issued order (P-04, P-07) | Short acknowledgement click | UI | No VO |
+| Button / overlay activate, Pause open (P-05) | UI click | UI | — |
+| Spend succeeds (P-02) | Confirmation | UI | No second confirm sting |
+| Objective complete | Objective-complete | UI | — |
+| Interaction progress | Interaction progress | UI | — |
+| Disabled control activated (P-03) | None required | — | A disabled control need not emit an activation event |
+| Abort arms (P-01) | UI click | UI | No mission-end sting on arm |
+| Abort confirms | None specified here | — | No Debrief sting. Landing is not this table |
+| Result banner, invoice, quiet replay (P-18) | None | — | No celebration sting. Ticks are silent, or one soft tick per ledger group — never per digit |
+| Alert toast onset (P-11) | One percussive red beat, plus the alert sting only when Tactical already requests it | Combat for the sting | Not every Alert rise emits a sting. Toast is never the only channel |
+| Alert 1–3 held | Tension drone, follows HUD Alert | Combat | Do not stack a second layer |
+| Weapon, reload, blast, ability, hit, death | Existing combat voices | Combat | UI stays under weapon reports in the reference mix |
+
+Mute and a zero channel silence the bus. No cue bypasses that. Captions stay backlog.
+
+## Escape
+
+One key, consumed by the innermost owner. It never confirms a spend or a discard.
+
+1. **Remap capture (P-13).** Escape cancels capture and does not close Settings. Shipped in `src/ui/Settings.tsx`.
+2. **Top overlay only.** Balance over Settings: Escape closes Balance and leaves Settings. Settings inside Pause: Escape returns to Pause. Shipped for Balance; P-05 and Interface AC 18 for the nest.
+3. **Armed confirm (P-01).** Escape disarms and does not discard. On Menu there is no parent overlay, so the screen stays. On Pause, Escape still closes the overlay (step 4); closing it disarms Abort and does not confirm. The 3 s timeout remains the other disarm. This is the Menu spec's rule, not current Menu code.
+4. **Pause.** If nothing above consumed it, Space or Escape opens Pause. Escape also closes Pause from anywhere, including when a dialog button is focused. Space does not: a focused dialog button keeps Space. Shipped in `src/scene/Input.tsx`.
+5. **Grenade targeting (P-08).** G arms and cancels, and does not open Pause. Escape does not cancel targeting in place. It opens Pause, and entering Pause clears targeting (`setPaused` already sets `grenadeTargeting: false`). No second Escape meaning.
+
 ## Gaps & Patterns Needed
 
 Not yet catalogued: none required by the current Interface GDD surfaces. Candidates that may appear in the screen specs: Scan marker / Focus selection on World Network; Brief map (the District); Assembly bays and dossier; candidate market; Research node graph; first-visit overlay. Add them when the screen spec that uses them is written.
@@ -353,7 +402,7 @@ Not yet catalogued: none required by the current Interface GDD surfaces. Candida
 1. Should a disabled control (P-03) stay focusable with its reason reachable from the keyboard, or be skipped in tab order with the reason as static text? Undecided; owner: Settings / Assembly specs.
 2. The 3 s window is the library default for P-01 (decided 2026-09-29). Interface Rule 12 specifies it only for Abort; New Operation and Balance Clear inherit it by this library and the Interface GDD does not yet say so.
 3. No `design/player-journey.md` exists; patterns were derived from GDD/art-bible rules, not journey phases.
-4. Does Escape cancel grenade targeting before it opens Pause, or does it always open Pause? The GDD is silent; owner: Mission HUD spec with Tactical.
+4. Closed 2026-09-30. Escape does not cancel grenade targeting in place. G arms and cancels. Escape opens Pause; entering Pause clears targeting. See Escape.
 5. P-12's reduced-motion fallback (numeral alone, no ink sweep) is inferred from art bible §7.4/§7.5 ("every motion-backed cue names its static fallback"), not stated for ability slots. Confirm in the Mission HUD spec.
 6. The Interface GDD (AC 22) requires the unfiled state to change once Persistence reports a successful autosave, but does not say what it changes to. Owner: Debrief spec.
 7. P-17: the non-color Live/Review cue is required (AC 27) but its form (label, glyph or both) is undecided. Owner: World Network spec.
