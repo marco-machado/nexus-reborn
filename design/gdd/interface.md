@@ -2,7 +2,7 @@
 
 > **Status**: Approved (independent `/design-review`, full pass 3, 2026-09-16; D2 alias reconciliation only)
 > **Author**: extract from docs/game-design.md §12, §13, §14 (session rules §4; Settings/Quality/UX §17, §20)
-> **Last Updated**: 2026-09-16
+> **Last Updated**: 2026-10-05
 > **Implements Pillar**: One corporate operating system; Information is operational power; Command, do not micromanage
 > **Living spec**: `docs/game-design.md` §12, §13, §14 — this file aliases them; do not fork rules
 > **Specialists (full)**: game-designer, systems-designer, ux-designer, ui-programmer, economy-designer, qa-lead, gameplay-programmer, audio-director, lead-programmer, performance-analyst; senior synthesis: creative-director. Full pass 3: APPROVED for the current D2 document. Unresolved flow decisions and implementation/runtime verification remain separate; see [review log](reviews/interface-review-log.md).
@@ -66,7 +66,7 @@ This serves **One corporate operating system**, **Information is operational pow
 
 11. **Minimap.** A tactical instrument, not a decoration. Shares the camera’s yaw so up is up. Shows buildings, roads, Extraction and checkpoints, the active-objective pulse, CorpSec patrol/suspicious/combat, sight cones for suspicious and combat CorpSec, civilians, operatives, and the camera’s ground footprint. **Three zoom levels.** Click and drag steers the camera. **Difficulty must not strip this information.** Zoom magnitudes for those three levels are unnamed in the living spec — do not invent them.
 
-12. **Pause and Abort.** Space or Escape opens a modal pause: the sim and the camera freeze, every remappable binding prints from the **same table** the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a **two-step confirmation with a three-second arming window**: first activation arms, a second while armed confirms immediately, and timeout disarms without discarding. Confirmation discards the mission without a Debrief ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). Abort chrome is Interface; discard is Persistence + ADR-0002.
+12. **Pause and Abort.** Space or Escape opens a modal pause: the sim and the camera freeze, every remappable binding prints from the **same table** the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a **two-step confirmation with a three-second arming window**: first activation arms, a second while armed confirms immediately, and timeout disarms without discarding. New Operation and telemetry Clear use that same window ([P-01](../ux/interaction-patterns.md)): first activation arms and shows the hint slot, a second activation while armed confirms, and timeout or Escape disarms without erasing. Screen specs may not shorten it. Living spec §12 names the three seconds for Abort; this alias applies that expiry to the other two discards so chrome does not invent a second duration. Confirmation discards the mission without a Debrief ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). Abort chrome is Interface; discard is Persistence + ADR-0002.
 
 13. **Tutorial and advisories.** The first mission teaches with dismissible HUD toasts — Select, Move, Attack, stances, role ability, items, weapon swap, Extraction — that name the **current** bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. Toasts **never block input** and **never pause the sim**. One-shot advisories fire **at most once per campaign**: an operative under 35% with med kits in stock; the first combat Alert; a role ability left ready for a minute; a valid deployment in Roster’s **heavy mass tier**. The last is the existing heavy-tier speed lesson (`src/game/world.ts` startup / `hint-overweight`), not a deployment beyond the refused mass gate; the living §12 “over the mass gate” wording conflates those conditions. A weather front writes a Comm-log line (Tactical emits; HUD prints).
 
@@ -104,7 +104,7 @@ This serves **One corporate operating system**, **Information is operational pow
 | Strategic header clock | Running / Paused; speed 1× / 2× / 4× / 8× | Only on the four Screens. World Network owns the clock; Interface presents Pause and Clock speed |
 | Mission pause | Live / Paused (modal) | Space/Escape. Sim and camera freeze. Settings nested inside. Resume returns. Abort arms a second activation for up to 3 real seconds; timeout disarms |
 | Abort confirm | Idle / Armed / Confirmed | First activation → Armed, no discard. Second activation while Armed → Confirmed immediately, no Debrief or campaign write. Timeout → Idle while still paused; the next activation only re-arms. Disarming without confirmation does not discard |
-| New Operation | Idle / Armed / Confirmed | Two-step erase. Armed does not erase. Settings survive confirm |
+| New Operation | Idle / Armed / Confirmed | Two-step erase with the same 3 real-second arming window as Abort. Armed does not erase. Timeout or Escape disarms. Settings survive confirm |
 | Remap table | Defaults / player remaps | One table. Pause, tutorial, and handlers read it. Pause, slots 1–4, and mouse reserved |
 | Tutorial | Unseen steps / seen / skipped | First mission toasts. Advance on action or dismiss. Skip Tutorial marks all seen. Persists with campaign (Persistence) |
 | Advisories | Unfired / fired (once per campaign) | Under 35% HP + med kits; first combat Alert; ability-ready minute (see formula/source distinction); valid heavy-tier deployment, not an over-limit deployment |
@@ -116,7 +116,7 @@ This serves **One corporate operating system**, **Information is operational pow
 | Invoice | None / Building at Debrief / Applied once in memory | Abort: never built. All five priced money rows, including zeros. Quiet: banner names the zero |
 | Filing status | Unfiled / durably filed; failed write remains unfiled | Debrief is unfiled. Successful next-Screen autosave (World Network or Brief Replay) files it. Failure is visibly not success; Persistence supplies outcomes |
 | Menu campaign state | Never-started / invalid-unreadable / valid | Continue absent for the first two, present for valid. Distinct reason for invalid-unreadable; New Operation write failure is not a durable-erase success |
-| Telemetry | Recording off/on; retained log empty/nonempty | Off stops appends, not retention. Clear empties the log; New Operation preserves it. Entry-point policy is Open Question 9 |
+| Telemetry | Recording off/on; retained log empty/nonempty | Off stops appends, not retention. Clear empties the log and uses the same 3 s arming window as Abort; New Operation preserves the log. Entry-point policy is Open Question 9 |
 
 ### Interactions with Other Systems
 
@@ -148,7 +148,7 @@ Presentation only. Do not live-query the running mission to price or shove. Do n
 
 Do not fork. Canonical chrome numbers: `docs/game-design.md` §12, §13, §4, §17. Interface does **not** own `hit_chance`, `risk_index`, `collateral`, `net_payout`, `tax_yield`, `mass_gate`, `injuryRecoverySec`, or `win_rate`. Those stay on their source GDDs / registry. `abort_rate` is named, not specified.
 
-The Abort confirmation window is defined as:
+The P-01 arming window (Abort, New Operation, telemetry Clear) is defined as:
 
 `arming window = 3 real seconds`, two-step; this is an expiry, not a minimum hold.
 
@@ -159,7 +159,7 @@ The Abort confirmation window is defined as:
 | arming window | — | int | 3 s | Real-time timeout scheduled by the first activation, independent of the frozen Tactical clock |
 | steps | — | enum | {idle, armed, confirmed} | First activation arms; second while armed confirms immediately; expiry disarms |
 
-**Output Range:** Discrete. Armed does not discard. Confirmed discards without Debrief or campaign write. Timeout returns to Idle while remaining paused. No explicit Cancel button is required: letting the window expire cancels the armed confirmation. Resuming instead leaves pause without discarding the mission. The exact ordering of a click and timeout delivered together is the existing event ordering, not a new equality guarantee.
+**Output Range:** Discrete. Armed does not discard or erase. Timeout returns to Idle; on Pause the mission stays paused. No explicit Cancel button is required: letting the window expire cancels the armed confirmation. Confirm outcomes stay with their owners: Abort discards the mission without Debrief or a campaign write; New Operation erases the campaign blob; telemetry Clear empties the log. The 3 s mechanics are shared. Resuming from Pause leaves pause without discarding the mission. The exact ordering of a click and timeout delivered together is the existing event ordering, not a new equality guarantee.
 **Example:** Pause → Abort → second activation after 1 s, before expiry → confirm immediately. Alternatively, let the 3 s timeout disarm → mission still paused; another activation only re-arms. Campaign state is unchanged by arming, expiry, or confirmed Abort.
 
 The `text_scale` formula is defined as:
@@ -256,7 +256,7 @@ All knobs are owned by `docs/game-design.md` §12, §13, §16, §17. This GDD do
 | Layout floor 1280×720 | §12 / §17 | Clipping is a bug; a second “mobile” layout is out of scope |
 | Text scale {90,100,110,125}% | §12 | Continuous scale that clips; 125% that compresses panels |
 | Abort confirm 3 s arming window, two-step | §12 / existing `PauseMenu.tsx` | One-click discard; confusing expiry with a mandatory hold |
-| New Operation / telemetry Clear two-step chrome | Persistence / §4 / §17 | **Not an Interface retune** — Persistence owns erase/clear; Interface presents two-step |
+| New Operation / telemetry Clear two-step chrome | Persistence / §4 / §17 | **Not an Interface retune** — Persistence owns erase/clear; Interface presents two-step with the same 3 s expiry as Abort, not a second duration |
 | Result delay 2.5 s of Tactical elapsed time | Tactical §10 / Rule 18 | **Not an Interface knob** — no minimum-visible or independent UI timer guarantee |
 | Tutorial toasts (non-blocking) | §12 | Modal tutorial that pauses the sim (forbidden) |
 | Advisory under 35% HP / 60 s ability / heavy mass tier | §12 description; existing hint source; Roster mass tier | Spam every mission; confuse heavy-tier slowdown with forbidden over-limit deployment |

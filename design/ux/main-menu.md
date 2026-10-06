@@ -118,7 +118,7 @@ New or unresolved patterns:
 - **Save status line**: P-19. Not a new pattern. Not a P-14 readout — P-14 is a numeric chip and value. Copy stays in this spec.
 - **Armed hint line in a message slot**: extends P-01. Not a P-11 toast. P-11 is a dismissible `role="status"` toast; Z5 is a reserved slot.
 - **Fiction chrome** (boot lines, clock, footer): no pattern. Not P-14.
-- **Button face**: no library pattern. Focus is P-04. Press is the §7.4 ink-step in Transitions, not a new button spec. Flagged for the library only if a later spec needs a named button pattern.
+- **Button face**: recorded in the pattern library Standard controls table. Focus is P-04. Press is the §7.4 ink-step. Not a numbered pattern.
 - **Erase-failure pair**: not a new pattern. P-11 is the immediate channel; P-16 is the record. Contract below.
 
 ### ASCII Wireframe
@@ -352,7 +352,7 @@ Numbers and formats: the UTC clock is `HH:MM:SS` and locale-independent; version
 | 3 | World Network has no UX spec. It must host the erase-failure contract in this spec (copy, P-11 toast, P-16 line). Zone coordinates inside that screen are for `/ux-design` World Network. | ux-designer | Open (host only; contract closed) |
 | 4 | Erase outcome API: `startNewOperation` returns `void` and swallows the storage error; the UI needs the outcome. | Persistence | Open; implementation dependency |
 | 5 | Three-state save read: `hasValidSave` returns a boolean; the UI needs absent vs. invalid. | Persistence | Open; implementation dependency |
-| 6 | Pattern library: add the armed-hint line as a P-01 extension (not P-11). Fiction chrome has no pattern. Button face has no pattern (focus is P-04; press is the §7.4 ink-step). Save status is P-19, not a new pattern. | ux-designer | Open |
+| 6 | Pattern library: armed-hint slot is P-01 (not P-11). Button face is recorded in the library Standard controls table (focus P-04; press is the §7.4 ink-step). Save status is P-19. Fiction chrome still has no pattern, by decision. | — | Closed 2026-10-05 |
 | 7 | Escape disarms on the Menu. P-01 and the pattern library Escape section already say this (pattern half closed). Interface Rule 14 still does not, so the GDD wording needs an update. Initial focus on the primary CTA is new versus the built code. | ux-designer / game-designer | Open (GDD only) |
 | 8 | Contrast of dim chrome. Default Ink Dim `#5d7d75` on Void is 4.48:1 and fails at boot/footer sizes. Spec requires ≥4.5:1 and ≥10 px at 100% scale, Telemetry Ink `#b8d8cf` or lighter. High-contrast Ink Dim passes at 10.51:1. | — | Closed 2026-10-05 |
 | 9 | Accessibility tier: defined (Standard). | — | Closed |
