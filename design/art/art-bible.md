@@ -2,6 +2,7 @@
 
 > **Status**: Complete (all 9 sections) · Authored 2026-09-23
 > **Review mode**: full · **Art Director Sign-Off (AD-ART-BIBLE)**: CONCERNS — all 8 items revised same day [2026-09-23]
+> **Revision**: 2026-10-05 — §2.1 no longer requires a Menu cost ticker. Menu chrome does not carry campaign state. Not a new art-director sign-off.
 > **Primary reference**: `inspiration/05-gameplay-ui.png`
 > **Source concept**: `design/gdd/game-concept.md` · Engine/tech constraints: `docs/technical-preferences.md`
 
@@ -32,7 +33,7 @@ Section 1 fixed the one instrument; this section tunes it per game state. Every 
 
 ---
 
-**2.1 Menu — the machine before you.** The terminal is already running when you arrive; you are not welcomed, you are logged in. Cool, very low contrast, dim: hairline cyan at low duty cycle over near-black, no glow bloom, pre-dawn stillness of a facility that never closes. The mood-carrier is the boot/self-test log scrolling behind the menu options, joined by a slow amber ticker of standing campaign costs — money counting itself while you idle, the only warm pixels on screen. Design test: the menu must feel like arriving mid-shift at an occupied console, not like a title screen.
+**2.1 Menu — the machine before you.** The terminal is already running when you arrive; you are not welcomed, you are logged in. Cool and dim: hairline cyan at low duty cycle over near-black, no glow bloom, pre-dawn stillness of a facility that never closes. Dim is ground and hairline luminance, not text below the §7.5 contrast floor. The mood-carrier is the boot/self-test lines behind the menu options. They are decorative fiction chrome and do not print standing campaign costs or any other game state — Credits and costs live on the World Network, and amber is not spent on this surface. Design test: the menu must feel like arriving mid-shift at an occupied console, not like a title screen.
 
 **2.2 Network/Strategy Map — the city as a ledger.** Omniscient, detached vigilance: the district rendered as a live wireframe obligation-grid, its dread ambient rather than acute. Cool, medium contrast — the highest ambient cyan density of any state — but motionless in time: the wireframe has no hour, only clock cadence. Adjectives do the work; spectacle does not. The mood-carrier is sector-ownership wash in cyan against amber contract nodes pulsing on the world clock: money breathing in the grid. Red is structurally absent here — an all-cyan map is the visual statement that, right now, nothing is on fire (yet).
 
