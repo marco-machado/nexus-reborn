@@ -1,16 +1,19 @@
 # Architecture Traceability Index
-Last Updated: 2026-09-11 (third full pass)
+Last Updated: 2026-10-05 (coverage moved to `requirements-traceability.md`; this file is the prior 64-row pass)
 Engine: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU
 Source review: `docs/architecture/architecture-review-2026-09-11.md`
-TR registry: `docs/architecture/tr-registry.yaml`
+TR registry: `docs/architecture/tr-registry.yaml` v6 (66 covered)
+Current matrix: `docs/architecture/requirements-traceability.md`
 Master architecture: `docs/architecture/architecture.md`
 Prior index: 2026-09-11 second pass (64 covered / 0 partial / 0 gaps; architecture.md not yet in tree)
 
 ## Coverage Summary
-- Total requirements: 64
-- Covered: 64 (100%)
+- Total requirements: 66 (registry v6). This file's table below is the 2026-09-11 64-row pass.
+- Current matrix, including TR-tactical-012 and TR-interface-008: `requirements-traceability.md`
+- Covered in the registry: 66 (100%)
 - Partial: 0
 - Gaps: 0
+- Foundation (World Network, 12 TRs): 0 gaps
 
 ADRs 0001–0008 cite `docs/game-design.md`. ADRs 0009–0020 cite `design/gdd/*.md` TR-IDs. Coverage is from ADR decision text (implicit counts as covered). All covering ADRs are Accepted. Master architecture exists.
 
@@ -91,7 +94,7 @@ Remaining documentation (not TR gaps):
 - World Network GDD AC leftover “snapshot DTO” vs Core Rule 11.
 - Several GDD sibling-extract footnotes still say files “are not extracted yet.”
 - QQ-02: **implementation debt** (not a missing ADR) — live `DeployParams` / Team Deploy lag Accepted ADR-0009 / ADR-0019. Do not re-decide.
-- QQ-01: performance budgets still PENDING in prefs / GDD §20.
+- QQ-01: performance budgets set 2026-10-05 in `docs/technical-preferences.md` (ratified caps plus the §20 procedure; no product FPS).
 
 `docs/architecture/architecture.md` ADR Audit hygiene now matches prefs (ADR log 0001–0020; Forbidden Patterns filled).
 
