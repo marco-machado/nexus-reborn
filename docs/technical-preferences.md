@@ -33,10 +33,13 @@
 
 ## Performance Budgets
 
-- **Target Framerate**: [PENDING — `docs/game-design.md` §20]
-- **Frame Budget**: [PENDING — `docs/game-design.md` §20]
-- **Draw Calls**: [PENDING — `docs/game-design.md` §20]
-- **Memory Ceiling**: [PENDING — `docs/game-design.md` §20]
+Set 2026-10-05 from ratified constraints. No product FPS number is approved. `docs/game-design.md` §20 remains the acceptance procedure: an unapproved figure is not a release gate. Art bible §8.3/§8.4 triangle and 300-draw-call figures stay provisional and are not these budgets.
+
+- **Target Framerate**: No product FPS. Do not treat 60 as a gate.
+- **Frame Budget**: City-architecture pass only — ≤10% frame-time growth versus that pass's baseline (`docs/city-architecture.md`). Not a whole-game gate.
+- **Draw Calls**: No product ceiling. The city-architecture high sample measured 164 (`docs/qa/city-architecture/README.md`). The art bible §8.4 ceiling of 300 is provisional and is not ratified.
+- **Memory Ceiling**: No product number until a §20 fixture is approved.
+- **Ratified caps**: 1280×720 minimum, no clip. ≤200 props per district. ≤70 sodium lamps per district and ≤120 district-wide. Instanced shared materials. Per-frame unit poses stay out of React state. Quality must not drop building ghosting or minimap information.
 
 ## Testing
 

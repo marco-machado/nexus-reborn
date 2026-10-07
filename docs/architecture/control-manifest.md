@@ -22,8 +22,7 @@ ADR-0009, ADR-0010, ADR-0016, ADR-0017, ADR-0018, ADR-0020.
 ADR-0016 living-spec defects are **not** stamped: do not treat current
 `orderHoldFire` nulling Explicit, or `orderAttack` on devices, as the contract.
 
-Quality numeric budgets in `docs/technical-preferences.md` are PENDING. Do not
-invent FPS targets here.
+Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`. There is no product FPS number. Do not invent one here.
 
 ---
 
@@ -164,7 +163,7 @@ invent FPS targets here.
 ### Performance Guardrails
 
 - **Credits refuse** is an identity no-op (no subscriber wake on no-change). — source: [ADR-0013](adr-0013-credits-never-overdraw.md)
-- **Fire lane:** existing sim plus a stray scan per miss. No new frame budget (FPS still PENDING). — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
+- **Fire lane:** existing sim plus a stray scan per miss. No new frame budget (no product FPS number; ratified caps are in `docs/technical-preferences.md`). — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
 - **Deploy gate:** sum of ≤4 operatives. No physics mass system. — source: [ADR-0019](adr-0019-deploy-gate.md)
 
 ---
@@ -280,10 +279,11 @@ Source: `docs/technical-preferences.md`.
 
 | Target | Value |
 |--------|-------|
-| Framerate | PENDING — `docs/game-design.md` §20 |
-| Frame budget | PENDING — `docs/game-design.md` §20 |
-| Draw calls | PENDING — `docs/game-design.md` §20 |
-| Memory ceiling | PENDING — `docs/game-design.md` §20 |
+| Framerate | No product FPS. §20 procedure. Do not treat 60 as a gate |
+| Frame budget | City-architecture pass only: ≤10% growth vs that baseline. Not a whole-game gate |
+| Draw calls | No product ceiling. Measured high sample 164. Art bible §8.4's 300 is provisional, not ratified |
+| Memory ceiling | No product number until a §20 fixture is approved |
+| Ratified caps | 1280×720; ≤200 props/district; ≤70/120 lights; instanced materials; no per-frame React poses |
 
 Do not invent FPS here. — source: [ADR-0010](adr-0010-mission-renderer-and-frame-loop.md), `docs/technical-preferences.md`
 

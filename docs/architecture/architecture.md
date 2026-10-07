@@ -365,7 +365,7 @@ All 20 ADRs are **Accepted**. None are Proposed. None conflict with the layer or
 
 This document synthesizes existing ADRs. It does not mint a new Foundation decision.
 
-Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; Forbidden Patterns are filled from ADR-0010 / ADR-0016 / ADR-0017; performance budgets still PENDING (`docs/game-design.md` §20).
+Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; Forbidden Patterns are filled from ADR-0010 / ADR-0016 / ADR-0017; performance budgets are the ratified caps plus the §20 procedure (no product FPS). Matrix: `docs/architecture/requirements-traceability.md` (66/66, 0 Foundation gaps).
 
 ## Required ADRs
 
@@ -374,7 +374,7 @@ Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; 
 **Should have before the relevant system is built:** none outstanding for TR coverage.
 
 **Can defer:**
-- Numeric performance budgets (GDD §20 still pending) — prefs, not a new ADR
+- Product FPS is not a number. Budgets are the ratified caps plus the §20 procedure in `docs/technical-preferences.md`. Not a new ADR.
 - **QQ-02 implementation debt** — extract `canDeploy` / four-slice `DeployParams` to match Accepted ADR-0009 / ADR-0019. Not a missing ADR. Do not re-decide.
 
 ## Architecture Principles
@@ -389,7 +389,7 @@ Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; 
 
 | ID | Summary | Priority | Resolution Path |
 |---|---|---|---|
-| QQ-01 | Performance budgets still PENDING in prefs / GDD §20 | Medium | Prefs update after §20; not a new ADR |
+| QQ-01 | Performance budgets set 2026-10-05: ratified caps plus the §20 procedure. No product FPS. Art bible §8.4 figures stay provisional | Medium | Closed as a prefs decision. Not a new ADR |
 | QQ-02 | `DeployParams` / `startMission` code lags ADR-0009 / ADR-0019 | High | **Implementation debt.** Not a missing ADR. Stories implement the Accepted contracts; do not re-decide |
 | QQ-03 | Stub vs keep `docs/game-design.md` after D2 extracts | Low | Design process; not architecture |
 | QQ-04 | Hire-on-failed (Roster OQ1) | Low | Roster GDD; not ADR-0020 |

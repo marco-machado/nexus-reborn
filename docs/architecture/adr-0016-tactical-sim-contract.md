@@ -198,7 +198,7 @@ Scene reads getWorld() each frame (ADR-0010)
 
 ## Performance Implications
 
-- **CPU**: existing sim plus a stray scan per miss. No new frame budget (`docs/technical-preferences.md` still PENDING).
+- **CPU**: existing sim plus a stray scan per miss. No new frame budget. Product frame-time is the §20 procedure plus the ratified caps in `docs/technical-preferences.md`. There is no product FPS number.
 - **Memory**: 96×96 walk grid plus unit list.
 - **Load Time**: `generateCity` at mission create.
 - **Network**: none.
