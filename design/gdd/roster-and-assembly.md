@@ -350,14 +350,14 @@ Presentation wrap is Interface / Audio. Assembly is another room of the same ter
 
 - Operatives = angular cool armor + personal accent (visor/trim only).
 - Dossier face = **stable hash figure** from operative id + codename. Same hash on reload. Not a character render.
-- Focus = amber; live/assigned = teal; danger/Injured/mass-over = red.
+- Focus = bracket, not Ledger Amber; live/assigned = teal; danger/Injured/mass-over = red.
 - Motion: one-frame terminal refresh, border/chip/text swaps, disabled CTA. No particles, implant-surgery VFX, or launch cinematic.
 
 ### Event feedback
 
 | Event | Visual | Non-color cue |
 |---|---|---|
-| Inspect dossier | Amber focus; paperwork fields swap; hash figure replaces in place | Focus ring / selected state |
+| Inspect dossier | Focus bracket; paperwork fields swap; hash figure replaces in place. Ledger Amber is not the focus cue | Focus ring / selected state |
 | Assign Squad bay | Empty bay fills with hash figure, slot plaque, accent visor | Slot index 01–04 |
 | Unassign | Bay returns to empty label | `EMPTY BAY` copy |
 | Pin / wear bay | Worn name + `PIN` vs `AUTO` chip | Chip text |

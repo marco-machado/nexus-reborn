@@ -2,7 +2,7 @@
 
 > **Status**: Approved (independent `/design-review`, full pass 3, 2026-09-16; D2 alias reconciliation only)
 > **Author**: extract from docs/game-design.md §12, §13, §14 (session rules §4; Settings/Quality/UX §17, §20)
-> **Last Updated**: 2026-10-05
+> **Last Updated**: 2026-10-05 (color roles reconciled to art bible §4.2: Ledger Amber is price and spend authorization only. Not a new `/design-review`.)
 > **Implements Pillar**: One corporate operating system; Information is operational power; Command, do not micromanage
 > **Living spec**: `docs/game-design.md` §12, §13, §14 — this file aliases them; do not fork rules
 > **Specialists (full)**: game-designer, systems-designer, ux-designer, ui-programmer, economy-designer, qa-lead, gameplay-programmer, audio-director, lead-programmer, performance-analyst; senior synthesis: creative-director. Full pass 3: APPROVED for the current D2 document. Unresolved flow decisions and implementation/runtime verification remain separate; see [review log](reviews/interface-review-log.md).
@@ -17,7 +17,7 @@ Rules stay in `docs/game-design.md` §12, §13, §14. This overview does not for
 
 ## Player Fantasy
 
-You sit the desk. The terminal is the character, not a skin over a shooter. You read one OS: Scan and district are different surfaces of the same world; Brief, Assembly, Research, and the HUD are different rooms of one building. Teal is live state. Amber is focus and authorization. Red is danger and failure. You never need a second visual language to “play.” A good order is small and timed because the board is visible — cones, patrols, the minimap with up = up — and Hardened does not hide that map. Pause prints the same bindings the input uses. Abort is a two-step discard, not a checkpoint. Debrief is paperwork: `REPLAY // FEE ALREADY COLLECTED` when the fee is already collected; collateral is a line item, not a splash. The fantasy fails if chrome buries the five verbs, if “gameplay” looks like a different product from “menu,” if critical state is color alone, if 1280×720 clips, or if the mission can be saved from the pause modal.
+You sit the desk. The terminal is the character, not a skin over a shooter. You read one OS: Scan and district are different surfaces of the same world; Brief, Assembly, Research, and the HUD are different rooms of one building. Teal is live state. Amber is price and spend authorization, not focus. Red is danger and failure. You never need a second visual language to “play.” A good order is small and timed because the board is visible — cones, patrols, the minimap with up = up — and Hardened does not hide that map. Pause prints the same bindings the input uses. Abort is a two-step discard, not a checkpoint. Debrief is paperwork: `REPLAY // FEE ALREADY COLLECTED` when the fee is already collected; collateral is a line item, not a splash. The fantasy fails if chrome buries the five verbs, if “gameplay” looks like a different product from “menu,” if critical state is color alone, if 1280×720 clips, or if the mission can be saved from the pause modal.
 
 This serves **One corporate operating system**, **Information is operational power**, and **Command, do not micromanage**. Secondary: **Violence has corporate consequences** (invoice chrome) and **The two layers feed each other** (header Credits / Influence / Intel / Roster / strategic clock on the four Screens; HUD collateral is a count Economy will price). It does not own Credits or collateral pricing (Economy), sector shove (World Network), verb validity (Tactical), roster KIA/injury (Roster), campaign commit (Persistence), or mix buses (Audio).
 
@@ -38,7 +38,7 @@ This serves **One corporate operating system**, **Information is operational pow
 | Controls | Default bindings; one remap table read by pause, tutorial, and handlers; reserved pause / operative slots / mouse | What Select/Move/Attack/stances **mean** (Tactical) |
 | Art / Spectacle | Palette language; no external art; unit chrome language; Quality vs building ghosting | Mixer (Audio); `tokens.ts` / `index.css` as the implementation pair (engineering contract, not a second palette) |
 
-4. **One OS (lead).** Every screen is a module of the same terminal. Near-black ground. Teal = selection and live state. Amber = focus, authorization, and the active objective. Red = danger, locks, damage, and failure. Green = completion. Small monospace uppercase labels; primary values larger than their labels. Thin technical borders, scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes. **No second visual language for “gameplay” versus “menu.”**
+4. **One OS (lead).** Every screen is a module of the same terminal. Near-black ground. Teal = selection and live state. Ledger Amber = price and spend authorization only. It does not mark focus, the active objective, Settings ON, or a running clock. Red = danger, locks, damage, and failure. The active objective is VIP Ice plus a printed token. Nominal Green = machine confirmation in terminal chrome only, not the tactical feed. Small monospace uppercase labels; primary values larger than their labels. Thin technical borders, scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes. **No second visual language for “gameplay” versus “menu.”**
 
 5. **DOM around and over the 3D scene.** The Scan is a flat projection, not a globe. The District is the mission layout, not the Scan. Minimap up = screen up (shared camera yaw — Tactical owns the pose; Interface presents that orientation).
 
@@ -82,7 +82,7 @@ This serves **One corporate operating system**, **Information is operational pow
 
     Mouse: left click operative Select; Shift+left add/remove; left drag box select; Shift+left drag add box; left click bare ground clear; right click ground Move; right click hostile Attack; double-click squad card center camera on that operative.
 
-16. **Art constraint.** **No external art assets.** Textures, portraits, figures, icons, unit geometry, the Scan, and UI decoration are generated in code. An external pipeline is a deliberate change of project, not a polish pass. Units are assembled from simple geometry. Operatives: cool armor, personal accent colors, slot tags, health pips, selection rings, route feedback. CorpSec: dark coats, red visors, rings, garrison marks, alert and suspicion markers. Hits flash; operatives flash red, everyone else amber, with a brief flinch. Effects stay sparse and informative. Bloom is emissive only; Quality may drop it. Neon stays readable at dusk and night. Opening hour lights dusk or night and is frozen ([ADR-0007](../../docs/architecture/adr-0007-opening-hour.md)); the HUD clock still ticks; the sky does not.
+16. **Art constraint.** **No external art assets.** Textures, portraits, figures, icons, unit geometry, the Scan, and UI decoration are generated in code. An external pipeline is a deliberate change of project, not a polish pass. Units are assembled from simple geometry. Operatives: cool armor, personal accent colors, slot tags, health pips, selection rings, route feedback. CorpSec: dark coats, red visors, rings, garrison marks, alert and suspicion markers. Hits flash; operatives flash red, everyone else in ink, with a brief flinch. Ledger Amber is not a hit color. Effects stay sparse and informative. Bloom is emissive only; Quality may drop it. Neon stays readable at dusk and night. Opening hour lights dusk or night and is frozen ([ADR-0007](../../docs/architecture/adr-0007-opening-hour.md)); the HUD clock still ticks; the sky does not.
 
 17. **Quality.** Auto / High / Medium / Low is a **player setting** in the settings slot, not a design lever. Using Quality to hide building ghosting or the minimap violates pillar 2.
 
@@ -273,12 +273,12 @@ Presentation wrap is this system plus Audio. Spectacle is emissive city light (n
 | Event | Visual | Audio (owned by Audio; no new cue implied) | Priority |
 |---|---|---|---|
 | Selection / order | Rings, dashed routes, destination rings, click marks | Short UI-bus acknowledgement click — not VO | High |
-| Authorization spend | Amber focus on the spend control | UI confirm | High |
+| Authorization spend | Amber-hot on the spend control; the printed cost carries the state | UI confirm | High |
 | Overdraft / Deploy refuse | Disabled control + reason copy | No mandatory refusal sound; a disabled control need not emit an activation event | High |
 | Alert / suspicion | Markers, cones, HUD Alert | Alert sting on combat bus (Audio) | High |
-| Hit / stray fire | Operative flash red; others amber; brief flinch; colored tracers | Weapon reports above UI | High |
+| Hit / stray fire | Operative flash red; others ink, not Ledger Amber; brief flinch; colored tracers | Weapon reports above UI | High |
 | Weather front | HUD Weather chip; Comm-log line | Rain crossfade (Audio); no new bed | Med |
-| Objective complete | Amber active → green complete | Objective-complete cue | Med |
+| Objective complete | VIP Ice while active; printed check on complete. Not Ledger Amber. Not Nominal Green on the tactical feed | Objective-complete cue | Med |
 | Result / Debrief | Result banner then invoice | No celebration sting for payout | High |
 | Quiet replay | `REPLAY // FEE ALREADY COLLECTED` | No fanfare | High |
 | Pause / Abort armed | Modal; bindings list; two-step Abort | UI click; no mission-end sting on arm | High |
@@ -317,8 +317,8 @@ Living spec §20 UX plus click-through.md. Criteria are independently verifiable
 ### One OS and layout
 
 1. **GIVEN** every listed surface (Menu, World Network, Research, Brief, Assembly, Mission HUD, pause, Debrief, Settings) at 1280×720 and each text scale 90 / 100 / 110 / 125%, **WHEN** the surface is shown, **THEN** there is no clipping, no unintended overlap, and scrolled overflow remains reachable. Smaller-than-minimum windows scroll and do not compress panels.
-2. **GIVEN** critical states selection, focus, injury/KIA, lock, objective, Alert, and result, **WHEN** each is shown, **THEN** each has a readable non-color cue in addition to teal/amber/red/green.
-3. **GIVEN** Menu and Mission HUD captures, **WHEN** their styling is checked against living §12/§14, **THEN** both use the shared near-black ground, semantic teal/amber/red/green roles, monospace uppercase labels, primary values larger than labels, and technical borders. Record the observed elements and deviations; overall visual coherence is a recorded visual-review judgment, not an unnamed numeric gate.
+2. **GIVEN** critical states selection, focus, injury/KIA, lock, objective, Alert, and result, **WHEN** each is shown, **THEN** each has a readable non-color cue. Hue, where used, follows living §12: teal for selection and live state, Ledger Amber for price and spend authorization only, red for danger, VIP Ice for the active objective. Nominal Green is not a tactical-feed cue.
+3. **GIVEN** Menu and Mission HUD captures, **WHEN** their styling is checked against living §12/§14, **THEN** both use the shared near-black ground, the reconciled semantic roles (teal selection, Ledger Amber price and spend authorization, red danger, VIP Ice active objective), monospace uppercase labels, primary values larger than labels, and technical borders. Record the observed elements and deviations; overall visual coherence is a recorded visual-review judgment, not an unnamed numeric gate.
 
 ### Screens and session chrome
 

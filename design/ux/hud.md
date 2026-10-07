@@ -102,11 +102,11 @@ Patterns are referenced from `design/ux/interaction-patterns.md`, not redefined 
 | E1 District + clock | Z1 | Must Show | District name; clock in monospace numerals | Ticks each tactical second; freezes on pause | Tick only, no easing |
 | E2 Weather chip | Z1 | Must Show | Chip with text label (P-14) | Follows live weather; a front also writes a Comm line | None; label changes in one frame |
 | E3 Alert | Z1 | Must Show | `ALERT: n` numeral plus bars; hot state when n above 0 | Follows Tactical Alert 0-3 | ~2 Hz pulse when hot (static hatch, edge glow and printed word when reduced) |
-| E4 Collateral | Z1 | Contextual (count above 0) | `COLLATERAL n` count chip, amber; count only, no CR | Event: each first squad-caused civilian hit | Pulse on increment (static when reduced) |
+| E4 Collateral | Z1 | Contextual (count above 0) | `COLLATERAL n` count chip in Telemetry Ink, not Ledger Amber; count only, no CR. The word carries the state | Event: each first squad-caused civilian hit | Pulse on increment (static when reduced) |
 | E5 Credits | Z1 | Must Show | Monospace numeral with `CR` suffix | Event-driven from Economy | None in mission |
 | E6 Pause | Z1 | Must Show | Button `PAUSE`; shows disabled `PAUSED` while paused | Input | None |
 | E7 Squad card | Z2 | Must Show | P-09 | Real time | Selection breathe (closed double ring when reduced) |
-| E8 Objectives | Z3 | Must Show | Required and optional list, timers, a mark per item; active objective in amber | Event plus per-second timers | Active-objective pulse (static marker when reduced) |
+| E8 Objectives | Z3 | Must Show | Required and optional list, timers, a mark per item; active objective in VIP Ice plus the printed token, not Ledger Amber | Event plus per-second timers | Active-objective pulse (static marker when reduced) |
 | E9 Comm log | Z4 | Must Show | P-16 | Event-driven | None |
 | E10 Weapons | Z5 | Must Show | Parts-catalog silhouette, name, magazine and reserve numerals | Real time on fire, reload, swap | None |
 | E11 Ability bar | Z5 | Must Show | P-12; key label from the remap table | Real-time cooldown | Ink sweep (numeral only when reduced) |
@@ -130,7 +130,7 @@ Motion budget: at most ~6 chrome readouts animate at once (art bible 7.5). The c
 | Weather front | E2 label changes; Comm line prints | No re-layout |
 | Civilian hit by the squad | E4 appears at count 1, then increments | CR is never shown in mission |
 | Operative injured or KIA | Squad card shows pip, glyph and text (P-09); low-HP advisory once per campaign | KIA is never color-only |
-| Objective completes or activates | E8 mark changes with a printed check | Amber to green is never the sole cue |
+| Objective completes or activates | E8 mark changes with a printed check. Active mark is VIP Ice. Complete is the check, not a hue | Ledger Amber and Nominal Green are never the cue |
 | Pause (Space or Escape) | Modal overlay (P-05); the sim and camera freeze, so no new Comm lines arrive; the HUD stays visible behind the panel | Toasts never pause the sim |
 | Result (Win or Loss) | E14 appears in one frame; Debrief follows 2.5 s of Tactical elapsed time | Banner duration is not guaranteed |
 | Hardened difficulty | No HUD change | Never strips the minimap or any panel |

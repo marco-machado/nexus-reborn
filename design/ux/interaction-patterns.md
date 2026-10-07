@@ -173,7 +173,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 **When to Use**: any selectable or focusable element inside a screen.
 **When NOT to Use**: hover-only feedback. Nav tab selection (P-06).
 
-**Accessibility**: Selection and focus are shape, not hue. Teal or amber may reinforce. Focus order is owned by the screen spec; this pattern is only the marker. High contrast keeps the brackets and the ring.
+**Accessibility**: Selection and focus are shape, not hue. Signal Cyan may reinforce selection. Ledger Amber does not reinforce focus. Focus order is owned by the screen spec; this pattern is only the marker. High contrast keeps the brackets and the ring.
 
 **Implementation notes**: Do not draw the ring with Ink Faint. Reduced motion freezes the breathe on the closed double ring.
 
@@ -367,7 +367,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 
 **Specification**:
 - Slider: range input 0–100 in steps of 5 with the numeric value printed beside it; accessible label `<channel> volume`.
-- Toggle: button with `aria-pressed`, an ON/OFF text label and accessible label `<name> // ON|OFF`. Amber may mark ON; the word carries the state.
+- Toggle: button with `aria-pressed`, an ON/OFF text label and accessible label `<name> // ON|OFF`. The word carries the state. Ledger Amber does not mark ON.
 - Segmented choice (text scale, Difficulty, Quality): `aria-pressed` on the active option, the value printed on it. Text scale is the discrete set 90 / 100 / 110 / 125%, never a continuous slider.
 - Remap: a capture mode that Escape cancels; a reset control per binding and a reset-all control. Pause, slots 1–4 and the mouse are reserved and shown as reserved.
 - Mute preserves chosen levels and restores them on unmute (Audio UI Requirements). The toggle word carries mute. Do not add a caption row; captions are backlog.
@@ -390,7 +390,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 
 **Specification**:
 - Monospace, tabular, right-aligned, zero-padded to fixed width; value larger than its label; unit suffix (`CR`, `m`, `s`, `%`) dim and same size. `k` / `M` abbreviations are banned.
-- A chip carries a tone (teal / amber / red / green / dim) plus a text token, never the tone alone.
+- A chip's tone follows art bible §4.2: Signal Cyan informs, Ledger Amber is price only and carries `CR` when it is money, Alarm Red alarms, Nominal Green is terminal-chrome confirmation only and never the tactical feed, dim is empty. A chip always adds a text token. Never the tone alone.
 - Live values print in their semantic hue; settled records print in Print White (`PRINT_WHITE`, `src/ui/tokens.ts`).
 - Readouts ≥12 px at 100% scale, absolute floor 10 px for tertiary labels; everything scales with text scale.
 - When the owner has not supplied a value, print a dim em dash, or the empty token the screen spec names. Never fabricate a 0. A 0 the owner supplied prints as 0. Research remaining before `sync` is not this dash — the label is absent (P-22).
@@ -525,7 +525,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 
 **Specification**:
 - Speeds are 1×, 2×, 4×, 8×. No other step.
-- The readout prints the word `PAUSED` or `nX`. Red may mark paused and amber may mark running. The word carries the state.
+- The readout prints the word `PAUSED` or `nX`. Red may mark paused. The word carries running. Ledger Amber does not mark a running clock.
 - Pause control: play and pause shapes, `aria-pressed`, accessible name `RESUME STRATEGIC CLOCK` or `PAUSE STRATEGIC CLOCK`.
 - Speed controls: four buttons labeled `1X` `2X` `4X` `8X`, `aria-pressed` on the active speed while not paused.
 - Setting a speed while paused may select that speed. The readout stays `PAUSED` until resume.

@@ -644,7 +644,7 @@ Four archetypes:
 
 Threat sets the elite mix: Moderate fields none; High upgrades one garrison member to a heavy; Severe fields one heavy and one officer. Upgraded members keep their posts. The checkpoint’s authored longrifle is the one authored marksman; its 80 HP outranks the archetype base.
 
-**Officer radio.** Four seconds after an officer enters combat, every CorpSec within 22 m that is not already fighting is put on the squad’s last seen position at investigation-level awareness. Killing the officer inside the delay — or calming them, for example with an EM burst — cancels the call. Officers wear an amber chest lamp. Heavies read by bulk. Marksmen read by a lean frame.
+**Officer radio.** Four seconds after an officer enters combat, every CorpSec within 22 m that is not already fighting is put on the squad’s last seen position at investigation-level awareness. Killing the officer inside the delay — or calming them, for example with an EM burst — cancels the call. Officers read by a radio pack on the back, not by hue. Heavies read by bulk. Marksmen read by a lean frame. Ledger Amber is not a rank mark.
 
 **Vision.** 14 m in clear weather, 12.6 m in light rain, 11.2 m in heavy rain. Those ranges follow the live weather: when a front hits, sight and weapon noise retune. 110° cone. 4.5 m omnidirectional notice, weather-invariant. Vision needs clear grid line of sight. Certainty takes about 0.45 s up close and about 1.7 s at maximum range.
 
@@ -776,7 +776,7 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 - DOM around and over the 3D scene.
 - Near-black ground for contrast.
-- Teal for selection and live state. Amber for focus, authorization, and the active objective. Red for danger, locks, damage, and failure. Green for completion.
+- Teal for selection and live state. Ledger Amber for price and spend authorization only — not focus, not the active objective, not Settings ON, not a running clock. Red for danger, locks, damage, and failure. The active objective is VIP Ice plus a printed token. Nominal Green confirms the machine in terminal chrome only, not on the tactical feed.
 - Small monospace uppercase labels. Primary values larger than their labels.
 - Every screen is a module of the same terminal.
 - Critical state is never color alone.
@@ -889,11 +889,11 @@ Defaults below. Every keyboard action except pause and the operative slots can b
 
 Late-1980s / 1990s cyberpunk strategy vocabulary, rebuilt as a crisp modern terminal.
 
-Near-black and dark blue-green ground. Teal operational graphics. Amber focus. Red hostility and failure. Thin technical borders. Monospace uppercase type. Scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes.
+Near-black and dark blue-green ground. Teal operational graphics. Ledger Amber for price and spend authorization, not for focus. Red hostility and failure. The active objective is VIP Ice plus a printed token. Thin technical borders. Monospace uppercase type. Scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes.
 
 The tactical scene is this city at dusk or night, dry or wet: asphalt that reads wet when it is raining, cool window light, warm street lamps, procedural neon, dense towers and industrial slabs, instanced street dressing. Neon stays readable in both looks. Bloom is emissive only, and a quality setting may drop it. Building ghosting exists so the player can still read the fight.
 
-Units are assembled from simple geometry. Operatives are cool armor with personal accent colors, slot tags, health pips, selection rings, and route feedback. CorpSec is dark coats, red visors, rings, garrison marks, alert and suspicion markers. Civilians vary. Hits flash; operatives flash red, everyone else amber, with a brief flinch.
+Units are assembled from simple geometry. Operatives are cool armor with personal accent colors, slot tags, health pips, selection rings, and route feedback. CorpSec is dark coats, red visors, rings, garrison marks, alert and suspicion markers. Civilians vary. Hits flash; operatives flash red, everyone else in ink, with a brief flinch. Ledger Amber is not a hit color.
 
 Effects stay sparse and informative: colored tracers, muzzle and impact flashes, dashed routes, destination rings, click marks, objective pulses, and two-layer camera-following rain when the weather is wet. A clear mission mounts no rain.
 

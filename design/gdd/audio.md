@@ -239,7 +239,7 @@ This **is** the audio system. Spectacle remains neon + terminal chrome (Interfac
 | HUD Alert 0–3 | Sustained tension drone follows Alert on combat bus; not a sting on every change | HUD Alert | High |
 | Ordinary suspicion | No cue triggered by suspicion alone; separate warning events can coincide with it | Cones / suspicion markers | High |
 | Operative hit / death | Thump / thud on combat bus | Red flash / pips | High |
-| Objective complete | UI-bus objective cue | Amber → green | Med |
+| Objective complete | UI-bus objective cue | VIP Ice while active; printed check on complete. Not Ledger Amber. Not Nominal Green on the tactical feed | Med |
 | Weather front | Rain crossfade; no new bed | HUD Weather; Comm log | High |
 | Four Screens | Strategy industrial loop (music) | One OS chrome | High |
 | Mission | City-hum (ambience), 1 of 3 | District | High |

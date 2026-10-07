@@ -332,7 +332,7 @@ All knobs are owned by `docs/game-design.md` §10, §16, and §5 (`risk_index`).
 
 ## Visual/Audio Requirements
 
-Presentation wrap is Interface / Audio. Tactical requires the **five verbs** to read on the district: selection rings, routes, destination rings, stance feedback. Operatives are geometry with pips, not star models. CorpSec: rings, garrison marks, alert and suspicion markers, sight cones for suspicious and combat. Hits flash; operatives flash red, everyone else amber, with a brief flinch. Missed rounds must paint a readable fire lane (colored tracers); if stray fire is invisible, pillar 3 is broken. Building ghosting survives every quality tier (readability, not spectacle). Rain is two-layer camera-following when wet; a clear mission mounts no rain. Opening hour lights dusk or night; neon still reads; the sky does not change mid-fight.
+Presentation wrap is Interface / Audio. Tactical requires the **five verbs** to read on the district: selection rings, routes, destination rings, stance feedback. Operatives are geometry with pips, not star models. CorpSec: rings, garrison marks, alert and suspicion markers, sight cones for suspicious and combat. Hits flash; operatives flash red, everyone else in ink, with a brief flinch. Ledger Amber is not a hit color. Missed rounds must paint a readable fire lane (colored tracers); if stray fire is invisible, pillar 3 is broken. Building ghosting survives every quality tier (readability, not spectacle). Rain is two-layer camera-following when wet; a clear mission mounts no rain. Opening hour lights dusk or night; neon still reads; the sky does not change mid-fight.
 
 Palette and chrome: pillar 5 / `docs/game-design.md` §12–15. No second visual language for “gameplay.” No external art assets.
 
