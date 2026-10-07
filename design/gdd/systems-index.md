@@ -2,7 +2,7 @@
 
 > **Status**: Draft
 > **Created**: 2026-09-07
-> **Last Updated**: 2026-09-22 (Roster and Assembly approved by `/design-review` pass 2; all eight systems now Approved)
+> **Last Updated**: 2026-10-07 (`/review-all-gdds` CONCERNS: five GDDs marked Needs Revision — see gdd-cross-review-2026-10-07.md)
 > **Source Concept**: `design/gdd/game-concept.md` (extract from `docs/game-design.md` §§1–4)
 > **Technical Director Review (TD-SYSTEM-BOUNDARY)**: CONCERNS (accepted) 2026-09-07
 > **Producer Review (PR-SCOPE)**: OPTIMISTIC 2026-09-07
@@ -23,12 +23,12 @@ This is a brownfield index of the shipping cut. All eight systems are already sp
 | # | System Name | Layer | Category | Priority | Status | Design Doc | Depends On |
 |---|-------------|-------|----------|----------|--------|------------|------------|
 | 1 | World Network | Foundation | Core | MVP | Approved | design/gdd/world-network.md | — |
-| 2 | Economy and contracts | Core | Economy | MVP | Approved | design/gdd/economy-and-contracts.md | World Network |
+| 2 | Economy and contracts | Core | Economy | MVP | Needs Revision | design/gdd/economy-and-contracts.md | World Network |
 | 3 | Research | Core | Progression | MVP | Approved | design/gdd/research.md | World Network, Economy and contracts |
-| 4 | Persistence and validation | Core | Persistence | MVP | Approved | design/gdd/persistence-and-validation.md | World Network, Economy and contracts, Research, Roster and Assembly, Audio |
-| 5 | Roster and Assembly | Feature | Gameplay | MVP | Approved | design/gdd/roster-and-assembly.md | World Network, Economy and contracts, Research |
-| 6 | Tactical mission | Feature | Gameplay | MVP | Approved | design/gdd/tactical-mission.md | World Network, Economy and contracts, Research, Roster and Assembly, Persistence and validation |
-| 7 | Interface | Presentation | UI | MVP | Approved | design/gdd/interface.md | World Network, Economy and contracts, Research, Roster and Assembly, Tactical mission, Persistence and validation |
+| 4 | Persistence and validation | Core | Persistence | MVP | Needs Revision | design/gdd/persistence-and-validation.md | World Network, Economy and contracts, Research, Roster and Assembly, Audio |
+| 5 | Roster and Assembly | Feature | Gameplay | MVP | Needs Revision | design/gdd/roster-and-assembly.md | World Network, Economy and contracts, Research |
+| 6 | Tactical mission | Feature | Gameplay | MVP | Needs Revision | design/gdd/tactical-mission.md | World Network, Economy and contracts, Research, Roster and Assembly, Persistence and validation |
+| 7 | Interface | Presentation | UI | MVP | Needs Revision | design/gdd/interface.md | World Network, Economy and contracts, Research, Roster and Assembly, Tactical mission, Persistence and validation |
 | 8 | Audio | Presentation | Audio | MVP | Approved | design/gdd/audio.md | Interface, Tactical mission, Persistence and validation |
 
 Status tokens are exact: `Not Started`, `In Progress`, `In Review`, `Designed`, `Approved`, `Needs Revision`. `Designed` means `design/gdd/<system>.md` exists with the eight required headings (D2 alias of the living spec). Do not mark `Approved` until independent `/design-review` passes.
@@ -160,7 +160,7 @@ Also required before `/design-system`: `design/gdd/game-concept.md` and `design/
 | Total systems identified | 8 |
 | Design docs started | 8 |
 | Design docs reviewed | 8 |
-| Design docs approved | 8 |
+| Design docs approved | 3 |
 | MVP systems designed | 8/8 template-path files; 8/8 living-spec |
 | Vertical Slice systems designed | 0/0 |
 

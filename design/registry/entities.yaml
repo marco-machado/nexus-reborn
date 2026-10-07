@@ -7,7 +7,7 @@
 # WRITTEN BY: /design-system Phase 5. READ BY: /design-system, /consistency-check.
 
 version: 1
-last_updated: "2026-09-22"
+last_updated: "2026-10-07"
 
 entities: []
 
@@ -152,18 +152,19 @@ formulas:
     added: 2026-09-08
     revised: ""
 
-  - name: abort_confirm_hold
+  - name: arming_window
     status: active
     source: design/gdd/interface.md
     referenced_by:
       - design/gdd/interface.md
+      - design/gdd/persistence-and-validation.md
     variables:
-      - abort_confirm_hold
+      - arming_window
     output_range: [3, 3]
     expression: "3"
-    notes: "Two-step Abort confirm hold in seconds. Armed does not discard. Canonical: docs/game-design.md §12."
+    notes: "P-01 two-step arming window in real seconds, shared by Abort, New Operation, and telemetry Clear. An expiry, not a minimum hold: first activation arms, a second while armed confirms, timeout disarms. Armed does not discard or erase. Renamed from abort_confirm_hold 2026-10-07. Canonical: docs/game-design.md §12; design/ux/interaction-patterns.md P-01."
     added: 2026-09-08
-    revised: ""
+    revised: 2026-10-07
 
   - name: text_scale
     status: active
