@@ -6,6 +6,7 @@ Last verified: 2026-09-08
 |-------|-------|
 | **Engine Version** | three.js 0.185.1 (r185); React 19.2.8; @react-three/fiber 9.6.1; Vite 6.4.3; TypeScript 5.8.3; Zustand 5.0.14 |
 | **Project Pinned** | 2026-09-08 |
+| **Installed at pin time** | three 0.185.1; react 19.2.8; @react-three/fiber 9.6.1; vite 6.4.3; typescript 5.8.3; zustand 5.0.14 — read from `node_modules/*/package.json` 2026-10-07 |
 | **LLM Knowledge Cutoff** | May 2025 |
 | **Risk Level** | HIGH — pinned three.js r185 published 2026-07-01; React 19.2.0 published 2025-10-01. Both are past cutoff. |
 
