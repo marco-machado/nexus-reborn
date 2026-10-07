@@ -32,6 +32,20 @@ Start a **New Operation**, select an unlocked contract on the World Network, the
 
 ## Verify a change
 
+### Standalone asset viewer
+
+Run `npm run dev:assets -- --strictPort` to open `/tools/asset-viewer.html` with the
+procedural Agent already loaded. The viewer and mission use the same builder in
+`src/scene/unitModel.ts`. Orbit, zoom, and pan with the mouse; use the inspector
+for camera presets, operative accents, weapon and selection markers, wireframe,
+turntable, grid, and exposure. Geometry statistics describe the model without
+its selection markers. The viewer does not initialize a campaign or mission.
+
+The page is also included in `npm run build` and can be opened at the same path
+with `npm run preview -- --port 4200 --strictPort`. Stop the server after use.
+
+### Automated checks
+
 ```sh
 npm run lint
 npm run test

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus Reborn · Asset Viewer</title>
+  </head>
+  <body>
+    <main class="viewer">
+      <header class="viewer-header">
+        <div><span class="eyebrow">NEXUS REBORN / DEVELOPMENT</span><h1>Asset viewer</h1></div>
+        <span id="backend" class="backend">Starting renderer…</span>
+      </header>
+      <aside class="inspector" aria-label="Asset controls">
+        <section>
+          <span class="eyebrow">LOADED ASSET / 01</span>
+          <h2>Agent</h2>
+          <p class="asset-description">Procedural mission model</p>
+          <p class="source">Shared geometry from <code>src/scene/unitModel.ts</code></p>
+        </section>
+        <section>
+          <label class="field" for="operative">Operative accent</label>
+          <select id="operative"><option value="">Default agent</option></select>
+          <div class="toggles">
+            <label><input id="weapon" type="checkbox" checked /> Weapon</label>
+            <label><input id="markers" type="checkbox" /> Selection ring &amp; slot tag</label>
+          </div>
+        </section>
+        <section>
+          <span class="field">View</span>
+          <div class="view-buttons" aria-label="Camera presets">
+            <button data-view="perspective" aria-pressed="true">Perspective</button>
+            <button data-view="front" aria-pressed="false">Front</button>
+            <button data-view="side" aria-pressed="false">Side</button>
+            <button data-view="back" aria-pressed="false">Back</button>
+          </div>
+          <div class="toggles">
+            <label><input id="rotate" type="checkbox" /> Turntable</label>
+            <label><input id="wireframe" type="checkbox" /> Wireframe</label>
+            <label><input id="grid" type="checkbox" checked /> Ground grid</label>
+          </div>
+          <label class="field exposure-label" for="exposure">Exposure <output id="exposure-value">1.2</output></label>
+          <input id="exposure" type="range" min="0.3" max="2.5" step="0.1" value="1.2" />
+          <button id="reset" class="reset">Reset view</button>
+        </section>
+        <section class="model-info">
+          <span class="field">Model geometry</span>
+          <dl id="stats"></dl>
+          <p class="source">1 unit = 1 metre · +Y up · +X forward</p>
+        </section>
+      </aside>
+      <div id="viewport" class="viewport">
+        <canvas id="scene" aria-label="Interactive 3D agent preview"></canvas>
+        <div class="viewport-label"><span class="status-dot"></span><span id="asset-label">AGENT / DEFAULT</span></div>
+        <div id="status" role="status" class="loading">Building agent…</div>
+        <div class="viewport-help">Drag to orbit <span>·</span> Scroll to zoom <span>·</span> Right-drag to pan</div>
+      </div>
+      <footer class="viewer-footer"><span>PROCEDURAL ASSET INSPECTION</span><span>Agent loaded from the same builder as the mission</span></footer>
+    </main>
+    <script type="module" src="/tools/asset-viewer.ts"></script>
+  </body>
+</html>

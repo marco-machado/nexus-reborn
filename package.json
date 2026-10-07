@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:assets": "vite --open /tools/asset-viewer.html",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",

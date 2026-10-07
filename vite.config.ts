@@ -8,6 +8,9 @@ declare const process: { env: Record<string, string | undefined> }
 export default defineConfig({
   plugins: [react()],
   build: {
+    rollupOptions: {
+      input: { game: 'index.html', assetViewer: 'tools/asset-viewer.html' },
+    },
     // The WebGPU mission is route-split from the 327 kB application shell.
     // Its Three.js renderer is intentionally larger than Vite's generic limit.
     chunkSizeWarningLimit: 1800,
