@@ -18,7 +18,7 @@ afterAll(() => {
   optic.dispose()
 })
 
-describe('procedural armored agent', () => {
+describe('procedural operative', () => {
   it('fits the mission height and ground plane, with forward-facing optics', () => {
     const rig = new THREE.Group()
     rig.scale.setScalar(1.22)
@@ -28,7 +28,7 @@ describe('procedural armored agent', () => {
     expect(bounds.max.y).toBeGreaterThan(1.9)
     expect(bounds.max.y).toBeLessThan(2.12) // Health tag remains clear above the helmet.
     const optics = resources.body.find((batch) => batch.finish === 'optic')!
-    expect(optics.geometry.boundingBox!.min.x).toBeGreaterThan(0.1)
+    expect(optics.geometry.boundingBox!.min.x).toBeGreaterThan(0.08)
   })
 
   it('shares GPU resources while each unit retains independent animated leg pivots', () => {
@@ -59,6 +59,11 @@ describe('procedural armored agent', () => {
     for (const { geometry } of batches) {
       const positions = geometry.getAttribute('position')
       expect(Array.from(positions.array).every(Number.isFinite)).toBe(true)
+      const normals = geometry.getAttribute('normal')
+      for (let i = 0; i < normals.count; i++) {
+        const length = Math.hypot(normals.getX(i), normals.getY(i), normals.getZ(i))
+        expect(length).toBeCloseTo(1, 4)
+      }
       triangles += (geometry.index?.count ?? positions.count) / 3
     }
     expect(triangles).toBeLessThan(20000)

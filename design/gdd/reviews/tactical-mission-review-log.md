@@ -1,5 +1,21 @@
 # Review log: Tactical mission
 
+## Review — 2026-10-07 — Verdict: APPROVED
+Scope signal: XL
+Specialists: none (lean)
+Blocking items: 0 | Recommended: 6
+Summary: Re-review after the W-02 link rewrite and Ledger Amber edits. Five verbs lead, Stop is not a sixth verb, alias discipline holds, and all formula examples reproduce (64% / 28.8% / 31.68%, risk 89, 76.5 s). Remaining items are a circular result-delay pointer, a missing same-step tiebreak in Rule 15 and its AC, AC coverage gaps for CorpSec states and objective behaviors, and header drift.
+Prior verdict resolved: Yes
+Findings:
+- [RECOMMENDED] Tuning Knobs / Rule 15: result delay basis points at Interface Rule 18, which points back; put sim-elapsed wording in Rule 15.
+- [RECOMMENDED] Rule 15 / Acceptance Criteria: same-step tiebreak (resolved OQ5) not in Rule 15 and has no AC, including pyrrhic win.
+- [RECOMMENDED] Acceptance Criteria: no ACs for CorpSec state changes, Officer radio, civilian flee, Interact/Defend pause, optional Destroy failure, optional time limit, 2.5 s delay.
+- [RECOMMENDED] Acceptance Criteria: AC 21 is compound; split.
+- [RECOMMENDED] Header: Last Updated stale after the 10-07 link rewrite.
+- [RECOMMENDED] Formulas / Tuning Knobs: hit_chance clamp 0.05-0.95 cannot bind for the stated inputs; say it is a safety net.
+Reviewed-Content-Hash: design/gdd/tactical-mission.md 7ae5bedcc5b322770a97b38e3f2b389dac5d1d01
+Reviewed-Content-Hash: design/registry/entities.yaml 42c51ca6191edf8d9b1876d27251ece76a78d18e
+
 ## Review — 2026-09-15 — Scoring pass: MAJOR REVISION NEEDED (pre-patch)
 Scope signal: XL
 Specialists: game-designer, systems-designer, qa-lead, economy-designer, ai-programmer, level-designer, ux-designer, gameplay-programmer, creative-director

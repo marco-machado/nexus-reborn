@@ -365,7 +365,7 @@ Presentation wrap is Interface / Audio. Assembly is another room of the same ter
 | Mass gate blocked | Mass number **red**; Deploy disabled; control **names the overage** | Disabled CTA + overage copy |
 | Mass tier readout | LIGHT / STANDARD / HEAVY + speed delta beside kg | Tier sentence, not bar color alone |
 | Hire | Hash bust + role/weapon/cost paperwork; roster row appears Ready | Market fields; no fanfare |
-| Deploy | Amber authorization CTA | Enabled `DEPLOY TEAM` copy |
+| Deploy | Signal Cyan instruction CTA. Not Ledger Amber: Deploy spends nothing | Enabled `DEPLOY TEAM` copy |
 | KIA empty bay | That slot is empty. No portrait, no shrine | Empty-bay copy |
 | Injured | Dim/red row wash; `INJURED` status; assign control dead | Status word + disabled assign |
 

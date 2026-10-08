@@ -2,7 +2,7 @@
 
 > **Status**: Draft
 > **Created**: 2026-09-07
-> **Last Updated**: 2026-09-22 (Roster and Assembly approved by `/design-review` pass 2; all eight systems now Approved)
+> **Last Updated**: 2026-10-07 (all eight Approved after same-day `/design-review` re-reviews; second `/review-all-gdds` CONCERNS, no rows changed — see gdd-cross-review-2026-10-07b.md)
 > **Source Concept**: `design/gdd/game-concept.md` (extract from `docs/game-design.md` §§1–4)
 > **Technical Director Review (TD-SYSTEM-BOUNDARY)**: CONCERNS (accepted) 2026-09-07
 > **Producer Review (PR-SCOPE)**: OPTIMISTIC 2026-09-07

@@ -102,6 +102,9 @@ export const PANEL_GRAD_B = '#050b0a' // mission-list panel gradient bottom
 export const ARMOR_LIT: [string, string, string] = ['#3a635a', '#22403a', '#0f221d']
 export const ARMOR_MID: [string, string, string] = ['#2b4d45', '#193029', '#0a1714']
 export const ARMOR_LOW: [string, string, string] = ['#1b342e', '#10231e', '#060f0d']
+// Natural skin on the procedural operative; equipment uses the armor ramps.
+export const SKIN = '#b78369'
+export const SKIN_SHADOW = '#654438'
 export const BODY_DEEP = '#0b1613'
 export const BODY_BELT = '#0b1714'
 export const FACE_BG = '#0a1512'

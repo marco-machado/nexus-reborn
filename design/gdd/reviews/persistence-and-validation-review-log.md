@@ -1,5 +1,23 @@
 # Review log: Persistence and validation
 
+## Review — 2026-10-07 — Verdict: NEEDS REVISION (revised same day, awaiting re-review)
+Scope signal: M
+Specialists: none (lean)
+Blocking items: 2 | Recommended: 6
+Summary: Persist model holds (three slots, unsaved mission, apply-once in memory, durable on next Screen). Blockers were two decisions passed between docs: Balance availability (AC vs Interface OQ9) and `win_rate` at zero decided missions (circular OQ2). Decided: Balance offered iff the retained log is nonempty; zero denominator shows a no-data marker. Recommended 3-6 also revised (header/date, autosave trigger, three untestable ACs, knob ranges); Interface OQ2/OQ9 closed to match. Items 7-8 (storage-throw player notice, Fantasy wording) left open.
+Prior verdict resolved: Yes (2026-09-15 APPROVED stood for the model, not for Balance implementability)
+Findings:
+- [BLOCKING] Rule 17 / ACs: Balance "not offered" AC contradicted Interface OQ9 and ignored retained-log-with-recording-off. Fixed.
+- [BLOCKING] Formulas / OQ2: win_rate zero denominator owned by neither doc; AC "unspecified" untestable. Fixed.
+- [RECOMMENDED] Header: Status Approved vs index Needs Revision; stale Last Updated. Fixed.
+- [RECOMMENDED] Rule 9: autosave trigger semantic undefined. Fixed.
+- [RECOMMENDED] Acceptance Criteria: three untestable ACs (Brief not locked, "Balance would be opened", durable-erase presentation). Fixed.
+- [RECOMMENDED] Tuning Knobs: no ranges; arming window missing. Fixed.
+- [RECOMMENDED] Edge Cases: storage-throw New Operation lets the erased house return with no later player notice. Open.
+- [RECOMMENDED] Player Fantasy: rules list rather than felt experience. Open.
+Reviewed-Content-Hash: design/gdd/persistence-and-validation.md 86feac35f22229d532f7ba35d6e6c4cf84312156
+Reviewed-Content-Hash: design/registry/entities.yaml 42c51ca6191edf8d9b1876d27251ece76a78d18e
+
 ## Review — 2026-09-15 — Scoring pass: NEEDS REVISION (pre-patch)
 Scope signal: M
 Specialists: game-designer, systems-designer, qa-lead, ux-designer, creative-director
@@ -42,3 +60,18 @@ Specialists: game-designer, systems-designer, qa-lead, ux-designer, creative-dir
 Blocking items: 0 | Recommended: 8
 Summary: Re-review of patched text. Last-pass extract holes are closed (KEEP ACs + write-time vs stored-flag hydrate, quiet-replay Credits/Tax/contractsWon, generated-contract identity). Persist model unchanged. Newly filed items (paying-win persist-set AC, quiet board fields, KEEP-as-anti-desk, anaphora, New Operation destination write-fail) are recs or sibling-owned, not this-file blockers.
 Prior verdict resolved: Yes
+
+## Review — 2026-10-07 — Verdict: APPROVED (re-review of patched text)
+Scope signal: M
+Specialists: none (lean)
+Blocking items: 0 | Recommended: 5
+Summary: Re-review of the text patched after the earlier same-day NEEDS REVISION. Both blockers are closed and agree across Persistence, Interface OQ2/OQ9 and the ACs: Balance is offered iff the retained log is nonempty, and `win_rate` at zero decided missions shows a no-data marker. The persist model is unchanged. Remaining items are test determinism and polish. The registry `win_rate` note was updated in this pass, so the hash below is of the updated registry.
+Prior verdict resolved: Yes
+Findings:
+- [RECOMMENDED] Registry win_rate: note still named zero-denominator as open OQ2. Fixed in this pass.
+- [RECOMMENDED] Acceptance Criteria 225/227/263/266: reload right after next-Screen commit races with the unspecified autosave delay; add a flush condition.
+- [RECOMMENDED] Tuning Knobs: telemetry cap 60 safe range is not measurable.
+- [RECOMMENDED] Edge Cases: storage-throw New Operation lets the old house return on reload with no later player notice. Open (Interface-owned copy).
+- [RECOMMENDED] Player Fantasy: negative checklist rather than felt experience. Open (advisory).
+Reviewed-Content-Hash: design/gdd/persistence-and-validation.md 86feac35f22229d532f7ba35d6e6c4cf84312156
+Reviewed-Content-Hash: design/registry/entities.yaml 915c63c38de8f149583e674c2d10499c687847a7

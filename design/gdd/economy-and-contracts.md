@@ -1,17 +1,17 @@
 # Economy and contracts
 
-> **Status**: Approved
+> **Status**: Approved (2026-10-07 third-pass `/design-review` NEEDS REVISION on the apply-once key, patched; same-session re-review APPROVED; the review-log entry was declined, so the log's last entry is the second pass — see [review log](reviews/economy-and-contracts-review-log.md))
 > **Author**: extract from docs/game-design.md §6, §9, §11
-> **Last Updated**: 2026-09-12 (independent /design-review APPROVED)
+> **Last Updated**: 2026-10-07 (third-pass review fixes: apply-once key minted at deploy, non-finite inputs, divergence wording, AC rewrites and additions; earlier: Audio row `Soft, none` — cross-review W-01)
 > **Implements Pillar**: Violence has corporate consequences; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §6, §9, §11 — this file aliases them; do not fork rules
 > **Owners (2026-09-07)**: Credits = Economy; contract instances / Reward / expiry / collateral / net payout = Economy; Influence wallet+spends = World Network; Tax emit = World Network → Economy; Intel access resource = World Network
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-09-07
-> **Independent /design-review**: 2026-09-12 APPROVED
+> **Independent /design-review**: 2026-09-12 APPROVED; 2026-10-07 NEEDS REVISION (outcome DTO ownership, AC coverage), patched, re-review APPROVED; 2026-10-07 third pass NEEDS REVISION (apply-once key), patched, re-review APPROVED
 
 ## Overview
 
-Economy and contracts is the house ledger and the work itself: **Credits** pay research and candidates; **Influence** is not kept here (World Network owns that wallet). The director accepts deniable work — three authored contracts as the campaign spine, a generated market as ongoing demand — at no up-front cost, then collects a **net payout** at debrief: Reward plus optional bonuses minus **collateral**. Collateral prices unique civilian hits by the squad. A quiet replay of already-won authored work pays no fee ([ADR-0004](../architecture/adr-0004-quiet-replay.md)). Authored and generated take the same path ([ADR-0003](../architecture/adr-0003-one-contract-kind.md)). Tax yield is received from World Network, not computed here ([ADR-0008](../architecture/adr-0008-influence-is-a-wallet.md)). Debrief applies the invoice once ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)); a win spends ETA so Tax can still tick ([ADR-0001](../architecture/adr-0001-two-clocks.md)). Without this system the research gap has no market, violence has no invoice, and the World Network is only a contract picker.
+Economy and contracts is the house ledger and the work itself: **Credits** pay research and candidates; **Influence** is not kept here (World Network owns that wallet). The director accepts deniable work — three authored contracts as the campaign spine, a generated market as ongoing demand — at no up-front cost, then collects a **net payout** at debrief: Reward plus optional bonuses minus **collateral**. Collateral prices unique civilian hits by the squad. A quiet replay of already-won authored work pays no fee ([ADR-0004](../../docs/architecture/adr-0004-quiet-replay.md)). Authored and generated take the same path ([ADR-0003](../../docs/architecture/adr-0003-one-contract-kind.md)). Tax yield is received from World Network, not computed here ([ADR-0008](../../docs/architecture/adr-0008-influence-is-a-wallet.md)). Debrief applies the invoice once ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)); a win spends ETA so Tax can still tick ([ADR-0001](../../docs/architecture/adr-0001-two-clocks.md)). Without this system the research gap has no market, violence has no invoice, and the World Network is only a contract picker.
 
 Rules and numbers stay in `docs/game-design.md` §6, §9, §11. This overview does not fork them.
 
@@ -35,17 +35,17 @@ This serves **Violence has corporate consequences** and **The two layers feed ea
 
 4. **Overdraft refuse.** Research and hiring cannot overdraw. Authorization refuses; the account is unchanged. Exact-balance spend is allowed (account → 0). Zero and negative spends are ignored. Tax and payouts ignore non-positive amounts.
 
-5. **One contract kind** ([ADR-0003](../architecture/adr-0003-one-contract-kind.md)). Authored and generated are the same work: brief → assembly → mission → debrief. Economy owns instances, Reward, expiry math, collateral, net payout. Generated records physically sit in `worldStore.contracts`; that is placement, not a second owner. Authored three stay replayable; generated leave the market on fulfill, fail, expiry, or raid withdraw.
+5. **One contract kind** ([ADR-0003](../../docs/architecture/adr-0003-one-contract-kind.md)). Authored and generated are the same work: brief → assembly → mission → debrief. Economy owns instances, Reward, expiry math, collateral, net payout. Generated records physically sit in `worldStore.contracts`; that is placement, not a second owner. Authored three stay replayable; generated leave the market on fulfill, fail, expiry, or raid withdraw.
 
 6. **Accept is free.** Selecting a contract spends no Credits. Intel gates **access** (World Network); Economy does not charge a retainer.
 
-7. **Net payout (Economy prices).** Loss and quiet replay pay **0** Credits (no debt), including optional bonuses. Else `Reward + optional_bonus − collateral`. Collateral: **5,000 CR** per unique civilian first **squad-caused hit** (not death, not stack, not CorpSec). Cap at Reward. Optional bonus sits on top of Reward (outside the cap). Quiet replay zeros the **whole** net ([ADR-0004](../architecture/adr-0004-quiet-replay.md)). `net_payout = 0` does not zero the stored Reward field on the outcome DTO. Illegal counts (`N < 0`, negative bonus) are refused as 0 — they never credit the ledger. A **pyrrhic win** (living spec §10: tiebreak Win that empties the roster on an incomplete campaign) still pays the **full** net payout; Interface prints the `PYRRHIC` note on the invoice, and banner precedence is World Network's, not a pricing rule.
+7. **Net payout (Economy prices).** Loss and quiet replay pay **0** Credits (no debt), including optional bonuses. Else `Reward + optional_bonus − collateral`. Collateral: **5,000 CR** per unique civilian first **squad-caused hit** (not death, not stack, not CorpSec). Cap at Reward. Optional bonus sits on top of Reward (outside the cap). Quiet replay zeros the **whole** net ([ADR-0004](../../docs/architecture/adr-0004-quiet-replay.md)). `net_payout = 0` does not zero the stored Reward field on the outcome DTO. Illegal counts (`N < 0`, negative bonus) are refused as 0 — they never credit the ledger. A **pyrrhic win** (living spec §10: tiebreak Win that empties the roster on an incomplete campaign) still pays the **full** net payout; Interface prints the `PYRRHIC` note on the invoice, and banner precedence is World Network's, not a pricing rule.
 
 8. **Quiet vs loss-retry.** Authored unwon (including a loss retry) still pays in full. Authored already won is quiet: 0 CR / 0 Inf / 0 Intel, no control/unrest shove; KIA / injury / XP / ETA still apply. Generated has no quiet replay.
 
-9. **ETA is not a Credits spend.** A **win** debrief spends contract ETA as strategic days, including quiet replay. A **loss** spends none ([ADR-0001](../architecture/adr-0001-two-clocks.md)). Economy does not run the clock. Tax still ticks on a quiet-replay win because ETA catch-up still runs. Economy stamps ETA days on the slice. **Authored** ETAs are the §9 table (Glass Veil **2** / Hollow Crown **4** / Rust Haven **3**). **Generated** ETA is threat-mapped at creation: Moderate **2** / High **3** / Severe **4** (`CONTRACT_ETA_DAYS` in `src/game/contracts.ts`). That map is not the authored table — authored Severe (Glass Veil) is 2 days; generated Severe is 4. World Network spends the stamped days on a win.
+9. **ETA is not a Credits spend.** A **win** debrief spends contract ETA as strategic days, including quiet replay. A **loss** spends none ([ADR-0001](../../docs/architecture/adr-0001-two-clocks.md)). Economy does not run the clock. Tax still ticks on a quiet-replay win because ETA catch-up still runs. Economy stamps ETA days on the slice. **Authored** ETAs are the §9 table (Glass Veil **2** / Hollow Crown **4** / Rust Haven **3**). **Generated** ETA is threat-mapped at creation: Moderate **2** / High **3** / Severe **4** (`CONTRACT_ETA_DAYS` in `src/game/contracts.ts`). That map is not the authored table — authored Severe (Glass Veil) is 2 days; generated Severe is 4. World Network spends the stamped days on a win.
 
-10. **Debrief cut.** One partitioned **deploy snapshot** (four named slices; this GDD owns the Economy slice; no live store handles); outcome DTO at debrief; apply once ([ADR-0002](../architecture/adr-0002-unsaved-mission.md), [ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). Economy prices the five §10 money lines **including zeros**; Interface presents them as an invoice, not a loot drop; World Network applies sector/unrest/ownership/Influence/Intel from the same outcome DTO; Persistence applies once. **Abort = no debrief = Economy writes nothing.** Do not live-query the running mission or roster to price. Economy does **not** emit a live collateral **CR** figure. Live HUD collateral is Interface presenting Tactical’s unique squad first-hit **count**. Economy prices CR only from the outcome DTO at debrief.
+10. **Debrief cut.** One partitioned **deploy snapshot** (four named slices; this GDD owns the Economy slice; no live store handles); outcome DTO at debrief; apply once ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md), [ADR-0009](../../docs/architecture/adr-0009-partitioned-deploy-snapshot.md)). Economy prices the five §10 money lines **including zeros**; Interface presents them as an invoice, not a loot drop; World Network applies sector/unrest/ownership/Influence/Intel from the same outcome DTO; Persistence applies once. **Abort = no debrief = Economy writes nothing.** Do not live-query the running mission or roster to price. Economy does **not** emit a live collateral **CR** figure. Live HUD collateral is Interface presenting Tactical’s unique squad first-hit **count**. Economy prices CR only from the outcome DTO at debrief.
 
     Apply order for Credits this debrief: (1) `net_payout` (may be 0); (2) deposit each Tax amount WN emits during this apply. `new_balance` is the ledger after both. Tax is **not** a sixth invoice money line. The five lines do not have to sum: `new_balance − credits_before = net_payout + tax_deposits`.
 
@@ -76,19 +76,27 @@ This serves **Violence has corporate consequences** and **The two layers feed ea
 | **World Network** | Tax emit (Credits+sector+tick); garrison→Threat; Expedite/re-client/withdraw/post/expiry-fire on Economy records; Scan list | Contract instances, Reward, quiet/pay flags, expiry, stamped ETA days | Economy owns instances/payouts/Credits; WN owns clock/board/hooks/Influence/Intel |
 | **Research** | Authorize request + cost | Refuse or debit; lab start is Research | Economy owns the Credits check; Research owns project formulas / `sync(t)` |
 | **Roster / Assembly** | Hire request + candidate cost | Refuse or debit | Roster owns bodies and hire table; Economy only the Credits refuse |
-| **Tactical** | Economy slice of the deploy snapshot (frozen Reward, bonus defs, quietReplay, contract id, ETA days) | Outcome DTO at debrief (`civiliansHit` unique squad-caused, won, bonus, stored Reward) | Neither live-queries the other. Tactical counts hits; Economy prices CR only at debrief |
-| **Interface** | Invoice rows (all five money lines including zeros), Credits header, overdraft-disabled authorize | Select contract (free); Abort (no debrief) | Presentation only. Must present priced zeros; must not hide them. Live collateral **count** is Tactical → Interface, not an Economy CR output |
-| **Persistence** | — | Credits; generated records; `contractsWon` | Strategy autosave. Mission + debrief not saved ([ADR-0002](../architecture/adr-0002-unsaved-mission.md)). Apply once |
+| **Tactical** | Outcome DTO at debrief (`won`, `civiliansHit` unique squad-caused, completed optional **ids**; Tactical emits no priced `reward` or `bonus`) | Economy slice of the deploy snapshot (frozen Reward, bonus defs, quietReplay, contract id, ETA days) | Neither live-queries the other. Tactical counts hits; Economy prices CR only at debrief |
+| **Interface** | Select contract (free); Abort (no debrief) | Invoice rows (all five money lines including zeros), Credits header, overdraft-disabled authorize | Presentation only. Must present priced zeros; must not hide them. Live collateral **count** is Tactical → Interface, not an Economy CR output |
+| **Persistence** | — | Credits; generated records; `contractsWon` | Strategy autosave. Mission + debrief not saved ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). Apply once |
+
+**Known divergences (code vs this spec; no issue linked yet):**
+
+1. `quietReplay`: `setOutcome` in `src/state/appStore.ts` keeps an explicit boolean on the outcome but falls back to live `contractsWon` (`isQuietReplay`) when the field is `undefined` (flagged in `tactical-mission.md` Outcome DTO). Core Rule 14 and the frozen-slice AC require the Economy slice's boolean, never the live lookup.
+2. Collateral clamp: `collateralFine` in `appStore.ts` uses raw `civiliansHit × 5000` with no `N = max(0, floor())`. `civiliansHit = −1` gives a negative fine and an inflated payout; `2.7` bills 13,500 CR instead of 10,000 CR. The negative-count and non-integer ACs fail against `src/`.
+3. Pricing owner: the code `MissionOutcome` carries `reward` and `bonus` already priced on the mission side, and `setOutcome` credits `netPayout` itself. The spec has Tactical emit ids only and Economy price from the frozen slice.
+
+Until the code is fixed, the ACs for these three fail against `src/`. `AGENTS.md` ranks code over the living spec when they disagree, so these are owner decisions (fix the code, or amend the spec), not settled by this file. File one GitHub issue per divergence before implementation work consumes the ACs.
 
 Research, Roster and Assembly, Tactical mission, Persistence and validation, and Interface GDDs exist. Edges above vs those files + living spec + World Network GDD.
 
-**Deploy snapshot (partitioned, frozen):** one snapshot, four named slices ([ADR-0009](../architecture/adr-0009-partitioned-deploy-snapshot.md)). This GDD owns the Economy slice. Do not pass live store handles. Do not call any slice “the Snapshot DTO.”
+**Deploy snapshot (partitioned, frozen):** one snapshot, four named slices ([ADR-0009](../../docs/architecture/adr-0009-partitioned-deploy-snapshot.md)). This GDD owns the Economy slice. Do not pass live store handles. Do not call any slice “the Snapshot DTO.”
 
-- **Economy slice:** contract id; authored vs generated; Reward; optional bonus defs; ETA days (authored §9 table, or generated `CONTRACT_ETA_DAYS`; World Network spends later); `quietReplay` from authored `contractsWon` (boolean at create; do not restamp from live `contractsWon`).
+- **Economy slice:** contract id; apply-once key (minted at deploy); authored vs generated; Reward; optional bonus defs; ETA days (authored §9 table, or generated `CONTRACT_ETA_DAYS`; World Network spends later); `quietReplay` from authored `contractsWon` (boolean at create; do not restamp from live `contractsWon`).
 - **World Network slice:** sector id; Control; Unrest — defined in the World Network GDD. Not an Economy schema.
 - **Research slice / Roster slice:** unslotted set and resolved wear / `appliedIds` — not Economy schema.
 
-**Outcome DTO (debrief, apply once):** `won`; `quietReplay` (frozen from the Economy slice; do not restamp from live `contractsWon`); `civiliansHit` (unique squad-caused first hits); `reward` (stored contract Reward from the Economy slice — including on Loss and quiet replay); `bonus` (completed optionals). `net_payout = 0` must not zero `reward`. Abort is **absence of an outcome**, not a field. World Network also reads this DTO for Control/Unrest/ownership/Influence/Intel/Feed/generated removal. World Network does **not** compute collateral.
+**Outcome DTO (debrief, apply once):** `won`; `quietReplay` (frozen from the Economy slice; do not restamp from live `contractsWon`); `civiliansHit` (unique squad-caused first hits); `reward` (stored contract Reward from the Economy slice — including on Loss and quiet replay); `bonus` (CR that **Economy prices** from the completed optional ids Tactical reports, against the frozen Economy-slice defs; Tactical does not emit it). `net_payout = 0` must not zero `reward`. Abort is **absence of an outcome**, not a field. **Apply-once key:** the key is minted once per deploy, when the deploy snapshot is cut, is carried on the Economy slice, and is echoed unchanged on the outcome DTO. It must not be minted by the apply itself. Economy applies an outcome only if its key differs from the last applied key (one deploy runs at a time, so only the latest key can repeat), so a second apply of the same outcome (same key) is a no-op for `net_payout` and for the Tax deposits that apply triggered. Code gap: `setOutcome` mints `outcomeSerial` (`outcomeSerial + 1`, `appStore.ts`) on every call and credits `netPayout` each time, so a duplicate call looks new. The existing `campaignStore.outcomeApplied >= outcomeSerial` guard (`ui/index.tsx`) covers the campaign and World Network apply only, not Credits. World Network also reads this DTO for Control/Unrest/ownership/Influence/Intel/Feed/generated removal. World Network does **not** compute collateral.
 
 ## Formulas
 
@@ -98,7 +106,7 @@ Economy owns four live formulas: `collateral`, `net_payout`, `generated_reward`,
 
 The `collateral` formula is defined as:
 
-`N = max(0, floor(civiliansHit))`
+`N = max(0, floor(civiliansHit))`; a non-finite `civiliansHit` (NaN or ±Infinity) is treated as 0 before the clamp
 
 `collateral = min(Reward, 5000 × N)`
 
@@ -117,7 +125,7 @@ The `collateral` formula is defined as:
 
 The `net_payout` formula is defined as:
 
-`optional_bonus = max(0, completed_bonus)`
+`optional_bonus = max(0, completed_bonus)`; a non-finite `completed_bonus` is treated as 0
 
 `net_payout = 0` if quiet replay or not a Win;
 
@@ -130,7 +138,7 @@ The `net_payout` formula is defined as:
 | Win | won | bool | true/false | Every required objective complete |
 | quiet replay | quiet | bool | true/false | Frozen Economy-slice flag: this authored contract is already won |
 | Reward | Reward | int | same as collateral | Stored contract fee (not zeroed when net is 0) |
-| completed bonus (raw) | completed_bonus | number | any | Sum of completed optional bonus defs from the frozen Economy slice |
+| completed bonus (raw) | completed_bonus | number | any | Sum of the frozen Economy-slice bonus defs whose ids Tactical reports complete. Economy prices it; Tactical emits ids only |
 | optional bonus | optional_bonus | int | ≥ 0 | `max(0, completed_bonus)`. 0 if ignored/failed. Do not invent a generated table; Tactical reports complete against frozen defs (Hollow Crown +9,000; Rust Haven +6,000; generated may report the same defs) |
 | collateral | collateral | int | 0–Reward | From `collateral` |
 | net payout | net_payout | int | ≥ 0 | Credits deposited on debrief from the contract fee |
@@ -192,6 +200,7 @@ Authored: Glass Veil (Severe) **2** days; Hollow Crown (High) **4** days; Rust H
 - **If collateral would exceed Reward:** `collateral = Reward`. Win net = optional_bonus only (or 0 if no optional). Never negative Credits.
 - **If civiliansHit < 0 or is non-integer:** `N = max(0, floor(civiliansHit))`. Negative never produces negative collateral or inflated `net_payout`.
 - **If completed_bonus < 0:** `optional_bonus = 0`. Negative never debits or credits the ledger.
+- **If civiliansHit or completed_bonus is NaN or ±Infinity:** treated as 0 before pricing. Collateral and `net_payout` are always finite integers; a non-finite input never reaches the ledger.
 - **If the same civilian is multi-hit:** first squad hit bills once. Repeats do not stack. Death is not required.
 - **If CorpSec-caused hits:** not Collateral. Do not increment N.
 - **If overdraft (research or hire):** authorization refuses. Credits unchanged.
@@ -215,12 +224,15 @@ Authored: Glass Veil (Severe) **2** days; Hollow Crown (High) **4** days; Rust H
 | Hard, downstream | Tactical mission | Economy slice of deploy snapshot; outcome at debrief | No live mission query. Tactical unique-hit **count** may feed HUD; Economy does not price that count until debrief |
 | Hard, downstream | Interface | Presentation | Invoice including zeros, Credits header, overdraft disable. Live collateral count is Tactical → Interface |
 | Hard, downstream | Persistence and validation | Strategy autosave | Mission/debrief excluded |
+| Soft, none | Audio | — | No dependency either way: Audio lists collateral CR as a non-dependency and keys no bed to payout ([Audio](audio.md) Dependencies). Audio prices violence, does not celebrate payouts; Economy emits nothing to Audio |
 
-This GDD lists World Network as upstream (Tax, clock, board). World Network lists Economy as downstream (Tax emit in; contract instances out). Bidirectional: Economy owns instances/payouts; WN owns clock/board/hooks. Research, Roster, Tactical, Persistence, and Interface GDDs exist and list Economy.
+This GDD lists World Network as upstream (Tax, clock, board). World Network lists Economy as downstream (Tax emit in; contract instances out). Bidirectional: Economy owns instances/payouts; WN owns clock/board/hooks. Research, Roster, Tactical, Persistence, and Interface GDDs exist and list Economy. Audio lists `collateral` / `net_payout` as non-dependencies in its own GDD.
 
 ## Tuning Knobs
 
-All knobs are owned by `docs/game-design.md` §6, §9, §11 (and `src/game/contracts.ts` / `appStore` for implementation). This GDD does not add ranges. Changing a knob requires checking the living spec, not this pointer. Do not duplicate World Network tax-base knobs here.
+All knobs are owned by `docs/game-design.md` §6, §9, §11 (and `src/game/contracts.ts` / `appStore` for implementation). This GDD does not add ranges. Changing a knob requires checking the living spec, not this pointer. Safe ranges live with each knob's owner section (§6, §9, §16); the Too high / Too low column names the failure at each edge.
+
+**Open pacing note (derived, non-binding):** after opening Credits and one authored pass, about 447,550 CR of the 779,000 CR program must come from the generated market — roughly 8–9 average wins (~54.5k) at 2–4 ETA days each. Living spec §16 states the dependency but no numeric target. Decide whether to set one there before balance work. Do not duplicate World Network tax-base knobs here.
 
 | Knob | Owner | Too high / too low |
 |---|---|---|
@@ -244,7 +256,7 @@ Credits header on strategy screens. Overdraft: research/hire authorization disab
 ## Acceptance Criteria
 
 - **GIVEN** a new campaign, **WHEN** the Credits ledger is first read, **THEN** it is **128,450 CR**.
-- **GIVEN** Credits **C ≥ 0**, **WHEN** a debrief payout, Tax deposit, research spend, or hire **succeeds**, **THEN** Credits after the write are **≥ 0**.
+- **GIVEN** Credits **10,000 CR**, **WHEN** a hire costing **10,000 CR** succeeds, **THEN** Credits **= 0 CR**; **GIVEN** Credits **0 CR**, **WHEN** a Tax deposit of **1,000 CR** applies, **THEN** Credits **= 1,000 CR**.
 - **GIVEN** Credits **15,999 CR** and a project listed at **16,000 CR**, **WHEN** research is authorized, **THEN** the authorization is refused, Credits stay **15,999 CR**, and the project does not start.
 - **GIVEN** Credits **15,999 CR** and a candidate listed at **16,000 CR**, **WHEN** hire is authorized, **THEN** the authorization is refused, Credits stay **15,999 CR**, and the roster is unchanged.
 - **GIVEN** Influence **I** and Intel **J**, and Economy apply only (World Network apply not run), **WHEN** Economy applies a payout, Tax deposit, research debit, or hire debit, **THEN** Influence is still **I** and Intel is still **J**.
@@ -252,7 +264,7 @@ Credits header on strategy screens. Overdraft: research/hire authorization disab
 - **GIVEN** Credits equal to a candidate’s hire cost **16,000 CR**, **WHEN** hire is authorized, **THEN** the authorization succeeds and Credits **= 0 CR**.
 - **GIVEN** Credits **128,450 CR**, **WHEN** a spend of **0 CR** or of **−1 CR** is requested, **THEN** Credits stay **128,450 CR** and no research or hire starts.
 - **GIVEN** Credits **128,450 CR**, **WHEN** an authored or generated contract is accepted, **THEN** Credits stay **128,450 CR**.
-- **GIVEN** an authored contract **or** a generated contract, **WHEN** it is accepted and played to finish, **THEN** both use Brief → Assembly → Mission → Debrief.
+- **GIVEN** an authored contract, **WHEN** it is accepted and played to a Win, **THEN** the Screens visited are Brief, Assembly, Mission, Debrief in that order; **GIVEN** a generated contract, **THEN** the same four in the same order.
 - **GIVEN** Glass Veil already won, **WHEN** the director returns to the World Network, **THEN** Glass Veil remains selectable.
 - **GIVEN** a generated contract that is fulfilled, **WHEN** the market is read, **THEN** that instance is gone.
 - **GIVEN** a generated contract that is failed, **WHEN** debrief has applied (World Network apply not run), **THEN** `net_payout = 0 CR`, that instance is gone, and Credits are unchanged by the contract fee.
@@ -279,7 +291,7 @@ Credits header on strategy screens. Overdraft: research/hire authorization disab
 - **GIVEN** a generated (not authored) win, Reward **54,500 CR**, **0** unique squad civilian hits, optional bonus **0 CR**, and World Network apply is not run, **WHEN** debrief applies, **THEN** Credits increase by **54,500 CR**.
 - **GIVEN** a mission in progress on a generated contract that is Offered, Credits **C CR**, **WHEN** Abort is confirmed, **THEN** there is no debrief, no invoice is built, Credits stay **C CR**, and the generated record remains Offered.
 - **GIVEN** a mission in progress on Glass Veil Unwon, Credits **C CR**, **WHEN** Abort is confirmed, **THEN** there is no debrief, no invoice is built, Credits stay **C CR**, and Glass Veil remains Unwon.
-- **GIVEN** Credits **128,450 CR**, a non-quiet win with `net_payout` **75,000 CR** already applied once (World Network apply not run), **WHEN** the same outcome is applied again, **THEN** Credits **= 203,450 CR**.
+- **GIVEN** Credits **128,450 CR** and a non-quiet win outcome with key **K** and `net_payout` **75,000 CR** (World Network apply not run), **WHEN** that same outcome (same key **K**) is applied twice, **THEN** Credits **= 203,450 CR** (the second apply is a no-op).
 - **GIVEN** World Network emits Tax amount **A CR** and **A > 0**, **WHEN** Economy deposits, **THEN** Credits increase by **A CR**.
 - **GIVEN** World Network emits Tax amount **A ≤ 0**, **WHEN** Economy deposits, **THEN** Credits are unchanged.
 - **GIVEN** a quiet-replay **win**, Credits **128,450 CR**, World Network apply not run, **WHEN** Economy applies, **THEN** `net_payout = 0 CR` and Credits **= 128,450 CR**.
@@ -306,11 +318,24 @@ Credits header on strategy screens. Overdraft: research/hire authorization disab
 - **GIVEN** a quiet-replay win, stored Reward **62,000 CR**, optional bonus **0 CR**, Collateral **0 CR**, `net_payout = 0 CR`, new balance **C**, **WHEN** Interface builds the invoice, **THEN** Reward **62,000 CR** is present (not omitted) and all five money lines are present.
 - **GIVEN** a non-quiet win, N=0, Collateral **0 CR**, **WHEN** Interface builds the invoice, **THEN** the Collateral **0 CR** line is present (not omitted).
 - **GIVEN** Credits **C CR** at deploy, **WHEN** the mission is still running, **THEN** Credits stay **C CR**.
+- **GIVEN** a non-quiet win, Reward **85,000 CR**, civiliansHit **2.7**, **WHEN** Economy prices from the outcome DTO (World Network apply not run), **THEN** N **= 2** and Collateral **= 10,000 CR**.
+- **GIVEN** a loss, stored Reward **62,000 CR**, optional objective complete (**+9,000 CR**), **WHEN** debrief applies (World Network apply not run), **THEN** `net_payout = 0 CR` and Credits are unchanged by the contract.
+- **GIVEN** a pyrrhic win (tiebreak Win that empties the roster on an incomplete campaign), non-quiet, Reward **85,000 CR**, N=0, **WHEN** debrief applies (World Network apply not run), **THEN** `net_payout = 85,000 CR` (full pay).
+- **GIVEN** a new Severe generated offer, initially priority, `u = 0.5`, **WHEN** it is created, **THEN** Reward **= 95,000 CR** (clamped).
+- **GIVEN** a new generated offer that is not initially priority, **WHEN** it is created, **THEN** its expiry is **24–48** strategic hours.
+- **GIVEN** a new generated offer that is initially priority, **WHEN** it is created, **THEN** its expiry is **8–16** strategic hours.
+- **GIVEN** a generated offer with expiry **E**, **WHEN** Expedite is applied, **THEN** expiry **= E + 24** strategic hours.
+- **GIVEN** a non-quiet Hollow Crown win, Reward **62,000 CR**, **13** unique squad first-hits, optional complete (**+9,000 CR**), **WHEN** Economy prices from the outcome DTO (World Network apply not run), **THEN** Collateral **= 62,000 CR** and `net_payout = 9,000 CR`.
+- **GIVEN** a non-quiet Rust Haven win at opening Standard, Reward **41,000 CR**, **8** unique squad first-hits, optional ignored, **WHEN** Economy prices from the outcome DTO (World Network apply not run), **THEN** Collateral **= 40,000 CR** and `net_payout = 1,000 CR`.
+- **GIVEN** a non-quiet win, Reward **85,000 CR**, civiliansHit **NaN**, completed_bonus **NaN**, **WHEN** Economy prices from the outcome DTO (World Network apply not run), **THEN** Collateral **= 0 CR**, `optional_bonus = 0 CR`, and `net_payout = 85,000 CR`.
+- **GIVEN** an outcome with apply-once key **K** already applied, Credits **128,450 CR** and `net_payout` **75,000 CR**, **WHEN** an outcome carrying the same key **K** is applied again, **THEN** Credits stay at their value after the first apply; **GIVEN** an outcome with a different key, **THEN** it applies.
+- **GIVEN** a generated contract that is Locked-hidden by the intel gate, **WHEN** Economy instances are read, **THEN** the instance exists and keeps its stamped Reward and ETA days.
+- **GIVEN** fewer than 3 generated instances are open, **WHEN** the roll timer is read after a roll, **THEN** the next roll is due **2–6** strategic hours later.
 
 ## Closed Questions
 
 | # | Question | Resolution |
 |---|---|---|
 | 1 | Locked generated “do not appear” vs OPEN CONTRACTS | Closed. World Network Core Rule 10: locked generated do not appear. Economy holds the instance and does not own a hide rule. |
-| 2 | Generated market physically sits in `worldStore` | Closed. Owner = Economy; home = `worldStore.contracts` ([ADR-0012](../architecture/adr-0012-store-placement.md)). Do not move. |
+| 2 | Generated market physically sits in `worldStore` | Closed. Owner = Economy; home = `worldStore.contracts` ([ADR-0012](../../docs/architecture/adr-0012-store-placement.md)). Do not move. |
 | 3 | Hide/show of zero-value invoice rows | Closed for Economy. This GDD requires Interface to present all five priced money lines including zeros (Loss, quiet replay, N=0). Interface GDD Open Question 1 is Closed on the same rule. Do not fork a second show-rule here. |
