@@ -1,8 +1,8 @@
 # UX Spec: Main Menu
 
-> **Status**: Approved (/ux-review design/ux/main-menu.md 2026-10-05)
+> **Status**: Approved (/ux-review design/ux/main-menu.md 2026-10-08)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-10-05
+> **Last Updated**: 2026-10-08
 > **Journey Phase(s)**: unknown — no journey map
 > **Platform Target**: Desktop browser (1280×720 minimum). Keyboard and mouse. No gamepad. No touch.
 > **Template**: UX Spec
@@ -333,7 +333,7 @@ Numbers and formats: the UTC clock is `HH:MM:SS` and locale-independent; version
 - [ ] **Invalid save.** With a corrupted save, Z3 reads `SAVE UNREADABLE // DROPPED`, told apart from the never-started case by text. Continue is absent. New Operation still takes two activations, and the armed label does not say erase.
 - [ ] **Two-step erase.** With a valid save, the first New Operation activation shows `CONFIRM // ERASE SAVE?` and the double-line frame, and the save is intact. The second activation within 3 s erases it and opens the World Network.
 - [ ] **Disarm.** The armed state clears after 3 s, on Esc, and when Settings opens. No erase happens, and no campaign starts.
-- [ ] **Erase failure.** When storage refuses the erase, the new campaign starts and the World Network shows `ERASE FAILED // SAVE NOT ERASED` in two places: a dismissible status toast that appears in one frame, holds at least 3 seconds unless dismissed, then collapses, and does not block input; and a Feed line with the same text that stays until scrolled away. Neither says the save was erased. The strategic clock is not paused.
+- [ ] **Erase failure** (verified on the World Network; its host zone waits on Open Question 3, the behavior below does not). When storage refuses the erase, the new campaign starts and the World Network shows `ERASE FAILED // SAVE NOT ERASED` in two places: a dismissible status toast that appears in one frame, holds at least 3 seconds unless dismissed, then collapses, and does not block input; and a Feed line with the same text that stays until scrolled away. Neither says the save was erased. The strategic clock is not paused.
 - [ ] **Settings survive.** After New Operation, audio, remaps, accessibility, Quality, Difficulty, and the telemetry toggle keep their values.
 - [ ] **Keyboard.** Tab reaches Continue (if present), New Operation, Settings, in that order. Every button works with Enter and Space. Focus is visible in high contrast. The first Enter or Space unlocks audio and still activates the focused control. If audio cannot start, the Menu stays interactive.
 - [ ] **Settings modal.** Focus is trapped while open and returns to the Settings button on close.
@@ -343,11 +343,34 @@ Numbers and formats: the UTC clock is `HH:MM:SS` and locale-independent; version
 
 ---
 
+## Input Method Completeness Checklist
+
+Platform Target: keyboard and mouse. Gamepad and touch are out of scope (ADR-0017).
+
+**Keyboard**
+- [x] Every interactive element is reachable by Tab / Shift+Tab: Continue (if present) → New Operation → Settings.
+- [x] Every action activates with Enter and Space, including both New Operation steps.
+- [x] Esc disarms New Operation and closes Settings.
+- [x] Initial focus lands on the primary CTA.
+- [x] Focus is always visible (P-04), including in high contrast.
+- [x] No keyboard trap outside the Settings modal; the modal trap releases on close or Esc and restores focus (P-05).
+- [x] The audio-unlock gesture (Enter or Space) is not consumed.
+
+**Mouse**
+- [x] Every action is a single click on a full-width button; no precision target.
+- [x] No information is shown only on hover; hover is not a state (P-04).
+- [x] No right-click, drag, or double-click is required. The two-step confirm is two separate clicks within 3 s.
+- [x] The audio-unlock click is not consumed.
+
+No item is unticked.
+
+---
+
 ## Open Questions
 
 | # | Question | Owner | Status |
 |---|---|---|---|
-| 1 | Player journey map missing: `design/player-journey.md` does not exist, so arrival context is assumed. Template: `skill_view('project-templates', file_path='templates/player-journey.md')`. | ux-designer | Open |
+| 1 | Player journey map missing: `design/player-journey.md` does not exist, so arrival context is assumed. Non-blocking for this spec: the Menu is the first touchpoint of every session regardless of journey phase. | ux-designer | Open |
 | 2 | Return routes to the Menu: nothing in code or GDDs returns the player to the Menu from pause, campaign-end or Debrief. Intended (Menu at launch only) or a gap? | game-designer | Open |
 | 3 | World Network has no UX spec. It must host the erase-failure contract in this spec (copy, P-11 toast, P-16 line). Zone coordinates inside that screen are for `/ux-design` World Network. | ux-designer | Open (host only; contract closed) |
 | 4 | Erase outcome API: `startNewOperation` returns `void` and swallows the storage error; the UI needs the outcome. | Persistence | Open; implementation dependency |
