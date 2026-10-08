@@ -1,0 +1,20 @@
+[
+  {
+    "level": "info",
+    "message": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "timestamp": "2026-10-07T21:35:18.575Z",
+    "url": "http://localhost:4200/node_modules/.vite/deps/react-dom_client.js?v=ea0fbe65"
+  },
+  {
+    "level": "warn",
+    "message": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "timestamp": "2026-10-07T21:35:18.663Z",
+    "url": "http://localhost:4200/node_modules/.vite/deps/chunk-J3ZAAMFK.js?v=ea0fbe65"
+  },
+  {
+    "level": "info",
+    "message": "[scene] renderer backend: WebGPU, quality tier: HIGH",
+    "timestamp": "2026-10-07T21:35:18.678Z",
+    "url": "http://localhost:4200/src/scene/GameCanvas.tsx"
+  }
+]
