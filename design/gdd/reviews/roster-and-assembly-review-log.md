@@ -1,5 +1,21 @@
 # Review log: Roster and Assembly
 
+## Review — 2026-10-07 — Verdict: APPROVED
+Scope signal: L
+Specialists: none (lean)
+Blocking items: 0 | Recommended: 6
+Summary: Re-review after the Ledger Amber / W-05 edits. Alias discipline holds, formula arithmetic (ACs 57-66) reproduces, tier boundaries agree across formula, edges and ACs, registry matches. Remaining items are header drift, a stale OQ1 target, and testability polish; no blockers.
+Prior verdict resolved: Yes
+Findings:
+- [RECOMMENDED] Header: Last Updated stale; Status Approved vs index Needs Revision (index now Approved).
+- [RECOMMENDED] Open Questions: OQ1 hire-on-failed target "After Persistence extract" is stale; needs a real target.
+- [RECOMMENDED] Formulas / ACs 51, 53, 55: cite ADR-0019 (plain float, no epsilon); boundary fixtures must be float-exact.
+- [RECOMMENDED] Acceptance Criteria: AC 27 is compound; split.
+- [RECOMMENDED] Acceptance Criteria: no ACs for Injured non-color cue, tier readout, hire-disabled UI, gate reason.
+- [RECOMMENDED] Open Questions: OQ2/OQ5 leave 24 h cadence reset undefined; name owner and date.
+Reviewed-Content-Hash: design/gdd/roster-and-assembly.md f71a05d4a4be90ac46f6ecd0602ad8dc6c7c98f2
+Reviewed-Content-Hash: design/registry/entities.yaml 42c51ca6191edf8d9b1876d27251ece76a78d18e
+
 ## Review — 2026-09-14 — Scoring pass: NEEDS REVISION (pre-patch)
 Scope signal: L
 Specialists: game-designer, systems-designer, economy-designer, qa-lead, creative-director

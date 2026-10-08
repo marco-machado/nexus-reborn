@@ -432,5 +432,6 @@ Tactical owns unique squad-caused civilian first-hits (`civiliansHit`). Economy 
 7. **Sight-confirm interpolation** between ~0.45 s and ~1.7 s, **weaponNoise / rain noiseMul** magnitudes, and **threat-extra numeric tables** are code-owned. §10 names the behaviors. Do not copy code constants here.
 8. **Stop vs parked Hold Ground path.** Resolved: Stop clears pathing, including any parked Hold Ground path (living spec §10 “clears pathing”). Stance bits stay; release after Stop does not resume the walk. AC 6 asserts this.
 9. **Optional Destroy after the required sequence moves on.** Living spec never deactivates an optional. Whether Rust Haven’s transformer remains completable after Destroy/Defend pressure is unnamed. Do not invent it here.
+10. **Glass Veil collateral not encountered (playtest 2026-10-06, unclassified).** In the first vertical slice (`prototypes/nexus-reborn-vertical-slice/REPORT.md`) no civilian was hit on Glass Veil, so pillar 3 never reached the invoice. Not reproduced; not a proven defect. Open: whether Glass Veil's civilian placement and lanes make a squad-caused hit encounterable, or whether this was one player's clean run. Owner has not classified the failure (PIVOT-NOTE). Economy pricing is unaffected. Do not retune Glass Veil here.
 
 ---

@@ -113,7 +113,7 @@ formulas:
       - lost
     output_range: [0, 1]
     expression: "won / (won + lost)"
-    notes: "Abort excluded from denominator. Defined only when won+lost > 0; zero-denominator is Open Question 2. Canonical: docs/game-design.md §17."
+    notes: "Abort excluded from denominator. Defined only when won+lost > 0; at won+lost = 0 it is not computed and Balance shows a no-data marker (Open Question 2 closed 2026-10-07). Canonical: docs/game-design.md §17."
     added: 2026-09-08
     revised: ""
 
@@ -260,7 +260,6 @@ formulas:
       - design/gdd/persistence-and-validation.md
       - design/gdd/tactical-mission.md
       - design/gdd/interface.md
-      - design/gdd/audio.md
     variables:
       - Reward
       - civiliansHit
@@ -278,7 +277,6 @@ formulas:
       - design/gdd/persistence-and-validation.md
       - design/gdd/tactical-mission.md
       - design/gdd/interface.md
-      - design/gdd/audio.md
     variables:
       - won
       - quiet

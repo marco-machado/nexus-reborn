@@ -56,3 +56,36 @@ Prior verdict resolved: Yes
 - Verified: complete specialist and senior review at full depth; 8/8 required sections, seven dependency GDDs, 28 consecutive ACs, no broken local Markdown file targets, and `git diff --check`. Arithmetic/state-model checks are not application execution. No browser/runtime/profiling acceptance is claimed.
 - Tracking: Interface is Approved in `design/gdd/systems-index.md`; approval metadata only was synchronized after scoring. No substantive GDD changes followed this scoring pass. No source code, sibling GDD, living-spec, registry or ADR edits were made by this review.
 
+
+## Review — 2026-10-07 — Verdict: APPROVED
+Scope signal: L
+Specialists: none (lean, single-session)
+Blocking items: 0 | Recommended: 6
+Summary: Re-review of the revised document after the 2026-10-07 cross-GDD review. The pyrrhic-win beat (Debrief surface row, Rule 18, UI Requirements, AC29) is consistent with World Network and living spec §10; the research-completion Feed line is recorded as OQ10 without inventing a surface; Roster's Deploy CTA no longer conflicts with Rule 4; the registry P-01 arming-window entry matches Rule 12. Remaining gaps are acceptance coverage and one under-specified advisory, not blockers. Note: the lean NEEDS REVISION cited in the document header (2026-10-07) had no log entry; this entry supersedes it.
+Prior verdict resolved: Yes
+Findings:
+- [RECOMMENDED] Edge Cases: no pyrrhic-win bullet; pyrrhic + quiet-replay both-flags case has no edge case or AC fixture
+- [RECOMMENDED] Acceptance Criteria: no ACs for the under-35% / first-combat-Alert / ability-ready advisories, reduced motion, high contrast, text-scale persistence, Balance beyond AC25, or New Operation / telemetry Clear arm-timeout-Escape
+- [RECOMMENDED] Open Questions: ability-ready advisory (spec "≥60 s" vs code's mission-local accumulator) is unresolved but has no OQ
+- [RECOMMENDED] Acceptance Criteria: AC3 ends in an unmeasurable "visual coherence" judgment; AC1 bundles 9 surfaces x 4 text scales
+- [RECOMMENDED] Core Rules 12: 3 s window extended to New Operation and Clear beyond the living spec's Abort-only wording; cite P-01 or log a living-spec follow-up
+- [RECOMMENDED] Header: status line said In Review while systems-index said Needs Revision; the lean 10-07 verdict lacked a log entry
+Reviewed-Content-Hash: design/gdd/interface.md 4dc00cd84b1c27699d04f02e93d2ea7e6d95cafb
+Reviewed-Content-Hash: design/registry/entities.yaml 42c51ca6191edf8d9b1876d27251ece76a78d18e
+
+## Review — 2026-10-07 — Verdict: APPROVED
+Scope signal: L
+Specialists: none (lean, single-session)
+Blocking items: 0 | Recommended: 7
+Summary: Second same-day re-review, after the 2026-10-07b cross-review fixes (Debrief pyrrhic banner, OQ10 split against living spec §19 #10, Balance / win_rate / arming window written back to §17 / §12, failed-campaign Debrief offers no Replay with AC30). All changes are consistent with the living spec and with Persistence and World Network. Recommended items 1, 3 and 4 were applied mechanically before hashing; the hash below is of that text. No creative-director pass was run.
+Prior verdict resolved: Yes (prior APPROVED stood; post-approval edits now scored)
+Findings:
+- [RECOMMENDED] Rules 7 / 10, States, AC6: authored Replay stated without the failed-campaign exception. Fixed.
+- [RECOMMENDED] Rule 18 / AC30: a loss that empties the roster shows no failure cue on Debrief beyond the missing Replay; living spec §10 silent. Open.
+- [RECOMMENDED] Rule 3 module map: Debrief pyrrhic banner missing from Screens ownership. Fixed.
+- [RECOMMENDED] UI Requirements: §19 #10 program-completion Feed line had no counterpart in world-network.md UI Requirements. Fixed there.
+- [RECOMMENDED] Edge Cases: no quiet + pyrrhic fixture; open Balance overlay after Clear unspecified. Open (carried).
+- [RECOMMENDED] Acceptance Criteria: no ACs for advisories, reduced motion, high contrast, text-scale persistence, New Operation / Clear arm-timeout-Escape. Open (carried).
+- [RECOMMENDED] Open Questions: ability-ready advisory (spec ≥60 s vs code accumulator) still has no OQ. Open (carried).
+Reviewed-Content-Hash: design/gdd/interface.md 72daf20f49ce41a4b972326adb75ba2c815a9864
+Reviewed-Content-Hash: design/registry/entities.yaml 915c63c38de8f149583e674c2d10499c687847a7

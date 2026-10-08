@@ -1,9 +1,9 @@
 # Persistence and validation
 
-> **Status**: Approved
+> **Status**: Approved (`/design-review` 2026-10-07 re-review of patched text APPROVED; see [review log](reviews/persistence-and-validation-review-log.md))
 > **Author**: extract from docs/game-design.md §17, §20
-> **Last Updated**: 2026-09-16 (header Status aligned to independent `/design-review` APPROVED 2026-09-15)
-> **Independent `/design-review`**: 2026-09-15 APPROVED
+> **Last Updated**: 2026-10-07 (header Status aligned to the re-review; Balance availability, `win_rate` zero denominator, autosave trigger, AC rewrites, knob ranges)
+> **Independent `/design-review`**: 2026-09-15 APPROVED; 2026-10-07 NEEDS REVISION, revised, re-review APPROVED
 > **Implements Pillar**: Violence has corporate consequences; The two layers feed each other; One corporate operating system
 > **Living spec**: `docs/game-design.md` §17, §4 session/end, §20 campaign sentence — this file aliases them; do not fork rules
 > **Specialists (full)**: creative-director (fantasy); systems-designer (rules/formulas/edges); gameplay-programmer (feasibility FEASIBLE); qa-lead (acceptance)
@@ -53,7 +53,7 @@ This serves **Violence has corporate consequences**, **The two layers feed each 
 
 8. **Invalid blob.** Unreadable or invalid campaign blob is no campaign. Continue unavailable. Do not half-load. Drop the whole blob. Settings garbage must not leak this policy (settings may fall back to defaults independently; campaign restore is all-or-nothing). Telemetry garbage yields an empty log; it does not drop a valid campaign ([ADR-0011](../../docs/architecture/adr-0011-campaign-persistence-envelope.md)). Both `campaignWon` and `campaignFailed` true is invalid — drop the whole campaign blob. A **non-failed** blob's `campaignWon` must match the three-authored record: `campaignWon` is true iff all three authored ids are in `contractsWon`; otherwise drop the whole blob. A **failed** blob may still list 0–2 authored wins. Do **not** drop-all empty living + incomplete + `!failed` (that re-derives fail on hydrate). Do **not** drop-all failed + three authored wins ([ADR-0020](../../docs/architecture/adr-0020-campaign-fail-flags.md)).
 
-9. **Four Screens autosave.** World Network, Research, Brief, Assembly autosave the campaign blob. Mission and Debrief do **not**. Abort discards the mission. No mid-mission resume ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). In-session Abort landing after confirm (Menu vs last Screen) is Open Question 8. Persistence owns discard only.
+9. **Four Screens autosave.** World Network, Research, Brief, Assembly autosave the campaign blob. Mission and Debrief do **not**. *Autosave* means: persisted state that changes while a Screen is the active phase is committed with no player action, and the first commit of a Debrief result happens when the next Screen becomes active. Delay and coalescing are not rules; a reload in the gap before a commit restores the previous commit. Abort discards the mission. No mid-mission resume ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). In-session Abort landing after confirm (Menu vs last Screen) is Open Question 8. Persistence owns discard only.
 
 10. **In-memory apply vs durable commit.** Debrief applies payout, sector, intel, influence, and roster **once in session memory**. A quiet replay applies roster and ETA catch-up only (`t`, laboratories, injuries, Tax deposits — owners tick; Persistence does not). Debrief is not a Screen autosave and does not durable-write ([ADR-0002](../../docs/architecture/adr-0002-unsaved-mission.md)). The first **durable** campaign write of that result is the next Screen autosave: World Network return **or** Brief Replay (`docs/game-design.md` §4 session rules 8–9). The committed result is **whatever owners applied this Debrief**, including quiet-replay catch-up; it is not limited to the five dirty-mission names. Reload while still on Debrief restores the last Screen snapshot (pre-mission). A second apply of the same outcome does not run.
 
@@ -69,7 +69,7 @@ This serves **Violence has corporate consequences**, **The two layers feed each 
 
 16. **Quality.** Auto / High / Medium / Low is a **player setting** in the settings slot, not a design lever. Building ghosting by tier is Interface / rendering — not owned here.
 
-17. **Telemetry.** Opt-in, local, **off by default**, never leaves the machine ([ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md)). When enabled, each debrief appends **one** record (**cap 60**, FIFO: oldest out at 61) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, deployed roles. Abort writes a thin record: `aborted`, duration, mission id, seed, deployed roles. The log survives New Operation. It is a session log, not a campaign transaction: reload on Debrief may keep a row the campaign rolled back. Balance dashboard aggregates. Export is a local JSON download. Clear is a two-step confirm. Further playstyle signals are backlog (`docs/game-design.md` §19.7), not open design.
+17. **Telemetry.** Opt-in, local, **off by default**, never leaves the machine ([ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md)). When enabled, each debrief appends **one** record (**cap 60**, FIFO: oldest out at 61) covering outcome, duration, first contact, objectives, weapon shots and damage, damage in and out, civilian hits by source, item and ability use, KIA, payout, deployed roles. Abort writes a thin record: `aborted`, duration, mission id, seed, deployed roles. The log survives New Operation. It is a session log, not a campaign transaction: reload on Debrief may keep a row the campaign rolled back. Balance dashboard aggregates. **Balance availability** (living spec §17): Balance is offered iff the retained telemetry log has at least one record, whatever the toggle now reads. It is not offered on an empty log, including a never-enabled origin. Turning recording off keeps the records and keeps Balance (with Export and Clear) reachable; Clear emptying the log removes Balance until a record exists again. Export is a local JSON download. Clear is a two-step confirm. Further playstyle signals are backlog (`docs/game-design.md` §19.7), not open design.
 
 18. **Forbidden.** Mid-mission save / resume; cloud / account / leaderboard; half-load; second apply of one debrief; campaign write on Abort; hydrating into mission or debrief; Quality as a design lever; offline hours on reload; storage keys / save-version integers / autosave delay as GDD rules; pricing Credits / applying Control–Unrest / ticking labs here; resolving Item-slot persistence or hire-on-failed-campaign; copying §12 chrome or §20 playtest / UX / performance; inventing an `abort_rate` denominator; inventing Abort land (Menu vs last Screen); network / beacon / analytics on the telemetry envelope; forking `injuryRecoverySec`, `mass_gate`, hire 16,000–34,000 CR, or `roster_cap` 8.
 
@@ -104,7 +104,7 @@ This serves **Violence has corporate consequences**, **The two layers feed each 
 
 ## Formulas
 
-Do not fork. Canonical telemetry sentence: `docs/game-design.md` §17. Persistence owns **win_rate** only among ratios. `abort_rate` is named, not defined.
+Do not fork. Canonical telemetry sentence: `docs/game-design.md` §17. Persistence owns **win_rate** only among ratios (and its zero-denominator rule). `abort_rate` is named, not defined.
 
 The `win_rate` formula is defined as:
 
@@ -120,7 +120,7 @@ Abort is **excluded** from the denominator.
 | losses | lost | int | ≥ 0 | Debrief records in the **current telemetry log** (after FIFO) whose outcome is Loss |
 | win rate | win_rate | float | [0, 1] when denominator > 0 | Balance dashboard ratio |
 
-**Output Range:** `[0, 1]` when `won + lost > 0`. `0` wins / `N` losses (`N ≥ 1`) is `0.0`. Living spec is silent at zero decided missions — do not invent hide / 0 / undefined (Open Question 2). An abort-only log is also denominator 0 (Open Question 2). Abort records do not enter `won` or `lost`.
+**Output Range:** `[0, 1]` when `won + lost > 0`. `0` wins / `N` losses (`N ≥ 1`) is `0.0`. At `won + lost = 0` (empty log or abort-only log) `win_rate` is **not computed**: Balance shows a no-data marker in the win-rate slot and never renders 0, NaN, or Infinity. The abort count still shows. Marker copy and styling are Interface. Abort records do not enter `won` or `lost`.
 **Example:** `won = 3`, `lost = 1`, two abort records → `win_rate = 3 / 4`. Abort count 2 sits beside it; `abort_rate` is not computed here. `won = 0`, `lost = 1` → `win_rate = 0.0`.
 
 **Named, not specified:** `abort_rate` — living spec: abort count and abort rate sit beside win rate. No expression, no denominator. Alias the name. Do not invent (Open Question 4).
@@ -181,11 +181,12 @@ World Network, Economy, Research, and Roster already list Persistence as hard do
 
 ## Tuning Knobs
 
-All knobs are owned by `docs/game-design.md` §17 (and §4 session rules). This GDD does not add ranges. Changing a knob requires checking the living spec, not this pointer. Do not add save-version integers, storage keys, or autosave delay.
+All knobs are owned by `docs/game-design.md` §17 (and §4 session rules). This GDD adds no values of its own; ranges below are the guard rails the owner must keep. Changing a knob requires checking the living spec, not this pointer. Do not add save-version integers, storage keys, or autosave delay.
 
 | Knob | Owner | Too high / too low |
 |---|---|---|
-| Telemetry record cap 60 | §17 | Unbounded log vs dashboard that never retains a session |
+| Telemetry record cap 60 | §17 | Safe range: large enough to hold a full session of Debriefs and Aborts, small enough to stay bounded in local storage; the number is owned by §17. Too high: unbounded log. Too low: Balance cannot show win rate over a session. Affects Balance only |
+| Arming window 3 s (Abort, New Operation, Clear) | §12 / registry `arming_window` | Expiry, not a minimum hold. Too short: the second activation is missed. Too long: a stray arm stays live while the player moves on. Affects discard safety only; owned by Interface |
 | Telemetry default off | §17 | On-by-default is not opt-in |
 | New Operation two-step | §4 | One-step erase is accidental wipe |
 | Telemetry Clear two-step | §17 | One-step clear is accidental wipe |
@@ -200,7 +201,7 @@ Presentation wrap is Interface / Audio. Persistence does not copy §12 palette o
 
 ## UI Requirements
 
-Menu: Continue iff a valid campaign blob exists; New Operation behind a two-step erase. Settings: audio, remaps, accessibility, quality, difficulty, telemetry toggle — independent of the campaign blob. Balance: opt-in dashboard; win rate from `win_rate`; abort count beside it; Export local JSON; Clear two-step. Screens and HUD belong to Interface.
+Menu: Continue iff a valid campaign blob exists; New Operation behind a two-step erase. Settings: audio, remaps, accessibility, quality, difficulty, telemetry toggle — independent of the campaign blob. Balance: opt-in dashboard offered once records exist; win rate from `win_rate` (no-data marker at zero decided missions); abort count beside it; Export local JSON; Clear two-step. Screens and HUD belong to Interface.
 
 This GDD requires Interface to present these outcomes (copy and layout stay Interface / `/ux-design`; do not copy §12 chrome):
 
@@ -208,7 +209,7 @@ This GDD requires Interface to present these outcomes (copy and layout stay Inte
 - Debrief invoice is not durable until the next Screen — the player can tell before they leave or reload.
 - Abort confirmed = discarded, not checkpointed. Landing surface is Open Question 8.
 - A swallowed storage write is not silent success.
-- Continue is absent when there is no campaign; New Operation cannot fire in one click; Balance does not exist unless telemetry is a player choice (pillar 2: undecorated numbers; pillar 5: one OS).
+- Continue is absent when there is no campaign; New Operation cannot fire in one click; Balance is offered only when the retained log has a record, and recording stays a player choice (pillar 2: undecorated numbers; pillar 5: one OS). Interface Open Question 9 closes to this rule.
 
 ## Acceptance Criteria
 
@@ -219,7 +220,7 @@ This GDD requires Interface to present these outcomes (copy and layout stay Inte
 - **GIVEN** Settings recorded as Difficulty D, Quality Q, telemetry toggle T, audio A, remap R, **WHEN** New Operation is confirmed, **THEN** Settings still equal D, Q, T, A, R.
 - **GIVEN** Settings recorded as Difficulty D, Quality Q, telemetry toggle T, audio A, remap R (no campaign required), **WHEN** the origin is fully reloaded, **THEN** Settings still equal D, Q, T, A, R with Continue not required to hydrate Settings.
 - **GIVEN** a lived-in campaign on a Screen, **WHEN** reload then Continue, **THEN** World Network, laboratories, roster, tutorial-seen, and campaign result match the last Screen visit (not the opening Operation).
-- **GIVEN** a Screen snapshot S that held selected contract C and squad assignment, then a mission in progress, **WHEN** the origin is reloaded before Debrief, **THEN** Continue returns strategic / roster state from S including C (Brief is not locked by the reload); Continue opens the World Network; the mission is not resumed; there is no Debrief outcome.
+- **GIVEN** a Screen snapshot S that held selected contract C and squad assignment, then a mission in progress, **WHEN** the origin is reloaded before Debrief, **THEN** Continue returns strategic / roster state from S including C (Brief can be entered for C without re-selecting it); Continue opens the World Network; the mission is not resumed; there is no Debrief outcome.
 - **GIVEN** snapshot S on a Screen, then a finished mission whose Debrief has applied in this session, **WHEN** the origin is reloaded while still on Debrief, **THEN** Continue restores S, not the invoice mutations.
 - **GIVEN** snapshot S, Debrief has applied payout, sector, Intel, Influence, and roster in this session, and the director has returned to the World Network, **WHEN** reload then Continue, **THEN** those named campaign fields equal the post-apply values exactly once (not S, not doubled) and selected contract is none.
 - **GIVEN** snapshot S that held selected contract C, then Debrief applied in this session, **WHEN** the director Replays to Brief, **THEN** selected contract is still C.
@@ -244,14 +245,15 @@ This GDD requires Interface to present these outcomes (copy and layout stay Inte
 - **GIVEN** a campaign whose Feed already differs from a fresh Operation, **WHEN** reload + Continue and the same strategic wait elapses at the same Clock speed, **THEN** the next rolled Event matches the recorded continuation, not a New Operation opening sequence.
 - **GIVEN** recorded candidate identities / costs at a known strategic time, **WHEN** reload + Continue, **THEN** the market matches that list; the next refresh continues that market, not the opening pool.
 - **GIVEN** a campaign whose generated market already differs from a fresh Operation, **WHEN** reload + Continue and the same strategic wait elapses at the same Clock speed, **THEN** the next generated contract matches the recorded continuation, not a New Operation opening sequence.
-- **GIVEN** a new origin (no settings blob) and a finished mission with telemetry never enabled, **WHEN** Settings is opened, **THEN** telemetry is off. **WHEN** Balance would be opened, **THEN** Balance is not offered.
+- **GIVEN** a new origin (no settings blob) and a finished mission with telemetry never enabled, **WHEN** Settings is opened, **THEN** telemetry is off, the log is empty, and no Balance entry point is present on Settings or Debrief.
+- **GIVEN** telemetry on with at least one record, **WHEN** the toggle is turned off, **THEN** the records remain, a Balance entry point is present, and Export and Clear work. **WHEN** Clear is confirmed, **THEN** the Balance entry point is gone.
 - **GIVEN** telemetry on, N records, a mission that reaches Debrief, **WHEN** the invoice applies, **THEN** Balance count is N+1 (not N+2), and the new row’s outcome is won or lost (not aborted).
 - **GIVEN** telemetry on and 60 records with a recorded oldest row identity (outcome, mission id, duration), **WHEN** another Debrief or Abort is logged, **THEN** Balance still shows 60 records (does not become 61) and that recorded oldest row is gone.
 - **GIVEN** telemetry on, snapshot S, records present, **WHEN** New Operation is confirmed, **THEN** the campaign equals a new Operation and the telemetry toggle and log still match the pre-erase values.
 - **GIVEN** telemetry on, snapshot S, **WHEN** Abort from pause, **THEN** campaign still equals S; abort count increases by 1; that row is `aborted` plus duration, mission id, seed, deployed roles — not a full combat invoice.
 - **GIVEN** telemetry records: 2 won, 1 lost, 3 aborted, **WHEN** Balance is opened, **THEN** win rate is 2 / (2 + 1); abort count is 3; aborts are not in the win-rate denominator.
 - **GIVEN** telemetry records: 0 won, 2 lost, **WHEN** Balance is opened, **THEN** win rate is 0.0.
-- **GIVEN** telemetry records: 0 won, 0 lost, 3 aborted, **WHEN** Balance is opened, **THEN** abort count is 3 and win rate is unspecified (Open Question 2).
+- **GIVEN** telemetry records: 0 won, 0 lost, 3 aborted, **WHEN** Balance is opened, **THEN** abort count is 3 and the win-rate slot shows the no-data marker; no 0, NaN, or Infinity appears anywhere in Balance.
 - **GIVEN** at least one telemetry record, **WHEN** Export JSON is used, **THEN** a local JSON file downloads and the action does not upload to an app origin.
 - **GIVEN** records present, **WHEN** Clear is activated once, **THEN** records remain and the control arms a confirm.
 - **GIVEN** records present and Clear armed, **WHEN** confirmed, **THEN** Balance is empty and the campaign blob is untouched.
@@ -259,7 +261,7 @@ This GDD requires Interface to present these outcomes (copy and layout stay Inte
 - **GIVEN** telemetry on or off, **WHEN** Debrief apply, Abort, Balance view, Export, or Clear runs, **THEN** no telemetry network request is emitted. UI click / SFX fetches are out of scope.
 - **GIVEN** Debrief has applied in this session (payout, sector, Intel, Influence, and roster — or quiet-replay roster + ETA catch-up only) and the director has not entered a Screen, **WHEN** Debrief is shown, **THEN** an observable filing-status indicates the invoice is not durable (unfiled) without leaving Debrief. Copy and layout stay Interface.
 - **GIVEN** that unfiled Debrief and a successful next-Screen autosave (World Network return or Brief Replay), **WHEN** reload then Continue, **THEN** named post-apply campaign fields persist (not S, not doubled) and filing-status is not still unfiled.
-- **GIVEN** recorded campaign C0 and the next campaign-blob write is injected to throw (harness; not a named storage key), **WHEN** New Operation is confirmed, **THEN** the session does not throw; in-session desk matches new-Operation fixture F; the confirm is not presented as durable erase; **WHEN** the origin reloads to Menu, **THEN** Continue loads C0.
+- **GIVEN** recorded campaign C0 and the next campaign-blob write is injected to throw (harness; not a named storage key), **WHEN** New Operation is confirmed, **THEN** the session does not throw; in-session desk matches new-Operation fixture F; the Interface write-failure indicator is present and the erase is not reported as filed; **WHEN** the origin reloads to Menu, **THEN** Continue loads C0.
 - **GIVEN** snapshot S, Debrief applied in this session, and the next Screen campaign-blob write is injected to throw (harness; not a named storage key), **WHEN** the director returns to the World Network or Replays to Brief, **THEN** the session does not throw and filing-status does not read filed; **WHEN** reload then Continue, **THEN** named campaign fields equal S.
 - **GIVEN** snapshot S, a quiet-replay win applied in this session (roster + ETA catch-up; no contract payout, Intel, Influence, or direct Control / Unrest change), and the director has returned to the World Network or Replayed to Brief, **WHEN** reload then Continue, **THEN** strategic `t`, laboratories, injuries, Tax deposits, and roster equal the post-apply values (not S); Intel, Influence, and `contractsWon` equal S; Credits equal S plus Tax deposits from that catch-up (not a contract payout).
 
@@ -268,7 +270,7 @@ Do not treat quiet-replay payouts, mass gate, clipping, playtest thresholds, or 
 ## Open Questions
 
 1. **Closed — Telemetry log vs New Operation.** Log survives. Clear is the erase. [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md).
-2. **`win_rate` when `won + lost = 0`.** Living spec silent. Includes an empty log and an abort-only log. Do not invent hide / 0 / undefined. Owner: Interface / Balance.
+2. **Closed — `win_rate` when `won + lost = 0`.** Decided 2026-10-07 and written to living spec §17: not computed; Balance shows a no-data marker, never 0 / NaN / Infinity (Formulas). Marker copy is Interface. Interface Open Question 2 should be closed to match.
 3. **Closed — Cap 60 eviction.** FIFO: oldest out at 61. [ADR-0015](../../docs/architecture/adr-0015-telemetry-never-leaves-the-machine.md).
 4. **`abort_rate` formula.** Named beside win rate. No denominator. Do not invent. Owner: Interface / Balance.
 5. **Item-slot persistence across Assembly visits** — Roster Open Question 3. Do not resolve.

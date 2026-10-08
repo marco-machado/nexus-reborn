@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: extract from docs/game-design.md §5
-> **Last Updated**: 2026-09-16 (header Status aligned to independent `/design-review` APPROVED 2026-09-14)
+> **Last Updated**: 2026-10-07 (pyrrhic-win Debrief banner placement aliased to Interface Rule 18 — cross-review W-01; not a new `/design-review`. Earlier: 2026-09-16 header Status aligned to independent `/design-review` APPROVED 2026-09-14)
 > **Independent `/design-review`**: 2026-09-14 APPROVED
 > **Implements Pillar**: Information is operational power; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §4 (campaign end), §5 (board/clock), §6 (Influence income) — this file aliases them; do not fork rules
@@ -138,7 +138,7 @@ Garrison bands, unrest clamp, crisis hysteresis, Influence **costs** / staging: 
 - **If Antarctica**: locked at every intel level; no Control / Unrest / Tax / Garrison print; no Focus cycle; no Stabilize / Lobby / Expedite; Scan land is Unknown.
 - **If sector is Contested or non-Nexus majority**: Tax figure may print; it does not pay. Opening Europe (Helix) is this case.
 - **If unrest is in crisis**: crisis entry/exit alone does not change campaign flags; crisis is recoverable per §5. An empty incomplete roster can still fail independently of crisis. Banner copy must not treat crisis hatch as CAMPAIGN FAILED.
-- **If campaign failed**: CAMPAIGN FAILED banner; `selectMission` no-op; Focus / clock / Research remain World Network concerns (hire-on-failed is Roster OQ1 — do not resolve here). On a pyrrhic win (§10 tiebreak Win that emptied the roster), the failed banner is posted first and dominates the win invoice; Economy still pays.
+- **If campaign failed**: CAMPAIGN FAILED banner; `selectMission` no-op; Debrief offers no Replay, so a failed campaign cannot re-enter Brief that way (living spec §10, Interface Rule 18); Focus / clock / Research remain World Network concerns (hire-on-failed is Roster OQ1 — do not resolve here). On a pyrrhic win (§10 tiebreak Win that emptied the roster), the failed banner is posted first and dominates the win invoice; Economy still pays.
 - **If campaign complete**: CAMPAIGN COMPLETE banner; authored three stay selectable; quiet replay still applies.
 - **If World Network would read the running mission or live roster**: forbidden. Use the WN slice / outcome DTO only. Outcome DTO for this owner is kia names, not `deadIds` / `survivorHp`.
 
@@ -172,7 +172,7 @@ All knobs are owned by `docs/game-design.md` §5–6 (and `src/game/forecast.ts`
 
 ## Visual/Audio Requirements
 
-Presentation wrap is Interface / Audio. World Network requires the Scan to read as a flat projection (not a globe), sector color = majority holder, crisis as red hatch/stroke **plus** a non-color CRISIS mark (pillar 2: not color-only), Feed as a record. Palette and chrome: pillar 5 / `docs/game-design.md` §12–15. No second visual language for “the map.” Campaign banners live on this screen; crisis hatch is not those banners.
+Presentation wrap is Interface / Audio. World Network requires the Scan to read as a flat projection (not a globe), sector color = majority holder, crisis as red hatch/stroke **plus** a non-color CRISIS mark (pillar 2: not color-only), Feed as a record. Palette and chrome: pillar 5 / `docs/game-design.md` §12–15. No second visual language for “the map.” Campaign banners live on this screen; crisis hatch is not those banners. One exception: on a **pyrrhic win** (Core Rule 12, living spec §10) Debrief also posts the CAMPAIGN FAILED banner, first and dominant above the invoice ([Interface](interface.md) Rule 18); World Network still owns the precedence and posts the failed banner on return.
 
 ## UI Requirements
 
@@ -181,7 +181,8 @@ Screens and HUD belong to Interface. This GDD requires:
 - Focus, Scan (flat projection), sector readout (four numbers), clock/Pause/speed on the four Screens, Timeline with a Live vs Review cue, Influence actions with disable reason (unaffordable / cooldown / no target / Antarctica), Feed, contract list.
 - **Chance** always printed on World Network contract chrome. Brief Risk bands are not this surface.
 - Tax **paid vs printed**: opening Europe may show a figure that does not pay; North America is the opening paying tap.
-- Campaign-complete and campaign-failed banners (ADR-0020). Complete does not lock contracts; failed makes select a no-op.
+- Research-program completion line on the Feed when the 21st project is researched (living spec §19 #10; placement and copy in [Interface](interface.md) UI Requirements). Milestone only.
+- Campaign-complete and campaign-failed banners (ADR-0020). Complete does not lock contracts; failed makes select a no-op. On a pyrrhic win, Debrief carries the CAMPAIGN FAILED banner first, then World Network on return (Interface Rule 18).
 - First-visit overlay teaches the desk job (Core Rule 13), not “click the marker.”
 - Locked generated offers absent from Scan / OPEN CONTRACTS. Authored intel-locked may still appear locked.
 - Control / Unrest / Tax / Garrison and Influence spends are visible and actionable when legal (pillar 2 veto: undecorated numbers). Disabled Influence at opening 0 must read as later, not as broken.
@@ -283,4 +284,5 @@ Screens and HUD belong to Interface. This GDD requires:
 - Strain floor 0.25 does not bind at unrest 2–96 (legal min 0.28). Do not retune the floor in this extract.
 - `campaignStore` holds intel progress in code. GDD owner is World Network; Zustand home is stamped — do not move ([ADR-0012](../../docs/architecture/adr-0012-store-placement.md)).
 - Generated market physically sits in `worldStore` while Economy owns instances. Split is stamped — do not move ([ADR-0012](../../docs/architecture/adr-0012-store-placement.md)).
+- **Arrival playtest evidence (2026-10-06, unclassified).** In the first vertical slice (`prototypes/nexus-reborn-vertical-slice/REPORT.md`) a new player said of the World Network on arrival: "i did not know what to do, where to start." That is the first-minute failure this file's Player Fantasy names, and Core Rule 13 (first-visit overlay) owns the teaching. The owner has not classified the failure (PIVOT-NOTE). Open: whether Core Rule 13, the opening desk, or neither changes. Do not resolve here before the owner classifies it.
 - Living-spec follow-ups (not this file): Control clamp, strain-floor vs unrest max, Influence costs vs first-win income, intel-2 onboarding, Tax-vs-market once extra taps light, Influence cooldowns vs ETA burst. Alias those facts; do not invent numbers.
