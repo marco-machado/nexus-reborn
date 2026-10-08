@@ -63,7 +63,7 @@ This serves **The two layers feed each other** and **Command, do not micromanage
 
 | Other system | In | Out | Interface owner |
 |---|---|---|---|
-| **World Network** | Strategic `t` after Screen tick or **win** ETA | — | WN owns clocks and ETA. Research `sync(t)`. |
+| **World Network** | Strategic `t` after Screen tick or **win** ETA | Program complete (21st project researched) → World Network Feed line (§19 #10); event name open | WN owns clocks and ETA. Research `sync(t)`. |
 | **Economy** | Refuse or debit of listed cost | Occupancy `start()`, then listed cost | Economy owns Credits / `spendCredits`. Research `start` is occupancy only; no Credits field ([ADR-0013](../../docs/architecture/adr-0013-credits-never-overdraw.md)). |
 | **Roster / Assembly** | Pins; hire; death drops assignment | Current issue; completed program; home bay | Roster owns bodies/pins/wear and the deploy freeze of resolved wear + `appliedIds` ([ADR-0009](../../docs/architecture/adr-0009-partitioned-deploy-snapshot.md)). §7 counts an equal-`endT` house-order non-issue as an older completed project, so it is pinnable — alias that; do not fork. Unsatisfied downstream obligation: living spec §7 shows worn project or stock issue, plus whether the bay is pinned — not a second current-issue name. This file does not claim that naming is already delivered. Closing it in `roster-and-assembly.md` is a separate target. |
 | **Tactical** | — | **Research slice** at deploy (unslotted ids only) | Neither live-queries the other. Wear / `appliedIds` ride the Roster slice. |

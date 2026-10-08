@@ -83,7 +83,7 @@ This serves **Information is operational power** and **The two layers feed each 
 | Other system | In | Out | Interface owner |
 |---|---|---|---|
 | **Economy** | Contract records, Reward, quiet/pay flags, stamped ETA days | Tax emit; garrison→Threat input; Expedite/priority/re-client/withdraw/post hooks | Economy owns instances/payouts/Credits; WN owns clock/board/hooks/Influence/Intel |
-| **Research** | — | Strategic `t` after tick or ETA jump | Research `sync(t)` |
+| **Research** | Program complete (21st project researched) → Feed line (§19 #10); event name open | Strategic `t` after tick or ETA jump | Research `sync(t)` |
 | **Roster / Assembly** | Outcome DTO: **kia names** only (emitted, not queried live); campaign flags for banners | Strategic `t` | Roster owns bodies, `deadIds`, `survivorHp`, and campaign flags; squad is not WN state; WN posts KIA Feed and banners |
 | **Tactical** | Outcome DTO at debrief; `missionChance` for strategy presentation | **WN slice** at deploy | Tactical computes Chance; WN presents it. Neither side live-queries the other during the mission |
 | **Interface** | Input: Focus, Pause, speed, spends, contract select | Focus, clock, Feed, four readouts, action enablement, **Chance**, campaign banners, first-visit overlay job, Review chrome, Scan list | Presentation only. Does not own flags, wallet, or clock |
@@ -251,7 +251,7 @@ Screens and HUD belong to Interface. This GDD requires:
 ### Deploy / debrief cut
 
 - **GIVEN** deploy confirmed, **WHEN** the Tactical mission is created, **THEN** it receives the frozen WN slice `{sector id, Control, Unrest}` and no live World Network store handle. Do not call this slice “the Snapshot DTO.”
-- **GIVEN** a fully applied Debrief serial **N**, captured post-apply strategic state **S**, and no intervening Screen tick or input, **WHEN** Debrief’s apply path is re-entered with the same serial **N**, **THEN** the existing `outcomeApplied` / `outcomeSerial` guard refuses a second apply: state still equals **S**, with no repeated mission write-back, ETA advancement, Tax/Credits deposit, Feed or market change, RNG/dues consumption, or Research/Roster synchronization. This is transaction-level apply-once, not idempotence of raw outcome mutators or a durable save on Debrief ([ADR-0020](../../docs/architecture/adr-0020-campaign-fail-flags.md)).
+- **GIVEN** a fully applied Debrief serial **N**, captured post-apply strategic state **S**, and no intervening Screen tick or input, **WHEN** Debrief’s apply path is re-entered with the same serial **N**, **THEN** the apply-once key minted at deploy and echoed on the outcome DTO (`economy-and-contracts.md` Outcome DTO) refuses a second apply: state still equals **S**, with no repeated mission write-back, ETA advancement, Tax/Credits deposit, Feed or market change, RNG/dues consumption, or Research/Roster synchronization. The existing `outcomeApplied` / `outcomeSerial` guard covers the campaign and World Network apply only, not Credits (Economy code gap). This is transaction-level apply-once, not idempotence of raw outcome mutators or a durable save on Debrief ([ADR-0020](../../docs/architecture/adr-0020-campaign-fail-flags.md)).
 
 ### Shove direction (magnitudes unnamed in §5 — do not copy code)
 
@@ -278,6 +278,8 @@ Screens and HUD belong to Interface. This GDD requires:
 
 ## Open Questions
 
+- **Intel-1 stall after Glass Veil (cross-review 2026-10-08 D-14, unresolved).** Opening intel progress 25; a Glass Veil win reaches 80 (clean) or 65 (dirty), so intel stays 1 while Hollow Crown and Rust Haven need 2. Market weighting favours Strained sectors (High threat, locked at intel 1); locked-hidden offers still count toward the 3-offer cap; Expedite (12) exceeds post-win Influence (≤ 8). The Scan can show nothing open but a quiet Glass Veil, with no on-screen reason. Candidate fixes: exclude locked offers from the cap; guarantee one Moderate offer while intel < 2; raise opening progress. Decide with the intel-2 onboarding follow-up; do not tune here.
+- **World Network attention budget (cross-review 2026-10-08 D-10, unresolved).** About seven live, unpaused systems share this screen (clock/speed, Focus and sector numbers, Feed, market expiry, Influence spends and cooldowns, Timeline, Event forecast at intel 2+). `game-concept.md` accepts only the mission peak. Same surface as the arrival evidence below; decide together with that classification.
 - Collision order is owned by [ADR-0018](../../docs/architecture/adr-0018-catch-up-collision-order.md). §5 still has no table. Do not fork a new table in this extract until the living spec does.
 - Mission-result Control/Unrest integer deltas are qualitative in §5 and numeric in code. Dirty-win **net** Unrest is unnamed. Do not copy code numbers into this extract.
 - Control range is unnamed in §5 (code uses a silent 4–96 — do not promote that here). Until §5 names a floor, `tax_yield ≥ 0` is unproven.

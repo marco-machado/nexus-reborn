@@ -51,7 +51,7 @@ Narrative, Meta, and unused template categories are omitted. Accessibility backl
 
 ---
 
-> **Creative Director Note (MVP):** The eight systems deliver the Operations Director fantasy; do not add or drop rows. Binding extract gaps: (1) exclusive owners for Credits / Influence / intel so World Network is not only a contract picker; (2) Tactical GDD must lead with Select / Move / Attack / Hold Ground / Hold Fire so chrome cannot bury command; (3) Debrief is the invoice beat — Interface presents, Economy prices, World Network applies sector/unrest, Persistence applies once.
+> **Creative Director Note (MVP):** The eight systems deliver the Operations Director fantasy; do not add or drop rows. Binding extract gaps: (1) exclusive owners for Credits / Influence / intel so World Network is not only a contract picker; (2) Tactical GDD must lead with Select / Move / Attack / Hold Ground / Hold Fire so chrome cannot bury command; (3) Debrief is the invoice beat — Interface presents, Economy prices, World Network applies sector/unrest, Persistence commits once on the next Screen.
 
 ## Priority Tiers
 
