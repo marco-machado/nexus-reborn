@@ -5,7 +5,7 @@
     "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/statusline.sh\""
   },
   "permissions": {
-    "defaultMode": "default",
+    "defaultMode": "auto",
     "allow": [
       "Bash(git status*)",
       "Bash(git diff*)",
