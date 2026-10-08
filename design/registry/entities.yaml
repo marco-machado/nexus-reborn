@@ -7,7 +7,7 @@
 # WRITTEN BY: /design-system Phase 5. READ BY: /design-system, /consistency-check.
 
 version: 1
-last_updated: "2026-10-07"
+last_updated: "2026-10-08"
 
 entities: []
 
@@ -19,8 +19,9 @@ formulas:
     source: design/gdd/roster-and-assembly.md
     referenced_by:
       - design/gdd/roster-and-assembly.md
-      - design/gdd/world-network.md
       - design/gdd/persistence-and-validation.md
+      - design/gdd/interface.md
+      - design/gdd/tactical-mission.md
     variables:
       - f
     output_range: [43200, 172800]
@@ -34,6 +35,7 @@ formulas:
     source: design/gdd/roster-and-assembly.md
     referenced_by:
       - design/gdd/roster-and-assembly.md
+      - design/gdd/persistence-and-validation.md
     variables:
       - Wprimary
       - Wsidearm
@@ -51,6 +53,8 @@ formulas:
     source: design/gdd/roster-and-assembly.md
     referenced_by:
       - design/gdd/roster-and-assembly.md
+      - design/gdd/interface.md
+      - design/gdd/persistence-and-validation.md
     variables:
       - operative_mass
     output_range: [0, null]
@@ -65,6 +69,8 @@ formulas:
     referenced_by:
       - design/gdd/roster-and-assembly.md
       - design/gdd/persistence-and-validation.md
+      - design/gdd/interface.md
+      - design/gdd/tactical-mission.md
     variables:
       - squad_mass
     output_range: [0, 1]
@@ -78,6 +84,8 @@ formulas:
     source: design/gdd/roster-and-assembly.md
     referenced_by:
       - design/gdd/roster-and-assembly.md
+      - design/gdd/persistence-and-validation.md
+      - design/gdd/tactical-mission.md
     variables:
       - squad_mass
     output_range: [-0.15, 0.15]
@@ -91,7 +99,7 @@ formulas:
     source: design/gdd/roster-and-assembly.md
     referenced_by:
       - design/gdd/roster-and-assembly.md
-      - design/gdd/world-network.md
+      - design/gdd/persistence-and-validation.md
     variables:
       - t0
       - D
@@ -122,6 +130,9 @@ formulas:
     source: design/gdd/tactical-mission.md
     referenced_by:
       - design/gdd/tactical-mission.md
+      - design/gdd/audio.md
+      - design/gdd/interface.md
+      - design/gdd/research.md
     variables:
       - d
       - r
@@ -140,6 +151,8 @@ formulas:
       - design/gdd/tactical-mission.md
       - design/gdd/world-network.md
       - design/gdd/interface.md
+      - design/gdd/audio.md
+      - design/gdd/research.md
     variables:
       - p
       - g
@@ -242,6 +255,8 @@ formulas:
       - design/gdd/persistence-and-validation.md
       - design/gdd/tactical-mission.md
       - design/gdd/interface.md
+      - design/gdd/research.md
+      - design/gdd/roster-and-assembly.md
     variables:
       - base
       - Control
@@ -260,6 +275,9 @@ formulas:
       - design/gdd/persistence-and-validation.md
       - design/gdd/tactical-mission.md
       - design/gdd/interface.md
+      - design/gdd/audio.md
+      - design/gdd/research.md
+      - design/gdd/world-network.md
     variables:
       - Reward
       - civiliansHit
@@ -277,6 +295,8 @@ formulas:
       - design/gdd/persistence-and-validation.md
       - design/gdd/tactical-mission.md
       - design/gdd/interface.md
+      - design/gdd/research.md
+      - design/gdd/roster-and-assembly.md
     variables:
       - won
       - quiet
@@ -326,6 +346,7 @@ constants:
     source: design/gdd/roster-and-assembly.md
     referenced_by:
       - design/gdd/roster-and-assembly.md
+      - design/gdd/interface.md
     value: 0.35
     unit: fraction
     added: 2026-09-08
@@ -442,4 +463,15 @@ constants:
     unit: clips
     notes: "Unseeded pick at mission-bed start. Canonical: docs/game-design.md §15, §17."
     added: 2026-09-08
+    revised: ""
+
+  - name: tactical_result_delay
+    status: active
+    source: design/gdd/tactical-mission.md
+    referenced_by:
+      - design/gdd/interface.md
+    value: 2.5
+    unit: s
+    notes: "Seconds of accepted Tactical elapsed time between result detection and Debrief. Not a wall-clock timer and not a minimum banner duration. Not an Interface knob. Canonical: docs/game-design.md §10; Interface Rule 18."
+    added: 2026-10-08
     revised: ""
