@@ -13,7 +13,7 @@
 # READ BY:    /architecture-decision, /architecture-review, /create-stories, /dev-story
 
 version: 1
-last_updated: "2026-09-11"
+last_updated: "2026-10-08"
 
 # ─── STATE OWNERSHIP ─────────────────────────────────────────────────────────
 
@@ -48,6 +48,7 @@ state_ownership:
     write_access: composer-at-mission-create
     referenced_by:
       - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
     added: 2026-09-10
     revised: ""
 
@@ -109,7 +110,7 @@ state_ownership:
     revised: ""
 
   - state: credits_ledger
-    status: active
+    status: "superseded_by: ADR-0021"
     owner_system: economy-and-contracts
     adr: docs/architecture/adr-0013-credits-never-overdraw.md
     interface: "useAppStore.credits / SaveV9.app.credits; opening INITIAL_CREDITS 128450; never < 0"
@@ -152,6 +153,40 @@ state_ownership:
     added: 2026-09-11
     revised: ""
 
+  - state: credits_ledger
+    status: active
+    owner_system: economy-and-contracts
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    interface: "useAppStore.credits / SaveV9.app.credits; opening INITIAL_CREDITS 128450; never < 0"
+    write_access: spendCredits-hireOperative-addCredits(applyDebrief, advanceFlow Tax)-hydrate
+    referenced_by:
+      - docs/architecture/adr-0013-credits-never-overdraw.md
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    revised: ""
+
+  - state: debrief_apply_key
+    status: active
+    owner_system: economy-and-contracts
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    interface: "appStore.deploySerial (minted once per mission create → economy.applyKey) and appStore.lastAppliedKey; both session-only, reset by hydrate and New Operation; never in the campaign blob"
+    write_access: mission-mount-composer(deploySerial)-applyDebrief(lastAppliedKey)
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    revised: ""
+
+  - state: campaign_filing_status
+    status: active
+    owner_system: persistence-and-validation
+    adr: docs/architecture/adr-0022-durable-commit-status.md
+    interface: "useSaveStatusStore { status: filed | unfiled | write-failed; reason: quota | unavailable | unknown | null }; session-only; reset to filed by hydrate; never in SaveV9; not subscribed by autosave"
+    write_access: save.ts-only
+    referenced_by:
+      - docs/architecture/adr-0022-durable-commit-status.md
+    added: 2026-10-08
+    revised: ""
+
 # ─── INTERFACE CONTRACTS ──────────────────────────────────────────────────────
 
 interfaces:
@@ -165,6 +200,7 @@ interfaces:
     signal_signature: "DeployParams { wn, economy, research, roster, mods, district } — no SnapshotDTO type; loadout folded into roster.items"
     referenced_by:
       - docs/architecture/adr-0009-partitioned-deploy-snapshot.md
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
     added: 2026-09-10
     revised: ""
 
@@ -357,6 +393,48 @@ interfaces:
     referenced_by:
       - docs/architecture/adr-0020-campaign-fail-flags.md
     added: 2026-09-11
+    revised: ""
+
+  - contract: mission_result_pricing
+    status: active
+    pattern: direct_call
+    producer: tactical-mission
+    consumers:
+      - economy-and-contracts
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    signal_signature: "setOutcome(result: MissionResult) → priceOutcome(result, economy) → stored MissionOutcome { reward, bonus, collateral, netPayout }; MissionResult has applyKey, completedOptionalIds, required quietReplay, no CR fields"
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    revised: ""
+
+  - contract: debrief_apply_transaction
+    status: active
+    pattern: direct_call
+    producer: interface
+    consumers:
+      - economy-and-contracts
+      - world-network
+      - roster-and-assembly
+      - persistence-and-validation
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    signal_signature: "applyDebrief(missionId): no-op unless outcome.applyKey > lastAppliedKey; sets lastAppliedKey first; telemetry → addCredits(netPayout) → reportMission → applyMissionResult → squad cleanup → win: advanceDays(ETA) + sync(t); called from Debrief useLayoutEffect"
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    revised: ""
+
+  - contract: filing_status_read
+    status: active
+    pattern: read_only_selector
+    producer: persistence-and-validation
+    consumers:
+      - interface
+    adr: docs/architecture/adr-0022-durable-commit-status.md
+    signal_signature: "useSaveStatusStore((s) => s.status) and (s) => s.reason; primitives only (no object-building selector under Zustand 5); unfiled after a Debrief apply (lastAppliedKey increase), filed after a successful write, write-failed on a swallowed write or failed New Operation erase (sticky until a write succeeds)"
+    referenced_by:
+      - docs/architecture/adr-0022-durable-commit-status.md
+    added: 2026-10-08
     revised: ""
 
 # ─── PERFORMANCE BUDGETS ──────────────────────────────────────────────────────
@@ -851,3 +929,66 @@ forbidden_patterns:
     added: 2026-09-11
     referenced_by:
       - docs/architecture/adr-0020-campaign-fail-flags.md
+
+  - pattern: apply_path_mints_key
+    status: active
+    description: "Only the mission-create composer mints applyKey. setOutcome, applyDebrief, reportMission, and src/game must never mint or rewrite it."
+    why: "A key minted by the apply path makes a duplicate outcome look new and re-deposits Credits (TR-economy-010)."
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+
+  - pattern: tactical_priced_outcome
+    status: active
+    description: "src/game must not emit reward, bonus, collateral, or payout on the mission result, and must not read mission.reward or contractsWon to build it."
+    why: "Economy owns pricing from the frozen Economy slice (TR-economy-011)."
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+
+  - pattern: setOutcome_credits_write
+    status: active
+    description: "setOutcome stores the priced outcome and enters Debrief. It must never change credits."
+    why: "The deposit belongs behind the apply-once key in applyDebrief."
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+
+  - pattern: debrief_apply_outside_transaction
+    status: active
+    description: "No UI component calls reportMission, applyMissionResult, addCredits, or advanceDays for a Debrief result. Debrief calls applyDebrief only."
+    why: "One transaction behind one key; a second call path re-opens partial or double apply."
+    adr: docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0021-outcome-dto-and-apply-once-key.md
+
+  - pattern: filing_status_written_outside_save
+    status: active
+    description: "Only save.ts calls the filing-status mutators. Interface, owners, and applyDebrief must not."
+    why: "One writer keeps filed meaning a setItem that returned (TR-persistence-009)."
+    adr: docs/architecture/adr-0022-durable-commit-status.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0022-durable-commit-status.md
+
+  - pattern: filing_status_in_campaign_blob_or_autosave_set
+    status: active
+    description: "Do not add the filing status to captureSave / SaveV9, and do not add its store to the startAutosave subscription list."
+    why: "A status change would schedule the write it reports on, and a persisted status would survive reload."
+    adr: docs/architecture/adr-0022-durable-commit-status.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0022-durable-commit-status.md
+
+  - pattern: filing_status_filed_on_swallowed_write
+    status: active
+    description: "A throwing setItem or removeItem, or a null storage, must set write-failed. Only a setItem that returned, a completed hydrate, or a successful erase may set filed."
+    why: "A swallowed write must never read as filed."
+    adr: docs/architecture/adr-0022-durable-commit-status.md
+    added: 2026-10-08
+    referenced_by:
+      - docs/architecture/adr-0022-durable-commit-status.md

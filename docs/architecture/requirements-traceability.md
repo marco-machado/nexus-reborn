@@ -1,14 +1,15 @@
 # Architecture Requirements Traceability
 
-Last Updated: 2026-10-05
+Last Updated: 2026-10-08
 Engine: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU
-Source: `docs/architecture/tr-registry.yaml` version 6 (2026-09-22)
+Source: `docs/architecture/tr-registry.yaml` version 8 (2026-10-08)
+Source review: `docs/architecture/architecture-review-2026-10-08b.md` (CONCERNS)
 Prior index: `docs/architecture/traceability-index.md` (64-row pass, 2026-09-11)
 
 ## Coverage Summary
 
-- Total requirements: 66
-- Covered: 66
+- Total requirements: 69
+- Covered: 69 (100%)
 - Partial: 0
 - Gaps: 0
 - Foundation layer (World Network): 12 requirements, 0 gaps
@@ -85,7 +86,23 @@ Coverage is the registry `coverage` field. All covering ADRs are Accepted. This 
 | TR-audio-004 | audio.md | Presentation | audio | No spoken VO, no spatial shooter mix, and no payout celebration sting | ADR-0017 | covered |
 | TR-tactical-012 | tactical-mission.md | Feature | tactical-mission | A Win and a total squad wipe in the same step resolve as the Win — required completion wins; deaths still grade KIA | ADR-0016 | covered |
 | TR-interface-008 | interface.md | Presentation | interface | A pyrrhic win (same-step wipe-Win on an incomplete campaign) pays the full win outcome; the CAMPAIGN FAILED banner takes precedence and the invoice notes PYRRHIC — SQUAD LOST // CAMPAIGN FAILED | ADR-0020 | covered |
+| TR-economy-010 | economy-and-contracts.md | Core | economy-and-contracts | Apply-once key is minted at deploy, carried on the Economy slice, and echoed on the outcome DTO; an already-applied key is a no-op, including Credits and Tax deposits | ADR-0021,ADR-0002,ADR-0009 | covered |
+| TR-economy-011 | economy-and-contracts.md | Core | economy-and-contracts | Tactical emits completed optional objective ids and no priced reward or bonus; Economy prices the optional bonus at debrief from frozen Economy-slice defs | ADR-0021,ADR-0009 | covered |
+| TR-persistence-009 | persistence-and-validation.md | Core | persistence-and-validation | Durable-commit status (unfiled / filed / write-failed) is observable to Interface; a swallowed write failure never reports filed | ADR-0022,ADR-0011 | covered |
 
 ## Foundation gaps
 
 None.
+
+## Known Gaps
+
+None. The three fourth-pass partials are covered: TR-economy-010 and TR-economy-011 by ADR-0021, TR-persistence-009 by ADR-0022.
+
+Open annotation conflict (architecture-review-2026-10-08b): ADR-0013 §Deposits still names `setOutcome` as the payout writer; ADR-0021 moves it to `applyDebrief → addCredits`. The registry records ADR-0021 as the winner; ADR text is not yet annotated.
+
+## Superseded Requirements
+
+- ADR-0020 line 45 (`outcomeApplied` vs `outcomeSerial` as the apply-once guard) — superseded by ADR-0021 (`applyKey` / `lastAppliedKey`, one `applyDebrief` transaction). ADR-0020 text not yet annotated.
+- ADR-0009 Key Interfaces `economy` — amended by ADR-0021 §2 (`applyKey`, `bonusDefs` keyed by objective id). ADR-0009 text not yet annotated.
+- ADR-0013 §Deposits (`setOutcome` adds `netPayout`) — amended by ADR-0021 §4–5. ADR-0013 text not yet annotated.
+- `architecture.md` `economy` slice and `MissionOutcome` — stale against ADR-0021; Data Flow §3 lacks the ADR-0022 filing-status path.

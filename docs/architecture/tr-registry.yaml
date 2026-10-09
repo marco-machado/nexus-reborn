@@ -1,10 +1,12 @@
 # Technical requirement registry for /architecture-review
 # IDs are stable. Never renumber or delete entries; mark status: deprecated instead.
-version: 6
-last_updated: "2026-09-22"
-source_review: docs/architecture/architecture-review-2026-09-11.md
+version: 8
+last_updated: "2026-10-08"
+source_review: docs/architecture/architecture-review-2026-10-08b.md
 # Third full pass: no new TR-IDs; no requirement text changes; no deprecations.
 # v6 delta (2026-09-22): +TR-tactical-012, +TR-interface-008 from GDD cross-review 2026-09-22 v2 (living spec §10).
+# v7 delta (2026-10-08): +TR-economy-010, +TR-economy-011, +TR-persistence-009 (all partial). No text revisions; no deprecations.
+# v8 delta (2026-10-08, fifth pass): TR-economy-010/011 covered by ADR-0021; TR-persistence-009 covered by ADR-0022. No new IDs; no text revisions; no deprecations.
 engine: "React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU"
 
 requirements:
@@ -607,3 +609,30 @@ requirements:
     coverage: covered
     adr: [ADR-0020]
     revised: "2026-09-22"
+
+  - id: TR-economy-010
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Apply-once key is minted at deploy, carried on the Economy slice, and echoed on the outcome DTO; an already-applied key is a no-op, including Credits and Tax deposits
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0021, ADR-0002, ADR-0009]
+
+  - id: TR-economy-011
+    system: economy-and-contracts
+    gdd: design/gdd/economy-and-contracts.md
+    requirement: Tactical emits completed optional objective ids and no priced reward or bonus; Economy prices the optional bonus at debrief from frozen Economy-slice defs
+    domain: Integration
+    status: active
+    coverage: covered
+    adr: [ADR-0021, ADR-0009]
+
+  - id: TR-persistence-009
+    system: persistence-and-validation
+    gdd: design/gdd/persistence-and-validation.md
+    requirement: Durable-commit status (unfiled / filed / write-failed) is observable to Interface; a swallowed write failure never reports filed
+    domain: Persistence
+    status: active
+    coverage: covered
+    adr: [ADR-0022, ADR-0011]
