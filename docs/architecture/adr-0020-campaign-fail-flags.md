@@ -3,6 +3,7 @@
 > **Engine specialist**: APPROVE 2026-09-11
 > **Technical Director Review (TD-ADR)**: APPROVED 2026-09-11 (re-run; prior CONCERNS 2026-09-11 scoped as TR-roster-007, not blocking)
 > **Lead Programmer Review (LP-FEASIBILITY)**: FEASIBLE 2026-09-11
+> **Partly superseded by [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)** (2026-10-08): the apply-once guard in §Constraints. The fail-flag rules are unchanged.
 
 An empty living roster fails an **incomplete** campaign. A **completed** campaign stays complete after a roster wipe and is not also marked failed. The two flags cannot both be true.
 
@@ -42,7 +43,7 @@ TR-roster-007 is an ADR gap. Without a stamp, stories can fail a completed campa
 
 ### Constraints
 
-- Debrief applies roster once (ADR-0002). The apply-once guard is Debrief `outcomeApplied` vs `outcomeSerial`, not inside `reportMission`.
+- Debrief applies roster once (ADR-0002). The apply-once guard is Debrief `outcomeApplied` vs `outcomeSerial`, not inside `reportMission`. *(Superseded by ADR-0021: the guard is `outcome.applyKey > lastAppliedKey` inside `applyDebrief`; still not inside `reportMission`.)*
 - Quiet replay still applies KIA and can empty the living roster (ADR-0004).
 - Persistence stores the flags and does not re-own meaning (`persistence-and-validation.md` Core Rule 14).
 - World Network posts banners and locks contracts. Roster detects empty living roster.

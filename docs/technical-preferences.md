@@ -93,6 +93,8 @@ Set 2026-10-05 from ratified constraints. No product FPS number is approved. `do
 - [ADR-0018](architecture/adr-0018-catch-up-collision-order.md) — catch-up collision order
 - [ADR-0019](architecture/adr-0019-deploy-gate.md) — deploy gate
 - [ADR-0020](architecture/adr-0020-campaign-fail-flags.md) — campaign fail flags
+- [ADR-0021](architecture/adr-0021-outcome-dto-and-apply-once-key.md) — outcome DTO and apply-once key
+- [ADR-0022](architecture/adr-0022-durable-commit-status.md) — durable-commit (filing) status
 
 ## Engine Specialists
 

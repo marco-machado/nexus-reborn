@@ -3,6 +3,7 @@
 > **Engine specialist**: pass-with-notes 2026-09-10
 > **Technical Director Review (TD-ADR)**: APPROVED 2026-09-11
 > **Lead Programmer Review (LP-FEASIBILITY)**: FEASIBLE 2026-09-11
+> **Amended by [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)** (2026-10-08): Key Interfaces `economy` gains `applyKey` and keys `bonusDefs` by optional objective id. The four-slice freeze and the `quietReplay` freeze are unchanged.
 
 The mission freeze is four named slices copied at create. Resolved wear has one owner: the Roster slice. The sim does not read live stores.
 
@@ -120,7 +121,7 @@ four Screens (live Zustand)
 - **Composer** (`MissionScreen` mount, not `src/game/`): one-shot `getState()` → clone four slices → run `appliedNodeIds` per assigned operative → `createWorld(mission, operatives, deploy)`.
 - **`DeployParams`:** `{ wn, economy, research, roster, mods, district }`. No `loadout`. No type named `SnapshotDTO`.
 - **`wn`:** `{ sector: SectorId; control: number; unrest: number }`.
-- **`economy`:** `{ id: string; generated: boolean; reward: number; bonusDefs: readonly number[]; etaDays: number; quietReplay: boolean }`.
+- **`economy`:** `{ id: string; generated: boolean; reward: number; bonusDefs: readonly number[]; etaDays: number; quietReplay: boolean }`. *Amended by ADR-0021 §2: `{ id; generated; applyKey: number; reward; bonusDefs: Readonly<Record<string, number>>; etaDays; quietReplay }`.*
 - **`research`:** `readonly string[]` (unslotted completed ids, `done` order).
 - **`roster`:** `{ ids: readonly string[]; wear: Readonly<Record<string, Partial<Record<AugSlot, string>>>>; appliedIds: Readonly<Record<string, readonly string[]>>; items: SquadLoadout; massKg: number; massTier: MassTier; maxHp: Readonly<Record<string, number>>; speed: Readonly<Record<string, number>> }`. Maps keyed by assigned `op.id`. Empty bay = omitted wear key (not `null`). `maxHp` / `speed` are **final** sampled totals (body + unslotted + worn slotted + Experience; mass-tier already in `speed`). Pins themselves are not on the freeze. Wear is not on the Research slice.
 - **`createWorld` consumption:** iterates `operatives`; indexes `roster` maps by `op.id`; copies `roster.maxHp` / `roster.speed` onto units; does not re-run `crewBonus` / `xpBonus` / `tierSpeedDelta` / `squadMassKg`; uses `roster.appliedIds` only for `squadWeapon` / weapon sampling; uses `roster.items` only for `loadoutPools`. `OperativeDef.maxHp` / `speed` are catalog bases only.

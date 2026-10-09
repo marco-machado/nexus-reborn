@@ -3,6 +3,7 @@
 > **Engine specialist**: pass-with-notes 2026-09-10
 > **Technical Director Review (TD-ADR)**: APPROVED 2026-09-10
 > **Lead Programmer Review (LP-FEASIBILITY)**: FEASIBLE 2026-09-10
+> **Amended by [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)** (2026-10-08): §Mission coupling — telemetry rides `MissionResult` from `src/game`. The local-only and off-by-default rules are unchanged.
 
 Opt-in local mission records. Cap 60, oldest out. The log is not a campaign transaction and does not leave the origin.
 
@@ -93,7 +94,7 @@ Writer swallows quota / security throws. They must not throw through Debrief or 
 
 ### Mission coupling
 
-`world.ts` accumulates plain numeric counters and hands them once as `MissionOutcome.telemetry`. `src/game` may type-import `MissionTelemetry`. It must not value-import `telemetry.ts` or call `record*`.
+`world.ts` accumulates plain numeric counters and hands them once as `MissionOutcome.telemetry` *(ADR-0021: `src/game` now emits `MissionResult.telemetry`; the priced `MissionOutcome` carries it unchanged)*. `src/game` may type-import `MissionTelemetry`. It must not value-import `telemetry.ts` or call `record*`.
 
 ### Architecture Diagram
 

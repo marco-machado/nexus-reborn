@@ -33,7 +33,7 @@ The Debrief apply-once guard is a serial that the apply path mints (`setOutcome`
 | **Depends On** | ADR-0002 (Accepted — mission memory-only; Debrief is the only write-back, once), ADR-0009 (Accepted — partitioned deploy snapshot; Economy slice), ADR-0004 (Accepted — quiet replay zeros the whole net payout), ADR-0013 (Accepted — Credits ledger, `addCredits`), ADR-0020 (Accepted — campaign flags set inside the Debrief apply), ADR-0001 (Accepted — win ETA catch-up runs after write-back) |
 | **Enables** | ADR-0009 implementation stories (QQ-02) with a final `economy` slice shape; Economy divergence fixes recorded in `economy-and-contracts.md` (pricing owner, collateral clamp) |
 | **Blocks** | None named as epics yet |
-| **Ordering Note** | Amends ADR-0009 Key Interfaces `economy` and the `MissionOutcome` shape in `architecture.md`. Supersedes ADR-0020 §Context line 45 (`outcomeApplied` vs `outcomeSerial` as the guard). Does not change ADR-0009's `quietReplay` freeze, ADR-0011's durable-commit rule, or ADR-0018's catch-up order. |
+| **Ordering Note** | Amends ADR-0009 Key Interfaces `economy` and the `MissionOutcome` shape in `architecture.md`. Amends ADR-0013 §Deposits (payout writer moves from `setOutcome` to `applyDebrief → addCredits`; priced `collateral` / `netPayout` are stored, not derived) and ADR-0015 §Mission coupling (`src/game` emits `MissionResult.telemetry`). Supersedes ADR-0020 §Context line 45 (`outcomeApplied` vs `outcomeSerial` as the guard). Does not change ADR-0009's `quietReplay` freeze, ADR-0011's durable-commit rule, or ADR-0018's catch-up order. |
 
 ## Context
 
@@ -230,5 +230,6 @@ applyDebrief(missionId)
 ## Related
 - Amends [ADR-0009](adr-0009-partitioned-deploy-snapshot.md) Key Interfaces (`economy` slice shape).
 - Supersedes [ADR-0020](adr-0020-campaign-fail-flags.md) §Context line 45 for the apply-once guard.
+- Amends [ADR-0013](adr-0013-credits-never-overdraw.md) §Deposits (payout writer, pricing helpers) and [ADR-0015](adr-0015-telemetry-never-leaves-the-machine.md) §Mission coupling (`MissionResult.telemetry`).
 - Depends on [ADR-0002](adr-0002-unsaved-mission.md), [ADR-0004](adr-0004-quiet-replay.md), [ADR-0013](adr-0013-credits-never-overdraw.md), [ADR-0001](adr-0001-two-clocks.md).
 - `design/gdd/economy-and-contracts.md` (Outcome DTO, Formulas, ACs); `design/gdd/tactical-mission.md` (Interactions, Economy row); `design/gdd/world-network.md` (apply-once AC); `design/gdd/gdd-cross-review-2026-10-08.md` W-01.

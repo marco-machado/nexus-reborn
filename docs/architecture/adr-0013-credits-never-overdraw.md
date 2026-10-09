@@ -3,6 +3,7 @@
 > **Engine specialist**: pass-with-notes 2026-09-10
 > **Technical Director Review (TD-ADR)**: APPROVED 2026-09-10
 > **Lead Programmer Review (LP-FEASIBILITY)**: FEASIBLE 2026-09-11
+> **Amended by [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)** (2026-10-08): §Deposits payout writer and pricing helpers. `setOutcome` no longer touches Credits; `applyDebrief → addCredits(netPayout)` deposits the payout once per apply key, and `priceOutcome` stores the priced fields. The never-overdraw rule and every spend path are unchanged.
 
 Economy owns the Credits ledger. The account never goes negative. Research and hire authorization refuse on overdraft; exact-balance spend is allowed. This stamps the existing `appStore` guards; it does not add `economyStore`.
 
@@ -21,7 +22,7 @@ Accepted
 | **Knowledge Risk** | HIGH — cutoff May 2025; pin is three.js r185 / React 19.2.8. This domain uses no three.js / r3f APIs. Traceability Engine Risk for TR-economy-001: LOW. |
 | **References Consulted** | `docs/engine-reference/web/VERSION.md`; `docs/engine-reference/web/breaking-changes.md`; `docs/engine-reference/web/deprecated-apis.md`; `docs/technical-preferences.md`; `docs/agents/strategy-time-state.md`; `src/state/appStore.ts`; `src/state/researchStore.ts`; `src/state/campaignStore.ts`; `src/state/worldStore.ts`; `src/state/save.ts`; `src/ui/Research.tsx` |
 | **Post-Cutoff APIs Used** | None — Zustand `create()` ledger, not an engine API |
-| **Verification Required** | `spendCredits` refuses `amount <= 0` and `amount > credits`; exact-balance spend → 0; `addCredits` ignores non-positive; `hireOperative` overdraft leaves roster and credits unchanged; `setOutcome` never subtracts (`netPayout` ≥ 0 for production producers); hydrate drop-alls `credits < 0`; no `src/state/economyStore.ts`; `researchStore` has no credits field. |
+| **Verification Required** | `spendCredits` refuses `amount <= 0` and `amount > credits`; exact-balance spend → 0; `addCredits` ignores non-positive; `hireOperative` overdraft leaves roster and credits unchanged; `setOutcome` never subtracts (`netPayout` ≥ 0 for production producers) — amended by ADR-0021: `setOutcome` leaves `credits` unchanged and `applyDebrief` deposits; hydrate drop-alls `credits < 0`; no `src/state/economyStore.ts`; `researchStore` has no credits field. |
 
 ## ADR Dependencies
 
@@ -74,6 +75,7 @@ Stamp the existing ledger. No migration. No envelope change. No `SAVE_VERSION` b
 ### Deposits
 
 - `addCredits(amount)` — `amount > 0` only. `worldStore.depositTax` calls this with the emitted Tax amount; do not recompute yield (ADR-0008).
+- *Amended by ADR-0021: the payout is deposited by `applyDebrief → addCredits(outcome.netPayout)`, guarded by the apply-once key; `setOutcome` prices and stores only, and never changes `credits`. `priceOutcome` stores `collateral` with `N = max(0, floor(civiliansHit))` and prices non-finite or negative bonus values as 0. The original text follows.*
 - `setOutcome` adds `netPayout(o)`. `netPayout` is 0 on quietReplay or loss; else `reward - collateralFine + bonus`. `collateralFine = min(reward, civiliansHit * COLLATERAL_FINE)` with `COLLATERAL_FINE = 5000`. Production producers keep this ≥ 0. Accepting a contract is free (`selectMission` does not debit).
 
 ### Presentation vs ledger
@@ -100,7 +102,7 @@ Owner: Economy
     spendCredits  ← Research.tsx (start() then debit)
     hireOperative ← check → acceptHire → decrement
     addCredits    ← worldStore.depositTax
-    setOutcome    ← +netPayout (≥ 0)
+    setOutcome    ← +netPayout (≥ 0)   [amended by ADR-0021: applyDebrief → addCredits]
        |
        v
   SaveV9.app.credits
@@ -180,7 +182,7 @@ Not this ledger:
 - Do not attach zustand persist to credits (ADR-0011).
 - Production must not `setState({ credits })` except hydrate.
 - Do not tighten hydrate to `integer()` here.
-- `netPayout` does not clamp a hostile negative `bonus`; production producers keep bonus ≥ 0.
+- `netPayout` does not clamp a hostile negative `bonus`; production producers keep bonus ≥ 0. *(Amended by ADR-0021: `priceOutcome` prices a negative or non-finite bonus value as 0.)*
 - Do not treat `spendInfluence` as a Credits path.
 
 ## GDD Requirements Addressed

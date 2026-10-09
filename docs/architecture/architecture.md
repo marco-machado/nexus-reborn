@@ -2,12 +2,12 @@
 
 ## Document Status
 - Version: 1.0
-- Last Updated: 2026-09-22
+- Last Updated: 2026-10-08
 - Engine: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
 - Review mode: full
 - GDDs Covered: `design/gdd/game-concept.md`, `game-pillars.md`, `systems-index.md`, `world-network.md`, `economy-and-contracts.md`, `research.md`, `persistence-and-validation.md`, `roster-and-assembly.md`, `tactical-mission.md`, `interface.md`, `audio.md` (living spec remains `docs/game-design.md`)
-- ADRs Referenced: ADR-0001 … ADR-0020 (all Accepted)
-- TR baseline: 66 requirements in `docs/architecture/tr-registry.yaml` (registry v6 — 2026-09-22 refresh from the GDD cross-review: +TR-tactical-012, +TR-interface-008; 66 covered, 0 gaps)
+- ADRs Referenced: ADR-0001 … ADR-0022 (all Accepted)
+- TR baseline: 69 requirements in `docs/architecture/tr-registry.yaml` (registry v8 — 2026-10-08: +TR-economy-010, +TR-economy-011, +TR-persistence-009, covered by ADR-0021 / ADR-0022; 69 covered, 0 gaps)
 - Technical Director Sign-Off: 2026-09-11 — APPROVED WITH CONDITIONS
 - Lead Programmer Feasibility: REVISED
 - TD-ARCHITECTURE: CONCERNS (API Boundaries abbreviated) → revised 2026-09-11 → APPROVED WITH CONDITIONS (QQ-01 budgets; QQ-02 is implementation debt on Accepted ADR-0009/0019, not a missing ADR)
@@ -189,7 +189,8 @@ No global event bus. Coupling is Zustand `getState`/`subscribe` plus explicit DT
 | orders (five verbs) | Interface | Tactical `WorldApi` | sync call |
 | phase | `appStore` | screens, Audio beds | Zustand |
 | strategic `t` | World Network `tick` / `advanceDays` | Research `sync(t)`, Roster dues, Economy generation | sync; private `advanceFlow` is not a public API |
-| outcome DTO | Tactical at win/loss | Debrief → Economy, WN, Roster | one-shot apply (ADR-0002) |
+| mission result | Tactical at win/loss (`MissionResult`, no CR) | `setOutcome` → `priceOutcome` (Economy) | sync; priced once, no Credits change (ADR-0021) |
+| priced outcome | Economy (`MissionOutcome`) | `applyDebrief` → Credits, campaign, WN, ETA | one transaction per `applyKey` (ADR-0002, ADR-0021) |
 | Review cursor | Interface slider | World Map view | `worldStore.review` — not a clock (ADR-0014) |
 
 ### 3. Save / load
@@ -199,8 +200,9 @@ No global event bus. Coupling is Zustand `getState`/`subscribe` plus explicit DT
 | campaign blob | `save.ts` `writeSave` | `readSave` / `hydrateSave` | `localStorage` JSON |
 | settings mixer | settings store | Audio, Quality | separate slot |
 | telemetry ≤60 | debrief/abort if opt-in | Balance export | third slot; never leaves machine |
+| filing status | `save.ts` only (`writeSave`, hydrate, New Operation erase, `lastAppliedKey` increase) | Interface (Debrief filing / write-failure indicators) | session-only `saveStatusStore`; not in the blob, not autosave-subscribed (ADR-0022) |
 
-Rules: four Screens autosave; mission and debrief do **not**. Debrief mutates stores in memory; the next Screen is the first durable campaign write. Invalid campaign blob is dropped whole. Abort writes nothing to campaign.
+Rules: four Screens autosave; mission and debrief do **not**. Debrief mutates stores in memory; the next Screen is the first durable campaign write. Between the two the filing status reads `unfiled`; a thrown or storage-less write reads `write-failed`, never `filed` (ADR-0022). Invalid campaign blob is dropped whole. Abort writes nothing to campaign.
 
 ### 4. Initialisation order
 
@@ -261,7 +263,7 @@ Composer (`MissionScreen`) clones four slices; `createWorld` must not `getState(
 ```ts
 interface DeployParams {
   wn: { sector: SectorId; control: number; unrest: number }
-  economy: { id: string; generated: boolean; reward: number; bonusDefs: readonly number[]; etaDays: number; quietReplay: boolean }
+  economy: { id: string; generated: boolean; applyKey: number; reward: number; bonusDefs: Readonly<Record<string, number>>; etaDays: number; quietReplay: boolean }  // ADR-0021
   research: readonly string[]           // unslotted completed ids only
   roster: { ids; wear; appliedIds; items; massKg; massTier; maxHp; speed }
   mods: MissionMods
@@ -270,7 +272,7 @@ interface DeployParams {
 createWorld(mission, operatives, deploy): WorldApi
 ```
 
-Invariant: resolved wear lives only on `roster`. `quietReplay` is the Economy-slice boolean.
+Invariant: resolved wear lives only on `roster`. `quietReplay` is the Economy-slice boolean. `applyKey` is minted once per mission create from `appStore.deploySerial` (ADR-0021); `bonusDefs` maps optional objective id → bonus CR.
 
 ### Deploy gate — ADR-0019
 
@@ -291,35 +293,44 @@ startMission(): void   // appStore; no-op unless canDeploy.ok
 
 Empty bays legal. Mass `>` 400 refuses; `===` 400 allowed. `goto('mission')` is not a public start API. Tactical does not re-own the gate.
 
-### Outcome DTO — ADR-0002 / ADR-0009
+### Outcome DTO — ADR-0002 / ADR-0009 / ADR-0021
 
 Tactical counts; Economy prices. `quietReplay` is the frozen Economy-slice boolean — not a live `contractsWon` restamp.
 
 ```ts
-interface MissionOutcome {
+interface MissionResult {           // src/game emits this; type defined in appStore.ts
+  applyKey: number                  // echoed from deploy.economy.applyKey
   won: boolean
   kills: number
   casualties: number
   timeSec: number
-  civiliansHit: number      // Tactical count; Economy prices collateral
-  reward: number
-  bonus: number
+  civiliansHit: number              // Tactical count; Economy prices collateral
+  completedOptionalIds: string[]
   deadIds: string[]
   survivorHp: Record<string, number>
-  quietReplay: boolean      // required; Economy slice at create
+  quietReplay: boolean              // required; Economy slice at create
   telemetry?: MissionTelemetry
 }
+type MissionOutcome = MissionResult & { reward: number; bonus: number; collateral: number; netPayout: number }
+
+priceOutcome(result, economy): MissionOutcome   // pure; Economy
+setOutcome(result): void                        // prices and stores; never changes credits
+applyDebrief(missionId): void                   // no-op unless applyKey > lastAppliedKey
 ```
 
-Abort emits no outcome DTO. `setOutcome` / `maybeOutcome` / `reportMission` must not call `isQuietReplay`.
+`applyDebrief` order: set `lastAppliedKey` → telemetry → `addCredits(netPayout)` → `reportMission` → `applyMissionResult` → squad cleanup → on a win `advanceDays(ETA)` and `sync(t)`. Debrief calls it from `useLayoutEffect`.
+
+Abort emits no outcome DTO. `setOutcome` / `maybeOutcome` / `reportMission` must not call `isQuietReplay`. `src/game` must not emit `reward` / `bonus` / collateral / payout.
 
 ### Economy / persistence
 
 ```ts
 spendCredits(amount): void     // refuse amount <= 0 or amount > credits
-addCredits(amount): void       // ignore non-positive
+addCredits(amount): void       // ignore non-positive; callers: depositTax, applyDebrief (payout)
 writeSave() / readSave() / hydrateSave() / initializeSaveSystem()
 startNewOperation()            // does not reset settings or telemetry
+useSaveStatusStore((s) => s.status)   // 'filed' | 'unfiled' | 'write-failed'; read-only outside save.ts (ADR-0022)
+useSaveStatusStore((s) => s.reason)   // 'quota' | 'unavailable' | 'unknown' | null
 ```
 
 Campaign blob omits a running mission. Invalid blob → drop-all. `save.ts` is the only campaign writer.
@@ -332,7 +343,7 @@ Verified: `docs/engine-reference/web/modules/webgpu.md`, `modules/r3f.md`, `modu
 
 ## ADR Audit
 
-All 20 ADRs are **Accepted**. None are Proposed. None conflict with the layer or ownership map in this document.
+All 22 ADRs are **Accepted**. None are Proposed. None conflict with the layer or ownership map in this document.
 
 | ADR | Engine Compat | Version | GDD Linkage | Conflicts | Valid |
 |---|---|---|---|---|---|
@@ -344,28 +355,30 @@ All 20 ADRs are **Accepted**. None are Proposed. None conflict with the layer or
 | 0006 Weather script | ✅ | ✅ | ✅ | None | ✅ |
 | 0007 Opening hour | ✅ | ✅ | ✅ | None | ✅ |
 | 0008 Influence is a wallet | ✅ | ✅ | ✅ | None | ✅ |
-| 0009 Partitioned deploy snapshot | ✅ | ✅ | ✅ TR | None | ✅ |
+| 0009 Partitioned deploy snapshot | ✅ | ✅ | ✅ TR | `economy` slice amended by ADR-0021 | ✅ |
 | 0010 Mission renderer / frame loop | ✅ post-cutoff APIs flagged | ✅ | ✅ TR | None | ✅ |
 | 0011 Campaign persistence envelope | ✅ | ✅ | ✅ TR | None | ✅ |
 | 0012 Store placement | ✅ | ✅ | ✅ TR | None | ✅ |
-| 0013 Credits never overdraw | ✅ | ✅ | ✅ TR | None | ✅ |
+| 0013 Credits never overdraw | ✅ | ✅ | ✅ TR | §Deposits amended by ADR-0021 | ✅ |
 | 0014 Timeline Review is a view | ✅ | ✅ | ✅ TR | None | ✅ |
-| 0015 Telemetry never leaves the machine | ✅ | ✅ | ✅ TR | None | ✅ |
+| 0015 Telemetry never leaves the machine | ✅ | ✅ | ✅ TR | §Mission coupling amended by ADR-0021 | ✅ |
 | 0016 Tactical sim contract | ✅ Geometry MEDIUM | ✅ | ✅ TR | None | ✅ |
 | 0017 One OS / input / audio mixer | ✅ | ✅ | ✅ TR | None | ✅ |
 | 0018 Catch-up collision order | ✅ | ✅ | ✅ TR | None | ✅ |
 | 0019 Deploy gate | ✅ | ✅ | ✅ TR | None | ✅ |
-| 0020 Campaign fail flags | ✅ | ✅ | ✅ TR | None | ✅ |
+| 0020 Campaign fail flags | ✅ | ✅ | ✅ TR | apply-once guard superseded by ADR-0021 | ✅ |
+| 0021 Outcome DTO and apply-once key | ✅ | ✅ | ✅ TR | None (amendments declared) | ✅ |
+| 0022 Durable-commit status | ✅ Zustand 5 selector rule | ✅ | ✅ TR | None | ✅ |
 
 0001–0008 link `docs/game-design.md`, not `TR-*` ids. Still valid for the pinned engine.
 
 ### Traceability
 
-66 / 66 covered, 0 partial, 0 gaps (`docs/architecture/tr-registry.yaml` v6 — 2026-09-22 refresh from the GDD cross-review: TR-tactical-012, TR-interface-008; prior full pass architecture-review 2026-09-11). No Required New ADR from uncovered TRs.
+69 / 69 covered, 0 partial, 0 gaps (`docs/architecture/tr-registry.yaml` v8 — 2026-10-08: TR-economy-010 / 011 by ADR-0021, TR-persistence-009 by ADR-0022; latest pass `architecture-review-2026-10-08b.md`). No Required New ADR from uncovered TRs.
 
 This document synthesizes existing ADRs. It does not mint a new Foundation decision.
 
-Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0020; Forbidden Patterns are filled from ADR-0010 / ADR-0016 / ADR-0017; performance budgets are the ratified caps plus the §20 procedure (no product FPS). Matrix: `docs/architecture/requirements-traceability.md` (66/66, 0 Foundation gaps).
+Hygiene (not new ADRs): `docs/technical-preferences.md` ADR log is 0001–0022; Forbidden Patterns are filled from ADR-0010 / ADR-0016 / ADR-0017; performance budgets are the ratified caps plus the §20 procedure (no product FPS). Matrix: `docs/architecture/requirements-traceability.md` (69/69, 0 Foundation gaps).
 
 ## Required ADRs
 
