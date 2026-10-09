@@ -1,0 +1,77 @@
+# Story 005: Unavailable and late audio never block play or burst
+
+> **Epic**: Audio
+> **Status**: Ready
+> **Layer**: Presentation
+> **Type**: Integration
+> **Estimate**: —
+> **Manifest Version**: 2026-10-08
+> **Last Updated**: —
+
+## Context
+
+**GDD**: `design/gdd/audio.md`
+**Requirement**: `TR-audio-003`
+*(Requirement text lives in `docs/architecture/tr-registry.yaml` — read fresh at review time)*
+
+**ADR Governing Implementation**: ADR-0017: One OS / input / audio mixer  
+**ADR Decision Summary**: One palette, one remap table, four audio buses; DOM screens at 1280×720; keyboard and mouse only.
+**ADR Version**: 2026-09-10 (ADR `## Date`; no `## Last Verified`)
+
+**Engine**: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 | **Risk**: LOW
+**Engine Notes**: DOM + Web Audio and Zustand 5; no post-cutoff three.js or r3f API involved (ADR Post-Cutoff APIs Used: None). Do not use `THREE.Audio` or React 19.2 `<Activity>` / `useEffectEvent`.
+
+**Control Manifest Rules (this layer)**:
+- Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
+- Forbidden: Never typecheck-import `game/audio.ts` from `sound.ts`.
+- Forbidden: Never replay stale cues as a delayed burst.
+- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (AGENTS.md).
+
+---
+
+## Acceptance Criteria
+
+*From GDD `design/gdd/audio.md`, scoped to this story:*
+
+- [ ] GIVEN audio unavailable, WHEN the game is played, THEN play is not blocked.
+- [ ] GIVEN a running context, audible test settings and deliberately deferred UI/combat clip decoding, WHEN completion is held beyond the runtime-owned freshness window documented in the audio README, THEN observing source-start calls shows no playback for those stale events, even a single stale cue. A fresh event after successful decoding and after the existing rate gate clears remains playable. Repeat with decoding rejected: no source starts and play remains usable. Separately defer UI module loading so an originating click is already stale when the module becomes usable; it must not be replayed as a fresh click. Record module-load and clip-decode evidence separately. Retain cold-cache play as smoke coverage and console inspection as diagnostics, not as proof of cue admission/drop. No timeout integers are duplicated here; these are verification requirements, not a claim that the current lazy bridge passes them.
+
+---
+
+## Implementation Notes
+
+*Derived from the governing ADRs and the Presentation Layer Rules:*
+
+- `sound.ts` lazy-imports the audio module. Events older than the runtime-owned freshness window (audio README) are dropped, both for clip decode and module load; record those two evidence paths separately.
+- Do not duplicate timeout integers in tests' prose; import the runtime constant.
+
+---
+
+## Out of Scope
+
+*Handled by neighbouring stories — do not implement here:*
+
+- Story 006: jitter determinism.
+
+---
+
+## QA Test Cases
+
+*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+
+---
+
+## Test Evidence
+
+**Story Type**: Integration
+**Required evidence**:
+- Integration: test file beside the module — `src/game/audio.test.ts`. — must exist and pass; plus a click-through note (docs/click-through.md, Audio changes) naming the screens exercised.
+
+**Status**: [ ] Not yet created
+
+---
+
+## Dependencies
+
+- Depends on: Story 001
+- Unlocks: None

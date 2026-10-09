@@ -1,11 +1,11 @@
 # Control Manifest
 
 > **Engine**: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
-> **Last Updated**: 2026-09-12
-> **Manifest Version**: 2026-09-12
-> **ADRs Covered**: ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0006, ADR-0007, ADR-0008, ADR-0009, ADR-0010, ADR-0011, ADR-0012, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017, ADR-0018, ADR-0019, ADR-0020
+> **Last Updated**: 2026-10-08
+> **Manifest Version**: 2026-10-08
+> **ADRs Covered**: ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0006, ADR-0007, ADR-0008, ADR-0009, ADR-0010, ADR-0011, ADR-0012, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017, ADR-0018, ADR-0019, ADR-0020, ADR-0021, ADR-0022
 > **Status**: Active — regenerate with `/create-control-manifest update` when ADRs change
-> **Technical Director Review (TD-MANIFEST)**: REVISED 2026-09-12
+> **Technical Director Review (TD-MANIFEST)**: REVISED 2026-09-12 (2026-10-08 update for ADR-0021 and ADR-0022: skipped, Lean mode)
 
 `Manifest Version` is the date this manifest was generated. Story files embed
 this date when created. `/story-readiness` compares a story's embedded version
@@ -17,7 +17,7 @@ technical preferences, and engine reference docs. For the reasoning behind each
 rule, see the referenced ADR.
 
 Spanning ADRs are duplicated into each layer they govern: ADR-0001, ADR-0007,
-ADR-0009, ADR-0010, ADR-0016, ADR-0017, ADR-0018, ADR-0020.
+ADR-0009, ADR-0010, ADR-0016, ADR-0017, ADR-0018, ADR-0020, ADR-0021, ADR-0022.
 
 ADR-0016 living-spec defects are **not** stamped: do not treat current
 `orderHoldFire` nulling Explicit, or `orderAttack` on devices, as the contract.
@@ -40,7 +40,7 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Name four slices: World Network, Economy, Research, Roster.** Do not call any one slice “the Snapshot DTO.” There is no umbrella type named `SnapshotDTO`. — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
 - **Resolved wear has one owner: the Roster slice** (worn slotted ids + per-operative ordered `appliedIds`). The Research slice is completed unslotted ids only. The composer runs `appliedNodeIds(done, pins)` at freeze. — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
 - **`createWorld` does not read `researchStore`, `campaignStore`, or `worldStore`.** It never unions Research unslotted with Roster wear, never calls `appliedNodeIds`, and never calls `missionMods`. No silent live-store / `getState()` fallback **for the four deploy slices inside `createWorld`**. `src/game` still writes Zustand (`setOutcome`, HUD sync, tutorial). — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
-- **`DeployParams` requires `wn`, `economy`, `research`, `roster`.** It keeps `mods` and `district`. It deletes `loadout`. — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
+- **`DeployParams` requires `wn`, `economy`, `research`, `roster`.** It keeps `mods` and `district`. It deletes `loadout`. The `economy` slice is `{ id, generated, applyKey, reward, bonusDefs, etaDays, quietReplay }` (amended by ADR-0021). — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
 - **`MissionOutcome.quietReplay` is the Economy-slice boolean.** `maybeOutcome`, `setOutcome`, and `reportMission` must not call `isQuietReplay` / `contractsWon`. — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
 - **Persistence is three storage envelopes:** campaign, settings, telemetry — not player-facing save slots, not one merged blob. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **World Event and candidate / generated-market RNG streams live in the campaign blob.** Pins are roster content, not a research field. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
@@ -48,7 +48,7 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Hydrate lands on menu.** Then `researchStore.sync(t)` and `campaignStore.sync(t)` to the **saved** strategic `t`. Reload does not grant offline hours. Continue never resumes a mission. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **Four Screens autosave the campaign blob. Mission and Debrief do not.** Abort writes no campaign. Debrief applies once in session memory; the first durable campaign write of that result is the next Screen autosave. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **Campaign skip on mission/debrief is not a global persist ban:** enabled telemetry may still append on debrief or abort. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
-- **`src/state/save.ts` is the only campaign-blob writer.** Do not put `zustand/middleware` persist on composed campaign stores. Screen writes coalesce. Storage throws swallow at the writer. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
+- **`src/state/save.ts` is the only campaign-blob writer.** Do not put `zustand/middleware` persist on composed campaign stores. Screen writes coalesce. Storage throws swallow at the writer, which marks `write-failed` (ADR-0022). — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **New Operation erases the campaign envelope only.** Settings survive. `initializeSaveSystem` stays idempotent. Boot order: `initSettings` then `initializeSaveSystem` then `createRoot`. The storage key never moves; bump the inner version. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **Persistence lives in `src/state/`.** `src/game/` stays pure. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **Owner ≠ Zustand module.** Intel owner is World Network; live home is `campaignStore.intelLevel` / `intelProgress`. Generated-contract owner is Economy; live home is `worldStore.contracts` / `contractRngState` / `nextContractT`. — source: [ADR-0012](adr-0012-store-placement.md)
@@ -71,6 +71,16 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **`save.ts` drop-alls if `campaignFailed && campaignWon`.** A non-failed blob’s `campaignWon` must match the three-authored record. Do not add drop-all for empty+incomplete+`!failed`. — source: [ADR-0020](adr-0020-campaign-fail-flags.md)
 - **Mission canvas is `WebGPURenderer` + `await init()` + r3f `createRoot`,** not stock `<Canvas>`. — source: [ADR-0010](adr-0010-mission-renderer-and-frame-loop.md)
 - **`appStore.Phase` is `'menu' | 'world' | 'research' | 'brief' | 'team' | 'mission' | 'debrief'`.** `App.tsx` routes with conditionals. Overlays do not change `Phase`. — source: [ADR-0017](adr-0017-one-os-input-audio-mixer.md)
+
+- **One apply-once key per deploy.** `appStore.deploySerial` (session only, starts 0, reset by hydrate and New Operation) is incremented once per mission create by the `MissionScreen` composer, which stamps it on the Economy slice as `applyKey`. Nothing else mints a key. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **`appStore.lastAppliedKey`** (session only, starts 0, reset with `deploySerial`). A key applies iff `outcome.applyKey > lastAppliedKey`; keys only increase, so a repeat or stray older key cannot re-apply. An aborted or torn-down deploy burns its key and never applies. `deploySerial` and `lastAppliedKey` never enter the campaign blob. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **`applyDebrief(missionId)` is the only caller of the Debrief owner mutators.** Order: return if no outcome or key already applied; set `lastAppliedKey` first; record telemetry; `addCredits(netPayout)`; `campaignStore.reportMission`; `worldStore.applyMissionResult` at frozen `t0`; squad and loadout cleanup; on a win `advanceDays(ETA)` then Research and Roster `sync(t)`. `reportMission` must run before `applyMissionResult` (it writes `lastReport`). — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Debrief calls `applyDebrief` from `useLayoutEffect` and holds no guard of its own.** `campaignStore.outcomeApplied` and `appStore.outcomeSerial` are deleted; `reportMission` and `applyMissionResult` stay unguarded mutators. No UI component calls `reportMission`, `applyMissionResult`, `addCredits` or `advanceDays` for a Debrief result. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Filing status is a session-only store written only by `save.ts`.** `FilingStatus = 'filed' | 'unfiled' | 'write-failed'` with `WriteFailReason = 'quota' | 'unavailable' | 'unknown'`; `reason !== null` iff `write-failed`. `writeSave` marks `filed` after `setItem` returns, or `write-failed` in its `catch` or when storage is `null`. `hydrateSave` resets to `filed` as its last step. `startNewOperation` sets `filed` or `write-failed` after the in-memory reset; with no storage it sets `write-failed` / `unavailable`. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **`startAutosave` adds one `appStore` subscription that marks `unfiled` when `s.lastAppliedKey > prev.lastAppliedKey`.** Compare against Zustand's `prevState`, never a closure variable; ignore a decrease. It joins the same unsubscribe list so StrictMode double-start stays idempotent. `write-failed` is sticky against `markUnfiled`. Abort never marks `unfiled`. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **Classify write failures by duck-typing `DOMException.name`:** `QuotaExceededError` / `NS_ERROR_DOM_QUOTA_REACHED` → `quota`; null storage or `SecurityError` → `unavailable`; anything else (including a `captureSave` / `JSON.stringify` throw) → `unknown`. `classifyWriteFailure` and the mutators run in `catch` blocks and never throw. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **The status store changes only on a transition.** A mutator that would not change `status` or `reason` must not call `setState`. The store is not in `SaveV9` and not in the autosave subscription set, so a status change never schedules a write. Settings and telemetry writes never touch it. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **`filed` is reported only from a `setItem` that returned, a completed hydrate, or a successful erase.** — source: [ADR-0022](adr-0022-durable-commit-status.md)
 
 ### Forbidden Approaches
 
@@ -100,12 +110,23 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Never fail a completed campaign on a later roster wipe.** — source: [ADR-0020](adr-0020-campaign-fail-flags.md)
 - **Never replace the two booleans with a `CampaignStatus` enum.** — source: [ADR-0020](adr-0020-campaign-fail-flags.md)
 
+- **Never mint, rewrite or persist the apply key outside the composer.** `applyDebrief`, `setOutcome`, `reportMission` and `src/game/` never mint it; never `crypto.randomUUID()`; never store `lastAppliedKey` in the blob. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Never keep `outcomeSerial` plus a Credits guard,** and never per-owner last-applied keys. A repeated outcome would look new, or a partial apply would become representable. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Never a `saveStatus` field on `appStore`** (autosave would feed back into the writer it reports on). Never have `applyDebrief` call `markUnfiled()`. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **Never call the status mutators from Interface, owners or `applyDebrief`.** Never add the status to `captureSave` or the `startAutosave` subscription list. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **Never `getItem` read-back after `setItem`,** and never amend ADR-0011 in place for the status. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **Never classify with `instanceof DOMException`.** — source: [ADR-0022](adr-0022-durable-commit-status.md)
+- **Never build a new object in a status selector** (Zustand 5 loops). Select primitives or use `useShallow`. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+
 ### Performance Guardrails
 
 - **Deploy snapshot**: one clone at mission create (1–4 operatives, ≤21 research ids) plus `appliedNodeIds` per assigned operative. None per frame. — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
 - **Campaign persist**: coalesced Screen writes, not 20Hz stringify. — source: [ADR-0011](adr-0011-campaign-persistence-envelope.md)
 - **Telemetry**: stringify at most 60 records on debrief/abort/export, not per frame. — source: [ADR-0015](adr-0015-telemetry-never-leaves-the-machine.md)
 - **Catch-up**: CPU proportional to dues inside the jumped span. No extra budget claimed. — source: [ADR-0018](adr-0018-catch-up-collision-order.md)
+
+- **Apply key and pricing:** one key compare and one pricing pass per Debrief. None per frame. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Filing status:** one `appStore` subscription comparing two numbers; `setState` only on a transition. — source: [ADR-0022](adr-0022-durable-commit-status.md)
 
 ---
 
@@ -127,7 +148,7 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **`createWorld` copies `roster.maxHp` / `roster.speed`**, uses Roster `appliedIds` for `squadWeapon` / weapon sampling, and uses `roster.items` for `loadoutPools` only. It does not re-run `crewBonus`, `xpBonus`, `tierSpeedDelta`, or `squadMassKg`. — source: [ADR-0009](adr-0009-partitioned-deploy-snapshot.md)
 - **Economy owns Credits; live home is `appStore.credits`.** The account never goes negative. Exact-balance spend is allowed (→ 0). Opening `INITIAL_CREDITS = 128450`. — source: [ADR-0013](adr-0013-credits-never-overdraw.md)
 - **`spendCredits` refuses `amount <= 0` or overdraft as identity no-op (`return s`).** `hireOperative` is check → `acceptHire` → decrement; it does not call `spendCredits`. — source: [ADR-0013](adr-0013-credits-never-overdraw.md)
-- **`addCredits` ignores non-positive.** `setOutcome` adds `netPayout` (≥ 0 for production producers). `researchStore.start` is occupancy only. Hydrate drop-alls if `!finite(credits) || credits < 0`; do not clamp to 0. — source: [ADR-0013](adr-0013-credits-never-overdraw.md)
+- **`addCredits` ignores non-positive.** `applyDebrief` adds `netPayout` via `addCredits` (≥ 0 for production producers); `setOutcome` never changes `credits` (ADR-0021). `researchStore.start` is occupancy only. Hydrate drop-alls if `!finite(credits) || credits < 0`; do not clamp to 0. — source: [ADR-0013](adr-0013-credits-never-overdraw.md)
 - **Chrome is not the guard.** Production must not `setState({ credits })` except hydrate. Do not persist `committedFunds()` as a second ledger. Accepting a contract is free (`selectMission` does not debit). Production Research path: re-read credits; if short, return; `if (start(node, t)) spendCredits(cost)` — do not invert to spend-then-start. — source: [ADR-0013](adr-0013-credits-never-overdraw.md)
 - **Protected verbs: Select, Move, Attack, Hold Ground, Hold Fire.** Stop is command language, not a sixth verb (`orderStop`). Custom TypeScript sim; no physics engine. Kit methods may stay on `WorldApi`; they are not fantasy verbs. — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
 - **Select lives on `missionStore.setSelected`;** do not add `WorldApi.orderSelect`. Dead are never recipients. Opens with every living operative selected. — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
@@ -140,6 +161,11 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **`createWorld` uses `squadMassKg` only for `massTier` / `tierSpeedDelta`.** It does not read `MASS_LIMIT_KG`. Tactical does not re-own the gate. — source: [ADR-0019](adr-0019-deploy-gate.md)
 - **Empty incomplete living roster fails; complete stays complete after wipe;** flags cannot both be true. — source: [ADR-0020](adr-0020-campaign-fail-flags.md)
 - **`isCampaignFailed` / flag writes stay in `campaignStore.reportMission`.** Do not add a second effect that sets `campaignFailed` from length. — source: [ADR-0020](adr-0020-campaign-fail-flags.md)
+
+- **Economy prices the invoice.** `priceOutcome(result: MissionResult, economy: EconomySlice): MissionOutcome` is pure, lives with the Credits ledger and `COLLATERAL_FINE` in `src/state/appStore.ts`, and reads no store. `MissionOutcome = MissionResult & { reward; bonus; collateral; netPayout }`. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Pricing math:** `reward = economy.reward` (also on loss and quiet replay); `bonus` = sum of `economy.bonusDefs[id]` over unique `completedOptionalIds` (unknown ids and non-finite or negative values price 0); `N = max(0, floor(civiliansHit))`, non-finite → 0; `collateral = min(reward, N × COLLATERAL_FINE)`; `netPayout = (won && !quietReplay) ? reward + bonus − collateral : 0`. All priced fields are finite integers. The live HUD collateral count uses the same `N` clamp. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **`setOutcome(result)` prices once, stores the priced outcome, and enters Debrief.** It never touches `credits` and never mints a key. Debrief renders the stored priced outcome. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **`MissionResult` is defined beside `MissionOutcome` in `src/state/appStore.ts`.** The live `contractsWon` fallbacks in `reportMission` and `applyMissionResult` are deleted because `quietReplay` is required. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
 
 ### Forbidden Approaches
 
@@ -159,6 +185,10 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Never a soft-cap that allows mass over 400.** — source: [ADR-0019](adr-0019-deploy-gate.md)
 - **Never put `MASS_LIMIT_KG` in `world.ts`.** — source: [ADR-0019](adr-0019-deploy-gate.md)
 - **Never treat unrest crisis as campaign fail.** — source: [ADR-0020](adr-0020-campaign-fail-flags.md)
+
+- **Never price in Tactical.** `src/game/` emits no `reward`, `bonus`, collateral or payout, and `maybeOutcome` never reads `mission.reward` or `contractsWon`. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Never deposit Credits in `setOutcome`.** — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Never derive collateral on the fly from `reward × civiliansHit`;** read the priced fields. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
 
 ### Performance Guardrails
 
@@ -186,6 +216,8 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Hardened is discrete `DIFFICULTY_FX`.** Must not hide minimap cones or patrols. Not a free-range. Control does not add CorpSec HP. Unrest extras are Tactical-derived from the World Network snapshot. — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
 - **One system, one seed, unsaved lifetime.** Do not split district / combat / weather / hour / objectives into sibling systems. — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
 
+- **Tactical emits `MissionResult`** (`applyKey` echoed from `deploy.economy.applyKey`, `won`, `kills`, `casualties`, `timeSec`, `civiliansHit`, `completedOptionalIds`, `deadIds`, `survivorHp`, `quietReplay`, optional `telemetry`). `src/game/world.ts` imports the type only; no new runtime import enters `src/game/`. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+
 ### Forbidden Approaches
 
 - **Never an unscripted mid-mission weather roll.** — source: [ADR-0006](adr-0006-weather-script.md)
@@ -196,6 +228,8 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Never a second generator or WebGPU compute walk grid beside `citygen.ts`.** — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
 - **Never Hardened-as-hidden-minimap.** — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
 - **Never split the tactical system into sibling systems.** — source: [ADR-0016](adr-0016-tactical-sim-contract.md)
+
+- **Never a Tactical-side apply guard or key.** Tactical echoes the key it was given. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
 
 ### Performance Guardrails
 
@@ -233,6 +267,9 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **`sfx.threatLevel` is HUD Alert 0–3 on the combat bus,** not World Network Threat. — source: [ADR-0017](adr-0017-one-os-input-audio-mixer.md)
 - **Pause overlay does not mute or swap beds.** Settings, Balance, pause, and tutorial toasts are overlays; they do not change `Phase`. — source: [ADR-0017](adr-0017-one-os-input-audio-mixer.md)
 
+- **Debrief paints the post-payout balance.** `applyDebrief` runs in `useLayoutEffect` so the header never shows the pre-payout Credits; React StrictMode double-mount of `MissionScreen` and the Debrief effect must not double-apply. — source: [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)
+- **Interface reads filing status with primitive selectors:** `useSaveStatusStore((s) => s.status)` and `(s) => s.reason`. It shows the Debrief filing and write-failure indicators; one generic message may cover all three reasons. The first commit may read a stale status but must re-render before the first painted frame. — source: [ADR-0022](adr-0022-durable-commit-status.md)
+
 ### Forbidden Approaches
 
 - **Never stock r3f `<Canvas>`, drei `Canvas` / `View`.** — source: [ADR-0010](adr-0010-mission-renderer-and-frame-loop.md)
@@ -250,6 +287,8 @@ Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`
 - **Never gamepad or touch.** — source: [ADR-0017](adr-0017-one-os-input-audio-mixer.md)
 - **Never a second palette runtime / CSS-in-JS palette.** — source: [ADR-0017](adr-0017-one-os-input-audio-mixer.md)
 - **Never key the mission bed clip to district, contract, hour, weather, or Threat.** — source: [ADR-0017](adr-0017-one-os-input-audio-mixer.md)
+
+- **Never write the filing status from a component,** and never treat `filed` as "memory equals blob" after later ticks. — source: [ADR-0022](adr-0022-durable-commit-status.md)
 
 ### Performance Guardrails
 
