@@ -100,7 +100,13 @@ The tester completed New Operation → Glass Veil → debrief invoice and said t
 
 ---
 
-## Recommendation: PIVOT
+## Recommendation: PROCEED (revised 2026-10-08)
+
+> **Owner revision, 2026-10-08**: PIVOT → PROCEED. The 2026-10-06 PIVOT reacted to the state of the build, not the concept. The validation question was met: the player felt remote command at the dashboard and while giving orders, reached it in 30 seconds, and finished Glass Veil without guidance. What remains is build-state work, listed under If Proceeding. The original PIVOT text below is kept as history.
+>
+> **Correction**: "Civilians were not hit" means civilians the owner placed in the line of fire between agents and enemies were never struck. It was tested; it did not happen. Cause in `src/game/world.ts` `tryFire`: a rolled hit applies damage straight to the target without checking bodies on the line, and only a missed round can stray (`strayVictim`). The miss is also offset past and beside the target, so its lane often clears a body standing directly in between.
+
+### Original recommendation (2026-10-06): PIVOT
 
 Player verdict, 2026-10-06. A new player did feel remote command, at the dashboard and when giving orders, and reached that in 30 seconds without a walkthrough. They also finished Glass Veil. That is not enough to PROCEED. They said the visuals are still a prototype and that Glass Veil and the other contracts are not ready. Civilians were not hit, so the invoice never carried the corporate cost the validation question required. The World Network did not tell them where to start. Grenades would not launch.
 
@@ -114,11 +120,19 @@ Build feasibility was not tested. There is no schedule claim in this report.
 
 ## If Proceeding
 
-Not this verdict.
+Build-state work for Pre-Production. `src/` stays the base. Nothing here reopens the five verbs, the dashboard, or an ADR.
+
+1. **Rounds hit bodies in their path.** Check the shooter→target line for intervening bodies on every shot, not only on misses, so a civilian in the line of fire can be hit and priced on the invoice (Pillar 3). Simulation change in `src/game/world.ts`, with tests.
+2. **World Network arrival.** The first strategic screen must tell a new player where to start.
+3. **Grenade launch.** Reproduce the player-side failure, then fix it.
+4. **Visuals.** Bring the mission and terminal from prototype read to representative quality.
+5. **Contracts.** Make Glass Veil and the other contracts ready.
 
 ---
 
 ## If Pivoting
+
+*Superseded by the 2026-10-08 PROCEED. Kept as history.*
 
 The failure is not the five-verb loop. The tester finished it and felt command. What failed is the first strategic screen, the consequence beat, and the claim that the current picture is production quality.
 

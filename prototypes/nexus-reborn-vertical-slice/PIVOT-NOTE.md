@@ -1,5 +1,7 @@
 # PIVOT note — Nexus Reborn vertical slice
 
+> **SUPERSEDED 2026-10-08**: the owner revised the verdict to PROCEED. The PIVOT reacted to the state of the build, not the concept. See REPORT.md § Recommendation and § If Proceeding. The body below is kept as history.
+
 > **Date**: 2026-10-06
 > **Source**: prototypes/nexus-reborn-vertical-slice/REPORT.md
 > **Verdict**: PIVOT. CD-PLAYTEST CONCERNS (accepted) 2026-10-06; recommendation confirmed.
