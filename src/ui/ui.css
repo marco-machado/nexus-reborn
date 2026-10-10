@@ -3901,6 +3901,8 @@ button.hud-slot:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .wm-onboard-row {
@@ -3917,6 +3919,14 @@ button.hud-slot:focus-visible {
   letter-spacing: 0.16em;
   color: var(--teal);
   font-weight: 500;
+}
+
+.wm-onboard-row.lead {
+  border-left-color: var(--amber);
+}
+
+.wm-onboard-row.lead b {
+  color: var(--amber);
 }
 
 .wm-onboard-row span {

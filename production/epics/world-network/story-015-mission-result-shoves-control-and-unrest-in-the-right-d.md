@@ -59,7 +59,23 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/state/worldStore.test.ts`
+
+**What to test**:
+- A non-quiet win, Control not at the unnamed cap, leaves Control greater than it was.
+- A non-quiet loss, Control not at the unnamed floor, leaves Control less than it was.
+- Two otherwise identical non-quiet wins, `civiliansHit = 0` versus `N > 0`, not at the unrest clamp: Unrest after N is greater than Unrest after 0.
+
+**Edge cases to cover**:
+- Magnitudes are unnamed in §5. Assert direction only. Do not copy code-only deltas into the test as expected integers.
+- The cap and floor cases are excluded by the criteria. Do not invent the unnamed bounds.
+- A quiet-replay win does no direct Control, Unrest, or ownership shove. That case is Story 005, not this story.
+
+*No formula in the Formulas section. Dirty-win net Unrest versus pre-mission U is unnamed. Do not assert it.*
+
+**Estimated test count**: ~3 unit tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

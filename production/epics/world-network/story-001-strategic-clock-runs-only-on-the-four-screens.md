@@ -62,7 +62,24 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/state/worldStore.test.ts` (tick, pause, phase gating); `src/ui/clock.test.ts` (beside `useWorldClock` in `src/ui/clock.ts`)
+
+**What to test**:
+- On World Network, Research, Brief, or Assembly, at 1×, unpaused, with no clamped gaps and no pending remainder, 1 accepted real second delivered to `tick` increases strategic `t` by 60 seconds.
+- One rAF callback after a 1-second wall gap, empty accumulator, 1×, admits 0.25 seconds and advances `t` by 15 strategic seconds. That clamp is on the caller, not on raw `worldStore.tick`.
+- Menu, Mission, and Debrief leave `t` unchanged when wall-clock advances.
+- Pause on a Screen leaves `t` unchanged.
+
+**Edge cases to cover**:
+- In the field (Mission): no strategic tick and no catch-up.
+- A 1-second stall must not call `advanceDays` or bulk-apply an hour of dues.
+- Game clocks are not `THREE.Clock` or `THREE.Timer`.
+
+*No Formulas-section expression. Rates are the Acceptance Criteria: 60 strategic seconds per accepted real second, and a 0.25s stall admission that yields 15 strategic seconds.*
+
+**Estimated test count**: ~6 unit tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

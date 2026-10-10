@@ -789,8 +789,9 @@ function UnreadBadge() {
 
 /* -------------------------------- the screen ------------------------------ */
 
-// First-visit orientation: names the screen's four panel groups and the way
-// to Research. Shows once per campaign; the dismissal persists with the save
+// First-visit orientation: states the desk job and a first minute, then names
+// the screen's panel groups and the way to Research (GDD Core Rule 13: teach
+// the job, not "click the marker"). Shows once per campaign; the dismissal persists with the save
 // through the tutorial seen set.
 function WorldOnboard() {
   const seen = useTutorialStore((s) => s.seen)
@@ -806,6 +807,21 @@ function WorldOnboard() {
       <div className="hud-menu-panel wm-onboard">
         <Panel title="WORLD NETWORK // ORIENTATION" right={<span className="dim">FIRST UPLINK</span>}>
           <div className="wm-onboard-rows">
+            <div className="wm-onboard-row lead">
+              <b>THE JOB</b>
+              <span>
+                You run the network from this desk. Keep sectors Nexus-held: Tax yield pays only
+                from sectors Nexus holds. Influence opens at 0; field wins earn it, and Stabilize,
+                Lobby and Expedite spend it.
+              </span>
+            </div>
+            <div className="wm-onboard-row lead">
+              <b>START HERE</b>
+              <span>
+                Focus a few sectors and read Control, Unrest, Tax yield and Garrison. Pause while you
+                read. When a sector needs hands on the ground, take its contract.
+              </span>
+            </div>
             <div className="wm-onboard-row">
               <b>SECTORS</b>
               <span>
@@ -830,7 +846,8 @@ function WorldOnboard() {
               <b>TIME AND EVENTS</b>
               <span>
                 The bottom strip runs Strategic time, reviews the last 24 hours, and carries the
-                Feed and your resource pool.
+                Feed and your resource pool. Time is a resource: it finishes labs, heals the
+                roster and pays Tax. Pausing spends it too.
               </span>
             </div>
             <div className="wm-onboard-row">

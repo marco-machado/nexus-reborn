@@ -63,7 +63,23 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/state/missionStore.test.ts` (abort leaves a deep-equal World Network blob); `src/game/missionParams.test.ts` (frozen slice); `src/game/world.test.ts` (`createWorld` reads no stores)
+
+**What to test**:
+- Confirmed Abort produces no debrief. Blob B is unchanged: `t`, sectors, owners, Influence, intelLevel, intelProgress, events, spends, `nextTaxT`.
+- Confirmed deploy gives the tactical mission only `{sector id, Control, Unrest}` and no live World Network store handle. Do not name that slice the Snapshot DTO.
+- The running mission reads the cloned slice. `createWorld` does not read `worldStore`, `campaignStore`, or `researchStore`.
+
+**Edge cases to cover**:
+- Abort writes nothing to those fields.
+- No silent `getState()` fallback inside `createWorld` for the deploy slices.
+- Intel is not a World Network deploy-slice field. The slice stays sector id, Control, Unrest.
+
+*No formula in the Formulas section. Test cases come from the acceptance criteria.*
+
+**Estimated test count**: ~5 integration tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

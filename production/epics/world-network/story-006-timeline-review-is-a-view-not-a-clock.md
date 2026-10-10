@@ -60,7 +60,22 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/state/worldStore.test.ts` (`setReview` does not move `t`, sectors, or owners; snap and force-null); `src/state/save.test.ts` (review absent from the saved world)
+
+**What to test**:
+- Scrubbing Review leaves live Control, Unrest, owners, and `t` unchanged. Feed and TimeCode follow the pin. The Scan's four numbers stay live.
+- On an unpaused tick, `review < t - DAY` snaps `review` to `null`. `advanceDays`, hydrate, and New Operation force `review: null`.
+
+**Edge cases to cover**:
+- `setReview` does not write `t` and does not run `advanceFlow`. It never calls `sync(t)` or Tax.
+- Do not reconstruct historical Control.
+- The Review pin is not in the campaign blob.
+
+*No formula in the Formulas section for Review.*
+
+**Estimated test count**: ~4 unit tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

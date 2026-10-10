@@ -274,3 +274,14 @@ describe('functional checkpoint passages', () => {
     }
   })
 })
+
+describe('checkpoint crowd', () => {
+  it('queues a third of the civilians on the avenue just south of the gate', () => {
+    for (const seed of GATE_SEEDS) {
+      const city = gateCity('checkpoint', seed)
+      const gate = city.landmarks.gate
+      const queued = city.civilians.filter((c) => c.x >= 45 && c.x < 52 && c.z > gate.z && c.z < gate.z + 10)
+      expect(queued.length, `seed ${seed}`).toBeGreaterThanOrEqual(Math.floor(22 / 3))
+    }
+  })
+})

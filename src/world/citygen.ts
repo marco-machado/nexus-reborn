@@ -783,8 +783,27 @@ export function generateCity(
   ]
 
   // Civilians on street cells in the south two-thirds, away from the target.
-  // The count comes from the mission modifiers.
+  // The count comes from the mission modifiers. A checkpoint queues a third of
+  // them on the avenue just south of the gate, so the garrison fight has
+  // bystanders on the squad's fire lanes.
   const civilians: Vec2[] = []
+  let crowd = g.civilianCount
+  if (arch === 'checkpoint') {
+    const queue: number[] = []
+    for (let z = GATE_Z + 2; z <= GATE_Z + 9; z++) {
+      for (let x = AVE.x0; x < AVE.x1; x++) {
+        const i = idx(x, z)
+        if (road[i] === 1 && walk[i] === 1) queue.push(i)
+      }
+    }
+    for (let want = Math.floor(crowd / 3); want > 0 && queue.length > 0; want--, crowd--) {
+      const j = Math.floor(rnd() * queue.length)
+      const i = queue[j]
+      queue[j] = queue[queue.length - 1]
+      queue.pop()
+      civilians.push({ x: (i % size) + 0.5, z: Math.floor(i / size) + 0.5 })
+    }
+  }
   const candidates: number[] = []
   for (let z = 34; z < 92; z++) {
     for (let x = 2; x < 94; x++) {
@@ -795,7 +814,7 @@ export function generateCity(
       if (dx * dx + dz * dz > 400) candidates.push(i)
     }
   }
-  for (let want = g.civilianCount; want > 0 && candidates.length > 0; want--) {
+  for (let want = crowd; want > 0 && candidates.length > 0; want--) {
     const j = Math.floor(rnd() * candidates.length)
     const i = candidates[j]
     candidates[j] = candidates[candidates.length - 1]

@@ -64,7 +64,24 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/state/appStore.test.ts` and `src/state/worldStore.test.ts` (apply-order spy; same key leaves a deep-equal snapshot)
+
+**What to test**:
+- A win at frozen `t0` with sector state S writes Control, Unrest, ownership, Influence, and Intel from S at `t0`. ETA catch-up advances `t` only after that write-back.
+- Re-entering apply with the same debrief serial N, and no Screen tick or input in between, leaves state equal to the post-apply snapshot S. No second mission write-back, ETA advancement, Tax or Credits deposit, Feed or market change, RNG or dues consumption, or Research or Roster sync.
+- An older apply key (`≤ lastAppliedKey`) applies nothing.
+
+**Edge cases to cover**:
+- `applyDebrief` sets `lastAppliedKey` first. A key applies only when `outcome.applyKey > lastAppliedKey`.
+- Order: `worldStore.applyMissionResult` at frozen `t0`, then `advanceDays(ETA)` only on a win.
+- Assert Credits do not move on the second apply. That is not proof the Economy mutator is itself idempotent.
+- Quiet-replay ETA behavior is Story 005, not this story.
+
+*No formula in the Formulas section. This story asserts order and a single apply, not Influence or Intel award integers.*
+
+**Estimated test count**: ~5 integration tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

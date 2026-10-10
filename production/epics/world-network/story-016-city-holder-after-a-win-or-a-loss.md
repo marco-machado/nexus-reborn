@@ -56,7 +56,21 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/game/ownership.test.ts`, `src/state/worldStore.test.ts`
+
+**What to test**:
+- A non-quiet win sets the mission city's holder to Nexus.
+- A non-quiet loss of a Nexus-held city sets the holder to that city's default holder.
+
+**Edge cases to cover**:
+- A quiet-replay win does no direct ownership shove. Do not expect holder to become Nexus in that case. Story 005 owns that assertion.
+- World Network must not read the running mission or the live roster to decide the holder. The write is the outcome DTO at debrief.
+
+*No formula in the Formulas section for holder.*
+
+**Estimated test count**: ~3 unit tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

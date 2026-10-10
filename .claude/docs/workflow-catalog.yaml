@@ -282,6 +282,12 @@ phases:
         name: "UX Review"
         command: /ux-review
         required: true
+        # /ux-review writes nothing. The spec Status line is the record it
+        # passed: `Approved (/ux-review …)`. Same floor as ux-design: 3 files.
+        artifact:
+          glob: "design/ux/*.md"
+          pattern: 'Approved \(/ux-review'
+          min_count: 3
         description: "Validate all key screen UX specs for GDD alignment and accessibility tier compliance. Run before creating epics."
 
       - id: prototype

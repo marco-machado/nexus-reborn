@@ -807,10 +807,17 @@ export function createWorld(
     }
   }
 
-  // A missed round keeps travelling. Returns the first living body the segment
-  // crosses, skipping the shooter and the unit aimed at, since the shot has
-  // already missed that one.
-  function strayVictim(from: Vec2, tx: number, tz: number, shooter: SimUnit, aimed: SimUnit): SimUnit | null {
+  // The first living body the segment from→(tx,tz) crosses, skipping the
+  // shooter and the unit aimed at, and the shooter's own side when
+  // skipOwnSide is set. Cover is not checked here.
+  function firstLaneBody(
+    from: Vec2,
+    tx: number,
+    tz: number,
+    shooter: SimUnit,
+    aimed: SimUnit,
+    skipOwnSide = false,
+  ): SimUnit | null {
     const dx = tx - from.x
     const dz = tz - from.z
     const len2 = dx * dx + dz * dz
@@ -819,6 +826,7 @@ export function createWorld(
     let bestEntry = Infinity
     for (const o of units) {
       if (o === shooter || o === aimed || o.stance === 'dead') continue
+      if (skipOwnSide && o.kind === shooter.kind) continue
       const ox = o.pos.x - from.x
       const oz = o.pos.z - from.z
       const k = (ox * dx + oz * dz) / len2
@@ -834,6 +842,14 @@ export function createWorld(
       best = o
       bestEntry = entry
     }
+    return best
+  }
+
+  // A missed round keeps travelling. Returns the first living body the segment
+  // crosses, skipping the shooter and the unit aimed at, since the shot has
+  // already missed that one.
+  function strayVictim(from: Vec2, tx: number, tz: number, shooter: SimUnit, aimed: SimUnit): SimUnit | null {
+    const best = firstLaneBody(from, tx, tz, shooter, aimed)
     // Nearest on the line is also the first thing cover can hide, so a blocked
     // sight line means the round struck the wall rather than the body.
     if (best && !hasLos(city, from, best.pos)) return null
@@ -871,8 +887,17 @@ export function createWorld(
     let tx = t.pos.x
     let tz = t.pos.z
     if (hit) {
-      if (u.kind === 'agent') damageByWeapon[w.id] += dmg
-      applyDamage(t, dmg, u)
+      // A hit still has to get there: whoever stands on the lane short of the
+      // target wears the round first. A blocked body means the round struck
+      // the wall, so nobody is hurt. Shooters aim past their own side.
+      const body = firstLaneBody(u.pos, t.pos.x, t.pos.z, u, t, true)
+      const struck = !body ? t : hasLos(city, u.pos, body.pos) ? body : null
+      if (struck) {
+        tx = struck.pos.x
+        tz = struck.pos.z
+        if (u.kind === 'agent') damageByWeapon[w.id] += dmg
+        applyDamage(struck, dmg, u)
+      }
     } else {
       const over = 1 + rng() * 1.8
       const side = (rng() - 0.5) * (0.7 + w.spread * 8) * (0.5 + d * 0.08)

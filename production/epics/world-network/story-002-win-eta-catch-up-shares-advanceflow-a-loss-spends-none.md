@@ -64,7 +64,23 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/state/worldStore.test.ts`
+
+**What to test**:
+- A win spends contract ETA through the same `advanceFlow` as Screen `tick`: one due at its timestamp, rearm from that due `t`, equal timestamps in ADR-0018 order. Do not assert a second order table.
+- A loss debrief at `t0` leaves strategic `t` at `t0` and emits no Tax from ETA.
+- A span with several dues: `advanceDays` and an equivalent run of `tick` fire the same dues in the same order.
+
+**Edge cases to cover**:
+- Two dues at one timestamp: expiry, then World Event, then contract generation, then staged spend, then pressure, then Tax yield. Tax at that `t` reads Control after pressure.
+- Do not bulk-apply N hours of effects at the jump instant.
+- A loss spends no ETA.
+
+*No formula in the Formulas section. Collision order is the ADR-0018 list above. Do not author a new one.*
+
+**Estimated test count**: ~5 unit tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 

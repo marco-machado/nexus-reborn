@@ -905,6 +905,76 @@ describe('role abilities', () => {
     expect(a1.abilityUntil).toBe(0)
   })
 
+  // A body standing still on the shooter→target lane, stance pinned.
+  function standOnLane(u: WorldApi["units"][number], at: Vec2) {
+    u.pos.x = at.x
+    u.pos.z = at.z
+    u.path.length = 0
+    u.holdGround = true
+    return u
+  }
+
+  it('a hit strikes the civilian standing on the fire lane and bills it', () => {
+    const w = createWorld(BARE_MISSION, ops(['op5']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 4 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+    const civ = standOnLane(w.units.find((u) => u.kind === 'civilian')!, { x: a1.pos.x, z: a1.pos.z - 2 })
+    civ.hp = 100000
+    civ.maxHp = 100000
+
+    // Deadeye makes the shot a guaranteed hit, so the lane is the only variable.
+    w.orderAbility(['a1'])
+    w.orderAttack(['a1'], enemy.id)
+    let guard = 0
+    while (civ.hp === 100000 && enemy.hp === 100000 && guard++ < 100) w.tick(STEP)
+    expect(enemy.hp).toBe(100000)
+    expect(civ.hp).toBeLessThan(100000)
+    expect(useMissionStore.getState().civiliansHit).toBe(1)
+  })
+
+  it('a hit on a clear lane still lands on the target', () => {
+    const w = createWorld(BARE_MISSION, ops(['op5']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 4 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+    // Put the civilian beside the lane, well outside the body radius.
+    standOnLane(w.units.find((u) => u.kind === 'civilian')!, { x: a1.pos.x + 3, z: a1.pos.z - 2 })
+
+    w.orderAbility(['a1'])
+    w.orderAttack(['a1'], enemy.id)
+    let guard = 0
+    while (enemy.hp === 100000 && guard++ < 100) w.tick(STEP)
+    expect(enemy.hp).toBeCloseTo(100000 - WEAPONS.longrifle.damage * 2, 5)
+    expect(useMissionStore.getState().civiliansHit).toBe(0)
+  })
+
+  it('a CorpSec hit through a civilian hurts them but bills nothing', () => {
+    const w = createWorld(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    a1.hp = 100000
+    a1.maxHp = 100000
+    w.orderHoldFire(['a1'], true)
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 4 }, false)
+    const civ = standOnLane(w.units.find((u) => u.kind === 'civilian')!, { x: a1.pos.x, z: a1.pos.z - 2 })
+    civ.hp = 100000
+    civ.maxHp = 100000
+    enemy.reloading = 0
+
+    let guard = 0
+    while (civ.hp === 100000 && guard++ < 600) w.tick(STEP)
+    expect(civ.hp).toBeLessThan(100000)
+    expect(useMissionStore.getState().civiliansHit).toBe(0)
+  })
+
   it('suppression sweep marks enemies in range and line of sight as slowed', () => {
     const w = createWorld(BARE_MISSION, ops(['op7']))
     deployReset()

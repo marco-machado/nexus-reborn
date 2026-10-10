@@ -92,7 +92,7 @@ The tester completed New Operation → Glass Veil → debrief invoice and said t
 |--------|--------|--------|
 | Time to first meaningful action | Without guidance, inside the 5-minute loop | 30 seconds |
 | Session length | 3–5 minutes | Not recorded |
-| Critical fun blockers found | 0 | 3 (World Network arrival, no civilian hit, grenades would not launch) |
+| Critical fun blockers found | 0 | 0 on re-play 2026-10-10 (was 3: World Network arrival, no civilian hit, grenades would not launch) |
 | Pipeline blockers found | 0 | 0 |
 | Architecture surprises | 0 | 0 reported |
 
@@ -176,3 +176,15 @@ Not this verdict. Kill checks met: 0. A targeted PIVOT is the recovery the skill
 > *No vertical slice code was written. Do not delete or quarantine `src/` because of this report.*
 > *Production must not import from `prototypes/`.*
 > *A later PROCEED must not be read as an order to rewrite the shipping cut from scratch. That rule applies to slice code. There is none.*
+
+---
+
+## Re-play — 2026-10-10
+
+Owner re-played Glass Veil after the path-back fixes from `production/gate-checks/gate-check-production-2026-10-09.md`:
+
+- Rolled hits now strike the first body on the fire lane (Story 017, `src/game/world.ts`).
+- The World Network first-visit overlay states the job and where to start (`src/ui/WorldMap.tsx`).
+- Checkpoint districts queue a third of the crowd south of the gate, so the garrison fight has bystanders (`src/world/citygen.ts`). Before this, no civilian spawned within reach of the gate fight.
+
+Result: civilians were hit and killed by stray fire and priced on the invoice. Lethality was confirmed as intended. The owner reported no other blockers. Critical fun blockers: 0.

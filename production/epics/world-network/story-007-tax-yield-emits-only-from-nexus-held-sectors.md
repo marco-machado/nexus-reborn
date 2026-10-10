@@ -60,7 +60,23 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+**Test file path**: `src/game/ownership.test.ts` and `src/state/worldStore.test.ts` (Nexus, Contested, non-Nexus, and the 4,080 CR opening case)
+
+**What to test**:
+- `tax_yield = round(base × Control/100 × strain)`. `round` is nearest-integer, half ties toward +∞ (`Math.round`).
+- A Nexus-held sector emits printed A CR when a Tax due fires.
+- Contested emits 0. A non-Nexus majority holder emits 0.
+- Opening North America (Nexus, 68% Control, 12% Unrest) emits 4,080 CR, which is `round(6000 × 68/100 × 1)`.
+
+**Edge cases to cover**:
+- Strain is 1 at unrest ≤ 60; otherwise `1 − 0.02` per unrest point above 60, floored at 0.25. Unrest is clamped 2–96, so at 96 strain is 0.28 and the 0.25 floor does not bind. Do not retune the floor in this test.
+- Opening Europe (Helix): a figure may print and that sector does not pay.
+- Economy deposits only an emit where A > 0. A non-positive emit leaves Credits unchanged.
+- Tax prints for every open sector and pays only if Nexus-held.
+
+**Estimated test count**: ~6 unit tests
+
+*Source: `production/qa/qa-plan-sprint-001-2026-10-09.md`*
 
 ---
 
