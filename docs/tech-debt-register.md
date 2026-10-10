@@ -1,6 +1,6 @@
 ## Technical Debt Register
 Last updated: 2026-10-10
-Total items: 8 | Estimated total effort: 6S + 2M
+Total items: 9 | Estimated total effort: 7S + 2M
 
 | ID | Category | Description | Files | Effort | Impact | Priority | Status | Added | Sprint |
 |----|----------|-------------|-------|--------|--------|----------|--------|-------|--------|
@@ -12,3 +12,4 @@ Total items: 8 | Estimated total effort: 6S + 2M
 | TD-006 | Test | Collision tests lean on fixture assumptions: the Tax test hard-codes yieldBase 6000 from atlas.ts and assumes `na` is the only Nexus-held open sector; the first collision test depends on the snapshot RNG rolling a riot at T=10000 — from production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md | src/state/worldStore.test.ts | S | Low | — | Open | 2026-10-10 | Backlog |
 | TD-007 | Test | The loss test checks AC2's debrief wiring with regexes over the src/ui/index.tsx source (structural), not a runtime debrief-loss check — from production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md | src/state/worldStore.test.ts, src/ui/index.tsx | M | Med | — | Open | 2026-10-10 | Backlog |
 | TD-008 | Test | TM-017 AC-2: no test runs a lane hit through to the debrief invoice. The world outcome's `civiliansHit` (world.test.ts) and `collateralFine` from a hand-built outcome (appStore.test.ts) are tested separately — from production/epics/tactical-mission/story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md | src/game/world.test.ts, src/state/appStore.test.ts | S | Med | — | Open | 2026-10-10 | Backlog |
+| TD-009 | Test | No test arms a pressure timer so that a pressure decay and a Tax due share one timestamp; GDD §135 says Tax then reads Control after pressure. WN-007 tests set sector state with `setState`, so no timer is armed — from production/epics/world-network/story-007-tax-yield-emits-only-from-nexus-held-sectors.md | src/state/worldStore.test.ts | S | Med | — | Open | 2026-10-10 | Backlog |

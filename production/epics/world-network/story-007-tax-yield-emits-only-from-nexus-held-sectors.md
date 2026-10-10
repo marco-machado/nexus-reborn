@@ -1,12 +1,12 @@
 # Story 007: Tax yield emits only from Nexus-held sectors
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN a Nexus-held sector with printed `tax_yield` A CR (`A = round(base × Control/100 × strain)` per GDD §5), WHEN a Tax due fires, THEN Economy is emitted A CR.
-- [ ] GIVEN Contested, WHEN a Tax due fires, THEN emit 0.
-- [ ] GIVEN a non-Nexus majority holder, WHEN a Tax due fires, THEN emit 0.
-- [ ] GIVEN opening North America (Nexus, 68% Control, 12% Unrest), WHEN a Tax due fires, THEN emit 4,080 CR.
+- [x] GIVEN a Nexus-held sector with printed `tax_yield` A CR (`A = round(base × Control/100 × strain)` per GDD §5), WHEN a Tax due fires, THEN Economy is emitted A CR.
+- [x] GIVEN Contested, WHEN a Tax due fires, THEN emit 0.
+- [x] GIVEN a non-Nexus majority holder, WHEN a Tax due fires, THEN emit 0.
+- [x] GIVEN opening North America (Nexus, 68% Control, 12% Unrest), WHEN a Tax due fires, THEN emit 4,080 CR.
 
 ---
 
@@ -86,7 +86,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/ownership.test.ts` / `src/state/worldStore.test.ts` — table test for Nexus, Contested, non-Nexus, and the 4,080 CR opening case. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/worldStore.test.ts` › `tax yield emits only from Nexus-held sectors (WN-007)`
 
 ---
 
@@ -94,3 +94,12 @@
 
 - Depends on: Story 002
 - Unlocks: Story 013
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 4/4 passing (no deferred items)
+**Deviations**: ADVISORY — Tax-after-pressure at an equal timestamp (GDD §135) is not exercised here; tests set sector state directly with no pressure timer armed. Logged as TD-009.
+**Test Evidence**: Logic: `src/state/worldStore.test.ts` (WN-007 block; 88/88 pass; removing the Nexus gate fails all 9). No `ownership.test.ts` tests — `ownership.ts` has no tax function.
+**Code Review**: Complete — /code-review APPROVED WITH SUGGESTIONS; all 5 suggestions applied

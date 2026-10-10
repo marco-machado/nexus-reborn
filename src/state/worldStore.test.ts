@@ -1125,6 +1125,96 @@ describe('tax yield', () => {
   })
 })
 
+describe('tax yield emits only from Nexus-held sectors (WN-007)', () => {
+  type Corp = ReturnType<typeof sectorCorp>
+
+  // Pays one Tax due with `id` as the only sector that could pay: every other
+  // city is Helix, and the sector's cities take `holder` (one corp for all, a
+  // per-city list, or null for the opening owners). `state` is set directly,
+  // so no pressure timer is armed and the due sees exactly that state.
+  // Returns the Credits delta.
+  function payOnce(
+    id: SectorId,
+    holder: Corp | readonly Corp[] | null,
+    state?: { control: number; unrest: number },
+  ): number {
+    pinFlows()
+    const owner: Record<string, Corp> = {}
+    for (const c of CITIES) owner[c.id] = 'helix'
+    CITIES_BY_SECTOR[id].forEach((c, i) => {
+      owner[c.id] =
+        holder === null ? initialOwner()[c.id] : typeof holder === 'string' ? holder : holder[i]
+    })
+    useWorldStore.setState({
+      owner,
+      nextTaxT: TAX_INTERVAL_SEC,
+      ...(state ? { sectors: { ...useWorldStore.getState().sectors, [id]: state } } : {}),
+    })
+    const before = useAppStore.getState().credits
+    crossTo(TAX_INTERVAL_SEC)
+    return useAppStore.getState().credits - before
+  }
+
+  it('opening North America (Nexus, 68% Control, 12% Unrest) emits 4,080 CR', () => {
+    expect(useWorldStore.getState().sectors.na).toEqual({ control: 68, unrest: 12 })
+    expect(payOnce('na', null)).toBe(4080)
+  })
+
+  // [control, unrest, strain]: flat to 60, 1 - 0.02/pt above it, 0.28 at the
+  // unrest cap (the 0.25 floor does not bind).
+  it.each<[number, number, number]>([
+    [100, 2, 1],
+    [100, 60, 1],
+    [100, 61, 0.98],
+    [100, 70, 0.8],
+    [50, 80, 0.6],
+    [68, 96, 0.28],
+  ])(
+    'a Nexus-held sector at %i Control / %i Unrest emits round(base x Control/100 x %f)',
+    (control, unrest, strain) => {
+      for (const id of OPEN_SECTORS) {
+        const base = SECTORS.find((s) => s.id === id)!.yieldBase
+        const printed = sectorReadout(id, { control, unrest }).taxYield
+        expect(printed, id).toBe(Math.round(base * (control / 100) * strain))
+        expect(payOnce(id, 'nexus', { control, unrest }), id).toBe(printed)
+      }
+    },
+  )
+
+  it('Contested and non-Nexus holders print a figure and emit 0, for every open sector', () => {
+    for (const id of OPEN_SECTORS) {
+      const printed = sectorReadout(id, useWorldStore.getState().sectors[id]).taxYield
+      expect(printed, id).toBeGreaterThan(0)
+      expect(CITIES_BY_SECTOR[id], id).toHaveLength(3)
+      // Opening holder, unchanged: pays only if that holder is Nexus.
+      const opening = sectorCorp(id, initialOwner())
+      expect(payOnce(id, null), id).toBe(opening === 'nexus' ? printed : 0)
+      // Non-Nexus majority holders.
+      expect(payOnce(id, 'helix'), id).toBe(0)
+      expect(payOnce(id, 'stratos'), id).toBe(0)
+      expect(payOnce(id, ['nexus', 'helix', 'helix']), id).toBe(0)
+      // A 2-of-3 Nexus majority pays.
+      expect(payOnce(id, ['nexus', 'nexus', 'helix']), id).toBe(printed)
+      // Contested: a 1-1-1 split has no majority.
+      const split = ['nexus', 'helix', 'stratos'] as const
+      const owner: Record<string, Corp> = {}
+      CITIES_BY_SECTOR[id].forEach((c, i) => (owner[c.id] = split[i]))
+      expect(sectorCorp(id, owner), id).toBe('contested')
+      expect(payOnce(id, split), id).toBe(0)
+    }
+  })
+
+  it('a due with no Nexus-held sector leaves Credits unchanged and still rearms', () => {
+    pinFlows()
+    const owner: Record<string, Corp> = {}
+    for (const c of CITIES) owner[c.id] = 'helix'
+    useWorldStore.setState({ owner, nextTaxT: TAX_INTERVAL_SEC })
+    crossTo(TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBe(INITIAL_CREDITS)
+    expect(useWorldStore.getState().nextTaxT).toBe(2 * TAX_INTERVAL_SEC)
+  })
+})
+
 describe('clock formatting', () => {
   it('stamp(0) prints the world start', () => {
     expect(stamp(0)).toEqual({ date: '2087.05.14', clock: '14:32:17' })
