@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules, manifest 2026-10-08).
 - Forbidden: Bulk-applying N hours of effects at the jump instant.
 - Forbidden: A per-item priority queue replacing kind-level collision.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

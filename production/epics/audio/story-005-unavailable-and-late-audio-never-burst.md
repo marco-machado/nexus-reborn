@@ -25,7 +25,7 @@
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Forbidden: Never typecheck-import `game/audio.ts` from `sound.ts`.
 - Forbidden: Never replay stale cues as a delayed burst.
-- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (AGENTS.md).
+- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (CLAUDE.md).
 
 ---
 

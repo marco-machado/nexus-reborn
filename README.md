@@ -77,7 +77,7 @@ No listener output means the port is clear. If you used another port, check that
 | Understand the game and its rules | [Game design](docs/game-design.md) | Living specification, including acceptance criteria and explicitly pending targets |
 | Use the right names | [Domain glossary](CONTEXT.md) | Canonical terminology, not a replacement for the rules |
 | Understand settled decisions | [ADRs](docs/adr/) | Rationale and consequences; reopen decisions explicitly |
-| Change code safely | [Engineering guidance](AGENTS.md) | Module boundaries, state lifetimes, rendering constraints, verification and contribution conventions |
+| Change code safely | [Engineering guidance](CLAUDE.md) | Module boundaries, state lifetimes, rendering constraints, verification and contribution conventions |
 | Exercise the player flow | [Click-through](docs/click-through.md) | Manual procedure; not evidence that a check has passed |
 | Record or inspect verification | [QA records](docs/qa/README.md) | Reproducible record format and historical evidence index |
 | Work on district rendering | [City architecture](docs/city-architecture.md) | Shared geometry/material kit, visibility behavior and scoped verification |

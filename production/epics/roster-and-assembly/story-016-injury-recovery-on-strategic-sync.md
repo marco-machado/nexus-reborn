@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Feature Layer Rules, manifest 2026-10-08).
 - Forbidden: tactical time advancing strategic downtime or the market.
 - Forbidden: catch-up running before debrief write-back.
-- Guardrail: no per-frame work; no per-frame React state (AGENTS.md); deterministic campaign RNG preserved.
+- Guardrail: no per-frame work; no per-frame React state (CLAUDE.md); deterministic campaign RNG preserved.
 
 ---
 

@@ -26,7 +26,7 @@
 - Required: Named colours are dual-owned by `src/index.css` `:root` and `src/ui/tokens.ts`; TS / SVG / canvas paints import from `tokens.ts`.
 - Required: Critical state is never color-only.
 - Forbidden: a second palette runtime / CSS-in-JS palette; scattered hex.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

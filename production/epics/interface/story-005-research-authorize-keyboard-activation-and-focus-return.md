@@ -27,7 +27,7 @@
 - Required: `BINDINGS` is the only remap table; keyboard and mouse, desktop only.
 - Forbidden: gamepad or touch.
 - Guardrail: debit/start correctness stays Economy/Research; Interface does not debit.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

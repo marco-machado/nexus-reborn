@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: One system, one seed: objectives belong to the tactical system.
 - Forbidden: Never split objectives into a sibling system.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

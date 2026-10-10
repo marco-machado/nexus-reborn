@@ -41,7 +41,7 @@ TR-interface-001 / 003 / 007 and TR-audio-001–004 are uncovered or partial. AD
 ### Constraints
 
 - Desktop web. Keyboard and mouse. No mobile, touch, or gamepad.
-- Palette dual-owned by `src/index.css` and `src/ui/tokens.ts` (`AGENTS.md`).
+- Palette dual-owned by `src/index.css` and `src/ui/tokens.ts` (`CLAUDE.md`).
 - Mission canvas is ADR-0010. Opaque `Scene.background`. HUD is a DOM sibling, not a transparent WebGPU composite.
 - Mixer values live in the settings envelope, not the campaign blob (ADR-0011).
 - Do not promote slider percents, README overlap caps, or authored base gains into GDD rules.

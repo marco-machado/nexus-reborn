@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Attack = living hostile; there is no Demolish verb.
 - Forbidden: Never accept Attack-on-device (`orderAttack` rejects devices — code that accepts it is a defect).
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

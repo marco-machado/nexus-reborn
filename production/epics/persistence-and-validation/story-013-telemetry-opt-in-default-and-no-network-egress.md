@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: see Implementation Notes (Foundation Layer Rules — persistence/save-load, manifest 2026-10-08).
 - Forbidden: `fetch`, `sendBeacon`, WebSocket, cookies, or an analytics SDK in `telemetry.ts` or Balance export.
-- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (AGENTS.md).
+- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (CLAUDE.md).
 
 ---
 

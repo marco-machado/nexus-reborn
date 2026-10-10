@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: see Implementation Notes (Core Layer Rules, manifest 2026-10-08).
 - Forbidden: Restamping on Unrest/Control change or Expedite.
-- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (CLAUDE.md).
 
 ---
 

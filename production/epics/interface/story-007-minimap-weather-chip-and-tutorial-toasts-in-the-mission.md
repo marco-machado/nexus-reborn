@@ -27,7 +27,7 @@
 - Required: Per-frame unit data stays out of React state; HUD subscribes at `SYNC_INTERVAL` 0.2s; minimap reads `getWorld()` ~10Hz.
 - Required: Camera yaw `CAMERA_YAW = π/4`; minimap uses the same yaw.
 - Forbidden: per-frame unit poses in React state; stock r3f `<Canvas>`.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

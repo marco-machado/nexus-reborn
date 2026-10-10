@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: One system, one seed, unsaved lifetime; five verbs on the custom TypeScript sim.
 - Forbidden: Never split the tactical system into sibling systems.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

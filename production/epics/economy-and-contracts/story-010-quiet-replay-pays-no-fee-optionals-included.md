@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Core Layer Rules, manifest 2026-10-08).
 - Forbidden: Unlimited full-fee authored replay.
 - Forbidden: Restamping the slice from live stores.
-- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (CLAUDE.md).
 
 ---
 

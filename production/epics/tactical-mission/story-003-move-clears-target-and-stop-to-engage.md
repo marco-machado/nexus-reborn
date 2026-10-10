@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Five verbs plus auto-acquire; operatives acquire visible targets when weapons are free.
 - Forbidden: No physics engine; routing stays in `src/game/pathfind.ts`.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

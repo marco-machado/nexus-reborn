@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules — persistence/save-load, manifest 2026-10-08).
 - Forbidden: `zustand persist` middleware on `worldStore` / `campaignStore`.
 - Forbidden: re-deriving campaign failed from `operatives.length === 0` on hydrate.
-- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (AGENTS.md).
+- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (CLAUDE.md).
 
 ---
 

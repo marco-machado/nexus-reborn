@@ -7,7 +7,7 @@
 
 ## Required Artifacts: 10/13 present
 
-- [x] Engine chosen — AGENTS.md stack pinned (three r185 / React 19.2.8 / Vite 6.4.3)
+- [x] Engine chosen — CLAUDE.md stack pinned (three r185 / React 19.2.8 / Vite 6.4.3)
 - [x] `docs/technical-preferences.md` — populated; naming conventions set
 - [x] `design/art/art-bible.md` — all 9 sections, AD-ART-BIBLE CONCERNS revised same-day 2026-09-23
 - [x] ADRs — 20/20 Accepted (need ≥3 Foundation), all with Engine Compatibility + GDD Requirements sections

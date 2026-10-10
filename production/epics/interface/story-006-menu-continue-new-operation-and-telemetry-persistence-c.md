@@ -27,7 +27,7 @@
 - Required: Interface reads Persistence validity; it does not validate the blob itself.
 - Guardrail: Settings survive New Operation; campaign fields match Persistence's canonical fresh-operation fixture.
 - Forbidden: calling a failed durable erase successful.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

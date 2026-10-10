@@ -26,7 +26,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Tactical counts N (`civiliansHit` on `MissionResult`).
 - Forbidden: Do not re-own `collateral` CR pricing — Economy prices Credits from the count.
-- Guardrail: Preserve deterministic gameplay RNG — the lane check draws no `rng()` values, so seeded outcomes change only where a body actually stands on the lane (AGENTS.md).
+- Guardrail: Preserve deterministic gameplay RNG — the lane check draws no `rng()` values, so seeded outcomes change only where a body actually stands on the lane (CLAUDE.md).
 
 ---
 

@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: see Implementation Notes (Foundation Layer Rules, manifest 2026-10-08).
 - Forbidden: Duplicating forecast weights in the UI.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

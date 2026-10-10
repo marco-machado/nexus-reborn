@@ -27,7 +27,7 @@
 - Required: Pause overlay does not mute or swap beds and does not change `Phase`.
 - Required: Abort discards the mission; no Debrief/invoice or campaign write.
 - Forbidden: mid-mission save chrome.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

@@ -159,7 +159,7 @@ Audit findings 1–8 confirmed.
 - No data-flow section for snapshot/outcome DTOs (ADR-0009 names slices; the master doc does not exist to host them).
 - No API-boundary chapter beyond individual ADRs.
 - No orphaned architecture systems (there is no architecture doc to orphan).
-- Layer law today lives in `AGENTS.md` and `docs/engine-reference/`, not in a master architecture doc.
+- Layer law today lives in `CLAUDE.md` and `docs/engine-reference/`, not in a master architecture doc.
 
 ---
 

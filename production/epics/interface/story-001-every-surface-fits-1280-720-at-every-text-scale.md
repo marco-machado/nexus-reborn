@@ -25,8 +25,8 @@
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Required: Screens must work at 1280×720 without clipping or truncation.
 - Required: Settings, Balance, pause, and tutorial toasts are overlays; they do not change `Phase`.
-- Guardrail: no per-frame React state (AGENTS.md).
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: no per-frame React state (CLAUDE.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

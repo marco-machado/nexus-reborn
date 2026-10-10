@@ -47,7 +47,7 @@ Two GDD rules have no architecture behind them (TR-economy-010, TR-economy-011; 
 - Mission and Debrief are memory-only (ADR-0002, ADR-0011). Hydrate lands on Menu with `outcome: null`; no apply can be pending across a reload.
 - `src/game/` stays pure TypeScript with no store reads for deploy data (ADR-0009).
 - Credits never overdraw and move only through guarded ledger functions (ADR-0013).
-- Deterministic gameplay and RNG; per-frame data stays out of React (AGENTS.md).
+- Deterministic gameplay and RNG; per-frame data stays out of React (CLAUDE.md).
 
 ### Requirements
 - One key per deploy, minted when the snapshot is cut, never by the apply.

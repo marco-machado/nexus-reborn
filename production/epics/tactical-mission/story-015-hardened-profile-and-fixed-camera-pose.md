@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Hardened is discrete `DIFFICULTY_FX`; camera fixed 45° yaw / 55° elevation / 25° FOV, zoom 44–115 m; minimap shares `CAMERA_YAW`.
 - Forbidden: Never Hardened-as-hidden-minimap; no OrbitControls; no rotate or tilt in play.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

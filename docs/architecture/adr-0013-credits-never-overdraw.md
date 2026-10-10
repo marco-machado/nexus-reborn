@@ -134,7 +134,7 @@ Not this ledger:
 
 - **Description**: Stores call a pure function; easier unit tests without Zustand.
 - **Pros**: `src/game` purity; boolean result.
-- **Cons**: Extra module; existing `appStore.test.ts` already covers the guards; AGENTS.md keeps the ledger in `src/state`.
+- **Cons**: Extra module; existing `appStore.test.ts` already covers the guards; CLAUDE.md keeps the ledger in `src/state`.
 - **Rejection Reason**: YAGNI. Stamp existing.
 
 ### Alternative 2: UI-only disable

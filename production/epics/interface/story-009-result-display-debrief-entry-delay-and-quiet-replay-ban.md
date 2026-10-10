@@ -27,7 +27,7 @@
 - Required: Debrief paints the post-payout balance; `applyDebrief` runs in `useLayoutEffect`; StrictMode double-mount must not double-apply.
 - Guardrail: no separate UI timer; the 2.5 s delay is Tactical elapsed time and does not progress while paused.
 - Guardrail: Abort emits no invoice.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

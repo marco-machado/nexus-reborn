@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Forbidden: Never mute rain audio for reduced motion (visual rain only).
 - Forbidden: Never stack a second drone layer.
-- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (AGENTS.md).
+- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (CLAUDE.md).
 
 ---
 

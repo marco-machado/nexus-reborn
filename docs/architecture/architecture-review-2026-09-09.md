@@ -143,7 +143,7 @@ Primary specialist: lead-programmer (`docs/technical-preferences.md`). Audit ver
 - No data-flow section for snapshot/outcome DTOs.
 - No API-boundary doc for the partitioned deploy snapshot.
 - No orphaned architecture systems (there is no architecture doc to orphan).
-- Layer law today lives in `AGENTS.md` and `docs/engine-reference/`, not in ADRs.
+- Layer law today lives in `CLAUDE.md` and `docs/engine-reference/`, not in ADRs.
 
 ---
 

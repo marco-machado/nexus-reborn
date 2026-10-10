@@ -25,7 +25,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules, manifest 2026-10-08).
 - Forbidden: Deleting or mutating Economy records to hide them.
 - Forbidden: Creating `src/state/economyStore.ts`.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

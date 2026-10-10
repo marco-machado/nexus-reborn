@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Living spec wins (GDD OQ2 resolved by ADR-0016): standing Explicit stays; later Attack fires through; Hold Fire bit stays.
 - Forbidden: `orderHoldFire` must not null a standing Explicit target — code that does is a defect vs spec.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

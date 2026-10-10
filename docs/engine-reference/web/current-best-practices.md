@@ -2,7 +2,7 @@
 
 Last verified: 2026-09-08
 
-Practices that differ from typical pre-r171 / r3f-v8 training data. Project law in `AGENTS.md` and `docs/agents/rendering-ui.md` wins when these conflict.
+Practices that differ from typical pre-r171 / r3f-v8 training data. Project law in `CLAUDE.md` and `docs/agents/rendering-ui.md` wins when these conflict.
 
 ## Renderer
 
@@ -15,7 +15,7 @@ Practices that differ from typical pre-r171 / r3f-v8 training data. Project law 
 
 - Import `three/webgpu` (and `three/tsl` when needed), `extend(THREE)`, and augment `ThreeElements`.
 - Mission root: `createRoot` + one `configure` / `render` per canvas (`GameCanvas.tsx`). Do not replace it with `<Canvas>`.
-- Per-frame data stays out of React state. Scene objects read the world imperatively (`AGENTS.md`).
+- Per-frame data stays out of React state. Scene objects read the world imperatively (`CLAUDE.md`).
 
 ## TSL / materials
 

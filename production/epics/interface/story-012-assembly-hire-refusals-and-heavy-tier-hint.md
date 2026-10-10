@@ -27,7 +27,7 @@
 - Required: disabled controls carry visible owner-reported reasons; critical state is never color-only.
 - Guardrail: no refusal audio is required.
 - Guardrail: Interface does not compute affordability or capacity.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

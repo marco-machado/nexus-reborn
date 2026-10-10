@@ -41,7 +41,7 @@ The mission view sits on a post-cutoff WebGPU + r3f 9 stack. Training data defau
 ### Constraints
 
 - Pinned three.js r185 / r3f 9.6.1 / React 19.2.8. Do not take npm latest (r186, r3f 9.7).
-- `AGENTS.md`: `src/scene` reads the world imperatively every frame. Per-frame data stays out of React state.
+- `CLAUDE.md`: `src/scene` reads the world imperatively every frame. Per-frame data stays out of React state.
 - Opaque `Scene.background` (r185 premultiplied alpha).
 - Quality numeric budgets are the ratified caps in `docs/technical-preferences.md`. This ADR does not invent an FPS target.
 - Opening-frame `world.tick` clamp and remainder catch-up already exist in `world.ts`. Do not drop either.

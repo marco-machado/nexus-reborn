@@ -265,7 +265,7 @@ All knobs are owned by `docs/game-design.md` §12, §13, §16, §17. This GDD do
 | Quality / Difficulty vs information | §12 / pillar 2 | Hiding ghosting or minimap as a lever (forbidden). Slot values and New Operation survival are Persistence |
 | Remap table (one table) | §13 | Pause/tutorial/handlers drifting apart; remapping pause or slots |
 
-Palette tokens live in `src/index.css` **and** `src/ui/tokens.ts` together. That pair is an engineering contract (AGENTS.md), not a designer slider in this GDD.
+Palette tokens live in `src/index.css` **and** `src/ui/tokens.ts` together. That pair is an engineering contract (CLAUDE.md), not a designer slider in this GDD.
 
 ## Visual/Audio Requirements
 

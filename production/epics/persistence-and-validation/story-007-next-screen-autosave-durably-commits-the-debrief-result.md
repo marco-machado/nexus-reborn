@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules — persistence/save-load, manifest 2026-10-08).
 - Required: four Screens autosave; Mission and Debrief do not.
 - Forbidden: serializing the ADR-0009 freeze, `deploySerial`, or `lastAppliedKey` into the campaign blob.
-- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (AGENTS.md).
+- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (CLAUDE.md).
 
 ---
 

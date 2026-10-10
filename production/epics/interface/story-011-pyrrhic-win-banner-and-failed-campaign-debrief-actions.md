@@ -27,7 +27,7 @@
 - Required: Debrief paints owner-supplied values; failure and payout are not recomputed in Interface.
 - Required: Critical state is never color-only.
 - Forbidden: payout celebration sting.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

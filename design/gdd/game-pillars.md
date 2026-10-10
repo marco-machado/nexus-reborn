@@ -163,7 +163,7 @@ Each pillar can kill a proposal. If a pillar never does, it is copy, not design.
 | **Art** | Palette from `src/index.css` and `src/ui/tokens.ts` | No external art pipeline |
 | **Audio** | Four channels under a master; strategy bed owns the four Screens | One industrial loop |
 | **Narrative** | Same paperwork voice everywhere | Uppercase terminal copy |
-| **Engineering** | Shared tokens; TS/SVG/canvas colours from `tokens.ts` | AGENTS.md palette guardrail |
+| **Engineering** | Shared tokens; TS/SVG/canvas colours from `tokens.ts` | CLAUDE.md palette guardrail |
 
 #### Serving This Pillar
 - Thin technical borders, monospace uppercase, scanlines

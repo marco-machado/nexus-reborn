@@ -27,7 +27,7 @@
 - Forbidden: A React-local Review pin instead of `worldStore.review`.
 - Forbidden: Adding `review` to `SaveV9.world`.
 - Forbidden: Reconstructing historical Control/Unrest/owners from the Feed.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Stop is not a sixth verb; five verbs plus Stop.
 - Forbidden: Never let separation shove a Hold Ground operative off its tile.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

@@ -231,7 +231,7 @@ Not pipeline-critical.
 
 ### 5.2 Technical preferences empty lists
 
-Forbidden Patterns and Allowed Libraries start empty by design. Optionally record zustand / r3f / drei / three / vitest as allowed, and the AGENTS.md guardrails as forbidden patterns.
+Forbidden Patterns and Allowed Libraries start empty by design. Optionally record zustand / r3f / drei / three / vitest as allowed, and the CLAUDE.md guardrails as forbidden patterns.
 
 **Time**: 5 min
 - [ ] Optional: Allowed Libraries lists the current `package.json` runtime deps

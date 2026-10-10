@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules, manifest 2026-10-08).
 - Forbidden: Moving Intel onto `worldStore`.
 - Forbidden: Adding an Intel field to the deploy slice.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

@@ -25,7 +25,7 @@
 - Required: see Implementation Notes (Core Layer Rules, manifest 2026-10-08).
 - Forbidden: Authorize-order append.
 - Forbidden: Changing the sort.
-- Guardrail: Credits refuse is an identity no-op; no per-frame work; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; no per-frame work; no per-frame React state (CLAUDE.md).
 
 ---
 

@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: A missed round continues down the fire lane; Tactical counts N (`civiliansHit` on `MissionResult`).
 - Forbidden: Do not re-own `collateral` CR pricing — Economy prices Credits from the count.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

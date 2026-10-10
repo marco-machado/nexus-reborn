@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Feature Layer Rules, manifest 2026-10-08).
 - Forbidden: `MASS_LIMIT_KG` in `world.ts`; Tactical re-checking or relaxing the gate; raw `goto('mission')` as a start API.
 - Forbidden: running mission reading live stores; worn ids on the Research slice.
-- Guardrail: no per-frame work; no per-frame React state (AGENTS.md); deterministic campaign RNG preserved.
+- Guardrail: no per-frame work; no per-frame React state (CLAUDE.md); deterministic campaign RNG preserved.
 
 ---
 

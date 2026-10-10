@@ -25,7 +25,7 @@
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Forbidden: Never key the mission bed clip to district, contract, hour, weather, or Threat.
 - Forbidden: Never React 19.2 `<Activity>` / `useEffectEvent` to hide phases.
-- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (AGENTS.md).
+- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (CLAUDE.md).
 
 ---
 

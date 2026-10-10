@@ -25,7 +25,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Same seed produces the same weather script; `generateCity(mission, spec?, gen?)` with RNG `mulberry32(district.seed)`; `CITY_SIZE = 96`; Generated contracts roll the Opening hour minute after the existing cosmetic stream.
 - Forbidden: Never a second generator or WebGPU compute walk grid beside `citygen.ts`; never an unscripted mid-mission weather roll; never derive Opening hour from strategic now.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

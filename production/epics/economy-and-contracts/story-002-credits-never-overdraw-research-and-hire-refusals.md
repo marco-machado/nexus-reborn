@@ -25,7 +25,7 @@
 - Required: see Implementation Notes (Core Layer Rules, manifest 2026-10-08).
 - Forbidden: UI-only overdraft disable with a store that always subtracts.
 - Forbidden: Clamping a negative Credits blob to 0 on hydrate.
-- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (CLAUDE.md).
 
 ---
 

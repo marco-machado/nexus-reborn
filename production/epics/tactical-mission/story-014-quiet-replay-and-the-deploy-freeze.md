@@ -25,7 +25,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Four slices on `DeployParams` at create; `quietReplay` on the outcome is the Economy-slice boolean.
 - Forbidden: `createWorld` must not read `researchStore`, `campaignStore`, or `worldStore`; never restamp `quietReplay` from live `contractsWon` in `maybeOutcome`, `setOutcome`, or `reportMission` (GDD OQ4 implementation debt).
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

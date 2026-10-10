@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Required: read filing status with primitive selectors `useSaveStatusStore((s) => s.status)` and `(s) => s.reason`; re-render before the first painted frame.
 - Forbidden: writing the filing status from a component; treating `filed` as "memory equals blob" after later ticks.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

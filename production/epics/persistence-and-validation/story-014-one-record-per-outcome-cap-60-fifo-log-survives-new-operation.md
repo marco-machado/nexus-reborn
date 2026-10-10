@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules — persistence/save-load, manifest 2026-10-08).
 - Forbidden: `removeItem(TELEMETRY_KEY)` on New Operation.
 - Forbidden: persist middleware on `TELEMETRY_KEY`.
-- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (AGENTS.md).
+- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (CLAUDE.md).
 
 ---
 

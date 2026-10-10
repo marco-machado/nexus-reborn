@@ -385,7 +385,7 @@ Source: `docs/engine-reference/web/current-best-practices.md`.
 
 ### Cross-Cutting Constraints
 
-- **Layer imports:** `src/game/` — no three, no React. `src/world/` — no three, no React. `src/state/` — Zustand only for stores. `src/scene/` — three/webgpu, tsl, r3f. `src/ui/` — React DOM; not the mission renderer. — source: `docs/engine-reference/web/current-best-practices.md`, `AGENTS.md`
+- **Layer imports:** `src/game/` — no three, no React. `src/world/` — no three, no React. `src/state/` — Zustand only for stores. `src/scene/` — three/webgpu, tsl, r3f. `src/ui/` — React DOM; not the mission renderer. — source: `docs/engine-reference/web/current-best-practices.md`, `CLAUDE.md`
 - **Preserve deterministic gameplay, campaign, and procedural RNG.**
 - **Do not invent project files, engine APIs, dependencies, FPS targets, or test results.**
 - **Target platform:** desktop browser, 1280×720 minimum. Keyboard/mouse. No gamepad. No touch. Mobile is out of scope.

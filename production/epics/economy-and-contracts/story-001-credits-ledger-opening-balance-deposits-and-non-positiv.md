@@ -27,7 +27,7 @@
 - Forbidden: `economyStore` holding Credits.
 - Forbidden: A pure `tryDebit` helper in `src/game` for Credits.
 - Forbidden: Chrome is not the guard: production must not `setState({ credits })` except hydrate.
-- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; one key compare and one pricing pass per Debrief; no per-frame React state (CLAUDE.md).
 
 ---
 

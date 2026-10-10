@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: see Implementation Notes (Feature Layer Rules, manifest 2026-10-08).
 - Forbidden: re-deriving campaignFailed from roster length on hydrate.
-- Guardrail: no per-frame work; no per-frame React state (AGENTS.md); deterministic campaign RNG preserved.
+- Guardrail: no per-frame work; no per-frame React state (CLAUDE.md); deterministic campaign RNG preserved.
 
 ---
 

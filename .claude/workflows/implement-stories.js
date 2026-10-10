@@ -86,7 +86,7 @@ Before returning, run npm run lint, npm run test and npm run build; ok=true only
 
   const review = await agent(
     `Invoke the code-review skill (Skill tool) on the uncommitted changes for ${story}. ${HEADLESS}
-Do not edit files. Classify each finding as blocking (bug, broken acceptance criterion, AGENTS.md guardrail breach) or advisory.`,
+Do not edit files. Classify each finding as blocking (bug, broken acceptance criterion, CLAUDE.md guardrail breach) or advisory.`,
     { phase: 'Review', schema: REVIEW, label: `review:${name}` },
   )
   record.steps.review = review
@@ -104,7 +104,7 @@ Then run npm run lint, npm run test and npm run build; ok=true only if every fin
     `Invoke the story-done skill (Skill tool) on ${story}. ${HEADLESS}
 ok=true only if the story is marked Complete in its file and in production/sprint-status.yaml.${
       opts.commit
-        ? ` Then commit the story's changes to the current branch, following the Commits section of AGENTS.md (imperative subject, body by file, what was verified). Do not push.`
+        ? ` Then commit the story's changes to the current branch, following the Commits section of CLAUDE.md (imperative subject, body by file, what was verified). Do not push.`
         : ' Do not commit.'
     }`,
     { phase: 'Done', schema: STEP, label: `done:${name}` },

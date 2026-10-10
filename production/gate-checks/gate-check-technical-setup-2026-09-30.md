@@ -7,7 +7,7 @@
 
 ## Required Artifacts: 10/13 present
 
-- [x] Engine chosen — AGENTS.md stack is pinned (three.js 0.185.1 / React 19.2.8 / Vite 6.4.3). No `[CHOOSE]`.
+- [x] Engine chosen — CLAUDE.md stack is pinned (three.js 0.185.1 / React 19.2.8 / Vite 6.4.3). No `[CHOOSE]`.
 - [x] `docs/technical-preferences.md` — populated; naming conventions set. Performance budgets still `[PENDING]`.
 - [x] `design/art/art-bible.md` — all 9 sections. Sections 1–4 are real content, not headers.
 - [x] ADRs — 20/20 Accepted. Each has Engine Compatibility (0.185.1) and GDD Requirements Addressed. Depends On graph is acyclic.

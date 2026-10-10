@@ -25,7 +25,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: A mission is memory only; Tactical emits `MissionResult` echoing `deploy.economy.applyKey`.
 - Forbidden: Never a Tactical-side apply guard or key; `src/game` has no value import of `telemetry.ts` and no `recordAbort` call.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

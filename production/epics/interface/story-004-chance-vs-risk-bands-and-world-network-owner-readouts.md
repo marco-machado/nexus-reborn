@@ -27,7 +27,7 @@
 - Required: Critical state is never color-only.
 - Guardrail: Do not recompute board rules in Interface.
 - Guardrail: Review is a view; Scan numbers remain live.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

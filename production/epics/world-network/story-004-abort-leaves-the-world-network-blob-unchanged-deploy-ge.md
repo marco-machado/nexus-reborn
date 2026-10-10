@@ -27,7 +27,7 @@
 - Forbidden: One combined Snapshot DTO or an umbrella `SnapshotDTO` type.
 - Forbidden: A silent live-store fallback inside `createWorld`.
 - Forbidden: Mid-mission persistence or resume.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

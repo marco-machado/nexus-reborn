@@ -25,7 +25,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: Rain only shortens CorpSec sight and quiets weapons; a mission may change weather once, to an adjacent intensity, at a tactical time fixed at create.
 - Forbidden: Never play-driven weather; never an unscripted mid-mission weather roll.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

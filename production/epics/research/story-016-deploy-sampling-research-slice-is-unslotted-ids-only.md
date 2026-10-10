@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Core Layer Rules, manifest 2026-10-08).
 - Forbidden: Reconstructing `appliedIds` in `createWorld` from unslotted ∪ wear.
 - Forbidden: A silent live-store fallback.
-- Guardrail: Credits refuse is an identity no-op; no per-frame work; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; no per-frame work; no per-frame React state (CLAUDE.md).
 
 ---
 

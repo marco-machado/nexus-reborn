@@ -35,7 +35,7 @@ return renderer
 
 ## Frame loop
 
-`useFrame` for scene mutation. Do not put per-frame unit positions in React state (`AGENTS.md`).
+`useFrame` for scene mutation. Do not put per-frame unit positions in React state (`CLAUDE.md`).
 
 ## Not in lockfile
 

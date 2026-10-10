@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules — persistence/save-load, manifest 2026-10-08).
 - Forbidden: a durable campaign write at Debrief.
 - Forbidden: per-owner last-applied keys or a UI-side apply guard.
-- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (AGENTS.md).
+- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (CLAUDE.md).
 
 ---
 

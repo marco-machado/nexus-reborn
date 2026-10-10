@@ -51,7 +51,7 @@ Prior verdict resolved: Yes — Audio dependency, apply-once key, divergence not
 Findings:
 - [BLOCKING, resolved] Detailed Rules (Outcome DTO) / AC: apply-once key minted by the apply cannot detect a duplicate
 - [RECOMMENDED, resolved] Interactions (Known divergence 1): setOutcome falls back to live contractsWon only when quietReplay is undefined
-- [RECOMMENDED, resolved] Interactions: "the spec stands" conflicted with AGENTS.md precedence; reworded as owner decision
+- [RECOMMENDED, resolved] Interactions: "the spec stands" conflicted with CLAUDE.md precedence; reworded as owner decision
 - [RECOMMENDED, resolved] Formulas / Edge Cases: non-finite civiliansHit and completed_bonus now treated as 0, with AC
 - [RECOMMENDED, resolved] Acceptance Criteria: vague/bundled ACs rewritten; added Hollow Crown, Rust Haven, key, Locked-hidden, roll cadence ACs
 - [RECOMMENDED, open] Core Rule 13: whether any generated contract has optionals is unstated

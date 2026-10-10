@@ -25,7 +25,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: see Implementation Notes (Core Layer Rules, manifest 2026-10-08).
 - Forbidden: A reason enum or exported reason type.
-- Guardrail: Credits refuse is an identity no-op; no per-frame work; no per-frame React state (AGENTS.md).
+- Guardrail: Credits refuse is an identity no-op; no per-frame work; no per-frame React state (CLAUDE.md).
 
 ---
 

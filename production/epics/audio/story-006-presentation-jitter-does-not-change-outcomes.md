@@ -25,7 +25,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Forbidden: Never draw mission-bed or gunshot playback-rate jitter from the seeded gameplay RNG.
-- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (AGENTS.md).
+- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (CLAUDE.md).
 
 ---
 

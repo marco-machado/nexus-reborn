@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Feature Layer Rules, manifest 2026-10-08).
 - Forbidden: abort writing campaign state; a second apply of the same outcome.
 - Forbidden: a Tactical-side apply guard or key (Tactical echoes the key it was given).
-- Guardrail: no per-frame work; no per-frame React state (AGENTS.md); deterministic campaign RNG preserved.
+- Guardrail: no per-frame work; no per-frame React state (CLAUDE.md); deterministic campaign RNG preserved.
 
 ---
 

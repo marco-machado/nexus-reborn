@@ -86,7 +86,7 @@ This serves **Violence has corporate consequences** and **The two layers feed ea
 2. Collateral clamp: `collateralFine` in `appStore.ts` uses raw `civiliansHit × 5000` with no `N = max(0, floor())`. `civiliansHit = −1` gives a negative fine and an inflated payout; `2.7` bills 13,500 CR instead of 10,000 CR. The negative-count and non-integer ACs fail against `src/`.
 3. Pricing owner: the code `MissionOutcome` carries `reward` and `bonus` already priced on the mission side, and `setOutcome` credits `netPayout` itself. The spec has Tactical emit ids only and Economy price from the frozen slice.
 
-Until the code is fixed, the ACs for these three fail against `src/`. `AGENTS.md` ranks code over the living spec when they disagree, so these are owner decisions (fix the code, or amend the spec), not settled by this file. File one GitHub issue per divergence before implementation work consumes the ACs.
+Until the code is fixed, the ACs for these three fail against `src/`. `CLAUDE.md` ranks code over the living spec when they disagree, so these are owner decisions (fix the code, or amend the spec), not settled by this file. File one GitHub issue per divergence before implementation work consumes the ACs.
 
 Research, Roster and Assembly, Tactical mission, Persistence and validation, and Interface GDDs exist. Edges above vs those files + living spec + World Network GDD.
 

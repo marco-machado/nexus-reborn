@@ -2,7 +2,7 @@
 
 > **Generated**: 2026-10-07
 > **Project phase**: Technical Setup (`production/stage.txt`)
-> **Engine**: React 19.2.8 + Vite + r3f / three.js r185 (per `docs/technical-preferences.md` and `AGENTS.md`). `.claude/docs/technical-preferences.md` still says Unity 6.6 and is stale.
+> **Engine**: React 19.2.8 + Vite + r3f / three.js r185 (per `docs/technical-preferences.md` and `CLAUDE.md`). `.claude/docs/technical-preferences.md` still says Unity 6.6 and is stale.
 > **Template version**: v1.0+ (no `project.yaml`)
 
 Work through these steps in order. Check off each item as you complete it.

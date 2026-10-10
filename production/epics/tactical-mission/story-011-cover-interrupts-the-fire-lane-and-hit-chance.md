@@ -24,7 +24,7 @@
 **Control Manifest Rules (this layer)**:
 - Required: The first Unit in the fire lane before cover is hit.
 - Forbidden: No physics engine — the lane is resolved in the custom sim.
-- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (AGENTS.md).
+- Guardrail: Memory — 96×96 walk grid plus unit list; `generateCity` at mission create; no per-frame React state (CLAUDE.md).
 
 ---
 

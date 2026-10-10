@@ -27,7 +27,7 @@
 - Forbidden: Mint, rewrite or persist the apply key outside the `MissionScreen` composer.
 - Forbidden: Per-owner last-applied keys or a Credits-only guard.
 - Forbidden: Any UI component calling `reportMission`, `applyMissionResult`, `addCredits` or `advanceDays` for a Debrief result.
-- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (AGENTS.md).
+- Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
 

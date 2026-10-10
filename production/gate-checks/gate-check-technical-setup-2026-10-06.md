@@ -7,7 +7,7 @@
 
 ## Required Artifacts: 13/13 present
 
-- [x] Engine chosen — AGENTS.md pins three.js 0.185.1 / React 19.2.8 / Vite 6.4.3. No `[CHOOSE]`.
+- [x] Engine chosen — CLAUDE.md pins three.js 0.185.1 / React 19.2.8 / Vite 6.4.3. No `[CHOOSE]`.
 - [x] `docs/technical-preferences.md` — naming set. Performance budgets set 2026-10-05. Coverage minimum still `[PENDING]`.
 - [x] `design/art/art-bible.md` — all 9 sections. Sections 1–4 are real content. Header still says AD-ART-BIBLE CONCERNS after the 2026-09-23 revision.
 - [x] ADRs — 20/20 Accepted. Each has Engine Compatibility (0.185.1 / r185) and GDD Requirements Addressed. Depends On is a DAG. Foundation is World Network, not a scene/event/save template. Persistence stays Core (ADR-0011). No event bus, by `architecture.md`.

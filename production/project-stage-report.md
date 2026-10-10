@@ -66,9 +66,9 @@ Work will be tracked in `production/sprints/` (decided 2026-10-07), so the missi
 ### Testing
 - **Status**: Coverage not measured
 - **Test Files**: 38 — 35 co-located in `src/` (`src/game` 21, `src/state` 9, `src/scene` 2, `src/ui` 2, `src/world` 1) and 3 in `tests/` (`unit/mass.test.ts`, `integration/weapon-mass.test.ts`, `README.md`)
-- **Coverage by System**: weighted toward sim and state, as `AGENTS.md` requires; scene/UI are thin by design (covered by click-through)
+- **Coverage by System**: weighted toward sim and state, as `CLAUDE.md` requires; scene/UI are thin by design (covered by click-through)
 - **Key Gaps**:
-  - [ ] `tests/` is untracked and duplicates the co-located convention in `AGENTS.md` — decide whether it stays
+  - [ ] `tests/` is untracked and duplicates the co-located convention in `CLAUDE.md` — decide whether it stays
 
 ### Prototypes
 - **Active Prototypes**: 1 in `prototypes/`
@@ -130,7 +130,7 @@ The configured stage is Technical Setup. The heuristic table classifies by code-
 
 5. **Stale session state** — `production/session-state/active.md` is a 2026-10-06 vertical-slice checkpoint in legacy format. Recreate from `.claude/docs/templates/session-state.md`.
 6. **`systems-index.md` header status** — update `Status: Draft` to reflect 8/8 Approved.
-7. **`tests/` vs co-located tests** — decide whether the top-level `tests/` tree stays alongside the `AGENTS.md` convention.
+7. **`tests/` vs co-located tests** — decide whether the top-level `tests/` tree stays alongside the `CLAUDE.md` convention.
 
 ---
 

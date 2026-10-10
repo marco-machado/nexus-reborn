@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Foundation Layer Rules — persistence/save-load, manifest 2026-10-08).
 - Forbidden: a `saveStatus` field on `appStore`; `applyDebrief` calling `markUnfiled()`.
 - Forbidden: Interface or owners calling the status mutators.
-- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (AGENTS.md).
+- Guardrail: Campaign persist is coalesced Screen writes, not 20Hz stringify; no per-frame React state (CLAUDE.md).
 
 ---
 

@@ -27,7 +27,7 @@
 - Required: `src/App.tsx` routes on `appStore.phase`; overlays do not change `Phase`.
 - Forbidden: React 19.2 `<Activity>` / `useEffectEvent` to hide phases.
 - Guardrail: Interface presents owner outputs; it does not recompute Brief/Tactical values.
-- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (AGENTS.md).
+- Guardrail: colours from `src/ui/tokens.ts` / `src/index.css` only; screens work at 1280×720 without clipping (CLAUDE.md).
 
 ---
 

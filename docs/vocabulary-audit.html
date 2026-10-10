@@ -294,7 +294,7 @@ const ISSUES = [
       rec("Keep Plate; do not add Scan",
         "Keep Plate as the CONTEXT.md term and as identifiers (WorldPlate, PLATE_W, PLATE_H, platePos, cityPlatePos, PlateMark, plateMarks.ts). Player-facing copy does not print Plate. ORBITAL SCAN stays a caption on the World Network Screen. Do not add Scan to the glossary."),
       opt("Replace Plate with Scan everywhere (#47)",
-        "Replace the glossary term Plate with Scan. Rename identifiers WorldPlate→WorldScan, plateMarks.ts→scanMarks.ts, PLATE_W/H→SCAN_W/H, platePos→scanPos. Rewrite GDD, ADR-0008, AGENTS.md, comments, and onboard copy. Avoid: Plate, world map, globe, atlas, overworld."),
+        "Replace the glossary term Plate with Scan. Rename identifiers WorldPlate→WorldScan, plateMarks.ts→scanMarks.ts, PLATE_W/H→SCAN_W/H, platePos→scanPos. Rewrite GDD, ADR-0008, CLAUDE.md, comments, and onboard copy. Avoid: Plate, world map, globe, atlas, overworld."),
       opt("Drop the short noun; identifiers stay Plate",
         "Remove Plate from CONTEXT.md. Docs say “the World Network's flat projection” with no proper noun. Identifiers stay Plate because they already exist. Player copy keeps ORBITAL SCAN. Do not add Scan."),
       opt("Scan in glossary and docs only; identifiers stay Plate",
@@ -328,7 +328,7 @@ const ISSUES = [
     rationale: "The identifiers already exist. Renaming worldStore / WorldMap / useWorldClock is a wide churn that does not change what the director reads. Comments and CONTRACT headers that teach the nickname should follow the glossary.",
     options: [
       rec("Keep modules; fix comments and copy",
-        "Do not rename worldStore, WorldMap.tsx, useWorldClock, Phase 'world', or NavKind 'world'. Comments, CONTRACT headers, AGENTS.md, tests, and player copy that mean Strategic time say Strategic time (or Clock speed / Pause). Those that mean the Screen say World Network. Stop saying world clock, world time, world hours, and world map in comments and copy."),
+        "Do not rename worldStore, WorldMap.tsx, useWorldClock, Phase 'world', or NavKind 'world'. Comments, CONTRACT headers, CLAUDE.md, tests, and player copy that mean Strategic time say Strategic time (or Clock speed / Pause). Those that mean the Screen say World Network. Stop saying world clock, world time, world hours, and world map in comments and copy."),
       opt("Rename modules to World Network / Strategic time",
         "Rename WorldMap, worldStore, useWorldClock, and Phase 'world' to identifiers built from World Network and Strategic time. Update every import."),
       opt("Leave comments as world clock / world map",
@@ -748,17 +748,17 @@ const ISSUES = [
   },
   {
     id: "docs-comments", cat: "id",
-    title: "GDD, ADR-0008, AGENTS.md, tests — plate / world clock",
+    title: "GDD, ADR-0008, CLAUDE.md, tests — plate / world clock",
     layers: ["gdd", "code"],
-    cite: "GDD 216, 222, 251, 859 plate. ADR-0008 “Credits from the plate”. AGENTS.md “world map plate”. Tests “on the plate” / “world clock”.",
+    cite: "GDD 216, 222, 251, 859 plate. ADR-0008 “Credits from the plate”. CLAUDE.md “world map plate”. Tests “on the plate” / “world clock”.",
     explanation: "Docs and tests teach Plate (good, if we keep it) mixed with world map / world clock (forbidden).",
-    suggestion: "GDD/ADR may say Plate if Plate stays the term. Replace world map / world clock with World Network / Strategic time. AGENTS.md atlas line follows atlas-name.",
+    suggestion: "GDD/ADR may say Plate if Plate stays the term. Replace world map / world clock with World Network / Strategic time. CLAUDE.md atlas line follows atlas-name.",
     rationale: "GDD already says the glossary wins when they disagree.",
     options: [
       rec("Docs follow the glossary; Plate stays a legal doc word if plate-noun keeps it",
-        "docs/game-design.md, docs/adr/0008, AGENTS.md, and test titles: world map → World Network or Plate as the sentence requires; world clock / world time / world hours → Strategic time; game speed → Clock speed. Leave docs/game-design.html (dated snapshot). If plate-noun dropped Plate, those Plate sentences become “the World Network's flat projection”."),
+        "docs/game-design.md, docs/adr/0008, CLAUDE.md, and test titles: world map → World Network or Plate as the sentence requires; world clock / world time / world hours → Strategic time; game speed → Clock speed. Leave docs/game-design.html (dated snapshot). If plate-noun dropped Plate, those Plate sentences become “the World Network's flat projection”."),
       opt("Leave docs and tests",
-        "Do not touch GDD, ADRs, AGENTS.md, or test titles.")
+        "Do not touch GDD, ADRs, CLAUDE.md, or test titles.")
     ]
   },
   {
@@ -837,7 +837,7 @@ const ISSUES = [
     rationale: "CONTEXT.md is not a UI sitemap. Adding Menu/Settings/Minimap would turn the glossary into the GDD Surfaces list.",
     options: [
       rec("Leave them out of CONTEXT.md",
-        "Do not add Menu, Settings, Minimap, Balance, or Mission HUD as glossary terms. Screen stays World Network, Research, Brief, Assembly. Debrief remains defined and is not a Screen. Settings remains an overlay in AGENTS.md / GDD."),
+        "Do not add Menu, Settings, Minimap, Balance, or Mission HUD as glossary terms. Screen stays World Network, Research, Brief, Assembly. Debrief remains defined and is not a Screen. Settings remains an overlay in CLAUDE.md / GDD."),
       opt("Add them as glossary terms under The terminal",
         "Add Menu, Settings, Minimap, Balance, Mission HUD (and maybe Pause as the overlay name) to CONTEXT.md."),
       opt("Add Settings only",

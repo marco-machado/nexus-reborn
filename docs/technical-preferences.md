@@ -107,7 +107,7 @@ Set 2026-10-05 from ratified constraints. No product FPS number is approved. `do
 - **Shader Specialist**: technical-artist (`three/tsl`, materials)
 - **UI Specialist**: ui-programmer (`src/ui/`, tokens)
 - **Additional Specialists**: gameplay-programmer (`src/game/`, `src/world/`, `src/state/`); performance-analyst
-- **Routing Notes**: No Godot/Unity/Unreal specialist on this stack. `AGENTS.md` layer boundaries win if this table disagrees.
+- **Routing Notes**: No Godot/Unity/Unreal specialist on this stack. `CLAUDE.md` layer boundaries win if this table disagrees.
 
 ### File Extension Routing
 

@@ -26,7 +26,7 @@
 - Required: see Implementation Notes (Presentation Layer Rules, manifest 2026-10-08).
 - Forbidden: Never a fifth bus.
 - Forbidden: Never write mixer values into the campaign blob.
-- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (AGENTS.md).
+- Guardrail: No `public/` assets — audio loads with Vite `?url` from `inspiration/audio/`; no per-frame React state (CLAUDE.md).
 
 ---
 
