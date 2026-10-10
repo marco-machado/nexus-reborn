@@ -50,3 +50,6 @@ platform:
 testing:
   framework: "Vitest (`npm run test`)"
 
+
+commands:
+  test: "npm run test"
