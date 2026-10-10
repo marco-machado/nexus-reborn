@@ -6,6 +6,21 @@ Design: [`docs/game-design.md`](docs/game-design.md) — economy, contracts, res
 
 Setup and documentation map: [`README.md`](README.md). QA records and evidence format: [`docs/qa/README.md`](docs/qa/README.md).
 
+## Personal Preferences
+
+### Model Preferences
+- Prefer Opus for complex design tasks
+- Use Haiku for quick lookups and simple edits
+
+### Communication Style
+- Keep responses concise
+- Show file paths in all code references
+- Explain architectural decisions briefly
+
+### Personal Shortcuts
+- When I say "review", run /code-review on the last changed files
+- When I say "status", show git status + sprint progress
+
 ## Technology Stack
 
 - **Engine**: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
