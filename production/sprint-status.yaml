@@ -93,11 +93,11 @@ stories:
     name: "A rolled hit strikes the first body on the fire lane"
     file: "production/epics/tactical-mission/story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md"
     priority: unplanned
-    status: review
+    status: done
     owner: "gameplay-programmer"
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "RA-006"
     name: "canDeploy allows one to four Ready operatives (QQ-02)"
     file: "production/epics/roster-and-assembly/story-006-candeploy-allows-one-to-four-ready.md"

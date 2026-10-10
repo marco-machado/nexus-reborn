@@ -1,12 +1,12 @@
 # Story 017: a rolled hit strikes the first body on the fire lane
 
 > **Epic**: Tactical mission
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: 2026-10-09
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -73,7 +73,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/world.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/world.test.ts`
 
 ---
 
@@ -81,3 +81,12 @@
 
 - Depends on: None (shares `civiliansHit` counting with Story 010; whichever lands first owns the counter)
 - Unlocks: re-play for the Production gate (gate-check 2026-10-09, Path back step 3)
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 7/7 passing. AC-2 is partial: the `civiliansHit` counter is asserted, but no test joins the world outcome to `collateralFine` (logged as TD-008).
+**Deviations**: Advisory, resolved. A rolled hit skips units of the shooter's own kind and a miss does not. ADR-0016 "Fire lane" now records this, and records that a VIP or device on the lane is struck from either side.
+**Test Evidence**: Logic: `src/game/world.test.ts`. The lane tests cover the civilian hit and the tracer endpoint, a clear lane, entry ranking with an offset body, the own-side skip, cover, CorpSec not billed, and a same-seed run with a body on the lane. The cover, own-side, ranking and tracer tests were each mutation-checked. The full suite passes: 654/654 tests, lint clean, build passes.
+**Code Review**: Complete. `/code-review` returned APPROVED WITH SUGGESTIONS (lead-programmer + qa-tester), and the suggestions were applied.
+**Run result**: N/A. Sim-only change in `src/game/world.ts`; the behaviour is observed through the headless world in the tests. No click-through was run.
+**Open question**: When cover stops a round, the tracer is still drawn through the wall to the target. Visual only; not specified.

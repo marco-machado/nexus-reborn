@@ -80,7 +80,9 @@ Custom sim in `src/game/world.ts`. No cannon, rapier, or three.js physics. Eight
 
 ### Fire lane (TR-tactical-006)
 
-A missed round continues down the lane to weapon range (`strayVictim` in `tryFire`). The first Unit before cover is hit, regardless of side. Cover or failed `hasLos` interrupts. Authority is the sim walk-grid LOS, not `THREE.Raycaster` / `Mesh.raycast`. Tactical counts unique squad-caused civilian first hits as `civiliansHit` (`N`). Economy prices; Tactical does not.
+A missed round continues down the lane to weapon range (`strayVictim` in `tryFire`). The first Unit before cover is hit, regardless of side. Cover or failed `hasLos` interrupts.
+
+A rolled hit takes the same lane check on the shooter→target segment before damage (`firstLaneBody`, shared with `strayVictim`, no `rng()` draw): the first body the round enters short of the target is struck instead of the target, and a body with failed `hasLos` means the round hits the wall and nobody is hurt. Unlike the miss, a hit skips Units of the shooter's own kind, so a squad advancing in file does not shoot itself in the back (TM-017). A miss can still strike a squadmate. The skip is by kind only: a VIP or a device standing on the lane is struck by a hit or a miss from either side. Authority is the sim walk-grid LOS, not `THREE.Raycaster` / `Mesh.raycast`. Tactical counts unique squad-caused civilian first hits as `civiliansHit` (`N`). Economy prices; Tactical does not.
 
 Do not fork `hit_chance` numbers into this ADR. The expression lives in the GDD and `tryFire`.
 

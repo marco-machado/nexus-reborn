@@ -446,6 +446,50 @@ describe('determinism', () => {
   })
 })
 
+describe('determinism with a body on the fire lane', () => {
+  it('two runs from the same seed hit the same bodies the same way', () => {
+    const run = () => {
+      const w = spawn(BARE_MISSION, ops(['op1']))
+      deployReset()
+      warm(w, 1.2)
+      const a1 = w.unit('a1')!
+      const enemy = w.units.find((u) => u.kind === 'enemy')!
+      for (const u of w.units) if (u.kind === 'enemy' && u !== enemy) u.stance = 'dead'
+      enemy.pos.x = a1.pos.x
+      enemy.pos.z = a1.pos.z - 4
+      enemy.path.length = 0
+      enemy.patrol!.length = 0
+      enemy.holdGround = true
+      enemy.reloading = 999
+      enemy.hp = 100000
+      enemy.maxHp = 100000
+      const civ = w.units.find((u) => u.kind === 'civilian')!
+      civ.pos.x = a1.pos.x
+      civ.pos.z = a1.pos.z - 2
+      civ.path.length = 0
+      civ.holdGround = true
+      civ.hp = 100000
+      civ.maxHp = 100000
+      // Ordinary rolled shots, no Deadeye: hits and misses both draw rng().
+      w.orderAttack(['a1'], enemy.id)
+      warm(w, 6)
+      return {
+        time: w.time,
+        civHp: civ.hp,
+        enemyHp: enemy.hp,
+        hit: useMissionStore.getState().civiliansHit,
+        units: w.units.map((u) => ({ id: u.id, x: u.pos.x, z: u.pos.z, hp: u.hp, stance: u.stance })),
+      }
+    }
+
+    const a = run()
+    const b = run()
+    // The lane was exercised: the civilian took rounds meant for the target.
+    expect(a.civHp).toBeLessThan(100000)
+    expect(b).toEqual(a)
+  })
+})
+
 describe('orders', () => {
   it('routes a unit toward an ordered move target over ticks', () => {
     const w = spawn(BARE_MISSION, ops(['op1']))
@@ -953,6 +997,8 @@ describe('role abilities', () => {
     expect(enemy.hp).toBe(100000)
     expect(civ.hp).toBeLessThan(100000)
     expect(useMissionStore.getState().civiliansHit).toBe(1)
+    // The tracer ends on the civilian, not on the target behind them.
+    expect(dist(w.tracers[w.tracers.length - 1].to, civ.pos)).toBeLessThan(0.01)
   })
 
   it('a hit on a clear lane still lands on the target', () => {
@@ -971,6 +1017,86 @@ describe('role abilities', () => {
     let guard = 0
     while (enemy.hp === 100000 && guard++ < 100) w.tick(STEP)
     expect(enemy.hp).toBeCloseTo(100000 - WEAPONS.longrifle.damage * 2, 5)
+    expect(useMissionStore.getState().civiliansHit).toBe(0)
+  })
+
+  it('with two bodies on the lane the one the round enters first is struck', () => {
+    const w = spawn(BARE_MISSION, ops(['op5']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 5 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+    // The offset body's centre projects onto the lane first (k 0.30 vs 0.32),
+    // but the round enters the body standing square on the lane first
+    // (entry 0.22 vs 0.26). Ranking by centre would pick the wrong one.
+    const [onLane, offset] = w.units.filter((u) => u.kind === 'civilian')
+    standOnLane(onLane, { x: a1.pos.x, z: a1.pos.z - 1.6 })
+    standOnLane(offset, { x: a1.pos.x + 0.45, z: a1.pos.z - 1.5 })
+    for (const c of [onLane, offset]) {
+      c.hp = 100000
+      c.maxHp = 100000
+    }
+
+    w.orderAbility(['a1'])
+    w.orderAttack(['a1'], enemy.id)
+    let guard = 0
+    while (onLane.hp === 100000 && offset.hp === 100000 && guard++ < 100) w.tick(STEP)
+    expect(onLane.hp).toBeLessThan(100000)
+    expect(offset.hp).toBe(100000)
+    expect(enemy.hp).toBe(100000)
+    expect(useMissionStore.getState().civiliansHit).toBe(1)
+  })
+
+  it('a hit does not strike a squadmate standing on the lane', () => {
+    const w = spawn(BARE_MISSION, ops(['op5', 'op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const a2 = w.unit('a2')!
+    w.orderHoldFire(['a2'], true)
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 4 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+    standOnLane(a2, { x: a1.pos.x, z: a1.pos.z - 2 })
+    a2.hp = 100000
+    a2.maxHp = 100000
+
+    w.orderAbility(['a1'])
+    w.orderAttack(['a1'], enemy.id)
+    let guard = 0
+    while (enemy.hp === 100000 && guard++ < 100) w.tick(STEP)
+    expect(enemy.hp).toBeLessThan(100000)
+    expect(a2.hp).toBe(100000)
+  })
+
+  it('a body behind cover on the lane stops the round: nobody is hurt', () => {
+    const w = spawn(BARE_MISSION, ops(['op5']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    // Hug the left edge of a column so a body 0.3 m to the left is inside the
+    // lane radius yet in the neighbouring cell. Closing that cell cuts the
+    // sight line to the body and leaves the line to the target open.
+    a1.pos.x = Math.floor(a1.pos.x) + 0.02
+    const enemy = isolateEnemy(w, { x: a1.pos.x, z: a1.pos.z - 4 }, true)
+    enemy.hp = 100000
+    enemy.maxHp = 100000
+    const civ = standOnLane(w.units.find((u) => u.kind === 'civilian')!, { x: a1.pos.x - 0.3, z: a1.pos.z - 2 })
+    civ.hp = 100000
+    civ.maxHp = 100000
+    const { size, walk } = w.city
+    walk[Math.floor(civ.pos.z) * size + Math.floor(civ.pos.x)] = 0
+
+    const shots = a1.magazine
+    w.orderAbility(['a1'])
+    w.orderAttack(['a1'], enemy.id)
+    let guard = 0
+    while (a1.magazine === shots && guard++ < 100) w.tick(STEP)
+    expect(a1.magazine).toBeLessThan(shots)
+    expect(civ.hp).toBe(100000)
+    expect(enemy.hp).toBe(100000)
     expect(useMissionStore.getState().civiliansHit).toBe(0)
   })
 
