@@ -51,7 +51,7 @@ QA plan: run `/qa-plan sprint` before implementation begins.
 
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
 |----|------|-------------|-----------|-------------|-------------------|
-| TM-017 | A rolled hit strikes the first body on the fire lane | gameplay-programmer | 1.0 | None | See story. Implemented and tested (`src/game/world.test.ts`) in commit 4eb541e; awaiting `/story-done` |
+| TM-017 | A rolled hit strikes the first body on the fire lane | gameplay-programmer | 1.0 | None | See story. Implemented and tested (`src/game/world.test.ts`) in commit 4eb541e; tests and close-out in 49e9eac. `/story-done`: COMPLETE WITH NOTES (2026-10-10) |
 
 ## Carryover from Previous Sprint
 
