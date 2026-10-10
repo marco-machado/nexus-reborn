@@ -1,12 +1,12 @@
 # Story 002: Win-ETA catch-up shares advanceFlow; a loss spends none
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -34,9 +34,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN a win debrief, WHEN contract ETA days are spent, THEN catch-up runs the same `advanceFlow` as Screen ticking: one due at its timestamp, rearm from that due `t`, equal timestamps in ADR-0018 order (do not author a new order table).
-- [ ] GIVEN a loss debrief at `t0`, WHEN debrief finishes, THEN strategic `t` stays `t0` and that debrief emits no Tax from ETA.
-- [ ] GIVEN a span that contains several dues, WHEN `advanceDays` and an equivalent run of `tick` cross it, THEN both fire the same dues in the same order (shared private `advanceFlow`).
+- [x] GIVEN a win debrief, WHEN contract ETA days are spent, THEN catch-up runs the same `advanceFlow` as Screen ticking: one due at its timestamp, rearm from that due `t`, equal timestamps in ADR-0018 order (do not author a new order table).
+- [x] GIVEN a loss debrief at `t0`, WHEN debrief finishes, THEN strategic `t` stays `t0` and that debrief emits no Tax from ETA.
+- [x] GIVEN a span that contains several dues, WHEN `advanceDays` and an equivalent run of `tick` cross it, THEN both fire the same dues in the same order (shared private `advanceFlow`).
 
 ---
 
@@ -90,7 +90,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/worldStore.test.ts` — equal-timestamp collision cases, rearm-from-due, loss leaves `t` at `t0`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/worldStore.test.ts` (7 new tests in "catch-up collision order (ADR-0018)")
 
 ---
 
@@ -98,3 +98,19 @@
 
 - Depends on: Story 001
 - Unlocks: Story 003, Story 005
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 3/3 passing (all covered by tests in `src/state/worldStore.test.ts`, describe "catch-up collision order (ADR-0018)")
+**Deviations**: None. No production code changed; `advanceFlow` in `src/state/worldStore.ts` already implemented the shared catch-up. Advisory test-quality findings logged as TD-005..TD-007 in `docs/tech-debt-register.md`.
+**Test Evidence**: Logic: test file at `src/state/worldStore.test.ts` (7 new tests). Lint, test (624/624) and build re-run and passing on 2026-10-10.
+**Code Review**: Complete via `/code-review` (lean mode, unattended): no blocking findings. Formally NOT ASSESSED rather than APPROVED because no specialist reviewers were spawned.
+**Traceability**:
+| Criterion | Test | Status |
+|-----------|------|--------|
+| AC-1: win ETA catch-up runs `advanceFlow` in ADR-0018 order | worldStore.test.ts::"an ETA jump fires each due at its timestamp and rearms from that due t", the equal-timestamp cases | COVERED |
+| AC-2: loss leaves `t` at `t0`, no Tax from ETA | worldStore.test.ts::"a loss debrief at t0 leaves strategic t at t0 and emits no Tax from ETA" (UI part is a structural source check, see TD-007) | COVERED |
+| AC-3: `advanceDays` and a run of `tick` fire the same dues in order | worldStore.test.ts::"advanceDays and a run of ticks fire the same mixed dues in the same order" | COVERED |
+**Automation decisions (unattended run)**: Phase 5 lean code-review prompt answered "Yes — /code-review ran"; Phase 7 chose "Close and log advisory deviations as tech debt".

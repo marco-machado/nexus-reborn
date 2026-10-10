@@ -35,11 +35,13 @@ import {
   TAX_INTERVAL_SEC,
   UNREST_MAX,
   cooldownKey,
+  taxYieldCredits,
 } from '../game/influence'
 import { FORECAST_KINDS, kindWeights } from '../game/forecast'
 import type { SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 import type { SectorState } from './worldStore'
+import debriefSrc from '../ui/index.tsx?raw'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
 // Event pacing constants mirrored from the source: next event lands between
@@ -1046,5 +1048,179 @@ describe('clock formatting', () => {
   it('hhmm handles the seeded negative timestamps', () => {
     expect(hhmm(0)).toBe('14:32')
     expect(hhmm(-137)).toBe('14:30')
+  })
+})
+
+// ADR-0018: tick() and advanceDays() share one private advanceFlow. These pin
+// the collision order at a shared timestamp, rearm-from-due, and that a loss
+// debrief spends no ETA. The order is read off behaviour, never a second table.
+describe('catch-up collision order (ADR-0018)', () => {
+  // Credits a Tax collection pays on the given sector states.
+  const taxOn = (sectors: Record<string, SectorState>) =>
+    OPEN_SECTORS.filter((id) => sectorCorp(id, useWorldStore.getState().owner) === 'nexus')
+      .reduce((sum, id) => sum + sectorReadout(id, sectors[id]).taxYield, 0)
+
+  // Expiry, World Event and contract generation all due at T = 10000 with the
+  // market full: only an expiry first leaves the generation check room.
+  const T = 10_000
+  function stageMarketCollision(): void {
+    pinFlows()
+    const full = Array.from({ length: CONTRACT_TARGET }, (_, i) => craft('eu', 0x100 + i))
+    full[0] = { ...full[0], expiresAtT: T }
+    useWorldStore.setState({
+      t: T - 1,
+      contracts: full,
+      nextEventT: T,
+      nextContractT: T,
+    })
+  }
+
+  it('expiry, then World Event, then contract generation at one timestamp', () => {
+    stageMarketCollision()
+    const before = useWorldStore.getState().events.length
+    useWorldStore.getState().tick(0.01)
+    const s = useWorldStore.getState()
+    const fresh = s.events.slice(before)
+    expect(fresh.every((e) => e.t === T)).toBe(true)
+    expect(fresh[0].text).toMatch(/EXPIRED/)
+    // The riot at T took the slot the expiry freed (riot hook rolled a
+    // priority contract), so the generation check after it found the market
+    // full: it rescheduled without rolling. Any other order changes the feed.
+    expect(fresh.map((e) => e.kind)).toEqual(['contract', 'riot', 'contract'])
+    expect(fresh[2].text).toMatch(/^PRIORITY CONTRACT .* POSTED IN /)
+    expect(fresh.some((e) => /^OPEN CONTRACT/.test(e.text))).toBe(false)
+    expect(s.contracts).toHaveLength(CONTRACT_TARGET)
+    expect(s.contracts.filter((c) => c.createdT === T)).toHaveLength(1)
+    expect(s.nextContractT).toBeGreaterThan(T)
+    expect(s.nextEventT).toBeGreaterThan(T)
+  })
+
+  it('a staged spend at T lands before pressure: decay re-checks the new unrest', () => {
+    pinFlows()
+    const T2 = TAX_INTERVAL_SEC
+    useWorldStore.setState({
+      t: T2 - 1,
+      sectors: { ...useWorldStore.getState().sectors, na: { control: 50, unrest: 61 } },
+      spends: [{ action: 'stabilize', sector: 'na', nextT: T2, remaining: 1 }],
+      pressure: { na: T2 },
+      nextTaxT: T2,
+    })
+    const credits0 = useAppStore.getState().credits
+    useWorldStore.getState().tick(0.01)
+    const s = useWorldStore.getState()
+    // Stabilize took unrest to 59, under the pressure threshold, so the decay
+    // timer due at the same T was dropped before it could fire.
+    expect(s.sectors.na).toEqual({ control: 50, unrest: 59 })
+    expect(s.pressure.na).toBeUndefined()
+    expect(s.spends).toEqual([])
+    expect(useAppStore.getState().credits).toBe(credits0 + taxOn(s.sectors))
+    expect(s.nextTaxT).toBe(2 * T2)
+  })
+
+  it('Tax yield at T reads Control after pressure at T', () => {
+    pinFlows()
+    const T2 = TAX_INTERVAL_SEC
+    useWorldStore.setState({
+      t: T2 - 1,
+      sectors: { ...useWorldStore.getState().sectors, na: { control: 50, unrest: 70 } },
+      pressure: { na: T2 },
+      nextTaxT: T2,
+    })
+    const credits0 = useAppStore.getState().credits
+    useWorldStore.getState().tick(0.01)
+    const s = useWorldStore.getState()
+    const drop = 50 - s.sectors.na.control
+    expect(drop).toBeGreaterThanOrEqual(PRESSURE_CONTROL_DROP_MIN)
+    expect(drop).toBeLessThanOrEqual(PRESSURE_CONTROL_DROP_MAX)
+    const paid = useAppStore.getState().credits - credits0
+    expect(paid).toBe(taxOn(s.sectors))
+    expect(paid).not.toBe(taxYieldCredits(6000, 50, 70))
+    expect(s.pressure.na).toBe(T2 + PRESSURE_INTERVAL_SEC)
+  })
+
+  it('the equal-timestamp market collision lands identically by jump and by frames', () => {
+    stageMarketCollision()
+    useWorldStore.getState().advanceDays(1)
+    const jump = flowSnapshot()
+    const jumpCredits = useAppStore.getState().credits
+
+    useWorldStore.setState(structuredClone(snapshot))
+    useAppStore.setState({ credits: INITIAL_CREDITS })
+    stageMarketCollision()
+    for (let i = 0; i < DAY / 30; i++) useWorldStore.getState().tick(0.25)
+    expect(flowSnapshot()).toEqual(jump)
+    expect(useAppStore.getState().credits).toBe(jumpCredits)
+  })
+
+  // Starts off a due boundary so a rearm from the jump time would show.
+  const T0 = 1000
+  function stageRearm(): void {
+    pinFlows()
+    useWorldStore.setState({
+      t: T0,
+      sectors: { ...useWorldStore.getState().sectors, na: { control: 50, unrest: 70 } },
+      spends: [{ action: 'lobby', sector: 'eu', nextT: 5400, remaining: 100 }],
+      pressure: { na: 3600 },
+      nextTaxT: TAX_INTERVAL_SEC,
+    })
+  }
+
+  it('an ETA jump fires each due at its timestamp and rearms from that due t', () => {
+    stageRearm()
+    const eu0 = useWorldStore.getState().sectors.eu.control
+    const credits0 = useAppStore.getState().credits
+    useWorldStore.getState().advanceDays(1)
+    const s = useWorldStore.getState()
+    const end = T0 + DAY
+    expect(s.t).toBe(end)
+    // Tax due at 86400 fired once and rearmed from 86400, not from the jump t.
+    expect(s.nextTaxT).toBe(2 * TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBeGreaterThan(credits0)
+    // Pressure due 3600, 25200, 46800, 68400: four steps, next at 90000.
+    expect(s.pressure.na).toBe(3600 + 4 * PRESSURE_INTERVAL_SEC)
+    expect(s.pressure.na).not.toBe(end + PRESSURE_INTERVAL_SEC)
+    const drop = 50 - s.sectors.na.control
+    expect(drop).toBeGreaterThanOrEqual(4 * PRESSURE_CONTROL_DROP_MIN)
+    expect(drop).toBeLessThanOrEqual(4 * PRESSURE_CONTROL_DROP_MAX)
+    // Lobby steps every 5400s from 5400: 16 land by 87400, the 17th is pending.
+    expect(s.spends).toEqual([
+      { action: 'lobby', sector: 'eu', nextT: 17 * 5400, remaining: 84 },
+    ])
+    expect(s.sectors.eu.control).toBe(eu0 + 16)
+  })
+
+  it('advanceDays and a run of ticks fire the same mixed dues in the same order', () => {
+    stageRearm()
+    useWorldStore.setState({ nextEventT: 2000, nextContractT: 2500 })
+    useWorldStore.getState().advanceDays(1)
+    const jump = flowSnapshot()
+    const jumpCredits = useAppStore.getState().credits
+
+    useWorldStore.setState(structuredClone(snapshot))
+    useAppStore.setState({ credits: INITIAL_CREDITS })
+    stageRearm()
+    useWorldStore.setState({ nextEventT: 2000, nextContractT: 2500 })
+    for (let i = 0; i < DAY / 30; i++) useWorldStore.getState().tick(0.25)
+    expect(flowSnapshot()).toEqual(jump)
+    expect(useAppStore.getState().credits).toBe(jumpCredits)
+  })
+
+  it('a loss debrief at t0 leaves strategic t at t0 and emits no Tax from ETA', () => {
+    const t0 = 5 * 3600
+    useWorldStore.setState({ t: t0, nextTaxT: t0 + 60 })
+    const before = flowSnapshot()
+    const credits0 = useAppStore.getState().credits
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    const s = useWorldStore.getState()
+    expect(s.t).toBe(t0)
+    expect(s.nextTaxT).toBe(before.nextTaxT)
+    expect(s.nextEventT).toBe(before.nextEventT)
+    expect(s.nextContractT).toBe(before.nextContractT)
+    expect(useAppStore.getState().credits).toBe(credits0)
+    // The debrief's only ETA spend sits behind the win check.
+    expect(debriefSrc.match(/\.advanceDays\(/g)).toHaveLength(1)
+    expect(debriefSrc).toMatch(
+      /if \(outcome\.won\) \{\s*useWorldStore\.getState\(\)\.advanceDays\(/,
+    )
   })
 })

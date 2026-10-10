@@ -30,11 +30,11 @@ stories:
     name: "Win-ETA catch-up shares advanceFlow; a loss spends none"
     file: "production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "WN-004"
     name: "Abort leaves the World Network blob unchanged; deploy gets a frozen slice"
     file: "production/epics/world-network/story-004-abort-leaves-the-world-network-blob-unchanged-deploy-ge.md"

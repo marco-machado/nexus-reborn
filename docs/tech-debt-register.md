@@ -1,6 +1,6 @@
 ## Technical Debt Register
 Last updated: 2026-10-10
-Total items: 4 | Estimated total effort: 3S + 1M
+Total items: 7 | Estimated total effort: 5S + 2M
 
 | ID | Category | Description | Files | Effort | Impact | Priority | Status | Added | Sprint |
 |----|----------|-------------|-------|--------|--------|----------|--------|-------|--------|
@@ -8,3 +8,6 @@ Total items: 4 | Estimated total effort: 3S + 1M
 | TD-002 | Test | Untested clock-loop paths: stall after a partial accumulator, 2x/4x speed, stall while paused, `useWorldClock` effect wiring — from production/epics/world-network/story-001-strategic-clock-runs-only-on-the-four-screens.md | src/ui/clock.ts, src/ui/clock.test.ts | S | Med | — | Open | 2026-10-10 | Backlog |
 | TD-003 | Code Quality | `startWorldClock` step reads `useWorldStore.getState().t` directly instead of through an injected sink; `CLOCK_BATCH_SEC` lacks a `/** */` doc comment — from production/epics/world-network/story-001-strategic-clock-runs-only-on-the-four-screens.md | src/ui/clock.ts | S | Low | — | Open | 2026-10-10 | Backlog |
 | TD-004 | Code Quality | First-frame `dt` may be slightly negative (pre-existing; `last` is taken before the first rAF timestamp). Changing the behavior needs owner sign-off — from production/epics/world-network/story-001-strategic-clock-runs-only-on-the-four-screens.md | src/ui/clock.ts | S | Low | — | Open | 2026-10-10 | Backlog |
+| TD-005 | Test | No equal-timestamp test pins contract generation before staged spend, or World Event against staged spend/pressure, at one `t` — from production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md | src/state/worldStore.test.ts | S | Med | — | Open | 2026-10-10 | Backlog |
+| TD-006 | Test | Collision tests lean on fixture assumptions: the Tax test hard-codes yieldBase 6000 from atlas.ts and assumes `na` is the only Nexus-held open sector; the first collision test depends on the snapshot RNG rolling a riot at T=10000 — from production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md | src/state/worldStore.test.ts | S | Low | — | Open | 2026-10-10 | Backlog |
+| TD-007 | Test | The loss test checks AC2's debrief wiring with regexes over the src/ui/index.tsx source (structural), not a runtime debrief-loss check — from production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md | src/state/worldStore.test.ts, src/ui/index.tsx | M | Med | — | Open | 2026-10-10 | Backlog |
