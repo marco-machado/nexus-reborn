@@ -1,12 +1,12 @@
 # Story 003: Debrief writes back at frozen t0, then ETA; apply-once
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Integration
 > **Estimate**: 2.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -35,9 +35,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN a win at frozen `t0` with sector state S, WHEN debrief applies, THEN Control / Unrest / ownership / Influence / Intel write-back uses S at `t0`, and only after that write-back does ETA catch-up advance `t`.
-- [ ] GIVEN a fully applied Debrief serial N, captured post-apply strategic state S, and no intervening Screen tick or input, WHEN Debrief's apply path is re-entered with the same serial N, THEN the apply-once key refuses a second apply: state still equals S, with no repeated mission write-back, ETA advancement, Tax/Credits deposit, Feed or market change, RNG/dues consumption, or Research/Roster synchronization.
-- [ ] GIVEN a stray older apply key (≤ `lastAppliedKey`), WHEN `applyDebrief` receives its outcome, THEN nothing is applied.
+- [x] GIVEN a win at frozen `t0` with sector state S, WHEN debrief applies, THEN Control / Unrest / ownership / Influence / Intel write-back uses S at `t0`, and only after that write-back does ETA catch-up advance `t`.
+- [x] GIVEN a fully applied Debrief serial N, captured post-apply strategic state S, and no intervening Screen tick or input, WHEN Debrief's apply path is re-entered with the same serial N, THEN the apply-once key refuses a second apply: state still equals S, with no repeated mission write-back, ETA advancement, Tax/Credits deposit, Feed or market change, RNG/dues consumption, or Research/Roster synchronization.
+- [x] GIVEN a stray older apply key (≤ `lastAppliedKey`), WHEN `applyDebrief` receives its outcome, THEN nothing is applied.
 
 ---
 
@@ -91,7 +91,7 @@
 **Required evidence**:
 - Integration: test beside the module — `src/state/appStore.test.ts` and `src/state/worldStore.test.ts` — apply order spy; re-entry with same key leaves a deep-equal state snapshot. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts` (5 tests in "applyDebrief apply-once (ADR-0021)") and `src/state/worldStore.test.ts` (2 tests in "Debrief write-back at frozen t0, then ETA")
 
 ---
 
@@ -99,3 +99,12 @@
 
 - Depends on: Story 002
 - Unlocks: Story 015, Story 016, Story 017
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 3/3 passing (all covered by integration tests; none deferred)
+**Deviations**: None. ADVISORY: no browser click-through run (`Run result: NOT VERIFIED` — unattended workflow); acceptance criteria name nothing on screen. `outcomeApplied` / `outcomeSerial` removed; `applyDebrief` in `src/state/debrief.ts` is the only Debrief mutator caller; Credits are covered by the single apply key. Extra files touched beyond Implementation Notes (`src/game/deploy.ts`, `src/state/deployFreeze.ts`, `src/game/world.ts`, `src/state/save.ts`, test fixtures) carry the apply key through the frozen deploy slice — within the story's intent.
+**Test Evidence**: Integration: `src/state/appStore.test.ts` ("applyDebrief apply-once (ADR-0021)", 5 tests) and `src/state/worldStore.test.ts` ("Debrief write-back at frozen t0, then ETA", 2 tests). `npm run lint`, `npm run test` (640/640) and `npm run build` pass on 2026-10-10.
+**Code Review**: Pending — lean-mode prompt unanswered (unattended run); run `/code-review` before sprint close-out.

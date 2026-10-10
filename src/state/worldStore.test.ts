@@ -41,7 +41,9 @@ import { FORECAST_KINDS, kindWeights } from '../game/forecast'
 import type { SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 import type { SectorState } from './worldStore'
-import debriefSrc from '../ui/index.tsx?raw'
+import debriefSrc from './debrief.ts?raw'
+import { applyDebrief } from './debrief'
+import { initialCampaignData, useCampaignStore } from './campaignStore'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
 // Event pacing constants mirrored from the source: next event lands between
@@ -296,6 +298,7 @@ describe('events feed', () => {
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
   return {
+    applyKey: 1,
     won: true,
     kills: 7,
     casualties: 0,
@@ -1222,5 +1225,97 @@ describe('catch-up collision order (ADR-0018)', () => {
     expect(debriefSrc).toMatch(
       /if \(outcome\.won\) \{\s*useWorldStore\.getState\(\)\.advanceDays\(/,
     )
+  })
+})
+
+describe('Debrief write-back at frozen t0, then ETA (ADR-0001, ADR-0021)', () => {
+  const T0 = 5 * 3600
+  const data = (s: object) =>
+    structuredClone(Object.fromEntries(Object.entries(s).filter(([, v]) => typeof v !== 'function')))
+  const intel = () => {
+    const c = useCampaignStore.getState()
+    return { intelLevel: c.intelLevel, intelProgress: c.intelProgress }
+  }
+
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+    useAppStore.setState({
+      phase: 'debrief',
+      missionId: 'm01',
+      outcome: null,
+      loadout: {},
+      deploySerial: 0,
+      lastAppliedKey: 0,
+    })
+    useWorldStore.setState({ t: T0, nextTaxT: T0 + 60 })
+  })
+
+  // Runs applyDebrief with spies on the World Network write-back and the ETA
+  // jump, recording the order and the board each one saw on entry.
+  function applyWithSpies(o: MissionOutcome) {
+    const world = useWorldStore.getState()
+    const origApply = world.applyMissionResult
+    const origAdvance = world.advanceDays
+    const calls: {
+      name: string
+      t: number
+      flow: ReturnType<typeof flowSnapshot>
+      intel: ReturnType<typeof intel>
+    }[] = []
+    const record = (name: string) =>
+      calls.push({ name, t: useWorldStore.getState().t, flow: flowSnapshot(), intel: intel() })
+    useWorldStore.setState({
+      applyMissionResult: (...args) => {
+        record('applyMissionResult')
+        origApply(...args)
+      },
+      advanceDays: (days) => {
+        record('advanceDays')
+        origAdvance(days)
+      },
+    })
+    try {
+      useAppStore.setState({ outcome: o })
+      applyDebrief('m01')
+    } finally {
+      useWorldStore.setState({ applyMissionResult: origApply, advanceDays: origAdvance })
+    }
+    return calls
+  }
+
+  it('a win writes Control, Unrest, ownership, Influence and Intel from S at t0, then the ETA advances t', () => {
+    const o = outcome({ civiliansHit: 1 })
+    const S = data(useWorldStore.getState())
+    // The write-back the same mutators make on S at t0, with no clock move.
+    useCampaignStore.getState().reportMission('m01', o, T0)
+    useWorldStore.getState().applyMissionResult('m01', o, [])
+    const expected = flowSnapshot()
+    const expectedIntel = intel()
+    expect(expected.sectors.eu).not.toEqual((S as { sectors: Record<string, SectorState> }).sectors.eu)
+
+    useWorldStore.setState(structuredClone(S))
+    useCampaignStore.setState(initialCampaignData())
+    const flowS = flowSnapshot()
+    const calls = applyWithSpies(o)
+
+    expect(calls.map((c) => c.name)).toEqual(['applyMissionResult', 'advanceDays'])
+    expect(calls[0].t).toBe(T0)
+    // Nothing before the write-back touched the board: it still reads S.
+    expect(calls[0].flow).toEqual(flowS)
+    // On entry to the ETA jump the board is exactly S written back at t0.
+    expect(calls[1].t).toBe(T0)
+    expect(calls[1].flow).toEqual(expected)
+    expect(calls[1].intel).toEqual(expectedIntel)
+    // Only after that does catch-up move the clock.
+    const eta = resolveMission('m01')?.etaDays ?? 0
+    expect(eta).toBeGreaterThan(0)
+    expect(useWorldStore.getState().t).toBe(T0 + eta * DAY)
+  })
+
+  it('a loss writes back at t0 and spends no ETA', () => {
+    const calls = applyWithSpies(outcome({ won: false }))
+    expect(calls.map((c) => c.name)).toEqual(['applyMissionResult'])
+    expect(calls[0].t).toBe(T0)
+    expect(useWorldStore.getState().t).toBe(T0)
   })
 })

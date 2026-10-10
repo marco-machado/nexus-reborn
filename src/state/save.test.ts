@@ -436,6 +436,7 @@ describe('save round trip', () => {
     })
     useWorldStore.setState({ t: 1000, speed: 4, paused: true, selected: 'as', review: 500 })
     useWorldStore.getState().applyMissionResult('m01', {
+      applyKey: 1,
       won: true,
       kills: 7,
       casualties: 0,
@@ -482,7 +483,8 @@ describe('save round trip', () => {
       squad: expected.app.squad,
       loadout: { op1: ['med', 'cell'], op3: [null, 'med'] },
       outcome: null,
-      outcomeSerial: 0,
+      deploySerial: 0,
+      lastAppliedKey: 0,
     })
     expect(world).toMatchObject({
       t: expected.world.t,
@@ -516,7 +518,6 @@ describe('save round trip', () => {
       contractsWon: expected.campaign.contractsWon,
       campaignWon: expected.campaign.campaignWon,
       campaignFailed: expected.campaign.campaignFailed,
-      outcomeApplied: 0,
       lastReport: null,
     })
   })
@@ -526,6 +527,7 @@ describe('save round trip', () => {
     useCampaignStore.getState().reportMission(
       'm01',
       {
+        applyKey: 1,
         won: true,
         kills: 5,
         casualties: 1,
@@ -571,6 +573,7 @@ describe('save round trip', () => {
     useCampaignStore.getState().reportMission(
       'm01',
       {
+        applyKey: 1,
         won: false,
         kills: 0,
         casualties: ids.length,

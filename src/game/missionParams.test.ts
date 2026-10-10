@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest'
-import { MISSIONS } from './data'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { DEFAULT_SQUAD, MISSIONS, operativeById } from './data'
+import { freezeDeploy } from '../state/deployFreeze'
+import { useWorldStore } from '../state/worldStore'
+import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
+import { useResearchStore } from '../state/researchStore'
+import { useAppStore } from '../state/appStore'
 import { mulberry32 } from './rng'
 import {
   DIFFICULTY_FX,
@@ -160,5 +165,71 @@ describe('opening hour', () => {
     }
     expect(dusk / n).toBeGreaterThan(0.15)
     expect(dusk / n).toBeLessThan(0.45)
+  })
+})
+
+// Story WN-004 / ADR-0009: deploy hands the Tactical mission a frozen World
+// Network slice, cloned once by the composer, never a live store handle.
+describe('deploy freeze: World Network slice', () => {
+  const mission = MISSIONS[0]
+  const squad = DEFAULT_SQUAD.map(operativeById)
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, [mission.sector]: { control: 71, unrest: 23 } },
+    })
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({ done: [] })
+    useAppStore.setState({ loadout: {} })
+  })
+
+  it('carries exactly {sector id, Control, Unrest}; Intel is not a field', () => {
+    const deploy = freezeDeploy(mission, squad, 1)
+    expect(deploy.wn).toEqual({ sector: mission.sector, control: 71, unrest: 23 })
+    expect(Object.keys(deploy.wn).sort()).toEqual(['control', 'sector', 'unrest'])
+    expect(Object.keys(deploy).sort()).toEqual(
+      ['district', 'economy', 'mods', 'research', 'roster', 'wn'],
+    )
+  })
+
+  it('is a clone: later World Network changes do not reach it', () => {
+    const live = useWorldStore.getState().sectors[mission.sector]
+    const deploy = freezeDeploy(mission, squad, 1)
+    expect(deploy.wn).not.toBe(live)
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, [mission.sector]: { control: 5, unrest: 95 } },
+    })
+    live.control = 0
+    expect(deploy.wn).toEqual({ sector: mission.sector, control: 71, unrest: 23 })
+  })
+
+  it('holds no live store handle anywhere in DeployParams', () => {
+    useResearchStore.setState({ done: ['b-propellants'] })
+    useAppStore.setState({ loadout: { op1: ['med', null] } })
+    const deploy = freezeDeploy(mission, squad, 1)
+    const live = new Set<unknown>([
+      useWorldStore.getState().sectors,
+      useWorldStore.getState().sectors[mission.sector],
+      useResearchStore.getState().done,
+      useCampaignStore.getState().roster,
+      useCampaignStore.getState().contractsWon,
+      useAppStore.getState().loadout,
+      useAppStore.getState().loadout.op1,
+    ])
+    const walk = (v: unknown): void => {
+      expect(typeof v).not.toBe('function')
+      if (v && typeof v === 'object') {
+        expect(live.has(v)).toBe(false)
+        for (const child of Object.values(v)) walk(child)
+      }
+    }
+    walk(deploy)
+  })
+
+  it('freezes quietReplay as a boolean at create, from contractsWon', () => {
+    const fresh = freezeDeploy(mission, squad, 1)
+    useCampaignStore.setState({ contractsWon: [mission.id] })
+    expect(fresh.economy.quietReplay).toBe(false)
+    expect(freezeDeploy(mission, squad, 1).economy.quietReplay).toBe(true)
   })
 })

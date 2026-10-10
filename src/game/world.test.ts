@@ -1,10 +1,12 @@
 // Tests for the mission simulation. Everything is deterministic: mission.seed
 // drives both the city generator and the in-world rng, and the tests drive
 // tick() by hand, so no timers or real clocks are involved.
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
 import { ENEMY_VISION, isWalkable } from './types'
 import { createWorld } from './world'
+import { headlessDeploy } from './deploy'
+import type { DeployInputs } from './deploy'
 import { DEFAULT_SQUAD, MISSIONS, OFFICER_RADIO_DELAY, ROSTER, WEAPONS, operativeById } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
 import { contractMission } from './contracts'
@@ -12,9 +14,10 @@ import type { ContractType, GeneratedContract } from './contracts'
 import { DIFFICULTY_FX, missionMods, weatherMul } from './missionParams'
 import { findPath, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
-import { useAppStore } from '../state/appStore'
+import { netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
+import { useWorldStore } from '../state/worldStore'
 import { XP_HP_PER, XP_SPEED_PER } from './experience'
 
 // Mirrors MAX_DT in world.ts.
@@ -69,6 +72,20 @@ function runUntil(
   return cond()
 }
 
+// The test is the composer here: it reads the stores the test arranged and
+// hands createWorld an explicit freeze, as MissionScreen does at deploy.
+function spawn(m: MissionDef, o: OperativeDef[], over: Partial<DeployInputs> = {}) {
+  return createWorld(
+    m,
+    o,
+    headlessDeploy(m, o, {
+      done: useResearchStore.getState().done,
+      roster: useCampaignStore.getState().roster,
+      ...over,
+    }),
+  )
+}
+
 beforeEach(() => {
   useMissionStore.setState({
     live: false,
@@ -93,7 +110,8 @@ beforeEach(() => {
     squad: [...DEFAULT_SQUAD],
     credits: 128450,
     outcome: null,
-    outcomeSerial: 0,
+    deploySerial: 0,
+    lastAppliedKey: 0,
   })
   useResearchStore.setState({
     done: [],
@@ -105,7 +123,7 @@ beforeEach(() => {
 describe('createWorld', () => {
   it('returns a working WorldApi with one agent per operative def', () => {
     const squadOps = ops(DEFAULT_SQUAD)
-    const w = createWorld(MISSION, squadOps)
+    const w = spawn(MISSION, squadOps)
 
     expect(w.time).toBe(0)
     expect(w.weather).toBe('heavy')
@@ -137,7 +155,7 @@ describe('createWorld', () => {
   })
 
   it('spawns only the operatives passed in', () => {
-    const w = createWorld(MISSION, ops(['op2', 'op5']))
+    const w = spawn(MISSION, ops(['op2', 'op5']))
     const agents = w.units.filter((u) => u.kind === 'agent')
     expect(agents.map((a) => a.name)).toEqual(['L. FERNANDEZ', 'A. OKAFOR'])
     expect(w.unit('a2')).toBeDefined()
@@ -145,7 +163,7 @@ describe('createWorld', () => {
   })
 
   it('spawns the enemies and civilians the city defines, all on patrol', () => {
-    const w = createWorld(MISSION, ops(['op1']))
+    const w = spawn(MISSION, ops(['op1']))
     const enemies = w.units.filter((u) => u.kind === 'enemy')
     const civilians = w.units.filter((u) => u.kind === 'civilian')
     expect(w.city.enemies.length).toBeGreaterThan(0)
@@ -161,7 +179,7 @@ describe('createWorld', () => {
 
 describe('tick', () => {
   it('advances at most one MAX_DT step per frame during the first world second', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     w.tick(2)
     expect(w.time).toBeCloseTo(0.05, 10)
     w.tick(3)
@@ -171,7 +189,7 @@ describe('tick', () => {
   })
 
   it('clamps a huge delta to MAX_CATCHUP once the mission is underway', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     warm(w, 1.2)
     const t0 = w.time
     w.tick(60)
@@ -179,7 +197,7 @@ describe('tick', () => {
   })
 
   it('consumes the whole delta in MAX_DT steps instead of dropping the remainder', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     warm(w, 1.2)
     let t0 = w.time
     w.tick(0.07)
@@ -190,7 +208,7 @@ describe('tick', () => {
   })
 
   it('ignores non-finite and non-positive deltas without touching the store', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(Number.NaN)
     w.tick(Infinity)
@@ -207,7 +225,7 @@ describe('tick', () => {
 
 describe('weather front', () => {
   it('retunes sight and logs when the scripted front hits', () => {
-    const w = createWorld(MISSION, ops(['op1']))
+    const w = spawn(MISSION, ops(['op1']))
     deployReset()
     const opening = w.vision
     expect(w.weather).toBe('heavy')
@@ -225,7 +243,7 @@ describe('weather front', () => {
 describe('store sync', () => {
   it('defers every store write to the first tick, which populates the HUD', () => {
     const squadOps = ops(DEFAULT_SQUAD)
-    const w = createWorld(MISSION, squadOps)
+    const w = spawn(MISSION, squadOps)
     deployReset()
 
     const before = useMissionStore.getState()
@@ -253,7 +271,7 @@ describe('store sync', () => {
   })
 
   it('pushes fresh squad rows only every SYNC_INTERVAL of world time', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const ref = useMissionStore.getState().squad
@@ -269,7 +287,7 @@ describe('store sync', () => {
   })
 
   it('advances the HUD clock with mission time', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     for (let i = 0; i < 30; i++) w.tick(STEP)
     // 1.5s of world time on top of the 22:14:08 base.
@@ -278,7 +296,7 @@ describe('store sync', () => {
 
   it('opens the HUD clock at the mission Opening hour', () => {
     const dusk = { ...BARE_MISSION, openingHour: 18 * 3600 + 14 * 60 + 8 }
-    const w = createWorld(dusk, ops(['op1']))
+    const w = spawn(dusk, ops(['op1']))
     deployReset()
     w.tick(STEP)
     expect(useMissionStore.getState().clock).toBe('18:14:08')
@@ -287,14 +305,14 @@ describe('store sync', () => {
 
   it('reports role-based inventory bonuses after the first tick', () => {
     // medic +2 med, support +1 med, tech +1 cell on top of the base 2/1.
-    const w = createWorld(BARE_MISSION, ops(['op8', 'op7', 'op6']))
+    const w = spawn(BARE_MISSION, ops(['op8', 'op7', 'op6']))
     deployReset()
     w.tick(STEP)
     expect(useMissionStore.getState().inventory).toEqual({ med: 5, cell: 2 })
   })
 
   it('adds loadout items from deployed operatives to the mission pools', () => {
-    const w = createWorld(BARE_MISSION, ops(['op8', 'op7', 'op6']), {
+    const w = spawn(BARE_MISSION, ops(['op8', 'op7', 'op6']), {
       loadout: {
         op8: ['med', 'med'],
         op6: ['cell', null],
@@ -311,7 +329,7 @@ describe('store sync', () => {
     // The default squad weighs 286.1 kg; eight med kits push it to 350.1,
     // over LIGHT_MASS_KG and under HEAVY_MASS_KG: the standard tier.
     const squadOps = ops(DEFAULT_SQUAD)
-    const w = createWorld(BARE_MISSION, squadOps, {
+    const w = spawn(BARE_MISSION, squadOps, {
       loadout: {
         op1: ['med', 'med'],
         op2: ['med', 'med'],
@@ -328,7 +346,7 @@ describe('store sync', () => {
     // 286.1 + 64 of items + 38 = 388.1 kg, over HEAVY_MASS_KG.
     useResearchStore.setState({ done: ['c-weave', 'k-hardening'] })
     const squadOps = ops(DEFAULT_SQUAD)
-    const w = createWorld(BARE_MISSION, squadOps, {
+    const w = spawn(BARE_MISSION, squadOps, {
       loadout: {
         op1: ['med', 'med'],
         op2: ['med', 'med'],
@@ -345,7 +363,7 @@ describe('research', () => {
   it('applies completed research at deployment and ignores later changes', () => {
     useResearchStore.setState({ done: ['c-pain', 'c-accelerator', 'b-propellants'] })
     const base = operativeById('op1')
-    const w = createWorld(BARE_MISSION, [base])
+    const w = spawn(BARE_MISSION, [base])
     const a1 = w.unit('a1')
     expect(a1).toBeDefined()
     expect(a1?.maxHp).toBe(base.maxHp + 14)
@@ -365,11 +383,11 @@ describe('research', () => {
   it('reads the research store fresh for each new world', () => {
     useResearchStore.setState({ done: ['c-pain'] })
     const base = operativeById('op1')
-    const boosted = createWorld(BARE_MISSION, [base])
+    const boosted = spawn(BARE_MISSION, [base])
     expect(boosted.unit('a1')?.maxHp).toBe(base.maxHp + 14)
 
     useResearchStore.setState({ done: [] })
-    const plain = createWorld(BARE_MISSION, [base])
+    const plain = spawn(BARE_MISSION, [base])
     expect(plain.unit('a1')?.maxHp).toBe(base.maxHp)
     // No research leaves only the assault role passive on the weapon.
     expect(plain.unit('a1')?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.1, 10)
@@ -379,6 +397,7 @@ describe('research', () => {
     useCampaignStore.getState().reportMission(
       MISSION.id,
       {
+        applyKey: 1,
         won: true,
         kills: 1,
         casualties: 0,
@@ -393,7 +412,7 @@ describe('research', () => {
     )
     expect(useCampaignStore.getState().roster.op1.xp).toBe(1)
     const base = operativeById('op1')
-    const w = createWorld(BARE_MISSION, [base])
+    const w = spawn(BARE_MISSION, [base])
     const a1 = w.unit('a1')
     expect(a1?.maxHp).toBe(base.maxHp + XP_HP_PER)
     expect(a1?.speed).toBeCloseTo(base.speed + 0.15 + XP_SPEED_PER, 10)
@@ -417,9 +436,9 @@ describe('determinism', () => {
         stance: u.stance,
       }))
 
-    const a = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const a = spawn(MISSION, ops(DEFAULT_SQUAD))
     script(a)
-    const b = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const b = spawn(MISSION, ops(DEFAULT_SQUAD))
     script(b)
 
     expect(b.time).toBe(a.time)
@@ -429,7 +448,7 @@ describe('determinism', () => {
 
 describe('orders', () => {
   it('routes a unit toward an ordered move target over ticks', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -452,7 +471,7 @@ describe('orders', () => {
   })
 
   it('stop cancels the route and the unit stays put', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -474,7 +493,7 @@ describe('orders', () => {
   })
 
   it('gates the grenade on the live flag, range and stock', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -503,7 +522,7 @@ describe('orders', () => {
   })
 
   it('heals the most wounded selected operative with a med kit while stock lasts', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1', 'op2']))
+    const w = spawn(BARE_MISSION, ops(['op1', 'op2']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -538,7 +557,7 @@ describe('orders', () => {
   })
 
   it('finishes a running ability cooldown with a power cell', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -567,7 +586,7 @@ describe('orders', () => {
   })
 
   it('hold ground parks the route on the spot and resumes it on release', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -596,7 +615,7 @@ describe('orders', () => {
   })
 
   it('hold fire clears the standing attack order and shows on the squad card', () => {
-    const w = createWorld(MISSION, ops(['op1']))
+    const w = spawn(MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -618,7 +637,7 @@ describe('orders', () => {
   })
 
   it('ignores orders naming unknown units or invalid targets', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     expect(() => w.orderMove(['zz'], { x: 48, z: 80 })).not.toThrow()
@@ -631,7 +650,7 @@ describe('orders', () => {
 describe('weapon swap', () => {
   it('deploys with the sidearm stowed, its own full magazine ready', () => {
     const op = operativeById('op1')
-    const w = createWorld(BARE_MISSION, [op])
+    const w = spawn(BARE_MISSION, [op])
     const a1 = w.unit('a1')
     expect(a1).toBeDefined()
     if (!a1) return
@@ -642,7 +661,7 @@ describe('weapon swap', () => {
   })
 
   it('swaps to the sidearm and holds fire until the readiness delay passes', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     warm(w, 1.2)
     const a1 = w.unit('a1')
@@ -676,7 +695,7 @@ describe('weapon swap', () => {
   })
 
   it('keeps per-slot magazines across swaps and cancels the stowed reload', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -710,7 +729,7 @@ describe('weapon swap', () => {
   it('applies completed weapon research to the sidearm exactly as to the primary', () => {
     // b-caseless: all weapons reload x0.88. b-sabot: all weapons damage x1.15.
     useResearchStore.setState({ done: ['b-caseless', 'b-sabot'] })
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')
@@ -746,7 +765,7 @@ describe('role abilities', () => {
   }
 
   it('applies the assault and sniper weapon passives to both slots at deployment', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1', 'op5']))
+    const w = spawn(BARE_MISSION, ops(['op1', 'op5']))
     expect(w.unit('a1')?.weapon?.damage).toBeCloseTo(WEAPONS.assault.damage * 1.1, 10)
     expect(w.unit('a1')?.stowedWeapon?.damage).toBeCloseTo(WEAPONS.pistol.damage * 1.1, 10)
     expect(w.unit('a2')?.weapon?.range).toBeCloseTo(WEAPONS.longrifle.range * 1.15, 10)
@@ -754,7 +773,7 @@ describe('role abilities', () => {
   })
 
   it('overdrive halves the fire delay and expires after its duration', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     warm(w, 1.2)
     const a1 = w.unit('a1')!
@@ -783,7 +802,7 @@ describe('role abilities', () => {
   })
 
   it('frag charge blasts the cluster after its fuse: enemy and civilian both pay', () => {
-    const w = createWorld(BARE_MISSION, ops(['op4']))
+    const w = spawn(BARE_MISSION, ops(['op4']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')!
@@ -813,7 +832,7 @@ describe('role abilities', () => {
   })
 
   it('frag charge with no target in range fails with a comm line and keeps no cooldown', () => {
-    const w = createWorld(BARE_MISSION, ops(['op4']))
+    const w = spawn(BARE_MISSION, ops(['op4']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -825,7 +844,7 @@ describe('role abilities', () => {
   })
 
   it('field stim heals the most wounded operative in range and respects max', () => {
-    const w = createWorld(BARE_MISSION, ops(['op8', 'op1']))
+    const w = spawn(BARE_MISSION, ops(['op8', 'op1']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -850,7 +869,7 @@ describe('role abilities', () => {
   })
 
   it('field stim with nobody wounded in range fails with a comm line', () => {
-    const w = createWorld(BARE_MISSION, ops(['op8']))
+    const w = spawn(BARE_MISSION, ops(['op8']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -862,7 +881,7 @@ describe('role abilities', () => {
   })
 
   it('em burst drops nearby guards to suspicious and silences their fire for the duration', () => {
-    const w = createWorld(BARE_MISSION, ops(['op6']))
+    const w = spawn(BARE_MISSION, ops(['op6']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')!
@@ -888,7 +907,7 @@ describe('role abilities', () => {
   })
 
   it('deadeye guarantees the next shot at double damage and is spent by it', () => {
-    const w = createWorld(BARE_MISSION, ops(['op5']))
+    const w = spawn(BARE_MISSION, ops(['op5']))
     deployReset()
     warm(w, 1.2)
     const a1 = w.unit('a1')!
@@ -915,7 +934,7 @@ describe('role abilities', () => {
   }
 
   it('a hit strikes the civilian standing on the fire lane and bills it', () => {
-    const w = createWorld(BARE_MISSION, ops(['op5']))
+    const w = spawn(BARE_MISSION, ops(['op5']))
     deployReset()
     warm(w, 1.2)
     const a1 = w.unit('a1')!
@@ -937,7 +956,7 @@ describe('role abilities', () => {
   })
 
   it('a hit on a clear lane still lands on the target', () => {
-    const w = createWorld(BARE_MISSION, ops(['op5']))
+    const w = spawn(BARE_MISSION, ops(['op5']))
     deployReset()
     warm(w, 1.2)
     const a1 = w.unit('a1')!
@@ -956,7 +975,7 @@ describe('role abilities', () => {
   })
 
   it('a CorpSec hit through a civilian hurts them but bills nothing', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     warm(w, 1.2)
     const a1 = w.unit('a1')!
@@ -976,7 +995,7 @@ describe('role abilities', () => {
   })
 
   it('suppression sweep marks enemies in range and line of sight as slowed', () => {
-    const w = createWorld(BARE_MISSION, ops(['op7']))
+    const w = spawn(BARE_MISSION, ops(['op7']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')!
@@ -993,7 +1012,7 @@ describe('role abilities', () => {
   })
 
   it('ghost veil hides the infiltrator from guard vision until it expires', () => {
-    const w = createWorld(BARE_MISSION, ops(['op3']))
+    const w = spawn(BARE_MISSION, ops(['op3']))
     deployReset()
     w.tick(STEP)
     const a1 = w.unit('a1')!
@@ -1012,7 +1031,7 @@ describe('role abilities', () => {
   })
 
   it('pulse scan opens the minimap reveal window on the world', () => {
-    const w = createWorld(BARE_MISSION, ops(['op2']))
+    const w = spawn(BARE_MISSION, ops(['op2']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -1024,7 +1043,7 @@ describe('role abilities', () => {
   })
 
   it('medic aura regenerates nearby operatives at 1 hp per second up to half max', () => {
-    const w = createWorld(BARE_MISSION, ops(['op8', 'op1']))
+    const w = spawn(BARE_MISSION, ops(['op8', 'op1']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -1048,7 +1067,7 @@ describe('role abilities', () => {
   })
 
   it('demolitions passive shaves incoming damage', () => {
-    const w = createWorld(BARE_MISSION, ops(['op4', 'op1']))
+    const w = spawn(BARE_MISSION, ops(['op4', 'op1']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -1065,7 +1084,7 @@ describe('role abilities', () => {
   })
 
   it('gates a retrigger on the cooldown', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -1092,7 +1111,7 @@ describe('role abilities', () => {
   })
 
   it('tech passive shortens squad ability cooldowns while the tech lives', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1', 'op6']))
+    const w = spawn(BARE_MISSION, ops(['op1', 'op6']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -1104,7 +1123,7 @@ describe('role abilities', () => {
     )
 
     // Without a living tech the same activation charges the full cooldown.
-    const w2 = createWorld(BARE_MISSION, ops(['op1']))
+    const w2 = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w2.tick(STEP)
     killEnemies(w2)
@@ -1114,7 +1133,7 @@ describe('role abilities', () => {
   })
 
   it('pushes ability state into the squad rows', () => {
-    const w = createWorld(BARE_MISSION, ops(['op1']))
+    const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
     w.tick(STEP)
     killEnemies(w)
@@ -1153,7 +1172,7 @@ describe('milestone 2 missions', () => {
   }
 
   it('runs Hollow Crown end to end: gate, locks, optional server, escort, extract', () => {
-    const w = createWorld(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
+    const w = spawn(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
     expect(w.city.archetype).toBe('compound')
@@ -1209,11 +1228,13 @@ describe('milestone 2 missions', () => {
     warm(w, 3)
     const app = useAppStore.getState()
     expect(app.outcome?.bonus).toBe(9000)
-    expect(app.credits).toBe(128450 + HOLLOW_CROWN.reward + 9000)
+    // Priced on the outcome; Credits move only at the Debrief apply.
+    expect(app.outcome ? netPayout(app.outcome) : -1).toBe(HOLLOW_CROWN.reward + 9000)
+    expect(app.credits).toBe(128450)
   })
 
   it('loses Hollow Crown on the spot when the vip dies', () => {
-    const w = createWorld(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
+    const w = spawn(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
     const vip = w.units.find((u) => u.kind === 'vip')
@@ -1229,7 +1250,7 @@ describe('milestone 2 missions', () => {
   })
 
   it('runs Rust Haven: destroy, paused defend countdown, no bonus when skipped', () => {
-    const w = createWorld(RUST_HAVEN, ops(DEFAULT_SQUAD))
+    const w = spawn(RUST_HAVEN, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
     expect(w.city.archetype).toBe('industrial')
@@ -1281,13 +1302,15 @@ describe('milestone 2 missions', () => {
     warm(w, 3)
     const app = useAppStore.getState()
     expect(app.outcome?.bonus).toBe(0)
-    expect(app.credits).toBe(128450 + RUST_HAVEN.reward)
+    // Priced on the outcome; Credits move only at the Debrief apply.
+    expect(app.outcome ? netPayout(app.outcome) : -1).toBe(RUST_HAVEN.reward)
+    expect(app.credits).toBe(128450)
   })
 
   it('builds distinct, connected layouts for both authored variants of each mission', () => {
     for (const mission of MISSIONS) {
-      const a = createWorld(mission, ops(['op1']), { district: mission.variants[0] })
-      const b = createWorld(mission, ops(['op1']), { district: mission.variants[1] })
+      const a = spawn(mission, ops(['op1']), { district: mission.variants[0] })
+      const b = spawn(mission, ops(['op1']), { district: mission.variants[1] })
       expect(a.city.walk.length).toBe(a.city.size * a.city.size)
       let differs = false
       for (let i = 0; i < a.city.walk.length; i++) {
@@ -1323,7 +1346,7 @@ describe('enemy archetypes', () => {
   })
 
   it('spawns the SEVERE checkpoint with officer, heavies and the marksman', () => {
-    const w = createWorld(MISSION, ops(['op1']))
+    const w = spawn(MISSION, ops(['op1']))
     const enemies = w.units.filter((u) => u.kind === 'enemy')
 
     const officer = enemies.filter((u) => u.archetype === 'officer')
@@ -1354,7 +1377,7 @@ describe('enemy archetypes', () => {
   })
 
   it('officer radios the garrison onto the squad after the delay', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
     const officer = w.units.find((u) => u.archetype === 'officer')
@@ -1406,7 +1429,7 @@ describe('enemy archetypes', () => {
   })
 
   it('killing the officer before the delay cancels the call', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
     const officer = w.units.find((u) => u.archetype === 'officer')
@@ -1444,7 +1467,7 @@ describe('timed objectives', () => {
         { id: 't1', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 5, z: 5, r: 1 }, failSec: 2 },
       ],
     }
-    const w = createWorld(timed, ops(['op1']))
+    const w = spawn(timed, ops(['op1']))
     deployReset()
     w.tick(STEP)
     expect(useMissionStore.getState().result).toBe('none')
@@ -1472,7 +1495,7 @@ describe('timed objectives', () => {
         { id: 'req1', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 5, z: 5, r: 1 } },
       ],
     }
-    const w = createWorld(timed, ops(['op1']))
+    const w = spawn(timed, ops(['op1']))
     deployReset()
     w.tick(STEP)
     warm(w, 0.5)
@@ -1489,8 +1512,8 @@ describe('timed objectives', () => {
 describe('hardened difficulty', () => {
   it('adds one metre of CorpSec vision and keeps it through a weather front', () => {
     const add = DIFFICULTY_FX.hardened.visionAdd
-    const std = createWorld(MISSION, ops(['op1']), { mods: missionMods(MISSION) })
-    const hard = createWorld(MISSION, ops(['op1']), {
+    const std = spawn(MISSION, ops(['op1']), { mods: missionMods(MISSION) })
+    const hard = spawn(MISSION, ops(['op1']), {
       mods: missionMods(MISSION, undefined, 'hardened'),
     })
     expect(hard.vision).toBeCloseTo(std.vision + add, 10)
@@ -1520,7 +1543,7 @@ describe('hardened difficulty', () => {
         { id: 'req1', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 5, z: 5, r: 1 } },
       ],
     }
-    const hard = createWorld(timed, ops(['op1']), {
+    const hard = spawn(timed, ops(['op1']), {
       mods: missionMods(timed, undefined, 'hardened'),
     })
     deployReset()
@@ -1530,7 +1553,7 @@ describe('hardened difficulty', () => {
     expect(useMissionStore.getState().objectives[0].failed).toBe(true)
     expect(useMissionStore.getState().result).toBe('none')
 
-    const std = createWorld(timed, ops(['op1']), { mods: missionMods(timed) })
+    const std = spawn(timed, ops(['op1']), { mods: missionMods(timed) })
     deployReset()
     std.tick(STEP)
     warm(std, 8.6)
@@ -1555,7 +1578,7 @@ describe('scripted playthrough', () => {
   }
 
   it('wins Glass Veil on orders alone: advance, clear the garrison, extract', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
 
@@ -1598,15 +1621,14 @@ describe('scripted playthrough', () => {
     )
     expect(won).toBe(true)
 
-    // The outcome lands after the debrief delay with the net payout applied.
+    // The outcome lands after the debrief delay. No Credits move yet: the
+    // payout is deposited by the Debrief apply transaction (ADR-0021).
     warm(w, 3)
     const app = useAppStore.getState()
     expect(app.phase).toBe('debrief')
     expect(app.outcome?.won).toBe(true)
     expect(app.outcome?.kills).toBeGreaterThanOrEqual(7)
-    const fine = Math.min(MISSION.reward, (app.outcome?.civiliansHit ?? 0) * 5000)
-    expect(app.credits).toBe(128450 + MISSION.reward - fine)
-    expect(app.credits).toBeGreaterThanOrEqual(0)
+    expect(app.credits).toBe(128450)
 
     // The outcome carries the mission counters for the local telemetry log.
     const t = app.outcome?.telemetry
@@ -1625,7 +1647,7 @@ describe('scripted playthrough', () => {
   })
 
   it('loses to CorpSec fire: a wipe driven by enemy rounds, not state edits', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
 
@@ -1670,7 +1692,7 @@ describe('scripted playthrough', () => {
   })
 
   it('carries item, ability, and collateral counters through the outcome telemetry', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
     for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
@@ -1778,7 +1800,7 @@ describe('objective completability', () => {
   }
 
   it.each(CASES)('%s builds a chain completable in principle', (_name, mission) => {
-    const w = createWorld(mission, ops(['op1']))
+    const w = spawn(mission, ops(['op1']))
     const required = mission.objectives.filter((d) => !d.optional)
     expect(required.length).toBeGreaterThan(0)
     // The chain always closes on extraction, never strands the squad.
@@ -1822,7 +1844,7 @@ describe('objective completability', () => {
 
 describe('objectives and outcome', () => {
   it('runs the m01 objective chain to a won debrief with the net payout', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     w.tick(STEP)
 
@@ -1877,11 +1899,13 @@ describe('objectives and outcome', () => {
       expect(frac).toBeGreaterThan(0)
       expect(frac).toBeLessThanOrEqual(1)
     }
-    expect(app.credits).toBe(128450 + MISSION.reward)
+    // Priced on the outcome; Credits move only at the Debrief apply.
+    expect(app.outcome ? netPayout(app.outcome) : -1).toBe(MISSION.reward)
+    expect(app.credits).toBe(128450)
   })
 
   it('reports a loss and pays nothing when the squad is wiped', () => {
-    const w = createWorld(MISSION, ops(DEFAULT_SQUAD))
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
     for (const u of w.units) if (u.kind === 'agent') u.stance = 'dead'
     w.tick(STEP)
@@ -1904,4 +1928,84 @@ it('uses only real roster ids in these tests', () => {
   for (const id of ['op1', 'op2', 'op5', 'op6', 'op7', 'op8', ...DEFAULT_SQUAD]) {
     expect(ids.has(id)).toBe(true)
   }
+})
+
+// Story WN-004 / ADR-0009: the running mission reads only the deploy freeze.
+describe('deploy freeze: createWorld reads no strategy store', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  // Ends the mission by a squad wipe so maybeOutcome runs too.
+  function wipe(w: WorldApi): void {
+    for (const u of w.units) if (u.kind === 'agent') {
+      u.hp = 0
+      u.stance = 'dead'
+    }
+    warm(w, 3)
+  }
+
+  it('reads none of worldStore, campaignStore or researchStore from create through the outcome', () => {
+    const squad = ops(DEFAULT_SQUAD)
+    const deploy = headlessDeploy(MISSION, squad)
+    const reads = [
+      vi.spyOn(useWorldStore, 'getState'),
+      vi.spyOn(useCampaignStore, 'getState'),
+      vi.spyOn(useResearchStore, 'getState'),
+    ]
+    const w = createWorld(MISSION, squad, deploy)
+    deployReset()
+    warm(w, 2)
+    wipe(w)
+    expect(useAppStore.getState().outcome).not.toBeNull()
+    for (const read of reads) expect(read).not.toHaveBeenCalled()
+  })
+
+  it('echoes the Economy slice apply key on the outcome unchanged', () => {
+    const squad = ops(['op1'])
+    const w = createWorld(MISSION, squad, headlessDeploy(MISSION, squad, { applyKey: 7 }))
+    deployReset()
+    w.tick(STEP)
+    wipe(w)
+    expect(useAppStore.getState().outcome?.applyKey).toBe(7)
+    expect(useAppStore.getState().deploySerial).toBe(0)
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+  })
+
+  it('stamps quietReplay from the Economy slice, not live contractsWon', () => {
+    useCampaignStore.setState({ contractsWon: [] })
+    const squad = ops(['op1'])
+    const deploy = headlessDeploy(MISSION, squad, { quietReplay: true })
+    const w = createWorld(MISSION, squad, deploy)
+    deployReset()
+    w.tick(STEP)
+    wipe(w)
+    expect(useAppStore.getState().outcome?.quietReplay).toBe(true)
+
+    useCampaignStore.setState({ contractsWon: [MISSION.id] })
+    useAppStore.setState({ outcome: null })
+    const w2 = createWorld(MISSION, squad, headlessDeploy(MISSION, squad, { quietReplay: false }))
+    deployReset()
+    w2.tick(STEP)
+    wipe(w2)
+    expect(useAppStore.getState().outcome?.quietReplay).toBe(false)
+  })
+
+  it('builds the squad from the Roster slice, ignoring live research and roster', () => {
+    useResearchStore.setState({ done: ['b-caseless', 'b-sabot', 'c-weave'] })
+    const squad = ops(['op1'])
+    const deploy = headlessDeploy(MISSION, squad)
+    const w = createWorld(BARE_MISSION, squad, {
+      ...deploy,
+      roster: { ...deploy.roster, maxHp: { op1: 777 }, speed: { op1: 3.25 } },
+    })
+    const a1 = w.unit('a1')
+    expect(a1?.maxHp).toBe(777)
+    expect(a1?.speed).toBe(3.25)
+    // Nothing applied on the slice: the live completed set does not reach the weapon.
+    expect(a1?.weapon?.damage).toBeCloseTo(
+      ROLE_ABILITIES[squad[0].role].passive.magnitude * WEAPONS[squad[0].weapon].damage,
+      10,
+    )
+  })
 })

@@ -17,6 +17,7 @@ const HOUR = 3600
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
   return {
+    applyKey: 1,
     won: true,
     kills: 7,
     casualties: 0,
@@ -76,7 +77,6 @@ describe('campaign initialization and intel', () => {
     state = useCampaignStore.getState()
     expect(state.intelProgress).toBe(80)
     expect(state.contractsWon).toEqual(['m01'])
-    expect(state.outcomeApplied).toBe(2)
 
     useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 1 }), 0)
     expect(useCampaignStore.getState().intelProgress).toBe(80)

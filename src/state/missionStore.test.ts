@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useMissionStore } from './missionStore'
 import type { AbilityAvailability, MissionAbilities, SquadMemberUi } from './missionStore'
-import type { CommEntry } from '../game/types'
+import type { CommEntry, WorldApi } from '../game/types'
+import { DEFAULT_SQUAD, MISSIONS, operativeById } from '../game/data'
+import { createWorld } from '../game/world'
+import { getWorld, setWorld } from '../game/runtime'
+import { freezeDeploy } from './deployFreeze'
+import { useAppStore } from './appStore'
+import { initialCampaignData, useCampaignStore } from './campaignStore'
+import { useResearchStore } from './researchStore'
+import { useWorldStore } from './worldStore'
 
 // The initial data shape, as declared in the source module.
 const INITIAL = {
@@ -213,5 +221,69 @@ describe('grenade targeting guards', () => {
     s.setGrenadeTargeting(true)
     s.setSquad([member('u1')])
     expect(useMissionStore.getState().grenadeTargeting).toBe(false)
+  })
+})
+
+// Story WN-004 / ADR-0002: a mission in progress is memory only. Confirmed
+// Abort (Hud onAbort → goto('world'), then MissionScreen teardown) produces
+// no debrief and writes nothing to the World Network blob.
+describe('abort leaves the World Network blob unchanged', () => {
+  function blob() {
+    const w = useWorldStore.getState()
+    const c = useCampaignStore.getState()
+    return structuredClone({
+      t: w.t,
+      sectors: w.sectors,
+      owner: w.owner,
+      influence: w.influence,
+      intelLevel: c.intelLevel,
+      intelProgress: c.intelProgress,
+      events: w.events,
+      spends: w.spends,
+      nextTaxT: w.nextTaxT,
+    })
+  }
+
+  function deployAndRun(): WorldApi {
+    const mission = MISSIONS[0]
+    const squad = DEFAULT_SQUAD.map(operativeById)
+    useAppStore.setState({ phase: 'mission', missionId: mission.id, outcome: null })
+    const world = createWorld(mission, squad, freezeDeploy(mission, squad, 1))
+    setWorld(world)
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+    for (let i = 0; i < 200; i++) world.tick(0.05)
+    return world
+  }
+
+  function confirmAbort(): void {
+    useAppStore.getState().goto('world')
+    setWorld(null)
+    useMissionStore.getState().reset()
+  }
+
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({ done: [] })
+    useAppStore.setState({ loadout: {}, outcome: null, deploySerial: 0, lastAppliedKey: 0 })
+    // A lived-in board: a few strategic days so events, Tax and spends exist.
+    useWorldStore.getState().advanceDays(2)
+  })
+
+  it('produces no debrief and leaves t, sectors, owners, Influence, intel, events, spends and nextTaxT equal', () => {
+    const before = blob()
+    const world = deployAndRun()
+    expect(world.time).toBeGreaterThan(5)
+    expect(blob()).toEqual(before)
+
+    confirmAbort()
+
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    expect(app.lastAppliedKey).toBe(0)
+    expect(getWorld()).toBeNull()
+    expect(blob()).toEqual(before)
   })
 })

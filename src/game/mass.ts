@@ -1,6 +1,6 @@
 // Deployment mass model, every number in one place. The assembly screen and
-// createWorld call the same functions, so the kilograms the player reads are
-// the kilograms the mission applies.
+// the deploy freeze (game/deploy.ts) call the same functions, so the
+// kilograms the player reads are the kilograms the mission applies.
 //
 // Per operative: OPERATIVE_BASE_KG for body and rig, the authored massKg of
 // both weapon slots, ARMOR_KG_PER_HP for every max-HP point above

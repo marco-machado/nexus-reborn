@@ -39,20 +39,20 @@ stories:
     name: "Abort leaves the World Network blob unchanged; deploy gets a frozen slice"
     file: "production/epics/world-network/story-004-abort-leaves-the-world-network-blob-unchanged-deploy-ge.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "WN-003"
     name: "Debrief writes back at frozen t0, then ETA, once"
     file: "production/epics/world-network/story-003-debrief-writes-back-at-frozen-t0-then-eta-apply-once.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 2.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "WN-006"
     name: "Timeline Review is a view, not a clock"
     file: "production/epics/world-network/story-006-timeline-review-is-a-view-not-a-clock.md"

@@ -11,7 +11,7 @@ Seven stores, split by lifetime and rate: `appStore` (flow, squad, outcome), `mi
 Strategic time has two advancement paths:
 
 - Continuous: shared `ScreenChrome` in `ui/Nav.tsx` mounts `useWorldClock` from `ui/clock.ts` for all four Screens: World Network, Research, Brief, and Assembly. rAF batched to 20Hz ticks `worldStore`, then `researchStore.sync(t)` and `campaignStore.sync(t)`. Menu, mission, and debrief do not mount that chrome.
-- Contract ETA: after a win, the debrief calls `worldStore.advanceDays(etaDays)`, then syncs research and campaign to the new time.
+- Contract ETA: after a win, `applyDebrief` (`src/state/debrief.ts`) writes the result back at the frozen time, then calls `worldStore.advanceDays(etaDays)` and syncs research and campaign to the new time. It runs once per apply key (ADR-0021): the `MissionScreen` composer mints `appStore.deploySerial` into the Economy slice, and a key applies only while it is above `appStore.lastAppliedKey`.
 
 Any new way to advance `worldStore.t` must catch up research labs, injury recovery, recruitment, and Tax yield at the resulting time.
 

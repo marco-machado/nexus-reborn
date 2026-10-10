@@ -4,13 +4,12 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
-import { resolveMission, useWorldStore } from '../state/worldStore'
-import { liveOperativeById, useCampaignStore } from '../state/campaignStore'
-import { missionMods, missionVariant } from '../game/missionParams'
+import { resolveMission } from '../state/worldStore'
+import { liveOperativeById } from '../state/campaignStore'
+import { freezeDeploy } from '../state/deployFreeze'
 import { createWorld } from '../game/world'
 import { setWorld } from '../game/runtime'
 import { missionSfx } from '../game/audioBridge'
-import { useSettingsStore } from '../state/settingsStore'
 import { startMissionBed, stopMissionBed } from './sound'
 import GameCanvas from '../scene/GameCanvas'
 import Hud from './Hud'
@@ -26,16 +25,15 @@ export default function MissionScreen() {
     const mission = resolveMission(missionId)
     if (!mission) return
     const ops = squad.map(liveOperativeById)
-    // Deployment snapshot: sector state and the layout variant are computed
-    // here, outside the sim, so world.ts never reads worldStore. A replay of
-    // a won contract rotates to the second authored variant.
-    const replay = useCampaignStore.getState().contractsWon.includes(mission.id)
-    const sector = useWorldStore.getState().sectors[mission.sector]
-    const world = createWorld(mission, ops, {
-      mods: missionMods(mission, sector, useSettingsStore.getState().difficulty),
-      district: missionVariant(mission, replay),
-      loadout: useAppStore.getState().loadout,
-    })
+    // ADR-0021: one apply-once key per mission create, minted here and nowhere
+    // else. A StrictMode or squad-change rebuild mints a fresh key for the new
+    // world; the torn-down world never reaches an outcome, so its key is burned.
+    const applyKey = useAppStore.getState().deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    // Deploy freeze (ADR-0009): the four slices, mods and district are
+    // cloned from the live stores once, here, so the sim never reads a store.
+    // A replay of a won contract rotates to the second authored variant.
+    const world = createWorld(mission, ops, freezeDeploy(mission, ops, applyKey))
     setWorld(world)
     const ms = useMissionStore.getState()
     ms.reset()

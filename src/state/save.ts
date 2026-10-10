@@ -729,7 +729,6 @@ export function hydrateSave(save: SaveV9): void {
     recruitRngState: save.campaign.recruitRngState,
     nextCandidateT: save.campaign.nextCandidateT,
     contractsWon: [...save.campaign.contractsWon],
-    outcomeApplied: 0,
     campaignWon: save.campaign.campaignWon,
     campaignFailed: save.campaign.campaignFailed,
     lastReport: null,
@@ -750,7 +749,8 @@ export function hydrateSave(save: SaveV9): void {
     loadout: structuredClone(save.app.loadout),
     credits: save.app.credits,
     outcome: null,
-    outcomeSerial: 0,
+    deploySerial: 0,
+    lastAppliedKey: 0,
   })
   useResearchStore.getState().sync(save.world.t)
   useCampaignStore.getState().sync(save.world.t)
@@ -861,7 +861,8 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     loadout: {},
     credits: INITIAL_CREDITS,
     outcome: null,
-    outcomeSerial: 0,
+    deploySerial: 0,
+    lastAppliedKey: 0,
   })
 }
 

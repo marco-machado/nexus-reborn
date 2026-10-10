@@ -1,6 +1,6 @@
-// Operative experience. Survivors gain a point per mission; createWorld
-// samples the bonus the same way it samples research, so a running
-// deployment never changes under a later award.
+// Operative experience. Survivors gain a point per mission; the deploy
+// freeze (game/deploy.ts) samples the bonus onto the Roster slice with
+// research, so a running deployment never changes under a later award.
 export const XP_PER_SURVIVE = 1
 export const XP_HP_PER = 2
 export const XP_SPEED_PER = 0.05

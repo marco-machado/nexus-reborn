@@ -6,7 +6,8 @@ import { nodeById } from '../game/research'
 import { INFLUENCE_ACTIONS } from '../game/influence'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
-import { useWorldStore } from './worldStore'
+import { DAY, useWorldStore } from './worldStore'
+import { applyDebrief } from './debrief'
 
 // World-store boot snapshot for the economy integration suite, captured at
 // module load before any test moves the singleton.
@@ -48,6 +49,7 @@ const START_CREDITS = 128450
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
   return {
+    applyKey: 1,
     won: true,
     kills: 6,
     casualties: 1,
@@ -69,7 +71,8 @@ beforeEach(() => {
     loadout: {},
     credits: START_CREDITS,
     outcome: null,
-    outcomeSerial: 0,
+    deploySerial: 0,
+    lastAppliedKey: 0,
   })
   useCampaignStore.setState(initialCampaignData())
 })
@@ -279,19 +282,18 @@ describe('mission outcome payout', () => {
     expect(netPayout(outcome({ won: false }))).toBe(0)
   })
 
-  it('setOutcome banks the win, stores the outcome and moves to debrief', () => {
+  it('setOutcome stores the outcome and moves to debrief without moving Credits', () => {
     const o = outcome({ civiliansHit: 2 })
     useAppStore.getState().setOutcome(o)
     const s = useAppStore.getState()
-    expect(s.credits).toBe(START_CREDITS + 85000 - 2 * COLLATERAL_FINE)
+    expect(s.credits).toBe(START_CREDITS)
     expect(s.outcome).toBe(o)
     expect(s.phase).toBe('debrief')
-    expect(s.outcomeSerial).toBe(1)
+    expect(s.lastAppliedKey).toBe(0)
   })
 
   it('a win drowned in collateral pays zero, never a debt', () => {
-    useAppStore.getState().setOutcome(outcome({ civiliansHit: 40 }))
-    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(netPayout(outcome({ civiliansHit: 40 }))).toBe(0)
   })
 
   it('a loss leaves credits untouched but still reaches debrief', () => {
@@ -327,6 +329,8 @@ describe('economy integration', () => {
     const first = outcome({ civiliansHit: 2, reward: m01.reward })
     useAppStore.getState().setOutcome(first)
     expect(netPayout(first)).toBe(m01.reward - 2 * COLLATERAL_FINE)
+    // The Debrief deposit (applyDebrief makes it under the apply-once key).
+    useAppStore.getState().addCredits(netPayout(first))
     expect(useAppStore.getState().credits).toBe(
       START_CREDITS + m01.reward - 2 * COLLATERAL_FINE,
     )
@@ -347,6 +351,7 @@ describe('economy integration', () => {
     const second = outcome({ civiliansHit: 0, reward: m01.reward, deadIds: ['op5'] })
     useAppStore.getState().setOutcome(second)
     expect(second.quietReplay).toBe(true)
+    expect(netPayout(second)).toBe(0)
     expect(useAppStore.getState().credits).toBe(creditsAfterFirst)
     useCampaignStore.getState().reportMission(m01.id, second, 0)
     useWorldStore.getState().applyMissionResult(m01.id, second, ['RAVEN'])
@@ -403,5 +408,149 @@ describe('economy integration', () => {
     useAppStore.getState().setOutcome(outcome({ won: false, reward: 0 }))
     expect(useAppStore.getState().credits).toBe(10000)
     assertSolvent()
+  })
+})
+
+describe('applyDebrief apply-once (ADR-0021)', () => {
+  const T0 = 3 * 3600
+  // Every data field of the four strategic stores the Debrief can touch.
+  const data = (s: object) =>
+    structuredClone(Object.fromEntries(Object.entries(s).filter(([, v]) => typeof v !== 'function')))
+  const snapshot = () => ({
+    app: data(useAppStore.getState()),
+    world: data(useWorldStore.getState()),
+    campaign: data(useCampaignStore.getState()),
+    research: data(useResearchStore.getState()),
+  })
+
+  beforeEach(() => {
+    useWorldStore.setState({ ...structuredClone(worldBoot), t: T0 })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', squad: ['op1', 'op2', 'op4'] })
+  })
+
+  // Wraps the owner mutators so a test can count calls and see the key each
+  // one ran under. Restored by the caller.
+  function spyOwners() {
+    const app = useAppStore.getState()
+    const campaign = useCampaignStore.getState()
+    const world = useWorldStore.getState()
+    const research = useResearchStore.getState()
+    const log: { name: string; key: number }[] = []
+    const note = (name: string) => log.push({ name, key: useAppStore.getState().lastAppliedKey })
+    useAppStore.setState({
+      addCredits: (n) => (note('addCredits'), app.addCredits(n)),
+    })
+    useCampaignStore.setState({
+      reportMission: (...a) => (note('reportMission'), campaign.reportMission(...a)),
+      sync: (t) => (note('campaign.sync'), campaign.sync(t)),
+    })
+    useWorldStore.setState({
+      applyMissionResult: (...a) => (note('applyMissionResult'), world.applyMissionResult(...a)),
+      advanceDays: (d) => (note('advanceDays'), world.advanceDays(d)),
+    })
+    useResearchStore.setState({ sync: (t) => (note('research.sync'), research.sync(t)) })
+    const restore = () => {
+      useAppStore.setState({ addCredits: app.addCredits })
+      useCampaignStore.setState({ reportMission: campaign.reportMission, sync: campaign.sync })
+      useWorldStore.setState({
+        applyMissionResult: world.applyMissionResult,
+        advanceDays: world.advanceDays,
+      })
+      useResearchStore.setState({ sync: research.sync })
+    }
+    return { log, restore }
+  }
+
+  it('claims the key first, then runs every owner once in the ADR order', () => {
+    useAppStore.getState().setOutcome(outcome({ applyKey: 1, deadIds: ['op4'] }))
+    // Tax off the ETA span so the deposit list is just the payout.
+    useWorldStore.setState({ nextTaxT: 1e12 })
+    const { log, restore } = spyOwners()
+    try {
+      applyDebrief('m01')
+    } finally {
+      restore()
+    }
+    expect(log.map((c) => c.name)).toEqual([
+      'addCredits',
+      'reportMission',
+      'applyMissionResult',
+      'advanceDays',
+      'research.sync',
+      'campaign.sync',
+    ])
+    // lastAppliedKey was already set when the first owner mutator ran.
+    for (const c of log) expect(c.key).toBe(1)
+    const s = useAppStore.getState()
+    expect(s.lastAppliedKey).toBe(1)
+    expect(s.squad).not.toContain('op4')
+    expect(useWorldStore.getState().t).toBe(T0 + MISSIONS[0].etaDays * DAY)
+  })
+
+  it('re-entering with the same key leaves every store equal to the post-apply snapshot', () => {
+    useAppStore.getState().setOutcome(outcome({ applyKey: 1, civiliansHit: 1 }))
+    applyDebrief('m01')
+    const S = snapshot()
+    // The apply moved Credits (payout plus any ETA Tax), Intel and the clock.
+    expect(useAppStore.getState().credits).toBeGreaterThanOrEqual(
+      START_CREDITS + 85000 - COLLATERAL_FINE,
+    )
+    expect(useWorldStore.getState().t).toBeGreaterThan(T0)
+
+    const { log, restore } = spyOwners()
+    try {
+      applyDebrief('m01')
+      applyDebrief('m01')
+    } finally {
+      restore()
+    }
+    expect(log).toEqual([])
+    expect(snapshot()).toEqual(S)
+  })
+
+  it('a stray older or equal key applies nothing', () => {
+    useAppStore.setState({ lastAppliedKey: 5 })
+    for (const applyKey of [3, 5]) {
+      useAppStore.getState().setOutcome(outcome({ applyKey }))
+      const before = snapshot()
+      const { log, restore } = spyOwners()
+      try {
+        applyDebrief('m01')
+      } finally {
+        restore()
+      }
+      expect(log).toEqual([])
+      expect(snapshot()).toEqual(before)
+      expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    }
+  })
+
+  it('Credits sit under the same key: one deposit per key, a higher key applies', () => {
+    const o = outcome({ applyKey: 1, won: true })
+    useAppStore.getState().setOutcome(o)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    useWorldStore.setState({ nextTaxT: 1e12 })
+    // Pin every timed flow off the ETA span so only the payout moves Credits.
+    useWorldStore.setState({ nextEventT: 1e12, nextContractT: 1e12 })
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 85000)
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 85000)
+
+    useAppStore.getState().setOutcome(outcome({ applyKey: 2, won: true, quietReplay: false }))
+    applyDebrief('m01')
+    expect(useAppStore.getState().lastAppliedKey).toBe(2)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 2 * 85000)
+  })
+
+  it('does nothing without an outcome', () => {
+    useAppStore.setState({ outcome: null })
+    const before = snapshot()
+    applyDebrief('m01')
+    expect(snapshot()).toEqual(before)
   })
 })

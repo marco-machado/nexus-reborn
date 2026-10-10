@@ -1,12 +1,12 @@
 # Story 004: Abort leaves the World Network blob unchanged; deploy gets a frozen WN slice
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Integration
 > **Estimate**: 1.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -35,9 +35,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN a mission in progress and World Network blob B (`t`, sectors, owners, Influence, intelLevel, intelProgress, events, spends, nextTaxT), WHEN Abort is confirmed, THEN there is no debrief and those fields still equal B.
-- [ ] GIVEN deploy confirmed, WHEN the Tactical mission is created, THEN it receives the frozen WN slice `{sector id, Control, Unrest}` and no live World Network store handle. (Do not call this slice “the Snapshot DTO”.)
-- [ ] GIVEN the running mission, WHEN it needs World Network data, THEN it reads only the cloned slice — `createWorld` does not read `worldStore`, `campaignStore` or `researchStore`.
+- [x] GIVEN a mission in progress and World Network blob B (`t`, sectors, owners, Influence, intelLevel, intelProgress, events, spends, nextTaxT), WHEN Abort is confirmed, THEN there is no debrief and those fields still equal B.
+- [x] GIVEN deploy confirmed, WHEN the Tactical mission is created, THEN it receives the frozen WN slice `{sector id, Control, Unrest}` and no live World Network store handle. (Do not call this slice “the Snapshot DTO”.)
+- [x] GIVEN the running mission, WHEN it needs World Network data, THEN it reads only the cloned slice — `createWorld` does not read `worldStore`, `campaignStore` or `researchStore`.
 
 ---
 
@@ -89,7 +89,7 @@
 **Required evidence**:
 - Integration: test beside the module — `src/game/missionParams.test.ts`, `src/game/world.test.ts` (no store reads), `src/state/missionStore.test.ts` (abort leaves a deep-equal WN blob). — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing (2026-10-10)
 
 ---
 
@@ -97,3 +97,17 @@
 
 - Depends on: None
 - Unlocks: Story 003
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 3/3 passing (all covered by integration tests; no deferred items)
+- AC-1 abort leaves WN blob B unchanged, no debrief — `src/state/missionStore.test.ts` › "abort leaves the World Network blob unchanged"
+- AC-2 deploy receives frozen `{sector, control, unrest}`, no live store handle — `src/game/missionParams.test.ts` › "deploy freeze: World Network slice"
+- AC-3 `createWorld` reads none of worldStore / campaignStore / researchStore — `src/game/world.test.ts` › "deploy freeze: createWorld reads no strategy store" (getState spies, create through outcome)
+**Deviations**: None against TR-world-network-008/009 or ADR-0009/0002. `src/game/world.ts` still writes `missionStore` / `appStore` (HUD sync and outcome), which the ADR permits.
+**Scope**: Extra files touched beyond the story list, all supporting the `DeployParams` change: `src/game/experience.ts`, `src/game/mass.ts`, `src/game/contracts.test.ts`, `tools/city-review.tsx`, `docs/agents/mission-runtime.md`. New: `src/game/deploy.ts`, `src/state/deployFreeze.ts`.
+**Test Evidence**: Integration: tests at `src/state/missionStore.test.ts`, `src/game/missionParams.test.ts`, `src/game/world.test.ts`. `npm run lint`, `npm run test` (39 files, 632 tests) and `npm run build` all passed 2026-10-10.
+**Run result**: NOT VERIFIED — unattended run; no browser click-through of deploy → mission → Abort (docs/click-through.md). Advisory: do one before sprint close-out.
+**Code Review**: Pending — lean mode; closed unattended, default "run /code-review before the sprint close-out" recorded.

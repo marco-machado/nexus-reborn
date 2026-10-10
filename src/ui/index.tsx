@@ -3,7 +3,7 @@
 // Flow: menu -> world -> brief -> team -> mission -> debrief -> world. The
 // four Screens share ScreenChrome; Research and Assembly are also on the nav.
 import './ui.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -15,7 +15,7 @@ import {
   hasValidSave,
   startNewOperation,
 } from '../state/save'
-import { recordMissionOutcome } from '../state/telemetry'
+import { applyDebrief } from '../state/debrief'
 import { WEAPONS } from '../game/data'
 import { isGeneratedMissionId } from '../game/contracts'
 import { ROLE_ABILITIES } from '../game/abilities'
@@ -1540,7 +1540,6 @@ export function Debrief() {
   const outcome = useAppStore((s) => s.outcome)
   const credits = useAppStore((s) => s.credits)
   const missionId = useAppStore((s) => s.missionId)
-  const outcomeSerial = useAppStore((s) => s.outcomeSerial)
   const m = missionId ? resolveMission(missionId) : null
   const report = useCampaignStore((s) => s.lastReport)
   const won = outcome?.won ?? false
@@ -1548,42 +1547,12 @@ export function Debrief() {
   const fine = outcome && !quiet ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
   const [balanceOpen, setBalanceOpen] = useState(false)
-  useEffect(() => {
-    if (!outcome || !missionId) return
-    if (useCampaignStore.getState().outcomeApplied >= outcomeSerial) return
-    const worldT = useWorldStore.getState().t
-    // Local telemetry rides the same once-per-outcome boundary; a no-op
-    // unless the TELEMETRY setting is on.
-    recordMissionOutcome(missionId, outcome)
-    useCampaignStore.getState().reportMission(missionId, outcome, worldT)
-    // The campaign report resolved codenames before the KIA left the roster;
-    // the world feed prints them, and dead or newly injured operatives leave
-    // the squad so the bays are refilled before the next deployment.
-    const debrief = useCampaignStore.getState().lastReport
-    useWorldStore
-      .getState()
-      .applyMissionResult(missionId, outcome, debrief?.kia.map((k) => k.codename) ?? [])
-    const out = new Set([
-      ...outcome.deadIds,
-      ...(debrief?.injured.map((i) => i.id) ?? []),
-    ])
-    if (out.size > 0) {
-      const dead = new Set(outcome.deadIds)
-      useAppStore.setState((state) => {
-        const loadout = { ...state.loadout }
-        for (const id of dead) delete loadout[id]
-        return { squad: state.squad.filter((id) => !out.has(id)), loadout }
-      })
-    }
-    // A completed contract costs its ETA in world days. Labs and recovery
-    // clocks run across the jump: their sync sees the advanced time at once.
-    if (outcome.won) {
-      useWorldStore.getState().advanceDays(resolveMission(missionId)?.etaDays ?? 0)
-      const t = useWorldStore.getState().t
-      useResearchStore.getState().sync(t)
-      useCampaignStore.getState().sync(t)
-    }
-  }, [missionId, outcome, outcomeSerial])
+  // The whole Debrief write-back runs in one apply-once transaction
+  // (state/debrief.ts), before paint so the header never shows the
+  // pre-payout balance. Debrief holds no guard of its own.
+  useLayoutEffect(() => {
+    if (missionId) applyDebrief(missionId)
+  }, [missionId, outcome])
   // Built as a list because the deduction only takes a line when a round caught
   // a bystander, and the row stagger has to stay even either way.
   const rows: { label: string; value: ReactNode; tone?: string }[] = [

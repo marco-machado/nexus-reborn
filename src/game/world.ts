@@ -5,7 +5,6 @@
 import type {
   AgentRole,
   Boom,
-  DistrictSpec,
   MissionDef,
   ObjectiveDef,
   OperativeDef,
@@ -27,12 +26,10 @@ import {
   weaponNoise,
 } from './data'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
-import { MISSION_CLOCK_BASE, missionMods, weatherAt, weatherMul } from './missionParams'
-import type { MissionMods } from './missionParams'
-import { appliedNodeIds, crewBonus, squadWeapon } from './research'
-import { xpBonus } from './experience'
-import { loadoutPools, massTier, squadMassKg, tierSpeedDelta } from './mass'
-import type { SquadLoadout } from './mass'
+import { MISSION_CLOCK_BASE, weatherAt, weatherMul } from './missionParams'
+import { squadWeapon } from './research'
+import { loadoutPools } from './mass'
+import type { DeployParams } from './deploy'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
@@ -48,8 +45,8 @@ import type {
   SquadMemberUi,
 } from '../state/missionStore'
 import { useAppStore } from '../state/appStore'
-import { useResearchStore } from '../state/researchStore'
-import { useCampaignStore } from '../state/campaignStore'
+
+export type { DeployParams } from './deploy'
 
 const MAX_DT = 0.05
 const MAX_CATCHUP = 5
@@ -193,24 +190,17 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
 
-// Deployment inputs computed outside the sim (MissionScreen), so world.ts
-// never reads worldStore. Both default for tests and headless construction.
-export interface DeployParams {
-  mods?: MissionMods
-  district?: DistrictSpec
-  // Per-operative extra item slots (game/mass.ts): they raise the mission's
-  // med/cell pools and count toward the deployment-mass speed tier.
-  loadout?: SquadLoadout
-}
-
+// The mission is built only from the deploy freeze (game/deploy.ts): the
+// four slices plus mods and district. createWorld reads no strategy store.
 export function createWorld(
   mission: MissionDef,
   operatives: OperativeDef[],
-  deploy?: DeployParams,
+  deploy: DeployParams,
 ): WorldApi {
   const rng = mulberry32(mission.seed)
-  const mods = deploy?.mods ?? missionMods(mission)
-  const city = generateCity(mission, deploy?.district, {
+  const mods = deploy.mods
+  const roster = deploy.roster
+  const city = generateCity(mission, deploy.district, {
     enemyExtra: mods.enemyExtra,
     civilianCount: mods.civilianCount,
     officerCount: mods.officerCount,
@@ -304,7 +294,7 @@ export function createWorld(
     else if (op.role === 'support') inventory.med += 1
     else if (op.role === 'tech') inventory.cell += 1
   }
-  const extraItems = loadoutPools(operatives, deploy?.loadout)
+  const extraItems = loadoutPools(operatives, roster.items)
   inventory.med += extraItems.med
   inventory.cell += extraItems.cell
   let grenadeReadyAt = 0
@@ -335,25 +325,6 @@ export function createWorld(
     return nearestWalkable(city, p) ?? { x: p.x, z: p.z }
   }
 
-  // Completed research and roster experience are read once, at deployment.
-  // Strategic time is stopped during a mission, so nothing can finish or
-  // award XP while this one runs.
-  const researched = useResearchStore.getState().done
-  const rosterXp = useCampaignStore.getState().roster
-  const appliedByOp: Record<string, string[]> = {}
-  const hpBonusByOp: Record<string, number> = {}
-  for (const op of operatives) {
-    const applied = appliedNodeIds(researched, rosterXp[op.id]?.pins)
-    appliedByOp[op.id] = applied
-    hpBonusByOp[op.id] = crewBonus(applied).maxHp + xpBonus(rosterXp[op.id]?.xp ?? 0).maxHp
-  }
-
-  // Deployment-mass tier: one shared speed adjustment for the whole squad,
-  // from the same model the assembly screen displays (game/mass.ts).
-  const massDelta = tierSpeedDelta(
-    massTier(squadMassKg(operatives, hpBonusByOp, deploy?.loadout)),
-  )
-
   // Stat passives land on the weapon copies at deployment, after research:
   // assault damage and sniper range reach both slots the same way research
   // does, so the HUD and the sim read one number.
@@ -366,13 +337,12 @@ export function createWorld(
 
   operatives.forEach((op, i) => {
     // Research applies to both slots the same way: each is built through
-    // squadWeapon, so a sidearm carries every completed weapon project.
-    const applied = appliedByOp[op.id] ?? researched
-    const bonus = crewBonus(applied)
+    // squadWeapon from the Roster slice's frozen appliedIds. HP and speed are
+    // the Roster slice's final sampled totals; nothing is re-derived here.
+    const applied = roster.appliedIds[op.id] ?? []
     const w = roleTuneWeapon(squadWeapon(op.weapon, applied), op.role)
     const sw = roleTuneWeapon(squadWeapon(op.sidearm, applied), op.role)
-    const xp = xpBonus(rosterXp[op.id]?.xp ?? 0)
-    const hp = op.maxHp + bonus.maxHp + xp.maxHp
+    const hp = roster.maxHp[op.id] ?? op.maxHp
     addUnit({
       id: 'a' + (i + 1),
       kind: 'agent',
@@ -381,7 +351,7 @@ export function createWorld(
       heading: Math.PI,
       hp,
       maxHp: hp,
-      speed: op.speed + bonus.speed + massDelta + xp.speed,
+      speed: roster.speed[op.id] ?? op.speed,
       weapon: w,
       stance: 'idle',
       path: [],
@@ -1836,6 +1806,7 @@ export function createWorld(
       squadRoles: operatives.map((op) => op.role),
     }
     useAppStore.getState().setOutcome({
+      applyKey: deploy.economy.applyKey,
       won: result === 'won',
       kills,
       casualties,
@@ -1845,7 +1816,7 @@ export function createWorld(
       bonus: result === 'won' ? bonusEarned : 0,
       deadIds: deadIds.slice(),
       survivorHp,
-      quietReplay: useCampaignStore.getState().contractsWon.includes(mission.id),
+      quietReplay: deploy.economy.quietReplay,
       telemetry,
     })
   }
@@ -1923,7 +1894,7 @@ export function createWorld(
 
   function startup(): void {
     pushLog('SYS', 'SQUAD LINK ESTABLISHED. ' + livingAgents().length + ' ONLINE.')
-    if (massDelta < 0) fireTutorialHint('hint-overweight')
+    if (roster.massTier === 'heavy') fireTutorialHint('hint-overweight')
     activateRequired(0)
     const firstIdx = requiredOrder[0]
     const first = firstIdx !== undefined ? objectives[firstIdx] : undefined

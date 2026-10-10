@@ -62,6 +62,7 @@ function telemetry(over: Partial<MissionTelemetry> = {}): MissionTelemetry {
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
   return {
+    applyKey: 1,
     won: true,
     kills: 9,
     casualties: 0,

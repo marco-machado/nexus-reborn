@@ -10,6 +10,10 @@ import { missionLocked, useCampaignStore } from './campaignStore'
 export type Phase = 'menu' | 'world' | 'research' | 'brief' | 'team' | 'mission' | 'debrief'
 
 export interface MissionOutcome {
+  // ADR-0021 apply-once key: minted by the MissionScreen composer at mission
+  // create, frozen on the Economy slice and echoed here unchanged. Debrief
+  // applies this outcome only while it is above `lastAppliedKey`.
+  applyKey: number
   won: boolean
   kills: number
   casualties: number
@@ -60,7 +64,12 @@ export interface AppState {
   loadout: SquadLoadout
   credits: number
   outcome: MissionOutcome | null
-  outcomeSerial: number
+  // Session-only apply-once counters (ADR-0021); never in the campaign blob,
+  // reset to 0 by hydrate and New Operation. `deploySerial` is bumped once per
+  // mission create by the MissionScreen composer; `lastAppliedKey` is written
+  // only by applyDebrief (state/debrief.ts).
+  deploySerial: number
+  lastAppliedKey: number
   goto: (phase: Phase) => void
   // Debrief → World Network. Drops the selected contract so Brief locks.
   returnFromDebrief: () => void
@@ -71,6 +80,8 @@ export interface AppState {
   // Tax yield and other income. Does not convert from Influence.
   addCredits: (amount: number) => void
   hireOperative: (candidateId: string) => void
+  // Stores the outcome and enters Debrief. Moves no Credits: the payout is
+  // deposited by applyDebrief, under the outcome's apply-once key.
   setOutcome: (o: MissionOutcome) => void
 }
 
@@ -81,7 +92,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadout: {},
   credits: INITIAL_CREDITS,
   outcome: null,
-  outcomeSerial: 0,
+  deploySerial: 0,
+  lastAppliedKey: 0,
   goto: (phase) => set({ phase }),
   returnFromDebrief: () => set({ phase: 'world', missionId: null }),
   selectMission: (id) => {
@@ -129,11 +141,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       const quiet =
         o.quietReplay === true || (o.quietReplay !== false && isQuietReplay(s.missionId))
       o.quietReplay = quiet
-      return {
-        outcome: o,
-        credits: s.credits + netPayout(o),
-        phase: 'debrief',
-        outcomeSerial: s.outcomeSerial + 1,
-      }
+      return { outcome: o, phase: 'debrief' }
     }),
 }))

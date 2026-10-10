@@ -28,6 +28,7 @@ import { mulberry32 } from './rng'
 import type { ObjectiveDef } from './types'
 import { isWalkable } from './types'
 import { createWorld } from './world'
+import { headlessDeploy } from './deploy'
 
 const OWNERSHIP: Record<string, CorpId> = {}
 for (const city of CITIES) OWNERSHIP[city.id] = city.corp
@@ -325,7 +326,7 @@ describe('derived missions', () => {
 
     for (const contract of byType.values()) {
       const m = contractMission(contract)
-      const w = createWorld(m, [operativeById('op1')])
+      const w = createWorld(m, [operativeById('op1')], headlessDeploy(m, [operativeById('op1')]))
 
       // The generated district resolves the same core landmarks as authored
       // work, and the squad inserts on walkable ground.
@@ -510,7 +511,7 @@ describe('objective sequence variants', () => {
       const contract = contractOf(type, seedForVariant(v))
       expect(sequenceVariant(contract.seed)).toBe(v)
       const m = contractMission(contract)
-      const w = createWorld(m, [operativeById('op1')])
+      const w = createWorld(m, [operativeById('op1')], headlessDeploy(m, [operativeById('op1')]))
 
       for (const key of ['insertion', 'extraction', 'target']) {
         expect(w.city.landmarks[key]).toBeDefined()

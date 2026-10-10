@@ -8,6 +8,7 @@ import type { WebGPURenderer } from 'three/webgpu'
 import GameCanvas from '../src/scene/GameCanvas'
 import { MISSIONS, ROSTER } from '../src/game/data'
 import { createWorld } from '../src/game/world'
+import { headlessDeploy } from '../src/game/deploy'
 import { getWorld, panCameraTo, setWorld } from '../src/game/runtime'
 import type { QualityTier } from '../src/game/quality'
 import { useSettingsStore } from '../src/state/settingsStore'
@@ -96,7 +97,11 @@ function Review() {
   const [fixture, setFixture] = useState(false)
   useEffect(() => {
     const m = MISSIONS[run.mission]
-    const world = createWorld(m, ROSTER.slice(0, 4), { district: m.variants?.[run.variant] })
+    const squad = ROSTER.slice(0, 4)
+    // Explicit neutral freeze: no research, no experience, empty loadout.
+    const world = createWorld(m, squad, headlessDeploy(m, squad, {
+      ...(m.variants?.[run.variant] ? { district: m.variants[run.variant] } : {}),
+    }))
     useSettingsStore.setState({ quality: run.quality, muted: true })
     useAppStore.setState({ missionId: m.id, phase: 'mission' })
     useMissionStore.getState().reset()

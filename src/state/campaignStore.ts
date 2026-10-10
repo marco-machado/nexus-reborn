@@ -76,8 +76,6 @@ export interface CampaignState {
   recruitRngState: number
   nextCandidateT: number
   contractsWon: string[]
-  // Number of app-store outcomes already consumed by the debrief boundary.
-  outcomeApplied: number
   campaignWon: boolean
   campaignFailed: boolean
   lastReport: DebriefReport | null
@@ -101,7 +99,6 @@ export type CampaignData = Pick<
   | 'recruitRngState'
   | 'nextCandidateT'
   | 'contractsWon'
-  | 'outcomeApplied'
   | 'campaignWon'
   | 'campaignFailed'
   | 'lastReport'
@@ -159,7 +156,6 @@ export function initialCampaignData(): CampaignData {
     recruitRngState,
     nextCandidateT: CANDIDATE_REFRESH_SEC,
     contractsWon: [],
-    outcomeApplied: 0,
     campaignWon: false,
     campaignFailed: false,
     lastReport: null,
@@ -278,7 +274,6 @@ export const useCampaignStore = create<CampaignState>((set) => ({
         contractsWon: won,
         campaignWon: allWon && !campaignFailed,
         campaignFailed,
-        outcomeApplied: state.outcomeApplied + 1,
         lastReport: { kia, injured, xp },
       }
     }),
