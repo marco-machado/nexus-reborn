@@ -4,7 +4,7 @@
 > **Status**: Ready
 > **Layer**: Core
 > **Type**: Integration
-> **Estimate**: —
+> **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
 > **Last Updated**: —
 

@@ -19,6 +19,9 @@
 | WN-007 Tax yield emits only from Nexus-held sectors | Logic | Unit — `src/game/ownership.test.ts`, `src/state/worldStore.test.ts` | None |
 | WN-015 Mission result shoves Control and Unrest | Logic | Unit — `src/state/worldStore.test.ts` | None |
 | WN-016 City holder after a win or a loss | Logic | Unit — `src/game/ownership.test.ts`, `src/state/worldStore.test.ts` | None |
+| TM-017 A rolled hit strikes the first body on the fire lane (unplanned, landed) | Logic | Unit — `src/game/world.test.ts` (present, passing); checkpoint queue in `src/world/citygen.test.ts` | Owner re-play of Glass Veil 2026-10-10 (done) |
+| RA-006 canDeploy allows one to four Ready operatives (QQ-02, past capacity) | Logic | Unit — `src/game/mass.test.ts` or `src/game/deployGate.test.ts`, `src/state/appStore.test.ts` | None |
+| IF-011 Pyrrhic win banner and failed-campaign Debrief actions (QQ-05, past capacity) | UI | None | Debrief screenshots at 1280×720 in `production/qa/evidence/` + click-through note |
 
 ---
 
@@ -153,6 +156,31 @@ Control-manifest guards these tests must keep: strategic time does not advance i
 
 **Estimated test count**: ~3 unit tests
 
+### TM-017 A rolled hit strikes the first body on the fire lane — Logic
+**Test file path**: `src/game/world.test.ts`, `src/world/citygen.test.ts`
+**What to test** (all present and passing at commit 4eb541e):
+- A rolled hit with a civilian on the lane strikes the civilian, not the target, and bills `civiliansHit` once.
+- A clear lane still hits the aimed target.
+- A CorpSec hit through a civilian damages them and bills nothing.
+- Checkpoint districts queue at least a third of the crowd on the avenue south of the gate.
+
+**Edge cases to cover**:
+- Own side is skipped: a squad in file does not shoot itself (the scripted Glass Veil playthrough is the guard).
+- No extra `rng()` draws in the sim; citygen draws extra only for the checkpoint archetype.
+
+**Estimated test count**: 4 (landed)
+
+### RA-006 canDeploy allows one to four Ready operatives — Logic
+**Test file path**: `src/game/deployGate.test.ts` (or `src/game/mass.test.ts`), `src/state/appStore.test.ts`
+**What to test**:
+- With a selected contract and `squad_mass ≤ 400` kg, 1, 2, 3 and 4 assigned Ready operatives are each allowed.
+- `appStore.startMission()` changes phase to mission only when `canDeploy` is ok, and no-ops otherwise.
+
+**Edge cases to cover**:
+- Refusals (0 operatives, over mass, no contract) are RA-007. Do not assert refusal text here.
+
+**Estimated test count**: ~5 unit tests
+
 ---
 
 ## Manual QA Checklist
@@ -180,6 +208,12 @@ Checklist:
 - [ ] An older apply key changes nothing.
 
 ---
+
+### IF-011 Pyrrhic win banner and failed-campaign Debrief actions — UI
+- [ ] Pyrrhic fixture: CAMPAIGN FAILED banner above the invoice, first and dominant; note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`; net payout unchanged.
+- [ ] Non-pyrrhic win shows neither the banner nor the note.
+- [ ] Failed-campaign Debrief actions match AC30 for both fixtures.
+- [ ] Screenshots of each fixture at 1280×720 saved to `production/qa/evidence/`, no clipping.
 
 ## Smoke Test Scope
 

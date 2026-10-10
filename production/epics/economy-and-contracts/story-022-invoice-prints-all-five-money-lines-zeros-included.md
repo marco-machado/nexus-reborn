@@ -4,7 +4,7 @@
 > **Status**: Ready
 > **Layer**: Core
 > **Type**: UI
-> **Estimate**: —
+> **Estimate**: 1.5 d
 > **Manifest Version**: 2026-10-08
 > **Last Updated**: —
 

@@ -10,6 +10,8 @@ Prove the two-clock contract on the living board: strategic time advances only o
 - Buffer (20%): 2 days
 - Available: 8 days
 - Must Have uses 7.0 of those 8. Should Have uses the remaining 1.0. Nice to Have sits past capacity and is cut first.
+- Unplanned: TM-017 (1.0) landed on 2026-10-09/10 to clear the Production gate. It came out of the buffer, which leaves 1 day.
+- Architecture debt QQ-02 and QQ-05 (RA-006, IF-011, 2.0 total) sit past capacity with Nice to Have. Pull them in before WN-015/016 if Must Have finishes early.
 
 QA plan: run `/qa-plan sprint` before implementation begins.
 
@@ -38,6 +40,19 @@ QA plan: run `/qa-plan sprint` before implementation begins.
 | WN-015 | Mission result shoves Control and Unrest in the right direction | gameplay-programmer | 1.0 | WN-003 | A non-quiet win raises Control; a non-quiet loss lowers it; civilians hit raise Unrest above a clean win |
 | WN-016 | City holder after a win or a loss | gameplay-programmer | 1.0 | WN-003 | A non-quiet win sets the mission city to Nexus; a non-quiet loss of a Nexus-held city restores that city’s default holder |
 
+### Architecture Debt (QQ-02, QQ-05)
+
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
+| RA-006 | canDeploy allows one to four Ready operatives; Team Deploy calls `startMission` (QQ-02, ADR-0019) | gameplay-programmer | 1.0 | RA-003 | 1–4 Ready operatives under 400 kg with a selected contract may deploy; `appStore.startMission()` no-ops unless `canDeploy` is ok. The four-slice `DeployParams` half of QQ-02 is WN-004 |
+| IF-011 | Pyrrhic win banner and failed-campaign Debrief actions (QQ-05) | ui-programmer | 1.0 | IF-009 | CAMPAIGN FAILED banner sits above the invoice; the note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`; the payout is unchanged; a non-pyrrhic win shows neither |
+
+### Unplanned (landed for the Production gate)
+
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
+| TM-017 | A rolled hit strikes the first body on the fire lane | gameplay-programmer | 1.0 | None | See story. Implemented and tested (`src/game/world.test.ts`) in commit 4eb541e; awaiting `/story-done` |
+
 ## Carryover from Previous Sprint
 
 | Task | Reason | New Estimate |
@@ -48,7 +63,8 @@ QA plan: run `/qa-plan sprint` before implementation begins.
 
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
-| Every selected story has `Estimate: —`, so these day counts are uncalibrated | Medium | Medium | Re-estimate after WN-001. Cut WN-015 and WN-016 first |
+| Story estimates (added 2026-10-10 from Type and AC count) are uncalibrated | Medium | Medium | Re-estimate after WN-001. Cut WN-015 and WN-016 first |
+| RA-006 and IF-011 depend on RA-003 and IF-009, which are outside this sprint | Medium | Low | Check with `/story-readiness`; if the code already satisfies the dependency, take it as done-in-code, otherwise carry the debt to sprint 2 |
 | WN-003 and WN-004 are Integration stories on the debrief and deploy boundary | Medium | High | Land WN-001 and WN-002 first. Tests sit beside the module the story names |
 | Catch-up order in WN-002 is easy to fork into a second table | Medium | High | Assert one shared `advanceFlow`. Do not author a new collision order |
 | The loop already plays, and the story criteria may not match the code | Medium | Medium | Run `/story-readiness` on WN-001 before `/dev-story` |
