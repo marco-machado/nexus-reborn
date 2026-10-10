@@ -1,12 +1,12 @@
 # Story 001: Strategic clock runs only on the four Screens
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN phase ∈ {World Network, Research, Brief, Assembly}, speed 1×, unpaused, foreground frame delivery with no clamped gaps, WHEN the clock delivers a total of 1 accepted real second to `tick` (no pending batching remainder at either observation), THEN strategic `t` increases by 60 seconds.
-- [ ] GIVEN an unpaused Screen at 1× with an empty caller accumulator, WHEN one rAF callback arrives after a 1-second wall-clock gap, THEN the caller admits 0.25 seconds and the delivered tick advances `t` by 15 strategic seconds. (Caller-side stall clamp per ADR-0018; not a clamp on raw `worldStore.tick`.)
-- [ ] GIVEN phase ∈ {Menu, Mission, Debrief}, WHEN wall-clock advances, THEN strategic `t` is unchanged.
-- [ ] GIVEN paused on a Screen, WHEN wall-clock advances, THEN strategic `t` is unchanged.
+- [x] GIVEN phase ∈ {World Network, Research, Brief, Assembly}, speed 1×, unpaused, foreground frame delivery with no clamped gaps, WHEN the clock delivers a total of 1 accepted real second to `tick` (no pending batching remainder at either observation), THEN strategic `t` increases by 60 seconds.
+- [x] GIVEN an unpaused Screen at 1× with an empty caller accumulator, WHEN one rAF callback arrives after a 1-second wall-clock gap, THEN the caller admits 0.25 seconds and the delivered tick advances `t` by 15 strategic seconds. (Caller-side stall clamp per ADR-0018; not a clamp on raw `worldStore.tick`.)
+- [x] GIVEN phase ∈ {Menu, Mission, Debrief}, WHEN wall-clock advances, THEN strategic `t` is unchanged.
+- [x] GIVEN paused on a Screen, WHEN wall-clock advances, THEN strategic `t` is unchanged.
 
 ---
 
@@ -89,7 +89,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/worldStore.test.ts` (tick/pause/phase gating); clock-hook coverage as a unit test beside `useWorldClock`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/worldStore.test.ts` (4 new tests in "clock advance"), `src/ui/clock.test.ts` (10 tests)
 
 ---
 
@@ -97,3 +97,14 @@
 
 - Depends on: None
 - Unlocks: Story 002, Story 006
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 4/4 passing (none deferred)
+**Deviations**: None blocking. Advisory items logged as TD-001..TD-004 in `docs/tech-debt-register.md`: AC3 (Menu/Mission/Debrief leave `t` unchanged) is covered by source-text scans in `src/ui/clock.test.ts` plus a no-caller fake-timer test, not a runtime phase check; the "1s stall must not call advanceDays" spy cannot fail with the current code; constant-pinning asserts are not behavior tests; `startWorldClock` step reads `useWorldStore.getState().t` directly rather than through an injected sink; first-frame `dt` may be slightly negative (pre-existing — changing it needs sign-off); `CLOCK_BATCH_SEC` lacks a `/** */` doc comment.
+**Untested**: stall after a partial accumulator, 2x/4x speed through the loop, stall while paused, `useWorldClock` effect wiring. Recommend adding tests in a follow-up story.
+**Test Evidence**: Logic: `src/state/worldStore.test.ts` ("clock advance", 4 new tests), `src/ui/clock.test.ts` (10 tests). Both suites passed on 2026-10-10 (73/73; full suite 617/617); lint and build clean.
+**Run result**: N/A — clock-loop refactor with no visible surface change (from /dev-story checkpoint).
+**Code Review**: Complete — /code-review APPROVED WITH SUGGESTIONS, zero blocking findings (lean mode; recorded unattended).

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DAY,
   MAX_DT,
@@ -168,6 +168,34 @@ describe('clock advance', () => {
     expect(s.paused).toBe(true)
     expect(s.t).toBe(0)
     expect(s.events).toHaveLength(3)
+  })
+
+  it('1 accepted real second at 1x, delivered in 20Hz batches, advances t by 60', () => {
+    useWorldStore.getState().setSpeed(1)
+    for (let i = 0; i < 20; i++) useWorldStore.getState().tick(0.05)
+    expect(useWorldStore.getState().t).toBeCloseTo(60, 9)
+  })
+
+  it('a MAX_DT stall admission at 1x advances t by 15', () => {
+    useWorldStore.getState().setSpeed(1)
+    useWorldStore.getState().tick(MAX_DT)
+    expect(useWorldStore.getState().t).toBeCloseTo(15, 9)
+  })
+
+  it('the store owns no timer: wall-clock advance with no caller (Menu, Mission, Debrief) leaves t unchanged', () => {
+    vi.useFakeTimers()
+    try {
+      vi.advanceTimersByTime(60_000)
+      expect(useWorldStore.getState().t).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('paused: repeated ticks across wall-clock time leave t unchanged', () => {
+    useWorldStore.getState().togglePause()
+    for (let i = 0; i < 20; i++) useWorldStore.getState().tick(0.05)
+    expect(useWorldStore.getState().t).toBe(0)
   })
 
   it('setSpeed also unpauses', () => {

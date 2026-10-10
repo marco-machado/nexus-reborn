@@ -21,11 +21,11 @@ stories:
     name: "Strategic clock runs only on the four Screens"
     file: "production/epics/world-network/story-001-strategic-clock-runs-only-on-the-four-screens.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "WN-002"
     name: "Win-ETA catch-up shares advanceFlow; a loss spends none"
     file: "production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md"
