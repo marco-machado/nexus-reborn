@@ -1,6 +1,6 @@
 ## Technical Debt Register
 Last updated: 2026-10-10
-Total items: 9 | Estimated total effort: 7S + 2M
+Total items: 10 | Estimated total effort: 8S + 2M
 
 | ID | Category | Description | Files | Effort | Impact | Priority | Status | Added | Sprint |
 |----|----------|-------------|-------|--------|--------|----------|--------|-------|--------|
@@ -13,3 +13,4 @@ Total items: 9 | Estimated total effort: 7S + 2M
 | TD-007 | Test | The loss test checks AC2's debrief wiring with regexes over the src/ui/index.tsx source (structural), not a runtime debrief-loss check — from production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md | src/state/worldStore.test.ts, src/ui/index.tsx | M | Med | — | Open | 2026-10-10 | Backlog |
 | TD-008 | Test | TM-017 AC-2: no test runs a lane hit through to the debrief invoice. The world outcome's `civiliansHit` (world.test.ts) and `collateralFine` from a hand-built outcome (appStore.test.ts) are tested separately — from production/epics/tactical-mission/story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md | src/game/world.test.ts, src/state/appStore.test.ts | S | Med | — | Open | 2026-10-10 | Backlog |
 | TD-009 | Test | No test arms a pressure timer so that a pressure decay and a Tax due share one timestamp; GDD §135 says Tax then reads Control after pressure. WN-007 tests set sector state with `setState`, so no timer is armed — from production/epics/world-network/story-007-tax-yield-emits-only-from-nexus-held-sectors.md | src/state/worldStore.test.ts | S | Med | — | Open | 2026-10-10 | Backlog |
+| TD-010 | Test | Mission-result tests assert exact Control/Unrest deltas (`+4`, `-4`, `+ 4 + 5`) that GDD §5 leaves unnamed; rewrite as direction-only or name the integers in §5 — from production/epics/world-network/story-015-mission-result-shoves-control-and-unrest-in-the-right-d.md | src/state/worldStore.test.ts | S | Low | — | Open | 2026-10-10 | Backlog |

@@ -21,6 +21,7 @@ The Debrief apply-once guard is a serial that the apply path mints (`setOutcome`
 |-------|-------|
 | **Engine** | React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU |
 | **Domain** | Core / Economy |
+| **Layer** | Foundation |
 | **Knowledge Risk** | HIGH for the pin overall (cutoff May 2025; three.js r185 / React 19.2.8 — see `docs/engine-reference/web/VERSION.md`). This domain uses no three.js / r3f / React 19.2 APIs: LOW. |
 | **References Consulted** | `docs/engine-reference/web/VERSION.md`; `docs/engine-reference/web/breaking-changes.md`; `docs/engine-reference/web/deprecated-apis.md`; `docs/agents/mission-runtime.md`; `docs/agents/strategy-time-state.md`; `docs/registry/architecture.yaml`; `src/state/appStore.ts`; `src/state/campaignStore.ts`; `src/state/save.ts`; `src/game/world.ts`; `src/game/types.ts`; `src/ui/MissionScreen.tsx`; `src/ui/index.tsx` |
 | **Post-Cutoff APIs Used** | None — plain TypeScript and Zustand `getState` / `setState`. No React 19.2 `useEffectEvent` / `<Activity>`. |

@@ -20,6 +20,7 @@ Accepted
 |-------|-------|
 | **Engine** | Configured in `docs/technical-preferences.md`: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU |
 | **Domain** | Core |
+| **Layer** | Foundation |
 | **Knowledge Risk** | HIGH — cutoff May 2025; pin is three.js r185 / React 19.2.8. See `docs/engine-reference/web/VERSION.md` |
 | **References Consulted** | `docs/engine-reference/web/VERSION.md`; `docs/technical-preferences.md` |
 | **Post-Cutoff APIs Used** | None — this decision is campaign persistence, not an engine API |

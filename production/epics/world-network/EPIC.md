@@ -39,6 +39,7 @@ The World Network is the director’s job between missions: six open sectors (An
 | TR-world-network-010 | Quiet replay awards 0 Influence and Intel and does not shove Control/Unrest; ETA still catch-up | ADR-0004 ✅ |
 | TR-world-network-011 | Timeline Review is not an advancement path | ADR-0014 ✅ |
 | TR-world-network-012 | Strategic clock runs only on the four Screens | ADR-0001 ✅ |
+| TR-world-network-013 | A non-quiet win raises Control, a loss lowers it, and civiliansHit raises Unrest over a clean win | ADR-0002, ADR-0021 ✅ |
 | TR-world-network-014 | A non-quiet win hands the mission city to Nexus; a loss of a Nexus-held city returns it to its default holder (Nexus-default is a no-op); quiet replay leaves the holder unchanged | ADR-0002, ADR-0021 ✅ |
 
 ## Definition of Done

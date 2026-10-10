@@ -654,6 +654,45 @@ describe('mission results', () => {
     expect(after.sectors.na.control).toBeLessThan(na.control)
   })
 
+  // Direction-only checks (TR-world-network-013). Magnitudes are unnamed in
+  // GDD section 5, so these assert relations, never deltas. Start mid-range
+  // so neither the cap nor the floor can hide a shove.
+  function midEu(): void {
+    const eu = useWorldStore.getState().sectors.eu
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, eu: { ...eu, control: 50, unrest: 50 } },
+    })
+  }
+
+  it('a non-quiet win leaves control higher than it was', () => {
+    midEu()
+    const before = useWorldStore.getState().sectors.eu.control
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: true }))
+    expect(useWorldStore.getState().sectors.eu.control).toBeGreaterThan(before)
+  })
+
+  it('a non-quiet loss leaves control lower than it was', () => {
+    midEu()
+    const before = useWorldStore.getState().sectors.eu.control
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    expect(useWorldStore.getState().sectors.eu.control).toBeLessThan(before)
+  })
+
+  it('civilian hits leave unrest higher than an otherwise identical clean win', () => {
+    midEu()
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 0 }))
+    const clean = useWorldStore.getState().sectors.eu.unrest
+
+    useWorldStore.setState(structuredClone(snapshot))
+    midEu()
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 3 }))
+    const dirty = useWorldStore.getState().sectors.eu.unrest
+
+    expect(dirty).toBeGreaterThan(clean)
+  })
+
   it('a single loss reads as one operative', () => {
     useWorldStore
       .getState()

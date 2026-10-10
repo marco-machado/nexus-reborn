@@ -1,17 +1,17 @@
 # Story 015: Mission result shoves Control and Unrest in the right direction
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
 **GDD**: `design/gdd/world-network.md`
-**Requirement**: `TR-world-network-004`
+**Requirement**: `TR-world-network-013` (shove direction); write-back timing is `TR-world-network-004` (Story 003)
 *(Requirement text lives in `docs/architecture/tr-registry.yaml` — read fresh at review time)*
 
 **ADR Governing Implementation**: ADR-0002: A mission in progress is not saved  
@@ -23,8 +23,12 @@
 **Engine Notes**: Pure TypeScript / Zustand 5 logic; no post-cutoff three.js or r3f API involved. Select primitives or use `useShallow` in selectors.
 
 **Control Manifest Rules (this layer)**:
-- Required: see Implementation Notes (Foundation Layer Rules, manifest 2026-10-08).
+- Required: The debrief is the only boundary that applies sector movement, and it applies it once (ADR-0002).
+- Required: `applyDebrief` is the only caller of `worldStore.applyMissionResult`; it runs after `campaignStore.reportMission` and before any win `advanceDays(ETA)` (ADR-0021).
+- Required: Apply the outcome at frozen `t0`; catch-up must not run before write-back (ADR-0018).
+- Required: Read `won`, `quietReplay` and `civiliansHit` from the outcome DTO; World Network does not compute collateral and does not read `deadIds` / `survivorHp` (GDD §Outcome DTO).
 - Forbidden: Writing sector effects anywhere but `applyMissionResult`.
+- Forbidden: Any UI component calling `applyMissionResult` for a Debrief result (ADR-0021).
 - Guardrail: catch-up CPU proportional to dues inside the jumped span; no per-frame React state (CLAUDE.md).
 
 ---
@@ -45,6 +49,7 @@
 
 - Assert direction only; magnitudes are unnamed in GDD §5. Do not copy code numbers into tests as requirements and do not promote the silent 4–96 Control range.
 - Applied only through `worldStore.applyMissionResult` at frozen `t0`.
+- Performance: no performance impact expected — one store write per debrief at frozen `t0`, outside the frame loop; no per-frame React state.
 
 ---
 
@@ -85,7 +90,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/worldStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — 3 tests in `src/state/worldStore.test.ts`, passing
 
 ---
 
@@ -93,3 +98,12 @@
 
 - Depends on: Story 003
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 3/3 passing (none deferred)
+**Deviations**: None in this story. Advisory, pre-existing: tests at `src/state/worldStore.test.ts:537` and `:637` assert exact Control/Unrest deltas, against GDD §5's direction-only guidance — logged as TD-010.
+**Test Evidence**: Logic: test file at `src/state/worldStore.test.ts` (3 direction-only tests; suite 91/91 passing)
+**Code Review**: Complete — /code-review APPROVED WITH SUGGESTIONS; `midEu(): void` return type applied

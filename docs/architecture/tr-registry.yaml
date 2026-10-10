@@ -6,7 +6,7 @@ source_review: docs/architecture/architecture-review-2026-10-08b.md
 # Third full pass: no new TR-IDs; no requirement text changes; no deprecations.
 # v6 delta (2026-09-22): +TR-tactical-012, +TR-interface-008 from GDD cross-review 2026-09-22 v2 (living spec §10).
 # v7 delta (2026-10-08): +TR-economy-010, +TR-economy-011, +TR-persistence-009 (all partial). No text revisions; no deprecations.
-# v9 delta (2026-10-10): +TR-world-network-014 (city holder after debrief, GDD Core Rule 9; Story 016). No text revisions; no deprecations.
+# v9 delta (2026-10-10): +TR-world-network-013 (Control/Unrest direction; Story 015), +TR-world-network-014 (city holder after debrief, GDD Core Rule 9; Story 016). No text revisions; no deprecations.
 # v8 delta (2026-10-08, fifth pass): TR-economy-010/011 covered by ADR-0021; TR-persistence-009 covered by ADR-0022. No new IDs; no text revisions; no deprecations.
 engine: "React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 WebGPU"
 
@@ -119,6 +119,15 @@ requirements:
     status: active
     coverage: covered
     adr: [ADR-0001]
+
+  - id: TR-world-network-013
+    system: world-network
+    gdd: design/gdd/world-network.md
+    requirement: A non-quiet win raises Control, a loss lowers it, and civiliansHit raises Unrest over a clean win (direction only; magnitudes unnamed in §5)
+    domain: State
+    status: active
+    coverage: covered
+    adr: [ADR-0002, ADR-0021]
 
   - id: TR-world-network-014
     system: world-network
