@@ -1,17 +1,17 @@
 # Story 016: City holder after a win or a loss
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
 **GDD**: `design/gdd/world-network.md`
-**Requirement**: `TR-world-network-004`
+**Requirement**: `TR-world-network-014`
 *(Requirement text lives in `docs/architecture/tr-registry.yaml` — read fresh at review time)*
 
 **ADR Governing Implementation**: ADR-0002: A mission in progress is not saved  
@@ -33,8 +33,10 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN a non-quiet win, WHEN the mission city is read, THEN holder is Nexus.
-- [ ] GIVEN a non-quiet loss of a Nexus-held city, WHEN the city is read, THEN holder is that city's default holder.
+- [x] GIVEN a non-quiet win, WHEN the mission city is read, THEN holder is Nexus.
+- [x] GIVEN a non-quiet loss of a Nexus-held city, WHEN the city is read, THEN holder is that city's default holder.
+- [x] GIVEN a quiet-replay win with mission city holder **H** at `t0`, WHEN direct outcome write-back completes (before ETA advancement), THEN holder is still **H**.
+- [x] GIVEN a non-quiet loss of a Nexus-held city whose default holder is Nexus, WHEN the city is read, THEN holder stays Nexus (no-op — GDD Core Rule 9).
 
 ---
 
@@ -61,9 +63,11 @@
 **What to test**:
 - A non-quiet win sets the mission city's holder to Nexus.
 - A non-quiet loss of a Nexus-held city sets the holder to that city's default holder.
+- A quiet-replay win leaves the holder unchanged at the pre-ETA boundary.
+- A non-quiet loss of a Nexus-default city (e.g. `nb`) leaves the holder Nexus.
 
 **Edge cases to cover**:
-- A quiet-replay win does no direct ownership shove. Do not expect holder to become Nexus in that case. Story 005 owns that assertion.
+- Quiet replay: assert only the holder here. Story 005 owns the full quiet-replay assertion (Influence, Intel, Control, Unrest).
 - World Network must not read the running mission or the live roster to decide the holder. The write is the outcome DTO at debrief.
 
 *No formula in the Formulas section for holder.*
@@ -80,7 +84,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/ownership.test.ts`, `src/state/worldStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/ownership.test.ts` (Nexus-default no-op), `src/state/worldStore.test.ts` (quiet win on a rival-held city; Nexus-default loss at the store), passing
 
 ---
 
@@ -88,3 +92,12 @@
 
 - Depends on: Story 003
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 4/4 passing (none deferred)
+**Deviations**: Behaviour reversal toward GDD Core Rule 9 — a loss of a Nexus-default city was handed to the first rival (Stratos) and now stays Nexus. Requirement moved from TR-world-network-004 (Story 003's) to the new TR-world-network-014. Unreachable non-holder fallback removed from `nextCityHolder`.
+**Test Evidence**: Logic: `src/game/ownership.test.ts`, `src/state/worldStore.test.ts` (full suite 668/668). Run result OBSERVED — `production/qa/evidence/story-016-city-holder/01-before-loss.png`, `02-after-loss.png` (state staged via store import, not a played mission).
+**Code Review**: Complete — /code-review APPROVED WITH SUGGESTIONS; suggestions applied.

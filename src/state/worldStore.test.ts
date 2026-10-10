@@ -625,6 +625,35 @@ describe('mission results', () => {
     expect(replayLoss.influence).toBe(influence)
   })
 
+  it('a quiet-replay win leaves a rival-held city with its holder', () => {
+    expect(useWorldStore.getState().owner.nc).toBe('helix')
+    const lastId = useWorldStore.getState().events.at(-1)?.id ?? 0
+    useWorldStore.getState().applyMissionResult('m01', outcome({ quietReplay: true }))
+    const after = useWorldStore.getState()
+    expect(after.owner.nc).toBe('helix')
+    const added = after.events.filter((e) => e.id > lastId)
+    expect(added.some((e) => e.text.includes(' TAKES '))).toBe(false)
+  })
+
+  it('a loss of a Nexus-default city is a no-op on its holder', () => {
+    const record = { ...craft('na', 0x516), cityId: 'nb' }
+    useWorldStore.setState({ contracts: [record] })
+    const before = useWorldStore.getState()
+    expect(before.owner.nb).toBe('nexus')
+    const na = { ...before.sectors.na }
+    const lastId = before.events.at(-1)?.id ?? 0
+    useWorldStore
+      .getState()
+      .applyMissionResult(record.id, outcome({ won: false, reward: 0 }))
+    const after = useWorldStore.getState()
+    expect(after.owner.nb).toBe('nexus')
+    const added = after.events.filter((e) => e.id > lastId)
+    expect(added[0]?.text).toBe('STRIKE TEAM 04 WITHDRAWS FROM DISTRICT 05 IN NEW BOSTON')
+    expect(added.some((e) => e.text.includes(' TAKES '))).toBe(false)
+    // The loss still shoves the sector; only the holder stays put.
+    expect(after.sectors.na.control).toBeLessThan(na.control)
+  })
+
   it('a single loss reads as one operative', () => {
     useWorldStore
       .getState()

@@ -24,8 +24,8 @@ describe('nextCityHolder', () => {
     expect(nextCityHolder('dt', 'nexus', false)).toBe('stratos')
   })
 
-  it('a Nexus-authored city lost by Nexus falls to the first rival holder', () => {
+  it('a loss of a Nexus-default city is a no-op', () => {
     expect(cityById('nb').corp).toBe('nexus')
-    expect(nextCityHolder('nb', 'nexus', false)).toBe('stratos')
+    expect(nextCityHolder('nb', 'nexus', false)).toBe('nexus')
   })
 })

@@ -84,11 +84,11 @@ stories:
     name: "City holder after a win or a loss"
     file: "production/epics/world-network/story-016-city-holder-after-a-win-or-a-loss.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "TM-017"
     name: "A rolled hit strikes the first body on the fire lane"
     file: "production/epics/tactical-mission/story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md"
