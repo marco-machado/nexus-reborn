@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
+# Claude Code Game Studios — Status Line
+# Receives JSON on stdin, outputs a single-line status.
+#
+# Segments: ctx tokens | model | production stage [| Epic > Feature > Task]
+
 # --- work from the project root ----------------------------------------------
-# Every path below is repo-relative, so a hook invoked with a working directory
-# that is not the repo root would silently read and write the WRONG TREE --
-# returning a near-empty result instead of the session-recovery block, and
-# creating stray trees such as docs/production/session-logs/ on write.
+# Paths are built from $cwd below, which falls back to "." when the JSON
+# carries no directory. Started from anywhere but the repo root, that "." would
+# read the WRONG TREE and report a guessed stage.
 #
 # PRECEDENCE IS LOAD-BEARING. A cwd that IS a project root carries real
 # information and must win: a caller sitting inside another project means that
@@ -13,7 +17,7 @@
 #   1. cwd holds project.yaml   -> cwd   (a project root)
 #   2. cwd holds .claude/       -> cwd   (a project root not yet configured)
 #   3. CLAUDE_PROJECT_DIR       -> that  (populated in the hook environment)
-#   4. this script's location   -> <root>/.claude/hooks/../.. by construction
+#   4. this script's location   -> <root>/.claude/.. by construction
 # Rule 4 always works and needs no environment at all; rules 1-2 stop it from
 # overriding a caller that legitimately means somewhere else.
 #
@@ -27,11 +31,6 @@ else
 fi
 [ -n "$CCGS_ROOT" ] && cd "$CCGS_ROOT" 2>/dev/null || true
 
-# Claude Code Game Studios — Status Line
-# Receives JSON on stdin, outputs a single-line status.
-#
-# Segments: ctx% | model | production stage [| Epic > Feature > Task]
-
 input=$(cat)
 
 # --- Parse JSON (jq with grep fallback) ---
@@ -39,13 +38,28 @@ input=$(cat)
 # status line looked for project.yaml in src/ and fell back to guessing.
 if command -v jq &>/dev/null; then
   model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
-  used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
+  # Tokens in the window = this turn's input incl. cache reads/writes. Older
+  # payloads without current_usage fall back to used_percentage x window size.
+  used_tokens=$(echo "$input" | jq -r '
+    .context_window as $c
+    | if $c.current_usage then
+        (($c.current_usage.input_tokens // 0) + ($c.current_usage.cache_creation_input_tokens // 0) + ($c.current_usage.cache_read_input_tokens // 0))
+      elif $c.used_percentage and $c.context_window_size then
+        ($c.used_percentage * $c.context_window_size / 100 | floor)
+      else empty end')
   cwd=$(echo "$input" | jq -r '.workspace.project_dir // .workspace.current_dir // .cwd // ""')
 else
   model=$(echo "$input" | grep -oE '"display_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*: *"//;s/"//')
-  used_pct=$(echo "$input" | grep -oE '"used_percentage"[[:space:]]*:[[:space:]]*[0-9]+' | head -1 | sed 's/.*: *//')
+  _num() { echo "$input" | grep -oE "\"$1\"[[:space:]]*:[[:space:]]*[0-9]+" | head -1 | sed 's/.*: *//'; }
+  _in=$(_num input_tokens); _cc=$(_num cache_creation_input_tokens); _cr=$(_num cache_read_input_tokens)
+  if [ -n "$_in$_cc$_cr" ]; then
+    used_tokens=$(( ${_in:-0} + ${_cc:-0} + ${_cr:-0} ))
+  else
+    used_tokens=""
+  fi
   cwd=$(echo "$input" | grep -oE '"project_dir"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*: *"//;s/"//')
   [ -z "$cwd" ] && cwd=$(echo "$input" | grep -oE '"current_dir"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*: *"//;s/"//')
+  [ -z "$cwd" ] && cwd=$(echo "$input" | grep -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*: *"//;s/"//')
   [ -z "$model" ] && model="Unknown"
 fi
 
@@ -54,8 +68,18 @@ cwd=$(echo "$cwd" | sed 's|\\|/|g')
 [ -z "$cwd" ] && cwd="."
 
 # --- Context usage ---
-if [ -n "$used_pct" ]; then
-  ctx_label="ctx: ${used_pct}%"
+# Yellow past 100k tokens, red past 150k.
+if [ -n "$used_tokens" ]; then
+  if [ "$used_tokens" -ge 1000 ]; then
+    ctx_label="ctx: $(( (used_tokens + 500) / 1000 ))k"
+  else
+    ctx_label="ctx: ${used_tokens}"
+  fi
+  if [ "$used_tokens" -gt 150000 ]; then
+    ctx_label=$'\033[31m'"${ctx_label}"$'\033[0m'
+  elif [ "$used_tokens" -gt 100000 ]; then
+    ctx_label=$'\033[33m'"${ctx_label}"$'\033[0m'
+  fi
 else
   ctx_label="ctx: --"
 fi
@@ -92,16 +116,13 @@ fi
 
 # Priority 3: Auto-detect from artifacts
 if [ -z "$stage" ]; then
-  concept_file="$cwd/design/gdd/game-concept.md"
   systems_file="$cwd/design/gdd/systems-index.md"
   tech_prefs="$cwd/.claude/docs/technical-preferences.md"
 
-  has_concept=false
   has_systems=false
   engine_configured=false
   src_count=0
 
-  [ -f "$concept_file" ] && has_concept=true
   [ -f "$systems_file" ] && has_systems=true
 
   # Check if engine is configured (project.yaml first, fall back to technical-preferences.md)
@@ -122,7 +143,7 @@ if [ -z "$stage" ]; then
     fi
   fi
 
-  # Count source files (language-agnostic) under the engine's code root --
+  # Count source files (Godot, C#, C++, Python, Rust, Lua, TS/JS) under the engine's code root --
   # src/, Assets/ or Source/ (directory-structure.md). Counting src/ alone left
   # every Unity and Unreal project at 0, so this ladder never reached
   # Production. Capped at the threshold below: the status line runs on every
@@ -132,7 +153,7 @@ if [ -z "$stage" ]; then
     code_root=$(cd "$cwd" 2>/dev/null && resolve_code_root 2>/dev/null | cut -f1)
   fi
   if [ -n "$code_root" ] && [ -d "$cwd/$code_root" ]; then
-    src_count=$(find "$cwd/$code_root" -type f \( -name "*.gd" -o -name "*.cs" -o -name "*.cpp" -o -name "*.h" -o -name "*.py" -o -name "*.rs" -o -name "*.lua" -o -name "*.tscn" -o -name "*.tres" \) 2>/dev/null | head -n 10 | wc -l | tr -d ' ')
+    src_count=$(find "$cwd/$code_root" -type f \( -name "*.gd" -o -name "*.cs" -o -name "*.cpp" -o -name "*.h" -o -name "*.py" -o -name "*.rs" -o -name "*.lua" -o -name "*.tscn" -o -name "*.tres" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) 2>/dev/null | head -n 10 | wc -l | tr -d ' ')
   fi
 
   # Check for ADRs (signals Pre-Production phase)
@@ -150,8 +171,6 @@ if [ -z "$stage" ]; then
     stage="Technical Setup"
   elif [ "$has_systems" = true ]; then
     stage="Systems Design"
-  elif [ "$has_concept" = true ]; then
-    stage="Concept"
   else
     stage="Concept"
   fi
@@ -160,8 +179,9 @@ fi
 # --- Process posture (modes.rigor) ---
 # Locked to project.yaml (not locally overridable) with a plain terminal default
 # in _yaml_helper_defaults, so a direct get_yaml_key read + default is exact.
-# Deliberately NOT resolve_setting: that assumes PWD is the project root, unsafe
-# here since the status line works from an absolute $cwd and never cd's.
+# Deliberately NOT resolve_setting: that assumes PWD is the project root, but
+# every read here goes through $cwd from the JSON, which can differ from the
+# directory the top of the script cd'd into.
 #
 # The default applies ONLY when nothing contradicts it. If `rigor` is
 # unset but a knob it fronts is set explicitly, the project's real process weight
@@ -216,6 +236,8 @@ fi
 # Gated on the RESOLVED workflow: an explicit modes.workflow wins, otherwise it
 # follows rigor. Gating on rigor alone left an explicit `workflow: minimal`
 # under another rigor showing Concept. Builtins only -- no spawn per story.
+# project.yaml only: modes.workflow is locked (not in
+# _yaml_helper_locally_overridable), so project.local.yaml never sets it.
 path_pos=""
 _wf=""
 if [ -f "$project_yaml" ] && [ "$helper" = true ]; then
@@ -260,16 +282,18 @@ if [ "$stage" = "Production" ] || [ "$stage" = "Polish" ] || [ "$stage" = "Relea
     # Parse structured STATUS block
     in_block=false
     epic="" feature="" task=""
-    while IFS= read -r line; do
+    while IFS= read -r line || [ -n "$line" ]; do
+      # Same normalisation as the story loop: CR, indent, `- `, `**`.
+      line="${line%$'\r'}"; line="${line#"${line%%[![:space:]]*}"}"; line="${line#- }"; line="${line//\*/}"
       case "$line" in
         *"<!-- STATUS -->"*) in_block=true; continue ;;
         *"<!-- /STATUS -->"*) break ;;
       esac
       if [ "$in_block" = true ]; then
         case "$line" in
-          Epic:*) epic=$(echo "$line" | sed 's/^Epic: *//') ;;
-          Feature:*) feature=$(echo "$line" | sed 's/^Feature: *//') ;;
-          Task:*) task=$(echo "$line" | sed 's/^Task: *//') ;;
+          Epic:*) epic="${line#Epic:}"; epic="${epic#"${epic%%[![:space:]]*}"}" ;;
+          Feature:*) feature="${line#Feature:}"; feature="${feature#"${feature%%[![:space:]]*}"}" ;;
+          Task:*) task="${line#Task:}"; task="${task#"${task%%[![:space:]]*}"}" ;;
         esac
       fi
     done < "$state_file"
