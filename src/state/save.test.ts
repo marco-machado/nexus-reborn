@@ -427,6 +427,29 @@ describe('save validation', () => {
   })
 })
 
+describe('review pin persistence', () => {
+  it('the captured world carries no review key and the blob stays valid', () => {
+    useWorldStore.setState({ review: 500 })
+    const save = captureSave()
+    expect('review' in save.world).toBe(false)
+    expect(JSON.stringify(save)).not.toContain('"review"')
+    expect(validateSave(save)).toBe(true)
+  })
+
+  it('hydrate forces review to null', () => {
+    const save = captureSave()
+    useWorldStore.setState({ review: 500 })
+    hydrateSave(save)
+    expect(useWorldStore.getState().review).toBeNull()
+  })
+
+  it('New Operation forces review to null', () => {
+    useWorldStore.setState({ review: 500 })
+    startNewOperation(null)
+    expect(useWorldStore.getState().review).toBeNull()
+  })
+})
+
 describe('save round trip', () => {
   it('restores all four stores while resetting transient view and outcome state', () => {
     useAppStore.setState({

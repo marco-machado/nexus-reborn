@@ -1,12 +1,12 @@
 # Story 006: Timeline Review is a view, not a clock
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-10
 
 ## Context
 
@@ -35,8 +35,10 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN Review time and live Control C, Unrest U, owners O, `t` T, WHEN the Timeline is scrubbed, THEN live C, U, O and T are unchanged; Feed / TimeCode follow the pin; the Scan's four numbers stay live.
-- [ ] GIVEN `review < t - DAY` on a tick (not paused), WHEN `tick` runs, THEN `review` snaps to `null`; `advanceDays`, hydrate and New Operation force `review: null`.
+- [ ] GIVEN Review time and live Control C, Unrest U, owners O, `t` T, WHEN the Timeline is scrubbed, THEN live C, U, O and T are unchanged.
+- [ ] GIVEN a Review pin is set, WHEN the Feed, TimeCode and Scan render, THEN Feed / TimeCode follow the pin, the Scan's four numbers stay live, and the pin is absent from `SaveV9.world`.
+- [ ] GIVEN `review < t - DAY` on a tick (not paused), WHEN `tick` runs, THEN `review` snaps to `null`.
+- [ ] GIVEN a Review pin is set, WHEN `advanceDays`, hydrate or New Operation runs, THEN `review` is `null`.
 
 ---
 
@@ -85,7 +87,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/worldStore.test.ts` — setReview does not move `t`, sectors or owners; snap/force-null cases; `src/state/save.test.ts` — review absent from the saved world. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/worldStore.test.ts` (`review pin`, 9 tests), `src/state/save.test.ts` (`review pin persistence`, 3 tests)
 
 ---
 
@@ -93,3 +95,12 @@
 
 - Depends on: Story 001
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-10
+**Criteria**: 4/4 passing (render half of "Feed / TimeCode follow the pin" is proved at store level only; Interface epic owns the render)
+**Deviations**: None. No source change: `tick`, `advanceDays`, `setReview`, `captureSave`, `hydrateSave` and `startNewOperation` already matched ADR-0014; this story added the tests.
+**Test Evidence**: Logic: `src/state/worldStore.test.ts` and `src/state/save.test.ts` (650 tests pass; `<` vs `<=` and `advanceDays` snap-rule mutations both caught)
+**Code Review**: Complete (`/code-review` APPROVED WITH SUGGESTIONS; the suggestion is the Interface-epic render coverage)

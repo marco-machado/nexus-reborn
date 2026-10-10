@@ -57,11 +57,11 @@ stories:
     name: "Timeline Review is a view, not a clock"
     file: "production/epics/world-network/story-006-timeline-review-is-a-view-not-a-clock.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-10"
   - id: "WN-007"
     name: "Tax yield emits only from Nexus-held sectors"
     file: "production/epics/world-network/story-007-tax-yield-emits-only-from-nexus-held-sectors.md"

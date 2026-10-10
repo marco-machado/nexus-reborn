@@ -923,6 +923,93 @@ describe('review pin', () => {
     useWorldStore.getState().tick(0.1)
     expect(useWorldStore.getState().review).toBe(50)
   })
+
+  it('the snap boundary is strict: exactly one day behind is kept, one second further snaps', () => {
+    pinFlows()
+    const dt = 0.1
+    const { speed } = useWorldStore.getState()
+    const t0 = 2 * DAY
+    const t1 = t0 + dt * speed * TIME_SCALE
+    useWorldStore.setState({ t: t0, review: t1 - DAY })
+    useWorldStore.getState().tick(dt)
+    expect(useWorldStore.getState().t).toBe(t1)
+    expect(useWorldStore.getState().review).toBe(t1 - DAY)
+
+    useWorldStore.setState({ t: t0, review: t1 - DAY - 1 })
+    useWorldStore.getState().tick(dt)
+    expect(useWorldStore.getState().review).toBeNull()
+  })
+
+  it('a paused tick neither advances t nor snaps a stale review', () => {
+    pinFlows()
+    useWorldStore.setState({ t: 3 * DAY, review: 0, paused: true })
+    useWorldStore.getState().tick(10)
+    const s = useWorldStore.getState()
+    expect(s.t).toBe(3 * DAY)
+    expect(s.review).toBe(0)
+  })
+
+  it('setReview writes only the pin: t, sectors, owners and the flows stay live', () => {
+    pinFlows()
+    useWorldStore.setState({ t: 5000 })
+    const before = flowSnapshot()
+    useWorldStore.getState().setReview(1234)
+    expect(useWorldStore.getState().review).toBe(1234)
+    expect(flowSnapshot()).toEqual(before)
+  })
+
+  it('setReview does not deposit Tax even with Tax overdue', () => {
+    const credits = useAppStore.getState().credits
+    useWorldStore.setState({
+      t: 10 * TAX_INTERVAL_SEC,
+      nextTaxT: TAX_INTERVAL_SEC,
+      nextEventT: 1e12,
+      nextContractT: 1e12,
+    })
+    useWorldStore.getState().setReview(5)
+    expect(useAppStore.getState().credits).toBe(credits)
+    expect(useWorldStore.getState().nextTaxT).toBe(TAX_INTERVAL_SEC)
+    // Control: the same overdue state does pay out once the clock ticks.
+    useWorldStore.getState().tick(0.01)
+    expect(useAppStore.getState().credits).toBeGreaterThan(credits)
+  })
+
+  it('setReview does not clamp: past and future pins are stored as given', () => {
+    useWorldStore.setState({ t: 1000 })
+    useWorldStore.getState().setReview(1000 + 10 * DAY)
+    expect(useWorldStore.getState().review).toBe(1000 + 10 * DAY)
+    useWorldStore.getState().setReview(-5)
+    expect(useWorldStore.getState().review).toBe(-5)
+    useWorldStore.getState().setReview(null)
+    expect(useWorldStore.getState().review).toBeNull()
+  })
+
+  it('the live board keeps running while a review is pinned: overdue Tax pays out', () => {
+    const credits = useAppStore.getState().credits
+    const t = 10 * TAX_INTERVAL_SEC
+    useWorldStore.setState({
+      t,
+      review: t - 1,
+      nextTaxT: TAX_INTERVAL_SEC,
+      nextEventT: 1e12,
+      nextContractT: 1e12,
+    })
+    useWorldStore.getState().tick(0.01)
+    const s = useWorldStore.getState()
+    expect(s.t).toBeGreaterThan(t)
+    expect(s.nextTaxT).toBeGreaterThan(TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBeGreaterThan(credits)
+    expect(s.review).toBe(t - 1)
+  })
+
+  it('advanceDays forces the review back to live, even a pin still fresh at the new t', () => {
+    pinFlows()
+    // After the jump t is 100 + DAY, so this pin is inside the 24h window and
+    // the tick snap rule alone would keep it.
+    useWorldStore.setState({ t: 100, review: 100 + DAY - 1 })
+    useWorldStore.getState().advanceDays(1)
+    expect(useWorldStore.getState().review).toBeNull()
+  })
 })
 
 describe('sector selection', () => {
