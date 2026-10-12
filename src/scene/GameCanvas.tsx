@@ -13,6 +13,7 @@ import { StrictMode, useEffect, useRef, type ReactNode } from 'react'
 import * as THREE from 'three/webgpu'
 import { createRoot, events, extend, useFrame, type ThreeToJSXElements } from '@react-three/fiber'
 import { getWorld } from '../game/runtime'
+import { tickIfLive } from '../game/frameTick'
 import {
   TIER_PARAMS,
   createFrameProbe,
@@ -97,9 +98,7 @@ function FrameGovernor() {
 // keeps tracking wall time across long frame gaps.
 function WorldTicker() {
   useFrame((_, dt) => {
-    const w = getWorld()
-    const ms = useMissionStore.getState()
-    if (w && ms.live && !ms.paused) w.tick(dt)
+    tickIfLive(getWorld(), useMissionStore.getState(), dt)
   }, 0)
   return null
 }

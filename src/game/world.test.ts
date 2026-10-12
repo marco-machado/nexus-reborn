@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
 import { ENEMY_VISION, isWalkable } from './types'
 import { createWorld } from './world'
+import { tickIfLive } from './frameTick'
 import { headlessDeploy } from './deploy'
 import type { DeployInputs } from './deploy'
 import { DEFAULT_SQUAD, MISSIONS, OFFICER_RADIO_DELAY, ROSTER, WEAPONS, operativeById } from './data'
@@ -42,6 +43,11 @@ function deployReset(): void {
 function warm(w: WorldApi, seconds: number): void {
   const until = w.time + seconds
   while (w.time < until) w.tick(STEP)
+}
+
+// One render frame through the same gate WorldTicker uses (scene/GameCanvas.tsx).
+function frame(w: WorldApi, dt: number): void {
+  tickIfLive(w, useMissionStore.getState(), dt)
 }
 
 function dist(a: Vec2, b: Vec2): number {
@@ -2133,5 +2139,93 @@ describe('deploy freeze: createWorld reads no strategy store', () => {
       ROLE_ABILITIES[squad[0].role].passive.magnitude * WEAPONS[squad[0].weapon].damage,
       10,
     )
+  })
+})
+
+// Story IF-009 AC15 (ADR-0002): the result shows while still in Mission and
+// Debrief opens on the outcome after Tactical's 2.5 s of elapsed sim time.
+// The delay is world.time, so there is no UI timer to fake.
+describe('result display and debrief entry delay (IF-009 AC15)', () => {
+  function startAndLose(): WorldApi {
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    useAppStore.setState({ phase: 'mission', outcome: null })
+    warm(w, 1)
+    for (const u of w.units) if (u.kind === 'agent') u.stance = 'dead'
+    return w
+  }
+
+  it('shows the result in Mission, then enters Debrief once 2.5 s of time has passed', () => {
+    const w = startAndLose()
+    const t0 = w.time
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+    expect(useAppStore.getState().phase).toBe('mission')
+    expect(useAppStore.getState().outcome).toBeNull()
+
+    while (w.time - t0 < 2.3) w.tick(STEP)
+    expect(useAppStore.getState().phase).toBe('mission')
+    expect(useAppStore.getState().outcome).toBeNull()
+
+    while (w.time - t0 < 2.7) w.tick(STEP)
+    expect(useAppStore.getState().phase).toBe('debrief')
+    expect(useAppStore.getState().outcome?.won).toBe(false)
+  })
+
+  it('does not progress the delay while paused, and resumes from where it stopped', () => {
+    const w = startAndLose()
+    const t0 = w.time
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+    warm(w, 1)
+    expect(useAppStore.getState().phase).toBe('mission')
+
+    useMissionStore.getState().setPaused(true)
+    const frozen = w.time
+    for (let i = 0; i < 400; i++) frame(w, STEP) // 20 s of wall time
+    expect(w.time).toBe(frozen)
+    expect(useAppStore.getState().phase).toBe('mission')
+    expect(useAppStore.getState().outcome).toBeNull()
+
+    useMissionStore.getState().setPaused(false)
+    // Same bracket as the unpaused case: the pause added nothing to the delay.
+    while (w.time - t0 < 2.4) frame(w, STEP)
+    expect(useAppStore.getState().phase).toBe('mission')
+    while (w.time - t0 < 2.65) frame(w, STEP)
+    expect(useAppStore.getState().phase).toBe('debrief')
+  })
+
+  it('a single catch-up frame crossing both notifications lands in Debrief, result set first', () => {
+    const w = startAndLose()
+    const order: string[] = []
+    const unsubMission = useMissionStore.subscribe((s, prev) => {
+      if (s.result !== prev.result && s.result !== 'none') order.push('result')
+    })
+    const unsubApp = useAppStore.subscribe((s, prev) => {
+      if (s.phase !== prev.phase) order.push(s.phase)
+    })
+    try {
+      w.tick(4) // one frame, under MAX_CATCHUP, spans result and the 2.5 s delay
+    } finally {
+      unsubMission()
+      unsubApp()
+    }
+    expect(order).toEqual(['result', 'debrief'])
+    expect(useMissionStore.getState().result).toBe('lost')
+    expect(useAppStore.getState().outcome?.won).toBe(false)
+  })
+
+  it('emits the outcome exactly once', () => {
+    const w = startAndLose()
+    let outcomes = 0
+    const unsub = useAppStore.subscribe((s, prev) => {
+      if (s.outcome !== prev.outcome && s.outcome) outcomes++
+    })
+    try {
+      warm(w, 8)
+    } finally {
+      unsub()
+    }
+    expect(outcomes).toBe(1)
   })
 })

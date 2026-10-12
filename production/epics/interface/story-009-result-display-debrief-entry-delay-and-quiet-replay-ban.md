@@ -1,12 +1,12 @@
 # Story 009: Result display, Debrief entry delay, and quiet replay banner
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-12
 
 ## Context
 
@@ -69,7 +69,7 @@
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — production/qa/evidence/if-009/ (01–06), src/game/world.test.ts
 
 ---
 
@@ -77,3 +77,12 @@
 
 - Depends on: None
 - Unlocks: Story 010, Story 011
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-12
+**Criteria**: 2/2 passing (AC15, AC16); none deferred
+**Deviations**: None against GDD/ADR. AC15/AC16 were already met by existing code (`src/game/world.ts` setResultNow/maybeOutcome; `src/ui/index.tsx` Debrief title). Out of stated scope, from approved /code-review suggestions: `src/game/frameTick.ts` (new `tickIfLive` pause gate) and `src/scene/GameCanvas.tsx` (WorldTicker calls it) so the pause test exercises the real gate — behaviour unchanged.
+**Test Evidence**: UI: `production/qa/evidence/if-009/` 01–02 Mission result banners, 03–04 quiet-replay Debrief (won/lost), 05–06 pause → Abort → World Network with no Debrief, outcome null, credits unchanged (128,450), all 1280×720. Unit: `src/game/world.test.ts` "result display and debrief entry delay (IF-009 AC15)" — 4 tests (progressing, paused, catch-up, exactly-once); pause test verified to fail when `!ms.paused` is removed. Click-through: `docs/click-through.md` step 5 (quiet replay).
+**Code Review**: Complete — /code-review APPROVED WITH SUGGESTIONS; all four applied.
