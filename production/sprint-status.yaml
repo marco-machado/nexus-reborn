@@ -107,6 +107,15 @@ stories:
     estimate_days: 1.0
     blocker: ""
     completed: "2026-10-12"
+  - id: "IF-009"
+    name: "Result display, debrief entry delay, and quiet replay ban"
+    file: "production/epics/interface/story-009-result-display-debrief-entry-delay-and-quiet-replay-ban.md"
+    priority: unplanned
+    status: done
+    owner: "ui-programmer"
+    estimate_days: 1.0
+    blocker: ""
+    completed: "2026-10-12"
   - id: "IF-011"
     name: "Pyrrhic win banner and failed-campaign Debrief actions (QQ-05)"
     file: "production/epics/interface/story-011-pyrrhic-win-banner-and-failed-campaign-debrief-actions.md"

@@ -46,7 +46,7 @@ QA plan: run `/qa-plan sprint` before implementation begins.
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
 |----|------|-------------|-----------|-------------|-------------------|
 | RA-006 | canDeploy allows one to four Ready operatives; Team Deploy calls `startMission` (QQ-02, ADR-0019) | gameplay-programmer | 1.0 | RA-003 | 1–4 Ready operatives under 400 kg with a selected contract may deploy; `appStore.startMission()` no-ops unless `canDeploy` is ok. The four-slice `DeployParams` half of QQ-02 is WN-004 |
-| IF-009 | Result display, debrief entry delay, and quiet replay ban (pulled in 2026-10-12 to unblock IF-011) | ui-programmer | TBD | None | See story (AC15 and siblings) |
+| IF-009 | Result display, debrief entry delay, and quiet replay ban (pulled in 2026-10-12 to unblock IF-011) | ui-programmer | 1.0 | None | See story (AC15 and siblings) |
 | IF-011 | Pyrrhic win banner and failed-campaign Debrief actions (QQ-05) | ui-programmer | 1.0 | IF-009 | CAMPAIGN FAILED banner sits above the invoice; the note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`; the payout is unchanged; a non-pyrrhic win shows neither |
 
 ### Unplanned (landed for the Production gate)
