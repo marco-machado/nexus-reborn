@@ -25,11 +25,9 @@ import {
   ITEM_MASS_KG,
   MASS_LIMIT_KG,
   TIER_SPEED_DELTA,
-  massGateOk,
   massTier,
   operativeItems,
   operativeMassKg,
-  squadMassKg,
 } from '../game/mass'
 import type { LoadoutItemId } from '../game/mass'
 import {
@@ -55,6 +53,7 @@ import {
 } from '../game/research'
 import type { AugSlot, BayPin } from '../game/research'
 import { xpBonus } from '../game/experience'
+import { assignedMassKg, canDeploy } from '../game/deployGate'
 import type { ResearchNode } from '../game/research'
 import type { AgentRole, DistrictArchetype, MissionDef, OperativeDef, Weather } from '../game/types'
 import {
@@ -992,7 +991,7 @@ function RecruitPanel(props: { onClose: () => void }) {
   )
 }
 export function TeamSelect() {
-  const goto = useAppStore((s) => s.goto)
+  const startMission = useAppStore((s) => s.startMission)
   const squad = useAppStore((s) => s.squad)
   const toggle = useAppStore((s) => s.toggleOperative)
   const loadout = useAppStore((s) => s.loadout)
@@ -1060,17 +1059,27 @@ export function TeamSelect() {
   const squadOps = squad
     .map((id) => operatives.find((o) => o.id === id))
     .filter((o): o is OperativeDef => o !== undefined)
-  const hpBonusByOp: Record<string, number> = {}
-  for (const op of squadOps) {
-    const applied = appliedNodeIds(done, roster[op.id]?.pins)
-    hpBonusByOp[op.id] = crewBonus(applied).maxHp + xpBonus(roster[op.id]?.xp ?? 0).maxHp
-  }
-  const mass = squadMassKg(squadOps, hpBonusByOp, loadout)
+  const mass = assignedMassKg(squadOps, done, roster, loadout)
   const tier = massTier(mass)
-  const overKg = mass - MASS_LIMIT_KG
-  const ready =
-    squad.length >= 1 && squad.every((id) => roster[id]?.status === 'READY')
-  const deployable = !!mission && ready && massGateOk(mass)
+  const gate = canDeploy({
+    missionSelected: !!mission,
+    assignedIds: squad,
+    statusById: Object.fromEntries(squad.map((id) => [id, roster[id]?.status])),
+    massKg: mass,
+  })
+  const overKg = gate.overKg
+  const deployable = gate.ok
+  // Presentation only (ADR-0019): Roster owns the rule, Interface says why.
+  const refusal = {
+    'no-contract': ['NO CONTRACT SELECTED', 'SELECT A CONTRACT ON THE WORLD NETWORK'],
+    'none-assigned': ['NO OPERATIVES ASSIGNED', 'ASSIGN AT LEAST ONE READY OPERATIVE'],
+    'not-ready': ['INJURED OPERATIVE ASSIGNED', 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'],
+    'over-mass': [
+      overKg.toFixed(1) + ' KG OVER THE MASS LIMIT',
+      'OFFLOAD ' + overKg.toFixed(1) + ' KG BEFORE DEPLOYMENT',
+    ],
+  } as const
+  const refused = gate.reason ? refusal[gate.reason] : null
   const augs = wornAugs(done, roster[focus.id]?.pins)
   const cycleBay = (slot: AugSlot): void => {
     const options: Array<BayPin | null> = [null]
@@ -1497,27 +1506,13 @@ export function TeamSelect() {
             type="button"
             className="cta big"
             disabled={!deployable}
-            aria-label={
-              deployable
-                ? 'DEPLOY STRIKE TEAM 04'
-                : !mission
-                  ? 'DEPLOY TEAM // NO CONTRACT SELECTED'
-                  : !ready
-                    ? 'DEPLOY TEAM // INJURED OPERATIVE ASSIGNED'
-                    : 'DEPLOY TEAM // ' + overKg.toFixed(1) + ' KG OVER THE MASS LIMIT'
-            }
-            onClick={act(() => goto('mission'))}
+            aria-label={refused ? 'DEPLOY TEAM // ' + refused[0] : 'DEPLOY STRIKE TEAM 04'}
+            onClick={act(() => startMission())}
           >
             <span className="cta-inner">DEPLOY TEAM &gt;&gt;</span>
           </button>
           <div className="dim mini ts-deploy-sub">
-            {!mission
-              ? 'SELECT A CONTRACT ON THE WORLD NETWORK'
-              : !ready
-                ? 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'
-                : overKg > 0
-                  ? 'OFFLOAD ' + overKg.toFixed(1) + ' KG BEFORE DEPLOYMENT'
-                  : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
+            {refused ? refused[1] : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
           </div>
         </div>
       </footer>

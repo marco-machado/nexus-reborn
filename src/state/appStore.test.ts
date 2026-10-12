@@ -8,6 +8,9 @@ import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import { DAY, useWorldStore } from './worldStore'
 import { applyDebrief } from './debrief'
+import { assignedMassKg } from '../game/deployGate'
+import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
+import { xpBonus } from '../game/experience'
 
 // World-store boot snapshot for the economy integration suite, captured at
 // module load before any test moves the singleton.
@@ -552,5 +555,80 @@ describe('applyDebrief apply-once (ADR-0021)', () => {
     const before = snapshot()
     applyDebrief('m01')
     expect(snapshot()).toEqual(before)
+  })
+})
+
+describe('startMission (ADR-0019)', () => {
+  const data = (s: object) =>
+    structuredClone(Object.fromEntries(Object.entries(s).filter(([, v]) => typeof v !== 'function')))
+  const snapshot = () => ({
+    app: data(useAppStore.getState()),
+    world: data(useWorldStore.getState()),
+    campaign: data(useCampaignStore.getState()),
+    research: data(useResearchStore.getState()),
+  })
+  // AC 5: a refused start changes nothing at all.
+  const expectNoOp = () => {
+    const before = snapshot()
+    useAppStore.getState().startMission()
+    expect(snapshot()).toEqual(before)
+  }
+
+  beforeEach(() => {
+    useAppStore.setState({ phase: 'team', missionId: MISSIONS[0].id })
+    useResearchStore.setState({ done: [] })
+  })
+
+  it('enters the mission with a contract and a Ready squad', () => {
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+  })
+
+  it('no-ops with no contract selected', () => {
+    useAppStore.setState({ missionId: null })
+    expectNoOp()
+  })
+
+  it('no-ops when the selected contract no longer resolves', () => {
+    useAppStore.setState({ missionId: 'gone-contract' })
+    expectNoOp()
+  })
+
+  it('no-ops when an assigned operative is not Ready', () => {
+    const id = DEFAULT_SQUAD[0]
+    const c = useCampaignStore.getState()
+    useCampaignStore.setState({
+      roster: { ...c.roster, [id]: { ...c.roster[id], status: 'INJURED' } },
+    })
+    expectNoOp()
+  })
+
+  it('no-ops with zero assigned operatives (AC 6)', () => {
+    useAppStore.setState({ squad: [] })
+    expectNoOp()
+  })
+
+  it('no-ops just over the mass limit and deploys just under it, counting Experience HP', () => {
+    // Size one operative's maxHp so armor puts the squad 0.25 kg either side of
+    // the limit (exactly 400 kg is pinned in deployGate.test.ts, free of float sums).
+    const c = useCampaignStore.getState()
+    const id = DEFAULT_SQUAD[0]
+    const xp = c.roster[id].xp
+    const others = c.operatives.filter((o) => DEFAULT_SQUAD.includes(o.id) && o.id !== id)
+    const base = assignedMassKg(others, [], c.roster, {})
+    const self = c.operatives.find((o) => o.id === id)!
+    const atZeroArmor = assignedMassKg([{ ...self, maxHp: 90 }], [], c.roster, {})
+    const xpHp = xpBonus(xp).maxHp
+    const setHp = (extraKg: number) =>
+      useCampaignStore.setState({
+        operatives: c.operatives.map((o) =>
+          o.id === id ? { ...o, maxHp: 90 - xpHp + (MASS_LIMIT_KG - base - atZeroArmor + extraKg) / ARMOR_KG_PER_HP } : o,
+        ),
+      })
+    setHp(0.25)
+    expectNoOp()
+    setHp(-0.25)
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
   })
 })

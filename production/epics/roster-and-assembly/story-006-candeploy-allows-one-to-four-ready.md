@@ -1,7 +1,7 @@
 # Story 006: canDeploy allows one to four Ready operatives
 
 > **Epic**: Roster and Assembly
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 1.0 d
@@ -32,12 +32,12 @@
 
 *From GDD `design/gdd/roster-and-assembly.md`, scoped to this story:*
 
-- [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 1 assigned Ready operative (other Squad bays empty), **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 1)*
-- [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 2 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 2)*
-- [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 3 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 3)*
-- [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 4 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 4)*
-- [ ] **GIVEN** a selected contract and 1–4 assigned operatives where `canDeploy` is not ok (any assigned operative not Ready, or `squad_mass > 400` kg), **WHEN** `appStore.startMission()` is called, **THEN** `appStore.phase` stays `team` and no mission is created (world, research and loadout snapshots unchanged). *(ADR-0019; Implementation Notes)*
-- [ ] **GIVEN** zero assigned operatives (all four Squad bays empty), **WHEN** Deploy is requested, **THEN** Deploy is refused. *(TR-roster-001: "requires 1–4")*
+- [x] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 1 assigned Ready operative (other Squad bays empty), **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 1)*
+- [x] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 2 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 2)*
+- [x] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 3 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 3)*
+- [x] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 4 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 4)*
+- [x] **GIVEN** a selected contract and 1–4 assigned operatives where `canDeploy` is not ok (any assigned operative not Ready, or `squad_mass > 400` kg), **WHEN** `appStore.startMission()` is called, **THEN** `appStore.phase` stays `team` and no mission is created (world, research and loadout snapshots unchanged). *(ADR-0019; Implementation Notes)*
+- [x] **GIVEN** zero assigned operatives (all four Squad bays empty), **WHEN** Deploy is requested, **THEN** Deploy is refused. *(TR-roster-001: "requires 1–4")*
 
 ---
 
@@ -71,7 +71,7 @@
 **Required evidence**:
 - Logic: test file beside the module — src/game/mass.test.ts (or a sibling `src/game/deployGate.test.ts` beside the new module), `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/deployGate.test.ts` (canDeploy, assignedMassKg), `src/state/appStore.test.ts` (`startMission (ADR-0019)`), passing
 
 ---
 
@@ -79,3 +79,13 @@
 
 - Depends on: Story 003
 - Unlocks: Story 007, Story 008
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-12
+**Criteria**: 6/6 passing (AC 1-4 plus the refused-start no-op and zero-operative refusal)
+**Deviations**: None. `canDeploy` follows the ADR-0019 Key Interfaces (`none-assigned`, `overKg`, `reason: null`).
+**Test Evidence**: Logic: `src/game/deployGate.test.ts`, `src/state/appStore.test.ts` (688 tests passing). Deploy button observed in a headless browser: `production/qa/evidence/ra-006/` (enabled, empty squad, over mass). The Deploy click itself was not exercised in the browser; `startMission` is covered by unit tests.
+**Code Review**: Complete — /code-review returned CHANGES REQUIRED; both required changes and the low-cost suggestions were applied, not re-reviewed.
+**Notes**: Team screen and `startMission` share `assignedMassKg` and `canDeploy`. The Deploy label's `>>` is clipped at the button edge in the captures (existing styling, untouched). Story 007 builds refusal text on `gate.reason`.

@@ -4,6 +4,8 @@ import { DEFAULT_SQUAD } from '../game/data'
 import type { MissionTelemetry } from './telemetry'
 import { resolveMission } from './worldStore'
 import { LOADOUT_SLOTS, emptyLoadout } from '../game/mass'
+import { MAX_SQUAD, assignedMassKg, canDeploy } from '../game/deployGate'
+import { useResearchStore } from './researchStore'
 import type { LoadoutItemId, OperativeLoadout, SquadLoadout } from '../game/mass'
 import { missionLocked, useCampaignStore } from './campaignStore'
 
@@ -71,6 +73,9 @@ export interface AppState {
   deploySerial: number
   lastAppliedKey: number
   goto: (phase: Phase) => void
+  // Team Deploy (ADR-0019). Enters the mission only while canDeploy is ok;
+  // otherwise a no-op. The one start API: never goto('mission') directly.
+  startMission: () => void
   // Debrief → World Network. Drops the selected contract so Brief locks.
   returnFromDebrief: () => void
   selectMission: (id: string) => void
@@ -95,6 +100,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   deploySerial: 0,
   lastAppliedKey: 0,
   goto: (phase) => set({ phase }),
+  startMission: () => {
+    const { missionId, squad, loadout } = get()
+    const { operatives, roster } = useCampaignStore.getState()
+    const done = useResearchStore.getState().done
+    const ops = squad.flatMap((id) => operatives.filter((o) => o.id === id))
+    const gate = canDeploy({
+      missionSelected: !!missionId && !!resolveMission(missionId),
+      assignedIds: squad,
+      statusById: Object.fromEntries(squad.map((id) => [id, roster[id]?.status])),
+      massKg: assignedMassKg(ops, done, roster, loadout),
+    })
+    if (gate.ok) set({ phase: 'mission' })
+  },
   returnFromDebrief: () => set({ phase: 'world', missionId: null }),
   selectMission: (id) => {
     const campaign = useCampaignStore.getState()
@@ -111,7 +129,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         return { squad: s.squad.filter((x) => x !== id) }
       }
       if (useCampaignStore.getState().roster[id]?.status !== 'READY') return s
-      if (s.squad.length >= 4) return s
+      if (s.squad.length >= MAX_SQUAD) return s
       return { squad: [...s.squad, id] }
     }),
   setLoadout: (opId, slot, item) =>
