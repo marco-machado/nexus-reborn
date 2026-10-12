@@ -1,12 +1,12 @@
 # Story 011: Pyrrhic win banner and failed-campaign Debrief actions
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-12
 
 ## Context
 
@@ -35,14 +35,14 @@
 
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
-- [ ] (AC29) GIVEN an owner-supplied pyrrhic-win outcome (Win, roster emptied, incomplete campaign) and, separately, a non-pyrrhic Win, WHEN Debrief is shown, THEN the pyrrhic fixture shows the CAMPAIGN FAILED banner above the invoice, first and visually dominant, and the invoice note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` with the owner-supplied full net payout unchanged; the non-pyrrhic fixture shows neither. Failure and payout values are not recomputed in Interface.
+- [x] (AC29) GIVEN an owner-supplied pyrrhic-win outcome (Win, roster emptied, incomplete campaign) and, separately, a non-pyrrhic Win, WHEN Debrief is shown, THEN the pyrrhic fixture shows the CAMPAIGN FAILED banner above the invoice, first and visually dominant, and the invoice note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` with the owner-supplied full net payout unchanged; the non-pyrrhic fixture shows neither. Failure and payout values are not recomputed in Interface.
   - *Observable meaning of "first and visually dominant"* (benchmark for this story):
     - The CAMPAIGN FAILED banner is the first element inside `.db-card`. It comes before the `db-tag` line, the title and the `.db-rows` invoice.
     - Its text is the literal `CAMPAIGN FAILED`, so it doesn't rely on color alone. It uses `RED` / `RED_A*` from `src/ui/tokens.ts`, with no new hex values.
     - Its font size is greater than or equal to the `.db-title` font size.
     - At 1280×720, at every text scale, the banner is fully visible without scrolling, clipping or truncation.
     - The retained screenshots for each fixture under `production/qa/evidence/` (named `if-011-<fixture>-1280x720`) show this.
-- [ ] (AC30) GIVEN a Debrief on a failed campaign (separate fixtures: pyrrhic win on an authored contract; loss on an authored contract that empties the roster), WHEN the Debrief actions are read, THEN no Replay control is present and World Network return is available. GIVEN a non-failed authored Debrief, THEN Replay is present.
+- [x] (AC30) GIVEN a Debrief on a failed campaign (separate fixtures: pyrrhic win on an authored contract; loss on an authored contract that empties the roster), WHEN the Debrief actions are read, THEN no Replay control is present and World Network return is available. GIVEN a non-failed authored Debrief, THEN Replay is present.
 
 ---
 
@@ -86,7 +86,7 @@
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 - Unit: `src/ui/debriefFlags.test.ts` covers AC29/AC30 flag decisions across the four fixtures.
 
-**Status**: [ ] Not yet created
+**Status**: [x] `src/ui/debriefFlags.test.ts` (9 tests) and `production/qa/evidence/if-011/` (13 screenshots + README click-through note)
 
 ---
 
@@ -94,3 +94,12 @@
 
 - Depends on: Story 009
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-12
+**Criteria**: 2/2 passing (AC29, AC30)
+**Deviations**: None. Advisory: `.db-failed` uses the `rgba(224, 75, 60, …)` values of `RED_A18`/`RED_A7` and `var(--red-hot)` directly in `ui.css`, matching existing rules there; no new colour values. `.db-card` now caps at screen height and `.db-rows` scrolls internally, so at text scale 125 PAYOUT/NOTE sit below the fold (banner, title and actions stay visible).
+**Test Evidence**: UI: retained screenshots in `production/qa/evidence/if-011/` (opened: pyrrhic-win, failed-loss, win at 1280×720); unit: `src/ui/debriefFlags.test.ts` passes (9/9), `tsc -b` clean.
+**Code Review**: Pending — run `/code-review` on `src/ui/debriefFlags.ts src/ui/debriefFlags.test.ts src/ui/index.tsx src/ui/ui.css` before sprint close-out (lean mode, not yet run).

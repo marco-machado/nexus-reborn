@@ -14,7 +14,7 @@ goal: "Prove the two-clock contract on the living board: strategic time advances
 start: "2026-10-09"
 end: "2026-10-22"
 generated: "2026-10-09"
-updated: "2026-10-12"
+updated: 2026-10-12
 
 stories:
   - id: "WN-001"
@@ -111,8 +111,8 @@ stories:
     name: "Pyrrhic win banner and failed-campaign Debrief actions (QQ-05)"
     file: "production/epics/interface/story-011-pyrrhic-win-banner-and-failed-campaign-debrief-actions.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-12"

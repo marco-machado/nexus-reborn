@@ -2561,6 +2561,25 @@
   display: flex;
   flex-direction: column;
   gap: 13px;
+  /* Never taller than the screen: at large text scales the invoice scrolls
+     inside the card so the banner, title and actions stay on screen (IF-011). */
+  max-height: 100%;
+  min-height: 0;
+}
+
+.db-card > :not(.db-rows) { flex-shrink: 0; }
+
+.db-failed {
+  font-size: clamp(26px, 3.4vw, 42px);
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--red-hot);
+  background: rgba(224, 75, 60, 0.18);
+  border: 1px solid rgba(224, 75, 60, 0.7);
+  padding: 8px 12px;
 }
 
 .db-tag { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.26em; }
@@ -2585,6 +2604,8 @@
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   padding: 14px 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .db-row {

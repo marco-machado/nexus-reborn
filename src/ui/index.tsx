@@ -16,8 +16,8 @@ import {
   startNewOperation,
 } from '../state/save'
 import { applyDebrief } from '../state/debrief'
+import { debriefFlags } from './debriefFlags'
 import { WEAPONS } from '../game/data'
-import { isGeneratedMissionId } from '../game/contracts'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { ROSTER_CAP } from '../game/recruits'
 import {
@@ -1538,10 +1538,12 @@ export function Debrief() {
   const missionId = useAppStore((s) => s.missionId)
   const m = missionId ? resolveMission(missionId) : null
   const report = useCampaignStore((s) => s.lastReport)
+  const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const won = outcome?.won ?? false
   const quiet = outcome?.quietReplay === true
   const fine = outcome && !quiet ? collateralFine(outcome) : 0
   const paid = outcome ? netPayout(outcome) : 0
+  const flags = debriefFlags(outcome, campaignFailed, missionId)
   const [balanceOpen, setBalanceOpen] = useState(false)
   // The whole Debrief write-back runs in one apply-once transaction
   // (state/debrief.ts), before paint so the header never shows the
@@ -1604,10 +1606,18 @@ export function Debrief() {
     value: won && paid > 0 ? '+' + fmt(paid) + ' CR' : '0 CR',
     tone: won && paid > 0 ? 'teal' : 'red',
   })
+  if (flags.pyrrhicNote) {
+    rows.push({ label: 'NOTE', value: 'PYRRHIC — SQUAD LOST // CAMPAIGN FAILED', tone: 'red' })
+  }
   rows.push({ label: 'ACCOUNT BALANCE', value: fmt(credits) + ' CR', tone: 'amber' })
   return (
     <div className="screen db">
       <div className="db-card corners">
+        {flags.banner && (
+          <div className="db-failed" role="status">
+            CAMPAIGN FAILED
+          </div>
+        )}
         <div className="db-tag dim">OPERATIONAL DEBRIEF // STRIKE TEAM 04 // CH 7A</div>
         <h1 className={'db-title ' + (won ? 'won' : 'lost')}>
           {quiet
@@ -1627,7 +1637,7 @@ export function Debrief() {
                 : 'EXTRACTION CONFIRMED // PAYMENT RELEASED'
               : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
         </div>
-        <div className="db-rows">
+        <div className="db-rows" tabIndex={0} aria-label="Mission invoice">
           {rows.map((r, i) => (
             <DebriefRow key={r.label} index={i} label={r.label} value={r.value} tone={r.tone} />
           ))}
@@ -1638,7 +1648,7 @@ export function Debrief() {
           </button>
           {/* A generated contract is spent by its debrief; only authored
               contracts offer a replay. */}
-          {missionId && !isGeneratedMissionId(missionId) && (
+          {flags.replay && (
             <button type="button" className="btn amber" onClick={act(() => goto('brief'))}>
               REPLAY MISSION
             </button>
