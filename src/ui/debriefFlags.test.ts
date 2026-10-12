@@ -24,6 +24,11 @@ describe('debriefFlags (IF-011)', () => {
     expect(f.pyrrhicNote).toBe(false)
   })
 
+  it('AC29: a zero-pay quiet replay that wipes the roster is still pyrrhic', () => {
+    const quiet = { won: true, quietReplay: true }
+    expect(debriefFlags(quiet, true, AUTHORED)).toEqual({ banner: true, pyrrhicNote: true, replay: false })
+  })
+
   it('AC30: failed-campaign loss shows banner, no pyrrhic note, no replay', () => {
     expect(debriefFlags(LOSS, true, AUTHORED)).toEqual({ banner: true, pyrrhicNote: false, replay: false })
   })

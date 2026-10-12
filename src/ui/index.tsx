@@ -3,7 +3,7 @@
 // Flow: menu -> world -> brief -> team -> mission -> debrief -> world. The
 // four Screens share ScreenChrome; Research and Assembly are also on the nav.
 import './ui.css'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { collateralFine, netPayout, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -1545,6 +1545,11 @@ export function Debrief() {
   const paid = outcome ? netPayout(outcome) : 0
   const flags = debriefFlags(outcome, campaignFailed, missionId)
   const [balanceOpen, setBalanceOpen] = useState(false)
+  const bannerRef = useRef<HTMLDivElement>(null)
+  // React's autoFocus only focuses form controls, so focus the banner by hand.
+  useEffect(() => {
+    if (flags.banner) bannerRef.current?.focus()
+  }, [flags.banner])
   // The whole Debrief write-back runs in one apply-once transaction
   // (state/debrief.ts), before paint so the header never shows the
   // pre-payout balance. Debrief holds no guard of its own.
@@ -1614,9 +1619,10 @@ export function Debrief() {
     <div className="screen db">
       <div className="db-card corners">
         {flags.banner && (
-          // Present at mount, so a live region would stay silent; focus it so
-          // a screen reader starts on the failure instead.
-          <div className="db-failed" tabIndex={-1} autoFocus>
+          // Present at mount, so a live region may stay silent; focus it too
+          // so a screen reader starts on the failure either way. No overlay
+          // can be open here: PauseMenu lives in the mission Hud.
+          <div ref={bannerRef} className="db-failed" role="alert" tabIndex={-1}>
             CAMPAIGN FAILED
           </div>
         )}
