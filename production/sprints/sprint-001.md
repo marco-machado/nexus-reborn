@@ -45,7 +45,7 @@ QA plan: run `/qa-plan sprint` before implementation begins.
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
 |----|------|-------------|-----------|-------------|-------------------|
 | RA-006 | canDeploy allows one to four Ready operatives; Team Deploy calls `startMission` (QQ-02, ADR-0019) | gameplay-programmer | 1.0 | RA-003 | 1–4 Ready operatives under 400 kg with a selected contract may deploy; `appStore.startMission()` no-ops unless `canDeploy` is ok. The four-slice `DeployParams` half of QQ-02 is WN-004 |
-| IF-011 | Pyrrhic win banner and failed-campaign Debrief actions (QQ-05) | ui-programmer | 1.0 | IF-009 | CAMPAIGN FAILED banner sits above the invoice; the note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`; the payout is unchanged; a non-pyrrhic win shows neither |
+| ~~IF-011~~ | Pyrrhic win banner and failed-campaign Debrief actions (QQ-05). **Carried to sprint 2 (2026-10-12): IF-009 not Complete** | ui-programmer | 1.0 | IF-009 | CAMPAIGN FAILED banner sits above the invoice; the note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`; the payout is unchanged; a non-pyrrhic win shows neither |
 
 ### Unplanned (landed for the Production gate)
 
@@ -64,7 +64,7 @@ QA plan: run `/qa-plan sprint` before implementation begins.
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
 | Story estimates (added 2026-10-10 from Type and AC count) are uncalibrated | Medium | Medium | Re-estimate after WN-001. Cut WN-015 and WN-016 first |
-| RA-006 and IF-011 depend on RA-003 and IF-009, which are outside this sprint | Medium | Low | Check with `/story-readiness`; if the code already satisfies the dependency, take it as done-in-code, otherwise carry the debt to sprint 2 |
+| RA-006 and IF-011 depend on RA-003 and IF-009, which are outside this sprint | Medium | Low | Check with `/story-readiness`; if the code already satisfies the dependency, take it as done-in-code, otherwise carry the debt to sprint 2. RA-006 done; IF-011 carried to sprint 2 on 2026-10-12 |
 | WN-003 and WN-004 are Integration stories on the debrief and deploy boundary | Medium | High | Land WN-001 and WN-002 first. Tests sit beside the module the story names |
 | Catch-up order in WN-002 is easy to fork into a second table | Medium | High | Assert one shared `advanceFlow`. Do not author a new collision order |
 | The loop already plays, and the story criteria may not match the code | Medium | Medium | Run `/story-readiness` on WN-001 before `/dev-story` |

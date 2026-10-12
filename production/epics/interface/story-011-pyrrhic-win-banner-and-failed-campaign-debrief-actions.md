@@ -36,6 +36,12 @@
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
 - [ ] (AC29) GIVEN an owner-supplied pyrrhic-win outcome (Win, roster emptied, incomplete campaign) and, separately, a non-pyrrhic Win, WHEN Debrief is shown, THEN the pyrrhic fixture shows the CAMPAIGN FAILED banner above the invoice, first and visually dominant, and the invoice note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` with the owner-supplied full net payout unchanged; the non-pyrrhic fixture shows neither. Failure and payout values are not recomputed in Interface.
+  - *Observable meaning of "first and visually dominant"* (benchmark for this story):
+    - The CAMPAIGN FAILED banner is the first element inside `.db-card`. It comes before the `db-tag` line, the title and the `.db-rows` invoice.
+    - Its text is the literal `CAMPAIGN FAILED`, so it doesn't rely on color alone. It uses `RED` / `RED_A*` from `src/ui/tokens.ts`, with no new hex values.
+    - Its font size is greater than or equal to the `.db-title` font size.
+    - At 1280×720, at every text scale, the banner is fully visible without scrolling, clipping or truncation.
+    - The retained screenshots for each fixture under `production/qa/evidence/` (named `if-011-<fixture>-1280x720`) show this.
 - [ ] (AC30) GIVEN a Debrief on a failed campaign (separate fixtures: pyrrhic win on an authored contract; loss on an authored contract that empties the roster), WHEN the Debrief actions are read, THEN no Replay control is present and World Network return is available. GIVEN a non-failed authored Debrief, THEN Replay is present.
 
 ---
@@ -46,6 +52,16 @@
 
 - CAMPAIGN FAILED banner sits above the invoice, first and visually dominant; invoice note reads `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`.
 - Replay is absent on a failed campaign (read `campaignFailed`, do not derive from `operatives.length === 0`).
+- **Where the pyrrhic signal comes from (owner-supplied, read-only):**
+  - `campaignFailed` is written by `campaignStore.reportMission` (`src/state/campaignStore.ts:268`). It runs inside `applyDebrief` (`src/state/debrief.ts:21`), which Debrief calls in a `useLayoutEffect`.
+  - Read it with a primitive selector: `useCampaignStore((s) => s.campaignFailed)`. Zustand re-renders before paint, so the first painted Debrief already shows the post-apply flag.
+  - Pyrrhic = `outcome.won && campaignFailed`. A completed campaign that loses its roster stays `campaignWon` and not failed (ADR-0020), so it shows no banner.
+  - Don't call `isCampaignFailed` from Interface, and don't derive the state from `operatives.length` or `outcome.deadIds`.
+- **Payout:** On a pyrrhic win the invoice keeps `netPayout(outcome)` unchanged. Only the note line changes, to `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`.
+- **Loss on a failed campaign (AC30, second fixture):** Show the CAMPAIGN FAILED banner. The pyrrhic note is win-only. Replay is hidden whenever `campaignFailed` is true. The gate at `src/ui/index.tsx:1641` becomes `missionId && !isGeneratedMissionId(missionId) && !campaignFailed`.
+- **Fixtures:** The repo has no DOM test harness (vitest only, no jsdom or testing-library).
+  - Pull the decision into a pure helper in `src/ui/`, e.g. `debriefFlags(outcome, campaignFailed, generated)` → `{ banner, pyrrhicNote, replay }`. Unit-test it for the pyrrhic win, the non-pyrrhic win, the failed loss and the non-failed authored loss.
+  - Seed the screenshot fixtures by setting `appStore.outcome` and `campaignStore` state in the dev console before entering Debrief.
 
 ---
 
@@ -68,6 +84,7 @@
 **Story Type**: UI
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
+- Unit: `src/ui/debriefFlags.test.ts` covers AC29/AC30 flag decisions across the four fixtures.
 
 **Status**: [ ] Not yet created
 
