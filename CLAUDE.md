@@ -30,6 +30,10 @@ Use imperative subject line, then a body that says what changed by file, why, an
 
 Before suggesting three.js, r3f, or React APIs, read `docs/engine-reference/web/VERSION.md`. Do not invent post-cutoff APIs. Knowledge risk is HIGH (cutoff May 2025; pin is three.js r185 / React 19.2.8).
 
+## Do It Yourself
+
+Only hand the user a task you cannot complete yourself. Launching the build, clicking through critical paths, smoke checks, and screenshots are yours: run the dev server and drive it in a browser (Claude in Chrome or another browser tool). If no browser tool is available, ask the user to enable one — do not hand them the manual check.
+
 ## Done
 
 Stop every dev server you started (`npm run dev`, `vite preview`) before the turn ends. Confirm the listener on port 4200 is gone.
