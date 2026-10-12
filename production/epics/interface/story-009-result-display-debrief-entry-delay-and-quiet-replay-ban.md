@@ -35,8 +35,8 @@
 
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
-- [ ] (AC15) GIVEN Tactical emits Win or Loss, WHEN result and outcome notifications are delivered, THEN Interface displays the result while still in Mission and enters Debrief on the outcome after Tactical’s 2.5 s elapsed-time delay. Test ordinary progressing time, paused time (delay does not progress), and a catch-up crossing both notifications before paint (Debrief may be the next painted surface). No minimum visible banner duration or separate UI timer is required. Abort emits no invoice; pricing is not checked here.
-- [ ] (AC16) GIVEN a quiet replay finish, WHEN Debrief is shown, THEN the banner reads `REPLAY // FEE ALREADY COLLECTED`.
+- [x] (AC15) GIVEN Tactical emits Win or Loss, WHEN result and outcome notifications are delivered, THEN Interface displays the result while still in Mission and enters Debrief on the outcome after Tactical’s 2.5 s elapsed-time delay. Test ordinary progressing time, paused time (delay does not progress), and a catch-up crossing both notifications before paint (Debrief may be the next painted surface). No minimum visible banner duration or separate UI timer is required. Abort emits no invoice; pricing is not checked here.
+- [x] (AC16) GIVEN a quiet replay finish, WHEN Debrief is shown, THEN the banner reads `REPLAY // FEE ALREADY COLLECTED`.
 
 ---
 

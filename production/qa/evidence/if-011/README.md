@@ -31,3 +31,20 @@ For each capture, the script loads the app. It then sets the text scale and seed
 ## Files
 
 `if-011-<fixture>-1280x720.png` (100%) and `if-011-<fixture>-text{90,110,125}-1280x720.png`, 13 images.
+
+---
+
+## Re-capture — 2026-10-12, /team-qa sprint (MC-1)
+
+**Revision:** 879bb68 (includes 27fd76f, f777b18, 96b9b05), `src/` clean. Same environment and seeding as above; all four fixtures at all four scales, so 16 images. The three loss scale captures `if-011-loss-text{90,110,125}-1280x720.png` are new. All 13 earlier images were overwritten.
+
+| Fixture | Scales | First child | Banner top–bottom (90/100/110/125) | Banner / title | Focus on entry | Tab → | NOTE | PAYOUT | Actions |
+|---|---|---|---|---|---|---|---|---|---|
+| pyrrhic-win | all | `.db-failed` | 74–138 / 63–127 / 48–112 / 38–102 | 42px / 42px | `.db-failed` (alert, tabIndex −1) | `.db-rows` | `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` | +85,000 CR | Return, Balance (no Replay) |
+| win | all | `.db-tag` | — | — / 42px | body | `.db-rows` | none | +85,000 CR | Return, Replay, Balance |
+| failed-loss | all | `.db-failed` | 99–163 / 90–154 / 76–140 / 63–127 | 42px / 42px | `.db-failed` | `.db-rows` | none | 0 CR | Return, Balance (no Replay) |
+| loss | all | `.db-tag` | — | — / 42px | body | `.db-rows` | none | 0 CR | Return, Replay, Balance |
+
+- None of the 16 captures has a page scroll, and `.db-card` stays inside 720px on all of them. There were 0 console errors.
+- AC30 is now evidenced for the loss fixture at all four scales.
+- Cases: `production/qa/test-cases/if-011-pyrrhic-win-banner-cases.md` (TC01–TC09 PASS).
