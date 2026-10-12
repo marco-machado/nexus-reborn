@@ -69,6 +69,11 @@ export function squadMassKg(
   }, 0)
 }
 
+// Exactly MASS_LIMIT_KG deploys; no epsilon.
+export function massGateOk(kg: number): boolean {
+  return kg <= MASS_LIMIT_KG
+}
+
 export function massTier(kg: number): MassTier {
   if (kg <= LIGHT_MASS_KG) return 'light'
   if (kg > HEAVY_MASS_KG) return 'heavy'

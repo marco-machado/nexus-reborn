@@ -1,12 +1,12 @@
 # Story 003: Squad mass sum and mass gate
 
 > **Epic**: Roster and Assembly
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-12
 
 ## Context
 
@@ -32,10 +32,10 @@
 
 *From GDD `design/gdd/roster-and-assembly.md`, scoped to this story:*
 
-- [ ] **GIVEN** assigned Mara, Ghost, Dart, Torq with no research/Experience/filled Item slots, **WHEN** `squad_mass` is computed, **THEN** it is 286.1 kg. *(GDD AC 66)*
-- [ ] **GIVEN** those 4 assigned plus unassigned living roster members, **WHEN** `squad_mass` is computed, **THEN** unassigned add 0 kg (still 286.1 kg). *(GDD AC 67)*
-- [ ] **GIVEN** `squad_mass = 286.1` kg, **WHEN** `mass_gate_ok` is computed, **THEN** it is true. *(GDD AC 68)*
-- [ ] **GIVEN** `squad_mass ≤ 400` kg, **WHEN** `mass_gate_ok` is computed, **THEN** it is true; **GIVEN** `squad_mass > 400` kg, **THEN** it is false. *(GDD AC 69)*
+- [x] **GIVEN** assigned Mara, Ghost, Dart, Torq with no research/Experience/filled Item slots, **WHEN** `squad_mass` is computed, **THEN** it is 286.1 kg. *(GDD AC 66)*
+- [x] **GIVEN** those 4 assigned plus unassigned living roster members, **WHEN** `squad_mass` is computed, **THEN** unassigned add 0 kg (still 286.1 kg). *(GDD AC 67)*
+- [x] **GIVEN** `squad_mass = 286.1` kg, **WHEN** `mass_gate_ok` is computed, **THEN** it is true. *(GDD AC 68)*
+- [x] **GIVEN** `squad_mass ≤ 400` kg, **WHEN** `mass_gate_ok` is computed, **THEN** it is true; **GIVEN** `squad_mass > 400` kg, **THEN** it is false. *(GDD AC 69)*
 
 ---
 
@@ -69,7 +69,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/mass.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/mass.test.ts` (`squadMassKg` AC 66–67, `massGateOk` AC 68–69), passing
 
 ---
 
@@ -77,3 +77,13 @@
 
 - Depends on: Story 001, Story 002
 - Unlocks: Story 004, Story 005, Story 006
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-12
+**Criteria**: 4/4 passing (AC 66-69)
+**Deviations**: None
+**Test Evidence**: Logic: `src/game/mass.test.ts` (13 tests, passing; full suite 671 passing)
+**Code Review**: Complete (user-confirmed /code-review passed, lean mode)
+**Notes**: Added `massGateOk` to `src/game/mass.ts`; `src/ui/index.tsx` Team screen now uses it for `deployable`. `canDeploy` (RA-006) should reuse it.

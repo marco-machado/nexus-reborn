@@ -7,6 +7,7 @@ import {
   MASS_LIMIT_KG,
   TIER_SPEED_DELTA,
   loadoutPools,
+  massGateOk,
   massTier,
   operativeItems,
   operativeMassKg,
@@ -50,6 +51,24 @@ describe('squadMassKg', () => {
       286.1 + 2 * ITEM_MASS_KG.med,
       10,
     )
+  })
+
+  it('adds nothing for living roster members left off the squad (AC 67)', () => {
+    const ops = DEFAULT_SQUAD.map(operativeById)
+    // A loadout entry for an unassigned operative must not leak into the sum.
+    expect(squadMassKg(ops, 0, { op5: ['med', 'cell'] })).toBeCloseTo(286.1, 10)
+  })
+})
+
+describe('massGateOk', () => {
+  it('passes the default squad at 286.1 kg (AC 68)', () => {
+    expect(massGateOk(squadMassKg(DEFAULT_SQUAD.map(operativeById), 0))).toBe(true)
+  })
+
+  it('allows exactly the limit and refuses anything over it (AC 69)', () => {
+    expect(massGateOk(MASS_LIMIT_KG - 0.1)).toBe(true)
+    expect(massGateOk(MASS_LIMIT_KG)).toBe(true)
+    expect(massGateOk(MASS_LIMIT_KG + 0.1)).toBe(false)
   })
 })
 

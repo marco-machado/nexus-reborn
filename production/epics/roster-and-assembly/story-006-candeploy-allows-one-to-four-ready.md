@@ -6,7 +6,7 @@
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-12
 
 ## Context
 
@@ -36,6 +36,8 @@
 - [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 2 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 2)*
 - [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 3 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 3)*
 - [ ] **GIVEN** a selected contract, `squad_mass ≤ 400` kg, and exactly 4 assigned Ready operatives, **WHEN** Deploy is requested, **THEN** Deploy is allowed. *(GDD AC 4)*
+- [ ] **GIVEN** a selected contract and 1–4 assigned operatives where `canDeploy` is not ok (any assigned operative not Ready, or `squad_mass > 400` kg), **WHEN** `appStore.startMission()` is called, **THEN** `appStore.phase` stays `team` and no mission is created (world, research and loadout snapshots unchanged). *(ADR-0019; Implementation Notes)*
+- [ ] **GIVEN** zero assigned operatives (all four Squad bays empty), **WHEN** Deploy is requested, **THEN** Deploy is refused. *(TR-roster-001: "requires 1–4")*
 
 ---
 

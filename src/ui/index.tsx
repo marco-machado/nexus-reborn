@@ -25,6 +25,7 @@ import {
   ITEM_MASS_KG,
   MASS_LIMIT_KG,
   TIER_SPEED_DELTA,
+  massGateOk,
   massTier,
   operativeItems,
   operativeMassKg,
@@ -1069,7 +1070,7 @@ export function TeamSelect() {
   const overKg = mass - MASS_LIMIT_KG
   const ready =
     squad.length >= 1 && squad.every((id) => roster[id]?.status === 'READY')
-  const deployable = !!mission && ready && overKg <= 0
+  const deployable = !!mission && ready && massGateOk(mass)
   const augs = wornAugs(done, roster[focus.id]?.pins)
   const cycleBay = (slot: AugSlot): void => {
     const options: Array<BayPin | null> = [null]
