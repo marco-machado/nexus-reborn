@@ -1614,7 +1614,9 @@ export function Debrief() {
     <div className="screen db">
       <div className="db-card corners">
         {flags.banner && (
-          <div className="db-failed" role="status">
+          // Present at mount, so a live region would stay silent; focus it so
+          // a screen reader starts on the failure instead.
+          <div className="db-failed" tabIndex={-1} autoFocus>
             CAMPAIGN FAILED
           </div>
         )}
@@ -1637,7 +1639,7 @@ export function Debrief() {
                 : 'EXTRACTION CONFIRMED // PAYMENT RELEASED'
               : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
         </div>
-        <div className="db-rows" tabIndex={0} aria-label="Mission invoice">
+        <div className="db-rows" role="region" tabIndex={0} aria-label="Mission invoice">
           {rows.map((r, i) => (
             <DebriefRow key={r.label} index={i} label={r.label} value={r.value} tone={r.tone} />
           ))}

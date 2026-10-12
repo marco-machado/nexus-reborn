@@ -2582,6 +2582,8 @@
   padding: 8px 12px;
 }
 
+.db-failed:focus { outline: none; }
+
 .db-tag { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.26em; }
 
 .db-title {
@@ -2607,6 +2609,8 @@
   min-height: 0;
   overflow-y: auto;
 }
+
+.db-rows:focus-visible { outline: 1px solid var(--line-strong); outline-offset: 2px; }
 
 .db-row {
   display: flex;

@@ -23,13 +23,13 @@ export interface DebriefFlags {
  * @param missionId The debriefed contract id, or null when none is set.
  */
 export function debriefFlags(
-  outcome: Pick<MissionOutcome, 'won' | 'quietReplay'> | null,
+  outcome: Pick<MissionOutcome, 'won'> | null,
   campaignFailed: boolean,
   missionId: string | null,
 ): DebriefFlags {
   return {
     banner: campaignFailed,
     pyrrhicNote: campaignFailed && outcome?.won === true,
-    replay: missionId !== null && !isGeneratedMissionId(missionId) && !campaignFailed,
+    replay: !!missionId && !isGeneratedMissionId(missionId) && !campaignFailed,
   }
 }
