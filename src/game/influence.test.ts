@@ -5,6 +5,8 @@ import {
   CRISIS_UNREST_EXIT,
   INFLUENCE_ACTIONS,
   INFLUENCE_ACTION_ORDER,
+  INFLUENCE_CLEAN_PTS,
+  INFLUENCE_WIN_PTS,
   PRESSURE_TAX_FLOOR,
   PRESSURE_UNREST_MIN,
   UNREST_MAX,
@@ -87,5 +89,12 @@ describe('pressure thresholds', () => {
     expect(taxYieldCredits(6000, 100, PRESSURE_UNREST_MIN + 10)).toBe(4800)
     expect(taxYieldCredits(6000, 100, UNREST_MAX)).toBe(1680)
     expect(taxYieldCredits(6000, 100, PRESSURE_UNREST_MIN + 40)).toBe(1500)
+  })
+})
+
+describe('earning', () => {
+  it('a win pays 6 points and a clean win 2 more', () => {
+    expect(INFLUENCE_WIN_PTS).toBe(6)
+    expect(INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS).toBe(8)
   })
 })

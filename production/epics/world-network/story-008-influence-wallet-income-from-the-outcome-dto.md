@@ -1,12 +1,12 @@
 # Story 008: Influence wallet income from the outcome DTO
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-12
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN a new campaign, WHEN Influence is read, THEN it is 0.
-- [ ] GIVEN Influence 0, a non-quiet win, `civiliansHit ≥ 1`, WHEN World Network applies the outcome DTO, THEN Influence = 6.
-- [ ] GIVEN Influence 0, a non-quiet win, `civiliansHit = 0`, WHEN World Network applies the outcome DTO, THEN Influence = 8.
-- [ ] GIVEN Influence I, a loss, WHEN World Network applies the outcome DTO, THEN Influence = I.
+- [x] GIVEN a new campaign, WHEN Influence is read, THEN it is 0.
+- [x] GIVEN Influence 0, a non-quiet win, `civiliansHit ≥ 1`, WHEN World Network applies the outcome DTO, THEN Influence = 6.
+- [x] GIVEN Influence 0, a non-quiet win, `civiliansHit = 0`, WHEN World Network applies the outcome DTO, THEN Influence = 8.
+- [x] GIVEN Influence I, a loss, WHEN World Network applies the outcome DTO, THEN Influence = I.
 
 ---
 
@@ -59,7 +59,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/game/influence.test.ts`, `src/state/worldStore.test.ts`.
+
+- A new campaign reads Influence 0.
+- Influence 0, non-quiet win, `civiliansHit ≥ 1` applies to 6. `civiliansHit = 2` is still 6.
+- Influence 0, non-quiet win, `civiliansHit = 0` applies to 8.
+- Influence I on a loss stays I. I = 0 stays 0.
+- The award is a delta: Influence 3 and a non-quiet dirty win ends at 9.
+- Quiet-replay income and spending are out of this story.
 
 ---
 
@@ -69,7 +76,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/influence.test.ts`, `src/state/worldStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/influence.test.ts`, `src/state/worldStore.test.ts`
 
 ---
 
@@ -77,3 +84,10 @@
 
 - Depends on: Story 003
 - Unlocks: Story 009, Story 017
+
+## Completion Notes
+**Completed**: 2026-10-12
+**Criteria**: 4/4 passing, each covered by a test in `src/state/worldStore.test.ts`
+**Deviations**: None. Income logic already existed in `applyMissionResult`; this story added tests only.
+**Test Evidence**: Logic: `src/state/worldStore.test.ts` (5 new tests), `src/game/influence.test.ts` (1 new test); 113 tests pass, `tsc -b` clean
+**Code Review**: Complete (`/code-review` 2026-10-12: APPROVED)

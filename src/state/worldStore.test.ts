@@ -731,6 +731,38 @@ describe('influence economy', () => {
     expect(useWorldStore.getState().influence).toBe(before)
   })
 
+  it('a new campaign reads Influence 0', () => {
+    expect(useWorldStore.getState().influence).toBe(0)
+  })
+
+  it('a non-quiet win with civilians hit pays 6, however many were hit', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 1 }))
+    expect(useWorldStore.getState().influence).toBe(6)
+    useWorldStore.setState({ influence: 0 })
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 2 }))
+    expect(useWorldStore.getState().influence).toBe(6)
+  })
+
+  it('a non-quiet clean win pays 8', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 0 }))
+    expect(useWorldStore.getState().influence).toBe(8)
+  })
+
+  it('income is a delta on the existing balance', () => {
+    useWorldStore.setState({ influence: 3 })
+    useWorldStore.getState().applyMissionResult('m01', outcome({ civiliansHit: 1 }))
+    expect(useWorldStore.getState().influence).toBe(9)
+  })
+
+  it('a loss leaves Influence unchanged, including at 0', () => {
+    useWorldStore.setState({ influence: 5 })
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    expect(useWorldStore.getState().influence).toBe(5)
+    useWorldStore.setState({ influence: 0 })
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0 }))
+    expect(useWorldStore.getState().influence).toBe(0)
+  })
+
   it('does not drip Influence from Control', () => {
     pinFlows()
     useWorldStore.setState({ nextTaxT: TAX_INTERVAL_SEC, influence: 0 })
