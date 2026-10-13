@@ -75,11 +75,11 @@ stories:
     name: "Antarctica stays hidden; Focus cycle skips it; Focus Tax figure prints"
     file: "production/epics/world-network/story-013-antarctica-stays-hidden-focus-cycle-skips-it-focus-tax.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"
   - id: "WN-012"
     name: "Event forecast gated on Intel level"
     file: "production/epics/world-network/story-012-event-forecast-gated-on-intel-level.md"

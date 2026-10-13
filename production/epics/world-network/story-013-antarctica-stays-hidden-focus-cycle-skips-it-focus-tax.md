@@ -1,12 +1,12 @@
 # Story 013: Antarctica stays hidden; Focus cycle skips it; Focus Tax figure prints
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -33,9 +33,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN intel 1, WHEN Scan, Focus cycle and sector readout are read, THEN Antarctica prints no Control, Unrest, Tax yield or Garrison condition; Focus never selects it; Stabilize / Lobby / Expedite are not offered for it; Scan land is Unknown.
-- [ ] GIVEN intel ≥ 2, WHEN those surfaces are read, THEN the same Antarctica behaviour holds.
-- [ ] GIVEN Focus on opening Europe, WHEN Tax yield is read, THEN a figure prints and that sector does not pay.
+- [x] GIVEN intel 1, WHEN Scan, Focus cycle and sector readout are read, THEN Antarctica prints no Control, Unrest, Tax yield or Garrison condition; Focus never selects it; Stabilize / Lobby / Expedite are not offered for it; Scan land is Unknown.
+- [x] GIVEN intel ≥ 2, WHEN those surfaces are read, THEN the same Antarctica behaviour holds.
+- [x] GIVEN Focus on opening Europe, WHEN Tax yield is read, THEN a figure prints and that sector does not pay.
 
 ---
 
@@ -75,7 +75,7 @@ From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots a
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/wn-013/` (README.md, `wn-013-intel1-europe-1280x720.png`, `wn-013-intel2-europe-1280x720.png`)
 
 ---
 
@@ -83,3 +83,10 @@ From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots a
 
 - Depends on: Story 007
 - Unlocks: None
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 3/3 passing (no deferred items)
+**Deviations**: None. No `src/` change — existing behaviour (`OPEN_SECTORS` focus cycle, locked sector row, Scan key UNKNOWN) already satisfied the criteria.
+**Test Evidence**: UI: retained screenshots at 1280×720 plus evidence note in `production/qa/evidence/wn-013/`. Partial click-through (World Network, steps 2 and 6).
+**Code Review**: Skipped — no implementation files changed. qa-lead sign-off named in the QA Test Cases was not recorded.
