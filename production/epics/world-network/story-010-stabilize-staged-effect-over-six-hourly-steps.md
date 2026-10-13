@@ -59,7 +59,13 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Logic. File: `src/state/worldStore.test.ts`.
+
+- Unrest 18, Influence 8, off cooldown, no other Unrest-changing effects: Influence is 0 immediately and Unrest is still 18. Then Unrest falls by 2 at each hourly step to 6, and the staged spend retires. Not a single −12 at activation.
+- Unrest 12 under the same conditions ends at 2, not 0.
+- Unrest 2 under the same conditions stays 2, Influence is 0, and the staged spend retires.
+- Six hours via `tick` and via `advanceDays` reach the same Unrest. Both go through `advanceFlow`. Do not add a second collision table.
+- Do not assert a net when a World Event is also scheduled. Do not retune the 2–96 clamp.
 
 ---
 

@@ -61,7 +61,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/state/campaignStore.test.ts`, `src/state/save.test.ts`.
+
+- Campaign already complete, living roster reaches 0: complete stays, failed is not set, contracts stay unlocked.
+- Crisis enter, and crisis clear, on an incomplete non-failed campaign with at least one living operative: flags unchanged, no campaign-failed. One injured operative still counts as living.
+- Debrief removes the last living operative on an incomplete campaign: failed is true and complete is false, including during sector crisis.
+- `isCampaignFailed` takes this debrief's `allWon`, not stored `campaignWon`.
+- Hydrate restores stored flags. An empty operative list on a stored non-failed blob does not become failed.
+- Both flags true is drop-all. Empty + incomplete + `!failed` is not drop-all. Generated wins do not set complete.
 
 ---
 

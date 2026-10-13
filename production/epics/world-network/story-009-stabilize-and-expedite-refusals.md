@@ -57,7 +57,13 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/game/influence.test.ts`, `src/state/worldStore.test.ts`.
+
+- Influence 7, Stabilize cost 8: refused, Influence stays 7. Opening Influence 0 also refuses and stays 0.
+- Influence ≥ 8 and Stabilize on cooldown: refused, Influence unchanged.
+- No generated target, Expedite activated: blocked, Influence unchanged. Expedite does not occupy the staged-spend slot and does not write Intel.
+- A refusal does not write cooldown or a staged spend, and does not call `setState` for a no-op.
+- Do not add a Lobby case or an Expedite-price case. The accepted Stabilize path is story 010.
 
 ---
 

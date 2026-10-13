@@ -59,7 +59,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Integration, secondary UI. State half: `src/state/worldStore.test.ts`. Screenshots at 1280×720 in `production/qa/evidence/wn-017/`.
+
+- Non-quiet win at frozen `t0`: before ETA advancement, the mission-result Feed event is appended at `t0`, and awards and sector effects have been applied. This boundary is not a screenshot.
+- First clean non-quiet win from Influence 0, after full write-back and ETA, before another Screen tick, with no other Influence spend or award: Influence is 8 and Scan is the post-ETA live board.
+- The apply reads the outcome DTO, not the running mission.
+- Manual, opening minute with no contract selected: Focus moves among the six open sectors, four numbers print (Control, Unrest, Tax, Garrison), Pause stops `t`, speed changes the advance, and contract select is not the only enabled verb.
+- Header screenshot after that first clean win reads Influence 8.
+- Do not change the first-visit overlay. The arrival-failure open question is out of scope.
 
 ---
 

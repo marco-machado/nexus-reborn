@@ -56,7 +56,13 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots at 1280×720 in `production/qa/evidence/wn-012/`. Sign-off: qa-lead. Click-through note per `docs/click-through.md`.
+
+- Intel 1: the focused sector panel does not show Event forecast.
+- Intel 2 or higher: Event forecast lists riot, blackout, raid, trade, and seizure chances for the next 6 strategic hours.
+- Printed chances equal `src/game/forecast.ts` for that sector and time. Do not copy the weights into the panel or into this story.
+- Nothing clips or truncates at 1280×720.
+- Verify after story 011. This header lists no dependency; the sprint sequences 011 first.
 
 ---
 

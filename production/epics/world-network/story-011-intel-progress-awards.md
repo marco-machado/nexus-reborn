@@ -60,7 +60,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Logic. File: `src/state/campaignStore.test.ts`.
+
+- intelProgress 25, non-quiet win, `civiliansHit ≥ 1` applies to 65. More than one civilian hit is still 65.
+- intelProgress 25, non-quiet clean win applies to 80.
+- intelProgress J on a loss stays J. J = 0 stays 0.
+- intelProgress J on a quiet-replay win stays J.
+- The write is `campaignStore.intelProgress` only. Do not put Intel on `worldStore` or `appStore`.
+- Do not add a level-up or Intel-1 stall case. The threshold crossing is not in these criteria.
 
 ---
 

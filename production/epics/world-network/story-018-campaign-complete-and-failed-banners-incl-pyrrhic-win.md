@@ -57,7 +57,13 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). Integration, secondary UI. State tests: `src/state/campaignStore.test.ts`, `src/state/appStore.test.ts`. Pyrrhic Debrief regression: `src/ui/debriefFlags.test.ts`.
+
+- Glass Veil, Hollow Crown, and Rust Haven all won: campaign-complete is set, and `selectMission` still selects each of the three.
+- Campaign incomplete and living roster 0 after debrief: campaign-failed is set, and `selectMission` is a no-op.
+- The two flags are not both true. Do not export a `CampaignStatus` enum. Do not read the live roster; use the outcome DTO.
+- Pyrrhic Debrief stays the IF-011 regression: CAMPAIGN FAILED first, full net payout, note `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`, mission grades a Win. Do not add a second banner implementation.
+- Screenshots at 1280×720 in `production/qa/evidence/wn-018/` for the World Network complete and failed banners. Compare the pyrrhic Debrief to `production/qa/evidence/if-011/` unless Debrief code changed. Click-through note per `docs/click-through.md`.
 
 ---
 

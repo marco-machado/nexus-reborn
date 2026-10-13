@@ -58,7 +58,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots at 1280×720 in `production/qa/evidence/wn-013/`. Sign-off: qa-lead. Click-through note per `docs/click-through.md`.
+
+- At intel 1, Antarctica prints no Control, Unrest, Tax yield, or Garrison. Scan land is Unknown.
+- Focus never selects Antarctica. The cycle visits only the six open sectors.
+- Stabilize, Lobby, and Expedite are not offered for Antarctica.
+- At intel ≥ 2, the same Antarctica behaviour holds.
+- Focus on opening Europe prints a Tax figure, and that sector does not pay.
+- Nothing clips or truncates at 1280×720.
 
 ---
 

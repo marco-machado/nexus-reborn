@@ -9,119 +9,110 @@
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
 
-sprint: 1
-goal: "Prove the two-clock contract on the living board: strategic time advances only on the four Screens, a win spends ETA through the shared catch-up, a loss spends none, and debrief is the only write-back."
-start: "2026-10-09"
-end: "2026-10-22"
-generated: "2026-10-09"
-updated: 2026-10-12
+sprint: 2
+goal: "Finish the World Network director loop Sprint 1 left open: a quiet replay awards nothing on the board, Influence can be earned and spent, Intel gates the Scan, and campaign-complete / campaign-failed resolve."
+start: "2026-10-23"
+end: "2026-11-05"
+generated: "2026-10-12"
+updated: "2026-10-12"
 
 stories:
-  - id: "WN-001"
-    name: "Strategic clock runs only on the four Screens"
-    file: "production/epics/world-network/story-001-strategic-clock-runs-only-on-the-four-screens.md"
+  - id: "WN-005"
+    name: "Quiet replay awards nothing and shoves nothing; ETA still catches up"
+    file: "production/epics/world-network/story-005-quiet-replay-awards-nothing-and-shoves-nothing-eta-stil.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-10-12"
+  - id: "WN-008"
+    name: "Influence wallet income from the outcome DTO"
+    file: "production/epics/world-network/story-008-influence-wallet-income-from-the-outcome-dto.md"
     priority: must-have
     status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-002"
-    name: "Win-ETA catch-up shares advanceFlow; a loss spends none"
-    file: "production/epics/world-network/story-002-win-eta-catch-up-shares-advanceflow-a-loss-spends-none.md"
+    completed: "2026-10-12"
+  - id: "WN-009"
+    name: "Stabilize and Expedite refusals"
+    file: "production/epics/world-network/story-009-stabilize-and-expedite-refusals.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
-    estimate_days: 1.5
+    estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-004"
-    name: "Abort leaves the World Network blob unchanged; deploy gets a frozen slice"
-    file: "production/epics/world-network/story-004-abort-leaves-the-world-network-blob-unchanged-deploy-ge.md"
+    completed: ""
+  - id: "WN-010"
+    name: "Stabilize staged effect over six hourly steps"
+    file: "production/epics/world-network/story-010-stabilize-staged-effect-over-six-hourly-steps.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
-    estimate_days: 1.5
+    estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-003"
-    name: "Debrief writes back at frozen t0, then ETA, once"
-    file: "production/epics/world-network/story-003-debrief-writes-back-at-frozen-t0-then-eta-apply-once.md"
+    completed: ""
+  - id: "WN-011"
+    name: "Intel progress awards"
+    file: "production/epics/world-network/story-011-intel-progress-awards.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
-    estimate_days: 2.0
+    estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-006"
-    name: "Timeline Review is a view, not a clock"
-    file: "production/epics/world-network/story-006-timeline-review-is-a-view-not-a-clock.md"
+    completed: ""
+  - id: "WN-018"
+    name: "Campaign complete and failed banners, including a pyrrhic win"
+    file: "production/epics/world-network/story-018-campaign-complete-and-failed-banners-incl-pyrrhic-win.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-007"
-    name: "Tax yield emits only from Nexus-held sectors"
-    file: "production/epics/world-network/story-007-tax-yield-emits-only-from-nexus-held-sectors.md"
+    completed: ""
+  - id: "WN-013"
+    name: "Antarctica stays hidden; Focus cycle skips it; Focus Tax figure prints"
+    file: "production/epics/world-network/story-013-antarctica-stays-hidden-focus-cycle-skips-it-focus-tax.md"
     priority: should-have
-    status: done
+    status: backlog
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-015"
-    name: "Mission result shoves Control and Unrest in the right direction"
-    file: "production/epics/world-network/story-015-mission-result-shoves-control-and-unrest-in-the-right-d.md"
+    completed: ""
+  - id: "WN-012"
+    name: "Event forecast gated on Intel level"
+    file: "production/epics/world-network/story-012-event-forecast-gated-on-intel-level.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "WN-014"
+    name: "Scan hides contracts above the director's Intel; Chance still prints"
+    file: "production/epics/world-network/story-014-scan-hides-contracts-above-the-director-s-intel-chance.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "WN-017"
+    name: "Opening desk and post-win Scan"
+    file: "production/epics/world-network/story-017-opening-desk-and-post-win-scan.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "WN-019"
+    name: "Campaign flag edge cases"
+    file: "production/epics/world-network/story-019-campaign-flag-edge-cases.md"
     priority: nice-to-have
-    status: done
+    status: backlog
     owner: ""
-    estimate_days: 1.0
+    estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-10"
-  - id: "WN-016"
-    name: "City holder after a win or a loss"
-    file: "production/epics/world-network/story-016-city-holder-after-a-win-or-a-loss.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-10"
-  - id: "TM-017"
-    name: "A rolled hit strikes the first body on the fire lane"
-    file: "production/epics/tactical-mission/story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md"
-    priority: unplanned
-    status: done
-    owner: "gameplay-programmer"
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-10"
-  - id: "RA-006"
-    name: "canDeploy allows one to four Ready operatives (QQ-02)"
-    file: "production/epics/roster-and-assembly/story-006-candeploy-allows-one-to-four-ready.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-12"
-  - id: "IF-009"
-    name: "Result display, debrief entry delay, and quiet replay ban"
-    file: "production/epics/interface/story-009-result-display-debrief-entry-delay-and-quiet-replay-ban.md"
-    priority: unplanned
-    status: done
-    owner: "ui-programmer"
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-12"
-  - id: "IF-011"
-    name: "Pyrrhic win banner and failed-campaign Debrief actions (QQ-05)"
-    file: "production/epics/interface/story-011-pyrrhic-win-banner-and-failed-campaign-debrief-actions.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-12"
+    completed: ""

@@ -57,7 +57,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots at 1280×720 in `production/qa/evidence/wn-014/`, plus a store read in the click-through note. Sign-off: qa-lead.
+
+- The same contract prints Chance below intel 2 and at intel 2 or higher. Risk bands stay on Brief.
+- An unexpired generated instance whose required Intel is greater than the director's Intel, and whose gate is not Expedite-waived, is absent from Scan and from OPEN CONTRACTS.
+- That instance remains on `worldStore.contracts`. A screenshot of an empty row does not prove this. Record the contract id in the click-through note.
+- Required Intel equal to the director's Intel is not hidden by this rule. An Expedite-waived gate is not hidden by this rule.
+- Do not change whether locked offers count toward the 3-offer cap.
+- Nothing clips or truncates at 1280×720.
 
 ---
 
