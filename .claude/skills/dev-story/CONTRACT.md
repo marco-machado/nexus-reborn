@@ -37,7 +37,7 @@ Bridges planning and code by loading the full context for a single story (story 
 |------|------------------------------|-------|
 | `<code root>/[system]/[file].[ext]` | Doc-commented public APIs; no hardcoded gameplay values; follows ADR Implementation Guidelines and control-manifest required patterns | created or modified by sub-agent; code root resolved per `.claude/docs/code-root-resolution.md` |
 | `tests/unit/[system]/[story-slug]_test.[ext]` OR `tests/integration/[system]/[story-slug]_test.[ext]` | One test function per acceptance criterion (Logic/Integration stories only); naming per engine (`.claude/rules/test-standards.md`); no random seeds; no external I/O | created by sub-agent; path matches `## Test Evidence` in story |
-| `production/session-state/active.md` | `<!-- CHECKPOINT -->` block: current task (story path), next step, blocker, files in progress, run result | block overwritten, never appended (file created from `.claude/docs/templates/session-state.md` if absent) |
+| `production/session-state/active.md` | `<!-- CHECKPOINT -->` block: current task (story path), next step, blocker, files in progress, run result; `<!-- STATUS -->` block: Epic, Feature, Task of this story | blocks overwritten, never appended (file created from `.claude/docs/templates/session-state.md` if absent) |
 
 ### Output Guarantees
 - All source files follow the naming conventions in `project.yaml` (`naming.*`), falling back to `.claude/docs/technical-preferences.md` for any convention absent there
@@ -55,7 +55,7 @@ Bridges planning and code by loading the full context for a single story (story 
 - READS but does NOT modify: `project.yaml`, `docs/architecture/tr-registry.yaml`, `docs/architecture/adr-NNNN-[slug].md`, all GDD files in `design/gdd/`, `docs/architecture/control-manifest.md`, `.claude/docs/technical-preferences.md` (legacy fallback), `docs/engine-reference/[engine]/VERSION.md`
 - MODIFIES, via sub-agent: `<code root>/**` (new/updated source files; code root resolved per `.claude/docs/code-root-resolution.md`) and the engine's test root (the new test file; `tests/` on Godot)
 - MODIFIES, itself, each after an ask that names the file (in `collaborative` mode; `.claude/docs/automation-modes.md` governs the others): the story file's `Status:`, `Last Updated:`, `ADR Version`, `**ADR Decision Summary**`, `## Implementation Notes`, `Manifest Version:` and `Manifest-Note:` (see the story row above); the story's entry in `production/sprint-status.yaml` (`status: in-progress`, top-level `updated`); a dependency story's `Status:` (dependency option `[C]` only); a Config/Data story's data file; on Unity, `Assets/Scripts/ScreenshotOnArg.cs`, written verbatim from `.claude/docs/run-and-observe.md` when the project has none
-- MODIFIES without an ask: `production/session-state/active.md` — its `<!-- CHECKPOINT -->` block is overwritten, never appended
+- MODIFIES without an ask: `production/session-state/active.md` — its `<!-- CHECKPOINT -->` and `<!-- STATUS -->` blocks are overwritten, never appended
 - Sets the story file's own `Status` field to `In Progress` only (Phase 2, before
   spawning any agent). Closing the story being implemented is the exclusive
   responsibility of `/story-done`; the one other `Status` this skill writes is a

@@ -55,7 +55,7 @@ verdict set at all, so a reader had nothing to branch on.
 | `production/epics/**/*.md` (the story file) | `Status: Complete`, `## Completion Notes` block (date, criteria count, deviations, test evidence path, code review status) | updated after explicit user approval |
 | `production/sprint-status.yaml` | `status: done`, `completed: [date]`, top-level `updated` field | updated silently alongside story file if file exists |
 | `docs/tech-debt-register.md` | Advisory deviation entries (if user confirms) | appended if advisory deviations exist and user agrees |
-| `production/session-state/active.md` | `<!-- CHECKPOINT -->` block: current task (story path and verdict), next step (the next story), blocker, tech debt count | block overwritten, never appended (file created from `.claude/docs/templates/session-state.md` if absent) |
+| `production/session-state/active.md` | `<!-- CHECKPOINT -->` block: current task (story path and verdict), next step (the next story), blocker, tech debt count; `<!-- STATUS -->` block: Epic, Feature, Task of the next story | blocks overwritten, never appended (file created from `.claude/docs/templates/session-state.md` if absent) |
 
 ### Output Guarantees
 - `Status: Complete` is written only after the user explicitly approves: on a COMPLETE or COMPLETE WITH NOTES verdict, or — on a BLOCKED or NOT ASSESSED verdict — only when the user explicitly asks to close anyway (the Phase 7 override, which always prompts as a `scope_changes` decision), with the override risk recorded in `## Completion Notes`
@@ -64,7 +64,7 @@ verdict set at all, so a reader had nothing to branch on.
 
 ## Immutability Rules
 - READS but does NOT modify: `docs/architecture/tr-registry.yaml`, `docs/architecture/adr-NNNN-[slug].md` (Decision + Consequences only), GDD sections, `docs/architecture/control-manifest.md`, source files under the code root — `src/`, `Assets/` or `Source/` by engine (Grep only) — and test files under the engine's test root (existence checked with Glob; never run or edited)
-- MODIFIES: the story `.md` file (status + completion notes), `production/sprint-status.yaml` (if exists), `production/session-state/active.md` (the `<!-- CHECKPOINT -->` block, overwritten), `docs/tech-debt-register.md` (append a row, and update its `Last updated:` and `Total items:` lines, only with user approval)
+- MODIFIES: the story `.md` file (status + completion notes), `production/sprint-status.yaml` (if exists), `production/session-state/active.md` (the `<!-- CHECKPOINT -->` and `<!-- STATUS -->` blocks, overwritten), `docs/tech-debt-register.md` (append a row, and update its `Last updated:` and `Total items:` lines, only with user approval)
 - Does NOT write to the code root or the test root under any circumstances
 
 ## Hard Constraints (Never Violate)

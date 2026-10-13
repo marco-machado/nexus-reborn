@@ -603,6 +603,18 @@ On **BLOCKED** (Phase 2) write the unblocking action instead —
 manifest diff to review — and fill **Blocked on**. `/help` reads this line: a
 checkpoint that says `/story-done` tells it the work is written.
 
+In the same write, **overwrite the `<!-- STATUS -->` … `<!-- /STATUS -->`
+block** with this story — `statusline.sh` shows it as the breadcrumb, and
+nothing else updates it:
+
+```
+<!-- STATUS -->
+Epic: [the story's `> **Epic**:` value]
+Feature: [the current sprint, e.g. Sprint 2]
+Task: [story ID as the sprint table lists it] [story title]
+<!-- /STATUS -->
+```
+
 If `active.md` does not exist, create it from the template. If it exists with no
 markers (a file from before the schema), insert the template's STATUS and
 CHECKPOINT blocks at the top and leave the rest untouched. Confirm: "Session
