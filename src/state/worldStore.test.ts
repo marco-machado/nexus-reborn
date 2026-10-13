@@ -44,6 +44,8 @@ import type { SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 import type { SectorState } from './worldStore'
 import { applyDebrief } from './debrief'
+import { useMissionStore } from './missionStore'
+import { useResearchStore } from './researchStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
@@ -82,6 +84,8 @@ const snapshot = structuredClone({
 beforeEach(() => {
   useWorldStore.setState(structuredClone(snapshot))
   useAppStore.setState({ credits: INITIAL_CREDITS })
+  // applyDebrief syncs the labs to the post-ETA clock; start each test idle.
+  useResearchStore.setState({ done: [], labs: { ballistics: null, cybernetics: null, control: null } })
 })
 
 // Every field the timed flow moves, for jump-vs-continuous parity checks.
@@ -1664,6 +1668,16 @@ describe('Debrief write-back at frozen t0, then ETA (ADR-0001, ADR-0021)', () =>
     expect(calls[1].t).toBe(T0)
     expect(calls[1].flow).toEqual(expected)
     expect(calls[1].intel).toEqual(expectedIntel)
+    // That board carries the mission-result Feed line stamped at t0 and the
+    // moved sector (WN-017), not just equality with the reference run.
+    const sector = resolveMission('m01')!.sector
+    expect(
+      calls[1].flow.events.some(
+        (e) => e.t === T0 && e.sector === sector && e.kind === 'seizure' && e.tone === 'green',
+      ),
+    ).toBe(true)
+    expect(calls[1].flow.sectors[sector].control).toBeGreaterThan(flowS.sectors[sector].control)
+    expect(calls[1].flow.sectors[sector].unrest).toBeLessThan(flowS.sectors[sector].unrest)
     // Only after that does catch-up move the clock.
     const eta = resolveMission('m01')?.etaDays ?? 0
     expect(eta).toBeGreaterThan(0)
@@ -1675,6 +1689,89 @@ describe('Debrief write-back at frozen t0, then ETA (ADR-0001, ADR-0021)', () =>
     expect(calls.map((c) => c.name)).toEqual(['applyMissionResult'])
     expect(calls[0].t).toBe(T0)
     expect(useWorldStore.getState().t).toBe(T0)
+  })
+})
+
+describe('Opening desk and post-win Scan (WN-017)', () => {
+  const T0 = 5 * 3600
+
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+    useAppStore.setState({
+      phase: 'debrief',
+      missionId: 'm01',
+      outcome: null,
+      loadout: {},
+      deploySerial: 0,
+      lastAppliedKey: 0,
+    })
+    useWorldStore.setState({ ...structuredClone(snapshot), t: T0, nextTaxT: T0 + 3600 * 24 * 30 })
+    useMissionStore.getState().reset()
+  })
+
+  // Store half of the opening minute. "Four numbers print" and "contract select
+  // is not the only enabled verb" are DOM checks, covered by the retained
+  // click-through evidence (production/qa/evidence/wn-017/), not here.
+  it('opening desk on a fresh board: Focus walks the six open sectors, Pause holds t, speed scales the advance', () => {
+    useAppStore.setState({ phase: 'world', missionId: null })
+    pinFlows()
+    const w = () => useWorldStore.getState()
+    expect(OPEN_SECTORS.length).toBe(6)
+    const seen: string[] = []
+    for (let i = 0; i < OPEN_SECTORS.length; i += 1) {
+      seen.push(w().selected)
+      w().stepSector(1)
+    }
+    expect(new Set(seen)).toEqual(new Set(OPEN_SECTORS))
+    expect(w().selected).toBe(seen[0])
+    const t = w().t
+    w().togglePause()
+    w().tick(1)
+    expect(w().t).toBe(t)
+    w().togglePause()
+    w().setSpeed(1)
+    w().tick(1)
+    const slow = w().t - t
+    expect(slow).toBeGreaterThan(0)
+    w().setSpeed(8)
+    const t2 = w().t
+    w().tick(1)
+    expect(w().t - t2).toBe(slow * 8)
+  })
+
+  it('a first clean win from Influence 0 reads 8 after write-back and ETA, on the live post-ETA board', () => {
+    expect(useWorldStore.getState().influence).toBe(0)
+    useAppStore.setState({ outcome: outcome({ civiliansHit: 0 }) })
+    applyDebrief('m01')
+    const eta = resolveMission('m01')?.etaDays ?? 0
+    expect(eta).toBeGreaterThan(0)
+    const s = useWorldStore.getState()
+    expect(s.t).toBe(T0 + eta * DAY)
+    expect(s.review).toBeNull()
+    // The AC reads the literal header value: 6 for the win plus 2 clean.
+    expect(s.influence).toBe(8)
+    expect(s.spends).toEqual([])
+  })
+
+  it('the apply reads the outcome DTO, not the running mission store', () => {
+    // The mission store says collateral; the DTO says clean. The DTO wins.
+    useMissionStore.getState().setCiviliansHit(3)
+    useMissionStore.getState().setResult('lost')
+    useAppStore.setState({ outcome: outcome({ civiliansHit: 0, won: true }) })
+    applyDebrief('m01')
+    expect(useWorldStore.getState().influence).toBe(INFLUENCE_WIN_PTS + INFLUENCE_CLEAN_PTS)
+  })
+
+  it('a second apply of the same key changes nothing (ADR-0021)', () => {
+    useAppStore.setState({ outcome: outcome({ civiliansHit: 0 }) })
+    applyDebrief('m01')
+    const world = flowSnapshot()
+    const credits = useAppStore.getState().credits
+    const key = useAppStore.getState().lastAppliedKey
+    applyDebrief('m01')
+    expect(flowSnapshot()).toEqual(world)
+    expect(useAppStore.getState().credits).toBe(credits)
+    expect(useAppStore.getState().lastAppliedKey).toBe(key)
   })
 })
 

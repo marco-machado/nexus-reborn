@@ -102,11 +102,11 @@ stories:
     name: "Opening desk and post-win Scan"
     file: "production/epics/world-network/story-017-opening-desk-and-post-win-scan.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"
   - id: "WN-019"
     name: "Campaign flag edge cases"
     file: "production/epics/world-network/story-019-campaign-flag-edge-cases.md"
