@@ -1,12 +1,12 @@
 # Story 018: Campaign complete and failed banners, incl. pyrrhic win
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN Glass Veil, Hollow Crown and Rust Haven all won, WHEN World Network is shown, THEN the campaign-complete banner is posted and all three remain selectable (not locked).
-- [ ] GIVEN campaign not complete and living roster count 0 after debrief, WHEN World Network is shown, THEN the campaign-failed banner is posted and contract select is a no-op.
-- [ ] GIVEN a pyrrhic win (same-step tiebreak Win that empties the roster on an incomplete campaign), WHEN the debrief is shown, THEN the CAMPAIGN FAILED banner takes precedence, the invoice still prints the full net payout with the `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` note, and the mission grades a Win.
+- [x] GIVEN Glass Veil, Hollow Crown and Rust Haven all won, WHEN World Network is shown, THEN the campaign-complete banner is posted and all three remain selectable (not locked).
+- [x] GIVEN campaign not complete and living roster count 0 after debrief, WHEN World Network is shown, THEN the campaign-failed banner is posted and contract select is a no-op.
+- [x] GIVEN a pyrrhic win (same-step tiebreak Win that empties the roster on an incomplete campaign), WHEN the debrief is shown, THEN the CAMPAIGN FAILED banner takes precedence, the invoice still prints the full net payout with the `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` note, and the mission grades a Win.
 
 ---
 
@@ -73,7 +73,7 @@ From `/qa-plan` sprint 2 (2026-10-12). Integration, secondary UI. State tests: `
 **Required evidence**:
 - Integration: test beside the module under `src/state/` / `src/game/` for the state half, plus a retained screenshot of each screen touched in `production/qa/evidence/` and the named click-through (docs/click-through.md).
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/campaignStore.test.ts` (4 tests in "campaign flags (WN-018)"), `src/state/appStore.test.ts` (2 tests in "selectMission campaign flags (WN-018)" + 1 pyrrhic `applyDebrief` test); screenshots in `production/qa/evidence/wn-018/`
 
 ---
 
@@ -81,3 +81,12 @@ From `/qa-plan` sprint 2 (2026-10-12). Integration, secondary UI. State tests: `
 
 - Depends on: Story 003
 - Unlocks: Story 019
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 3/3 passing. Pyrrhic Debrief look is carried by IF-011 evidence (Debrief code unchanged since 96b9b05), not re-captured.
+**Deviations**: None. The banners, `selectMission` guard and ADR-0020 flags already existed from IF-011; this story added tests and evidence only.
+**Test Evidence**: Integration — `src/state/campaignStore.test.ts` (4 tests), `src/state/appStore.test.ts` (3 tests), `src/ui/debriefFlags.test.ts` (IF-011 regression); screenshots in `production/qa/evidence/wn-018/` (complete and failed at 1280x720). Click-through was partial: World Network only plus one contract click per fixture. Full suite 747 passing when last run (existence only verified by this skill).
+**Code Review**: Complete — `/code-review` APPROVED WITH SUGGESTIONS (inline pass, specialist agents not spawned); all four suggestions applied.

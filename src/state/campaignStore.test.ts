@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAppStore, type MissionOutcome } from './appStore'
+import * as campaignModule from './campaignStore'
 import {
   INJURY_HP_FRAC,
   INJURY_RECOVERY_MAX,
@@ -288,6 +289,51 @@ describe('campaign fail state', () => {
     const state = useCampaignStore.getState()
     expect(state.campaignWon).toBe(true)
     expect(state.campaignFailed).toBe(false)
+  })
+})
+
+describe('campaign flags (WN-018)', () => {
+  const wipe = () => {
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    return { casualties: ids.length, deadIds: ids }
+  }
+  // ADR-0020: the two flags are never both true, checked after every report.
+  const report = (id: string, over: Partial<MissionOutcome> = {}) => {
+    useCampaignStore.getState().reportMission(id, outcome(over), 0)
+    const { campaignWon, campaignFailed } = useCampaignStore.getState()
+    expect(campaignWon && campaignFailed).toBe(false)
+  }
+
+  it('a same-step Win that empties an incomplete roster fails the campaign (pyrrhic)', () => {
+    const size = useCampaignStore.getState().operatives.length
+    report('m01', wipe())
+    const state = useCampaignStore.getState()
+    expect(state.contractsWon).toEqual(['m01'])
+    expect(state.lastReport?.kia).toHaveLength(size)
+    expect(state.campaignFailed).toBe(true)
+    expect(state.campaignWon).toBe(false)
+  })
+
+  it('a completed campaign stays complete after a later roster wipe', () => {
+    for (const id of ['m01', 'm02', 'm03']) report(id, { civiliansHit: 1 })
+    report('m01', { won: false, reward: 0, ...wipe() })
+    const state = useCampaignStore.getState()
+    expect(state.operatives).toEqual([])
+    expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
+  })
+
+  it('the last authored win that also wipes the roster is complete, not failed', () => {
+    report('m01', { civiliansHit: 1 })
+    report('m02', { civiliansHit: 1 })
+    report('m03', wipe())
+    const state = useCampaignStore.getState()
+    expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
+  })
+
+  it('exports no CampaignStatus enum', () => {
+    expect('CampaignStatus' in campaignModule).toBe(false)
   })
 })
 

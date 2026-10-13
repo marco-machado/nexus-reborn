@@ -177,6 +177,33 @@ describe('screen flow', () => {
   })
 })
 
+describe('selectMission campaign flags (WN-018)', () => {
+  it('stays selectable for all three authored contracts once the campaign is complete', () => {
+    for (const m of MISSIONS) {
+      useCampaignStore.getState().reportMission(m.id, outcome({ casualties: 0 }), 0)
+    }
+    expect(useCampaignStore.getState().campaignWon).toBe(true)
+    // Intel gates are not under test here; lift them so only the flags decide.
+    useCampaignStore.setState({ intelLevel: 3 })
+    for (const m of MISSIONS) {
+      useAppStore.setState({ phase: 'world', missionId: null })
+      useAppStore.getState().selectMission(m.id)
+      expect(useAppStore.getState().missionId).toBe(m.id)
+      expect(useAppStore.getState().phase).toBe('brief')
+    }
+  })
+
+  it('is a no-op once the campaign has failed', () => {
+    useCampaignStore.setState({ intelLevel: 3, campaignWon: false, campaignFailed: true })
+    useAppStore.setState({ phase: 'world', missionId: null })
+    for (const m of MISSIONS) {
+      useAppStore.getState().selectMission(m.id)
+      expect(useAppStore.getState().missionId).toBeNull()
+      expect(useAppStore.getState().phase).toBe('world')
+    }
+  })
+})
+
 describe('squad selection', () => {
   it('removes an operative already in the squad', () => {
     useAppStore.getState().toggleOperative('op2')
@@ -558,6 +585,22 @@ describe('applyDebrief apply-once (ADR-0021)', () => {
     expect(s.lastAppliedKey).toBe(1)
     expect(s.squad).not.toContain('op4')
     expect(useWorldStore.getState().t).toBe(T0 + MISSIONS[0].etaDays * DAY)
+  })
+
+  it('pyrrhic win (WN-018): pays the full net payout, grades a Win and fails the campaign', () => {
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    const pyrrhic = outcome({ applyKey: 1, casualties: ids.length, deadIds: ids })
+    useAppStore.getState().setOutcome(pyrrhic)
+    // Tax off the ETA span so the deposit is just the payout.
+    useWorldStore.setState({ nextTaxT: 1e12 })
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + netPayout(pyrrhic))
+    expect(useAppStore.getState().outcome?.won).toBe(true)
+    const c = useCampaignStore.getState()
+    expect(c.operatives).toEqual([])
+    expect(c.contractsWon).toEqual(['m01'])
+    expect(c.campaignFailed).toBe(true)
+    expect(c.campaignWon).toBe(false)
   })
 
   it('re-entering with the same key leaves every store equal to the post-apply snapshot', () => {
