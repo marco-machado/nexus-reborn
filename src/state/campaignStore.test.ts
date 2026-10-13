@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { MissionOutcome } from './appStore'
+import { useAppStore, type MissionOutcome } from './appStore'
 import {
   INJURY_HP_FRAC,
   INJURY_RECOVERY_MAX,
@@ -10,6 +10,7 @@ import {
   missionLocked,
   useCampaignStore,
 } from './campaignStore'
+import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
 import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
 
@@ -328,5 +329,63 @@ describe('quietReplay flag is the intel award input', () => {
     expect(state.intelLevel).toBe(1)
     expect(state.intelProgress).toBe(25)
     expect(state.contractsWon).toEqual(['m01'])
+  })
+})
+
+describe('World Network intel progress awards (WN-011)', () => {
+  const seed = (progress: number) =>
+    useCampaignStore.setState({ intelLevel: 1, intelProgress: progress })
+
+  it('a non-quiet win with a civilian hit awards 40: 25 -> 65', () => {
+    seed(25)
+    useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 1 }), 0)
+    expect(useCampaignStore.getState().intelProgress).toBe(65)
+  })
+
+  it('more than one civilian hit still awards 40: 25 -> 65', () => {
+    seed(25)
+    useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 3 }), 0)
+    expect(useCampaignStore.getState().intelProgress).toBe(65)
+  })
+
+  it('a non-quiet clean win awards 55: 25 -> 80', () => {
+    seed(25)
+    useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 0 }), 0)
+    expect(useCampaignStore.getState().intelProgress).toBe(80)
+  })
+
+  it('a loss leaves intelProgress unchanged, including J = 0', () => {
+    for (const j of [0, 25]) {
+      seed(j)
+      useCampaignStore.getState().reportMission(
+        'm01',
+        outcome({ won: false, reward: 0, civiliansHit: 0 }),
+        0,
+      )
+      expect(useCampaignStore.getState().intelProgress).toBe(j)
+      expect(useCampaignStore.getState().intelLevel).toBe(1)
+    }
+  })
+
+  it('a quiet-replay win leaves intelProgress unchanged', () => {
+    seed(25)
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ quietReplay: true, civiliansHit: 0 }),
+      0,
+    )
+    expect(useCampaignStore.getState().intelProgress).toBe(25)
+  })
+
+  it('writes Intel on campaignStore only', () => {
+    seed(25)
+    const worldBefore = useWorldStore.getState()
+    const appBefore = useAppStore.getState()
+    useCampaignStore.getState().reportMission('m01', outcome(), 0)
+    expect(useCampaignStore.getState().intelProgress).toBe(80)
+    expect(useWorldStore.getState()).toBe(worldBefore)
+    expect(useAppStore.getState()).toBe(appBefore)
+    expect('intelProgress' in useWorldStore.getState()).toBe(false)
+    expect('intelProgress' in useAppStore.getState()).toBe(false)
   })
 })

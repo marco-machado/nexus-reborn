@@ -57,11 +57,11 @@ stories:
     name: "Intel progress awards"
     file: "production/epics/world-network/story-011-intel-progress-awards.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"
   - id: "WN-018"
     name: "Campaign complete and failed banners, including a pyrrhic win"
     file: "production/epics/world-network/story-018-campaign-complete-and-failed-banners-incl-pyrrhic-win.md"

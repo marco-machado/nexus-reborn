@@ -1,12 +1,12 @@
 # Story 011: Intel progress awards
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -77,7 +77,7 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. File: `src/state/campaignStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/campaignStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/campaignStore.test.ts` (6 tests in "World Network intel progress awards (WN-011)")
 
 ---
 
@@ -85,3 +85,12 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. File: `src/state/campaignStore.tes
 
 - Depends on: Story 003
 - Unlocks: Story 012, Story 014
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 3/3 passing, all covered by tests in `src/state/campaignStore.test.ts` ("World Network intel progress awards (WN-011)", 6 tests; 25/25 pass in the file)
+**Deviations**: None. No source change: the award logic already existed in `reportMission` (`src/state/campaignStore.ts`); this story added coverage.
+**Test Evidence**: Logic: test file present at `src/state/campaignStore.test.ts`; suite run at close: 25 passed
+**Code Review**: `/code-review` run, verdict NOT ASSESSED (specialist and qa-tester passes not spawned); both suggestions applied (static imports, same-object store assertion). No required changes.
