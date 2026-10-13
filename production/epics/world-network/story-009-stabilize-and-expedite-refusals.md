@@ -1,12 +1,12 @@
 # Story 009: Stabilize and Expedite refusals
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-12
 
 ## Context
 
@@ -73,7 +73,7 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/game/influence.test.ts
 **Required evidence**:
 - Logic: test file beside the module — `src/game/influence.test.ts`, `src/state/worldStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/worldStore.test.ts` (describe `stabilize and expedite refusals`, 6 tests); `src/game/influence.test.ts` needed no change
 
 ---
 
@@ -81,3 +81,13 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/game/influence.test.ts
 
 - Depends on: Story 008
 - Unlocks: Story 010
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-12
+**Criteria**: 3/3 passing (all covered by tests in `src/state/worldStore.test.ts`, describe `stabilize and expedite refusals`)
+**Deviations**: None. The refusal paths already existed in `spendInfluence` (`src/state/worldStore.ts`); this story added the tests that pin them, with no production code change.
+**Test Evidence**: Logic: test file at `src/state/worldStore.test.ts` (6 tests); full suite 729/729 passing at closure.
+**Code Review**: Complete (`/code-review`: APPROVED WITH SUGGESTIONS; all three applied).
+**Follow-up, outside this story**: no test covers Expedite refused on cooldown with a target present, or a cooldown expiring exactly at `t`.

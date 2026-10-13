@@ -873,6 +873,90 @@ describe('influence economy', () => {
   })
 })
 
+describe('stabilize and expedite refusals', () => {
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+  })
+
+  // A refused spend must leave the whole store untouched: same state object,
+  // and no subscriber notified.
+  function expectNoOp(run: () => void): void {
+    const before = useWorldStore.getState()
+    const listener = vi.fn()
+    const unsubscribe = useWorldStore.subscribe(listener)
+    try {
+      run()
+    } finally {
+      unsubscribe()
+    }
+    expect(listener).not.toHaveBeenCalled()
+    expect(useWorldStore.getState()).toBe(before)
+  }
+
+  it('refuses Stabilize at Influence 7 and keeps 7', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 7 })
+    expectNoOp(() => useWorldStore.getState().spendInfluence('eu', 'stabilize'))
+    const s = useWorldStore.getState()
+    expect(s.influence).toBe(7)
+    expect(s.spends).toEqual([])
+    expect(s.cooldowns).toEqual({})
+  })
+
+  it('refuses Stabilize at the opening Influence 0', () => {
+    pinFlows()
+    expectNoOp(() => useWorldStore.getState().spendInfluence('eu', 'stabilize'))
+    expect(useWorldStore.getState().influence).toBe(0)
+  })
+
+  it('refuses Stabilize on cooldown at Influence 8 and above, changing nothing', () => {
+    pinFlows()
+    for (const influence of [8, 20]) {
+      const readyAtT = useWorldStore.getState().t + 3600
+      const cooldowns = { [cooldownKey('eu', 'stabilize')]: readyAtT }
+      useWorldStore.setState({ influence, cooldowns, spends: [] })
+      expectNoOp(() => useWorldStore.getState().spendInfluence('eu', 'stabilize'))
+      const s = useWorldStore.getState()
+      expect(s.influence).toBe(influence)
+      expect(s.cooldowns).toEqual(cooldowns)
+      expect(s.spends).toEqual([])
+    }
+  })
+
+  it('refuses Expedite with no generated target and keeps Influence', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 30, contracts: [] })
+    expectNoOp(() => useWorldStore.getState().spendInfluence('eu', 'expedite'))
+    const s = useWorldStore.getState()
+    expect(s.influence).toBe(30)
+    expect(s.cooldowns).toEqual({})
+    expect(s.spends).toEqual([])
+  })
+
+  it('refuses Expedite when the only offers are in another sector', () => {
+    pinFlows()
+    const elsewhere = craft('af', 41, 'MODERATE')
+    useWorldStore.setState({ influence: 30, contracts: [elsewhere] })
+    expectNoOp(() => useWorldStore.getState().spendInfluence('eu', 'expedite'))
+    expect(useWorldStore.getState().influence).toBe(30)
+  })
+
+  it('Expedite never occupies the staged-spend slot or writes Intel', () => {
+    pinFlows()
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 5 })
+    useWorldStore.setState({ influence: 30, contracts: [craft('eu', 42, 'MODERATE')] })
+    useWorldStore.getState().spendInfluence('eu', 'expedite')
+    const s = useWorldStore.getState()
+    expect(s.influence).toBe(30 - INFLUENCE_ACTIONS.expedite.cost)
+    expect(s.spends).toEqual([])
+    const c = useCampaignStore.getState()
+    expect({ intelLevel: c.intelLevel, intelProgress: c.intelProgress }).toEqual({
+      intelLevel: 2,
+      intelProgress: 5,
+    })
+  })
+})
+
 describe('unrest pressure and crisis', () => {
   it('a sector pushed above 60 unrest arms a decay timer through a mission result', () => {
     useWorldStore.setState({
