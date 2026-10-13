@@ -1,12 +1,12 @@
 # Story 010: Stabilize staged effect over six hourly steps
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -33,9 +33,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN an open sector with Unrest 18, Influence 8, Stabilize off cooldown, and no other Unrest-changing effects, WHEN Stabilize is activated and 6 strategic hours elapse, THEN Influence is 0 immediately, Unrest falls by 2 at each hourly step to 6, and the staged spend retires.
-- [ ] GIVEN Unrest 12 under the same conditions, WHEN all six hourly steps complete, THEN Influence is 0 immediately and Unrest ends at 2, not 0, because each step respects the GDD §5 clamp.
-- [ ] GIVEN Unrest 2 under the same conditions, WHEN all six hourly steps complete, THEN Influence is 0, Unrest stays 2, and the staged spend retires. (Interleaved World Events follow ordinary catch-up rules; no guaranteed net reduction.)
+- [x] GIVEN an open sector with Unrest 18, Influence 8, Stabilize off cooldown, and no other Unrest-changing effects, WHEN Stabilize is activated and 6 strategic hours elapse, THEN Influence is 0 immediately, Unrest falls by 2 at each hourly step to 6, and the staged spend retires.
+- [x] GIVEN Unrest 12 under the same conditions, WHEN all six hourly steps complete, THEN Influence is 0 immediately and Unrest ends at 2, not 0, because each step respects the GDD §5 clamp.
+- [x] GIVEN Unrest 2 under the same conditions, WHEN all six hourly steps complete, THEN Influence is 0, Unrest stays 2, and the staged spend retires. (Interleaved World Events follow ordinary catch-up rules; no guaranteed net reduction.)
 
 ---
 
@@ -75,7 +75,7 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. File: `src/state/worldStore.test.t
 **Required evidence**:
 - Logic: test file beside the module — `src/state/worldStore.test.ts` — advance six hours via `tick` and via `advanceDays`; both reach the same Unrest. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing — `src/state/worldStore.test.ts` (5 tests)
 
 ---
 
@@ -83,3 +83,12 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. File: `src/state/worldStore.test.t
 
 - Depends on: Story 002, Story 009
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 3/3 passing, all covered by `describe('stabilize staged effect over six hourly steps')` in `src/state/worldStore.test.ts`.
+**Deviations**: None. Stabilize in `worldStore.ts` already matched the criteria; this story added tests only. Parity test compares full `flowSnapshot()` for 720 frames of `tick` vs `advanceDays(0.25)`.
+**Test Evidence**: Logic: test file at `src/state/worldStore.test.ts` (5 tests; suite 114/114 passed locally, exit 0). Run result: N/A — test-only Logic story.
+**Code Review**: Complete — APPROVED WITH SUGGESTIONS (parity-test fix applied). Open suggestions: assert spend `nextT`/`remaining` countdown, a mid-run clamp case (Unrest 3).

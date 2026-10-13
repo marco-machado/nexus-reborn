@@ -14,7 +14,7 @@ goal: "Finish the World Network director loop Sprint 1 left open: a quiet replay
 start: "2026-10-23"
 end: "2026-11-05"
 generated: "2026-10-12"
-updated: "2026-10-12"
+updated: "2026-10-13"
 
 stories:
   - id: "WN-005"
@@ -48,11 +48,11 @@ stories:
     name: "Stabilize staged effect over six hourly steps"
     file: "production/epics/world-network/story-010-stabilize-staged-effect-over-six-hourly-steps.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"
   - id: "WN-011"
     name: "Intel progress awards"
     file: "production/epics/world-network/story-011-intel-progress-awards.md"

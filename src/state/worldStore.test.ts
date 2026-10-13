@@ -35,6 +35,7 @@ import {
   PRESSURE_INTERVAL_SEC,
   TAX_INTERVAL_SEC,
   UNREST_MAX,
+  UNREST_MIN,
   cooldownKey,
   taxYieldCredits,
 } from '../game/influence'
@@ -1861,5 +1862,91 @@ describe('Quiet replay awards nothing; ETA still catches up', () => {
     useAppStore.getState().setOutcome(o)
     expect(o.quietReplay).toBe(false)
     expect(useAppStore.getState().outcome?.quietReplay).toBe(false)
+  })
+})
+
+describe('stabilize staged effect over six hourly steps', () => {
+  const STAB = INFLUENCE_ACTIONS.stabilize
+  const HOUR = STAB.stepSec
+
+  // Open sector at the given Unrest, Influence 8, off cooldown, every other
+  // timed flow pinned away so nothing else can move Unrest. Returns the
+  // activation instant.
+  function activate(unrest: number): number {
+    pinFlows()
+    const prev = useWorldStore.getState().sectors.eu
+    useWorldStore.setState({
+      influence: STAB.cost,
+      contracts: [],
+      cooldowns: {},
+      spends: [],
+      sectors: { ...useWorldStore.getState().sectors, eu: { ...prev, unrest } },
+    })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    return useWorldStore.getState().t
+  }
+
+  const unrestOf = () => useWorldStore.getState().sectors.eu.unrest
+
+  it('uses the GDD values: six steps of -2 every world hour, clamped at 2-96', () => {
+    expect(STAB.steps).toBe(6)
+    expect(STAB.unrestDelta).toBe(-2)
+    expect(STAB.stepSec).toBe(3600)
+    expect(UNREST_MAX).toBe(96)
+    expect(UNREST_MIN).toBe(2)
+  })
+
+  it('Unrest 18, Influence 8: wallet empties at once, Unrest falls 2 per hour to 6', () => {
+    const t0 = activate(18)
+    // Right after activation: Influence spent, Unrest untouched, not a -12.
+    let s = useWorldStore.getState()
+    expect(s.influence).toBe(0)
+    expect(s.sectors.eu.unrest).toBe(18)
+    expect(s.spends).toHaveLength(1)
+    expect(s.spends[0].remaining).toBe(STAB.steps)
+    for (let step = 1; step <= STAB.steps; step++) {
+      crossTo(t0 + step * HOUR)
+      s = useWorldStore.getState()
+      expect(s.sectors.eu.unrest).toBe(18 - 2 * step)
+    }
+    expect(unrestOf()).toBe(6)
+    expect(s.spends).toEqual([])
+    expect(s.influence).toBe(0)
+  })
+
+  it('Unrest 12 ends at 2, not 0, because each step respects the clamp', () => {
+    const t0 = activate(12)
+    expect(useWorldStore.getState().influence).toBe(0)
+    expect(unrestOf()).toBe(12)
+    crossTo(t0 + STAB.steps * HOUR)
+    expect(unrestOf()).toBe(UNREST_MIN)
+    expect(useWorldStore.getState().spends).toEqual([])
+  })
+
+  it('Unrest 2 stays 2, Influence stays 0, and the spend retires', () => {
+    const t0 = activate(2)
+    expect(useWorldStore.getState().influence).toBe(0)
+    expect(unrestOf()).toBe(2)
+    crossTo(t0 + STAB.steps * HOUR)
+    const s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).toBe(UNREST_MIN)
+    expect(s.influence).toBe(0)
+    expect(s.spends).toEqual([])
+  })
+
+  it('six hours via tick and via advanceDays reach the same Unrest', () => {
+    const span = STAB.steps * HOUR
+    activate(18)
+    useWorldStore.getState().advanceDays(span / DAY)
+    const jump = flowSnapshot()
+    expect(jump.sectors.eu.unrest).toBe(6)
+    expect(jump.spends).toEqual([])
+
+    // Same start in frames: 0.25s frames at speed 2 advance exactly 30 world
+    // seconds each, so every hourly step lands on its own boundary.
+    useWorldStore.setState(structuredClone(snapshot))
+    activate(18)
+    for (let i = 0; i < span / 30; i++) useWorldStore.getState().tick(0.25)
+    expect(flowSnapshot()).toEqual(jump)
   })
 })
