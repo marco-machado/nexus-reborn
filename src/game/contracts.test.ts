@@ -10,6 +10,7 @@ import {
   CONTRACT_REWARD_MIN,
   PRIORITY_EXPIRY_MIN_SEC,
   PRIORITY_EXPIRY_SPAN_SEC,
+  contractIntelReq,
   contractMission,
   contractThreat,
   expediteTarget,
@@ -19,6 +20,7 @@ import {
   rollSuppressionContract,
   sectorClient,
   sequenceVariant,
+  visibleContracts,
 } from './contracts'
 import type { ContractSectorInput, ContractType, GeneratedContract } from './contracts'
 import { CITIES, CITIES_BY_SECTOR, HOLDERS, SCAN_H, SCAN_W, cityById } from './atlas'
@@ -235,6 +237,43 @@ describe('expedite targeting', () => {
         'eu',
       ),
     ).toBeNull()
+  })
+
+  describe('intel visibility (WN-014)', () => {
+    const contracts = [
+      stub('gc-mod', 'na', 'MODERATE'),
+      stub('gc-high', 'na', 'HIGH'),
+      stub('gc-sev', 'na', 'SEVERE'),
+      stub('gc-exp', 'na', 'SEVERE', { expedited: true }),
+    ]
+    const ids = (level: number) => visibleContracts(contracts, level).map((c) => c.id)
+
+    it('hides an offer whose required intel exceeds the director level', () => {
+      expect(ids(1)).toEqual(['gc-mod', 'gc-exp'])
+      expect(ids(2)).toEqual(['gc-mod', 'gc-high', 'gc-exp'])
+    })
+
+    it('shows an offer whose required intel equals the director level', () => {
+      expect(ids(2)).toContain('gc-high')
+      expect(ids(3)).toContain('gc-sev')
+    })
+
+    it('does not hide an Expedite-waived gate', () => {
+      expect(contractIntelReq(contracts[3])).toBe(1)
+      expect(ids(1)).toContain('gc-exp')
+    })
+
+    it('filters read-side only: the source array keeps every record', () => {
+      const before = contracts.map((c) => ({ ...c }))
+      visibleContracts(contracts, 1)
+      expect(contracts).toEqual(before)
+    })
+
+    it('agrees with the derived mission gate', () => {
+      for (const c of contracts) {
+        expect(contractMission(c).intelReq).toBe(contractIntelReq(c))
+      }
+    })
   })
 })
 

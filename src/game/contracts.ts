@@ -263,6 +263,22 @@ export function rollContract(
   return finishContract(input, t, false, rng)
 }
 
+// The Intel level a generated contract needs. An EXPEDITE spend waives the
+// gate to the floor (level 1, which every director holds).
+export function contractIntelReq(c: GeneratedContract): number {
+  return c.expedited ? 1 : CONTRACT_INTEL_REQ[c.threat]
+}
+
+// The generated offers Scan and OPEN CONTRACTS list: an offer whose required
+// Intel exceeds the director's level is hidden. Read-side only; the caller's
+// array (worldStore.contracts) keeps every record.
+export function visibleContracts(
+  contracts: GeneratedContract[],
+  intelLevel: number,
+): GeneratedContract[] {
+  return contracts.filter((c) => contractIntelReq(c) <= intelLevel)
+}
+
 // The record an EXPEDITE spend targets: the lowest-intel-gate open generated
 // contract in the sector that is not already expedited. Ties break toward the
 // oldest offer, then by id, so the target is deterministic.
@@ -602,7 +618,7 @@ export function contractMission(contract: GeneratedContract): MissionDef {
     briefing: briefingFor(contract, city.name, district),
     notes: notesFor(contract, weather, weatherFront, openingHour),
     objectives: objectivesFor(contract),
-    intelReq: contract.expedited ? 1 : CONTRACT_INTEL_REQ[contract.threat],
+    intelReq: contractIntelReq(contract),
     mapPos,
   }
   missionCache.set(contract, def)

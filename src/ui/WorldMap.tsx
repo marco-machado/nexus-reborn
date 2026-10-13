@@ -13,7 +13,7 @@ import {
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
 import { MISSIONS } from '../game/data'
-import { contractMission, expediteTarget } from '../game/contracts'
+import { contractMission, expediteTarget, visibleContracts } from '../game/contracts'
 import type { GeneratedContract } from '../game/contracts'
 import {
   EXPEDITE_EXTENSION_SEC,
@@ -104,13 +104,20 @@ interface OpEntry {
   gen: GeneratedContract | null
 }
 
-function opsFor(sector: SectorId | null, contracts: GeneratedContract[]): OpEntry[] {
+// Generated offers above the director's Intel are absent from Scan and OPEN
+// CONTRACTS (visibleContracts; worldStore.contracts keeps the record).
+// Authored contracts stay listed as locked.
+function opsFor(
+  sector: SectorId | null,
+  contracts: GeneratedContract[],
+  intelLevel: number,
+): OpEntry[] {
   return [
     ...MISSIONS.filter((m) => sector === null || m.sector === sector).map((m) => ({
       m,
       gen: null,
     })),
-    ...contracts
+    ...visibleContracts(contracts, intelLevel)
       .filter((c) => sector === null || c.sector === sector)
       .map((c) => ({ m: contractMission(c), gen: c })),
   ]
@@ -255,7 +262,7 @@ function WorldScan() {
   const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
-  const marks = useMemo(() => opsFor(null, contracts), [contracts])
+  const marks = useMemo(() => opsFor(null, contracts, intelLevel), [contracts, intelLevel])
   const scanMarks = useMemo(
     () =>
       visibleScanMarks(
@@ -487,7 +494,7 @@ function SectorInset(props: { id: SectorId }) {
   const corp = sectorCorp(props.id, owner)
   const cities = CITIES_BY_SECTOR[props.id] ?? []
   const lights = LIGHTS_BY_SECTOR[props.id] ?? []
-  const generated = contracts.find((c) => c.sector === props.id)
+  const generated = visibleContracts(contracts, intelLevel).find((c) => c.sector === props.id)
   const mission =
     MISSIONS.find((m) => m.sector === props.id) ??
     (generated ? contractMission(generated) : undefined)
@@ -898,7 +905,10 @@ export function WorldMap() {
 
   const def = sectorDef(selected)
   const read = sectorReadout(selected, sectors[selected])
-  const ops = useMemo(() => opsFor(selected, contracts), [selected, contracts])
+  const ops = useMemo(
+    () => opsFor(selected, contracts, intelLevel),
+    [selected, contracts, intelLevel],
+  )
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
 
   return (

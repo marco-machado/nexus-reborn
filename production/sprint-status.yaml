@@ -93,11 +93,11 @@ stories:
     name: "Scan hides contracts above the director's Intel; Chance still prints"
     file: "production/epics/world-network/story-014-scan-hides-contracts-above-the-director-s-intel-chance.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"
   - id: "WN-017"
     name: "Opening desk and post-win Scan"
     file: "production/epics/world-network/story-017-opening-desk-and-post-win-scan.md"

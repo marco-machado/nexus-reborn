@@ -1,12 +1,12 @@
 # Story 014: Scan hides contracts above the director's Intel; Chance still prints
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -74,7 +74,7 @@ From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots a
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/wn-014/` (3 screenshots at 1280×720, `README.md` click-through note, `drive.mjs`); unit tests in `src/game/contracts.test.ts` ("intel visibility (WN-014)", 5 tests)
 
 ---
 
@@ -82,3 +82,12 @@ From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots a
 
 - Depends on: Story 011
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 2/2 passing (screenshots opened for intel 2 and 3; intel 1 observed at dev-story time)
+**Deviations**: None from GDD/ADR-0012. Advisory, from the ui-programmer review (all INFO): the OPEN CONTRACTS counter total now counts shown offers only; the empty-state text "NO CONTRACTS POSTED IN …" is untrue when every offer in a sector is hidden (UX call, not changed); the Brief-only risk bands were not exercised on screen. Beyond the story's UI scope, a pure helper (`contractIntelReq`, `visibleContracts`) was added to `src/game/contracts.ts` with tests, at the code review's suggestion.
+**Test Evidence**: UI — retained screenshots in `production/qa/evidence/wn-014/`; unit tests present in `src/game/contracts.test.ts` (run at dev time: 752 passed)
+**Code Review**: Complete — /code-review plus ui-programmer review, APPROVED WITH SUGGESTIONS; suggestions applied
