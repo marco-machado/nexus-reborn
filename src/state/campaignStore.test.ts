@@ -27,6 +27,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     bonus: 0,
     deadIds: [],
     survivorHp: {},
+    quietReplay: false,
     ...over,
   }
 }
@@ -78,7 +79,11 @@ describe('campaign initialization and intel', () => {
     expect(state.intelProgress).toBe(80)
     expect(state.contractsWon).toEqual(['m01'])
 
-    useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 1 }), 0)
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ civiliansHit: 1, quietReplay: true }),
+      0,
+    )
     expect(useCampaignStore.getState().intelProgress).toBe(80)
     expect(useCampaignStore.getState().intelLevel).toBe(1)
   })
@@ -295,5 +300,33 @@ describe('augmentation bays', () => {
     expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBeUndefined()
     useCampaignStore.getState().setBay('op1', 'NEURAL', 'b-propellants')
     expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBeUndefined()
+  })
+})
+
+describe('quietReplay flag is the intel award input', () => {
+  it('quietReplay false on an already-won contract — reportMission still awards intel', () => {
+    useCampaignStore.setState({ contractsWon: ['m01'], intelLevel: 1, intelProgress: 25 })
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ quietReplay: false, civiliansHit: 0 }),
+      0,
+    )
+    const state = useCampaignStore.getState()
+    expect(state.intelLevel).toBe(1)
+    expect(state.intelProgress).toBe(80)
+    expect(state.contractsWon).toEqual(['m01'])
+  })
+
+  it('quietReplay true on a contract not yet won — reportMission awards no intel', () => {
+    useCampaignStore.setState({ contractsWon: [], intelLevel: 1, intelProgress: 25 })
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ quietReplay: true, civiliansHit: 0 }),
+      0,
+    )
+    const state = useCampaignStore.getState()
+    expect(state.intelLevel).toBe(1)
+    expect(state.intelProgress).toBe(25)
+    expect(state.contractsWon).toEqual(['m01'])
   })
 })

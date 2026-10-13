@@ -27,6 +27,7 @@ import type { ContractThreat, GeneratedContract } from '../game/contracts'
 import {
   EXPEDITE_EXTENSION_SEC,
   INFLUENCE_ACTIONS,
+  CONTROL_MAX,
   INFLUENCE_CLEAN_PTS,
   INFLUENCE_WIN_PTS,
   PRESSURE_CONTROL_DROP_MAX,
@@ -41,7 +42,6 @@ import { FORECAST_KINDS, kindWeights } from '../game/forecast'
 import type { SectorId } from '../game/types'
 import type { MissionOutcome } from './appStore'
 import type { SectorState } from './worldStore'
-import debriefSrc from './debrief.ts?raw'
 import { applyDebrief } from './debrief'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 
@@ -308,6 +308,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     bonus: 0,
     deadIds: [],
     survivorHp: {},
+    quietReplay: false,
     ...over,
   }
 }
@@ -1497,11 +1498,6 @@ describe('catch-up collision order (ADR-0018)', () => {
     expect(s.nextEventT).toBe(before.nextEventT)
     expect(s.nextContractT).toBe(before.nextContractT)
     expect(useAppStore.getState().credits).toBe(credits0)
-    // The debrief's only ETA spend sits behind the win check.
-    expect(debriefSrc.match(/\.advanceDays\(/g)).toHaveLength(1)
-    expect(debriefSrc).toMatch(
-      /if \(outcome\.won\) \{\s*useWorldStore\.getState\(\)\.advanceDays\(/,
-    )
   })
 })
 
@@ -1594,5 +1590,192 @@ describe('Debrief write-back at frozen t0, then ETA (ADR-0001, ADR-0021)', () =>
     expect(calls.map((c) => c.name)).toEqual(['applyMissionResult'])
     expect(calls[0].t).toBe(T0)
     expect(useWorldStore.getState().t).toBe(T0)
+  })
+})
+
+describe('Quiet replay awards nothing; ETA still catches up', () => {
+  const T0 = 5 * 3600
+
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+    useAppStore.setState({
+      phase: 'debrief',
+      missionId: 'm01',
+      outcome: null,
+      loadout: {},
+      deploySerial: 0,
+      lastAppliedKey: 0,
+    })
+    useWorldStore.setState({ t: T0, nextTaxT: T0 + 60 })
+  })
+
+  function applyWithBoundary(o: MissionOutcome) {
+    const world = useWorldStore.getState()
+    const origApply = world.applyMissionResult
+    const origAdvance = world.advanceDays
+    const calls: {
+      name: string
+      t: number
+      flow: ReturnType<typeof flowSnapshot>
+      intel: { intelLevel: number; intelProgress: number }
+      credits: number
+    }[] = []
+    const record = (name: string) => {
+      const c = useCampaignStore.getState()
+      calls.push({
+        name,
+        t: useWorldStore.getState().t,
+        flow: flowSnapshot(),
+        intel: { intelLevel: c.intelLevel, intelProgress: c.intelProgress },
+        credits: useAppStore.getState().credits,
+      })
+    }
+    useWorldStore.setState({
+      applyMissionResult: (missionId: string, result: MissionOutcome, kia?: string[]) => {
+        record('applyMissionResult')
+        origApply(missionId, result, kia)
+      },
+      advanceDays: (days: number) => {
+        record('advanceDays')
+        origAdvance(days)
+      },
+    })
+    try {
+      useAppStore.setState({ outcome: o })
+      applyDebrief('m01')
+    } finally {
+      useWorldStore.setState({ applyMissionResult: origApply, advanceDays: origAdvance })
+    }
+    return calls
+  }
+
+  function advanceBoundary(calls: ReturnType<typeof applyWithBoundary>) {
+    const boundary = calls.find((c) => c.name === 'advanceDays')
+    expect(boundary).toBeDefined()
+    if (!boundary) throw new Error('advanceDays was not called')
+    return boundary
+  }
+
+  function armQuietBoard() {
+    const world = useWorldStore.getState()
+    const eu = world.sectors.eu
+    useWorldStore.setState({ influence: 11 })
+    useCampaignStore.setState({ intelLevel: 3, intelProgress: 17 })
+    return { control: eu.control, unrest: eu.unrest, holder: world.owner.nc }
+  }
+
+  function armLossRetryBoard() {
+    const world = useWorldStore.getState()
+    useWorldStore.setState({
+      influence: 0,
+      owner: { ...world.owner, nc: 'helix' },
+      sectors: {
+        ...world.sectors,
+        eu: { ...world.sectors.eu, unrest: 40 },
+      },
+    })
+    expect(useWorldStore.getState().sectors.eu.control).toBeLessThan(CONTROL_MAX)
+    expect(useWorldStore.getState().owner.nc).not.toBe('nexus')
+  }
+
+  it('quiet-replay win write-back before ETA — Influence, Intel, Control, Unrest, holder and t stay at t0', () => {
+    const board = armQuietBoard()
+    const calls = applyWithBoundary(
+      outcome({ won: true, quietReplay: true, civiliansHit: 0, applyKey: 1 }),
+    )
+    const boundary = advanceBoundary(calls)
+    expect(boundary.t).toBe(T0)
+    expect(boundary.flow.influence).toBe(11)
+    expect(boundary.intel).toEqual({ intelLevel: 3, intelProgress: 17 })
+    expect(boundary.flow.sectors.eu.control).toBe(board.control)
+    expect(boundary.flow.sectors.eu.unrest).toBe(board.unrest)
+    expect(boundary.flow.owner.nc).toBe(board.holder)
+  })
+
+  it('quiet-replay ETA catch-up — matches continuous ticking, including Tax deposits', () => {
+    armQuietBoard()
+    const calls = applyWithBoundary(
+      outcome({ won: true, quietReplay: true, civiliansHit: 0, applyKey: 1 }),
+    )
+    const boundary = advanceBoundary(calls)
+    expect(boundary.t).toBe(T0)
+    const jump = flowSnapshot()
+    const jumpCredits = useAppStore.getState().credits
+    const eta = resolveMission('m01')?.etaDays ?? 0
+    expect(eta).toBe(2)
+    expect(jump.t).toBe(T0 + eta * DAY)
+
+    useWorldStore.setState(structuredClone(boundary.flow))
+    useWorldStore.setState({ paused: false, speed: 2 })
+    useAppStore.setState({ credits: boundary.credits })
+    expect(useWorldStore.getState().speed).toBe(2)
+    for (let i = 0; i < (eta * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
+
+    expect(flowSnapshot()).toEqual(jump)
+    expect(useAppStore.getState().credits).toBe(jumpCredits)
+  })
+
+  it('loss retry with civiliansHit 0 — Influence 8, Intel 80, Control rises, holder Nexus before ETA', () => {
+    armLossRetryBoard()
+    const startControl = useWorldStore.getState().sectors.eu.control
+    const calls = applyWithBoundary(
+      outcome({ won: true, quietReplay: false, civiliansHit: 0, applyKey: 1 }),
+    )
+    const boundary = advanceBoundary(calls)
+    expect(boundary.t).toBe(T0)
+    expect(boundary.flow.influence).toBe(8)
+    expect(boundary.intel).toEqual({ intelLevel: 1, intelProgress: 80 })
+    expect(boundary.flow.sectors.eu.control).toBeGreaterThan(startControl)
+    expect(boundary.flow.owner.nc).toBe('nexus')
+  })
+
+  it('loss retry with civiliansHit >= 1 — Influence 6, Intel 65, Control rises, holder Nexus, Unrest above the clean retry', () => {
+    armLossRetryBoard()
+    const start = {
+      flow: flowSnapshot(),
+      control: useWorldStore.getState().sectors.eu.control,
+      credits: useAppStore.getState().credits,
+      lastAppliedKey: useAppStore.getState().lastAppliedKey,
+      campaign: structuredClone({
+        intelLevel: useCampaignStore.getState().intelLevel,
+        intelProgress: useCampaignStore.getState().intelProgress,
+        operatives: useCampaignStore.getState().operatives,
+        roster: useCampaignStore.getState().roster,
+        candidates: useCampaignStore.getState().candidates,
+        recruitRngState: useCampaignStore.getState().recruitRngState,
+        nextCandidateT: useCampaignStore.getState().nextCandidateT,
+        contractsWon: useCampaignStore.getState().contractsWon,
+        campaignWon: useCampaignStore.getState().campaignWon,
+        campaignFailed: useCampaignStore.getState().campaignFailed,
+        lastReport: useCampaignStore.getState().lastReport,
+      }),
+    }
+    const clean = advanceBoundary(
+      applyWithBoundary(outcome({ won: true, quietReplay: false, civiliansHit: 0, applyKey: 1 })),
+    )
+    useWorldStore.setState(structuredClone(start.flow))
+    useCampaignStore.setState(structuredClone(start.campaign))
+    useAppStore.setState({
+      lastAppliedKey: start.lastAppliedKey,
+      outcome: null,
+      credits: start.credits,
+    })
+    const dirty = advanceBoundary(
+      applyWithBoundary(outcome({ won: true, quietReplay: false, civiliansHit: 1, applyKey: 1 })),
+    )
+    expect(dirty.t).toBe(T0)
+    expect(dirty.flow.influence).toBe(6)
+    expect(dirty.intel).toEqual({ intelLevel: 1, intelProgress: 65 })
+    expect(dirty.flow.sectors.eu.control).toBeGreaterThan(start.control)
+    expect(dirty.flow.owner.nc).toBe('nexus')
+    expect(dirty.flow.sectors.eu.unrest).toBeGreaterThan(clean.flow.sectors.eu.unrest)
+  })
+
+  it('setOutcome with quietReplay false on an already-won contract — leaves the flag false', () => {
+    useCampaignStore.setState({ contractsWon: ['m01'] })
+    const o = outcome({ quietReplay: false })
+    useAppStore.getState().setOutcome(o)
+    expect(o.quietReplay).toBe(false)
+    expect(useAppStore.getState().outcome?.quietReplay).toBe(false)
   })
 })

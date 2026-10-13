@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { COLLATERAL_FINE, collateralFine, netPayout, useAppStore } from './appStore'
+import { COLLATERAL_FINE, collateralFine, netPayout, priceOutcome, useAppStore } from './appStore'
 import type { MissionOutcome } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS } from '../game/data'
 import { nodeById } from '../game/research'
@@ -62,6 +62,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     bonus: 0,
     deadIds: [],
     survivorHp: {},
+    quietReplay: false,
     ...over,
   }
 }
@@ -129,6 +130,12 @@ describe('screen flow', () => {
     expect(s.missionId).toBeNull()
     expect(s.squad).toEqual(DEFAULT_SQUAD)
     expect(s.credits).toBe(START_CREDITS)
+  })
+
+  it('refuses the mission phase so Deploy stays on startMission', () => {
+    useAppStore.getState().goto('mission')
+    expect(useAppStore.getState().phase).toBe('menu')
+    expect(useAppStore.getState().missionId).toBeNull()
   })
 
   it('selectMission stores the mission and moves to the brief', () => {
@@ -280,6 +287,60 @@ describe('mission outcome payout', () => {
     expect(collateralFine(outcome({ civiliansHit: 100 }))).toBe(85000)
   })
 
+  it('floors the civilian count and treats a negative or non-finite count as none', () => {
+    expect(collateralFine(outcome({ civiliansHit: 2.7 }))).toBe(2 * COLLATERAL_FINE)
+    expect(collateralFine(outcome({ civiliansHit: -3 }))).toBe(0)
+    expect(netPayout(outcome({ civiliansHit: -3 }))).toBe(85000)
+    expect(collateralFine(outcome({ civiliansHit: Number.NaN }))).toBe(0)
+    expect(collateralFine(outcome({ civiliansHit: Number.POSITIVE_INFINITY }))).toBe(0)
+    expect(netPayout(outcome({ civiliansHit: Number.NaN }))).toBe(85000)
+  })
+
+  it('prices the contract fee on a loss and the bonus from completed optional ids', () => {
+    const priced = priceOutcome(
+      {
+        applyKey: 4,
+        won: false,
+        kills: 1,
+        casualties: 2,
+        timeSec: 10,
+        civiliansHit: 1.9,
+        completedOptionalIds: ['hc-opt', 'hc-opt', 'missing', 'bad', 'neg'],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: false,
+      },
+      { reward: 85000.9, bonusDefs: { 'hc-opt': 9000, bad: Number.NaN, neg: -5 } },
+    )
+    expect(priced.reward).toBe(85000)
+    expect(priced.bonus).toBe(9000)
+    expect(priced.quietReplay).toBe(false)
+    expect(priced.applyKey).toBe(4)
+    expect(netPayout(priced)).toBe(0)
+    expect(collateralFine(priced)).toBe(COLLATERAL_FINE)
+  })
+
+  it('keeps the fee on a quiet win and pays nothing', () => {
+    const priced = priceOutcome(
+      {
+        applyKey: 2,
+        won: true,
+        kills: 0,
+        casualties: 0,
+        timeSec: 1,
+        civiliansHit: 0,
+        completedOptionalIds: ['hc-opt'],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: true,
+      },
+      { reward: 85000, bonusDefs: { 'hc-opt': 9000 } },
+    )
+    expect(priced.reward).toBe(85000)
+    expect(priced.bonus).toBe(9000)
+    expect(netPayout(priced)).toBe(0)
+  })
+
   it('netPayout pays reward minus fine on a win and nothing on a loss', () => {
     expect(netPayout(outcome({ civiliansHit: 1 }))).toBe(85000 - COLLATERAL_FINE)
     expect(netPayout(outcome({ won: false }))).toBe(0)
@@ -351,7 +412,12 @@ describe('economy integration', () => {
     // Win 2 is a quiet replay: invoice stays still, Raven still dies.
     const creditsAfterFirst = useAppStore.getState().credits
     const intelAfterFirst = useCampaignStore.getState().intelProgress
-    const second = outcome({ civiliansHit: 0, reward: m01.reward, deadIds: ['op5'] })
+    const second = outcome({
+      civiliansHit: 0,
+      reward: m01.reward,
+      deadIds: ['op5'],
+      quietReplay: true,
+    })
     useAppStore.getState().setOutcome(second)
     expect(second.quietReplay).toBe(true)
     expect(netPayout(second)).toBe(0)

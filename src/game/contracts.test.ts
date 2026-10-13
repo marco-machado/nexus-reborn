@@ -1,5 +1,6 @@
 // Tests for the procedural contract market. Rolls are pure functions of an
-// explicit rng state, so everything here is deterministic and clock-free.
+// explicit rng state, so the rolling tests are deterministic and clock-free.
+// The quiet-replay describe is the one ETA catch-up comparison.
 import { describe, expect, it } from 'vitest'
 import {
   CONTRACT_EXPIRY_MIN_SEC,
@@ -29,6 +30,10 @@ import type { ObjectiveDef } from './types'
 import { isWalkable } from './types'
 import { createWorld } from './world'
 import { headlessDeploy } from './deploy'
+import { INITIAL_CREDITS, useAppStore } from '../state/appStore'
+import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
+import { applyDebrief } from '../state/debrief'
+import { DAY, useWorldStore } from '../state/worldStore'
 
 const OWNERSHIP: Record<string, CorpId> = {}
 for (const city of CITIES) OWNERSHIP[city.id] = city.corp
@@ -605,5 +610,90 @@ describe('re-clienting', () => {
     const moved = reclientContract(nexusRecord(), 'helix', allNexus, 0x4040).contract
     expect(moved.client).toBe('nexus')
     expect(moved.cityId).toBe('nb')
+  })
+})
+
+describe('quiet-replay ETA contract stream (story 005)', () => {
+  function worldFlow() {
+    const s = useWorldStore.getState()
+    return structuredClone({
+      t: s.t,
+      sectors: s.sectors,
+      owner: s.owner,
+      events: s.events,
+      nextEventT: s.nextEventT,
+      rngState: s.rngState,
+      contracts: s.contracts,
+      contractRngState: s.contractRngState,
+      nextContractT: s.nextContractT,
+      influence: s.influence,
+      nextTaxT: s.nextTaxT,
+      spends: s.spends,
+      cooldowns: s.cooldowns,
+      crisis: s.crisis,
+      pressure: s.pressure,
+    })
+  }
+
+  it('quiet-replay ETA catch-up — contract list and contractRngState match a continuous advance', () => {
+    useCampaignStore.setState(initialCampaignData())
+    useAppStore.setState({
+      credits: INITIAL_CREDITS,
+      phase: 'debrief',
+      missionId: 'm01',
+      outcome: null,
+      lastAppliedKey: 0,
+    })
+    useWorldStore.setState({ t: 0, speed: 2, paused: false, review: null })
+
+    const origAdvance = useWorldStore.getState().advanceDays
+    // A `let` written only from this closure stays at its initializer (`null`)
+    // for control flow, and the null guard then narrows it to `never`.
+    const seen: { atJump: ReturnType<typeof worldFlow> | null } = { atJump: null }
+    useWorldStore.setState({
+      advanceDays: (days: number) => {
+        seen.atJump = worldFlow()
+        origAdvance(days)
+      },
+    })
+    try {
+      useAppStore.setState({
+        outcome: {
+          applyKey: 1,
+          won: true,
+          kills: 0,
+          casualties: 0,
+          timeSec: 0,
+          civiliansHit: 0,
+          reward: 85000,
+          bonus: 0,
+          deadIds: [],
+          survivorHp: {},
+          quietReplay: true,
+        },
+      })
+      applyDebrief('m01')
+    } finally {
+      useWorldStore.setState({ advanceDays: origAdvance })
+    }
+
+    const atJump = seen.atJump
+    expect(atJump).not.toBeNull()
+    if (!atJump) return
+    const jumped = {
+      contracts: structuredClone(useWorldStore.getState().contracts),
+      contractRngState: useWorldStore.getState().contractRngState,
+      t: useWorldStore.getState().t,
+    }
+    expect(jumped.t).toBe(2 * DAY)
+    expect(jumped.contracts.length).toBeGreaterThan(0)
+
+    useWorldStore.setState({ ...structuredClone(atJump), paused: false, speed: 2 })
+    expect(useWorldStore.getState().speed).toBe(2)
+    for (let i = 0; i < (2 * DAY) / 30; i++) useWorldStore.getState().tick(0.25)
+
+    expect(useWorldStore.getState().contracts).toEqual(jumped.contracts)
+    expect(useWorldStore.getState().contractRngState).toBe(jumped.contractRngState)
+    expect(useWorldStore.getState().t).toBe(jumped.t)
   })
 })

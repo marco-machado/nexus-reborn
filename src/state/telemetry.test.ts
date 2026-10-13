@@ -72,6 +72,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     bonus: 0,
     deadIds: [],
     survivorHp: {},
+    quietReplay: false,
     telemetry: telemetry(),
     ...over,
   }

@@ -469,6 +469,7 @@ describe('save round trip', () => {
       bonus: 0,
       deadIds: [],
       survivorHp: {},
+      quietReplay: false,
     })
     useResearchStore.getState().start(nodeById('b-propellants'), 1000)
     useCampaignStore.setState({
@@ -560,6 +561,7 @@ describe('save round trip', () => {
         bonus: 0,
         deadIds: ['op4'],
         survivorHp: { op1: 0.1, op2: 0.8, op3: 0.9 },
+        quietReplay: false,
       },
       2000,
     )
@@ -606,6 +608,7 @@ describe('save round trip', () => {
         bonus: 0,
         deadIds: ids,
         survivorHp: {},
+        quietReplay: false,
       },
       0,
     )

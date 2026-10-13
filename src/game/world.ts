@@ -44,7 +44,7 @@ import type {
   ObjectiveUi,
   SquadMemberUi,
 } from '../state/missionStore'
-import { useAppStore } from '../state/appStore'
+import { priceOutcome, useAppStore } from '../state/appStore'
 
 export type { DeployParams } from './deploy'
 
@@ -273,7 +273,7 @@ export function createWorld(
     if (!d.optional) requiredOrder.push(i)
   })
   let reqPtr = 0
-  let bonusEarned = 0
+  const completedOptionalIds: string[] = []
   // Interact channels accrued and defend countdowns remaining, per objective.
   const interactT: number[] = objectives.map(() => 0)
   const interactStarted: boolean[] = objectives.map(() => false)
@@ -1685,8 +1685,8 @@ export function createWorld(
     noteTutorial('objective')
     pushLog('SYS', 'OBJECTIVE COMPLETE: ' + def.label, 'ok')
     if (def.optional) {
+      completedOptionalIds.push(def.id)
       if (def.bonusReward) {
-        bonusEarned += def.bonusReward
         pushLog('SYS', 'BONUS SECURED: +' + def.bonusReward + ' CR.', 'ok')
       }
     } else {
@@ -1805,20 +1805,24 @@ export function createWorld(
       abilityUsesByRole: { ...abilityUsesByRole },
       squadRoles: operatives.map((op) => op.role),
     }
-    useAppStore.getState().setOutcome({
-      applyKey: deploy.economy.applyKey,
-      won: result === 'won',
-      kills,
-      casualties,
-      timeSec: world.time,
-      civiliansHit,
-      reward: result === 'won' ? mission.reward : 0,
-      bonus: result === 'won' ? bonusEarned : 0,
-      deadIds: deadIds.slice(),
-      survivorHp,
-      quietReplay: deploy.economy.quietReplay,
-      telemetry,
-    })
+    useAppStore.getState().setOutcome(
+      priceOutcome(
+        {
+          applyKey: deploy.economy.applyKey,
+          won: result === 'won',
+          kills,
+          casualties,
+          timeSec: world.time,
+          civiliansHit,
+          completedOptionalIds,
+          deadIds: deadIds.slice(),
+          survivorHp,
+          quietReplay: deploy.economy.quietReplay,
+          telemetry,
+        },
+        deploy.economy,
+      ),
+    )
   }
 
   function updateAlert(): void {

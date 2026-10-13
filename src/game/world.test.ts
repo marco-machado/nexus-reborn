@@ -413,6 +413,7 @@ describe('research', () => {
         bonus: 0,
         deadIds: [],
         survivorHp: { op1: 1 },
+        quietReplay: false,
       },
       0,
     )
@@ -2049,7 +2050,9 @@ describe('objectives and outcome', () => {
     const app = useAppStore.getState()
     expect(app.phase).toBe('debrief')
     expect(app.outcome?.won).toBe(false)
-    expect(app.outcome?.reward).toBe(0)
+    expect(app.outcome?.reward).toBe(MISSION.reward)
+    expect(app.outcome?.bonus).toBe(0)
+    expect(app.outcome ? netPayout(app.outcome) : -1).toBe(0)
     expect(app.credits).toBe(128450)
   })
 })

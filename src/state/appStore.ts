@@ -22,19 +22,41 @@ export interface MissionOutcome {
   timeSec: number
   civiliansHit: number
   reward: number
-  // Optional-objective pay, on top of the contract fee. Zero on a loss.
+  // Optional-objective pay, priced from the Economy slice. A loss stores it
+  // and pays none of it.
   bonus: number
   deadIds: string[]
   // End-of-mission health of each surviving deployed operative, as a fraction
   // of max HP. The debrief grades injuries from it (campaignStore).
   survivorHp: Record<string, number>
-  // True when this finish is a replay of a contract already won. Stamped at
-  // mission end from contractsWon. A quiet replay pays nothing.
-  quietReplay?: boolean
+  // Copied from the Economy slice. Required, so a missing flag cannot pay.
+  // A quiet replay stores the fee and pays nothing.
+  quietReplay: boolean
   // Mission counters for the local telemetry log (state/telemetry.ts). Rides
   // the existing outcome push; the debrief boundary records it when the
   // TELEMETRY setting is on. Optional so hand-built outcomes stay valid.
   telemetry?: MissionTelemetry
+}
+
+// What the sim reports. Reward and bonus are priced from the Economy slice
+// by priceOutcome; the sim does not send either figure.
+export interface MissionResult {
+  applyKey: number
+  won: boolean
+  kills: number
+  casualties: number
+  timeSec: number
+  civiliansHit: number
+  completedOptionalIds: readonly string[]
+  deadIds: string[]
+  survivorHp: Record<string, number>
+  quietReplay: boolean
+  telemetry?: MissionTelemetry
+}
+
+export interface OutcomePricing {
+  reward: number
+  bonusDefs: Readonly<Record<string, number>>
 }
 
 // Every contract carries a collateral clause. Each bystander caught by a round
@@ -42,7 +64,39 @@ export interface MissionOutcome {
 export const COLLATERAL_FINE = 5000
 
 export function collateralFine(o: MissionOutcome): number {
-  return Math.min(o.reward, o.civiliansHit * COLLATERAL_FINE)
+  const hits = Number.isFinite(o.civiliansHit) ? Math.max(0, Math.floor(o.civiliansHit)) : 0
+  return Math.min(o.reward, hits * COLLATERAL_FINE)
+}
+
+// Prices the invoice from the frozen Economy slice. The contract fee is stored
+// on a loss and on a quiet replay. Bonus is the sum of bonusDefs for each
+// distinct completed optional id; an unknown, negative, or non-finite value
+// adds nothing. Credits do not move here.
+export function priceOutcome(result: MissionResult, economy: OutcomePricing): MissionOutcome {
+  const reward = Number.isFinite(economy.reward) ? Math.max(0, Math.floor(economy.reward)) : 0
+  let bonus = 0
+  const seen = new Set<string>()
+  for (const id of result.completedOptionalIds) {
+    if (seen.has(id)) continue
+    seen.add(id)
+    const value = economy.bonusDefs[id]
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) continue
+    bonus += Math.floor(value)
+  }
+  return {
+    applyKey: result.applyKey,
+    won: result.won,
+    kills: result.kills,
+    casualties: result.casualties,
+    timeSec: result.timeSec,
+    civiliansHit: result.civiliansHit,
+    reward,
+    bonus,
+    deadIds: result.deadIds,
+    survivorHp: result.survivorHp,
+    quietReplay: result.quietReplay,
+    telemetry: result.telemetry,
+  }
 }
 
 export function netPayout(o: MissionOutcome): number {
@@ -99,7 +153,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   outcome: null,
   deploySerial: 0,
   lastAppliedKey: 0,
-  goto: (phase) => set({ phase }),
+  // 'mission' is not a phase change. startMission is the only way in.
+  goto: (phase) => {
+    if (phase === 'mission') return
+    set({ phase })
+  },
   startMission: () => {
     const { missionId, squad, loadout } = get()
     const { operatives, roster } = useCampaignStore.getState()
@@ -154,11 +212,5 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!useCampaignStore.getState().acceptHire(candidateId)) return
     set((s) => ({ credits: s.credits - candidate.cost }))
   },
-  setOutcome: (o) =>
-    set((s) => {
-      const quiet =
-        o.quietReplay === true || (o.quietReplay !== false && isQuietReplay(s.missionId))
-      o.quietReplay = quiet
-      return { outcome: o, phase: 'debrief' }
-    }),
+  setOutcome: (o) => set({ outcome: o, phase: 'debrief' }),
 }))

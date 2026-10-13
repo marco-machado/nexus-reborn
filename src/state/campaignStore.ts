@@ -162,6 +162,16 @@ export function initialCampaignData(): CampaignData {
   }
 }
 
+function injuryDue(roster: Record<string, CampaignRosterEntry>, t: number): boolean {
+  for (const id in roster) {
+    const entry = roster[id]
+    if (entry.status === 'INJURED' && entry.recoverAtT !== null && t >= entry.recoverAtT) {
+      return true
+    }
+  }
+  return false
+}
+
 function addIntel(level: number, progress: number, points: number): [number, number] {
   let nextLevel = level
   let nextProgress = progress + Math.max(0, Math.floor(points))
@@ -200,9 +210,8 @@ export const useCampaignStore = create<CampaignState>((set) => ({
 
   reportMission: (missionId, outcome, worldT) =>
     set((state) => {
-      const quiet =
-        outcome.quietReplay === true ||
-        (outcome.quietReplay !== false && state.contractsWon.includes(missionId))
+      // Quiet iff the Economy slice says so. contractsWon below is the record.
+      const quiet = outcome.quietReplay === true
       const intelAward =
         outcome.won && !quiet
           ? MISSION_INTEL + (outcome.civiliansHit === 0 ? CLEAN_INTEL : 0)
@@ -320,6 +329,7 @@ export const useCampaignStore = create<CampaignState>((set) => ({
 
   sync: (t) =>
     set((state) => {
+      if (t < state.nextCandidateT && !injuryDue(state.roster, t)) return state
       let changed = false
       const roster = { ...state.roster }
       for (const [id, entry] of Object.entries(roster)) {
