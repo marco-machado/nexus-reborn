@@ -84,11 +84,11 @@ stories:
     name: "Event forecast gated on Intel level"
     file: "production/epics/world-network/story-012-event-forecast-gated-on-intel-level.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"
   - id: "WN-014"
     name: "Scan hides contracts above the director's Intel; Chance still prints"
     file: "production/epics/world-network/story-014-scan-hides-contracts-above-the-director-s-intel-chance.md"

@@ -1,12 +1,12 @@
 # Story 012: Event forecast gated on Intel level
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -32,8 +32,8 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN intel 1, WHEN the focused sector panel is read, THEN Event forecast is not shown.
-- [ ] GIVEN intel 2+, WHEN the focused sector panel is read, THEN Event forecast lists riot, blackout, raid, trade and seizure chances for the next 6 strategic hours using the same weights the generator rolls (formulas stay in GDD §5 / `forecast.ts` — do not copy).
+- [x] GIVEN intel 1, WHEN the focused sector panel is read, THEN Event forecast is not shown.
+- [x] GIVEN intel 2+, WHEN the focused sector panel is read, THEN Event forecast lists riot, blackout, raid, trade and seizure chances for the next 6 strategic hours using the same weights the generator rolls (formulas stay in GDD §5 / `forecast.ts` — do not copy).
 
 ---
 
@@ -72,7 +72,7 @@ From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots a
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created: `production/qa/evidence/wn-012/` (README, intel 1 and intel 2 screenshots at 1280x720)
 
 ---
 
@@ -80,3 +80,10 @@ From `/qa-plan` sprint 2 (2026-10-12). UI. No automated test file. Screenshots a
 
 - Depends on: None
 - Unlocks: Story 011
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 2/2 passing, both observed in retained screenshots (`production/qa/evidence/wn-012/`)
+**Deviations**: ADVISORY: at intel 1 the panel shows a locked `EVENT FORECAST / REQUIRES INTEL LVL 2` row rather than hiding the section; no chances are shown. Same wording WN-013 accepted. No `src/` change: existing `SectorForecast` already reads `eventForecast` from `src/game/forecast.ts`.
+**Test Evidence**: UI: screenshots at intel 1 and 2, partial click-through (World Network). qa-lead sign-off from the QA plan still outstanding.
+**Code Review**: Skipped, no source change
