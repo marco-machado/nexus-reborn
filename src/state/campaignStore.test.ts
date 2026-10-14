@@ -570,3 +570,62 @@ describe('World Network intel progress awards (WN-011)', () => {
     expect('intelProgress' in useAppStore.getState()).toBe(false)
   })
 })
+
+describe('campaign complete from the three authored wins (EC-021)', () => {
+  const AUTHORED = ['m01', 'm02', 'm03'] as const
+
+  it('names Glass Veil, Hollow Crown and Rust Haven as the three authored contracts', () => {
+    expect(AUTHORED.map((id) => missionById(id).codename)).toEqual([
+      'GLASS VEIL',
+      'HOLLOW CROWN',
+      'RUST HAVEN',
+    ])
+  })
+
+  it('exactly two authored wins leave campaign-complete false', () => {
+    // Every pair of the three: none completes the campaign on its own.
+    for (const [a, b] of [['m01', 'm02'], ['m01', 'm03'], ['m02', 'm03']]) {
+      useCampaignStore.setState(initialCampaignData())
+      useCampaignStore.getState().reportMission(a, outcome(), 0)
+      useCampaignStore.getState().reportMission(b, outcome(), 0)
+      const state = useCampaignStore.getState()
+      expect(state.contractsWon).toEqual([a, b])
+      expect(state.campaignWon).toBe(false)
+    }
+  })
+
+  it('the same contract won twice counts once', () => {
+    useCampaignStore.getState().reportMission('m01', outcome(), 0)
+    useCampaignStore.getState().reportMission('m01', outcome({ quietReplay: true }), 0)
+    useCampaignStore.getState().reportMission('m02', outcome(), 0)
+    const state = useCampaignStore.getState()
+    expect(state.contractsWon).toEqual(['m01', 'm02'])
+    expect(state.campaignWon).toBe(false)
+  })
+
+  it('Glass Veil, Hollow Crown and Rust Haven all won marks campaign-complete true', () => {
+    for (const id of AUTHORED) {
+      useCampaignStore.getState().reportMission(id, outcome(), 0)
+    }
+    const state = useCampaignStore.getState()
+    expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
+  })
+
+  it('all three won leaves all three selectable with a living roster', () => {
+    for (const id of AUTHORED) {
+      useCampaignStore.getState().reportMission(id, outcome(), 0)
+    }
+    expect(useCampaignStore.getState().campaignWon).toBe(true)
+    expect(useCampaignStore.getState().operatives.length).toBeGreaterThan(0)
+    // Intel gates are not under test; lift them so only completion decides.
+    useCampaignStore.setState({ intelLevel: 3 })
+    for (const id of AUTHORED) {
+      expect(missionLocked(missionById(id), useCampaignStore.getState().intelLevel)).toBe(false)
+      useAppStore.setState({ phase: 'world', missionId: null })
+      useAppStore.getState().selectMission(id)
+      expect(useAppStore.getState().missionId).toBe(id)
+      expect(useAppStore.getState().phase).toBe('brief')
+    }
+  })
+})

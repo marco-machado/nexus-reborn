@@ -102,11 +102,11 @@ stories:
     name: "Campaign-complete from the three authored wins"
     file: "production/epics/economy-and-contracts/story-021-campaign-complete-from-the-three-authored-wins.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-020"
     name: "Generated instances leave the market, or are held when hidden"
     file: "production/epics/economy-and-contracts/story-020-generated-instances-leave-the-market-or-are-held-when-h.md"
