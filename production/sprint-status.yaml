@@ -75,11 +75,11 @@ stories:
     name: "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win"
     file: "production/epics/economy-and-contracts/story-008-worked-contract-examples-hollow-crown-rust-haven-pyrrhi.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-009"
     name: "A loss pays nothing; a failed generated contract leaves the market"
     file: "production/epics/economy-and-contracts/story-009-a-loss-pays-nothing-a-failed-generated-contract-leaves.md"

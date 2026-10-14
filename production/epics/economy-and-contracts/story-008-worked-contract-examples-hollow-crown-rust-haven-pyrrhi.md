@@ -1,12 +1,12 @@
 # Story 008: Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -77,7 +77,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`, `src/game/contracts.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win (EC-008)" (3 tests)
 
 ---
 
@@ -85,3 +85,12 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: Story 007
 - Unlocks: None
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 3/3 passing (all auto-verified by unit tests; `npx vitest run src/state/appStore.test.ts -t EC-008` ran 3 passed)
+**Deviations**: ADVISORY — Implementation Notes point to `src/game/contracts.ts` for authored contract values, but the authored rewards (85,000 / 62,000 / 41,000) and optional defs live in `src/game/data.ts` (`MISSIONS`); the test reads them from there through `economySlice` (`src/game/deploy.ts`), so the intent (no copied constants, assert GDD figures) is met. The story's file pointer is stale.
+**Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win (EC-008)" (3 tests)
+**Run result**: N/A — test-only story; no player-visible surface changed
+**Code Review**: Not confirmed in this step (lean mode; story-done ran unattended, default recorded: run /code-review before sprint close-out)
+**Advisory**: QL-TEST-COVERAGE skipped — Lean mode.

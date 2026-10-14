@@ -19,6 +19,7 @@ import { SAVE_KEY, captureSave, readSave, validateSave } from './save'
 import { assignedMassKg } from '../game/deployGate'
 import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
 import { xpBonus } from '../game/experience'
+import { economySlice } from '../game/deploy'
 
 // World-store boot snapshot for the economy integration suite, captured at
 // module load before any test moves the singleton.
@@ -1201,6 +1202,89 @@ describe('Net payout: reward plus optional bonus minus collateral (EC-007)', () 
       bonusDefs: { opt: 6000 },
     })
     expect(netPayout(withBonus)).toBe(6000)
+  })
+})
+
+describe('Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win (EC-008)', () => {
+  // TR-economy-007 / TR-economy-011 / ADR-0021. Reward and bonus defs come
+  // from the authored mission data through the same Economy slice the deploy
+  // composer freezes; expectations are the GDD figures, not re-derived.
+  const mission = (id: string) => {
+    const m = MISSIONS.find((x) => x.id === id)
+    if (!m) throw new Error('missing authored mission ' + id)
+    return m
+  }
+
+  function priceAuthored(
+    id: string,
+    over: { civiliansHit: number; optional?: string[]; deadIds?: string[] },
+  ): MissionOutcome {
+    const economy = economySlice(mission(id), false, false, 1)
+    return priceOutcome(
+      {
+        applyKey: 1,
+        won: true,
+        kills: 4,
+        casualties: over.deadIds?.length ?? 0,
+        timeSec: 300,
+        civiliansHit: over.civiliansHit,
+        completedOptionalIds: over.optional ?? [],
+        deadIds: over.deadIds ?? [],
+        survivorHp: {},
+        quietReplay: economy.quietReplay,
+      },
+      economy,
+    )
+  }
+
+  it('Hollow Crown: Reward 62,000, 13 hits, optional +9,000 gives Collateral 62,000 and net 9,000 CR', () => {
+    const hc = mission('m02')
+    expect(hc.codename).toBe('HOLLOW CROWN')
+    const optional = hc.objectives.filter((o) => o.optional).map((o) => o.id)
+    const o = priceAuthored('m02', { civiliansHit: 13, optional })
+    expect(o.reward).toBe(62000)
+    expect(o.bonus).toBe(9000)
+    expect(collateralFine(o)).toBe(62000)
+    expect(netPayout(o)).toBe(9000)
+  })
+
+  it('Rust Haven at opening Standard: Reward 41,000, 8 hits, optional ignored gives Collateral 40,000 and net 1,000 CR', () => {
+    const rh = mission('m03')
+    expect(rh.codename).toBe('RUST HAVEN')
+    const o = priceAuthored('m03', { civiliansHit: 8 })
+    expect(o.reward).toBe(41000)
+    expect(o.bonus).toBe(0)
+    expect(collateralFine(o)).toBe(40000)
+    expect(netPayout(o)).toBe(1000)
+  })
+
+  describe('pyrrhic win', () => {
+    beforeEach(() => {
+      useWorldStore.setState({ ...structuredClone(worldBoot), t: 3 * 3600, nextTaxT: 1e12 })
+      useResearchStore.setState({
+        done: [],
+        labs: { ballistics: null, cybernetics: null, control: null },
+      })
+      useAppStore.setState({ phase: 'debrief', missionId: 'm01', squad: ['op1', 'op2', 'op4'] })
+    })
+
+    it('non-quiet tiebreak Win that empties the roster, Reward 85,000, N = 0 pays the full 85,000 CR', () => {
+      const ids = useCampaignStore.getState().operatives.map((op) => op.id)
+      expect(ids.length).toBeGreaterThan(0)
+      expect(useCampaignStore.getState().contractsWon).toEqual([])
+      const o = priceAuthored('m01', { civiliansHit: 0, deadIds: ids })
+      expect(o.quietReplay).toBe(false)
+      expect(o.reward).toBe(85000)
+      expect(netPayout(o)).toBe(85000)
+
+      useAppStore.getState().setOutcome(o)
+      applyDebrief('m01')
+      expect(useAppStore.getState().credits).toBe(START_CREDITS + 85000)
+      const c = useCampaignStore.getState()
+      expect(c.operatives).toEqual([])
+      expect(c.campaignWon).toBe(false)
+      expect(c.campaignFailed).toBe(true)
+    })
   })
 })
 
