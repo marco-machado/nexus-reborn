@@ -1,0 +1,102 @@
+{
+ "steps": [
+  {
+   "name": "p3-win-eta-split-1",
+   "attempt": 1,
+   "atLaunch": 128450,
+   "atEtaStart": 213450,
+   "atDebrief": 222387,
+   "outcome": {
+    "won": true,
+    "reward": 85000,
+    "bonus": 0,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "net": 85000
+   },
+   "etaDays": 2,
+   "play": {
+    "result": "won"
+   },
+   "etaStartMinusLaunch": 85000,
+   "equalsNet": true,
+   "taxDuringEta": 8937
+  },
+  {
+   "name": "p3-apply-once",
+   "atDebrief": 222387,
+   "after3s": 222387
+  },
+  {
+   "name": "p5-research-refuse-short",
+   "buttons": [
+    {
+     "l": "AUTHORIZE ADV. PROPELLANTS // INSUFFICIENT CREDITS // 15,900 CR SHORT",
+     "off": true
+    }
+   ],
+   "credits": 100,
+   "activeBefore": "null",
+   "activeAfter": "null"
+  },
+  {
+   "name": "p5-research-debit",
+   "button": "AUTHORIZE ADV. PROPELLANTS // COMMITS 16,000 CR // 2H IN BALLISTICS LAB",
+   "before": 128450,
+   "after": 112450
+  },
+  {
+   "name": "p5-after-loss",
+   "credits": 128450,
+   "living": 4
+  },
+  {
+   "name": "p5-hire-debit",
+   "buttons": [
+    {
+     "l": "HIRE JACKAL // 24,500 CR",
+     "off": false,
+     "title": "SIGN JACKAL TO THE ROSTER"
+    },
+    {
+     "l": "HIRE PYRE // 28,000 CR",
+     "off": false,
+     "title": "SIGN PYRE TO THE ROSTER"
+    },
+    {
+     "l": "HIRE FATHOM // 22,500 CR",
+     "off": false,
+     "title": "SIGN FATHOM TO THE ROSTER"
+    }
+   ],
+   "hired": "HIRE JACKAL // 24,500 CR",
+   "before": 128450,
+   "after": 103950,
+   "livingBefore": 4,
+   "livingAfter": 5
+  },
+  {
+   "name": "p5-hire-refuse-short",
+   "buttons": [
+    {
+     "l": "HIRE PYRE // 28,000 CR",
+     "off": true,
+     "title": "INSUFFICIENT CREDITS"
+    },
+    {
+     "l": "HIRE FATHOM // 22,500 CR",
+     "off": true,
+     "title": "INSUFFICIENT CREDITS"
+    }
+   ],
+   "credits": 1000,
+   "livingBefore": 5,
+   "livingAfter": 5
+  },
+  {
+   "name": "errors",
+   "errs": [],
+   "faviconOnly": true
+  }
+ ]
+}

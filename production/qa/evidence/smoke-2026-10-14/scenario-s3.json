@@ -1,0 +1,174 @@
+{
+ "steps": [
+  {
+   "name": "p2-new-operation",
+   "credits": 128450,
+   "header128450": true,
+   "phase": "world"
+  },
+  {
+   "name": "p3-win-attempt-1",
+   "atLaunch": 128450,
+   "duringStart": 128450,
+   "duringEnd": 128450,
+   "play": {
+    "result": "won",
+    "simTime": 41
+   },
+   "atDebrief": 222387,
+   "debrief3s": 222387,
+   "afterLeave": 222387,
+   "outcome": {
+    "won": true,
+    "reward": 85000,
+    "bonus": 0,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "fine": 0,
+    "net": 85000
+   },
+   "inv": "> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n7\n> SQUAD CASUALTIES\n0\n> EXPERIENCE // MARA\n+1 XP (1)\n> EXPERIENCE // GHOST\n+1 XP (1)\n> EXPERIENCE // DART\n+1 XP (1)\n> EXPERIENCE // TORQ\n+1 XP (1)\n> COLLATERAL\n0\n> MISSION TIME\n0:43\n> CONTRACT ETA\n+2 DAYS ELAPSED\n> PAYOUT\n+85,000 CR\n> ACCOUNT BALANCE\n222,387 CR",
+   "ret": "RETURN TO WORLD NETWORK",
+   "delta": 93937,
+   "deltaEqualsNet": false
+  },
+  {
+   "name": "p4-quiet-replay",
+   "atLaunch": 222387,
+   "duringStart": 222387,
+   "duringEnd": 222387,
+   "play": {
+    "result": "won",
+    "simTime": 38
+   },
+   "atDebrief": 225398,
+   "debrief3s": 225398,
+   "afterLeave": 225398,
+   "outcome": {
+    "won": true,
+    "reward": 85000,
+    "bonus": 0,
+    "civiliansHit": 1,
+    "quietReplay": true,
+    "fine": 5000,
+    "net": 0
+   },
+   "inv": "> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n5\n> SQUAD CASUALTIES\n0\n> EXPERIENCE // MARA\n+1 XP (2)\n> EXPERIENCE // GHOST\n+1 XP (2)\n> EXPERIENCE // DART\n+1 XP (2)\n> EXPERIENCE // TORQ\n+1 XP (2)\n> COLLATERAL\n1\n> MISSION TIME\n0:40\n> CONTRACT ETA\n+2 DAYS ELAPSED\n> PAYOUT\n0 CR\n> ACCOUNT BALANCE\n225,398 CR",
+   "ret": "RETURN TO WORLD NETWORK",
+   "missionDelta": 3011,
+   "unchangedThroughDebrief": false
+  },
+  {
+   "name": "p4-loss",
+   "atLaunch": 128450,
+   "duringStart": 128450,
+   "duringEnd": 128450,
+   "play": {
+    "result": "lost",
+    "simTime": 11
+   },
+   "atDebrief": 128450,
+   "debrief3s": 128450,
+   "afterLeave": 128450,
+   "outcome": {
+    "won": false,
+    "reward": 85000,
+    "bonus": 0,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "fine": 0,
+    "net": 0
+   },
+   "inv": "> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n2\n> SQUAD CASUALTIES\n4\n> KILLED IN ACTION\nMARA, GHOST, DART, TORQ\n> COLLATERAL\n0\n> MISSION TIME\n0:13\n> PAYOUT\n0 CR\n> ACCOUNT BALANCE\n128,450 CR",
+   "ret": "RETURN TO WORLD NETWORK",
+   "missionDelta": 0,
+   "unchangedThroughDebrief": true
+  },
+  {
+   "name": "p5-research-nodes",
+   "nodes": []
+  },
+  {
+   "name": "p5-research-authorize",
+   "authButtons": [
+    {
+     "l": "AUTHORIZE ADV. PROPELLANTS // COMMITS 16,000 CR // 2H IN BALLISTICS LAB",
+     "off": false
+    }
+   ],
+   "resAuth": {
+    "label": "AUTHORIZE ADV. PROPELLANTS // COMMITS 16,000 CR // 2H IN BALLISTICS LAB",
+    "before": 128450,
+    "after": 112450
+   }
+  },
+  {
+   "name": "p5-research-short",
+   "ab2": [
+    {
+     "l": "AUTHORIZE ADV. PROPELLANTS // RUNNING IN BALLISTICS LAB",
+     "off": true
+    }
+   ],
+   "shortTry": {
+    "label": "AUTHORIZE ADV. PROPELLANTS // RUNNING IN BALLISTICS LAB",
+    "disabled": true,
+    "credits": 0,
+    "stateUnchanged": true
+   }
+  },
+  {
+   "name": "p5-hire",
+   "marketButton": 1,
+   "buttons": [
+    {
+     "l": "HIRE JACKAL // 24,500 CR",
+     "off": true
+    },
+    {
+     "l": "HIRE PYRE // 28,000 CR",
+     "off": true
+    },
+    {
+     "l": "HIRE FATHOM // 22,500 CR",
+     "off": true
+    }
+   ],
+   "short": {
+    "buttons": [
+     {
+      "l": "HIRE JACKAL // 24,500 CR",
+      "off": true
+     },
+     {
+      "l": "HIRE PYRE // 28,000 CR",
+      "off": true
+     },
+     {
+      "l": "HIRE FATHOM // 22,500 CR",
+      "off": true
+     }
+    ],
+    "credits": 0,
+    "rosterBefore": 8,
+    "rosterAfter": 8
+   }
+  },
+  {
+   "name": "p6-reload",
+   "before": 97531,
+   "after": 97531,
+   "phase": "world"
+  },
+  {
+   "name": "errors",
+   "errs": [
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico"
+   ]
+  }
+ ]
+}
