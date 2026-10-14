@@ -1,12 +1,12 @@
 # Story 001: Credits ledger: opening balance, deposits and non-positive spends
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -35,10 +35,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a new campaign, WHEN the Credits ledger is first read, THEN it is 128,450 CR.
-- [ ] GIVEN Credits 0 CR, WHEN a Tax deposit of 1,000 CR applies, THEN Credits = 1,000 CR; GIVEN Tax amount A > 0, WHEN Economy deposits, THEN Credits increase by A; GIVEN A ≤ 0, THEN Credits are unchanged.
-- [ ] GIVEN Credits 128,450 CR, WHEN a spend of 0 CR or of −1 CR is requested, THEN Credits stay 128,450 CR and no research or hire starts.
-- [ ] GIVEN Credits 128,450 CR and `net_payout = 0 CR` already applied, WHEN Economy deposits Tax 1,000 CR, THEN Credits = 129,450 CR and `new_balance = 129,450 CR`.
+- [x] GIVEN a new campaign, WHEN the Credits ledger is first read, THEN it is 128,450 CR.
+- [x] GIVEN Credits 0 CR, WHEN a Tax deposit of 1,000 CR applies, THEN Credits = 1,000 CR; GIVEN Tax amount A > 0, WHEN Economy deposits, THEN Credits increase by A; GIVEN A ≤ 0, THEN Credits are unchanged.
+- [x] GIVEN Credits 128,450 CR, WHEN a spend of 0 CR or of −1 CR is requested, THEN Credits stay 128,450 CR and no research or hire starts.
+- [x] GIVEN Credits 128,450 CR and `net_payout = 0 CR` already applied, WHEN Economy deposits Tax 1,000 CR, THEN Credits = 129,450 CR and `new_balance = 129,450 CR`.
 
 ---
 
@@ -85,7 +85,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Present — `src/state/appStore.test.ts` (`describe('Credits ledger (EC-001)')`)
 
 ---
 
@@ -93,3 +93,13 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: None
 - Unlocks: Story 002, Story 012
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (all covered by unit tests in `src/state/appStore.test.ts`; `npx vitest run src/state/appStore.test.ts` ran 56/56 passed on 2026-10-14)
+**Deviations**: None against TR-economy-001 / TR-economy-009 / ADR-0013. Advisory: `addCredits(Infinity)` sets Credits to Infinity (only non-positive and NaN are ignored); the spec does not name the expected result and the QA edge-case list mentions Infinity deposits, so this is left as an open design question. Out of scope: the working tree also carries an unrelated edit to `.claude/skills/dev-story/SKILL.md` (removes `disable-model-invocation`), not part of this story.
+**Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
+**Run result**: N/A — store logic with no new player-visible surface (from /dev-story checkpoint)
+**Code Review**: Pending — lean mode; recorded "No — I'll run /code-review before the sprint close-out" (autonomous run, no answer available)

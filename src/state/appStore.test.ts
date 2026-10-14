@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { COLLATERAL_FINE, collateralFine, netPayout, priceOutcome, useAppStore } from './appStore'
+import {
+  COLLATERAL_FINE,
+  INITIAL_CREDITS,
+  collateralFine,
+  netPayout,
+  priceOutcome,
+  useAppStore,
+} from './appStore'
 import type { MissionOutcome } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS } from '../game/data'
 import { nodeById } from '../game/research'
-import { INFLUENCE_ACTIONS } from '../game/influence'
+import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
-import { DAY, useWorldStore } from './worldStore'
+import { DAY, sectorReadout, useWorldStore } from './worldStore'
 import { applyDebrief } from './debrief'
 import { assignedMassKg } from '../game/deployGate'
 import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
@@ -739,5 +746,101 @@ describe('startMission (ADR-0019)', () => {
     setHp(-0.25)
     useAppStore.getState().startMission()
     expect(useAppStore.getState().phase).toBe('mission')
+  })
+})
+
+describe('Credits ledger (EC-001)', () => {
+  // North America at Control 17 / Unrest 61 yields exactly 1,000 CR per Tax
+  // tick (round(6000 × 0.17 × 0.98)); it is the only Nexus-held sector at
+  // boot, so one tick deposits exactly that through worldStore's depositTax.
+  // The pressure timer is pinned so Unrest 61 cannot decay Control mid-span.
+  function taxOf1000At(nextTaxT: number, t: number): void {
+    const sectors = structuredClone(worldBoot.sectors)
+    sectors.na = { ...sectors.na, control: 17, unrest: 61 }
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      t,
+      sectors,
+      nextEventT: 1e12,
+      nextContractT: 1e12,
+      nextTaxT,
+      pressure: { na: 1e12 },
+    })
+    expect(sectorReadout('na', sectors.na).taxYield).toBe(1000)
+  }
+
+  beforeEach(() => {
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  })
+
+  it('a new campaign reads 128,450 CR', () => {
+    expect(INITIAL_CREDITS).toBe(128450)
+    expect(bootState.credits).toBe(INITIAL_CREDITS)
+  })
+
+  it('a Tax deposit of 1,000 CR onto 0 CR leaves 1,000 CR', () => {
+    taxOf1000At(TAX_INTERVAL_SEC, TAX_INTERVAL_SEC - 1)
+    useAppStore.setState({ credits: 0 })
+    useWorldStore.getState().tick(0.01)
+    expect(useWorldStore.getState().nextTaxT).toBe(2 * TAX_INTERVAL_SEC)
+    expect(useAppStore.getState().credits).toBe(1000)
+  })
+
+  it('a deposit of A > 0 adds exactly A, including 1 CR', () => {
+    useAppStore.setState({ credits: 0 })
+    useAppStore.getState().addCredits(1000)
+    expect(useAppStore.getState().credits).toBe(1000)
+    useAppStore.getState().addCredits(1)
+    expect(useAppStore.getState().credits).toBe(1001)
+  })
+
+  it('a deposit of A <= 0 or NaN is an identity no-op', () => {
+    const before = useAppStore.getState()
+    for (const a of [0, -0, -1, -1000, NaN, -Infinity]) {
+      useAppStore.getState().addCredits(a)
+      expect(useAppStore.getState()).toBe(before)
+    }
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+
+  it('a spend of 0 CR or -1 CR keeps 128,450 CR and starts no research or hire', () => {
+    const app = useAppStore.getState()
+    const research = useResearchStore.getState()
+    const campaign = useCampaignStore.getState()
+    for (const a of [0, -1, NaN]) {
+      useAppStore.getState().spendCredits(a)
+      // Refusal is an identity no-op (ADR-0013): no new state object at all.
+      expect(useAppStore.getState()).toBe(app)
+    }
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(useResearchStore.getState()).toBe(research)
+    expect(useCampaignStore.getState()).toBe(campaign)
+  })
+
+  it('a spend of exactly the balance leaves 0 CR', () => {
+    useAppStore.getState().spendCredits(START_CREDITS)
+    expect(useAppStore.getState().credits).toBe(0)
+  })
+
+  it('after a net_payout = 0 apply, a Tax deposit of 1,000 CR gives 129,450 CR', () => {
+    // Quiet-replay win of m01 (ETA 2 days) from T0 = 3 h: one Tax tick falls
+    // inside the ETA span (T0 + 1.5 d), the next (T0 + 2.5 d) does not.
+    const T0 = 3 * 3600
+    taxOf1000At(T0 + 1.5 * DAY, T0)
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', squad: ['op1', 'op2', 'op4'] })
+    const quiet = outcome({ applyKey: 1, won: true, quietReplay: true, civiliansHit: 0 })
+    useAppStore.getState().setOutcome(quiet)
+    expect(netPayout(quiet)).toBe(0)
+    expect(useAppStore.getState().credits).toBe(128450)
+
+    applyDebrief('m01')
+
+    expect(useWorldStore.getState().t).toBe(T0 + MISSIONS[0].etaDays * DAY)
+    expect(useWorldStore.getState().nextTaxT).toBe(T0 + 2.5 * DAY)
+    // new_balance = credits_before + net_payout + tax_deposits.
+    expect(useAppStore.getState().credits).toBe(129450)
   })
 })
