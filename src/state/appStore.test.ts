@@ -1947,3 +1947,150 @@ describe('Wins pay in full: loss-retry, generated and post-campaign (EC-011)', (
     expect(useAppStore.getState().credits).toBe(START_CREDITS)
   })
 })
+
+describe('Accepting a contract is free; one pipeline for both kinds (EC-004)', () => {
+  // TR-economy-003 / ADR-0003 / ADR-0013: authored and generated contracts are
+  // one kind of work. selectMission and ACCEPT CONTRACT (goto('team')) move no
+  // Credits, and both kinds walk Brief -> Assembly -> Mission -> Debrief
+  // through the same store actions. World Network apply is stubbed out.
+  function generated(seed: number): GeneratedContract {
+    return {
+      id: 'gc' + seed.toString(16).padStart(8, '0'),
+      createdT: 0,
+      expiresAtT: 1e9,
+      sector: 'eu',
+      cityId: CITIES_BY_SECTOR.eu[0].id,
+      district: 5,
+      type: 'SEIZURE',
+      client: sectorClient('eu', initialOwner()),
+      // MODERATE needs Intel 1, the starting level; the Intel gate is out of scope.
+      threat: 'MODERATE',
+      reward: 54500,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  // Plays one contract from the World Network to Debrief using only the
+  // public store actions the screens call, recording every phase entered.
+  function playToWin(missionId: string, applyKey: number): string[] {
+    const phases: string[] = []
+    const unsub = useAppStore.subscribe((s, prev) => {
+      if (s.phase !== prev.phase) phases.push(s.phase)
+    })
+    const world = useWorldStore.getState()
+    useWorldStore.setState({ applyMissionResult: () => {} })
+    try {
+      const app = useAppStore.getState()
+      app.selectMission(missionId)
+      useAppStore.getState().goto('team') // ACCEPT CONTRACT
+      useAppStore.getState().startMission()
+      const mission = resolveMission(missionId)
+      if (!mission) throw new Error('mission did not resolve ' + missionId)
+      const deploy = freezeDeploy(mission, DEFAULT_SQUAD.map(operativeById), applyKey)
+      const o = priceOutcome(
+        {
+          applyKey,
+          won: true,
+          kills: 5,
+          casualties: 0,
+          timeSec: 300,
+          civiliansHit: 0,
+          completedOptionalIds: [],
+          deadIds: [],
+          survivorHp: {},
+          quietReplay: deploy.economy.quietReplay,
+        },
+        deploy.economy,
+      )
+      useAppStore.getState().setOutcome(o)
+      applyDebrief(missionId)
+    } finally {
+      unsub()
+      useWorldStore.setState({ applyMissionResult: world.applyMissionResult })
+    }
+    return phases
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    useAppStore.setState({ phase: 'world', missionId: null })
+  })
+
+  it('AC 1: accepting an authored contract leaves Credits at 128,450 CR', () => {
+    useAppStore.getState().selectMission('m01')
+    expect(useAppStore.getState().phase).toBe('brief')
+    expect(useAppStore.getState().credits).toBe(128450)
+    useAppStore.getState().goto('team')
+    expect(useAppStore.getState().phase).toBe('team')
+    expect(useAppStore.getState().credits).toBe(128450)
+  })
+
+  it('AC 1: accepting a generated contract leaves Credits at 128,450 CR', () => {
+    const c = generated(41)
+    useWorldStore.setState({ contracts: [c] })
+    useAppStore.getState().selectMission(c.id)
+    expect(useAppStore.getState().missionId).toBe(c.id)
+    expect(useAppStore.getState().phase).toBe('brief')
+    expect(useAppStore.getState().credits).toBe(128450)
+    useAppStore.getState().goto('team')
+    expect(useAppStore.getState().credits).toBe(128450)
+  })
+
+  it('edge: backing out of a Brief does not charge', () => {
+    const c = generated(42)
+    useWorldStore.setState({ contracts: [c] })
+    for (const id of ['m01', c.id]) {
+      useAppStore.getState().selectMission(id)
+      useAppStore.getState().goto('world')
+      expect(useAppStore.getState().phase).toBe('world')
+      expect(useAppStore.getState().credits).toBe(128450)
+    }
+  })
+
+  it('edge: entering the mission moves no Credits for either kind', () => {
+    const c = generated(43)
+    useWorldStore.setState({ contracts: [c] })
+    for (const id of ['m01', c.id]) {
+      useAppStore.setState({ phase: 'world', missionId: null })
+      useAppStore.getState().selectMission(id)
+      useAppStore.getState().goto('team')
+      useAppStore.getState().startMission()
+      expect(useAppStore.getState().phase).toBe('mission')
+      expect(useAppStore.getState().credits).toBe(128450)
+    }
+  })
+
+  it('AC 2: an authored win visits Brief, Assembly, Mission, Debrief in order', () => {
+    expect(playToWin('m01', 1)).toEqual(['brief', 'team', 'mission', 'debrief'])
+  })
+
+  it('AC 2: a generated win visits the same four screens in the same order', () => {
+    const c = generated(44)
+    useWorldStore.setState({ contracts: [c] })
+    expect(playToWin(c.id, 1)).toEqual(['brief', 'team', 'mission', 'debrief'])
+  })
+
+  it('AC 3: Glass Veil already won stays selectable from the World Network', () => {
+    playToWin('m01', 1)
+    expect(useCampaignStore.getState().contractsWon).toContain('m01')
+    useAppStore.getState().returnFromDebrief()
+    expect(useAppStore.getState().phase).toBe('world')
+    expect(useAppStore.getState().missionId).toBeNull()
+    const credits = useAppStore.getState().credits
+    useAppStore.getState().selectMission('m01')
+    expect(useAppStore.getState().missionId).toBe('m01')
+    expect(useAppStore.getState().phase).toBe('brief')
+    expect(useAppStore.getState().credits).toBe(credits)
+  })
+})
