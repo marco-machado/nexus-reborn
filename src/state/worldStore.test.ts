@@ -23,6 +23,7 @@ import {
   contractMission,
   generatedReward,
   sectorClient,
+  visibleContracts,
 } from '../game/contracts'
 import type { ContractThreat, GeneratedContract } from '../game/contracts'
 import {
@@ -48,6 +49,8 @@ import { applyDebrief } from './debrief'
 import { useMissionStore } from './missionStore'
 import { useResearchStore } from './researchStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
+import { INTEL_LEVEL } from '../game/data'
+import { mulberryStep } from '../game/rng'
 
 const KINDS = ['riot', 'seizure', 'trade', 'raid', 'blackout']
 // Event pacing constants mirrored from the source: next event lands between
@@ -2141,5 +2144,105 @@ describe('stabilize staged effect over six hourly steps', () => {
     activate(18)
     for (let i = 0; i < span / 30; i++) useWorldStore.getState().tick(0.25)
     expect(flowSnapshot()).toEqual(jump)
+  })
+})
+
+// Story 019 (TR-economy-006): the generation checkpoint caps the market at
+// CONTRACT_TARGET counting every open record — a Locked-hidden offer (Intel
+// above the director's level) still holds its slot — and rearms 2-6 world
+// hours from the due timestamp. The client check lives in contracts.test.ts.
+describe('generated market cap and roll timer (story 019)', () => {
+  const T = 10_000
+
+  // One open offer the director cannot see at the starting Intel level.
+  function lockedHidden(seed: number): GeneratedContract {
+    const c = craft('af', seed, 'SEVERE')
+    expect(visibleContracts([c], INTEL_LEVEL)).toEqual([])
+    return c
+  }
+
+  // Stages the market and fires exactly one generation due at T.
+  function fireGenerationDue(contracts: GeneratedContract[], contractRngState?: number): void {
+    pinFlows()
+    useWorldStore.setState({
+      contracts,
+      nextContractT: T,
+      ...(contractRngState === undefined ? {} : { contractRngState }),
+    })
+    crossTo(T)
+  }
+
+  // The schedule draw is the last step on the market cursor: undo the
+  // mulberry increment to read back the value the rearm used.
+  function lastDraw(state: number): number {
+    return mulberryStep((state - 0x6d2b79f5) >>> 0)[0]
+  }
+
+  it('3 open instances (one Locked-hidden) stay 3 when a generation due fires', () => {
+    const open = [craft('eu', 0x101), craft('eu', 0x102, 'MODERATE'), lockedHidden(0x103)]
+    fireGenerationDue(open)
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(CONTRACT_TARGET)
+    expect(s.contracts).toEqual(open)
+    expect(s.events.some((e) => e.t === T && /^OPEN CONTRACT/.test(e.text))).toBe(false)
+  })
+
+  it('3 Locked-hidden instances still fill the cap', () => {
+    const open = [lockedHidden(0x111), lockedHidden(0x112), lockedHidden(0x113)]
+    fireGenerationDue(open)
+    expect(useWorldStore.getState().contracts).toEqual(open)
+  })
+
+  it('2 open instances (one Locked-hidden) become 3 when a generation due fires', () => {
+    const open = [craft('eu', 0x121), lockedHidden(0x122)]
+    fireGenerationDue(open)
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(CONTRACT_TARGET)
+    expect(s.contracts.slice(0, 2)).toEqual(open)
+    expect(s.contracts[2].createdT).toBe(T)
+    expect(s.events.filter((e) => e.t === T && /^OPEN CONTRACT .* POSTED IN /.test(e.text))).toHaveLength(1)
+  })
+
+  it('after a roll under the cap the next roll is due 2-6 strategic hours later, rearmed from the due', () => {
+    fireGenerationDue([craft('eu', 0x131)])
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(2)
+    const gap = s.nextContractT - T
+    expect(gap).toBeGreaterThanOrEqual(2 * 3600)
+    expect(gap).toBeLessThan(6 * 3600)
+    expect(gap).toBe(CONTRACT_MIN_SEC + lastDraw(s.contractRngState) * CONTRACT_SPAN_SEC)
+  })
+
+  it('the rearm window reaches both ends across market cursors and never leaves 2-6 h', () => {
+    let lo = Infinity
+    let hi = -Infinity
+    for (let i = 0; i < 256; i++) {
+      useWorldStore.setState(structuredClone(snapshot))
+      fireGenerationDue([], (0x9e3779b9 * (i + 1)) >>> 0)
+      const s = useWorldStore.getState()
+      expect(s.contracts).toHaveLength(1)
+      const gap = s.nextContractT - T
+      expect(gap).toBeGreaterThanOrEqual(CONTRACT_MIN_SEC)
+      expect(gap).toBeLessThan(CONTRACT_MIN_SEC + CONTRACT_SPAN_SEC)
+      lo = Math.min(lo, gap)
+      hi = Math.max(hi, gap)
+    }
+    expect(lo).toBeLessThan(CONTRACT_MIN_SEC + 0.05 * CONTRACT_SPAN_SEC)
+    expect(hi).toBeGreaterThan(CONTRACT_MIN_SEC + 0.95 * CONTRACT_SPAN_SEC)
+  })
+
+  it('the roll and rearm are deterministic from contractRngState', () => {
+    fireGenerationDue([craft('eu', 0x141)], 0xc0ffee)
+    const first = structuredClone({
+      contracts: useWorldStore.getState().contracts,
+      contractRngState: useWorldStore.getState().contractRngState,
+      nextContractT: useWorldStore.getState().nextContractT,
+    })
+    useWorldStore.setState(structuredClone(snapshot))
+    fireGenerationDue([craft('eu', 0x141)], 0xc0ffee)
+    const second = useWorldStore.getState()
+    expect(second.contracts).toEqual(first.contracts)
+    expect(second.contractRngState).toBe(first.contractRngState)
+    expect(second.nextContractT).toBe(first.nextContractT)
   })
 })

@@ -997,3 +997,55 @@ describe('quiet-replay ETA contract stream (story 005)', () => {
     expect(useWorldStore.getState().t).toBe(jumped.t)
   })
 })
+
+// Story 019 (TR-economy-006): Sable Enterprises is Glass Veil's authored
+// client and never a city holder, so no generated offer may carry it — not
+// the record's client, not the derived mission's client line or briefing.
+describe('generated offer client (story 019)', () => {
+  function expectNotSable(c: GeneratedContract): void {
+    expect(HOLDERS).toContain(c.client)
+    const mission = contractMission(c)
+    expect(mission.client).not.toBe('SABLE ENTERPRISES')
+    expect(mission.client).not.toMatch(/sable/i)
+    expect(mission.briefing.join(' ')).not.toMatch(/sable/i)
+  }
+
+  it('no market roll across a chained cursor is signed by Sable Enterprises', () => {
+    for (const c of rollMany(300)) expectNotSable(c)
+  })
+
+  it('no suppression roll in any sector is signed by Sable Enterprises', () => {
+    let state = 0x5ab1e
+    for (let i = 0; i < 60; i++) {
+      const rolled = rollSuppressionContract(INPUTS[i % INPUTS.length], 2000 + i, state)
+      expectNotSable(rolled.contract)
+      state = rolled.state
+    }
+  })
+
+  it('every holder as sector client yields a non-Sable offer', () => {
+    for (const client of HOLDERS) {
+      const { contract } = rollContract([{ ...inputFor('eu'), client }], 1000, 0x19)
+      expectNotSable(contract)
+    }
+  })
+
+  it('a re-clienting after an ownership move stays off Sable', () => {
+    const { contract } = rollContract([inputFor('af')], 1000, 0x2b)
+    for (const client of HOLDERS) {
+      expectNotSable(reclientContract(contract, client, OWNERSHIP, 0x3c).contract)
+    }
+  })
+
+  it('an offer the store posts on a generation due is not signed by Sable', () => {
+    useWorldStore.setState({ nextEventT: 1e12, nextTaxT: 1e12 })
+    for (let i = 0; i < 3; i++) {
+      const s = useWorldStore.getState()
+      useWorldStore.setState({ t: s.nextContractT - 1 })
+      useWorldStore.getState().tick(0.01)
+    }
+    const posted = useWorldStore.getState().contracts
+    expect(posted.length).toBeGreaterThan(0)
+    for (const c of posted) expectNotSable(c)
+  })
+})
