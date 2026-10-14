@@ -120,8 +120,8 @@ stories:
     name: "Invoice prints all five money lines, zeros included"
     file: "production/epics/economy-and-contracts/story-022-invoice-prints-all-five-money-lines-zeros-included.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"

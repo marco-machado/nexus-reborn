@@ -5,7 +5,7 @@
 import './ui.css'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { collateralFine, netPayout, useAppStore } from '../state/appStore'
+import { collateralFine, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { useCampaignStore } from '../state/campaignStore'
 import { useSettingsStore } from '../state/settingsStore'
@@ -17,6 +17,7 @@ import {
 } from '../state/save'
 import { applyDebrief } from '../state/debrief'
 import { debriefFlags } from './debriefFlags'
+import { debriefInvoiceRows } from './debriefInvoice'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { ROSTER_CAP } from '../game/recruits'
@@ -1541,8 +1542,7 @@ export function Debrief() {
   const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const won = outcome?.won ?? false
   const quiet = outcome?.quietReplay === true
-  const fine = outcome && !quiet ? collateralFine(outcome) : 0
-  const paid = outcome ? netPayout(outcome) : 0
+  const fine = outcome ? collateralFine(outcome) : 0
   const flags = debriefFlags(outcome, campaignFailed, missionId)
   const [balanceOpen, setBalanceOpen] = useState(false)
   const bannerRef = useRef<HTMLDivElement>(null)
@@ -1556,8 +1556,8 @@ export function Debrief() {
   useLayoutEffect(() => {
     if (missionId) applyDebrief(missionId)
   }, [missionId, outcome])
-  // Built as a list because the deduction only takes a line when a round caught
-  // a bystander, and the row stagger has to stay even either way.
+  // Built as a list because the KIA / injury / XP lines vary, and the row
+  // stagger has to stay even either way.
   const rows: { label: string; value: ReactNode; tone?: string }[] = [
     { label: 'TARGET', value: m ? m.district + ' // ' + m.city : '--' },
     { label: 'ELIMINATIONS', value: outcome ? outcome.kills : '--' },
@@ -1596,25 +1596,15 @@ export function Debrief() {
     },
     { label: 'MISSION TIME', value: outcome ? mmss(outcome.timeSec) : '--:--' },
   ]
-  if (outcome && won && !quiet && fine > 0) {
-    rows.push({ label: 'CONTRACT VALUE', value: fmt(outcome.reward) + ' CR' })
-    rows.push({ label: 'COLLATERAL PENALTY', value: '-' + fmt(fine) + ' CR', tone: 'red' })
-  }
-  if (outcome && won && !quiet && outcome.bonus > 0) {
-    rows.push({ label: 'OPTIONAL BONUS', value: '+' + fmt(outcome.bonus) + ' CR', tone: 'teal' })
-  }
-  if (outcome && won && m) {
-    rows.push({ label: 'CONTRACT ETA', value: '+' + m.etaDays + ' DAYS ELAPSED', tone: 'amber' })
-  }
-  rows.push({
-    label: 'PAYOUT',
-    value: won && paid > 0 ? '+' + fmt(paid) + ' CR' : '0 CR',
-    tone: won && paid > 0 ? 'teal' : 'red',
-  })
-  if (flags.pyrrhicNote) {
-    rows.push({ label: 'NOTE', value: 'PYRRHIC — SQUAD LOST // CAMPAIGN FAILED', tone: 'red' })
-  }
-  rows.push({ label: 'ACCOUNT BALANCE', value: fmt(credits) + ' CR', tone: 'amber' })
+  // All five money lines, zeros included (EC-022); Economy prices them.
+  rows.push(
+    ...debriefInvoiceRows({
+      outcome,
+      credits,
+      etaDays: m ? m.etaDays : null,
+      pyrrhicNote: flags.pyrrhicNote,
+    }),
+  )
   return (
     <div className="screen db">
       <div className="db-card corners">

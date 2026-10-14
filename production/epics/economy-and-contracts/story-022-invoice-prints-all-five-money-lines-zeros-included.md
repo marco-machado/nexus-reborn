@@ -1,12 +1,12 @@
 # Story 022: Invoice prints all five money lines, zeros included
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: UI
 > **Estimate**: 1.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN Economy has priced Reward 0, optional bonus 0, Collateral 0, net payout 0 and new balance C, WHEN Interface builds the invoice, THEN those five lines are present (not omitted).
-- [ ] GIVEN a loss, stored Reward 85,000 CR, Collateral 10,000 CR, optional bonus 0, `net_payout = 0`, new balance C, THEN Reward 85,000 CR is present and all five money lines are present.
-- [ ] GIVEN a quiet-replay win, stored Reward 62,000 CR, optional bonus 0, Collateral 0, `net_payout = 0`, new balance C, THEN Reward 62,000 CR is present and all five money lines are present.
-- [ ] GIVEN a non-quiet win, N = 0, Collateral 0 CR, THEN the Collateral 0 CR line is present (not omitted).
+- [x] GIVEN Economy has priced Reward 0, optional bonus 0, Collateral 0, net payout 0 and new balance C, WHEN Interface builds the invoice, THEN those five lines are present (not omitted).
+- [x] GIVEN a loss, stored Reward 85,000 CR, Collateral 10,000 CR, optional bonus 0, `net_payout = 0`, new balance C, THEN Reward 85,000 CR is present and all five money lines are present.
+- [x] GIVEN a quiet-replay win, stored Reward 62,000 CR, optional bonus 0, Collateral 0, `net_payout = 0`, new balance C, THEN Reward 62,000 CR is present and all five money lines are present.
+- [x] GIVEN a non-quiet win, N = 0, Collateral 0 CR, THEN the Collateral 0 CR line is present (not omitted).
 
 ---
 
@@ -66,11 +66,11 @@
 **Gap**: this is a code change. Today CONTRACT VALUE and COLLATERAL PENALTY print only when `won && !quiet && fine > 0`, and OPTIONAL BONUS only when `bonus > 0`, so a zero line, a loss and a quiet replay all omit rows.
 
 **Manual**: Playwright at 1280x720, one screenshot per case in `production/qa/evidence/sprint-004/`; lead-programmer sign-off.
-- [ ] Non-quiet win, Collateral 0: five lines, Collateral shows 0 CR
-- [ ] Zero-priced win: five lines present
-- [ ] Loss: Reward shows the stored value (85,000 CR), payout 0
-- [ ] Quiet-replay win: Reward shows the stored value (62,000 CR), payout 0
-- [ ] No row clipped in the invoice region
+- [x] Non-quiet win, Collateral 0: five lines, Collateral shows 0 CR
+- [x] Zero-priced win: five lines present
+- [x] Loss: Reward shows the stored value (85,000 CR), payout 0
+- [x] Quiet-replay win: Reward shows the stored value (62,000 CR), payout 0
+- [x] No row clipped in the invoice region
 
 ---
 
@@ -80,7 +80,7 @@
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/ui/debriefInvoice.test.ts` (8 tests); screenshots and click-through note in `production/qa/evidence/sprint-004/ec-022-*` (README + 4 PNGs at 1280x720)
 
 ---
 
@@ -88,3 +88,22 @@
 
 - Depends on: Story 008, Story 009, Story 010
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (AC1-AC4 each covered by a unit test in `src/ui/debriefInvoice.test.ts` and a retained 1280x720 screenshot in `production/qa/evidence/sprint-004/`)
+**Deviations**: None blocking. Advisory items below.
+**Test Evidence**: UI: screenshots `production/qa/evidence/sprint-004/ec-022-{win-collateral0,zero-priced-win,loss,quiet-replay-win}-1280x720.png`, click-through note `production/qa/evidence/sprint-004/ec-022-README.md`; unit test `src/ui/debriefInvoice.test.ts` (8/8 passing when run at story-done, 2026-10-14)
+**Run result**: OBSERVED — production/qa/evidence/sprint-004/ec-022-*-1280x720.png
+**Code Review**: Ran (/code-review). Verdict NOT ASSESSED: the ui-programmer, lead-programmer and qa-tester specialist reviews could not be spawned (no Agent tool in the workflow subagent). The reviewer's own pass found no Required Changes (would have been APPROVED WITH SUGGESTIONS); ADR-0021 COMPLIANT, Standards 6/6, Architecture CLEAN, SOLID COMPLIANT; vitest 8/8, tsc -b clean, eslint clean. Re-run /code-review in a context that can spawn agents to reach APPROVED.
+**Story-done decisions (autonomous mode)**: lean-mode code-review prompt answered "Yes, /code-review ran" with the result above; Phase 7 closed with the recommended "Close the story" option. QL-TEST-COVERAGE skipped (lean mode).
+
+**Advisory findings (from /code-review):**
+- Review gap, not a code defect: specialist and qa-tester reviews did not run; re-run /code-review where agents can be spawned.
+- Design question for the owner: `src/ui/debriefInvoice.ts:48-61` — on a loss or a quiet replay with optionals completed, `priceOutcome` still stores bonus > 0, so the invoice prints OPTIONAL BONUS `+9,000 CR` (teal) next to PAYOUT 0 CR, and a quiet replay with civiliansHit > 0 prints a red COLLATERAL PENALTY. GDD §7 (edge cases L198-199, AC L282) zeroes the net but does not say whether bonus/collateral lines show the priced value or 0 on unpaid outcomes. The old code hid these lines when quiet; `src/ui/index.tsx` L1545 dropped the `!quiet` guard. Owner to confirm intended presentation.
+- Test gap: `src/ui/debriefInvoice.test.ts` has no quiet-replay or loss case with non-zero bonus or non-zero collateral (where line values and payout disagree). Add once the design question is settled.
+- `src/ui/debriefInvoice.ts:46`: the five-line guarantee holds only when `outcome` is non-null; with no outcome only PAYOUT and ACCOUNT BALANCE print (tested and documented). Acceptable — there is no priced invoice before an outcome.
+- GDD L254 asks for Collateral as "count and CR": met across two rows (COLLATERAL count, `src/ui/index.tsx` ~L1590, and COLLATERAL PENALTY CR). Noted for the Interface epic's layout.
+- Evidence README: lead-programmer sign-off still pending (not required for a UI story by the story-done gate); text scales 90/110/125 not captured, deferred to IF-011.
