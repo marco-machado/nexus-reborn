@@ -75,6 +75,20 @@ describe('start', () => {
       endT: 500 + hyper.hours * HOUR,
     })
   })
+
+  it('refuses a non-positive or non-finite duration and leaves the lab idle', () => {
+    for (const hours of [0, -2, NaN, Infinity]) {
+      expect(useResearchStore.getState().start({ ...propellants, hours }, 0)).toBe(false)
+      expect(useResearchStore.getState().labs.ballistics).toBeNull()
+    }
+  })
+
+  it('refuses a non-finite start time and leaves the lab idle', () => {
+    for (const t of [NaN, Infinity, -Infinity]) {
+      expect(useResearchStore.getState().start(propellants, t)).toBe(false)
+      expect(useResearchStore.getState().labs.ballistics).toBeNull()
+    }
+  })
 })
 
 describe('sync', () => {

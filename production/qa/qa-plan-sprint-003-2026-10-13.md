@@ -13,6 +13,21 @@ Economy pricing already exists in `src/state/appStore.ts` (`INITIAL_CREDITS`, `s
 
 All 10 stories are Logic or Integration, so none needs a screenshot. The one UI touch (the Debrief invoice, EC-022) is not in this sprint.
 
+## Coverage status (updated 2026-10-14, after sprint close)
+
+The **Existing coverage** lines below record the state at planning time. Every gap they name is now closed by a test in `src/state/appStore.test.ts`:
+
+| Story | Gap named at planning | Closing test |
+|-------|-----------------------|--------------|
+| EC-001 | 129,450 CR through the real Tax deposit | 'after a net_payout = 0 apply, a Tax deposit of 1,000 CR gives 129,450 CR' |
+| EC-003 | No test pins Influence/Intel across an Economy apply | 'payout, Tax deposit, research debit and hire debit leave Influence I and Intel J'; 'a first non-quiet win payout applied by Economy alone leaves Influence 0'; 'a loss then a quiet-replay win (net_payout 0) leaves Influence, Intel and Credits unchanged' |
+| EC-006 | NaN bonus def | 'civiliansHit NaN and a NaN bonus def price 0 collateral, 0 bonus, 85,000 CR net' |
+| EC-008 | Hollow Crown, Rust Haven, pyrrhic | 'Hollow Crown: Reward 62,000, …'; 'Rust Haven at opening Standard: …'; 'non-quiet tiebreak Win that empties the roster, …' |
+| EC-010 | Confirm no outcome path reads `isQuietReplay` | 'setOutcome and reportMission take quietness from the outcome, not contractsWon' (`isQuietReplay` is called only from `src/ui/Hud.tsx`) |
+| EC-012 | Credits flat during the running mission | 'AC 3: Credits at deploy stay put while the mission runs' |
+
+QA does not need to chase these gaps. Sprint 3's code review also added a duration and clock guard to `researchStore.start`, covered in `src/state/researchStore.test.ts`.
+
 ---
 
 ## Test Summary

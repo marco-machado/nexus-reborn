@@ -8,7 +8,7 @@ import {
   useAppStore,
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
-import { DEFAULT_SQUAD, MISSIONS, operativeById } from '../game/data'
+import { DEFAULT_SQUAD, MISSIONS, ROSTER, operativeById } from '../game/data'
 import { nodeById } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
@@ -1296,7 +1296,7 @@ describe('Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win (EC-00
 
     it('non-quiet tiebreak Win that empties the roster, Reward 85,000, N = 0 pays the full 85,000 CR', () => {
       const ids = useCampaignStore.getState().operatives.map((op) => op.id)
-      expect(ids.length).toBeGreaterThan(0)
+      expect(ids).toEqual(ROSTER.map((op) => op.id))
       expect(useCampaignStore.getState().contractsWon).toEqual([])
       const o = priceAuthored('m01', { civiliansHit: 0, deadIds: ids })
       expect(o.quietReplay).toBe(false)

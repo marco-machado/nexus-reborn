@@ -37,6 +37,9 @@ export const useResearchStore = create<ResearchStoreState>((set, get) => ({
     const s = get()
     if (s.labs[node.branch] || s.done.includes(node.id)) return false
     if (!node.needs.every((id) => s.done.includes(id))) return false
+    // A non-finite clock or a non-positive duration would schedule an endT
+    // that sync() never reaches, holding the lab forever.
+    if (!Number.isFinite(t) || !(Number.isFinite(node.hours) && node.hours > 0)) return false
     set({
       labs: { ...s.labs, [node.branch]: { id: node.id, startedT: t, endT: t + node.hours * 3600 } },
     })
