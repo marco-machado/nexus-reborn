@@ -35,6 +35,7 @@
 
 - [ ] GIVEN a mission in progress on a generated contract that is Offered, Credits C CR, WHEN Abort is confirmed, THEN there is no debrief, no invoice is built, Credits stay C CR, and the generated record remains Offered.
 - [ ] GIVEN a mission in progress on Glass Veil Unwon, Credits C CR, WHEN Abort is confirmed, THEN there is no debrief, no invoice is built, Credits stay C CR, and Glass Veil remains Unwon.
+- [ ] GIVEN a mission already aborted, Credits C CR, WHEN Abort is confirmed again or teardown runs, THEN Credits stay C CR, the contract record and the apply-once key are unchanged, the record is not marked `unfiled`, and no ETA is set, so there is no Tax catch-up. *(GDD Edge Cases: If Abort; If mission is running.)*
 
 ---
 
@@ -43,6 +44,7 @@
 *Derived from the governing ADRs and the Core Layer Rules:*
 
 - An aborted or torn-down deploy burns its key and never applies. Abort does not mark `unfiled`.
+- No performance impact expected: abort is a one-shot lifecycle path with no per-frame work.
 
 ---
 
@@ -63,6 +65,7 @@
 **What to test**:
 - Confirmed Abort on an Offered generated contract: no outcome, no invoice, Credits C, record still Offered
 - Confirmed Abort on an Unwon Glass Veil: same, still Unwon
+- Second Abort or teardown after Abort: Credits, record and apply-once key unchanged; no `unfiled`; no ETA
 
 **Edge cases**: Abort at t = 0; Abort after hits taken; a second Abort is a no-op.
 
