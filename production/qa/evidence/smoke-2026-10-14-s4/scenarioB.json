@@ -1,0 +1,162 @@
+{
+ "steps": [
+  {
+   "name": "start",
+   "labels": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "BRIEF // LOCKED // NO CONTRACT SELECTED"
+   ]
+  },
+  {
+   "name": "GLASS VEIL",
+   "attempt": 1,
+   "play": "won",
+   "atLaunch": 128450,
+   "credits": 217405,
+   "contractsWon": [
+    "m01"
+   ],
+   "campaignWon": false,
+   "banner": null
+  },
+  {
+   "name": "HOLLOW CROWN",
+   "attempt": 1,
+   "play": "won",
+   "atLaunch": 217405,
+   "credits": 284862,
+   "contractsWon": [
+    "m01",
+    "m02"
+   ],
+   "campaignWon": false,
+   "banner": null
+  },
+  {
+   "name": "RUST HAVEN",
+   "attempt": 1,
+   "play": "won",
+   "atLaunch": 284862,
+   "credits": 326159,
+   "contractsWon": [
+    "m01",
+    "m02",
+    "m03"
+   ],
+   "campaignWon": true,
+   "banner": null
+  },
+  {
+   "name": "p7-final",
+   "contractsWon": [
+    "m01",
+    "m02",
+    "m03"
+   ],
+   "campaignWon": true,
+   "credits": 326159,
+   "selectable": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT CRIMSON MERIDIAN // SUPPRESSION // NEO KOWLOON",
+    "OPEN CONTRACT BROKEN CURTAIN // SABOTAGE // NEW BOSTON",
+    "OPEN CONTRACT BROKEN CURTAIN // SUPPRESSION // CAIRO",
+    "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+    "OPEN CONTRACT CRIMSON MERIDIAN // SUPPRESSION // NEO KOWLOON // PRIORITY CONTRACT",
+    "13:31 PRIORITY CONTRACT BROKEN CURTAIN POSTED IN CAIRO // FOCUS AFRICA",
+    "11:33 CORPSEC RAID WITHDRAWS CONTRACT CRIMSON CIRCUIT // FOCUS ASIA",
+    "BRIEF // LOCKED // NO CONTRACT SELECTED"
+   ],
+   "body": [
+    "CAMPAIGN COMPLETE"
+   ]
+  },
+  {
+   "name": "p7-selectable",
+   "sel": [
+    {
+     "name": "GLASS VEIL",
+     "acceptEnabled": 1
+    },
+    {
+     "name": "HOLLOW CROWN",
+     "present": false
+    },
+    {
+     "name": "RUST HAVEN",
+     "present": false
+    }
+   ]
+  },
+  {
+   "name": "console-errors",
+   "errs": [
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client",
+    "console WebSocket connection to 'ws://localhost:4200/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4200/@vite/client"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,293 @@
+{
+ "steps": [
+  {
+   "name": "p1-p2-launch",
+   "credits": 128450,
+   "header": true,
+   "phase": "world"
+  },
+  {
+   "name": "p6-market-rolled",
+   "n": 3,
+   "market": [
+    {
+     "id": "gc07e04863",
+     "client": "nexus",
+     "threat": "MODERATE",
+     "reward": 41000,
+     "keys": [
+      "id",
+      "createdT",
+      "expiresAtT",
+      "sector",
+      "cityId",
+      "district",
+      "type",
+      "client",
+      "threat",
+      "reward",
+      "seed",
+      "priority",
+      "expedited"
+     ]
+    },
+    {
+     "id": "gcd4f49705",
+     "client": "helix",
+     "threat": "HIGH",
+     "reward": 54500,
+     "keys": [
+      "id",
+      "createdT",
+      "expiresAtT",
+      "sector",
+      "cityId",
+      "district",
+      "type",
+      "client",
+      "threat",
+      "reward",
+      "seed",
+      "priority",
+      "expedited"
+     ]
+    },
+    {
+     "id": "gc5e583db2",
+     "client": "helix",
+     "threat": "HIGH",
+     "reward": 70000,
+     "keys": [
+      "id",
+      "createdT",
+      "expiresAtT",
+      "sector",
+      "cityId",
+      "district",
+      "type",
+      "client",
+      "threat",
+      "reward",
+      "seed",
+      "priority",
+      "expedited"
+     ]
+    }
+   ],
+   "labels": [
+    "OPEN CONTRACT PALE STATION // SEIZURE // DETROIT SPRAWL"
+   ]
+  },
+  {
+   "name": "p3-accept-authored",
+   "c0": 132619,
+   "afterSelect": 132619,
+   "afterAccept": 132619,
+   "flat": true,
+   "phase": "team"
+  },
+  {
+   "name": "p4-abort",
+   "creditsAtLaunch": 132619,
+   "creditsInMission": 132619,
+   "creditsAfterAbort": 132619,
+   "phase": "world",
+   "outcomeSet": null,
+   "contractsWon": [],
+   "btnsGlass": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE"
+   ]
+  },
+  {
+   "name": "p3-accept-generated",
+   "label": "OPEN CONTRACT PALE STATION // SEIZURE // DETROIT SPRAWL",
+   "g0": 132619,
+   "afterSelect": 132619,
+   "afterAccept": 132619,
+   "phase": "team"
+  },
+  {
+   "name": "p5-win",
+   "atLaunch": 132619,
+   "atDebrief": 221762,
+   "delta": 89143,
+   "play": "won",
+   "outcome": {
+    "won": true,
+    "reward": 85000,
+    "bonus": 0,
+    "civ": 0,
+    "quiet": false,
+    "fine": 0,
+    "net": 85000
+   },
+   "inv": "> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n6\n> SQUAD CASUALTIES\n0\n> EXPERIENCE // MARA\n+1 XP (1)\n> EXPERIENCE // GHOST\n+1 XP (1)\n> EXPERIENCE // DART\n+1 XP (1)\n> EXPERIENCE // TORQ\n+1 XP (1)\n> COLLATERAL\n0\n> MISSION TIME\n0:41\n> CONTRACT VALUE\n85,000 CR\n> COLLATERAL PENALTY\n0 CR\n> OPTIONAL BONUS\n0 CR\n> CONTRACT ETA\n+2 DAYS ELAPSED\n> PAYOUT\n+85,000 CR\n> ACCOUNT BALANCE\n221,762 CR"
+  },
+  {
+   "name": "p5-quiet",
+   "atLaunch": 221762,
+   "atDebrief": 223661,
+   "delta": 1899,
+   "play": "won",
+   "outcome": {
+    "won": true,
+    "reward": 85000,
+    "bonus": 0,
+    "civ": 3,
+    "quiet": true,
+    "fine": 15000,
+    "net": 0
+   },
+   "inv": "> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n5\n> SQUAD CASUALTIES\n0\n> EXPERIENCE // MARA\n+1 XP (2)\n> EXPERIENCE // GHOST\n+1 XP (2)\n> EXPERIENCE // DART\n+1 XP (2)\n> EXPERIENCE // TORQ\n+1 XP (2)\n> COLLATERAL\n3\n> MISSION TIME\n0:39\n> CONTRACT VALUE\n85,000 CR\n> COLLATERAL PENALTY\n-15,000 CR\n> OPTIONAL BONUS\n0 CR\n> CONTRACT ETA\n+2 DAYS ELAPSED\n> PAYOUT\n0 CR\n> ACCOUNT BALANCE\n223,661 CR"
+  },
+  {
+   "name": "p5-loss",
+   "atLaunch": 128450,
+   "atDebrief": 128450,
+   "delta": 0,
+   "play": "lost",
+   "outcome": {
+    "won": false,
+    "reward": 85000,
+    "bonus": 0,
+    "civ": 0,
+    "quiet": false,
+    "fine": 0,
+    "net": 0
+   },
+   "inv": "> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n2\n> SQUAD CASUALTIES\n4\n> KILLED IN ACTION\nMARA, GHOST, DART, TORQ\n> COLLATERAL\n0\n> MISSION TIME\n0:15\n> CONTRACT VALUE\n85,000 CR\n> COLLATERAL PENALTY\n0 CR\n> OPTIONAL BONUS\n0 CR\n> PAYOUT\n0 CR\n> ACCOUNT BALANCE\n128,450 CR"
+  },
+  {
+   "name": "p6-expiry-refill",
+   "trace": [
+    3,
+    2,
+    3,
+    2,
+    0,
+    1,
+    2,
+    3,
+    3,
+    3,
+    3,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    2,
+    3,
+    2,
+    3,
+    3,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "endN": 3,
+   "clients": [
+    "nexus",
+    "stratos"
+   ],
+   "market": [
+    {
+     "id": "gca057f296",
+     "client": "nexus",
+     "threat": "SEVERE",
+     "reward": 80000,
+     "keys": [
+      "id",
+      "createdT",
+      "expiresAtT",
+      "sector",
+      "cityId",
+      "district",
+      "type",
+      "client",
+      "threat",
+      "reward",
+      "seed",
+      "priority",
+      "expedited"
+     ]
+    },
+    {
+     "id": "gcb42e580a",
+     "client": "stratos",
+     "threat": "SEVERE",
+     "reward": 67000,
+     "keys": [
+      "id",
+      "createdT",
+      "expiresAtT",
+      "sector",
+      "cityId",
+      "district",
+      "type",
+      "client",
+      "threat",
+      "reward",
+      "seed",
+      "priority",
+      "expedited"
+     ]
+    },
+    {
+     "id": "gc58bae0d9",
+     "client": "nexus",
+     "threat": "SEVERE",
+     "reward": 79500,
+     "keys": [
+      "id",
+      "createdT",
+      "expiresAtT",
+      "sector",
+      "cityId",
+      "district",
+      "type",
+      "client",
+      "threat",
+      "reward",
+      "seed",
+      "priority",
+      "expedited"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "p8-reload",
+   "before": 97531,
+   "after": 97531,
+   "phase": "world"
+  },
+  {
+   "name": "console-errors",
+   "errs": [
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico"
+   ]
+  }
+ ]
+}
