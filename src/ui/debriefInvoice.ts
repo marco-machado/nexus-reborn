@@ -2,7 +2,10 @@
 // figure (appStore: priceOutcome, collateralFine, netPayout); this module only
 // formats them. All five money lines print on every outcome, zeros included:
 // a loss, a quiet replay and N = 0 never drop a line (GDD §10, Closed Q3 —
-// one show-rule, no separate rule for zero rows).
+// one show-rule, no separate rule for zero rows). On an unpaid outcome (loss
+// or quiet replay) Collateral and optional bonus keep their priced values but
+// print dim with a NOT APPLIED tag, so they never read as money moved (GDD UI
+// Requirements).
 import { collateralFine, netPayout } from '../state/appStore'
 import type { MissionOutcome } from '../state/appStore'
 import { fmt } from './util'
@@ -29,8 +32,15 @@ export interface InvoiceInput {
   pyrrhicNote: boolean
 }
 
+export const NOT_APPLIED = ' — NOT APPLIED'
+
 function signed(sign: '+' | '-', n: number): string {
   return n > 0 ? sign + fmt(n) + ' CR' : '0 CR'
+}
+
+/** Loss or quiet replay: priced lines print, but none of them moves Credits. */
+function unpaid(o: MissionOutcome): boolean {
+  return !o.won || o.quietReplay
 }
 
 /**
@@ -45,17 +55,18 @@ export function debriefInvoiceRows(input: InvoiceInput): InvoiceRow[] {
   const paid = outcome ? netPayout(outcome) : 0
   if (outcome) {
     const fine = collateralFine(outcome)
+    const tag = unpaid(outcome) ? NOT_APPLIED : ''
     rows.push({ label: 'CONTRACT VALUE', value: fmt(outcome.reward) + ' CR', line: 'reward' })
     rows.push({
       label: 'COLLATERAL PENALTY',
-      value: signed('-', fine),
-      tone: fine > 0 ? 'red' : undefined,
+      value: signed('-', fine) + tag,
+      tone: tag ? 'dim' : fine > 0 ? 'red' : undefined,
       line: 'collateral',
     })
     rows.push({
       label: 'OPTIONAL BONUS',
-      value: signed('+', outcome.bonus),
-      tone: outcome.bonus > 0 ? 'teal' : undefined,
+      value: signed('+', outcome.bonus) + tag,
+      tone: tag ? 'dim' : outcome.bonus > 0 ? 'teal' : undefined,
       line: 'bonus',
     })
     if (outcome.won && etaDays !== null) {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { priceOutcome } from '../state/appStore'
 import type { MissionOutcome, MissionResult } from '../state/appStore'
-import { debriefInvoiceRows } from './debriefInvoice'
+import { debriefInvoiceRows, NOT_APPLIED } from './debriefInvoice'
 import type { InvoiceLine, InvoiceRow } from './debriefInvoice'
 
 const C = 128450
@@ -60,8 +60,8 @@ describe('debriefInvoiceRows (EC-022)', () => {
     expect(moneyLines(rows)).toEqual(FIVE)
     expect(lines(rows)).toEqual({
       reward: '85,000 CR',
-      collateral: '-10,000 CR',
-      bonus: '0 CR',
+      collateral: '-10,000 CR' + NOT_APPLIED,
+      bonus: '0 CR' + NOT_APPLIED,
       netPayout: '0 CR',
       balance: '128,450 CR',
     })
@@ -72,8 +72,8 @@ describe('debriefInvoiceRows (EC-022)', () => {
     expect(moneyLines(rows)).toEqual(FIVE)
     expect(lines(rows)).toEqual({
       reward: '62,000 CR',
-      collateral: '0 CR',
-      bonus: '0 CR',
+      collateral: '0 CR' + NOT_APPLIED,
+      bonus: '0 CR' + NOT_APPLIED,
       netPayout: '0 CR',
       balance: '128,450 CR',
     })
@@ -101,6 +101,57 @@ describe('debriefInvoiceRows (EC-022)', () => {
       netPayout: '+9,000 CR',
       balance: '128,450 CR',
     })
+  })
+
+  // Unpaid outcomes: Economy still prices bonus and Collateral, so the lines
+  // keep their values, but they print dim and tagged beside PAYOUT 0.
+  function unpaidCase(over: Partial<MissionResult>) {
+    const o = priceOutcome(
+      result({ civiliansHit: 3, completedOptionalIds: ['opt'], ...over }),
+      { reward: 62000, bonusDefs: { opt: 9000 } },
+    )
+    return build(o)
+  }
+
+  function row(rows: InvoiceRow[], line: InvoiceLine): InvoiceRow {
+    const r = rows.find((x) => x.line === line)
+    if (!r) throw new Error('missing ' + line)
+    return r
+  }
+
+  it('a loss with Collateral and a completed optional prints both priced, NOT APPLIED, payout 0', () => {
+    const rows = unpaidCase({ won: false })
+    expect(moneyLines(rows)).toEqual(FIVE)
+    expect(lines(rows)).toEqual({
+      reward: '62,000 CR',
+      collateral: '-15,000 CR' + NOT_APPLIED,
+      bonus: '+9,000 CR' + NOT_APPLIED,
+      netPayout: '0 CR',
+      balance: '128,450 CR',
+    })
+    expect(row(rows, 'collateral').tone).toBe('dim')
+    expect(row(rows, 'bonus').tone).toBe('dim')
+  })
+
+  it('a quiet-replay win with Collateral and a completed optional prints both priced, NOT APPLIED, payout 0', () => {
+    const rows = unpaidCase({ won: true, quietReplay: true })
+    expect(moneyLines(rows)).toEqual(FIVE)
+    expect(lines(rows)).toEqual({
+      reward: '62,000 CR',
+      collateral: '-15,000 CR' + NOT_APPLIED,
+      bonus: '+9,000 CR' + NOT_APPLIED,
+      netPayout: '0 CR',
+      balance: '128,450 CR',
+    })
+    expect(row(rows, 'collateral').tone).toBe('dim')
+    expect(row(rows, 'bonus').tone).toBe('dim')
+  })
+
+  it('a paid win keeps red Collateral and teal bonus, untagged', () => {
+    const rows = unpaidCase({ won: true })
+    expect(row(rows, 'collateral')).toMatchObject({ value: '-15,000 CR', tone: 'red' })
+    expect(row(rows, 'bonus')).toMatchObject({ value: '+9,000 CR', tone: 'teal' })
+    expect(row(rows, 'netPayout').value).toBe('+56,000 CR')
   })
 
   it('keeps ETA on a win and the pyrrhic note between payout and balance', () => {

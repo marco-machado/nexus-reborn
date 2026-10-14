@@ -2632,6 +2632,7 @@
 .db-row b.red { color: var(--red-hot); }
 .db-row b.teal { color: var(--teal); }
 .db-row b.amber { color: var(--amber-hot); }
+.db-row b.dim { color: var(--ink-dim); }
 
 .db-actions { display: flex; gap: 10px; }
 .db-actions .btn { flex: 1; }
