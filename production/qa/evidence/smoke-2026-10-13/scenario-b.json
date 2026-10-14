@@ -1,0 +1,207 @@
+{
+ "steps": [
+  {
+   "name": "p8-intel2-seeded",
+   "store": [
+    "gc9d5b6790:sa:HIGH",
+    "gcf4629a43:as:HIGH"
+   ],
+   "southAmericaRowsIntel1": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE"
+   ],
+   "southAmericaRowsIntel2": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT ASHEN CIRCUIT // SUPPRESSION // LIMA",
+    "OPEN CONTRACT COLD LEDGER // SEIZURE // SHINGANG",
+    "OPEN CONTRACT ASHEN CIRCUIT // SUPPRESSION // LIMA // PRIORITY CONTRACT"
+   ]
+  },
+  {
+   "name": "wipe-1",
+   "play": {
+    "result": "lost",
+    "simTime": 10,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "ob1",
+      "reach-zone"
+     ]
+    ]
+   },
+   "outcome": {
+    "won": false,
+    "civiliansHit": 1,
+    "quietReplay": false,
+    "casualties": 4,
+    "deadIds": [
+     "op3",
+     "op2",
+     "op4",
+     "op1"
+    ],
+    "applyKey": 2
+   },
+   "after": {
+    "living": 4,
+    "roster": [
+     "RAVEN:INJURED",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "campaignFailed": false,
+    "campaignWon": false,
+    "phase": "world"
+   }
+  },
+  {
+   "name": "wipe-2",
+   "play": {
+    "result": "lost",
+    "simTime": 4,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "ob1",
+      "reach-zone"
+     ]
+    ]
+   },
+   "outcome": {
+    "won": false,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "casualties": 3,
+    "deadIds": [
+     "op6",
+     "op8",
+     "op7"
+    ],
+    "applyKey": 4
+   },
+   "after": {
+    "living": 1,
+    "roster": [
+     "RAVEN:INJURED"
+    ],
+    "campaignFailed": false,
+    "campaignWon": false,
+    "phase": "world"
+   }
+  },
+  {
+   "name": "waited-for-recovery",
+   "roster": [
+    "RAVEN:READY"
+   ],
+   "t": 86691.1439999995
+  },
+  {
+   "name": "wipe-3",
+   "play": {
+    "result": "lost",
+    "simTime": 4,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "ob1",
+      "reach-zone"
+     ]
+    ]
+   },
+   "outcome": {
+    "won": false,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "casualties": 1,
+    "deadIds": [
+     "op5"
+    ],
+    "applyKey": 6
+   },
+   "after": {
+    "living": 0,
+    "roster": [],
+    "campaignFailed": true,
+    "campaignWon": false,
+    "phase": "world"
+   }
+  },
+  {
+   "name": "failed-rows",
+   "failedRows": [
+    "GLASS VEIL // LOCKED // REQUIRES INTEL LVL 1",
+    "HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2",
+    "RUST HAVEN // LOCKED // REQUIRES INTEL LVL 2",
+    "GLASS VEIL // LOCKED // REQUIRES INTEL LVL 1"
+   ]
+  },
+  {
+   "name": "p7-campaign-failed",
+   "banner": {
+    "win": [],
+    "fail": [
+     "◆\nCAMPAIGN FAILED\nROSTER EMPTY // NETWORK COMMAND SUSPENDED\n0 / 3"
+    ]
+   },
+   "flags": {
+    "failed": true,
+    "won": false,
+    "living": 0
+   },
+   "selectNoop": {
+    "before": {
+     "phase": "world",
+     "missionId": null
+    },
+    "after": {
+     "phase": "world",
+     "missionId": null
+    }
+   },
+   "focusAfter": "AFRICA // CONTROL 36% // UNREST 32%",
+   "clockAdvanced": true,
+   "researchPhase": "research"
+  },
+  {
+   "name": "p9-hydrate-failed",
+   "flags": {
+    "failed": true,
+    "won": false,
+    "living": 0
+   },
+   "banner": {
+    "win": [],
+    "fail": [
+     "◆\nCAMPAIGN FAILED\nROSTER EMPTY // NETWORK COMMAND SUSPENDED\n0 / 3"
+    ]
+   }
+  },
+  {
+   "name": "errors",
+   "errs": [
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico"
+   ]
+  }
+ ]
+}

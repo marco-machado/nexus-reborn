@@ -1,0 +1,138 @@
+{
+ "play": {
+  "result": "won",
+  "simTime": 34,
+  "log": [
+   [
+    0,
+    "none",
+    null
+   ],
+   [
+    0,
+    "ob1",
+    "reach-zone"
+   ],
+   [
+    12,
+    "ob2",
+    "eliminate-tag"
+   ],
+   [
+    19,
+    "ob3",
+    "extract"
+   ]
+  ]
+ },
+ "eta": {
+  "days": 2
+ },
+ "perPhase": {
+  "world": {
+   "n": 8328,
+   "p50": 6.2,
+   "p95": 6.8,
+   "p99": 7,
+   "max": 50,
+   "over50ms": 0,
+   "over100ms": 0
+  },
+  "brief": {
+   "n": 115,
+   "p50": 6.3,
+   "p95": 6.9,
+   "p99": 25.1,
+   "max": 38.1,
+   "over50ms": 0,
+   "over100ms": 0
+  },
+  "team": {
+   "n": 134,
+   "p50": 6.2,
+   "p95": 6.9,
+   "p99": 7,
+   "max": 25,
+   "over50ms": 0,
+   "over100ms": 0
+  },
+  "mission": {
+   "n": 5746,
+   "p50": 6.3,
+   "p95": 7,
+   "p99": 12.5,
+   "max": 324.9,
+   "over50ms": 2,
+   "over100ms": 1
+  },
+  "debrief": {
+   "n": 617,
+   "p50": 6.2,
+   "p95": 6.9,
+   "p99": 7,
+   "max": 7.1,
+   "over50ms": 0,
+   "over100ms": 0
+  }
+ },
+ "debriefEntryFrames": [
+  [
+   "mission",
+   6.4
+  ],
+  [
+   "mission",
+   5.8
+  ],
+  [
+   "mission",
+   6.7
+  ],
+  [
+   "debrief",
+   5.9
+  ],
+  [
+   "debrief",
+   6.5
+  ],
+  [
+   "debrief",
+   6
+  ],
+  [
+   "debrief",
+   6.6
+  ],
+  [
+   "debrief",
+   6.2
+  ],
+  [
+   "debrief",
+   6.2
+  ]
+ ],
+ "longTasks": [
+  [
+   "?",
+   194
+  ],
+  [
+   "mission",
+   295
+  ],
+  [
+   "mission",
+   53
+  ],
+  [
+   "world",
+   51
+  ]
+ ],
+ "errs": [
+  "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4201/favicon.ico",
+  "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4201/favicon.ico"
+ ]
+}
