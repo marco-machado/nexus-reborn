@@ -22,7 +22,7 @@ Use imperative subject line, then a body that says what changed by file, why, an
 - **Engine**: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
 - **Language**: TypeScript 5.8.3
 - **Build System**: Vite + `tsc -b` (`npm run build`)
-- **Asset Pipeline**: Code-generated geometry and materials; no `public/` art assets
+- **Asset Pipeline**: Code-generated geometry and materials; the only `public/` art asset is the World Network globe's Earth texture (`public/textures/earth/`, NASA Blue Marble, sourced in its README)
 - **State**: Zustand 5.0.14
 - **Physics**: None — mission sim is custom TypeScript in `src/game/`
 
