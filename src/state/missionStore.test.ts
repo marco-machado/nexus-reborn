@@ -248,7 +248,10 @@ describe('abort leaves the World Network blob unchanged', () => {
     const mission = MISSIONS[0]
     const squad = DEFAULT_SQUAD.map(operativeById)
     useAppStore.setState({ phase: 'mission', missionId: mission.id, outcome: null })
-    const world = createWorld(mission, squad, freezeDeploy(mission, squad, 1))
+    // Mint the apply-once key the way the MissionScreen composer does.
+    const applyKey = useAppStore.getState().deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const world = createWorld(mission, squad, freezeDeploy(mission, squad, applyKey))
     setWorld(world)
     const ms = useMissionStore.getState()
     ms.reset()
@@ -267,6 +270,9 @@ describe('abort leaves the World Network blob unchanged', () => {
     useCampaignStore.setState(initialCampaignData())
     useResearchStore.setState({ done: [] })
     useAppStore.setState({ loadout: {}, outcome: null, deploySerial: 0, lastAppliedKey: 0 })
+    // A test that throws mid-mission must not leak its world into the next.
+    setWorld(null)
+    useMissionStore.getState().reset()
     // A lived-in board: a few strategic days so events, Tax and spends exist.
     useWorldStore.getState().advanceDays(2)
   })
@@ -297,6 +303,8 @@ describe('abort leaves the World Network blob unchanged', () => {
       deploySerial: useAppStore.getState().deploySerial,
       lastAppliedKey: useAppStore.getState().lastAppliedKey,
     }
+    // The first deploy minted key 1 and the abort burned it unapplied.
+    expect(keys).toEqual({ deploySerial: 1, lastAppliedKey: 0 })
 
     useAppStore.getState().goto('world')
     confirmAbort()

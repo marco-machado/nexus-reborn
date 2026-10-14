@@ -2198,6 +2198,9 @@ describe('Abort writes nothing to Economy (EC-013)', () => {
       deploySerial: 0,
       lastAppliedKey: 0,
     })
+    // A test that throws mid-mission must not leak its world into the next.
+    setWorld(null)
+    useMissionStore.getState().reset()
   })
 
   it('AC 1: Abort on an Offered generated contract: no invoice, Credits C, record still Offered', () => {
@@ -2233,6 +2236,19 @@ describe('Abort writes nothing to Economy (EC-013)', () => {
   it('edge: Abort at t = 0 writes nothing either', () => {
     const before = ledger()
     deployAndRun('m01', 0)
+    confirmAbort()
+    expectNoDebrief()
+    expect(ledger()).toEqual(before)
+  })
+
+  it('edge: Abort after hits taken writes nothing either', () => {
+    const before = ledger()
+    deployAndRun('m01', 120)
+    const world = getWorld()
+    if (!world) throw new Error('no live world')
+    // The squad has been hit before the abort.
+    const hurt = world.units.filter((u) => u.kind === 'agent' && u.hp < u.maxHp)
+    expect(hurt.length).toBeGreaterThan(0)
     confirmAbort()
     expectNoDebrief()
     expect(ledger()).toEqual(before)

@@ -79,7 +79,7 @@
 **Required evidence**:
 - Integration: test beside the module — `src/state/missionStore.test.ts`, `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [x] Created — `src/state/appStore.test.ts` (describe "Abort writes nothing to Economy (EC-013)"), `src/state/missionStore.test.ts:290`; 138/138 passing (`npx vitest run`, 2026-10-14)
+**Status**: [x] Created — `src/state/appStore.test.ts` (describe "Abort writes nothing to Economy (EC-013)"), `src/state/missionStore.test.ts` (second-Abort test in "abort leaves the World Network blob unchanged"); 139/139 passing (`npx vitest run`, 2026-10-14)
 
 ---
 
@@ -92,15 +92,17 @@
 
 ## Completion Notes
 **Completed**: 2026-10-14
-**Criteria**: 3/3 passing (all covered by integration tests; none deferred)
+**Criteria**: 3/3 passing, with one clause deferred: AC 3 "the record is not marked `unfiled`" has no test because nothing in `src` implements `unfiled` or save status yet. Add the assertion when the save-status store lands.
 **Deviations**: None. ADR-0021 Decision 1 (aborted/torn-down deploy burns its key, never applies; keys only increase) pinned by lastAppliedKey==0, deploySerial==burned key, next key==burned+1. ADR-0002 and ADR-0012 consistent with the ledger() snapshot. ADR-0002 has no `## Decision` heading; its compliance rests on the story's decision summary.
-**Test Evidence**: Integration: `src/state/appStore.test.ts` (EC-013 describe block), `src/state/missionStore.test.ts:290`. Both files run and pass, 138/138.
-**Code Review**: Complete. /code-review verdict NOT ASSESSED only because the lead-programmer and qa-tester specialists could not be spawned (no Agent tool in the unattended run); every check it could run was clean, no required changes.
+**Test Evidence**: Integration: `src/state/appStore.test.ts` (EC-013 describe block), `src/state/missionStore.test.ts`. Both files run and pass, 139/139.
+**Code Review**: Complete. Re-run 2026-10-14 with the lead-programmer and qa-tester specialists: APPROVED WITH SUGGESTIONS. Suggestions applied (see below).
 **Run result**: N/A — the story changes only Zustand store tests; no screen or rendered output is touched.
 **Gates**: QL-TEST-COVERAGE skipped (lean mode). LP-CODE-REVIEW lean prompt answered "Yes — /code-review passed or was approved with suggestions" (autonomous default).
 
 **Advisory findings (from /code-review)**:
-- Review gap, not a defect: Phase 7 specialists (lead-programmer, qa-tester) were not spawned. Re-run /code-review where Agent is available if an APPROVED verdict is needed.
+- Resolved: the specialist review gap. /code-review re-ran with both specialists.
 - AC 3 "not marked `unfiled`" holds only because nothing in src implements `unfiled` yet (`rg -i 'unfiled|saveStatus' src` is empty; useSaveStatusStore exists only in docs/registry/architecture.yaml:183). No test asserts save status. Untested clause: AC 3 (unfiled). Recommend an assertion once the save-status store lands.
-- QA edge case "Abort after hits taken" is not proven: deployAndRun runs 60/120 s of sim but never asserts damage before abort. Suggest asserting e.g. unit HP below max.
+- Resolved: "Abort after hits taken" now has its own test, which asserts at least one agent is below max HP before the abort.
+- Resolved: the missionStore abort helper now mints the apply-once key like the MissionScreen composer, so its key assertions can fail (they compared 0 to 0 before).
+- Resolved: both abort suites reset the live world and missionStore in `beforeEach`, so a failing test cannot leak a world.
 - The confirmAbort helper mirrors src/ui/MissionScreen.tsx:43-50 (goto('world'), setWorld(null), missionStore.reset()) but skips the Hud onAbort recordAbort telemetry call (src/ui/Hud.tsx:596). Acceptable: telemetry is not an Economy field.
