@@ -1,0 +1,7 @@
+{
+  "name": "status-band",
+  "version": "0.3.0",
+  "description": "Shows the stage, breadcrumb, a status-colored sprint bar, timing and the current story above the prompt; its crumbs and count open the epic, sprint and stories",
+  "author": { "name": "Marco Machado" },
+  "types": "./types/index.d.ts"
+}
