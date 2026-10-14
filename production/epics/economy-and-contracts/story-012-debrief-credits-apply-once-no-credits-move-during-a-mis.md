@@ -1,12 +1,12 @@
 # Story 012: Debrief Credits apply once; no Credits move during a mission
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -81,7 +81,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Integration. Test file: `src/state/appSto
 **Required evidence**:
 - Integration: test beside the module — `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Present — `src/state/appStore.test.ts` (`describe('Debrief Credits apply once; no Credits move during a mission (EC-012)')`, plus `applyDebrief apply-once (ADR-0021)`)
 
 ---
 
@@ -89,3 +89,13 @@ From `/qa-plan` sprint 3 (2026-10-13). Integration. Test file: `src/state/appSto
 
 - Depends on: Story 001
 - Unlocks: Story 013
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 3/3 passing (all covered by integration tests in `src/state/appStore.test.ts`; the EC-012 and ADR-0021 describes ran and passed via vitest on 2026-10-14, 10 tests)
+**Deviations**: None. Implementation is test-only for this story; the `authorizeResearch` change in `src/state/appStore.ts` belongs to Story 002, not this one.
+**Test Evidence**: Integration: `src/state/appStore.test.ts`, describe "Debrief Credits apply once; no Credits move during a mission (EC-012)" (4 tests) plus "applyDebrief apply-once (ADR-0021)"
+**Run result**: N/A — no player-visible surface; Credits flat during a running mission is asserted headlessly by ticking a composer-built world
+**Code Review**: Pending — lean mode; autonomous run recorded "No — I'll run /code-review before the sprint close-out"

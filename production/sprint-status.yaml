@@ -102,8 +102,8 @@ stories:
     name: "Debrief Credits apply once; no Credits move during a mission"
     file: "production/epics/economy-and-contracts/story-012-debrief-credits-apply-once-no-credits-move-during-a-mis.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"

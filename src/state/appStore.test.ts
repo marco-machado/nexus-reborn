@@ -11,7 +11,7 @@ import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS, operativeById } from '../game/data'
 import { nodeById } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
-import { initialCampaignData, useCampaignStore } from './campaignStore'
+import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import { DAY, initialOwner, resolveMission, sectorReadout, useWorldStore } from './worldStore'
 import { CITIES_BY_SECTOR } from '../game/atlas'
@@ -24,6 +24,8 @@ import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
 import { xpBonus } from '../game/experience'
 import { economySlice } from '../game/deploy'
 import { freezeDeploy } from './deployFreeze'
+import { createWorld } from '../game/world'
+import { useMissionStore } from './missionStore'
 
 // World-store boot snapshot for the economy integration suite, captured at
 // module load before any test moves the singleton.
@@ -1672,5 +1674,94 @@ describe('Quiet replay pays no fee, optionals included (EC-010)', () => {
     expect(useAppStore.getState().credits).toBe(START_CREDITS)
     const c = useCampaignStore.getState()
     expect([c.intelLevel, c.intelProgress]).toEqual([fresh.intelLevel, fresh.intelProgress])
+  })
+})
+
+describe('Debrief Credits apply once; no Credits move during a mission (EC-012)', () => {
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      // Pin every timed flow off the ETA span so only the payout moves Credits.
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: 1e12,
+    })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', squad: ['op1', 'op2', 'op4'] })
+  })
+
+  it('AC 1: a 75,000 CR net payout applied twice under key K lands once (203,450 CR)', () => {
+    const o = outcome({ applyKey: 7, reward: 75000, bonus: 0, civiliansHit: 0 })
+    expect(netPayout(o)).toBe(75000)
+    useAppStore.getState().setOutcome(o)
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(203450)
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(203450)
+    expect(useAppStore.getState().lastAppliedKey).toBe(7)
+  })
+
+  it('AC 2: an outcome re-carrying key K is a no-op; a higher key applies', () => {
+    useAppStore.getState().setOutcome(outcome({ applyKey: 3, reward: 75000 }))
+    applyDebrief('m01')
+    const afterFirst = useAppStore.getState().credits
+    expect(afterFirst).toBe(START_CREDITS + 75000)
+
+    // A fresh outcome object, same key K: still nothing.
+    useAppStore.getState().setOutcome(outcome({ applyKey: 3, reward: 75000 }))
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(afterFirst)
+
+    useAppStore.getState().setOutcome(outcome({ applyKey: 4, reward: 75000 }))
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(afterFirst + 75000)
+    expect(useAppStore.getState().lastAppliedKey).toBe(4)
+  })
+
+  it('Tax deposited during the ETA catch-up is single-shot under the same key', () => {
+    // Tax back on: the win's ETA span crosses Tax ticks.
+    useWorldStore.setState({ nextTaxT: worldBoot.nextTaxT })
+    useAppStore.getState().setOutcome(outcome({ applyKey: 1, reward: 75000 }))
+    applyDebrief('m01')
+    const afterFirst = useAppStore.getState().credits
+    const influence = useWorldStore.getState().influence
+    expect(afterFirst).toBeGreaterThanOrEqual(START_CREDITS + 75000)
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(afterFirst)
+    expect(useWorldStore.getState().influence).toBe(influence)
+  })
+
+  it('AC 3: Credits at deploy stay put while the mission runs', () => {
+    useAppStore.setState({ phase: 'team', missionId: MISSIONS[0].id, squad: [...DEFAULT_SQUAD] })
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+    const C = useAppStore.getState().credits
+
+    // The MissionScreen composer: mint the key, freeze the deploy, build the world.
+    const mission = { ...MISSIONS[0], objectives: [] }
+    const ops = useAppStore.getState().squad.map(liveOperativeById)
+    const applyKey = useAppStore.getState().deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const w = createWorld(mission, ops, freezeDeploy(mission, ops, applyKey))
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+
+    // Two minutes of sim time in MAX_DT frames, checking Credits every frame.
+    while (w.time < 120) {
+      w.tick(0.05)
+      expect(useAppStore.getState().credits).toBe(C)
+    }
+    expect(useMissionStore.getState().result).toBe('none')
+    expect(useAppStore.getState().phase).toBe('mission')
+    expect(useAppStore.getState().outcome).toBeNull()
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+    // applyDebrief with no outcome yet moves nothing either.
+    applyDebrief(MISSIONS[0].id)
+    expect(useAppStore.getState().credits).toBe(C)
+    useMissionStore.getState().reset()
   })
 })
