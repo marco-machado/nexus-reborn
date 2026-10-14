@@ -317,6 +317,50 @@ describe('generated ETA by threat band (story 016)', () => {
   })
 })
 
+describe('authored ETA table (story 017)', () => {
+  // The authored ETAs live on MISSIONS in data.ts; the generated threat map
+  // (CONTRACT_ETA_DAYS) is private to contracts.ts, so data.ts cannot import it.
+  function authored(codename: string) {
+    const m = MISSIONS.find((x) => x.codename === codename)
+    if (!m) throw new Error('missing authored mission ' + codename)
+    return m
+  }
+  // The generated ETA for a threat band, read through a rolled offer.
+  // eu SECURE → Moderate, af STRAINED → High, oc CRITICAL → Severe.
+  function generatedEta(threat: string): number {
+    const sector = { MODERATE: 'eu', HIGH: 'af', SEVERE: 'oc' }[threat]
+    if (!sector) throw new Error('unknown threat ' + threat)
+    const offer = rollContract([inputFor(sector)], 5000, 0x1234).contract
+    expect(offer.threat).toBe(threat)
+    return contractMission(offer).etaDays
+  }
+
+  it('GIVEN Glass Veil, WHEN its ETA is read, THEN ETA = 2 days (not generated Severe 4)', () => {
+    const m = authored('GLASS VEIL')
+    expect(m.threat).toBe('SEVERE')
+    expect(m.etaDays).toBe(2)
+    expect(generatedEta(m.threat)).toBe(4)
+  })
+
+  it('GIVEN Hollow Crown THEN ETA = 4 days (not generated High 3)', () => {
+    const m = authored('HOLLOW CROWN')
+    expect(m.threat).toBe('HIGH')
+    expect(m.etaDays).toBe(4)
+    expect(generatedEta(m.threat)).toBe(3)
+  })
+
+  it('GIVEN Rust Haven THEN ETA = 3 days (not generated Moderate 2)', () => {
+    const m = authored('RUST HAVEN')
+    expect(m.threat).toBe('MODERATE')
+    expect(m.etaDays).toBe(3)
+    expect(generatedEta(m.threat)).toBe(2)
+  })
+
+  it('differs from the generated value for every authored contract', () => {
+    for (const m of MISSIONS) expect(m.etaDays).not.toBe(generatedEta(m.threat))
+  })
+})
+
 describe('threat and client derivation', () => {
   it('maps garrison condition onto the threat ladder', () => {
     expect(contractThreat('SECURE')).toBe('MODERATE')
