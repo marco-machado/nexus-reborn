@@ -1,12 +1,12 @@
 # Story 003: Economy keeps no Influence or Intel ledger
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN Influence I and Intel J and Economy apply only (World Network apply not run), WHEN Economy applies a payout, Tax deposit, research debit or hire debit, THEN Influence is still I and Intel is still J.
-- [ ] GIVEN Economy Credits write only, WHEN a first non-quiet win payout is applied, THEN Influence stays 0.
-- [ ] GIVEN Influence I and Intel J, WHEN Economy alone applies a loss debrief and then a quiet-replay win debrief (each `net_payout = 0`; World Network apply not run), THEN Influence is still I, Intel is still J, and Credits are unchanged by either contract fee.
+- [x] GIVEN Influence I and Intel J and Economy apply only (World Network apply not run), WHEN Economy applies a payout, Tax deposit, research debit or hire debit, THEN Influence is still I and Intel is still J.
+- [x] GIVEN Economy Credits write only, WHEN a first non-quiet win payout is applied, THEN Influence stays 0.
+- [x] GIVEN Influence I and Intel J, WHEN Economy alone applies a loss debrief and then a quiet-replay win debrief (each `net_payout = 0`; World Network apply not run), THEN Influence is still I, Intel is still J, and Credits are unchanged by either contract fee.
 
 ---
 
@@ -78,7 +78,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "Economy keeps no Influence or Intel ledger (EC-003)" (3 tests)
 
 ---
 
@@ -86,3 +86,14 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: None
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 3/3 passing (all covered by `src/state/appStore.test.ts`, describe "Economy keeps no Influence or Intel ledger (EC-003)"; 3 tests run and passed under vitest at story-done)
+**Deviations**: None. Only `src/state/appStore.test.ts` changed for this story; no Influence or Intel field exists in `src/state/appStore.ts`.
+**Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
+**Run result**: N/A — test-only Logic story; no player-visible surface changed
+**Code Review**: Not confirmed at story-done (lean mode; unattended run took "run /code-review before the sprint close-out")
+**Gates**: QL-TEST-COVERAGE skipped — Lean mode.

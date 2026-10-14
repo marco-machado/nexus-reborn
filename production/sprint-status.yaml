@@ -30,11 +30,11 @@ stories:
     name: "Economy keeps no Influence or Intel ledger"
     file: "production/epics/economy-and-contracts/story-003-economy-keeps-no-influence-or-intel-ledger.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-005"
     name: "Collateral prices unique squad-caused civilian first-hits"
     file: "production/epics/economy-and-contracts/story-005-collateral-prices-unique-squad-caused-civilian-first-hi.md"

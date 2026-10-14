@@ -7,7 +7,7 @@ import {
   priceOutcome,
   useAppStore,
 } from './appStore'
-import type { MissionOutcome } from './appStore'
+import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS } from '../game/data'
 import { nodeById } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
@@ -842,5 +842,127 @@ describe('Credits ledger (EC-001)', () => {
     expect(useWorldStore.getState().nextTaxT).toBe(T0 + 2.5 * DAY)
     // new_balance = credits_before + net_payout + tax_deposits.
     expect(useAppStore.getState().credits).toBe(129450)
+  })
+})
+
+describe('Economy keeps no Influence or Intel ledger (EC-003)', () => {
+  // The Economy apply path in isolation (TR-economy-002, ADR-0008): pricing
+  // plus the Credits writes applyDebrief makes, never worldStore's
+  // applyMissionResult. Influence is World Network's; Intel is the campaign's.
+  // Intel has no level cap in campaignStore, so "maximum" is the highest
+  // contract requirement — the level that unlocks every contract.
+  const INTEL_TOP = Math.max(...MISSIONS.map((m) => m.intelReq))
+  const SEEDS: ReadonlyArray<[influence: number, level: number, progress: number]> = [
+    [0, 0, 0],
+    [7, 1, 40],
+    [1_000_000, INTEL_TOP, 99],
+  ]
+  const pricing = { reward: 85000, bonusDefs: { opt: 12000 } }
+
+  function result(over: Partial<MissionResult> = {}): MissionResult {
+    return {
+      applyKey: 1,
+      won: true,
+      kills: 6,
+      casualties: 0,
+      timeSec: 412,
+      civiliansHit: 0,
+      completedOptionalIds: ['opt'],
+      deadIds: [],
+      survivorHp: {},
+      quietReplay: false,
+      ...over,
+    }
+  }
+
+  // Economy's half of applyDebrief: price, store, deposit net_payout.
+  function economyApply(r: MissionResult): void {
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01' })
+    useAppStore.getState().setOutcome(priceOutcome(r, pricing))
+    const o = useAppStore.getState().outcome
+    if (!o) throw new Error('setOutcome stored no outcome')
+    useAppStore.getState().addCredits(netPayout(o))
+  }
+
+  function seed(influence: number, intelLevel: number, intelProgress: number): void {
+    useWorldStore.setState({ ...structuredClone(worldBoot), influence })
+    useCampaignStore.setState({ intelLevel, intelProgress })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  }
+
+  function expectUnchanged(influence: number, intelLevel: number, intelProgress: number): void {
+    expect(useWorldStore.getState().influence).toBe(influence)
+    expect(useCampaignStore.getState().intelLevel).toBe(intelLevel)
+    expect(useCampaignStore.getState().intelProgress).toBe(intelProgress)
+  }
+
+  it('payout, Tax deposit, research debit and hire debit leave Influence I and Intel J', () => {
+    for (const [I, L, P] of SEEDS) {
+      // The campaign starts at the roster cap; a loss report opens the bay
+      // the hire fills. Seed after it, so only Economy writes follow.
+      useAppStore.setState({ credits: START_CREDITS, lastAppliedKey: 0 })
+      useCampaignStore.setState(initialCampaignData())
+      useCampaignStore
+        .getState()
+        .reportMission('m01', outcome({ won: false, casualties: 1, deadIds: ['op1'] }), 0)
+      seed(I, L, P)
+      const world = useWorldStore.getState()
+
+      economyApply(result())
+      expect(useAppStore.getState().credits).toBe(START_CREDITS + 85000 + 12000)
+      useAppStore.getState().addCredits(1000) // a Tax deposit
+      useAppStore.getState().spendCredits(nodeById('b-propellants').cost) // research debit
+      const candidate = useCampaignStore.getState().candidates[0]
+      useAppStore.getState().hireOperative(candidate.id) // hire debit
+      expect(useCampaignStore.getState().operatives.some((o) => o.id === candidate.id)).toBe(
+        true,
+      )
+      expect(useAppStore.getState().credits).toBe(
+        START_CREDITS + 97000 + 1000 - nodeById('b-propellants').cost - candidate.cost,
+      )
+
+      expectUnchanged(I, L, P)
+      // Economy writes never touch the World Network store at all.
+      expect(useWorldStore.getState()).toBe(world)
+    }
+  })
+
+  it('a first non-quiet win payout applied by Economy alone leaves Influence 0', () => {
+    seed(0, 0, 0)
+    expect(useCampaignStore.getState().contractsWon).not.toContain('m01')
+    economyApply(result({ quietReplay: false }))
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 97000)
+    expect(useWorldStore.getState().influence).toBe(0)
+    expect(Object.keys(useAppStore.getState())).not.toContain('influence')
+    expect(Object.keys(useAppStore.getState())).not.toContain('intel')
+  })
+
+  it('a loss then a quiet-replay win (net_payout 0) leaves Influence, Intel and Credits unchanged', () => {
+    for (const [I, L, P] of SEEDS) {
+      useAppStore.setState({ credits: START_CREDITS, lastAppliedKey: 0 })
+      seed(I, L, P)
+      const world = useWorldStore.getState()
+      const campaign = useCampaignStore.getState()
+
+      economyApply(result({ applyKey: 1, won: false, casualties: 2 }))
+      let o = useAppStore.getState().outcome
+      expect(o?.reward).toBe(85000) // the fee is stored on a loss...
+      expect(o && netPayout(o)).toBe(0) // ...and pays nothing
+      expect(useAppStore.getState().credits).toBe(START_CREDITS)
+
+      economyApply(result({ applyKey: 2, won: true, quietReplay: true }))
+      o = useAppStore.getState().outcome
+      expect(o?.reward).toBe(85000)
+      expect(o?.bonus).toBe(12000)
+      expect(o && netPayout(o)).toBe(0)
+      expect(useAppStore.getState().credits).toBe(START_CREDITS)
+
+      expectUnchanged(I, L, P)
+      expect(useWorldStore.getState()).toBe(world)
+      expect(useCampaignStore.getState()).toBe(campaign)
+    }
   })
 })
