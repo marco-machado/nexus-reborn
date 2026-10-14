@@ -9,110 +9,101 @@
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
 
-sprint: 2
-goal: "Finish the World Network director loop Sprint 1 left open: a quiet replay awards nothing on the board, Influence can be earned and spent, Intel gates the Scan, and campaign-complete / campaign-failed resolve."
-start: "2026-10-23"
-end: "2026-11-05"
-generated: "2026-10-12"
+sprint: 3
+goal: "Stand up the Economy ledger and invoice: Credits never overdraw, collateral and net payout price a debrief, and a loss or quiet replay pays nothing."
+start: "2026-11-06"
+end: "2026-11-19"
+generated: "2026-10-13"
 updated: "2026-10-13"
 
 stories:
-  - id: "WN-005"
-    name: "Quiet replay awards nothing and shoves nothing; ETA still catches up"
-    file: "production/epics/world-network/story-005-quiet-replay-awards-nothing-and-shoves-nothing-eta-stil.md"
+  - id: "EC-001"
+    name: "Credits ledger: opening balance, deposits and non-positive spends"
+    file: "production/epics/economy-and-contracts/story-001-credits-ledger-opening-balance-deposits-and-non-positiv.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "EC-003"
+    name: "Economy keeps no Influence or Intel ledger"
+    file: "production/epics/economy-and-contracts/story-003-economy-keeps-no-influence-or-intel-ledger.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-12"
-  - id: "WN-008"
-    name: "Influence wallet income from the outcome DTO"
-    file: "production/epics/world-network/story-008-influence-wallet-income-from-the-outcome-dto.md"
+    completed: ""
+  - id: "EC-005"
+    name: "Collateral prices unique squad-caused civilian first-hits"
+    file: "production/epics/economy-and-contracts/story-005-collateral-prices-unique-squad-caused-civilian-first-hi.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-12"
-  - id: "WN-009"
-    name: "Stabilize and Expedite refusals"
-    file: "production/epics/world-network/story-009-stabilize-and-expedite-refusals.md"
+    completed: ""
+  - id: "EC-006"
+    name: "Collateral clamps and input sanitising"
+    file: "production/epics/economy-and-contracts/story-006-collateral-clamps-and-input-sanitising.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "EC-007"
+    name: "Net payout: reward plus optional bonus minus collateral"
+    file: "production/epics/economy-and-contracts/story-007-net-payout-reward-plus-optional-bonus-minus-collateral.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-12"
-  - id: "WN-010"
-    name: "Stabilize staged effect over six hourly steps"
-    file: "production/epics/world-network/story-010-stabilize-staged-effect-over-six-hourly-steps.md"
-    priority: must-have
-    status: done
+    completed: ""
+  - id: "EC-002"
+    name: "Credits never overdraw: research and hire refusals"
+    file: "production/epics/economy-and-contracts/story-002-credits-never-overdraw-research-and-hire-refusals.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "EC-008"
+    name: "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win"
+    file: "production/epics/economy-and-contracts/story-008-worked-contract-examples-hollow-crown-rust-haven-pyrrhi.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-011"
-    name: "Intel progress awards"
-    file: "production/epics/world-network/story-011-intel-progress-awards.md"
-    priority: must-have
-    status: done
+    completed: ""
+  - id: "EC-009"
+    name: "A loss pays nothing; a failed generated contract leaves the market"
+    file: "production/epics/economy-and-contracts/story-009-a-loss-pays-nothing-a-failed-generated-contract-leaves.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-018"
-    name: "Campaign complete and failed banners, including a pyrrhic win"
-    file: "production/epics/world-network/story-018-campaign-complete-and-failed-banners-incl-pyrrhic-win.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-013"
-    name: "Antarctica stays hidden; Focus cycle skips it; Focus Tax figure prints"
-    file: "production/epics/world-network/story-013-antarctica-stays-hidden-focus-cycle-skips-it-focus-tax.md"
+    completed: ""
+  - id: "EC-010"
+    name: "Quiet replay pays no fee, optionals included"
+    file: "production/epics/economy-and-contracts/story-010-quiet-replay-pays-no-fee-optionals-included.md"
     priority: should-have
-    status: done
+    status: backlog
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-012"
-    name: "Event forecast gated on Intel level"
-    file: "production/epics/world-network/story-012-event-forecast-gated-on-intel-level.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-014"
-    name: "Scan hides contracts above the director's Intel; Chance still prints"
-    file: "production/epics/world-network/story-014-scan-hides-contracts-above-the-director-s-intel-chance.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-017"
-    name: "Opening desk and post-win Scan"
-    file: "production/epics/world-network/story-017-opening-desk-and-post-win-scan.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-13"
-  - id: "WN-019"
-    name: "Campaign flag edge cases"
-    file: "production/epics/world-network/story-019-campaign-flag-edge-cases.md"
+    completed: ""
+  - id: "EC-012"
+    name: "Debrief Credits apply once; no Credits move during a mission"
+    file: "production/epics/economy-and-contracts/story-012-debrief-credits-apply-once-no-credits-move-during-a-mis.md"
     priority: nice-to-have
-    status: done
+    status: backlog
     owner: ""
-    estimate_days: 0.5
+    estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-13"
+    completed: ""
