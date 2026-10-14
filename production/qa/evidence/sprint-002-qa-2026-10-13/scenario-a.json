@@ -1,0 +1,1040 @@
+{
+ "steps": [
+  {
+   "name": "baseline-world-8x",
+   "perf": {
+    "n": 2383,
+    "p50": 6.3,
+    "p95": 6.8,
+    "p99": 7,
+    "max": 44.4,
+    "over50ms": 0,
+    "longTasks": 0,
+    "longestTask": 0
+   }
+  },
+  {
+   "name": "p8-intel1",
+   "intel": 1,
+   "contracts": [
+    {
+     "id": "gc9d5b6790",
+     "sector": "sa",
+     "threat": "HIGH",
+     "req": 2,
+     "visible": false,
+     "name": "ASHEN CIRCUIT",
+     "expiresAtT": 43593
+    },
+    {
+     "id": "gcf4629a43",
+     "sector": "as",
+     "threat": "HIGH",
+     "req": 2,
+     "visible": false,
+     "name": "COLD LEDGER",
+     "expiresAtT": 172444
+    }
+   ],
+   "hiddenStillOnScanButtons": {
+    "ASHEN CIRCUIT": [
+     "14:59 PRIORITY CONTRACT ASHEN CIRCUIT POSTED IN LIMA // FOCUS SOUTH AMERICA"
+    ],
+    "COLD LEDGER": [
+     "16:32 OPEN CONTRACT COLD LEDGER POSTED IN SHINGANG // FOCUS ASIA"
+    ]
+   },
+   "chanceText": [
+    "CHANCE\n36%",
+    "CHANCE 36%\nETA 2D"
+   ],
+   "scanRows": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2",
+    "RUST HAVEN // LOCKED // REQUIRES INTEL LVL 2",
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "BRIEF // LOCKED // NO CONTRACT SELECTED"
+   ]
+  },
+  {
+   "name": "p4-glass-veil-attempt-1",
+   "before": {
+    "phase": "world",
+    "credits": 128450,
+    "t": 7362.65999999785,
+    "influence": 0,
+    "intelLevel": 1,
+    "intelProgress": 25,
+    "sectors": {
+     "na": {
+      "control": 68,
+      "unrest": 12
+     },
+     "sa": {
+      "control": 39.60998158250004,
+      "unrest": 27.781111565884203
+     },
+     "eu": {
+      "control": 62,
+      "unrest": 18
+     },
+     "af": {
+      "control": 38.721232219133526,
+      "unrest": 24.260018326807767
+     },
+     "as": {
+      "control": 53.064422452356666,
+      "unrest": 20.94235711474903
+     },
+     "oc": {
+      "control": 73,
+      "unrest": 9
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "nexus",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "helix",
+     "os": "omni",
+     "cr": "omni",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "contracts": [
+     {
+      "id": "gc9d5b6790",
+      "sector": "sa",
+      "cityId": "lm",
+      "expedited": false
+     },
+     {
+      "id": "gcf4629a43",
+      "sector": "as",
+      "cityId": "sg",
+      "expedited": false
+     }
+    ],
+    "contractsWon": [],
+    "campaignWon": false,
+    "campaignFailed": false,
+    "living": 8,
+    "roster": [
+     "MARA:READY",
+     "GHOST:READY",
+     "DART:READY",
+     "TORQ:READY",
+     "RAVEN:INJURED",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "events": 8,
+    "lastEvent": "OPEN CONTRACT COLD LEDGER POSTED IN SHINGANG",
+    "missionId": null
+   },
+   "atLaunch": {
+    "phase": "mission",
+    "credits": 128450,
+    "t": 7362.65999999785,
+    "influence": 0,
+    "intelLevel": 1,
+    "intelProgress": 25,
+    "sectors": {
+     "na": {
+      "control": 68,
+      "unrest": 12
+     },
+     "sa": {
+      "control": 39.60998158250004,
+      "unrest": 27.781111565884203
+     },
+     "eu": {
+      "control": 62,
+      "unrest": 18
+     },
+     "af": {
+      "control": 38.721232219133526,
+      "unrest": 24.260018326807767
+     },
+     "as": {
+      "control": 53.064422452356666,
+      "unrest": 20.94235711474903
+     },
+     "oc": {
+      "control": 73,
+      "unrest": 9
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "nexus",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "helix",
+     "os": "omni",
+     "cr": "omni",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "contracts": [
+     {
+      "id": "gc9d5b6790",
+      "sector": "sa",
+      "cityId": "lm",
+      "expedited": false
+     },
+     {
+      "id": "gcf4629a43",
+      "sector": "as",
+      "cityId": "sg",
+      "expedited": false
+     }
+    ],
+    "contractsWon": [],
+    "campaignWon": false,
+    "campaignFailed": false,
+    "living": 8,
+    "roster": [
+     "MARA:READY",
+     "GHOST:READY",
+     "DART:READY",
+     "TORQ:READY",
+     "RAVEN:INJURED",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "events": 8,
+    "lastEvent": "OPEN CONTRACT COLD LEDGER POSTED IN SHINGANG",
+    "missionId": "m01"
+   },
+   "play": {
+    "result": "won",
+    "simTime": 38,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "ob1",
+      "reach-zone"
+     ],
+     [
+      12,
+      "ob2",
+      "eliminate-tag"
+     ],
+     [
+      23,
+      "ob3",
+      "extract"
+     ]
+    ]
+   },
+   "outcome": {
+    "won": true,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "casualties": 0,
+    "deadIds": [],
+    "applyKey": 2
+   },
+   "eta": {
+    "days": 2,
+    "t": 7362.65999999785,
+    "influence": 8,
+    "intelLevel": 1,
+    "intelProgress": 80,
+    "sectors": {
+     "na": {
+      "control": 68,
+      "unrest": 12
+     },
+     "sa": {
+      "control": 39.60998158250004,
+      "unrest": 27.781111565884203
+     },
+     "eu": {
+      "control": 66,
+      "unrest": 14
+     },
+     "af": {
+      "control": 38.721232219133526,
+      "unrest": 24.260018326807767
+     },
+     "as": {
+      "control": 53.064422452356666,
+      "unrest": 20.94235711474903
+     },
+     "oc": {
+      "control": 73,
+      "unrest": 9
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "nexus",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "nexus",
+     "os": "omni",
+     "cr": "omni",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "credits": 213450,
+    "lastEvent": {
+     "id": 10,
+     "t": 7362.65999999785,
+     "sector": "eu",
+     "kind": "seizure",
+     "tone": "green",
+     "text": "NEXUS GLOBAL TAKES NEW CARTHAGE"
+    }
+   },
+   "after": {
+    "phase": "world",
+    "credits": 222387,
+    "t": 180162.65999999785,
+    "influence": 8,
+    "intelLevel": 1,
+    "intelProgress": 80,
+    "sectors": {
+     "na": {
+      "control": 75.37385417427868,
+      "unrest": 13.16459326678887
+     },
+     "sa": {
+      "control": 4.702046557329595,
+      "unrest": 96
+     },
+     "eu": {
+      "control": 56.636945478618145,
+      "unrest": 44.14320235606283
+     },
+     "af": {
+      "control": 17.446945385541767,
+      "unrest": 64.29340095608495
+     },
+     "as": {
+      "control": 48.572329960763454,
+      "unrest": 45.04320810222998
+     },
+     "oc": {
+      "control": 74.14917697943747,
+      "unrest": 21.80717430007644
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "omni",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "nexus",
+     "os": "nexus",
+     "cr": "helix",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "contracts": [
+     {
+      "id": "gcee706b74",
+      "sector": "as",
+      "cityId": "nk",
+      "expedited": false
+     },
+     {
+      "id": "gcae28110c",
+      "sector": "af",
+      "cityId": "jb",
+      "expedited": false
+     },
+     {
+      "id": "gc6e93017b",
+      "sector": "sa",
+      "cityId": "sp",
+      "expedited": false
+     }
+    ],
+    "contractsWon": [
+     "m01"
+    ],
+    "campaignWon": false,
+    "campaignFailed": false,
+    "living": 8,
+    "roster": [
+     "MARA:READY",
+     "GHOST:READY",
+     "DART:READY",
+     "TORQ:READY",
+     "RAVEN:READY",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "events": 40,
+    "lastEvent": "CIVIL UNREST SPREADS THROUGH SYDNEY",
+    "missionId": null
+   },
+   "header": "INFLUENCE 8 PTS",
+   "debriefText": "OPERATIONAL DEBRIEF // STRIKE TEAM 04 // CH 7A\nCONTRACT FULFILLED\nEXTRACTION CONFIRMED // PAYMENT RELEASED\n> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n7\n> SQUAD CASUALTIES\n0\n> EXPERIENCE // MARA\n+1 XP (1)\n> EXPERIENCE // GHOST\n+1 XP (1)\n> EXPERIENCE // DART\n+1 XP (1)\n> EXPERIENCE // TORQ\n+1 XP (1)\n> COLLATERAL\n0\n> MISSION TIME\n0:40\n> CONTRACT ETA\n+2 DAYS ELAPSED\n> PAYOUT\n+85,000 CR\n> ACCOUNT BALANCE\n222,387 CR\nRETURN TO WORLD NETWORK\nREPLAY MISSION\nBALANCE DATA",
+   "ret": "RETURN TO WORLD NETWORK",
+   "perfReturn": {
+    "n": 838,
+    "p50": 6.2,
+    "p95": 6.7,
+    "p99": 7,
+    "max": 37.5,
+    "over50ms": 0,
+    "longTasks": 0,
+    "longestTask": 0
+   }
+  },
+  {
+   "name": "p5-quiet-replay",
+   "before": {
+    "phase": "world",
+    "credits": 222387,
+    "t": 180162.65999999785,
+    "influence": 8,
+    "intelLevel": 1,
+    "intelProgress": 80,
+    "sectors": {
+     "na": {
+      "control": 75.37385417427868,
+      "unrest": 13.16459326678887
+     },
+     "sa": {
+      "control": 4.702046557329595,
+      "unrest": 96
+     },
+     "eu": {
+      "control": 56.636945478618145,
+      "unrest": 44.14320235606283
+     },
+     "af": {
+      "control": 17.446945385541767,
+      "unrest": 64.29340095608495
+     },
+     "as": {
+      "control": 48.572329960763454,
+      "unrest": 45.04320810222998
+     },
+     "oc": {
+      "control": 74.14917697943747,
+      "unrest": 21.80717430007644
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "omni",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "nexus",
+     "os": "nexus",
+     "cr": "helix",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "contracts": [
+     {
+      "id": "gcee706b74",
+      "sector": "as",
+      "cityId": "nk",
+      "expedited": false
+     },
+     {
+      "id": "gcae28110c",
+      "sector": "af",
+      "cityId": "jb",
+      "expedited": false
+     },
+     {
+      "id": "gc6e93017b",
+      "sector": "sa",
+      "cityId": "sp",
+      "expedited": false
+     }
+    ],
+    "contractsWon": [
+     "m01"
+    ],
+    "campaignWon": false,
+    "campaignFailed": false,
+    "living": 8,
+    "roster": [
+     "MARA:READY",
+     "GHOST:READY",
+     "DART:READY",
+     "TORQ:READY",
+     "RAVEN:READY",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "events": 40,
+    "lastEvent": "CIVIL UNREST SPREADS THROUGH SYDNEY",
+    "missionId": null
+   },
+   "atLaunch": {
+    "phase": "mission",
+    "credits": 222387,
+    "t": 180162.65999999785,
+    "influence": 8,
+    "intelLevel": 1,
+    "intelProgress": 80,
+    "sectors": {
+     "na": {
+      "control": 75.37385417427868,
+      "unrest": 13.16459326678887
+     },
+     "sa": {
+      "control": 4.702046557329595,
+      "unrest": 96
+     },
+     "eu": {
+      "control": 56.636945478618145,
+      "unrest": 44.14320235606283
+     },
+     "af": {
+      "control": 17.446945385541767,
+      "unrest": 64.29340095608495
+     },
+     "as": {
+      "control": 48.572329960763454,
+      "unrest": 45.04320810222998
+     },
+     "oc": {
+      "control": 74.14917697943747,
+      "unrest": 21.80717430007644
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "omni",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "nexus",
+     "os": "nexus",
+     "cr": "helix",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "contracts": [
+     {
+      "id": "gcee706b74",
+      "sector": "as",
+      "cityId": "nk",
+      "expedited": false
+     },
+     {
+      "id": "gcae28110c",
+      "sector": "af",
+      "cityId": "jb",
+      "expedited": false
+     },
+     {
+      "id": "gc6e93017b",
+      "sector": "sa",
+      "cityId": "sp",
+      "expedited": false
+     }
+    ],
+    "contractsWon": [
+     "m01"
+    ],
+    "campaignWon": false,
+    "campaignFailed": false,
+    "living": 8,
+    "roster": [
+     "MARA:READY",
+     "GHOST:READY",
+     "DART:READY",
+     "TORQ:READY",
+     "RAVEN:READY",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "events": 40,
+    "lastEvent": "CIVIL UNREST SPREADS THROUGH SYDNEY",
+    "missionId": "m01"
+   },
+   "play": {
+    "result": "won",
+    "simTime": 38,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "ob1",
+      "reach-zone"
+     ],
+     [
+      12,
+      "ob2",
+      "eliminate-tag"
+     ],
+     [
+      23,
+      "ob3",
+      "extract"
+     ]
+    ]
+   },
+   "outcome": {
+    "won": true,
+    "civiliansHit": 1,
+    "quietReplay": true,
+    "casualties": 0,
+    "deadIds": [],
+    "applyKey": 4
+   },
+   "eta": {
+    "days": 2,
+    "t": 180162.65999999785,
+    "influence": 8,
+    "intelLevel": 1,
+    "intelProgress": 80,
+    "sectors": {
+     "na": {
+      "control": 75.37385417427868,
+      "unrest": 13.16459326678887
+     },
+     "sa": {
+      "control": 4.702046557329595,
+      "unrest": 96
+     },
+     "eu": {
+      "control": 56.636945478618145,
+      "unrest": 44.14320235606283
+     },
+     "af": {
+      "control": 17.446945385541767,
+      "unrest": 64.29340095608495
+     },
+     "as": {
+      "control": 48.572329960763454,
+      "unrest": 45.04320810222998
+     },
+     "oc": {
+      "control": 74.14917697943747,
+      "unrest": 21.80717430007644
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "omni",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "nexus",
+     "os": "nexus",
+     "cr": "helix",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "nexus"
+    },
+    "credits": 222387,
+    "lastEvent": {
+     "id": 122,
+     "t": 180162.65999999785,
+     "sector": "eu",
+     "kind": "seizure",
+     "tone": "green",
+     "text": "STRIKE TEAM 04 OPENS DISTRICT 07 IN NEW CARTHAGE"
+    }
+   },
+   "after": {
+    "phase": "world",
+    "credits": 225398,
+    "t": 352962.6599999978,
+    "influence": 8,
+    "intelLevel": 1,
+    "intelProgress": 80,
+    "sectors": {
+     "na": {
+      "control": 75.37385417427868,
+      "unrest": 13.16459326678887
+     },
+     "sa": {
+      "control": 4,
+      "unrest": 96
+     },
+     "eu": {
+      "control": 42.181500466540456,
+      "unrest": 79.57491389173083
+     },
+     "af": {
+      "control": 4.508287083823234,
+      "unrest": 93.8867928548716
+     },
+     "as": {
+      "control": 39.68623421387747,
+      "unrest": 73.29113698843867
+     },
+     "oc": {
+      "control": 75.17679280694574,
+      "unrest": 25.37411390733905
+     },
+     "an": {
+      "control": 0,
+      "unrest": 0
+     }
+    },
+    "owner": {
+     "nb": "omni",
+     "pc": "nexus",
+     "dt": "stratos",
+     "bg": "nexus",
+     "sp": "stratos",
+     "lm": "omni",
+     "ln": "helix",
+     "nc": "nexus",
+     "os": "nexus",
+     "cr": "helix",
+     "lg": "omni",
+     "jb": "helix",
+     "sg": "helix",
+     "kt": "helix",
+     "nk": "stratos",
+     "sy": "stratos",
+     "pr": "stratos",
+     "ak": "omni"
+    },
+    "contracts": [
+     {
+      "id": "gc41e50cd8",
+      "sector": "eu",
+      "cityId": "os",
+      "expedited": false
+     },
+     {
+      "id": "gcad7ae8e0",
+      "sector": "sa",
+      "cityId": "lm",
+      "expedited": false
+     },
+     {
+      "id": "gc71161999",
+      "sector": "af",
+      "cityId": "lg",
+      "expedited": false
+     }
+    ],
+    "contractsWon": [
+     "m01"
+    ],
+    "campaignWon": false,
+    "campaignFailed": false,
+    "living": 8,
+    "roster": [
+     "MARA:READY",
+     "GHOST:READY",
+     "DART:READY",
+     "TORQ:READY",
+     "RAVEN:READY",
+     "SLATE:READY",
+     "VEX:READY",
+     "KESTREL:READY"
+    ],
+    "events": 40,
+    "lastEvent": "DATA RELAYS DOWN IN LONDON",
+    "missionId": null
+   },
+   "header": "INFLUENCE 8 PTS",
+   "debriefText": "OPERATIONAL DEBRIEF // STRIKE TEAM 04 // CH 7A\nREPLAY // FEE ALREADY COLLECTED\nEXTRACTION CONFIRMED // NO FEE\n> TARGET\nDISTRICT 07 // NEW CARTHAGE\n> ELIMINATIONS\n7\n> SQUAD CASUALTIES\n0\n> EXPERIENCE // MARA\n+1 XP (2)\n> EXPERIENCE // GHOST\n+1 XP (2)\n> EXPERIENCE // DART\n+1 XP (2)\n> EXPERIENCE // TORQ\n+1 XP (2)\n> COLLATERAL\n1\n> MISSION TIME\n0:40\n> CONTRACT ETA\n+2 DAYS ELAPSED\n> PAYOUT\n0 CR\n> ACCOUNT BALANCE\n225,398 CR\nRETURN TO WORLD NETWORK\nREPLAY MISSION\nBALANCE DATA",
+   "ret": "RETURN TO WORLD NETWORK",
+   "perfReturn": {
+    "n": 838,
+    "p50": 6.2,
+    "p95": 6.9,
+    "p99": 7,
+    "max": 37.5,
+    "over50ms": 0,
+    "longTasks": 0,
+    "longestTask": 0
+   },
+   "atBoundary": {
+    "tUnchanged": true,
+    "phaseAtLaunch": "mission",
+    "influence": true,
+    "intelLevel": true,
+    "intelProgress": true,
+    "sectors": true,
+    "owner": true
+   },
+   "etaRan": {
+    "dt": 172799.99999999997,
+    "creditsDuringEta": 3011,
+    "eventsAfter": 40
+   }
+  },
+  {
+   "name": "generated-win-0",
+   "contract": {
+    "id": "gc41e50cd8",
+    "sector": "eu",
+    "threat": "MODERATE",
+    "req": 1,
+    "visible": true,
+    "name": "FERAL GARDEN",
+    "expiresAtT": 378944.7239845693
+   },
+   "outcome": {
+    "won": true,
+    "civiliansHit": 1,
+    "quietReplay": false,
+    "casualties": 0,
+    "deadIds": [],
+    "applyKey": 6
+   },
+   "eta": {
+    "influence": 14,
+    "intelLevel": 2,
+    "intelProgress": 20
+   },
+   "after": {
+    "intelLevel": 2,
+    "intelProgress": 20,
+    "influence": 14
+   }
+  },
+  {
+   "name": "p8-intel2",
+   "intel": 2,
+   "formerlyHidden": {
+    "ASHEN CIRCUIT": "expired/gone",
+    "COLD LEDGER": "expired/gone"
+   }
+  },
+  {
+   "name": "p7-hc",
+   "outcome": {
+    "won": true,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "casualties": 0,
+    "deadIds": [],
+    "applyKey": 8
+   },
+   "play": {
+    "result": "won",
+    "simTime": 41,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "hc1",
+      "reach-zone"
+     ],
+     [
+      8,
+      "hc2",
+      "interact"
+     ],
+     [
+      15,
+      "hc3",
+      "escort"
+     ]
+    ]
+   },
+   "after": {
+    "contractsWon": [
+     "m01",
+     "m02"
+    ],
+    "campaignWon": false,
+    "campaignFailed": false
+   }
+  },
+  {
+   "name": "p7-rh",
+   "outcome": {
+    "won": true,
+    "civiliansHit": 0,
+    "quietReplay": false,
+    "casualties": 0,
+    "deadIds": [],
+    "applyKey": 10
+   },
+   "play": {
+    "result": "won",
+    "simTime": 73,
+    "log": [
+     [
+      0,
+      "none",
+      null
+     ],
+     [
+      0,
+      "rh1",
+      "reach-zone"
+     ],
+     [
+      8,
+      "rh2",
+      "destroy"
+     ],
+     [
+      17,
+      "rh3",
+      "defend"
+     ],
+     [
+      61,
+      "rh4",
+      "extract"
+     ]
+    ]
+   },
+   "after": {
+    "contractsWon": [
+     "m01",
+     "m02",
+     "m03"
+    ],
+    "campaignWon": true,
+    "campaignFailed": false
+   }
+  },
+  {
+   "name": "p7-campaign-complete",
+   "banner": {
+    "win": [
+     "◆\nCAMPAIGN COMPLETE\nALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE\n3 / 3"
+    ],
+    "fail": []
+   },
+   "selectable": {
+    "GLASS VEIL": {
+     "phase": "brief",
+     "missionId": "m01"
+    },
+    "HOLLOW CROWN": {
+     "phase": "brief",
+     "missionId": "m02"
+    },
+    "RUST HAVEN": {
+     "phase": "brief",
+     "missionId": "m03"
+    }
+   },
+   "flags": {
+    "won": true,
+    "failed": false
+   }
+  },
+  {
+   "name": "errors",
+   "errs": [
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4201/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4201/favicon.ico"
+   ]
+  }
+ ]
+}

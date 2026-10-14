@@ -1,0 +1,485 @@
+{
+ "wn017_opening": {
+  "focusNextVisits": [
+   "af",
+   "as",
+   "oc",
+   "na",
+   "sa",
+   "eu",
+   "af"
+  ],
+  "four": [
+   [
+    "CONTROL",
+    "62%"
+   ],
+   [
+    "UNREST",
+    "18%"
+   ],
+   [
+    "TAX YIELD",
+    "2,468 CR / 24H"
+   ],
+   [
+    "GARRISON CONDITION",
+    "SECURE"
+   ]
+  ],
+  "dtPaused2s": 0,
+  "dt1x2s": 120.40199999999993,
+  "dt8x2s": 942.24,
+  "enabledVerbs": [
+   "NORTH AMERICA // CONTROL 68% // UNREST 12%",
+   "SOUTH AMERICA // CONTROL 41% // UNREST 24%",
+   "EUROPE // CONTROL 62% // UNREST 18%",
+   "AFRICA // CONTROL 37% // UNREST 28%",
+   "ASIA // CONTROL 55% // UNREST 16%",
+   "OCEANIA // CONTROL 73% // UNREST 9%",
+   "ANTARCTICA // NO SURVEY DATA",
+   "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+   "HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2",
+   "RUST HAVEN // LOCKED // REQUIRES INTEL LVL 2",
+   "FOCUS PREVIOUS SECTOR",
+   "FOCUS NEXT SECTOR",
+   "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+   "RESUME STRATEGIC CLOCK",
+   "CLOCK SPEED 1X",
+   "CLOCK SPEED 2X",
+   "CLOCK SPEED 4X",
+   "CLOCK SPEED 8X",
+   "MARK 3 EVENTS READ",
+   "14:28 RIOTS REPORTED IN CAIRO // FOCUS AFRICA",
+   "14:11 NEXUS GLOBAL TAKES BOGOTA // FOCUS SOUTH AMERICA",
+   "13:47 HELIX CORP SECURES TRADE AGREEMENT IN OSLO // FOCUS EUROPE",
+   "WORLD NETWORK",
+   "RESEARCH",
+   "BRIEF // LOCKED // NO CONTRACT SELECTED",
+   "ASSEMBLY"
+  ],
+  "clip": {
+   "scrollW": 1280,
+   "scrollH": 720,
+   "overflowing": 0
+  }
+ },
+ "wn013": {
+  "intel1": {
+   "selectedBefore": "eu",
+   "antarcticaAriaDisabled": "true",
+   "selectedAfterAntarcticaClick": "eu",
+   "antarcticaButton": [
+    "ANTARCTICA // NO SURVEY DATA"
+   ],
+   "focusCycle": [
+    "af",
+    "as",
+    "oc",
+    "na",
+    "sa",
+    "eu"
+   ],
+   "scanAntarctica": "ANTARCTICA\nNO SURVEY DATA\n60\n30\n0\n-30\nNE",
+   "europeTaxYield": "2,468 CR / 24H",
+   "verbs": [
+    "1 STABILIZE",
+    "2 LOBBY",
+    "3 EXPEDITE"
+   ]
+  },
+  "intel2": {
+   "selectedBefore": "eu",
+   "antarcticaAriaDisabled": "true",
+   "selectedAfterAntarcticaClick": "eu",
+   "antarcticaButton": [
+    "ANTARCTICA // NO SURVEY DATA"
+   ],
+   "focusCycle": [
+    "af",
+    "as",
+    "oc",
+    "na",
+    "sa",
+    "eu"
+   ],
+   "scanAntarctica": "ANTARCTICA\nNO SURVEY DATA\n60\n30\n0\n-30\nNE",
+   "europeTaxYield": "2,468 CR / 24H",
+   "verbs": [
+    "1 STABILIZE",
+    "2 LOBBY",
+    "3 EXPEDITE"
+   ]
+  },
+  "intel3": {
+   "selectedBefore": "eu",
+   "antarcticaAriaDisabled": "true",
+   "selectedAfterAntarcticaClick": "eu",
+   "antarcticaButton": [
+    "ANTARCTICA // NO SURVEY DATA"
+   ],
+   "focusCycle": [
+    "af",
+    "as",
+    "oc",
+    "na",
+    "sa",
+    "eu"
+   ],
+   "scanAntarctica": "ANTARCTICA\nNO SURVEY DATA\n60\n30\n0\n-30\nNE",
+   "europeTaxYield": "2,468 CR / 24H",
+   "verbs": [
+    "1 STABILIZE",
+    "2 LOBBY",
+    "3 EXPEDITE"
+   ]
+  }
+ },
+ "wn012": {
+  "intel1": {
+   "forecastText": "EVENT FORECAST\nREQUIRES INTEL LVL 2",
+   "expectedFromForecastTs": [
+    {
+     "kind": "riot",
+     "chance": 51
+    },
+    {
+     "kind": "blackout",
+     "chance": 32
+    },
+    {
+     "kind": "raid",
+     "chance": 41
+    },
+    {
+     "kind": "trade",
+     "chance": 19
+    },
+    {
+     "kind": "seizure",
+     "chance": 20
+    }
+   ],
+   "clip": {
+    "scrollW": 1280,
+    "scrollH": 720,
+    "overflowing": 0
+   }
+  },
+  "intel2": {
+   "forecastText": "EVENT FORECAST\nRIOT\n51%\nBLKOUT\n32%\nRAID\n41%\nTRADE\n19%\nSEIZE\n20%",
+   "expectedFromForecastTs": [
+    {
+     "kind": "riot",
+     "chance": 51
+    },
+    {
+     "kind": "blackout",
+     "chance": 32
+    },
+    {
+     "kind": "raid",
+     "chance": 41
+    },
+    {
+     "kind": "trade",
+     "chance": 19
+    },
+    {
+     "kind": "seizure",
+     "chance": 20
+    }
+   ],
+   "clip": {
+    "scrollW": 1280,
+    "scrollH": 720,
+    "overflowing": 0
+   }
+  },
+  "intel3": {
+   "forecastText": "EVENT FORECAST\nRIOT\n51%\nBLKOUT\n32%\nRAID\n41%\nTRADE\n19%\nSEIZE\n20%",
+   "expectedFromForecastTs": [
+    {
+     "kind": "riot",
+     "chance": 51
+    },
+    {
+     "kind": "blackout",
+     "chance": 32
+    },
+    {
+     "kind": "raid",
+     "chance": 41
+    },
+    {
+     "kind": "trade",
+     "chance": 19
+    },
+    {
+     "kind": "seizure",
+     "chance": 20
+    }
+   ],
+   "clip": {
+    "scrollW": 1280,
+    "scrollH": 720,
+    "overflowing": 0
+   }
+  }
+ },
+ "wn013_tax": {
+  "t": 1346.9280000007152,
+  "nextTaxT": 86400,
+  "rows": [
+   {
+    "id": "na",
+    "holder": "nexus",
+    "taxYield": 4080
+   },
+   {
+    "id": "sa",
+    "holder": "contested",
+    "taxYield": 1722
+   },
+   {
+    "id": "eu",
+    "holder": "helix",
+    "taxYield": 2468
+   },
+   {
+    "id": "af",
+    "holder": "omni",
+    "taxYield": 1887
+   },
+   {
+    "id": "as",
+    "holder": "helix",
+    "taxYield": 4620
+   },
+   {
+    "id": "oc",
+    "holder": "stratos",
+    "taxYield": 1606
+   }
+  ],
+  "nexusSum": 4080,
+  "deposit": 4169,
+  "events": [
+   "STRIKE COLUMNS BLOCK JOHANNESBURG",
+   "CORPSEC RETAKES THE DOCKS IN NEW CARTHAGE",
+   "CIVIL UNREST SPREADS THROUGH SAO PAULO",
+   "TRANSIT NETWORK STALLED IN KITARU",
+   "TRANSIT NETWORK STALLED IN NEW BOSTON",
+   "CORPSEC RETAKES THE DOCKS IN SAO PAULO",
+   "CONTRACT ASHEN CIRCUIT EXPIRED // OFFER RESCINDED",
+   "CURFEW ENFORCED IN JOHANNESBURG",
+   "OPEN CONTRACT PALE STATION POSTED IN DETROIT SPRAWL",
+   "STRIKE COLUMNS BLOCK BOGOTA",
+   "TRANSIT NETWORK STALLED IN SHINGANG",
+   "DATA RELAYS DOWN IN SAO PAULO",
+   "RIOTS REPORTED IN SAO PAULO",
+   "CURFEW ENFORCED IN LAGOS",
+   "CIVIL UNREST SPREADS THROUGH BOGOTA",
+   "STRIKE COLUMNS BLOCK NEO KOWLOON",
+   "TRANSIT NETWORK STALLED IN LAGOS",
+   "DATA RELAYS DOWN IN OSLO",
+   "CONTRACT GILDED CIRCUIT EXPIRED // OFFER RESCINDED",
+   "CORPSEC RETAKES THE DOCKS IN NEO KOWLOON",
+   "CORPSEC RAID WITHDRAWS CONTRACT COLD LEDGER",
+   "DATA RELAYS DOWN IN SAO PAULO",
+   "RIOTS REPORTED IN DETROIT SPRAWL",
+   "PRIORITY CONTRACT GILDED STATION POSTED IN NEW BOSTON",
+   "STRATOS INDUSTRIES BUYS THE UTILITY GRID IN PERTH",
+   "RIOTS REPORTED IN SAO PAULO",
+   "DATA RELAYS DOWN IN SHINGANG",
+   "CORPSEC RAID SWEEPS BOGOTA",
+   "CURFEW ENFORCED IN BOGOTA",
+   "OPEN CONTRACT NEON CURTAIN POSTED IN LAGOS",
+   "CORPSEC RAID SWEEPS PACIFICA",
+   "CORPSEC RAID WITHDRAWS CONTRACT GILDED STATION",
+   "CURFEW ENFORCED IN SAO PAULO",
+   "DATA RELAYS DOWN IN SYDNEY",
+   "RIOTS REPORTED IN JOHANNESBURG",
+   "CIVIL UNREST SPREADS THROUGH SHINGANG",
+   "PRIORITY CONTRACT IRON CURTAIN POSTED IN KITARU",
+   "CORPSEC RAID SWEEPS NEW BOSTON",
+   "CORPSEC RAID SWEEPS SAO PAULO",
+   "CURFEW ENFORCED IN PACIFICA"
+  ]
+ },
+ "wn014": {
+  "intel1": {
+   "rows": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2",
+    "RUST HAVEN // LOCKED // REQUIRES INTEL LVL 2",
+    "OPEN CONTRACT BROKEN LEDGER // SEIZURE // NEW BOSTON",
+    "RUST HAVEN // LOCKED // REQUIRES INTEL LVL 2",
+    "OPEN CONTRACT BROKEN LEDGER // SEIZURE // NEW BOSTON // GENERATED CONTRACT",
+    "BRIEF // LOCKED // NO CONTRACT SELECTED"
+   ],
+   "chance": [
+    "CHANCE\n35%",
+    "CHANCE\n35%",
+    "CHANCE 82%",
+    "CHANCE 35%"
+   ],
+   "riskBandOnWorldChrome": false,
+   "store": [
+    {
+     "id": "gc-high",
+     "req": 2,
+     "expedited": false,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": false
+    },
+    {
+     "id": "gc-severe",
+     "req": 3,
+     "expedited": false,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": false
+    },
+    {
+     "id": "gc-sev-exp",
+     "req": 1,
+     "expedited": true,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": true
+    }
+   ],
+   "clip": {
+    "scrollW": 1280,
+    "scrollH": 720,
+    "overflowing": 0
+   }
+  },
+  "intel2": {
+   "rows": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT IRON VESPER // SEIZURE // NEW BOSTON",
+    "OPEN CONTRACT BROKEN LEDGER // SEIZURE // NEW BOSTON",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT IRON VESPER // SEIZURE // NEW BOSTON // GENERATED CONTRACT",
+    "OPEN CONTRACT BROKEN LEDGER // SEIZURE // NEW BOSTON // GENERATED CONTRACT",
+    "BRIEF // LOCKED // NO CONTRACT SELECTED"
+   ],
+   "chance": [
+    "CHANCE\n35%",
+    "CHANCE\n52%",
+    "CHANCE\n82%",
+    "CHANCE\n57%",
+    "CHANCE\n35%",
+    "CHANCE 82%",
+    "CHANCE 57%",
+    "CHANCE 35%"
+   ],
+   "riskBandOnWorldChrome": false,
+   "store": [
+    {
+     "id": "gc-high",
+     "req": 2,
+     "expedited": false,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": true
+    },
+    {
+     "id": "gc-severe",
+     "req": 3,
+     "expedited": false,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": false
+    },
+    {
+     "id": "gc-sev-exp",
+     "req": 1,
+     "expedited": true,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": true
+    }
+   ],
+   "clip": {
+    "scrollW": 1280,
+    "scrollH": 720,
+    "overflowing": 0
+   }
+  },
+  "intel3": {
+   "rows": [
+    "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+    "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT IRON VESPER // SEIZURE // NEW BOSTON",
+    "OPEN CONTRACT IRON VESPER // SEIZURE // NEW BOSTON",
+    "OPEN CONTRACT BROKEN LEDGER // SEIZURE // NEW BOSTON",
+    "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+    "OPEN CONTRACT IRON VESPER // SEIZURE // NEW BOSTON // GENERATED CONTRACT",
+    "OPEN CONTRACT IRON VESPER // SEIZURE // NEW BOSTON // GENERATED CONTRACT",
+    "OPEN CONTRACT BROKEN LEDGER // SEIZURE // NEW BOSTON // GENERATED CONTRACT",
+    "BRIEF // LOCKED // NO CONTRACT SELECTED"
+   ],
+   "chance": [
+    "CHANCE\n35%",
+    "CHANCE\n52%",
+    "CHANCE\n82%",
+    "CHANCE\n57%",
+    "CHANCE\n39%",
+    "CHANCE\n35%",
+    "CHANCE 82%",
+    "CHANCE 57%",
+    "CHANCE 39%",
+    "CHANCE 35%"
+   ],
+   "riskBandOnWorldChrome": false,
+   "store": [
+    {
+     "id": "gc-high",
+     "req": 2,
+     "expedited": false,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": true
+    },
+    {
+     "id": "gc-severe",
+     "req": 3,
+     "expedited": false,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": true
+    },
+    {
+     "id": "gc-sev-exp",
+     "req": 1,
+     "expedited": true,
+     "expiresAtT": 259201,
+     "t": 86401,
+     "held": true,
+     "visible": true
+    }
+   ],
+   "clip": {
+    "scrollW": 1280,
+    "scrollH": 720,
+    "overflowing": 0
+   }
+  }
+ },
+ "consoleErrors": []
+}
