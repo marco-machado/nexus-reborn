@@ -911,7 +911,7 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
             (outcome.civiliansHit === 0 ? INFLUENCE_CLEAN_PTS : 0)
           : state.influence
       settlePressure(f, state.t)
-      return { ...f }
+      return commitFlow(f)
     }),
 
   spendInfluence: (sector, action) =>
@@ -948,7 +948,7 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
         })
       }
       f.influence = s.influence - def.cost
-      return { ...f, cooldowns: { ...s.cooldowns, [key]: s.t + def.cooldownSec } }
+      return { ...commitFlow(f), cooldowns: { ...s.cooldowns, [key]: s.t + def.cooldownSec } }
     }),
 
   setSpeed: (speed) => set({ speed, paused: false }),

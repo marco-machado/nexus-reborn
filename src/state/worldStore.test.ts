@@ -590,6 +590,11 @@ describe('mission results', () => {
     expect(after.unread).toBe(unread + 3)
   })
 
+  it('a debrief write-back leaves no session-only taxPaid key on the store', () => {
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    expect('taxPaid' in useWorldStore.getState()).toBe(false)
+  })
+
   it('a second Glass Veil win on a fresh start still hands New Carthage to Nexus', () => {
     useWorldStore.getState().applyMissionResult('m01', outcome())
     const first = useWorldStore.getState().owner.nc
@@ -782,6 +787,7 @@ describe('influence economy', () => {
     pinFlows()
     useWorldStore.setState({ influence: 20 })
     useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    expect('taxPaid' in useWorldStore.getState()).toBe(false)
     const s = useWorldStore.getState()
     expect(s.influence).toBe(20 - INFLUENCE_ACTIONS.stabilize.cost)
     expect(s.cooldowns[cooldownKey('eu', 'stabilize')]).toBe(
