@@ -342,6 +342,81 @@ describe('save validation', () => {
     expect(validateSave(save)).toBe(false)
   })
 
+  it('accepts an empty-roster incomplete blob that is not failed, and hydrate keeps it not failed', () => {
+    const save = captureSave()
+    save.campaign.operatives = []
+    save.campaign.roster = {}
+    save.app.squad = []
+    save.campaign.contractsWon = ['m01']
+    save.campaign.campaignWon = false
+    save.campaign.campaignFailed = false
+    expect(validateSave(save)).toBe(true)
+    hydrateSave(save)
+    const state = useCampaignStore.getState()
+    expect(state.operatives).toEqual([])
+    expect(state.campaignFailed).toBe(false)
+    expect(state.campaignWon).toBe(false)
+  })
+
+  it('hydrate restores stored flags without re-deriving fail from the roster', () => {
+    const save = captureSave()
+    save.campaign.campaignFailed = true
+    save.campaign.campaignWon = false
+    expect(save.campaign.operatives.length).toBeGreaterThan(0)
+    expect(validateSave(save)).toBe(true)
+    hydrateSave(save)
+    expect(useCampaignStore.getState().campaignFailed).toBe(true)
+    expect(useCampaignStore.getState().operatives.length).toBeGreaterThan(0)
+  })
+
+  it('rejects a non-failed blob whose campaignWon disagrees with the authored wins', () => {
+    const save = captureSave()
+    expect(validateSave(save)).toBe(true)
+    // Positive pair: all three authored wins with campaignWon true is valid.
+    const complete = structuredClone(save)
+    complete.campaign.contractsWon = ['m01', 'm02', 'm03']
+    complete.campaign.campaignWon = true
+    complete.campaign.campaignFailed = false
+    expect(validateSave(complete)).toBe(true)
+    save.campaign.contractsWon = ['m01']
+    save.campaign.campaignWon = true
+    save.campaign.campaignFailed = false
+    expect(validateSave(save)).toBe(false)
+  })
+
+  it('a completed campaign with an empty roster round-trips complete and not failed', () => {
+    for (const id of ['m01', 'm02', 'm03']) {
+      useCampaignStore.getState().reportMission(
+        id,
+        {
+          applyKey: 1, won: true, kills: 0, casualties: 0, timeSec: 10, civiliansHit: 1,
+          reward: 0, bonus: 0, deadIds: [], survivorHp: {}, quietReplay: false,
+        },
+        0,
+      )
+    }
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    useCampaignStore.getState().reportMission(
+      'm01',
+      {
+        applyKey: 2, won: false, kills: 0, casualties: ids.length, timeSec: 10, civiliansHit: 0,
+        reward: 0, bonus: 0, deadIds: ids, survivorHp: {}, quietReplay: false,
+      },
+      0,
+    )
+    useAppStore.setState({ squad: [] })
+    expect(writeSave(storage)).toBe(true)
+    startNewOperation()
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    hydrateSave(loaded)
+    const state = useCampaignStore.getState()
+    expect(state.operatives).toEqual([])
+    expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
+  })
+
   it('rejects tampered tutorial history', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)

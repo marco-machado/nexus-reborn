@@ -49,11 +49,12 @@ export interface DebriefReport {
   xp: Array<{ id: string; codename: string; gained: number; total: number }>
 }
 
-// Terminal fail: the live roster is empty and the campaign is not already won.
+// Terminal fail: the live roster is empty and the campaign is not already
+// complete. Callers pass this debrief's `allWon`, not the stored campaignWon.
 // Distinct from recoverable sector crisis; a campaign cannot be both won and
 // failed.
-export function isCampaignFailed(rosterSize: number, campaignWon: boolean): boolean {
-  return rosterSize === 0 && !campaignWon
+export function isCampaignFailed(rosterSize: number, alreadyComplete: boolean): boolean {
+  return rosterSize === 0 && !alreadyComplete
 }
 
 export function injuryRecoverySec(hpFrac: number): number {

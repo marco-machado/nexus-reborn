@@ -62,6 +62,7 @@ import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
 import { ART_BG, RED, WORLD_GLOW } from './tokens'
 import { layoutScanMarks, visibleScanMarks } from './scanMarks'
+import { campaignBanner } from './campaignBanner'
 
 function WarningGlyph() {
   return <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 2 19 18H1Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M10 7v5m0 2v1" stroke="currentColor" strokeWidth="1.8" /></svg>
@@ -910,6 +911,7 @@ export function WorldMap() {
     [selected, contracts, intelLevel],
   )
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
+  const banner = campaignBanner(campaignWon, campaignFailed)
 
   return (
     <ScreenChrome
@@ -918,7 +920,7 @@ export function WorldMap() {
       subtitle={<div className="screen-sub">NEXUS GLOBAL // GEOSTRATEGIC COMMAND INTERFACE</div>}
       className="wm"
     >
-      {campaignFailed && (
+      {banner === 'failed' && (
         <div className="wm-campaign-fail corners" role="status">
           <span className="wm-campaign-sigil fail" aria-hidden="true">◆</span>
           <span>
@@ -928,7 +930,7 @@ export function WorldMap() {
           <strong>0 / {MISSIONS.length}</strong>
         </div>
       )}
-      {campaignWon && !campaignFailed && (
+      {banner === 'complete' && (
         <div className="wm-campaign-win corners" role="status">
           <span className="wm-campaign-sigil" aria-hidden="true">◆</span>
           <span>

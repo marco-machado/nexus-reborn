@@ -111,8 +111,8 @@ stories:
     name: "Campaign flag edge cases"
     file: "production/epics/world-network/story-019-campaign-flag-edge-cases.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-13"

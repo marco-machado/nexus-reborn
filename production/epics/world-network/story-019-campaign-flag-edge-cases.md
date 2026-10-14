@@ -1,12 +1,12 @@
 # Story 019: Campaign flag edge cases
 
 > **Epic**: World Network
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-13
 
 ## Context
 
@@ -34,9 +34,9 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN campaign already complete, WHEN living roster count reaches 0, THEN the complete banner remains, the fail banner is not posted, and contracts are not locked.
-- [ ] GIVEN an incomplete, non-failed campaign with at least one living operative, WHEN only sector crisis enters or clears, THEN campaign flags remain unchanged and no campaign-failed banner appears. Injured operatives still count as living.
-- [ ] GIVEN a campaign still incomplete after debrief removes its last living operative, WHEN campaign flags are read, THEN failed is true and complete is false, regardless of sector crisis.
+- [x] GIVEN campaign already complete, WHEN living roster count reaches 0, THEN the complete banner remains, the fail banner is not posted, and contracts are not locked.
+- [x] GIVEN an incomplete, non-failed campaign with at least one living operative, WHEN only sector crisis enters or clears, THEN campaign flags remain unchanged and no campaign-failed banner appears. Injured operatives still count as living.
+- [x] GIVEN a campaign still incomplete after debrief removes its last living operative, WHEN campaign flags are read, THEN failed is true and complete is false, regardless of sector crisis.
 
 ---
 
@@ -78,7 +78,7 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/state/campaignStore.te
 **Required evidence**:
 - Logic: test file beside the module — `src/state/campaignStore.test.ts`, `src/state/save.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/campaignStore.test.ts` (WN-019 block, 8 tests), `src/state/save.test.ts` (4 tests), `src/ui/campaignBanner.test.ts` (3 tests); visual: `production/qa/evidence/wn-019/`
 
 ---
 
@@ -86,3 +86,13 @@ From `/qa-plan` sprint 2 (2026-10-12). Logic. Files: `src/state/campaignStore.te
 
 - Depends on: Story 018
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-13
+**Criteria**: 3/3 passing, none deferred
+**Deviations**: ADVISORY (scope): `src/ui/WorldMap.tsx` and new `src/ui/campaignBanner.ts` (+ test) are outside the story's files and touch Story 018's banner area. Added at the user's request after `/code-review` found the banner decision could not be unit-tested; behaviour unchanged, verified in browser. Implementation itself was already in place from WN-018; this story is a parameter rename plus tests.
+**Test Evidence**: Logic: test files present at `src/state/campaignStore.test.ts`, `src/state/save.test.ts`; full suite last run 42 files / 770 tests passing, `npm run build` and `npm run lint` clean. Visual: `production/qa/evidence/wn-019/wn-019-complete-then-wipe-1280x720.png`, `wn-019-incomplete-wipe-failed-1280x720.png`.
+**Code Review**: Complete — `/code-review` with lead-programmer and qa-tester: no blocking findings; 2 required and 4 suggested changes applied afterwards. Not re-run on the fixes.
+**Open question**: TR-world-network-009's registry text ("Outcome DTO is applied once at debrief") does not describe campaign fail flags; the story cites it anyway. Fix the citation or registry entry in `/architecture-review`.

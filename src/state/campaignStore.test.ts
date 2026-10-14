@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useAppStore, type MissionOutcome } from './appStore'
 import * as campaignModule from './campaignStore'
 import {
@@ -7,6 +7,7 @@ import {
   INJURY_RECOVERY_MIN,
   initialCampaignData,
   injuryRecoverySec,
+  isCampaignFailed,
   liveOperativeById,
   missionLocked,
   useCampaignStore,
@@ -334,6 +335,140 @@ describe('campaign flags (WN-018)', () => {
 
   it('exports no CampaignStatus enum', () => {
     expect('CampaignStatus' in campaignModule).toBe(false)
+  })
+})
+
+describe('campaign flag edge cases (WN-019)', () => {
+  // Crisis helpers move the World Network clock, sectors and timers; restore
+  // the whole store around each test so nothing leaks into later describes.
+  const resetWorld = () => useWorldStore.setState(useWorldStore.getInitialState(), true)
+  beforeEach(resetWorld)
+  afterEach(resetWorld)
+
+  const ids = () => useCampaignStore.getState().operatives.map((o) => o.id)
+  const flags = () => {
+    const { campaignWon, campaignFailed } = useCampaignStore.getState()
+    return { campaignWon, campaignFailed }
+  }
+  // Pushes eu into crisis through the real debrief path.
+  const enterCrisis = () => {
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, eu: { control: 40, unrest: 80 } },
+    })
+    useWorldStore
+      .getState()
+      .applyMissionResult('m01', outcome({ won: false, reward: 0, civiliansHit: 9 }))
+    expect(useWorldStore.getState().crisis).toContain('eu')
+  }
+  // Clears a standing eu crisis through a staged stabilize spend.
+  const clearCrisis = () => {
+    useWorldStore.setState({
+      nextEventT: 1e12,
+      nextContractT: 1e12,
+      nextTaxT: 1e12,
+      influence: 20,
+      crisis: ['eu'],
+      sectors: { ...useWorldStore.getState().sectors, eu: { control: 40, unrest: 71 } },
+      pressure: { eu: 1e12 },
+    })
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    useWorldStore.setState({ t: 7 * HOUR - 1 })
+    useWorldStore.getState().tick(0.01)
+    expect(useWorldStore.getState().crisis).toEqual([])
+  }
+
+  it('isCampaignFailed is rosterSize 0 and not already complete', () => {
+    expect(isCampaignFailed(0, false)).toBe(true)
+    expect(isCampaignFailed(0, true)).toBe(false)
+    expect(isCampaignFailed(1, false)).toBe(false)
+    expect(isCampaignFailed(1, true)).toBe(false)
+  })
+
+  it('a complete campaign whose living roster reaches 0 keeps its contracts selectable', () => {
+    // Flags after the wipe are WN-018's "stays complete after a later roster
+    // wipe"; this covers the lock, through the action that applies it.
+    for (const id of ['m01', 'm02', 'm03']) {
+      useCampaignStore.getState().reportMission(id, outcome({ civiliansHit: 1 }), 0)
+    }
+    useCampaignStore.getState().reportMission(
+      'm02',
+      outcome({ won: false, reward: 0, casualties: ids().length, deadIds: ids() }),
+      0,
+    )
+    expect(useCampaignStore.getState().operatives).toEqual([])
+    // Intel gates are not under test; lift them so only the flags decide.
+    useCampaignStore.setState({ intelLevel: 3 })
+    for (const id of ['m01', 'm02', 'm03']) {
+      useAppStore.setState({ phase: 'world', missionId: null })
+      useAppStore.getState().selectMission(id)
+      expect(useAppStore.getState().missionId).toBe(id)
+      expect(useAppStore.getState().phase).toBe('brief')
+    }
+  })
+
+  it('a wipe fails on this debrief allWon even when the stored campaignWon reads true', () => {
+    // Inconsistent seed: stored campaignWon true, no authored wins. Passing the
+    // stored flag would keep the campaign alive; this debrief's allWon fails it.
+    useCampaignStore.setState({ campaignWon: true, contractsWon: [] })
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ won: false, reward: 0, casualties: ids().length, deadIds: ids() }),
+      0,
+    )
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: true })
+  })
+
+  it('sector crisis entering or clearing leaves the flags alone with a living operative', () => {
+    const before = flags()
+    enterCrisis()
+    expect(flags()).toEqual(before)
+    clearCrisis()
+    expect(flags()).toEqual(before)
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: false })
+  })
+
+  it('one injured operative still counts as living as a crisis enters and clears', () => {
+    const [keep, ...rest] = ids()
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({
+        won: false,
+        reward: 0,
+        casualties: rest.length,
+        deadIds: rest,
+        survivorHp: { [keep]: INJURY_HP_FRAC / 2 },
+      }),
+      0,
+    )
+    const state = useCampaignStore.getState()
+    expect(state.operatives.map((o) => o.id)).toEqual([keep])
+    expect(state.roster[keep].status).toBe('INJURED')
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: false })
+    enterCrisis()
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: false })
+    clearCrisis()
+    expect(useCampaignStore.getState().operatives.map((o) => o.id)).toEqual([keep])
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: false })
+  })
+
+  it('removing the last living operative on an incomplete campaign fails it during crisis', () => {
+    enterCrisis()
+    useCampaignStore.getState().reportMission(
+      'm02',
+      outcome({ won: false, reward: 0, casualties: ids().length, deadIds: ids() }),
+      0,
+    )
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: true })
+  })
+
+  it('generated wins do not mark the campaign complete', () => {
+    for (const id of ['m01', 'm02']) {
+      useCampaignStore.getState().reportMission(id, outcome({ civiliansHit: 1 }), 0)
+    }
+    useCampaignStore.getState().reportMission('gen-1', outcome({ civiliansHit: 1 }), 0)
+    const state = useCampaignStore.getState()
+    expect(state.contractsWon).toEqual(['m01', 'm02'])
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: false })
   })
 })
 
