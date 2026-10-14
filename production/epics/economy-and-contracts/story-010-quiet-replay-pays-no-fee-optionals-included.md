@@ -60,7 +60,19 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Quiet-replay win, Reward 62,000, optional +9,000: `netPayout` 0 and `reward` 62,000
+- Glass Veil already won: contract fee 0
+- Quiet win at 128,450 CR leaves Credits 128,450
+- Slice created with `quietReplay` false: a later `contractsWon` entry does not restamp it at apply
+
+**Edge cases**:
+- `maybeOutcome`, `setOutcome` and `reportMission` must not call `isQuietReplay` / `contractsWon` (story note)
+- Any Collateral on a quiet replay still nets 0
+
+**Existing coverage**: Partly present: 'keeps the fee on a quiet win and pays nothing'. `isQuietReplay` still exists in `appStore.ts` and `src/ui/Hud.tsx:113` calls it (HUD only). Confirm no outcome path reads it.
 
 ---
 

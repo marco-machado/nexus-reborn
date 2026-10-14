@@ -56,7 +56,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Hollow Crown: Reward 62,000, 13 hits, optional +9,000 gives Collateral 62,000 and net 9,000
+- Rust Haven at opening Standard: Reward 41,000, 8 hits, optional ignored gives Collateral 40,000 and net 1,000
+- Pyrrhic non-quiet win (roster emptied, campaign incomplete), Reward 85,000, N = 0, pays 85,000
+
+**Edge cases**:
+- Read Reward from `src/game/contracts.ts`, not a copy
+- Assert the GDD figures, not re-derived constants
+
+**Existing coverage**: No test found naming Hollow Crown or Rust Haven in `appStore.test.ts` or `contracts.test.ts`. Pyrrhic is partly covered by `applyDebrief` > 'pyrrhic win (WN-018)'.
 
 ---
 

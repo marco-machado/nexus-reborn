@@ -58,7 +58,20 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Reward 41,000 with 9 hits gives Collateral 41,000 (capped)
+- civiliansHit −1 gives 0 and `netPayout` is not raised
+- civiliansHit 2.7 floors to 2: Collateral 10,000 at Reward 85,000
+- civiliansHit NaN and a NaN bonus def: Collateral 0, bonus 0, `netPayout` 85,000
+
+**Edge cases**:
+- Infinity and −Infinity
+- Non-integer Reward
+- All priced fields are finite integers
+
+**Existing coverage**: Mostly present: 'floors the civilian count and treats a negative or non-finite count as none'. Missing: the NaN bonus def and the finite-integer check.
 
 ---
 

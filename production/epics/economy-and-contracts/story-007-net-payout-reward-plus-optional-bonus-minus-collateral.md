@@ -59,7 +59,19 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Reward 85,000, bonus 0, Collateral 10,000 gives 75,000
+- Reward 41,000, Collateral 41,000, optional +6,000 gives 6,000
+- Bonus def −1,000 prices 0 and `netPayout` stays 85,000
+
+**Edge cases**:
+- Duplicate completed optional ids count once
+- Unknown optional id prices 0
+- Collateral larger than reward plus bonus never goes below 0 (`netPayout` clamp)
+
+**Existing coverage**: Partly present: 'netPayout pays reward minus fine on a win and nothing on a loss', 'a win drowned in collateral pays zero'. Check the +6,000 and negative-bonus cases.
 
 ---
 

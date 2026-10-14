@@ -55,7 +55,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Seed Influence I and Intel J, run Economy-only apply paths (payout, Tax deposit, research debit, hire debit); both unchanged
+- First non-quiet win payout applied by Economy alone leaves Influence 0
+
+**Edge cases**:
+- Influence 0 and a large Influence
+- Intel at its maximum level
+- Test the Economy path in isolation from `worldStore.applyMissionResult` (story note)
+
+**Existing coverage**: No test found that pins Influence/Intel across an Economy apply. New assertions, small.
 
 ---
 

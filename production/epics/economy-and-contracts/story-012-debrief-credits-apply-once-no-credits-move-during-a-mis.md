@@ -59,7 +59,19 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Integration. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Same outcome applied twice with key K and `net_payout` 75,000: 203,450 CR (second is a no-op)
+- Same key K again: unchanged; a higher key applies
+- Credits at deploy C stay C while the mission runs
+
+**Edge cases**:
+- Stray older or equal key applies nothing
+- Tax deposit under the same key is also single-shot
+- No outcome present: nothing applies
+
+**Existing coverage**: Mostly present: `applyDebrief apply-once` > 'Credits sit under the same key', 're-entering with the same key', 'a stray older or equal key'. Missing: Credits flat during the running mission.
 
 ---
 

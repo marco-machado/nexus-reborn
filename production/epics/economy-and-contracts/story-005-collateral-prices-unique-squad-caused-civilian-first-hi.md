@@ -60,7 +60,20 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Reward 85,000 CR with civiliansHit 2 gives Collateral 10,000
+- civiliansHit 1 (a repeat hit on one civilian is still 1 at the DTO) gives 5,000
+- civiliansHit 0 (CorpSec-only harm, which Tactical never counts) gives 0
+- One non-fatal first-hit gives 5,000
+
+**Edge cases**:
+- Reward smaller than the fine
+- Reward 0
+- Count must be read from the outcome, never derived from `reward × civiliansHit`
+
+**Existing coverage**: Partly present: `mission outcome payout` > 'fines per civilian hit, capped at the reward'. Unique-hit counting itself is Tactical's (`tactical-mission` story 010), so assert the priced fields only.
 
 ---
 

@@ -15,7 +15,7 @@ Stand up the Economy ledger and invoice: Credits never overdraw, collateral and 
 - Story granularity: balanced (10 stories planned, inside the 6–10 range).
 - No milestone is defined. No risk register exists. Planning is against the Ready story backlog only.
 
-QA plan: run `/qa-plan sprint` before implementation begins. (No `qa-plan-sprint-003-*` exists yet.)
+QA plan: `production/qa/qa-plan-sprint-003-2026-10-13.md`.
 
 ## Tasks
 
@@ -69,7 +69,7 @@ QA plan: run `/qa-plan sprint` before implementation begins. (No `qa-plan-sprint
 
 - [ ] All Must Have tasks completed
 - [ ] All tasks pass acceptance criteria
-- [ ] QA plan exists (`production/qa/qa-plan-sprint-003-[date].md`, from `/qa-plan sprint`)
+- [x] QA plan exists (`production/qa/qa-plan-sprint-003-2026-10-13.md`)
 - [ ] All Logic/Integration stories have passing unit/integration tests
 - [ ] Smoke check passed (`/smoke-check sprint`)
 - [ ] QA sign-off report: APPROVED or APPROVED WITH CONDITIONS (`/team-qa sprint`)

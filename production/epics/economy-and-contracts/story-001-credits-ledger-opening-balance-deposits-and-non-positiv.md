@@ -62,7 +62,20 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- New campaign reads 128,450 CR (`INITIAL_CREDITS`)
+- `addCredits(A)` adds A for A > 0; 0 and negative leave Credits unchanged
+- `spendCredits(0)` and `spendCredits(-1)` leave 128,450 CR and start no research or hire
+- Tax deposit after a `net_payout = 0` apply gives 129,450 CR (Credits 128,450 + 1,000)
+
+**Edge cases**:
+- NaN / Infinity deposit
+- Deposit of exactly 1 CR
+- Spend of exactly the balance (zero result)
+
+**Existing coverage**: Mostly present: `initial state`, `credits` (spendCredits, spend to exactly zero, ignores zero and negative, addCredits). Missing: the 129,450 CR case through the real Tax deposit (`depositTax` in `src/state/worldStore.ts`, no test names it).
 
 ---
 

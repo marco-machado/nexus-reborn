@@ -61,7 +61,19 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- At 15,999 CR a 16,000 CR project is refused: Credits, research and occupancy unchanged
+- At 15,999 CR a 16,000 CR candidate is refused: Credits and roster unchanged
+- At exactly 16,000 CR both succeed and Credits = 0
+
+**Edge cases**:
+- Order is check, start, then spend (do not invert)
+- Refusal is an identity no-op (no subscriber wake)
+- Hydrate drops credits that are non-finite or < 0
+
+**Existing coverage**: Partly present: `hireOperative` ('blocks an overdraw without touching the roster') and `economy integration` ('refuses every unaffordable spend'). Check the exact-balance successes for research and hire.
 
 ---
 

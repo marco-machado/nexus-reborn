@@ -58,7 +58,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.test.ts`.
+
+**What to test**:
+- Loss, Reward 85,000, 2 hits, bonus 0: `reward` 85,000, Collateral 10,000, `netPayout` 0, Credits unchanged
+- Loss with optional +9,000 complete: `netPayout` 0
+- Failed generated contract: gone from `worldStore.contracts` after debrief, Credits unchanged
+
+**Edge cases**:
+- Loss on an authored contract keeps the record selectable
+- Loss retry of a never-won authored contract still pays in full on the later win (EC-011, out of scope)
+
+**Existing coverage**: Partly present: 'prices the contract fee on a loss and the bonus from completed optional ids', 'a loss leaves credits untouched but still reaches debrief'. The generated-instance removal sits in `worldStore.applyMissionResult` tests.
 
 ---
 
