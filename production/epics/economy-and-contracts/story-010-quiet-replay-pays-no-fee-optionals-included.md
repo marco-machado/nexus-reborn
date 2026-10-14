@@ -1,12 +1,12 @@
 # Story 010: Quiet replay pays no fee, optionals included
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -34,10 +34,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a quiet-replay win, Reward 62,000 CR, optional complete +9,000 CR and any Collateral, THEN `net_payout = 0 CR` including optionals and outcome `reward = 62,000 CR`.
-- [ ] GIVEN Glass Veil already won, WHEN a quiet-replay win debriefs, THEN contract fee is 0 CR.
-- [ ] GIVEN a quiet-replay win at Credits 128,450 CR, WHEN Economy applies, THEN Credits = 128,450 CR.
-- [ ] GIVEN an Economy slice created with `quietReplay` false and Reward R, WHEN live `contractsWon` later includes that contract before apply, THEN Economy prices with frozen `quietReplay` false and Reward R (no restamp).
+- [x] GIVEN a quiet-replay win, Reward 62,000 CR, optional complete +9,000 CR and any Collateral, THEN `net_payout = 0 CR` including optionals and outcome `reward = 62,000 CR`.
+- [x] GIVEN Glass Veil already won, WHEN a quiet-replay win debriefs, THEN contract fee is 0 CR.
+- [x] GIVEN a quiet-replay win at Credits 128,450 CR, WHEN Economy applies, THEN Credits = 128,450 CR.
+- [x] GIVEN an Economy slice created with `quietReplay` false and Reward R, WHEN live `contractsWon` later includes that contract before apply, THEN Economy prices with frozen `quietReplay` false and Reward R (no restamp).
 
 ---
 
@@ -82,7 +82,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`, `src/game/contracts.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "Quiet replay pays no fee, optionals included (EC-010)" (6 tests)
 
 ---
 
@@ -90,3 +90,13 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: Story 007
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (all covered by unit tests; 6 EC-010 tests run and passed via vitest on 2026-10-14)
+**Deviations**: None. `isQuietReplay` remains only in `src/ui/Hud.tsx:113` (HUD display); no outcome path (`maybeOutcome`, `setOutcome`, `reportMission`) calls it.
+**Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Quiet replay pays no fee, optionals included (EC-010)"
+**Run result**: N/A — pure Economy logic; quiet-replay invoice UI unchanged
+**Code Review**: Pending — lean mode; autonomous run recorded "No — I'll run /code-review before the sprint close-out"

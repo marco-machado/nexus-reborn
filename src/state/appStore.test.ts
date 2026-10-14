@@ -8,7 +8,7 @@ import {
   useAppStore,
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
-import { DEFAULT_SQUAD, MISSIONS } from '../game/data'
+import { DEFAULT_SQUAD, MISSIONS, operativeById } from '../game/data'
 import { nodeById } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
@@ -23,6 +23,7 @@ import { assignedMassKg } from '../game/deployGate'
 import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
 import { xpBonus } from '../game/experience'
 import { economySlice } from '../game/deploy'
+import { freezeDeploy } from './deployFreeze'
 
 // World-store boot snapshot for the economy integration suite, captured at
 // module load before any test moves the singleton.
@@ -1540,5 +1541,136 @@ describe('A loss pays nothing; a failed generated contract leaves the market (EC
     useAppStore.getState().selectMission('m01')
     expect(useAppStore.getState().missionId).toBe('m01')
     expect(useAppStore.getState().phase).toBe('brief')
+  })
+})
+
+describe('Quiet replay pays no fee, optionals included (EC-010)', () => {
+  // TR-economy-004 / TR-economy-005 / ADR-0004 / ADR-0009: quietness is the
+  // frozen Economy-slice boolean. A quiet win stores the fee and pays 0 CR,
+  // bonus and Collateral included; nothing on the outcome path re-reads
+  // contractsWon to decide it.
+  const authored = (id: string) => {
+    const m = MISSIONS.find((x) => x.id === id)
+    if (!m) throw new Error('missing authored mission ' + id)
+    return m
+  }
+
+  function winResult(over: Partial<MissionResult> = {}): MissionResult {
+    return {
+      applyKey: 1,
+      won: true,
+      kills: 5,
+      casualties: 0,
+      timeSec: 300,
+      civiliansHit: 0,
+      completedOptionalIds: [],
+      deadIds: [],
+      survivorHp: {},
+      quietReplay: true,
+      ...over,
+    }
+  }
+
+  function debrief(missionId: string, o: MissionOutcome): void {
+    useAppStore.setState({ phase: 'mission', missionId })
+    useAppStore.getState().setOutcome(o)
+    applyDebrief(missionId)
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({ ...structuredClone(worldBoot), nextTaxT: 1e12, nextEventT: 1e12 })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  })
+
+  it('quiet win, Reward 62,000, optional +9,000: net_payout 0 and reward 62,000', () => {
+    const m = authored('m02')
+    const optional = m.objectives.filter((o) => o.optional).map((o) => o.id)
+    const economy = economySlice(m, false, true, 1)
+    expect(economy.quietReplay).toBe(true)
+    const o = priceOutcome(winResult({ completedOptionalIds: optional }), economy)
+    expect(o.reward).toBe(62000)
+    expect(o.bonus).toBe(9000)
+    expect(o.quietReplay).toBe(true)
+    expect(netPayout(o)).toBe(0)
+  })
+
+  it('quiet win with any Collateral still nets 0', () => {
+    const m = authored('m02')
+    const optional = m.objectives.filter((o) => o.optional).map((o) => o.id)
+    const economy = economySlice(m, false, true, 1)
+    for (const hits of [0, 1, 3, 50]) {
+      const o = priceOutcome(winResult({ civiliansHit: hits, completedOptionalIds: optional }), economy)
+      expect(o.reward).toBe(62000)
+      expect(netPayout(o)).toBe(0)
+    }
+  })
+
+  it('Glass Veil already won: a quiet-replay win debriefs with contract fee 0 CR', () => {
+    useCampaignStore.setState({ contractsWon: ['m01'] })
+    const m = authored('m01')
+    const squad = DEFAULT_SQUAD.map(operativeById)
+    const deploy = freezeDeploy(m, squad, 1)
+    expect(deploy.economy.quietReplay).toBe(true)
+    const o = priceOutcome(winResult({ quietReplay: deploy.economy.quietReplay }), deploy.economy)
+    expect(o.reward).toBe(85000)
+    expect(netPayout(o)).toBe(0)
+    debrief('m01', o)
+    expect(useAppStore.getState().lastAppliedKey).toBe(1)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(useCampaignStore.getState().contractsWon).toEqual(['m01'])
+  })
+
+  it('quiet win at 128,450 CR leaves Credits 128,450 CR after Economy applies', () => {
+    expect(useAppStore.getState().credits).toBe(128450)
+    const m = authored('m02')
+    const optional = m.objectives.filter((o) => o.optional).map((o) => o.id)
+    const o = priceOutcome(
+      winResult({ civiliansHit: 2, completedOptionalIds: optional }),
+      economySlice(m, false, true, 1),
+    )
+    debrief('m02', o)
+    expect(useAppStore.getState().credits).toBe(128450)
+  })
+
+  it('slice frozen with quietReplay false and Reward R is not restamped when contractsWon later includes the contract', () => {
+    const m = authored('m01')
+    const squad = DEFAULT_SQUAD.map(operativeById)
+    const deploy = freezeDeploy(m, squad, 1)
+    expect(deploy.economy.quietReplay).toBe(false)
+    const R = deploy.economy.reward
+    expect(R).toBe(85000)
+    // Live record changes between deploy and apply.
+    useCampaignStore.setState({ contractsWon: ['m01'] })
+    expect(deploy.economy.quietReplay).toBe(false)
+    const o = priceOutcome(winResult({ quietReplay: deploy.economy.quietReplay }), deploy.economy)
+    expect(o.quietReplay).toBe(false)
+    expect(o.reward).toBe(R)
+    debrief('m01', o)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + R)
+  })
+
+  it('setOutcome and reportMission take quietness from the outcome, not contractsWon', () => {
+    // Record says won, outcome says not quiet: full pay and the Intel award.
+    useCampaignStore.setState({ contractsWon: ['m01'] })
+    const before = useCampaignStore.getState()
+    const paid = priceOutcome(winResult({ quietReplay: false }), economySlice(authored('m01'), false, false, 1))
+    debrief('m01', paid)
+    expect(useAppStore.getState().outcome?.quietReplay).toBe(false)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 85000)
+    const after = useCampaignStore.getState()
+    expect([after.intelLevel, after.intelProgress]).not.toEqual([before.intelLevel, before.intelProgress])
+
+    // Record empty, outcome says quiet: no pay and no Intel.
+    useAppStore.setState({ credits: START_CREDITS, lastAppliedKey: 0 })
+    useCampaignStore.setState(initialCampaignData())
+    const fresh = useCampaignStore.getState()
+    const quiet = priceOutcome(winResult({ quietReplay: true }), economySlice(authored('m01'), false, true, 1))
+    debrief('m01', quiet)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    const c = useCampaignStore.getState()
+    expect([c.intelLevel, c.intelProgress]).toEqual([fresh.intelLevel, fresh.intelProgress])
   })
 })
