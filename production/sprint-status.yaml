@@ -84,11 +84,11 @@ stories:
     name: "Generated expiry windows and Expedite extension"
     file: "production/epics/economy-and-contracts/story-018-generated-expiry-windows-and-expedite-extension.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-019"
     name: "Generated market cap, roll timer and client"
     file: "production/epics/economy-and-contracts/story-019-generated-market-cap-roll-timer-and-client.md"

@@ -12,6 +12,7 @@ import {
   PRIORITY_EXPIRY_MIN_SEC,
   PRIORITY_EXPIRY_SPAN_SEC,
   contractIntelReq,
+  contractLifeSec,
   contractMission,
   contractThreat,
   expediteTarget,
@@ -33,6 +34,7 @@ import { mulberry32, mulberryStep } from './rng'
 import type { ObjectiveDef } from './types'
 import { isWalkable } from './types'
 import { createWorld } from './world'
+import { EXPEDITE_EXTENSION_SEC } from './influence'
 import { headlessDeploy } from './deploy'
 import { INITIAL_CREDITS, useAppStore } from '../state/appStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
@@ -358,6 +360,51 @@ describe('authored ETA table (story 017)', () => {
 
   it('differs from the generated value for every authored contract', () => {
     for (const m of MISSIONS) expect(m.etaDays).not.toBe(generatedEta(m.threat))
+  })
+})
+
+describe('generated expiry windows (story 018)', () => {
+  const H = 3600
+
+  it('a regular offer stands 24 h at the low end and 48 h at the high end', () => {
+    expect(contractLifeSec(false, 0)).toBe(24 * H)
+    expect(contractLifeSec(false, 0.5)).toBe(36 * H)
+    // The largest draw below 1 rounds to the inclusive 48 h end.
+    expect(contractLifeSec(false, 1 - Number.EPSILON)).toBe(48 * H)
+  })
+
+  it('an initially priority offer stands 8 h at the low end and 16 h at the high end', () => {
+    expect(contractLifeSec(true, 0)).toBe(8 * H)
+    expect(contractLifeSec(true, 0.5)).toBe(12 * H)
+    expect(contractLifeSec(true, 1 - Number.EPSILON)).toBe(16 * H)
+  })
+
+  it('every rolled regular offer expires 24-48 strategic hours after creation', () => {
+    for (const c of rollMany(300)) {
+      expect(c.priority).toBe(false)
+      const life = c.expiresAtT - c.createdT
+      expect(Number.isInteger(life)).toBe(true)
+      expect(life).toBeGreaterThanOrEqual(24 * H)
+      expect(life).toBeLessThanOrEqual(48 * H)
+    }
+  })
+
+  it('every rolled priority offer expires 8-16 strategic hours after creation', () => {
+    let state = 0x5eed
+    for (let i = 0; i < 300; i++) {
+      const rolled = rollSuppressionContract(inputFor('oc'), 4000 + i, state)
+      state = rolled.state
+      const c = rolled.contract
+      expect(c.priority).toBe(true)
+      const life = c.expiresAtT - c.createdT
+      expect(Number.isInteger(life)).toBe(true)
+      expect(life).toBeGreaterThanOrEqual(8 * H)
+      expect(life).toBeLessThanOrEqual(16 * H)
+    }
+  })
+
+  it('the Expedite extension is exactly 24 strategic hours', () => {
+    expect(EXPEDITE_EXTENSION_SEC).toBe(24 * H)
   })
 })
 

@@ -947,6 +947,33 @@ describe('generated Reward immutability (story 015)', () => {
   })
 })
 
+describe('Expedite expiry extension (story 018)', () => {
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+  })
+
+  it('moves expiry from E to exactly E + 24 strategic hours and writes no Intel', () => {
+    pinFlows()
+    for (const priority of [false, true]) {
+      const t = useWorldStore.getState().t
+      const E = t + (priority ? 9 : 30) * 3600
+      const offer = { ...craft('eu', priority ? 52 : 51, 'HIGH'), priority, expiresAtT: E }
+      useCampaignStore.setState({ intelLevel: 1, intelProgress: 3 })
+      useWorldStore.setState({ influence: 30, cooldowns: {}, contracts: [offer] })
+      useWorldStore.getState().spendInfluence('eu', 'expedite')
+      const after = useWorldStore.getState().contracts.find((c) => c.id === offer.id)
+      expect(after?.expedited).toBe(true)
+      expect(after?.expiresAtT).toBe(E + 24 * 3600)
+      expect(after?.createdT).toBe(offer.createdT)
+      const c = useCampaignStore.getState()
+      expect({ intelLevel: c.intelLevel, intelProgress: c.intelProgress }).toEqual({
+        intelLevel: 1,
+        intelProgress: 3,
+      })
+    }
+  })
+})
+
 describe('stabilize and expedite refusals', () => {
   beforeEach(() => {
     useCampaignStore.setState(initialCampaignData())

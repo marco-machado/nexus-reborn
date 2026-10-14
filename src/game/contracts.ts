@@ -230,6 +230,20 @@ function citiesForClient(
     : { client: 'nexus', cities }
 }
 
+/**
+ * Whole strategic seconds a new generated offer stands before it expires,
+ * from one market draw `u` in [0, 1). An offer that is initially priority
+ * stands 8-16 h; any other offer 24-48 h. Both ends are inclusive after
+ * rounding. Expedite later adds EXPEDITE_EXTENSION_SEC to the stored
+ * expiresAtT; it never re-runs this.
+ */
+export function contractLifeSec(initialPriority: boolean, u: number): number {
+  const life = initialPriority
+    ? PRIORITY_EXPIRY_MIN_SEC + u * PRIORITY_EXPIRY_SPAN_SEC
+    : CONTRACT_EXPIRY_MIN_SEC + u * CONTRACT_EXPIRY_SPAN_SEC
+  return Math.round(life)
+}
+
 function finishContract(
   input: ContractSectorInput,
   t: number,
@@ -243,14 +257,12 @@ function finishContract(
   const threat = contractThreat(input.garrison)
   const reward = rollReward(threat, priority, rng)
   const seed = Math.floor(next(rng) * 0x100000000) >>> 0
-  const life = priority
-    ? PRIORITY_EXPIRY_MIN_SEC + next(rng) * PRIORITY_EXPIRY_SPAN_SEC
-    : CONTRACT_EXPIRY_MIN_SEC + next(rng) * CONTRACT_EXPIRY_SPAN_SEC
+  const life = contractLifeSec(priority, next(rng))
   return {
     contract: {
       id: 'gc' + seed.toString(16).padStart(8, '0'),
       createdT: t,
-      expiresAtT: t + Math.round(life),
+      expiresAtT: t + life,
       sector: input.sector,
       cityId: city.id,
       district,
