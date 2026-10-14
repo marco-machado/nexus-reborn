@@ -1,12 +1,12 @@
 # Story 005: Collateral prices unique squad-caused civilian first-hits
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a non-quiet win, Reward 85,000 CR and 2 unique civilians each first-hit by the squad, WHEN Economy prices from the outcome DTO, THEN Collateral = 10,000 CR.
-- [ ] GIVEN the same civilian hit twice by the squad and no other squad civilian hits, THEN Collateral = 5,000 CR.
-- [ ] GIVEN civilian harm caused only by CorpSec, THEN Collateral = 0 CR.
-- [ ] GIVEN one unique squad-caused civilian first-hit that is not a death, THEN Collateral = 5,000 CR.
+- [x] GIVEN a non-quiet win, Reward 85,000 CR and 2 unique civilians each first-hit by the squad, WHEN Economy prices from the outcome DTO, THEN Collateral = 10,000 CR.
+- [x] GIVEN the same civilian hit twice by the squad and no other squad civilian hits, THEN Collateral = 5,000 CR.
+- [x] GIVEN civilian harm caused only by CorpSec, THEN Collateral = 0 CR.
+- [x] GIVEN one unique squad-caused civilian first-hit that is not a death, THEN Collateral = 5,000 CR.
 
 ---
 
@@ -83,7 +83,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts` — `priceOutcome` table tests. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "Collateral prices unique squad-caused civilian first-hits (EC-005)"
 
 ---
 
@@ -91,3 +91,14 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: None
 - Unlocks: Story 006, Story 007
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (all covered by `src/state/appStore.test.ts`, describe "Collateral prices unique squad-caused civilian first-hits (EC-005)"; 8 tests run and passed under vitest at story-done, including the reward-below-fine, reward-0 and no-derive-from-reward edge cases)
+**Deviations**: None. Only `src/state/appStore.test.ts` changed for this story; `priceOutcome`, `collateralFine` and `COLLATERAL_FINE` already lived in `src/state/appStore.ts`, and `src/game/` prices nothing (it only counts `civiliansHit`). Manifest version 2026-10-08 matches the current control manifest.
+**Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
+**Run result**: N/A — test-only Logic story; no player-visible surface changed
+**Code Review**: Not confirmed at story-done (lean mode; unattended run took "run /code-review before the sprint close-out")
+**Gates**: QL-TEST-COVERAGE skipped — Lean mode.

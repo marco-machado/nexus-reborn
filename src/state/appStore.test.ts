@@ -966,3 +966,56 @@ describe('Economy keeps no Influence or Intel ledger (EC-003)', () => {
     }
   })
 })
+
+describe('Collateral prices unique squad-caused civilian first-hits (EC-005)', () => {
+  // TR-economy-007: Tactical counts unique squad first-hits as civiliansHit
+  // (N); Economy prices collateral = min(Reward, 5000 × N) from the outcome
+  // DTO. Unique-hit counting is Tactical's, so these assert priced fields only.
+  function priced(civiliansHit: number, reward = 85000, won = true): MissionOutcome {
+    return priceOutcome(
+      {
+        applyKey: 1,
+        won,
+        kills: 4,
+        casualties: 0,
+        timeSec: 300,
+        civiliansHit,
+        completedOptionalIds: [],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: false,
+      },
+      { reward, bonusDefs: {} },
+    )
+  }
+
+  const TABLE: ReadonlyArray<[label: string, n: number, reward: number, collateral: number]> = [
+    ['two unique squad first-hits on an 85,000 CR win', 2, 85000, 10000],
+    ['one civilian hit twice by the squad (N = 1 at the DTO)', 1, 85000, 5000],
+    ['CorpSec-only harm (Tactical never counts it, N = 0)', 0, 85000, 0],
+    ['one non-fatal squad first-hit', 1, 85000, 5000],
+    ['reward smaller than the fine', 1, 3000, 3000],
+    ['reward 0', 2, 0, 0],
+  ]
+
+  for (const [label, n, reward, expected] of TABLE) {
+    it(`prices ${label} at ${expected} CR`, () => {
+      const o = priced(n, reward)
+      expect(o.civiliansHit).toBe(n)
+      expect(o.reward).toBe(reward)
+      expect(collateralFine(o)).toBe(expected)
+    })
+  }
+
+  it('reads the count from the outcome, not from reward × civiliansHit', () => {
+    // Below the cap, collateral depends on N alone: the same N on two
+    // different Rewards prices the same fine.
+    expect(collateralFine(priced(2, 85000))).toBe(2 * COLLATERAL_FINE)
+    expect(collateralFine(priced(2, 30500))).toBe(2 * COLLATERAL_FINE)
+    expect(collateralFine(priced(0, 95000))).toBe(0)
+  })
+
+  it('net payout on the 85,000 CR / N = 2 win deducts exactly 10,000 CR', () => {
+    expect(netPayout(priced(2))).toBe(75000)
+  })
+})

@@ -39,11 +39,11 @@ stories:
     name: "Collateral prices unique squad-caused civilian first-hits"
     file: "production/epics/economy-and-contracts/story-005-collateral-prices-unique-squad-caused-civilian-first-hi.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-006"
     name: "Collateral clamps and input sanitising"
     file: "production/epics/economy-and-contracts/story-006-collateral-clamps-and-input-sanitising.md"
