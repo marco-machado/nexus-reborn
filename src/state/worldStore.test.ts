@@ -2246,3 +2246,135 @@ describe('generated market cap and roll timer (story 019)', () => {
     expect(second.nextContractT).toBe(first.nextContractT)
   })
 })
+
+describe('generated instances leave the market or are held when hidden (story 020)', () => {
+  const C = 77_777
+  const ALL_INTEL = 3
+
+  // The market a director with full Intel would read: every visible offer.
+  const market = () => visibleContracts(useWorldStore.getState().contracts, ALL_INTEL)
+  const ids = (cs: GeneratedContract[]) => cs.map((c) => c.id)
+
+  beforeEach(() => {
+    useAppStore.setState({ credits: C, outcome: null })
+  })
+
+  // No invoice was priced, and Credits did not move.
+  function expectNoInvoice(): void {
+    expect(useAppStore.getState().outcome).toBeNull()
+    expect(useAppStore.getState().credits).toBe(C)
+  }
+
+  // The record a raid named in its WITHDRAWS line.
+  function withdrawnBy(text: string, staged: GeneratedContract[]): GeneratedContract | undefined {
+    return staged.find((c) => text.endsWith('WITHDRAWS CONTRACT ' + contractMission(c).codename))
+  }
+
+  it('AC 1: a fulfilled generated contract is gone from the market', () => {
+    const won = craft('eu', 0x2001)
+    const other = craft('af', 0x2002)
+    pinFlows()
+    useWorldStore.setState({ contracts: [won, other] })
+    expect(ids(market())).toEqual([won.id, other.id])
+    useWorldStore.getState().applyMissionResult(won.id, outcome())
+    expect(ids(useWorldStore.getState().contracts)).toEqual([other.id])
+    expect(ids(market())).toEqual([other.id])
+  })
+
+  it('AC 2: an expired generated contract is gone, no invoice is built, Credits stay C', () => {
+    const T = 50_000
+    const expiring = { ...craft('eu', 0x2011), expiresAtT: T }
+    const other = craft('af', 0x2012)
+    pinFlows()
+    useWorldStore.setState({ contracts: [expiring, other], t: T - 1 })
+    useWorldStore.getState().tick(1)
+    const s = useWorldStore.getState()
+    expect(s.t).toBeGreaterThanOrEqual(T)
+    expect(ids(s.contracts)).toEqual([other.id])
+    expect(ids(market())).toEqual([other.id])
+    expect(s.events.at(-1)?.text).toContain('EXPIRED')
+    expectNoInvoice()
+  })
+
+  it('AC 3: a raid-withdrawn generated contract is gone, no invoice is built, Credits unchanged', () => {
+    const staged = [craft('eu', 0x2021), craft('af', 0x2022), craft('as', 0x2023)]
+    pinFlows()
+    useWorldStore.setState({ contracts: staged, nextEventT: useWorldStore.getState().t + 1 })
+    let line: string | undefined
+    for (let i = 0; i < 600 && !line; i++) {
+      forceEvent()
+      line = useWorldStore.getState().events.find((e) => e.text.includes('WITHDRAWS CONTRACT'))?.text
+    }
+    expect(line).toBeDefined()
+    const victim = withdrawnBy(line ?? '', staged)
+    expect(victim).toBeDefined()
+    const s = useWorldStore.getState()
+    expect(s.contracts.some((c) => c.id === victim?.id)).toBe(false)
+    expect(market().some((c) => c.id === victim?.id)).toBe(false)
+    expectNoInvoice()
+  })
+
+  it('AC 4: a Locked-hidden instance exists and keeps its stamped Reward and ETA days', () => {
+    const hidden = craft('af', 0x2031, 'SEVERE')
+    const stampReward = hidden.reward
+    const stampEta = contractMission(hidden).etaDays
+    pinFlows()
+    useWorldStore.setState({ contracts: [hidden] })
+    expect(visibleContracts(useWorldStore.getState().contracts, INTEL_LEVEL)).toEqual([])
+    useWorldStore.getState().advanceDays(2)
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(1)
+    expect(s.contracts[0].id).toBe(hidden.id)
+    expect(s.contracts[0].reward).toBe(stampReward)
+    expect(contractMission(s.contracts[0]).etaDays).toBe(stampEta)
+    expect(contractMission(s.contracts[0]).reward).toBe(stampReward)
+  })
+
+  it('hidden then revealed shows the same Reward and ETA (Intel level and Expedite)', () => {
+    const hidden = craft('af', 0x2041, 'SEVERE')
+    const stampReward = hidden.reward
+    const stampEta = contractMission(hidden).etaDays
+    pinFlows()
+    useWorldStore.setState({ contracts: [hidden], influence: 100 })
+    expect(visibleContracts(useWorldStore.getState().contracts, INTEL_LEVEL)).toEqual([])
+
+    // Revealed by Intel: the same record, unchanged.
+    const byIntel = visibleContracts(useWorldStore.getState().contracts, CONTRACT_INTEL_REQ.SEVERE)
+    expect(byIntel).toEqual([hidden])
+
+    // Revealed by Expedite: the gate drops, Reward and ETA do not move.
+    useWorldStore.getState().spendInfluence('af', 'expedite')
+    const shown = visibleContracts(useWorldStore.getState().contracts, INTEL_LEVEL)
+    expect(ids(shown)).toEqual([hidden.id])
+    expect(shown[0].reward).toBe(stampReward)
+    expect(contractMission(shown[0]).etaDays).toBe(stampEta)
+    expect(contractMission(shown[0]).reward).toBe(stampReward)
+    expectNoInvoice()
+  })
+
+  it('raid and expiry in one catch-up: both records gone, no invoice, Credits unchanged', () => {
+    const t0 = useWorldStore.getState().t
+    const expiring = { ...craft('na', 0x2051), expiresAtT: t0 + 3600 }
+    const staged = [craft('eu', 0x2052), craft('af', 0x2053), craft('as', 0x2054), craft('sa', 0x2055)]
+    useWorldStore.setState({
+      contracts: [expiring, ...staged],
+      nextContractT: 1e12,
+      nextTaxT: 1e12,
+    })
+    // One catch-up: the expiry is due in the first hour, and the event stream
+    // from the opening snapshot lands a raid withdrawal within the same day.
+    useWorldStore.getState().advanceDays(1)
+    const s = useWorldStore.getState()
+    const withdrawn = s.events
+      .filter((e) => e.text.includes('WITHDRAWS CONTRACT'))
+      .map((e) => withdrawnBy(e.text, [expiring, ...staged]))
+    expect(withdrawn.length).toBeGreaterThan(0)
+    expect(withdrawn.every((c) => c !== undefined)).toBe(true)
+    // The expiring record left by expiry, not by a raid.
+    expect(withdrawn.map((c) => c?.id)).not.toContain(expiring.id)
+    const left = ids(s.contracts)
+    expect(left).not.toContain(expiring.id)
+    for (const c of withdrawn) expect(left).not.toContain(c?.id)
+    expectNoInvoice()
+  })
+})

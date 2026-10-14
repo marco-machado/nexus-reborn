@@ -111,11 +111,11 @@ stories:
     name: "Generated instances leave the market, or are held when hidden"
     file: "production/epics/economy-and-contracts/story-020-generated-instances-leave-the-market-or-are-held-when-h.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-022"
     name: "Invoice prints all five money lines, zeros included"
     file: "production/epics/economy-and-contracts/story-022-invoice-prints-all-five-money-lines-zeros-included.md"
