@@ -159,20 +159,35 @@ const THREAT_REWARD: Record<ContractThreat, number> = {
   SEVERE: 70000,
 }
 
-// Reward scales with threat only, jittered on a 500 CR grid inside the
-// 30,000-95,000 band. Atlas sector weight is not a surcharge.
-function rollReward(
+/**
+ * GDD `generated_reward`: `clamp(500 × round(B × (0.9 + 0.3u) × P / 500),
+ * 30000, 95000)`, where B is the threat band, u the roll in [0, 1) and P is
+ * 1.4 when the offer is initially priority, else 1. `round` is `Math.round`
+ * (halves toward +∞, never banker's half-even). Evaluated once at offer
+ * creation; the result is the stamped Reward. Atlas sector weight is not a
+ * surcharge.
+ */
+export function generatedReward(
   threat: ContractThreat,
-  priority: boolean,
-  rng: RngCursor,
+  u: number,
+  initialPriority: boolean,
 ): number {
-  const base = THREAT_REWARD[threat] * (0.9 + next(rng) * 0.3)
-  const raw = priority ? base * PRIORITY_REWARD_MUL : base
+  const base = THREAT_REWARD[threat] * (0.9 + u * 0.3)
+  const raw = initialPriority ? base * PRIORITY_REWARD_MUL : base
   return clamp(
     Math.round(raw / 500) * 500,
     CONTRACT_REWARD_MIN,
     CONTRACT_REWARD_MAX,
   )
+}
+
+// Draws the reward roll from the market cursor and stamps the Reward.
+function rollReward(
+  threat: ContractThreat,
+  priority: boolean,
+  rng: RngCursor,
+): number {
+  return generatedReward(threat, next(rng), priority)
 }
 
 // High unrest and low control both pull generated work toward a sector.

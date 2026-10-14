@@ -21,6 +21,7 @@ import {
   PRIORITY_EXPIRY_MIN_SEC,
   PRIORITY_EXPIRY_SPAN_SEC,
   contractMission,
+  generatedReward,
   sectorClient,
 } from '../game/contracts'
 import type { ContractThreat, GeneratedContract } from '../game/contracts'
@@ -389,6 +390,15 @@ describe('generated contracts', () => {
     expect(second.contracts).toEqual(first.contracts)
     expect(second.contractRngState).toBe(first.contractRngState)
     expect(second.nextContractT).toBe(first.nextContractT)
+  })
+
+  it('stamps the posted offer with a Reward from its threat band (story 014)', () => {
+    forceGeneration()
+    const c = useWorldStore.getState().contracts[0]
+    expect(Number.isInteger(c.reward)).toBe(true)
+    expect(c.reward % 500).toBe(0)
+    expect(c.reward).toBeGreaterThanOrEqual(generatedReward(c.threat, 0, c.priority))
+    expect(c.reward).toBeLessThanOrEqual(generatedReward(c.threat, 1 - 2 ** -32, c.priority))
   })
 
   it('keeps at most three contracts open across repeated generation checks', () => {

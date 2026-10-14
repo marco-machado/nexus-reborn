@@ -21,11 +21,11 @@ stories:
     name: "Generated Reward is stamped from threat band, roll and priority"
     file: "production/epics/economy-and-contracts/story-014-generated-reward-is-stamped-from-threat-band-roll-and-p.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-015"
     name: "Generated Reward clamp and immutability"
     file: "production/epics/economy-and-contracts/story-015-generated-reward-clamp-and-immutability.md"

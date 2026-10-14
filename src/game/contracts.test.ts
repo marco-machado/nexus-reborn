@@ -6,6 +6,7 @@ import {
   CONTRACT_EXPIRY_MIN_SEC,
   CONTRACT_EXPIRY_SPAN_SEC,
   CONTRACT_INTEL_REQ,
+  CONTRACT_KEYS,
   CONTRACT_REWARD_MAX,
   CONTRACT_REWARD_MIN,
   PRIORITY_EXPIRY_MIN_SEC,
@@ -14,6 +15,7 @@ import {
   contractMission,
   contractThreat,
   expediteTarget,
+  generatedReward,
   isGeneratedMissionId,
   reclientContract,
   rollContract,
@@ -27,7 +29,7 @@ import { CITIES, CITIES_BY_SECTOR, HOLDERS, SCAN_H, SCAN_W, cityById } from './a
 import type { CorpId } from './atlas'
 import { MISSIONS, operativeById } from './data'
 import { missionPeriod, rollOpeningHour, rollWeatherFront } from './missionParams'
-import { mulberry32 } from './rng'
+import { mulberry32, mulberryStep } from './rng'
 import type { ObjectiveDef } from './types'
 import { isWalkable } from './types'
 import { createWorld } from './world'
@@ -144,6 +146,90 @@ describe('rolling', () => {
       intelReq: contractMission(internal).intelReq,
     })
     expect(rollSuppressionContract(outsideInput, 2000, 0x4040).contract.client).toBe('nexus')
+  })
+})
+
+// Story EC-014: the generated Reward is stamped once, at creation, from the
+// threat band B, the roll u and the initial priority premium P (GDD
+// §Formulas `generated_reward`).
+describe('generated Reward stamp (story 014)', () => {
+  // The roll u is the n-th draw (1-based) from the market cursor.
+  function drawAt(state: number, n: number): number {
+    let value = 0
+    for (let i = 0; i < n; i++) [value, state] = mulberryStep(state)
+    return value
+  }
+  // rollContract draws sector, type, city, district, then the reward roll.
+  const MARKET_REWARD_DRAW = 5
+  // A suppression offer skips the type pick: city, district, then reward.
+  const SUPPRESSION_REWARD_DRAW = 3
+  const U_MAX = 1 - 2 ** -32
+
+  it('GIVEN High, u = 0.5, not initially priority THEN Reward = 54,500 CR', () => {
+    expect(generatedReward('HIGH', 0.5, false)).toBe(54500)
+  })
+
+  it('GIVEN High, u = 0.5, initially priority THEN Reward = 76,500 CR', () => {
+    expect(generatedReward('HIGH', 0.5, true)).toBe(76500)
+  })
+
+  it('GIVEN Moderate, u = 0, not initially priority THEN Reward = 30,500 CR', () => {
+    expect(generatedReward('MODERATE', 0, false)).toBe(30500)
+  })
+
+  it('GIVEN Moderate, u = 0.75, not initially priority THEN Reward = 38,500 CR (Math.round, not half-even)', () => {
+    expect(generatedReward('MODERATE', 0.75, false)).toBe(38500)
+  })
+
+  it('applies the priority premium once', () => {
+    // 54,600 × 1.4 = 76,440 → 76,500; a doubled premium would clamp to 95,000.
+    expect(generatedReward('HIGH', 0.5, true)).toBe(76500)
+    expect(generatedReward('HIGH', 0.5, true)).toBeLessThan(CONTRACT_REWARD_MAX)
+  })
+
+  it('keeps u = 0 and u near 1 inside 30,000-95,000 on the 500 CR grid', () => {
+    for (const threat of ['MODERATE', 'HIGH', 'SEVERE'] as const) {
+      for (const priority of [false, true]) {
+        for (const u of [0, U_MAX]) {
+          const r = generatedReward(threat, u, priority)
+          expect(r % 500).toBe(0)
+          expect(r).toBeGreaterThanOrEqual(CONTRACT_REWARD_MIN)
+          expect(r).toBeLessThanOrEqual(CONTRACT_REWARD_MAX)
+        }
+      }
+    }
+    // The 30,000 floor never binds; Severe priority near u = 1 hits the ceiling.
+    expect(generatedReward('MODERATE', 0, false)).toBeGreaterThan(CONTRACT_REWARD_MIN)
+    expect(generatedReward('SEVERE', U_MAX, true)).toBe(CONTRACT_REWARD_MAX)
+  })
+
+  it('stamps the market roll into the record at creation via rollContract', () => {
+    for (const input of INPUTS) {
+      for (const state of [0x1, 0x1234, 0xabcdef, 0x7fffffff]) {
+        const { contract } = rollContract([input], 5000, state)
+        const u = drawAt(state, MARKET_REWARD_DRAW)
+        expect(contract.priority).toBe(false)
+        expect(contract.reward).toBe(generatedReward(contract.threat, u, false))
+      }
+    }
+  })
+
+  it('stamps a suppression offer with the initial priority premium', () => {
+    for (const input of INPUTS) {
+      for (const state of [0x1, 0x77, 0xbeef]) {
+        const { contract } = rollSuppressionContract(input, 5000, state)
+        const u = drawAt(state, SUPPRESSION_REWARD_DRAW)
+        expect(contract.priority).toBe(true)
+        expect(contract.reward).toBe(generatedReward(contract.threat, u, true))
+      }
+    }
+  })
+
+  it('gives the same Reward from the same seed', () => {
+    const a = rollContract(INPUTS, 5000, 0x5eed).contract
+    const b = rollContract(INPUTS, 5000, 0x5eed).contract
+    expect(b.reward).toBe(a.reward)
+    expect(CONTRACT_KEYS).toContain('reward')
   })
 })
 
