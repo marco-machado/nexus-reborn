@@ -323,10 +323,42 @@ If [B]: add a warning block to the sprint plan document:
 
 ### Write the plan
 
-Ask: "May I write the sprint plan to `production/sprints/sprint-NNN.md` (`[N]` zero-padded to three digits) and
-`production/sprint-status.yaml`?" If yes, write both files (creating directories as
-needed). Verdict: **COMPLETE** — sprint plan and status file created. If no:
+Ask: "May I write the sprint plan to `production/sprints/sprint-NNN.md` (`[N]` zero-padded to three digits),
+`production/sprint-status.yaml`, and point the session state at the new sprint?" If yes, write
+the two sprint files (creating directories as needed), then the session state below.
+Verdict: **COMPLETE** — sprint plan and status file created. If no:
 Verdict: **BLOCKED** — user declined write.
+
+**Session state (`new` mode only).** `production/session-state/active.md` still names
+the previous sprint, and `/dev-story` and `/story-done` only rewrite it once a story
+of this one runs, so the status-line breadcrumb and the session-start checkpoint
+would point at the closed sprint until then. In one write, overwrite both blocks:
+
+```
+<!-- STATUS -->
+Epic: [the first Must Have story's `> **Epic**:` value]
+Feature: Sprint [N]
+Task:
+<!-- /STATUS -->
+
+<!-- CHECKPOINT -->
+**Updated:** [date]
+**Branch:** `[current git branch]`
+**Current task:** /sprint-plan new — production/sprints/sprint-NNN.md written
+**Next step:** [/qa-plan sprint when Phase 5 found no QA plan, else /story-readiness [first Must Have story path]]
+**Blocked on:** nothing
+**Files in progress:** none
+**Open questions:** none
+<!-- /CHECKPOINT -->
+```
+
+`Task:` stays empty — no story has started. Leave everything after
+`<!-- /CHECKPOINT -->` untouched. If `active.md` does not exist, create it from
+`.claude/docs/templates/session-state.md`; if it exists with no markers, insert the
+template's STATUS and CHECKPOINT blocks at the top. `update` and `status` modes do
+not touch it: the sprint number is unchanged. Confirm: "Session state updated." If
+the write did not happen, say so by name — "Session state NOT updated: the status
+line still shows Sprint [N-1]" — never stay silent.
 
 After writing, add:
 

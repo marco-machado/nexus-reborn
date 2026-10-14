@@ -604,7 +604,7 @@ checkpoint that says `/story-done` tells it the work is written.
 
 In the same write, **overwrite the `<!-- STATUS -->` … `<!-- /STATUS -->`
 block** with this story — `statusline.sh` shows it as the breadcrumb, and
-nothing else updates it:
+only `/sprint-plan new` and `/story-done` otherwise update it:
 
 ```
 <!-- STATUS -->
