@@ -26,6 +26,8 @@ import { economySlice } from '../game/deploy'
 import { freezeDeploy } from './deployFreeze'
 import { createWorld } from '../game/world'
 import { useMissionStore } from './missionStore'
+import { getWorld, setWorld } from '../game/runtime'
+import { visibleContracts } from '../game/contracts'
 
 // World-store boot snapshot for the economy integration suite, captured at
 // module load before any test moves the singleton.
@@ -2092,5 +2094,184 @@ describe('Accepting a contract is free; one pipeline for both kinds (EC-004)', (
     expect(useAppStore.getState().missionId).toBe('m01')
     expect(useAppStore.getState().phase).toBe('brief')
     expect(useAppStore.getState().credits).toBe(credits)
+  })
+})
+
+describe('Abort writes nothing to Economy (EC-013)', () => {
+  // TR-economy-008 / TR-economy-006 / ADR-0002 / ADR-0021: a mission in
+  // progress is memory only. Confirmed Abort (Hud onAbort -> goto('world'),
+  // then MissionScreen teardown) builds no invoice, moves no Credits, leaves
+  // the contract record where it was at deploy, and burns the apply-once key.
+  function generated(seed: number): GeneratedContract {
+    return {
+      id: 'gc' + seed.toString(16).padStart(8, '0'),
+      createdT: 0,
+      expiresAtT: 1e12,
+      sector: 'eu',
+      cityId: CITIES_BY_SECTOR.eu[0].id,
+      district: 5,
+      type: 'SEIZURE',
+      client: sectorClient('eu', initialOwner()),
+      // MODERATE needs Intel 1, which the opening director holds: Offered.
+      threat: 'MODERATE',
+      reward: 41500,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  // Brief -> Assembly -> Deploy, then the MissionScreen composer: mint the
+  // key, freeze the deploy, build and publish the world, run `seconds` of sim.
+  function deployAndRun(missionId: string, seconds: number): number {
+    useAppStore.setState({ phase: 'world', missionId: null })
+    useAppStore.getState().selectMission(missionId)
+    useAppStore.getState().goto('team')
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+    const mission = resolveMission(missionId)
+    if (!mission) throw new Error('mission did not resolve ' + missionId)
+    const ops = useAppStore.getState().squad.map(liveOperativeById)
+    const applyKey = useAppStore.getState().deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const world = createWorld(mission, ops, freezeDeploy(mission, ops, applyKey))
+    setWorld(world)
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+    while (world.time < seconds) world.tick(0.05)
+    expect(useMissionStore.getState().result).toBe('none')
+    return applyKey
+  }
+
+  // Hud onAbort, then the MissionScreen effect cleanup.
+  function confirmAbort(): void {
+    useAppStore.getState().goto('world')
+    setWorld(null)
+    useMissionStore.getState().reset()
+  }
+
+  // Every Economy-visible field an abort must not touch.
+  function ledger() {
+    const app = useAppStore.getState()
+    const w = useWorldStore.getState()
+    const c = useCampaignStore.getState()
+    return structuredClone({
+      credits: app.credits,
+      outcome: app.outcome,
+      lastAppliedKey: app.lastAppliedKey,
+      contracts: w.contracts,
+      t: w.t,
+      nextTaxT: w.nextTaxT,
+      influence: w.influence,
+      contractsWon: c.contractsWon,
+      lastReport: c.lastReport,
+    })
+  }
+
+  function expectNoDebrief(): void {
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    expect(getWorld()).toBeNull()
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    useAppStore.setState({
+      phase: 'world',
+      missionId: null,
+      squad: [...DEFAULT_SQUAD],
+      loadout: {},
+      credits: START_CREDITS,
+      outcome: null,
+      deploySerial: 0,
+      lastAppliedKey: 0,
+    })
+  })
+
+  it('AC 1: Abort on an Offered generated contract: no invoice, Credits C, record still Offered', () => {
+    const c = generated(61)
+    useWorldStore.setState({ contracts: [c] })
+    const intel = useCampaignStore.getState().intelLevel
+    expect(visibleContracts(useWorldStore.getState().contracts, intel)).toEqual([c])
+    const before = ledger()
+
+    deployAndRun(c.id, 60)
+    confirmAbort()
+
+    expectNoDebrief()
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(useWorldStore.getState().contracts).toEqual([c])
+    expect(visibleContracts(useWorldStore.getState().contracts, intel)).toEqual([c])
+    expect(ledger()).toEqual(before)
+  })
+
+  it('AC 2: Abort on Glass Veil Unwon: no invoice, Credits C, Glass Veil still Unwon', () => {
+    expect(useCampaignStore.getState().contractsWon).not.toContain('m01')
+    const before = ledger()
+
+    deployAndRun('m01', 60)
+    confirmAbort()
+
+    expectNoDebrief()
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(useCampaignStore.getState().contractsWon).not.toContain('m01')
+    expect(ledger()).toEqual(before)
+  })
+
+  it('edge: Abort at t = 0 writes nothing either', () => {
+    const before = ledger()
+    deployAndRun('m01', 0)
+    confirmAbort()
+    expectNoDebrief()
+    expect(ledger()).toEqual(before)
+  })
+
+  it('AC 3: a second Abort or teardown after Abort is a no-op: Credits, record and key unchanged, no ETA', () => {
+    const c = generated(62)
+    useWorldStore.setState({ contracts: [c] })
+    const before = ledger()
+
+    const key = deployAndRun(c.id, 120)
+    confirmAbort()
+    const afterAbort = ledger()
+    expect(afterAbort).toEqual(before)
+
+    // Abort confirmed again, then teardown again (a StrictMode double cleanup).
+    useAppStore.getState().goto('world')
+    confirmAbort()
+    // A Debrief apply on the way back finds no invoice: nothing to file.
+    applyDebrief(c.id)
+
+    expectNoDebrief()
+    expect(ledger()).toEqual(afterAbort)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    expect(useWorldStore.getState().contracts).toEqual([c])
+    // The burned key is never applied and never re-minted by the abort path.
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+    expect(useAppStore.getState().deploySerial).toBe(key)
+    // No ETA: the strategic clock and the Tax schedule did not move.
+    expect(useWorldStore.getState().t).toBe(before.t)
+    expect(useWorldStore.getState().nextTaxT).toBe(before.nextTaxT)
+  })
+
+  it('AC 3: the next deploy after an abort mints a fresh key above the burned one', () => {
+    const burned = deployAndRun('m01', 30)
+    confirmAbort()
+    const next = deployAndRun('m01', 0)
+    expect(next).toBe(burned + 1)
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+    confirmAbort()
   })
 })

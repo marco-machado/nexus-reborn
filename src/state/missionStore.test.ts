@@ -286,4 +286,28 @@ describe('abort leaves the World Network blob unchanged', () => {
     expect(getWorld()).toBeNull()
     expect(blob()).toEqual(before)
   })
+
+  // Story EC-013 AC 3: a second Abort or a repeat teardown is a no-op.
+  it('a second Abort or teardown after Abort leaves the blob, Credits and keys unchanged', () => {
+    const before = blob()
+    const credits = useAppStore.getState().credits
+    deployAndRun()
+    confirmAbort()
+    const keys = {
+      deploySerial: useAppStore.getState().deploySerial,
+      lastAppliedKey: useAppStore.getState().lastAppliedKey,
+    }
+
+    useAppStore.getState().goto('world')
+    confirmAbort()
+
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    expect(app.credits).toBe(credits)
+    expect({ deploySerial: app.deploySerial, lastAppliedKey: app.lastAppliedKey }).toEqual(keys)
+    expect(app.lastAppliedKey).toBe(0)
+    expect(getWorld()).toBeNull()
+    expect(blob()).toEqual(before)
+  })
 })

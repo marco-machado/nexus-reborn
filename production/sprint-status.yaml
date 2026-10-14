@@ -75,11 +75,11 @@ stories:
     name: "Abort writes nothing to Economy"
     file: "production/epics/economy-and-contracts/story-013-abort-writes-nothing-to-economy.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-018"
     name: "Generated expiry windows and Expedite extension"
     file: "production/epics/economy-and-contracts/story-018-generated-expiry-windows-and-expedite-extension.md"
