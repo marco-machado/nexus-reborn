@@ -39,11 +39,11 @@ stories:
     name: "Generated ETA by threat band"
     file: "production/epics/economy-and-contracts/story-016-generated-eta-by-threat-band.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-017"
     name: "Authored ETA table"
     file: "production/epics/economy-and-contracts/story-017-authored-eta-table.md"

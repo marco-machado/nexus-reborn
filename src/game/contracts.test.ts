@@ -270,6 +270,53 @@ describe('generated Reward clamp and immutability (story 015)', () => {
   })
 })
 
+describe('generated ETA by threat band (story 016)', () => {
+  // INPUTS: eu SECURE → Moderate, af STRAINED → High, oc CRITICAL → Severe.
+  function offerFor(sector: string, state = 0x1234): GeneratedContract {
+    return rollContract([inputFor(sector)], 5000, state).contract
+  }
+
+  it('GIVEN a new Moderate generated offer, WHEN it is created, THEN ETA = 2 days', () => {
+    const offer = offerFor('eu')
+    expect(offer.threat).toBe('MODERATE')
+    expect(contractMission(offer).etaDays).toBe(2)
+  })
+
+  it('GIVEN a new High generated offer THEN ETA = 3 days', () => {
+    const offer = offerFor('af')
+    expect(offer.threat).toBe('HIGH')
+    expect(contractMission(offer).etaDays).toBe(3)
+  })
+
+  it('GIVEN a new Severe generated offer THEN ETA = 4 days', () => {
+    const offer = offerFor('oc')
+    expect(offer.threat).toBe('SEVERE')
+    expect(contractMission(offer).etaDays).toBe(4)
+  })
+
+  it('takes the ETA from the record threat for suppression offers too', () => {
+    const expected = { MODERATE: 2, HIGH: 3, SEVERE: 4 } as const
+    for (const input of INPUTS) {
+      const { contract } = rollSuppressionContract(input, 5000, 0x77)
+      expect(contractMission(contract).etaDays).toBe(expected[contract.threat])
+    }
+  })
+
+  it("lets the record's own threat decide, not the sector's later garrison", () => {
+    const offer = offerFor('af')
+    expect(contractThreat('CRITICAL')).toBe('SEVERE')
+    // The sector worsens after creation: the record and its ETA keep the High band.
+    const cloned = structuredClone(offer)
+    expect(cloned.threat).toBe('HIGH')
+    expect(contractMission(cloned).etaDays).toBe(3)
+    // A control change re-clients the offer without re-deriving its threat or ETA.
+    const ownership = { ...OWNERSHIP, [offer.cityId]: 'nexus' as CorpId }
+    const moved = reclientContract(offer, 'helix', ownership, 0x1234).contract
+    expect(moved.threat).toBe('HIGH')
+    expect(contractMission(moved).etaDays).toBe(3)
+  })
+})
+
 describe('threat and client derivation', () => {
   it('maps garrison condition onto the threat ladder', () => {
     expect(contractThreat('SECURE')).toBe('MODERATE')
