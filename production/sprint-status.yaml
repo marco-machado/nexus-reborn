@@ -84,11 +84,11 @@ stories:
     name: "A loss pays nothing; a failed generated contract leaves the market"
     file: "production/epics/economy-and-contracts/story-009-a-loss-pays-nothing-a-failed-generated-contract-leaves.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-010"
     name: "Quiet replay pays no fee, optionals included"
     file: "production/epics/economy-and-contracts/story-010-quiet-replay-pays-no-fee-optionals-included.md"

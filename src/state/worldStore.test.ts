@@ -478,6 +478,19 @@ describe('generated contracts', () => {
     expect(after.events.at(-1)?.text).not.toContain('TAKES CONTROL OF')
   })
 
+  it('a failed generated contract also leaves the market (EC-009)', () => {
+    // ADR-0003: a generated contract that is fulfilled or failed leaves the market.
+    const failed = craft('eu', 31)
+    const other = craft('af', 32)
+    useWorldStore.setState({ contracts: [failed, other], nextContractT: Number.MAX_SAFE_INTEGER })
+    useWorldStore.getState().applyMissionResult(failed.id, outcome({ won: false }))
+    const after = useWorldStore.getState()
+    expect(after.contracts.map((c) => c.id)).toEqual([other.id])
+    expect(after.events.find((e) => e.text.includes('WITHDRAWS FROM'))?.tone).toBe('red')
+    // Still resolvable for the debrief that is showing it.
+    expect(resolveMission(failed.id)?.id).toBe(failed.id)
+  })
+
   it('resolveMission finds authored, open generated, and just-fulfilled missions', () => {
     expect(resolveMission('m01')?.codename).toBe('GLASS VEIL')
     expect(resolveMission('zz')).toBeNull()

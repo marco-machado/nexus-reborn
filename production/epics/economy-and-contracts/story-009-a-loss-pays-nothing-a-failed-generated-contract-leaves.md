@@ -1,12 +1,12 @@
 # Story 009: A loss pays nothing; a failed generated contract leaves the market
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -33,9 +33,9 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a loss, stored Reward 85,000 CR, 2 unique squad first-hits and optional bonus 0 CR, THEN `reward = 85,000 CR`, Collateral = 10,000 CR, `net_payout = 0 CR`, and Credits are unchanged by the contract fee.
-- [ ] GIVEN a loss, stored Reward 62,000 CR and optional objective complete (+9,000 CR), THEN `net_payout = 0 CR` and Credits are unchanged by the contract.
-- [ ] GIVEN a failed generated contract, WHEN debrief has applied, THEN `net_payout = 0 CR`, that instance is gone, and Credits are unchanged by the contract fee.
+- [x] GIVEN a loss, stored Reward 85,000 CR, 2 unique squad first-hits and optional bonus 0 CR, THEN `reward = 85,000 CR`, Collateral = 10,000 CR, `net_payout = 0 CR`, and Credits are unchanged by the contract fee.
+- [x] GIVEN a loss, stored Reward 62,000 CR and optional objective complete (+9,000 CR), THEN `net_payout = 0 CR` and Credits are unchanged by the contract.
+- [x] GIVEN a failed generated contract, WHEN debrief has applied, THEN `net_payout = 0 CR`, that instance is gone, and Credits are unchanged by the contract fee.
 
 ---
 
@@ -79,7 +79,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`, `src/state/worldStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "A loss pays nothing; a failed generated contract leaves the market (EC-009)" (4 tests); `src/state/worldStore.test.ts`, "a failed generated contract also leaves the market (EC-009)" (1 test)
 
 ---
 
@@ -87,3 +87,14 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: Story 007
 - Unlocks: Story 022
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 3/3 passing (all covered by unit tests; `npx vitest run src/state/appStore.test.ts src/state/worldStore.test.ts` — 215/215 passed at story-done)
+**Deviations**: None
+**Test Evidence**: Logic: `src/state/appStore.test.ts` (describe "A loss pays nothing; a failed generated contract leaves the market (EC-009)"), `src/state/worldStore.test.ts` ("a failed generated contract also leaves the market (EC-009)")
+**Run result**: N/A — no player-visible change; behaviour already lived in priceOutcome/applyDebrief/applyMissionResult, this story adds tests only
+**Code Review**: Lean mode, run unattended — the code-review prompt defaulted to the implement-stories workflow's /code-review step that runs before story-done; story-done did not check that result itself
+**Advisory**: QL-TEST-COVERAGE skipped (lean mode).

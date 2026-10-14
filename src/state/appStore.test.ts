@@ -13,7 +13,10 @@ import { nodeById } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
-import { DAY, sectorReadout, useWorldStore } from './worldStore'
+import { DAY, initialOwner, resolveMission, sectorReadout, useWorldStore } from './worldStore'
+import { CITIES_BY_SECTOR } from '../game/atlas'
+import { sectorClient } from '../game/contracts'
+import type { GeneratedContract } from '../game/contracts'
 import { applyDebrief } from './debrief'
 import { SAVE_KEY, captureSave, readSave, validateSave } from './save'
 import { assignedMassKg } from '../game/deployGate'
@@ -1417,5 +1420,125 @@ describe('Credits never overdraw (EC-002)', () => {
     const zero = structuredClone(valid)
     zero.app.credits = 0
     expect(validateSave(zero)).toBe(true)
+  })
+})
+
+describe('A loss pays nothing; a failed generated contract leaves the market (EC-009)', () => {
+  // TR-economy-004 / TR-economy-008 / ADR-0021 / ADR-0003: reward is stored on
+  // a loss so the invoice can print it; netPayout is 0 unless won and not
+  // quiet; a generated contract that is fulfilled or failed leaves the market.
+  const authored = (id: string) => {
+    const m = MISSIONS.find((x) => x.id === id)
+    if (!m) throw new Error('missing authored mission ' + id)
+    return m
+  }
+
+  function lossResult(over: Partial<MissionResult> = {}): MissionResult {
+    return {
+      applyKey: 1,
+      won: false,
+      kills: 2,
+      casualties: 1,
+      timeSec: 240,
+      civiliansHit: 0,
+      completedOptionalIds: [],
+      deadIds: [],
+      survivorHp: {},
+      quietReplay: false,
+      ...over,
+    }
+  }
+
+  function generated(seed: number): GeneratedContract {
+    return {
+      id: 'gc' + seed.toString(16).padStart(8, '0'),
+      createdT: 0,
+      expiresAtT: 1e9,
+      sector: 'eu',
+      cityId: CITIES_BY_SECTOR.eu[0].id,
+      district: 5,
+      type: 'SEIZURE',
+      client: sectorClient('eu', initialOwner()),
+      threat: 'HIGH',
+      reward: 50000,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({ ...structuredClone(worldBoot), nextTaxT: 1e12, nextEventT: 1e12 })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  })
+
+  it('loss, Reward 85,000, 2 hits, bonus 0: reward 85,000, Collateral 10,000, net 0, Credits unchanged', () => {
+    const m = authored('m01')
+    const economy = economySlice(m, false, false, 1)
+    expect(economy.reward).toBe(85000)
+    const o = priceOutcome(lossResult({ civiliansHit: 2 }), economy)
+    expect(o.reward).toBe(85000)
+    expect(o.bonus).toBe(0)
+    expect(collateralFine(o)).toBe(10000)
+    expect(netPayout(o)).toBe(0)
+
+    useAppStore.setState({ phase: 'mission', missionId: 'm01' })
+    useAppStore.getState().setOutcome(o)
+    applyDebrief('m01')
+    expect(useAppStore.getState().lastAppliedKey).toBe(1)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+
+  it('loss, Reward 62,000 with the optional complete (+9,000): net 0, Credits unchanged', () => {
+    const m = authored('m02')
+    const optional = m.objectives.filter((o) => o.optional).map((o) => o.id)
+    const economy = economySlice(m, false, false, 1)
+    expect(economy.reward).toBe(62000)
+    const o = priceOutcome(lossResult({ completedOptionalIds: optional }), economy)
+    expect(o.reward).toBe(62000)
+    expect(o.bonus).toBe(9000)
+    expect(netPayout(o)).toBe(0)
+
+    useAppStore.setState({ phase: 'mission', missionId: 'm02' })
+    useAppStore.getState().setOutcome(o)
+    applyDebrief('m02')
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+
+  it('failed generated contract: net 0, the instance is gone after debrief, Credits unchanged', () => {
+    const c = generated(41)
+    const keep = { ...generated(42), sector: 'af' as const, cityId: CITIES_BY_SECTOR.af[0].id }
+    useWorldStore.setState({ contracts: [c, keep], nextContractT: Number.MAX_SAFE_INTEGER })
+    const mission = resolveMission(c.id)
+    if (!mission) throw new Error('generated contract did not resolve')
+    const economy = economySlice(mission, true, false, 1)
+    expect(economy.reward).toBe(50000)
+    const o = priceOutcome(lossResult({ civiliansHit: 1 }), economy)
+    expect(o.reward).toBe(50000)
+    expect(netPayout(o)).toBe(0)
+
+    useAppStore.setState({ phase: 'mission', missionId: c.id })
+    useAppStore.getState().setOutcome(o)
+    applyDebrief(c.id)
+    const contracts = useWorldStore.getState().contracts
+    expect(contracts.some((x) => x.id === c.id)).toBe(false)
+    expect(contracts.map((x) => x.id)).toEqual([keep.id])
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+
+  it('a loss on an authored contract keeps the record selectable', () => {
+    useAppStore.setState({ phase: 'mission', missionId: 'm01' })
+    useAppStore
+      .getState()
+      .setOutcome(priceOutcome(lossResult(), economySlice(authored('m01'), false, false, 1)))
+    applyDebrief('m01')
+    useAppStore.getState().returnFromDebrief()
+    expect(resolveMission('m01')?.id).toBe('m01')
+    useAppStore.getState().selectMission('m01')
+    expect(useAppStore.getState().missionId).toBe('m01')
+    expect(useAppStore.getState().phase).toBe('brief')
   })
 })
