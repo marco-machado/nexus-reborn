@@ -1,12 +1,12 @@
 # Story 006: Collateral clamps and input sanitising
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -32,10 +32,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a non-quiet win, Reward 41,000 CR and 9 unique squad first-hits, THEN Collateral = 41,000 CR (capped at Reward).
-- [ ] GIVEN civiliansHit −1, THEN Collateral = 0 CR and `net_payout` is not increased by a negative fine.
-- [ ] GIVEN civiliansHit 2.7, THEN N = 2 and Collateral = 10,000 CR (Reward 85,000 CR).
-- [ ] GIVEN civiliansHit NaN and completed_bonus NaN, THEN Collateral = 0 CR, `optional_bonus = 0 CR`, and `net_payout = 85,000 CR`.
+- [x] GIVEN a non-quiet win, Reward 41,000 CR and 9 unique squad first-hits, THEN Collateral = 41,000 CR (capped at Reward).
+- [x] GIVEN civiliansHit −1, THEN Collateral = 0 CR and `net_payout` is not increased by a negative fine.
+- [x] GIVEN civiliansHit 2.7, THEN N = 2 and Collateral = 10,000 CR (Reward 85,000 CR).
+- [x] GIVEN civiliansHit NaN and completed_bonus NaN, THEN Collateral = 0 CR, `optional_bonus = 0 CR`, and `net_payout = 85,000 CR`.
 
 ---
 
@@ -81,7 +81,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "Collateral clamps and input sanitising (EC-006)" (8 tests)
 
 ---
 
@@ -89,3 +89,14 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: Story 005
 - Unlocks: Story 007
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (all covered by `src/state/appStore.test.ts`, describe "Collateral clamps and input sanitising (EC-006)"; 8/8 tests run and passed via `npx vitest run src/state/appStore.test.ts -t "EC-006"` on 2026-10-14)
+**Deviations**: None. Implementation in `src/state/appStore.ts` already met TR-economy-007 / ADR-0021; this story added tests only. Edge cases (±Infinity count, Infinity bonus def, non-integer and non-finite Reward, finite-integer fields) also covered.
+**Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
+**Run result**: N/A — pure pricing logic; no player-visible surface changed (from the /dev-story checkpoint)
+**Code Review**: Lean mode prompt answered unattended by the implement-stories workflow; its sequence runs /code-review before /story-done, but the review result was not checked in this step.
+**QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.

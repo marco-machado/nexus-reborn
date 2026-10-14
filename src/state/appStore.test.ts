@@ -1019,3 +1019,105 @@ describe('Collateral prices unique squad-caused civilian first-hits (EC-005)', (
     expect(netPayout(priced(2))).toBe(75000)
   })
 })
+
+describe('Collateral clamps and input sanitising (EC-006)', () => {
+  // TR-economy-007 / ADR-0021: N = max(0, floor(civiliansHit)), non-finite → 0;
+  // collateral = min(reward, N × COLLATERAL_FINE). A negative or non-finite
+  // input never raises net_payout, and every priced field is a finite integer.
+  function priced(
+    civiliansHit: number,
+    over: { reward?: number; bonusDefs?: Record<string, number>; optional?: string[] } = {},
+  ): MissionOutcome {
+    return priceOutcome(
+      {
+        applyKey: 1,
+        won: true,
+        kills: 3,
+        casualties: 0,
+        timeSec: 240,
+        civiliansHit,
+        completedOptionalIds: over.optional ?? [],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: false,
+      },
+      { reward: over.reward ?? 85000, bonusDefs: over.bonusDefs ?? {} },
+    )
+  }
+
+  function expectFiniteIntegers(o: MissionOutcome): void {
+    for (const v of [o.reward, o.bonus, collateralFine(o), netPayout(o)]) {
+      expect(Number.isFinite(v)).toBe(true)
+      expect(Number.isInteger(v)).toBe(true)
+    }
+  }
+
+  it('caps collateral at Reward: 9 first-hits on a 41,000 CR win price 41,000 CR', () => {
+    const o = priced(9, { reward: 41000 })
+    expect(collateralFine(o)).toBe(41000)
+    expect(netPayout(o)).toBe(0)
+    expectFiniteIntegers(o)
+  })
+
+  it('civiliansHit −1 prices 0 CR and does not raise net_payout', () => {
+    const o = priced(-1)
+    expect(collateralFine(o)).toBe(0)
+    expect(netPayout(o)).toBe(85000)
+    expect(netPayout(o)).toBeLessThanOrEqual(netPayout(priced(0)))
+    expectFiniteIntegers(o)
+  })
+
+  it('civiliansHit 2.7 floors to N = 2: 10,000 CR on an 85,000 CR Reward', () => {
+    const o = priced(2.7)
+    expect(collateralFine(o)).toBe(10000)
+    expect(netPayout(o)).toBe(75000)
+    expectFiniteIntegers(o)
+  })
+
+  it('civiliansHit NaN and a NaN bonus def price 0 collateral, 0 bonus, 85,000 CR net', () => {
+    const o = priced(Number.NaN, { optional: ['opt'], bonusDefs: { opt: Number.NaN } })
+    expect(collateralFine(o)).toBe(0)
+    expect(o.bonus).toBe(0)
+    expect(netPayout(o)).toBe(85000)
+    expectFiniteIntegers(o)
+  })
+
+  it('treats ±Infinity civiliansHit as N = 0', () => {
+    for (const n of [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      const o = priced(n)
+      expect(collateralFine(o)).toBe(0)
+      expect(netPayout(o)).toBe(85000)
+      expectFiniteIntegers(o)
+    }
+  })
+
+  it('an Infinity bonus def prices 0 and cannot raise net_payout', () => {
+    const o = priced(0, { optional: ['opt'], bonusDefs: { opt: Number.POSITIVE_INFINITY } })
+    expect(o.bonus).toBe(0)
+    expect(netPayout(o)).toBe(85000)
+    expectFiniteIntegers(o)
+  })
+
+  it('a non-integer Reward prices as integers, with the cap applied to the floored Reward', () => {
+    const o = priced(20, { reward: 41000.6 })
+    expect(o.reward).toBe(41000)
+    expect(collateralFine(o)).toBe(41000)
+    expect(netPayout(o)).toBe(0)
+    expectFiniteIntegers(o)
+    const small = priced(1.5, { reward: 85000.4 })
+    expect(small.reward).toBe(85000)
+    expect(collateralFine(small)).toBe(COLLATERAL_FINE)
+    expect(netPayout(small)).toBe(80000)
+    expectFiniteIntegers(small)
+  })
+
+  it('a non-finite Reward prices 0 and pays nothing', () => {
+    for (const r of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      const o = priced(2, { reward: r })
+      expect(o.reward).toBe(0)
+      expect(collateralFine(o)).toBe(0)
+      expect(netPayout(o)).toBe(0)
+      expectFiniteIntegers(o)
+    }
+  })
+})
