@@ -62,5 +62,5 @@ UI story: closed by the retained screenshots above; a lead sign-off is welcome b
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
-| qa-lead | | | [ ] |
+| qa-lead | Marco Machado | 2026-10-13 | [x] |
 

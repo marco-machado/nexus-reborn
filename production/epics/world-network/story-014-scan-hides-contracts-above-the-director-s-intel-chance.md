@@ -33,8 +33,8 @@
 
 *From GDD `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] GIVEN intel < 2 vs intel ≥ 2 on the same contract, WHEN World Network chrome is read, THEN Chance still prints. (Risk index bands are Brief-only.)
-- [ ] GIVEN an unexpired generated instance whose required Intel is greater than the director's Intel level, and whose gate is not Expedite-waived, WHEN Scan / OPEN CONTRACTS is read, THEN that instance is absent while Economy still holds its record.
+- [x] GIVEN intel < 2 vs intel ≥ 2 on the same contract, WHEN World Network chrome is read, THEN Chance still prints. (Risk index bands are Brief-only.)
+- [x] GIVEN an unexpired generated instance whose required Intel is greater than the director's Intel level, and whose gate is not Expedite-waived, WHEN Scan / OPEN CONTRACTS is read, THEN that instance is absent while Economy still holds its record.
 
 ---
 

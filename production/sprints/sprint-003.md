@@ -10,7 +10,7 @@ Stand up the Economy ledger and invoice: Credits never overdraw, collateral and 
 - Buffer (20%): 2 days
 - Available: 8 days
 - Must Have uses 4.0 of those 8. Should Have uses 3.0. Nice to Have adds 1.0 and sits past the planned line, so it is cut first.
-- Calibration: Sprint 1 delivered 14.0 sheet-days in about 2 working days (retrospective 2026-10-12) and Sprint 2's 8.5 sheet-days closed in the first days of the window. These estimates are the same uncalibrated unit.
+- Calibration (retro sprint 2, 2026-10-13): Sprint 2 delivered 8.5 sheet-days in about 2.7 active hours, about 3.1 sheet-days per active hour. At that pace this plan's 8.0 sheet-days is about 2.6 active hours. Many sprint 2 stories only added tests for behaviour that already existed. Part of this sprint's pricing exists too: `collateralFine` and `netPayout` are in `src/state/appStore.ts` and are used by the Debrief (`src/ui/index.tsx`) and the HUD. Check each story against that code at `/story-readiness` (retro action 2). A story that only needs tests and evidence should be re-estimated down. Record actual hours per story at close-out (retro action 3).
 - Epic choice: World Network (19 of 19) is Complete. Economy and contracts is the next Core epic; its Must Have chain (001 → 003, 005 → 006 → 007) has no unmet dependency. Research, Persistence, Roster, Tactical, Interface and Audio epics stay out. Pull them in with `/sprint-plan update` if the window should be filled.
 - Story granularity: balanced (10 stories planned, inside the 6–10 range).
 - No milestone is defined. No risk register exists. Planning is against the Ready story backlog only.
@@ -54,7 +54,7 @@ QA plan: run `/qa-plan sprint` before implementation begins. (No `qa-plan-sprint
 
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
-| Sheet estimates run about 5× actual, so the sprint closes in a few days and the window sits empty | High | Low | Do not pad with another epic in this plan. Pull more with `/sprint-plan update` if the window should be filled |
+| Sheet estimates run far above actual (sprint 2 measured about 25×), so the sprint closes in a few active hours and the window sits empty | High | Low | Do not pad with another epic in this plan. Pull more with `/sprint-plan update` if the window should be filled |
 | EC-001's opening 128,450 CR may already exist in `appStore` and duplicate a constant | Medium | Medium | Read the existing balance and Tax deposit path first. Reuse it rather than adding a second ledger (ADR-0012: no `economyStore`) |
 | EC-005–EC-007 and the later invoice stories fork a second payout formula against the outcome DTO | Medium | High | Price in one place from the outcome DTO (ADR-0021). EC-008, EC-009 and EC-010 assert against that single function |
 | EC-010's frozen `quietReplay` depends on the Economy deploy slice (ADR-0009) that Tactical/Persistence stories also touch | Medium | Medium | Assert against the slice as cloned at create. Do not read live `contractsWon` at apply |

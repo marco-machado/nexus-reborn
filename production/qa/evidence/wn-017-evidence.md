@@ -61,6 +61,6 @@ Integration story with UI surfaces. Its integration tests passed in the 770/770 
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
-| qa-lead (screenshots) | | | [ ] |
+| qa-lead (screenshots) | Marco Machado | 2026-10-13 | [x] |
 | lead-programmer (integration tests) | | | [ ] |
 

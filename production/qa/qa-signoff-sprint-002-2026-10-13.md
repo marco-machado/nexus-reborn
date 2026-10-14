@@ -41,6 +41,14 @@ There are no open S1/S2 bugs and no story failed. All 11 stories produced execut
 1. **WN-018 copy question.** In the campaign-failed state, Glass Veil's row reads `REQUIRES INTEL LVL 1`. This is not a defect against the current acceptance criteria. The design or UX owner should decide whether that copy is intended. If it is not, file it as a story or bug.
 2. **Lead sign-off.** The sign-off rows in the five evidence files (WN-012, 013, 014, 017, 018) are unchecked. A lead needs to review and check them before the sprint closes.
 
+### Conditions Close-Out (2026-10-13)
+1. **WN-018 copy**: Marco accepted `REQUIRES INTEL LVL 1` in the campaign-failed state as intended. No story or bug filed.
+2. **Lead sign-off**: Marco Machado signed the qa-lead rows in the WN-012, 013, 014, 017 and 018 evidence files.
+- **WN-014 bookkeeping**: both acceptance-criteria boxes ticked. The 5 "intel visibility (WN-014)" tests pass in `src/game/contracts.test.ts`.
+- **`taxPaid` leak (retro sprint 1 action 4)**: fixed rather than filed. `applyMissionResult` and `spendInfluence` in `src/state/worldStore.ts` now return `commitFlow(f)`, so the session-only key stays off the store. Two assertions in `src/state/worldStore.test.ts` fail without the fix and pass with it. Full suite: 777/777, `tsc -b` exit 0.
+
+**Sprint 2 status: CLOSED.**
+
 ### Next Step
 Resolve the conditions before advancing. S3/S4 bugs may be deferred to polish.
 
