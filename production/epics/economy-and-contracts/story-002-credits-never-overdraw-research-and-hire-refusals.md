@@ -1,12 +1,12 @@
 # Story 002: Credits never overdraw: research and hire refusals
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN Credits 15,999 CR and a project listed at 16,000 CR, WHEN research is authorized, THEN it is refused, Credits stay 15,999 CR, and the project does not start.
-- [ ] GIVEN Credits 15,999 CR and a candidate listed at 16,000 CR, WHEN hire is authorized, THEN it is refused, Credits stay 15,999 CR, and the roster is unchanged.
-- [ ] GIVEN Credits 16,000 CR and a project listed at 16,000 CR, WHEN research is authorized, THEN it succeeds and Credits = 0 CR.
-- [ ] GIVEN Credits equal to a candidate's hire cost 16,000 CR, WHEN hire is authorized, THEN it succeeds and Credits = 0 CR.
+- [x] GIVEN Credits 15,999 CR and a project listed at 16,000 CR, WHEN research is authorized, THEN it is refused, Credits stay 15,999 CR, and the project does not start.
+- [x] GIVEN Credits 15,999 CR and a candidate listed at 16,000 CR, WHEN hire is authorized, THEN it is refused, Credits stay 15,999 CR, and the roster is unchanged.
+- [x] GIVEN Credits 16,000 CR and a project listed at 16,000 CR, WHEN research is authorized, THEN it succeeds and Credits = 0 CR.
+- [x] GIVEN Credits equal to a candidate's hire cost 16,000 CR, WHEN hire is authorized, THEN it succeeds and Credits = 0 CR.
 
 ---
 
@@ -83,7 +83,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`, `src/state/researchStore.test.ts`, `src/game/recruits.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts` › `Credits never overdraw (EC-002)`
 
 ---
 
@@ -91,3 +91,13 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: Story 001
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (all covered by unit tests in `src/state/appStore.test.ts` › `Credits never overdraw (EC-002)`; the file ran 88/88 passing at close)
+**Deviations**: ADVISORY — ADR-0013 puts the research check → start → spend sequence in `Research.tsx`; it now lives in a new `appStore.authorizeResearch(node, t)` (CONTRACT FILE `src/state/appStore.ts`), and `Research.tsx` calls that. The order and refusal behaviour are the same, so it works the same way; the ADR's debit-site text and diagram should name the new action next time ADR-0013 is touched.
+**Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
+**Run result**: OBSERVED — per the /dev-story checkpoint: Research AUTHORIZE on Adv. Propellants took Credits 128,450 → 112,450 CR and started the Ballistics lab with no console errors. No screenshot kept; none needed, because no AC names anything on screen.
+**Code Review**: Pending — lean mode; this step could not confirm whether /code-review ran. Defaulted to "run /code-review before the sprint close-out" (autonomous run).

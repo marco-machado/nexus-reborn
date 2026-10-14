@@ -15,6 +15,7 @@ import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import { DAY, sectorReadout, useWorldStore } from './worldStore'
 import { applyDebrief } from './debrief'
+import { SAVE_KEY, captureSave, readSave, validateSave } from './save'
 import { assignedMassKg } from '../game/deployGate'
 import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
 import { xpBonus } from '../game/experience'
@@ -1200,5 +1201,137 @@ describe('Net payout: reward plus optional bonus minus collateral (EC-007)', () 
       bonusDefs: { opt: 6000 },
     })
     expect(netPayout(withBonus)).toBe(6000)
+  })
+})
+
+describe('Credits never overdraw (EC-002)', () => {
+  // ADR-0013 / TR-economy-001. b-propellants is a 16,000 CR root project
+  // (no prerequisites), so only the balance can refuse it here.
+  const PROJECT = nodeById('b-propellants')
+  const PRICE = 16000
+
+  beforeEach(() => {
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  })
+
+  // Opens a roster bay (the campaign boots at the cap) and lists the first
+  // candidate at exactly 16,000 CR.
+  function candidateAt16000(): string {
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'] }), 0)
+    const candidates = useCampaignStore.getState().candidates.slice()
+    candidates[0] = { ...candidates[0], cost: PRICE }
+    useCampaignStore.setState({ candidates })
+    return candidates[0].id
+  }
+
+  it('the research project under test is listed at 16,000 CR', () => {
+    expect(PROJECT.cost).toBe(PRICE)
+    expect(PROJECT.needs).toEqual([])
+  })
+
+  it('at 15,999 CR a 16,000 CR project is refused: Credits, research and occupancy unchanged', () => {
+    useAppStore.setState({ credits: 15999 })
+    const app = useAppStore.getState()
+    const research = useResearchStore.getState()
+    let wakes = 0
+    const unsubApp = useAppStore.subscribe(() => wakes++)
+    const unsubResearch = useResearchStore.subscribe(() => wakes++)
+
+    expect(useAppStore.getState().authorizeResearch(PROJECT, 0)).toBe(false)
+
+    unsubApp()
+    unsubResearch()
+    expect(useAppStore.getState().credits).toBe(15999)
+    expect(useResearchStore.getState().labs.ballistics).toBeNull()
+    expect(useResearchStore.getState().done).toEqual([])
+    // Identity no-op: no new state object, no subscriber wake.
+    expect(useAppStore.getState()).toBe(app)
+    expect(useResearchStore.getState()).toBe(research)
+    expect(wakes).toBe(0)
+  })
+
+  it('at 15,999 CR a 16,000 CR candidate is refused: Credits and roster unchanged', () => {
+    const id = candidateAt16000()
+    useAppStore.setState({ credits: 15999 })
+    const app = useAppStore.getState()
+    const campaign = useCampaignStore.getState()
+    let wakes = 0
+    const unsubApp = useAppStore.subscribe(() => wakes++)
+    const unsubCampaign = useCampaignStore.subscribe(() => wakes++)
+
+    useAppStore.getState().hireOperative(id)
+
+    unsubApp()
+    unsubCampaign()
+    expect(useAppStore.getState().credits).toBe(15999)
+    expect(useCampaignStore.getState()).toBe(campaign)
+    expect(useCampaignStore.getState().operatives.some((o) => o.id === id)).toBe(false)
+    expect(useAppStore.getState()).toBe(app)
+    expect(wakes).toBe(0)
+  })
+
+  it('at exactly 16,000 CR the 16,000 CR project starts and Credits = 0', () => {
+    useAppStore.setState({ credits: PRICE })
+    expect(useAppStore.getState().authorizeResearch(PROJECT, 100)).toBe(true)
+    expect(useAppStore.getState().credits).toBe(0)
+    expect(useResearchStore.getState().labs.ballistics).toEqual({
+      id: PROJECT.id,
+      startedT: 100,
+      endT: 100 + PROJECT.hours * 3600,
+    })
+  })
+
+  it('at exactly 16,000 CR the 16,000 CR candidate is hired and Credits = 0', () => {
+    const id = candidateAt16000()
+    useAppStore.setState({ credits: PRICE })
+    useAppStore.getState().hireOperative(id)
+    expect(useAppStore.getState().credits).toBe(0)
+    expect(useCampaignStore.getState().operatives.some((o) => o.id === id)).toBe(true)
+    expect(useCampaignStore.getState().candidates.some((c) => c.id === id)).toBe(false)
+  })
+
+  it('checks, starts, then spends: a lab that refuses the project bills nothing', () => {
+    // Funds are there, but the ballistics lab is busy, so start() refuses.
+    // Spend-then-start would have charged 16,000 CR for nothing.
+    useAppStore.setState({ credits: PRICE })
+    useResearchStore.setState({
+      labs: { ballistics: { id: 'b-coating', startedT: 0, endT: 1e9 }, cybernetics: null, control: null },
+    })
+    const labs = useResearchStore.getState().labs
+    expect(useAppStore.getState().authorizeResearch(PROJECT, 0)).toBe(false)
+    expect(useAppStore.getState().credits).toBe(PRICE)
+    expect(useResearchStore.getState().labs).toBe(labs)
+  })
+
+  it('hydrate drops a save whose Credits are negative or non-finite, never clamping to 0', () => {
+    const valid = captureSave()
+    expect(validateSave(valid)).toBe(true)
+    for (const credits of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const bad = structuredClone(valid)
+      bad.app.credits = credits
+      expect(validateSave(bad)).toBe(false)
+      // readSave drops the whole blob (no campaign), it does not repair it.
+      const data = new Map([[SAVE_KEY, JSON.stringify(bad)]])
+      if (!Number.isFinite(credits)) {
+        // JSON cannot carry NaN/Infinity; they serialise to null.
+        expect(JSON.parse(data.get(SAVE_KEY)!).app.credits).toBeNull()
+      }
+      const storage = {
+        getItem: (k: string) => data.get(k) ?? null,
+        setItem: (k: string, v: string) => void data.set(k, v),
+        removeItem: (k: string) => void data.delete(k),
+      }
+      expect(readSave(storage)).toBeNull()
+      expect(data.has(SAVE_KEY)).toBe(false)
+    }
+    // Exactly 0 CR is a legal balance and survives.
+    const zero = structuredClone(valid)
+    zero.app.credits = 0
+    expect(validateSave(zero)).toBe(true)
   })
 })

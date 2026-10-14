@@ -7,6 +7,7 @@ import { LOADOUT_SLOTS, emptyLoadout } from '../game/mass'
 import { MAX_SQUAD, assignedMassKg, canDeploy } from '../game/deployGate'
 import { useResearchStore } from './researchStore'
 import type { LoadoutItemId, OperativeLoadout, SquadLoadout } from '../game/mass'
+import type { ResearchNode } from '../game/research'
 import { missionLocked, useCampaignStore } from './campaignStore'
 
 export type Phase = 'menu' | 'world' | 'research' | 'brief' | 'team' | 'mission' | 'debrief'
@@ -136,6 +137,10 @@ export interface AppState {
   toggleOperative: (id: string) => void
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
   spendCredits: (amount: number) => void
+  // Research AUTHORIZE (ADR-0013): re-reads the balance, starts the project,
+  // then bills it. A short balance or a lab that refuses the project is a
+  // full no-op. Returns whether the project started.
+  authorizeResearch: (node: ResearchNode, t: number) => boolean
   // Tax yield and other income. Does not convert from Influence.
   addCredits: (amount: number) => void
   hireOperative: (candidateId: string) => void
@@ -202,6 +207,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => (amount > 0 && s.credits >= amount ? { credits: s.credits - amount } : s)),
   addCredits: (amount) =>
     set((s) => (amount > 0 ? { credits: s.credits + amount } : s)),
+  // Check, start, then spend: never spend first, since researchStore.start is
+  // occupancy only and may still refuse (busy lab, unmet prerequisites).
+  authorizeResearch: (node, t) => {
+    if (get().credits < node.cost) return false
+    if (!useResearchStore.getState().start(node, t)) return false
+    get().spendCredits(node.cost)
+    return true
+  },
   // Signs a recruitment candidate. The fee clears here first, so a blocked
   // hire (unknown candidate, roster at cap, overdraw) costs nothing.
   hireOperative: (candidateId) => {

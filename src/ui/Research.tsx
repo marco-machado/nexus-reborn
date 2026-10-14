@@ -261,8 +261,7 @@ function ReqRow(props: { id: string; met: boolean }) {
 }
 function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) {
   const credits = useAppStore((s) => s.credits)
-  const spendCredits = useAppStore((s) => s.spendCredits)
-  const start = useResearchStore((s) => s.start)
+  const authorize = useAppStore((s) => s.authorizeResearch)
   const n = props.node
   const branch = branchDef(n.branch)
   const state = nodeState(n, props.done, props.labs)
@@ -360,10 +359,9 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
         disabled={!can}
         aria-label={'AUTHORIZE ' + nodeTitle(n) + ' // ' + sub}
         onClick={act(() => {
-          // Bill only a lab that actually took the project, and only against
-          // the balance as it stands now, so the two stores cannot drift.
-          if (useAppStore.getState().credits < n.cost) return
-          if (start(n, useWorldStore.getState().t)) spendCredits(n.cost)
+          // appStore.authorizeResearch bills only a lab that actually took the
+          // project, against the balance as it stands now (ADR-0013).
+          authorize(n, useWorldStore.getState().t)
         })}
       >
         <span className="cta-inner">AUTHORIZE PROJECT</span>
