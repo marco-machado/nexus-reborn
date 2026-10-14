@@ -1121,3 +1121,84 @@ describe('Collateral clamps and input sanitising (EC-006)', () => {
     }
   })
 })
+
+describe('Net payout: reward plus optional bonus minus collateral (EC-007)', () => {
+  // TR-economy-011 / TR-economy-007 / ADR-0021: bonus = sum of bonusDefs over
+  // unique completedOptionalIds (unknown, negative, non-finite → 0);
+  // netPayout = (won && !quietReplay) ? reward + bonus − collateral : 0.
+  function priced(over: {
+    reward: number
+    civiliansHit?: number
+    bonusDefs?: Record<string, number>
+    optional?: string[]
+  }): MissionOutcome {
+    return priceOutcome(
+      {
+        applyKey: 1,
+        won: true,
+        kills: 4,
+        casualties: 0,
+        timeSec: 300,
+        civiliansHit: over.civiliansHit ?? 0,
+        completedOptionalIds: over.optional ?? [],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: false,
+      },
+      { reward: over.reward, bonusDefs: over.bonusDefs ?? {} },
+    )
+  }
+
+  it('Reward 85,000, bonus 0, Collateral 10,000 pays 75,000 CR', () => {
+    const o = priced({ reward: 85000, civiliansHit: 2 })
+    expect(o.bonus).toBe(0)
+    expect(collateralFine(o)).toBe(10000)
+    expect(netPayout(o)).toBe(75000)
+  })
+
+  it('Reward 41,000, Collateral 41,000, optional +6,000 pays 6,000 CR', () => {
+    const o = priced({
+      reward: 41000,
+      civiliansHit: 9,
+      optional: ['rh-opt'],
+      bonusDefs: { 'rh-opt': 6000 },
+    })
+    expect(collateralFine(o)).toBe(41000)
+    expect(o.bonus).toBe(6000)
+    expect(netPayout(o)).toBe(6000)
+  })
+
+  it('a −1,000 bonus def prices 0 and net_payout stays 85,000 CR', () => {
+    const o = priced({ reward: 85000, optional: ['neg'], bonusDefs: { neg: -1000 } })
+    expect(collateralFine(o)).toBe(0)
+    expect(o.bonus).toBe(0)
+    expect(netPayout(o)).toBe(85000)
+  })
+
+  it('a duplicate completed optional id counts once', () => {
+    const o = priced({ reward: 85000, optional: ['opt', 'opt', 'opt'], bonusDefs: { opt: 6000 } })
+    expect(o.bonus).toBe(6000)
+    expect(netPayout(o)).toBe(91000)
+  })
+
+  it('an unknown optional id prices 0', () => {
+    const o = priced({ reward: 85000, optional: ['opt', 'ghost'], bonusDefs: { opt: 6000 } })
+    expect(o.bonus).toBe(6000)
+    expect(netPayout(o)).toBe(91000)
+  })
+
+  it('collateral beyond reward plus bonus never drives net_payout below 0', () => {
+    for (const hits of [9, 20, 1000]) {
+      const o = priced({ reward: 41000, civiliansHit: hits })
+      expect(netPayout(o)).toBeGreaterThanOrEqual(0)
+      expect(netPayout(o)).toBe(0)
+    }
+    const withBonus = priced({
+      reward: 41000,
+      civiliansHit: 1000,
+      optional: ['opt'],
+      bonusDefs: { opt: 6000 },
+    })
+    expect(netPayout(withBonus)).toBe(6000)
+  })
+})

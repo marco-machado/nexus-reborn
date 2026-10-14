@@ -57,11 +57,11 @@ stories:
     name: "Net payout: reward plus optional bonus minus collateral"
     file: "production/epics/economy-and-contracts/story-007-net-payout-reward-plus-optional-bonus-minus-collateral.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-002"
     name: "Credits never overdraw: research and hire refusals"
     file: "production/epics/economy-and-contracts/story-002-credits-never-overdraw-research-and-hire-refusals.md"

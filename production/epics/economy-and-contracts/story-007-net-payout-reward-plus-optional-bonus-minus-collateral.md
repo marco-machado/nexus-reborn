@@ -1,12 +1,12 @@
 # Story 007: Net payout: reward plus optional bonus minus collateral
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a non-quiet win, Reward 85,000 CR, optional bonus 0 CR, Collateral 10,000 CR, WHEN debrief applies, THEN `net_payout = 75,000 CR`.
-- [ ] GIVEN Reward 41,000 CR, Collateral 41,000 CR and optional complete +6,000 CR, THEN `net_payout = 6,000 CR`.
-- [ ] GIVEN Reward 85,000 CR, completed_bonus −1,000 CR and Collateral 0 CR, THEN `optional_bonus = 0 CR` and `net_payout = 85,000 CR`.
+- [x] GIVEN a non-quiet win, Reward 85,000 CR, optional bonus 0 CR, Collateral 10,000 CR, WHEN debrief applies, THEN `net_payout = 75,000 CR`.
+- [x] GIVEN Reward 41,000 CR, Collateral 41,000 CR and optional complete +6,000 CR, THEN `net_payout = 6,000 CR`.
+- [x] GIVEN Reward 85,000 CR, completed_bonus −1,000 CR and Collateral 0 CR, THEN `optional_bonus = 0 CR` and `net_payout = 85,000 CR`.
 
 ---
 
@@ -81,7 +81,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe "Net payout: reward plus optional bonus minus collateral (EC-007)" (6 tests)
 
 ---
 
@@ -89,3 +89,14 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 
 - Depends on: Story 005, Story 006
 - Unlocks: Story 008
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 3/3 passing (all auto-verified by unit tests; `npx vitest run src/state/appStore.test.ts -t EC-007` ran 6 passed)
+**Deviations**: None. `priceOutcome` / `netPayout` in `src/state/appStore.ts` match the Implementation Notes; collateral is clamped to reward in `collateralFine`, so `netPayout` never drops below the bonus.
+**Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Net payout: reward plus optional bonus minus collateral (EC-007)" (6 tests, incl. duplicate id, unknown id, collateral clamp edge cases)
+**Run result**: N/A — pure pricing logic; Debrief already renders netPayout, no new surface
+**Code Review**: Not confirmed in this step (lean mode; story-done ran unattended, default recorded: run /code-review before sprint close-out)
+**Advisory**: QL-TEST-COVERAGE skipped — Lean mode.
