@@ -233,6 +233,43 @@ describe('generated Reward stamp (story 014)', () => {
   })
 })
 
+describe('generated Reward clamp and immutability (story 015)', () => {
+  it('GIVEN a new Severe offer, initially priority, u = 0.5 THEN Reward = 95,000 CR (clamped)', () => {
+    // 70,000 × 1.05 × 1.4 = 102,900 raw, which the ceiling clamps.
+    expect(70000 * (0.9 + 0.5 * 0.3) * 1.4).toBeCloseTo(102900, 6)
+    expect(generatedReward('SEVERE', 0.5, true)).toBe(95000)
+    expect(generatedReward('SEVERE', 0.5, true)).toBe(CONTRACT_REWARD_MAX)
+  })
+
+  it('leaves a raw value landing exactly on 95,000 unchanged, and 94,500 below it', () => {
+    // Severe priority: 98,000 × (0.9 + 0.3u) = 95,000 at this u.
+    const uAtCeiling = (95000 / 98000 - 0.9) / 0.3
+    expect(generatedReward('SEVERE', uAtCeiling, true)).toBe(95000)
+    // 98,000 × (0.9 + 0.3u) = 94,500 sits on the grid under the ceiling.
+    const uBelow = (94500 / 98000 - 0.9) / 0.3
+    expect(generatedReward('SEVERE', uBelow, true)).toBe(94500)
+  })
+
+  it('keeps the stamped Reward through a record clone and the mission projection', () => {
+    const { contract } = rollSuppressionContract(INPUTS[2], 5000, 0xbeef)
+    const cloned = structuredClone(contract)
+    expect(cloned.reward).toBe(contract.reward)
+    expect({ ...contract, expedited: true }.reward).toBe(contract.reward)
+    expect(contractMission(cloned).reward).toBe(contract.reward)
+  })
+
+  it('keeps the stamped Reward when a control change re-clients the offer', () => {
+    for (const state of [0x1, 0x1234, 0xabcdef]) {
+      const { contract } = rollContract([INPUTS[0]], 5000, state)
+      // Nexus takes the offer's city: the record moves to a corp-held city.
+      const ownership = { ...OWNERSHIP, [contract.cityId]: 'nexus' as CorpId }
+      const moved = reclientContract(contract, 'omni', ownership, state).contract
+      expect(moved).not.toBe(contract)
+      expect(moved.reward).toBe(contract.reward)
+    }
+  })
+})
+
 describe('threat and client derivation', () => {
   it('maps garrison condition onto the threat ladder', () => {
     expect(contractThreat('SECURE')).toBe('MODERATE')

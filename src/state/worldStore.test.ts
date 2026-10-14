@@ -907,6 +907,46 @@ describe('influence economy', () => {
   })
 })
 
+describe('generated Reward immutability (story 015)', () => {
+  const R = 73500
+
+  it('Expedite waives the gate and adds 24 h of expiry but leaves Reward at R', () => {
+    pinFlows()
+    const offer = { ...craft('eu', 41, 'SEVERE'), reward: R }
+    useWorldStore.setState({ influence: 30, contracts: [offer] })
+    useWorldStore.getState().spendInfluence('eu', 'expedite')
+    const after = useWorldStore.getState().contracts.find((c) => c.id === offer.id)
+    expect(after).toMatchObject({
+      expedited: true,
+      expiresAtT: offer.expiresAtT + EXPEDITE_EXTENSION_SEC,
+      reward: R,
+    })
+    if (after) expect(contractMission(after).intelReq).toBe(1)
+  })
+
+  it('a later Unrest or Control change leaves Reward at R', () => {
+    pinFlows()
+    // nc is a Helix city that Glass Veil hands to Nexus, so the win also
+    // re-clients this offer to the sector's new majority holder.
+    const offer = { ...craft('eu', 42, 'HIGH'), cityId: 'nc', client: 'helix' as const, reward: R }
+    const other = { ...craft('af', 43, 'MODERATE'), reward: 41000 }
+    useWorldStore.setState({ influence: 40, contracts: [offer, other] })
+    const before = structuredClone(useWorldStore.getState().sectors.eu)
+    useWorldStore.getState().spendInfluence('eu', 'stabilize')
+    useWorldStore.getState().spendInfluence('eu', 'lobby')
+    crossTo(13 * 3600)
+    useWorldStore.getState().applyMissionResult('m01', outcome())
+    const s = useWorldStore.getState()
+    expect(s.sectors.eu.unrest).not.toBe(before.unrest)
+    expect(s.sectors.eu.control).not.toBe(before.control)
+    expect(s.owner.nc).toBe('nexus')
+    const moved = s.contracts.find((c) => c.id === offer.id)
+    expect(moved?.client).not.toBe('helix')
+    expect(moved?.reward).toBe(R)
+    expect(s.contracts.find((c) => c.id === other.id)?.reward).toBe(41000)
+  })
+})
+
 describe('stabilize and expedite refusals', () => {
   beforeEach(() => {
     useCampaignStore.setState(initialCampaignData())
