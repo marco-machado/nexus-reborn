@@ -9,101 +9,119 @@
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
 
-sprint: 3
-goal: "Stand up the Economy ledger and invoice: Credits never overdraw, collateral and net payout price a debrief, and a loss or quiet replay pays nothing."
-start: "2026-11-06"
-end: "2026-11-19"
-generated: "2026-10-13"
+sprint: 4
+goal: "Finish the Economy and contracts rules behind the invoice: wins pay in full, generated contracts get a stamped Reward, ETA, expiry and market cap, and abort writes nothing to Economy."
+start: "2026-10-15"
+end: "2026-10-28"
+generated: "2026-10-14"
 updated: "2026-10-14"
 
 stories:
-  - id: "EC-001"
-    name: "Credits ledger: opening balance, deposits and non-positive spends"
-    file: "production/epics/economy-and-contracts/story-001-credits-ledger-opening-balance-deposits-and-non-positiv.md"
+  - id: "EC-014"
+    name: "Generated Reward is stamped from threat band, roll and priority"
+    file: "production/epics/economy-and-contracts/story-014-generated-reward-is-stamped-from-threat-band-roll-and-p.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: ""
+  - id: "EC-015"
+    name: "Generated Reward clamp and immutability"
+    file: "production/epics/economy-and-contracts/story-015-generated-reward-clamp-and-immutability.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "EC-016"
+    name: "Generated ETA by threat band"
+    file: "production/epics/economy-and-contracts/story-016-generated-eta-by-threat-band.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "EC-017"
+    name: "Authored ETA table"
+    file: "production/epics/economy-and-contracts/story-017-authored-eta-table.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "EC-011"
+    name: "Wins pay in full: loss-retry, generated and post-campaign"
+    file: "production/epics/economy-and-contracts/story-011-wins-pay-in-full-loss-retry-generated-and-post-campaign.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-003"
-    name: "Economy keeps no Influence or Intel ledger"
-    file: "production/epics/economy-and-contracts/story-003-economy-keeps-no-influence-or-intel-ledger.md"
-    priority: must-have
-    status: done
+    completed: ""
+  - id: "EC-004"
+    name: "Accepting a contract is free; one pipeline for authored and generated work"
+    file: "production/epics/economy-and-contracts/story-004-accepting-a-contract-is-free-one-pipeline-for-authored.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "EC-013"
+    name: "Abort writes nothing to Economy"
+    file: "production/epics/economy-and-contracts/story-013-abort-writes-nothing-to-economy.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: ""
+  - id: "EC-018"
+    name: "Generated expiry windows and Expedite extension"
+    file: "production/epics/economy-and-contracts/story-018-generated-expiry-windows-and-expedite-extension.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "EC-019"
+    name: "Generated market cap, roll timer and client"
+    file: "production/epics/economy-and-contracts/story-019-generated-market-cap-roll-timer-and-client.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: ""
+  - id: "EC-021"
+    name: "Campaign-complete from the three authored wins"
+    file: "production/epics/economy-and-contracts/story-021-campaign-complete-from-the-three-authored-wins.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-005"
-    name: "Collateral prices unique squad-caused civilian first-hits"
-    file: "production/epics/economy-and-contracts/story-005-collateral-prices-unique-squad-caused-civilian-first-hi.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-006"
-    name: "Collateral clamps and input sanitising"
-    file: "production/epics/economy-and-contracts/story-006-collateral-clamps-and-input-sanitising.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-007"
-    name: "Net payout: reward plus optional bonus minus collateral"
-    file: "production/epics/economy-and-contracts/story-007-net-payout-reward-plus-optional-bonus-minus-collateral.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-002"
-    name: "Credits never overdraw: research and hire refusals"
-    file: "production/epics/economy-and-contracts/story-002-credits-never-overdraw-research-and-hire-refusals.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-008"
-    name: "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win"
-    file: "production/epics/economy-and-contracts/story-008-worked-contract-examples-hollow-crown-rust-haven-pyrrhi.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-009"
-    name: "A loss pays nothing; a failed generated contract leaves the market"
-    file: "production/epics/economy-and-contracts/story-009-a-loss-pays-nothing-a-failed-generated-contract-leaves.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-010"
-    name: "Quiet replay pays no fee, optionals included"
-    file: "production/epics/economy-and-contracts/story-010-quiet-replay-pays-no-fee-optionals-included.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-012"
-    name: "Debrief Credits apply once; no Credits move during a mission"
-    file: "production/epics/economy-and-contracts/story-012-debrief-credits-apply-once-no-credits-move-during-a-mis.md"
+    completed: ""
+  - id: "EC-020"
+    name: "Generated instances leave the market, or are held when hidden"
+    file: "production/epics/economy-and-contracts/story-020-generated-instances-leave-the-market-or-are-held-when-h.md"
     priority: nice-to-have
-    status: done
+    status: backlog
     owner: ""
-    estimate_days: 1.0
+    estimate_days: 0.3
     blocker: ""
-    completed: "2026-10-14"
+    completed: ""
+  - id: "EC-022"
+    name: "Invoice prints all five money lines, zeros included"
+    file: "production/epics/economy-and-contracts/story-022-invoice-prints-all-five-money-lines-zeros-included.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.5
+    blocker: ""
+    completed: ""
