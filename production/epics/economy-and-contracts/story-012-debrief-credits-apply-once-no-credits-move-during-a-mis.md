@@ -34,9 +34,9 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN Credits 128,450 CR and a non-quiet win outcome with key K and `net_payout` 75,000 CR, WHEN that same outcome is applied twice, THEN Credits = 203,450 CR (the second apply is a no-op).
-- [ ] GIVEN an outcome with key K already applied, WHEN an outcome carrying the same key K is applied again, THEN Credits stay at their post-first-apply value; GIVEN a different (higher) key, THEN it applies.
-- [ ] GIVEN Credits C CR at deploy, WHEN the mission is still running, THEN Credits stay C CR.
+- [x] GIVEN Credits 128,450 CR and a non-quiet win outcome with key K and `net_payout` 75,000 CR, WHEN that same outcome is applied twice, THEN Credits = 203,450 CR (the second apply is a no-op).
+- [x] GIVEN an outcome with key K already applied, WHEN an outcome carrying the same key K is applied again, THEN Credits stay at their post-first-apply value; GIVEN a different (higher) key, THEN it applies.
+- [x] GIVEN Credits C CR at deploy, WHEN the mission is still running, THEN Credits stay C CR.
 
 ---
 
@@ -98,4 +98,4 @@ From `/qa-plan` sprint 3 (2026-10-13). Integration. Test file: `src/state/appSto
 **Deviations**: None. Implementation is test-only for this story; the `authorizeResearch` change in `src/state/appStore.ts` belongs to Story 002, not this one.
 **Test Evidence**: Integration: `src/state/appStore.test.ts`, describe "Debrief Credits apply once; no Credits move during a mission (EC-012)" (4 tests) plus "applyDebrief apply-once (ADR-0021)"
 **Run result**: N/A — no player-visible surface; Credits flat during a running mission is asserted headlessly by ticking a composer-built world
-**Code Review**: Pending — lean mode; autonomous run recorded "No — I'll run /code-review before the sprint close-out"
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Fixed from review: the ETA Tax assertion is now strictly greater, so it fails if no Tax tick lands.

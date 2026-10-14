@@ -95,5 +95,5 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: None. Only `src/state/appStore.test.ts` changed for this story; no Influence or Intel field exists in `src/state/appStore.ts`.
 **Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
 **Run result**: N/A — test-only Logic story; no player-visible surface changed
-**Code Review**: Not confirmed at story-done (lean mode; unattended run took "run /code-review before the sprint close-out")
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: `economyApply` mirrors Economy's half of `applyDebrief` rather than calling it; research debit and Tax use `spendCredits` / `addCredits` directly.
 **Gates**: QL-TEST-COVERAGE skipped — Lean mode.

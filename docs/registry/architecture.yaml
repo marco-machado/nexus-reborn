@@ -242,7 +242,7 @@ interfaces:
       - research
       - roster-and-assembly
     adr: docs/architecture/adr-0013-credits-never-overdraw.md
-    signal_signature: "spendCredits(amount): void identity no-op unless amount > 0 && credits >= amount; hireOperative: check → acceptHire → decrement (does not call spendCredits); addCredits ignores non-positive"
+    signal_signature: "spendCredits(amount): void identity no-op unless amount > 0 && credits >= amount; hireOperative: check → acceptHire → decrement (does not call spendCredits); addCredits ignores non-positive and non-finite"
     referenced_by:
       - docs/architecture/adr-0013-credits-never-overdraw.md
     added: 2026-09-10

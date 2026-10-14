@@ -96,5 +96,5 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: None
 **Test Evidence**: Logic: `src/state/appStore.test.ts` (describe "A loss pays nothing; a failed generated contract leaves the market (EC-009)"), `src/state/worldStore.test.ts` ("a failed generated contract also leaves the market (EC-009)")
 **Run result**: N/A — no player-visible change; behaviour already lived in priceOutcome/applyDebrief/applyMissionResult, this story adds tests only
-**Code Review**: Lean mode, run unattended — the code-review prompt defaulted to the implement-stories workflow's /code-review step that runs before story-done; story-done did not check that result itself
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. No gaps.
 **Advisory**: QL-TEST-COVERAGE skipped (lean mode).

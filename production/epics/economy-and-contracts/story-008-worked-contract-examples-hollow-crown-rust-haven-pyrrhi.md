@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN a non-quiet Hollow Crown win, Reward 62,000 CR, 13 unique squad first-hits and optional complete (+9,000 CR), THEN Collateral = 62,000 CR and `net_payout = 9,000 CR`.
-- [ ] GIVEN a non-quiet Rust Haven win at opening Standard, Reward 41,000 CR, 8 unique squad first-hits and optional ignored, THEN Collateral = 40,000 CR and `net_payout = 1,000 CR`.
-- [ ] GIVEN a pyrrhic win (tiebreak Win that empties the roster on an incomplete campaign), non-quiet, Reward 85,000 CR, N = 0, THEN `net_payout = 85,000 CR` (full pay).
+- [x] GIVEN a non-quiet Hollow Crown win, Reward 62,000 CR, 13 unique squad first-hits and optional complete (+9,000 CR), THEN Collateral = 62,000 CR and `net_payout = 9,000 CR`.
+- [x] GIVEN a non-quiet Rust Haven win at opening Standard, Reward 41,000 CR, 8 unique squad first-hits and optional ignored, THEN Collateral = 40,000 CR and `net_payout = 1,000 CR`.
+- [x] GIVEN a pyrrhic win (tiebreak Win that empties the roster on an incomplete campaign), non-quiet, Reward 85,000 CR, N = 0, THEN `net_payout = 85,000 CR` (full pay).
 
 ---
 
@@ -92,5 +92,5 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: ADVISORY — Implementation Notes point to `src/game/contracts.ts` for authored contract values, but the authored rewards (85,000 / 62,000 / 41,000) and optional defs live in `src/game/data.ts` (`MISSIONS`); the test reads them from there through `economySlice` (`src/game/deploy.ts`), so the intent (no copied constants, assert GDD figures) is met. The story's file pointer is stale.
 **Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win (EC-008)" (3 tests)
 **Run result**: N/A — test-only story; no player-visible surface changed
-**Code Review**: Not confirmed in this step (lean mode; story-done ran unattended, default recorded: run /code-review before sprint close-out)
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: values come from `MISSIONS` in `src/game/data`; the pyrrhic case is a hand-built win, not the tiebreak path.
 **Advisory**: QL-TEST-COVERAGE skipped — Lean mode.

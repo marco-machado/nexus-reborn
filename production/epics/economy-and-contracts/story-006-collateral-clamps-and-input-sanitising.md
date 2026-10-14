@@ -98,5 +98,5 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: None. Implementation in `src/state/appStore.ts` already met TR-economy-007 / ADR-0021; this story added tests only. Edge cases (±Infinity count, Infinity bonus def, non-integer and non-finite Reward, finite-integer fields) also covered.
 **Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
 **Run result**: N/A — pure pricing logic; no player-visible surface changed (from the /dev-story checkpoint)
-**Code Review**: Lean mode prompt answered unattended by the implement-stories workflow; its sequence runs /code-review before /story-done, but the review result was not checked in this step.
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: `priceOutcome` passes a raw non-finite `civiliansHit` through to the stored outcome; the spec names only priced fields.
 **QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.

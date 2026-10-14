@@ -205,11 +205,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Funds research. Guarded here so no caller can overdraw the account.
   spendCredits: (amount) =>
     set((s) => (amount > 0 && s.credits >= amount ? { credits: s.credits - amount } : s)),
+  // A non-finite deposit (NaN, Infinity) never reaches the ledger.
   addCredits: (amount) =>
-    set((s) => (amount > 0 ? { credits: s.credits + amount } : s)),
+    set((s) => (Number.isFinite(amount) && amount > 0 ? { credits: s.credits + amount } : s)),
   // Check, start, then spend: never spend first, since researchStore.start is
   // occupancy only and may still refuse (busy lab, unmet prerequisites).
+  // A non-positive or non-finite listed cost is refused before start()
+  // (research.md Core Rule 3), so no project can start unbilled.
   authorizeResearch: (node, t) => {
+    if (!(Number.isFinite(node.cost) && node.cost > 0)) return false
     if (get().credits < node.cost) return false
     if (!useResearchStore.getState().start(node, t)) return false
     get().spendCredits(node.cost)
@@ -221,7 +225,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     const candidate = useCampaignStore
       .getState()
       .candidates.find((c) => c.id === candidateId)
-    if (!candidate || get().credits < candidate.cost) return
+    if (!candidate || !(Number.isFinite(candidate.cost) && candidate.cost > 0)) return
+    if (get().credits < candidate.cost) return
     if (!useCampaignStore.getState().acceptHire(candidateId)) return
     set((s) => ({ credits: s.credits - candidate.cost }))
   },

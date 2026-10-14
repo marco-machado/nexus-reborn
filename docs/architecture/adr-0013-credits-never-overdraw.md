@@ -4,6 +4,7 @@
 > **Technical Director Review (TD-ADR)**: APPROVED 2026-09-10
 > **Lead Programmer Review (LP-FEASIBILITY)**: FEASIBLE 2026-09-11
 > **Amended by [ADR-0021](adr-0021-outcome-dto-and-apply-once-key.md)** (2026-10-08): §Deposits payout writer and pricing helpers. `setOutcome` no longer touches Credits; `applyDebrief → addCredits(netPayout)` deposits the payout once per apply key, and `priceOutcome` stores the priced fields. The never-overdraw rule and every spend path are unchanged.
+> **Amended 2026-10-14** (EC-002, EC-001): the research check → start → spend path moved from `Research.tsx` into `appStore.authorizeResearch(node, t)`; same order, same refusals, and `Research.tsx` calls the action. `authorizeResearch` and `hireOperative` refuse a non-positive or non-finite listed cost before `start()` / `acceptHire` (GDD Economy rule 4: zero and negative spends are ignored). `addCredits` also ignores non-finite amounts, so a NaN or ±Infinity deposit never reaches the ledger (GDD Economy edge case: non-finite inputs).
 
 Economy owns the Credits ledger. The account never goes negative. Research and hire authorization refuse on overdraft; exact-balance spend is allowed. This stamps the existing `appStore` guards; it does not add `economyStore`.
 
@@ -22,7 +23,7 @@ Accepted
 | **Knowledge Risk** | HIGH — cutoff May 2025; pin is three.js r185 / React 19.2.8. This domain uses no three.js / r3f APIs. Traceability Engine Risk for TR-economy-001: LOW. |
 | **References Consulted** | `docs/engine-reference/web/VERSION.md`; `docs/engine-reference/web/breaking-changes.md`; `docs/engine-reference/web/deprecated-apis.md`; `docs/technical-preferences.md`; `docs/agents/strategy-time-state.md`; `src/state/appStore.ts`; `src/state/researchStore.ts`; `src/state/campaignStore.ts`; `src/state/worldStore.ts`; `src/state/save.ts`; `src/ui/Research.tsx` |
 | **Post-Cutoff APIs Used** | None — Zustand `create()` ledger, not an engine API |
-| **Verification Required** | `spendCredits` refuses `amount <= 0` and `amount > credits`; exact-balance spend → 0; `addCredits` ignores non-positive; `hireOperative` overdraft leaves roster and credits unchanged; `setOutcome` never subtracts (`netPayout` ≥ 0 for production producers) — amended by ADR-0021: `setOutcome` leaves `credits` unchanged and `applyDebrief` deposits; hydrate drop-alls `credits < 0`; no `src/state/economyStore.ts`; `researchStore` has no credits field. |
+| **Verification Required** | `spendCredits` refuses `amount <= 0` and `amount > credits`; exact-balance spend → 0; `addCredits` ignores non-positive and non-finite; `authorizeResearch` bills only a true `start()`; `hireOperative` overdraft leaves roster and credits unchanged; `setOutcome` never subtracts (`netPayout` ≥ 0 for production producers) — amended by ADR-0021: `setOutcome` leaves `credits` unchanged and `applyDebrief` deposits; hydrate drop-alls `credits < 0`; no `src/state/economyStore.ts`; `researchStore` has no credits field. |
 
 ## ADR Dependencies
 
@@ -69,7 +70,7 @@ Stamp the existing ledger. No migration. No envelope change. No `SAVE_VERSION` b
 
 ### Debit sites (two; both refuse overdraft)
 
-1. `spendCredits(amount)` — `amount > 0 && credits >= amount` then subtract, else identity no-op (`return s`, so refused spends do not notify Zustand subscribers). Research production path (`Research.tsx`): re-read `credits`; if short, return; `if (start(node, t)) spendCredits(cost)`. `researchStore.start` is occupancy only and does not read Credits. **Rider:** `design/gdd/research.md` Core Rule 3 extends this protocol with a post-spend `getState()` verification read, an internal occupancy undo, and a visible mismatch sentence — Unsatisfied in code until closed; this ADR's three-step path is the floor, not the ceiling.
+1. `spendCredits(amount)` — `amount > 0 && credits >= amount` then subtract, else identity no-op (`return s`, so refused spends do not notify Zustand subscribers). Research production path (`appStore.authorizeResearch(node, t): boolean`, called by `Research.tsx` AUTHORIZE): re-read `credits`; if short, return `false`; if `!researchStore.start(node, t)`, return `false`; else `spendCredits(cost)` and return `true`. `researchStore.start` is occupancy only and does not read Credits. **Rider:** `design/gdd/research.md` Core Rule 3 extends this protocol with a post-spend `getState()` verification read, an internal occupancy undo, and a visible mismatch sentence — Unsatisfied in code until closed; this ADR's three-step path is the floor, not the ceiling.
 2. `hireOperative(candidateId)` — unknown candidate or `credits < cost` → return. Then `acceptHire`; if that fails, return (no debit). Then decrement by `candidate.cost`. Does **not** call `spendCredits`. Do not invert to spend-then-hire (charges a refused roster) or hire-then-`spendCredits` (free hire if spend no-ops).
 
 ### Deposits
@@ -99,7 +100,7 @@ Owner: Economy
        |
        v
   appStore.credits
-    spendCredits  ← Research.tsx (start() then debit)
+    spendCredits  ← authorizeResearch (check → start() → debit) ← Research.tsx
     hireOperative ← check → acceptHire → decrement
     addCredits    ← worldStore.depositTax
     setOutcome    ← +netPayout (≥ 0)   [amended by ADR-0021: applyDebrief → addCredits]
@@ -120,8 +121,9 @@ Not this ledger:
 
 - `useAppStore.getState().credits`
 - `spendCredits(amount: number): void` — identity no-op on refuse
-- `addCredits(amount: number): void` — ignores non-positive
-- `hireOperative(candidateId: string): void` — check → `acceptHire` → decrement
+- `authorizeResearch(node: ResearchNode, t: number): boolean` — check → `researchStore.start` → `spendCredits`; `false` and no debit on refuse
+- `addCredits(amount: number): void` — ignores non-positive and non-finite
+- `hireOperative(candidateId: string): void` — check (cost finite and > 0, cost ≤ credits) → `acceptHire` → decrement
 - `netPayout` / `collateralFine` / `INITIAL_CREDITS` / `COLLATERAL_FINE` in `appStore.ts`
 - `researchStore.start(node, t): boolean` — occupancy only
 - `campaignStore.acceptHire` — roster only
@@ -176,7 +178,7 @@ Not this ledger:
 - Identity no-op on refuse must stay `return s` so subscribers are not woken for a no-change.
 - Do not "fix" hire to `spendCredits` after `acceptHire` (free hire) or debit before `acceptHire` (charge on roster refuse).
 - `campaignStore` comment "fee cleared first" is stale vs check → `acceptHire` → decrement; stamp the code.
-- Production `Research.tsx` must not invert to spend-then-start (charges a refused lab).
+- `authorizeResearch` must not invert to spend-then-start (charges a refused lab), and `Research.tsx` must not bill on its own.
 - `committedFunds()` must not be persisted or debited as a second ledger.
 - This ADR prices Credits from the outcome's `quietReplay` / `netPayout`; it does not own restamping `quietReplay` (`world.ts` / `setOutcome` still do that today — ADR-0009).
 - Do not attach zustand persist to credits (ADR-0011).
@@ -208,6 +210,8 @@ None. Document current CONTRACT FILE guards. Do not bump `SAVE_VERSION`.
 
 - `spendCredits(START + 1)` leaves credits unchanged; `spendCredits(START)` → 0; 0 and negative amounts no-op.
 - Hire overdraft: credits and roster unchanged.
+- `authorizeResearch` short balance, busy lab, or non-positive cost: returns `false`, credits unchanged, project not started.
+- `addCredits(NaN)` / `addCredits(Infinity)` leave credits unchanged.
 - `rg credits src/state/researchStore.ts` — no field.
 - No `src/state/economyStore.ts`.
 - `save.ts` still rejects `credits < 0` without clamping.

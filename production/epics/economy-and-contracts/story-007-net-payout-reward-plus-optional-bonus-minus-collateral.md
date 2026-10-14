@@ -98,5 +98,5 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: None. `priceOutcome` / `netPayout` in `src/state/appStore.ts` match the Implementation Notes; collateral is clamped to reward in `collateralFine`, so `netPayout` never drops below the bonus.
 **Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Net payout: reward plus optional bonus minus collateral (EC-007)" (6 tests, incl. duplicate id, unknown id, collateral clamp edge cases)
 **Run result**: N/A — pure pricing logic; Debrief already renders netPayout, no new surface
-**Code Review**: Not confirmed in this step (lean mode; story-done ran unattended, default recorded: run /code-review before sprint close-out)
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: AC1 is tested on the pure functions, not through `applyDebrief`.
 **Advisory**: QL-TEST-COVERAGE skipped — Lean mode.

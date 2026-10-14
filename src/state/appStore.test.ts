@@ -805,9 +805,9 @@ describe('Credits ledger (EC-001)', () => {
     expect(useAppStore.getState().credits).toBe(1001)
   })
 
-  it('a deposit of A <= 0 or NaN is an identity no-op', () => {
+  it('a deposit of A <= 0 or a non-finite A is an identity no-op', () => {
     const before = useAppStore.getState()
-    for (const a of [0, -0, -1, -1000, NaN, -Infinity]) {
+    for (const a of [0, -0, -1, -1000, NaN, Infinity, -Infinity]) {
       useAppStore.getState().addCredits(a)
       expect(useAppStore.getState()).toBe(before)
     }
@@ -826,6 +826,26 @@ describe('Credits ledger (EC-001)', () => {
     expect(useAppStore.getState().credits).toBe(START_CREDITS)
     expect(useResearchStore.getState()).toBe(research)
     expect(useCampaignStore.getState()).toBe(campaign)
+  })
+
+  it('a 0 CR or -1 CR research or hire cost starts neither and keeps 128,450 CR', () => {
+    // Open a roster bay (the campaign boots at the cap).
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'] }), 0)
+    const project = nodeById('b-propellants')
+    for (const cost of [0, -1]) {
+      expect(useAppStore.getState().authorizeResearch({ ...project, cost }, 0)).toBe(false)
+      expect(useResearchStore.getState().labs.ballistics).toBeNull()
+
+      const candidates = useCampaignStore.getState().candidates.slice()
+      candidates[0] = { ...candidates[0], cost }
+      useCampaignStore.setState({ candidates })
+      const roster = useCampaignStore.getState().roster
+      useAppStore.getState().hireOperative(candidates[0].id)
+      expect(useCampaignStore.getState().roster).toBe(roster)
+      expect(useAppStore.getState().credits).toBe(START_CREDITS)
+    }
   })
 
   it('a spend of exactly the balance leaves 0 CR', () => {
@@ -1319,6 +1339,15 @@ describe('Credits never overdraw (EC-002)', () => {
     return candidates[0].id
   }
 
+  it('a non-positive or non-finite listed cost is refused before start()', () => {
+    useAppStore.setState({ credits: PRICE })
+    for (const cost of [0, -1, NaN, Infinity]) {
+      expect(useAppStore.getState().authorizeResearch({ ...PROJECT, cost }, 0)).toBe(false)
+      expect(useResearchStore.getState().labs.ballistics).toBeNull()
+      expect(useAppStore.getState().credits).toBe(PRICE)
+    }
+  })
+
   it('the research project under test is listed at 16,000 CR', () => {
     expect(PROJECT.cost).toBe(PRICE)
     expect(PROJECT.needs).toEqual([])
@@ -1728,7 +1757,8 @@ describe('Debrief Credits apply once; no Credits move during a mission (EC-012)'
     applyDebrief('m01')
     const afterFirst = useAppStore.getState().credits
     const influence = useWorldStore.getState().influence
-    expect(afterFirst).toBeGreaterThanOrEqual(START_CREDITS + 75000)
+    // Strictly greater: at least one Tax tick landed inside the ETA span.
+    expect(afterFirst).toBeGreaterThan(START_CREDITS + 75000)
     applyDebrief('m01')
     expect(useAppStore.getState().credits).toBe(afterFirst)
     expect(useWorldStore.getState().influence).toBe(influence)

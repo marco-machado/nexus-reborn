@@ -71,7 +71,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 - Tax deposit after a `net_payout = 0` apply gives 129,450 CR (Credits 128,450 + 1,000)
 
 **Edge cases**:
-- NaN / Infinity deposit
+- NaN / Infinity deposit: Credits unchanged (non-finite amounts never reach the ledger)
 - Deposit of exactly 1 CR
 - Spend of exactly the balance (zero result)
 
@@ -99,7 +99,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 ## Completion Notes
 **Completed**: 2026-10-14
 **Criteria**: 4/4 passing (all covered by unit tests in `src/state/appStore.test.ts`; `npx vitest run src/state/appStore.test.ts` ran 56/56 passed on 2026-10-14)
-**Deviations**: None against TR-economy-001 / TR-economy-009 / ADR-0013. Advisory: `addCredits(Infinity)` sets Credits to Infinity (only non-positive and NaN are ignored); the spec does not name the expected result and the QA edge-case list mentions Infinity deposits, so this is left as an open design question. Out of scope: the working tree also carries an unrelated edit to `.claude/skills/dev-story/SKILL.md` (removes `disable-model-invocation`), not part of this story.
+**Deviations**: None against TR-economy-001 / TR-economy-009 / ADR-0013. Advisory (resolved 2026-10-14): `addCredits(Infinity)` used to set Credits to Infinity. It now ignores non-finite amounts, following the GDD rule that a non-finite input never reaches the ledger; the EC-001 no-op test covers NaN and ±Infinity. Out of scope: the working tree also carries an unrelated edit to `.claude/skills/dev-story/SKILL.md` (removes `disable-model-invocation`), not part of this story.
 **Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
 **Run result**: N/A — store logic with no new player-visible surface (from /dev-story checkpoint)
-**Code Review**: Pending — lean mode; recorded "No — I'll run /code-review before the sprint close-out" (autonomous run, no answer available)
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: INCOMPLETE → fixed: AC3's research/hire half was not exercised (only `spendCredits`); added a 0 / −1 CR research and hire test, `hireOperative` now refuses a non-positive cost, `addCredits` ignores ±Infinity.

@@ -99,4 +99,4 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: None. `isQuietReplay` remains only in `src/ui/Hud.tsx:113` (HUD display); no outcome path (`maybeOutcome`, `setOutcome`, `reportMission`) calls it.
 **Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Quiet replay pays no fee, optionals included (EC-010)"
 **Run result**: N/A — pure Economy logic; quiet-replay invoice UI unchanged
-**Code Review**: Pending — lean mode; autonomous run recorded "No — I'll run /code-review before the sprint close-out"
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: AC4 copies the slice's `quietReplay` into the result; the real stamp in `world.ts` `maybeOutcome` is covered by `src/game/world.test.ts`.

@@ -100,5 +100,5 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **Deviations**: None. Only `src/state/appStore.test.ts` changed for this story; `priceOutcome`, `collateralFine` and `COLLATERAL_FINE` already lived in `src/state/appStore.ts`, and `src/game/` prices nothing (it only counts `civiliansHit`). Manifest version 2026-10-08 matches the current control manifest.
 **Test Evidence**: Logic: test file at `src/state/appStore.test.ts`
 **Run result**: N/A — test-only Logic story; no player-visible surface changed
-**Code Review**: Not confirmed at story-done (lean mode; unattended run took "run /code-review before the sprint close-out")
+**Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: the hit-twice and non-fatal rows share N = 1, since unique-hit counting is Tactical's.
 **Gates**: QL-TEST-COVERAGE skipped — Lean mode.
