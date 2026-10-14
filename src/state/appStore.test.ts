@@ -1795,3 +1795,155 @@ describe('Debrief Credits apply once; no Credits move during a mission (EC-012)'
     useMissionStore.getState().reset()
   })
 })
+
+describe('Wins pay in full: loss-retry, generated and post-campaign (EC-011)', () => {
+  // TR-economy-004 / TR-economy-008 / ADR-0004 / ADR-0021: only a repeat win
+  // of an authored contract is quiet. A retry after a loss, any generated win,
+  // and a generated win after campaign-complete all pay net_payout in full via
+  // applyDebrief -> addCredits. World Network apply is stubbed out per the GDD
+  // ACs ("World Network apply not run").
+  const AUTHORED_IDS = MISSIONS.map((m) => m.id)
+  const authored = (id: string) => {
+    const m = MISSIONS.find((x) => x.id === id)
+    if (!m) throw new Error('missing authored mission ' + id)
+    return m
+  }
+
+  function winResult(over: Partial<MissionResult> = {}): MissionResult {
+    return {
+      applyKey: 1,
+      won: true,
+      kills: 5,
+      casualties: 0,
+      timeSec: 300,
+      civiliansHit: 0,
+      completedOptionalIds: [],
+      deadIds: [],
+      survivorHp: {},
+      quietReplay: false,
+      ...over,
+    }
+  }
+
+  function generated(seed: number, reward: number): GeneratedContract {
+    return {
+      id: 'gc' + seed.toString(16).padStart(8, '0'),
+      createdT: 0,
+      expiresAtT: 1e9,
+      sector: 'eu',
+      cityId: CITIES_BY_SECTOR.eu[0].id,
+      district: 5,
+      type: 'SEIZURE',
+      client: sectorClient('eu', initialOwner()),
+      threat: 'HIGH',
+      reward,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  // Freeze, price and debrief one win the way MissionScreen + Debrief do,
+  // with World Network apply stubbed out. Returns the priced outcome.
+  function deployAndWin(missionId: string, applyKey: number, over: Partial<MissionResult> = {}) {
+    const mission = resolveMission(missionId)
+    if (!mission) throw new Error('mission did not resolve ' + missionId)
+    const deploy = freezeDeploy(mission, DEFAULT_SQUAD.map(operativeById), applyKey)
+    const o = priceOutcome(
+      winResult({ applyKey, quietReplay: deploy.economy.quietReplay, ...over }),
+      deploy.economy,
+    )
+    const world = useWorldStore.getState()
+    let worldApplies = 0
+    useWorldStore.setState({ applyMissionResult: () => void (worldApplies += 1) })
+    try {
+      useAppStore.setState({ phase: 'mission', missionId })
+      useAppStore.getState().setOutcome(o)
+      applyDebrief(missionId)
+    } finally {
+      useWorldStore.setState({ applyMissionResult: world.applyMissionResult })
+    }
+    expect(worldApplies).toBe(1)
+    return { o, deploy }
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      // Timed flows off the ETA span so only the payout moves Credits.
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+  })
+
+  it('AC 1: Glass Veil retry win after a loss at 128,450 CR lands 213,450 CR', () => {
+    // The earlier loss: pays nothing and does not mark the contract won.
+    const loss = priceOutcome(
+      winResult({ won: false, quietReplay: false }),
+      economySlice(authored('m01'), false, false, 1),
+    )
+    useAppStore.setState({ phase: 'mission', missionId: 'm01' })
+    useAppStore.getState().setOutcome(loss)
+    applyDebrief('m01')
+    expect(useAppStore.getState().credits).toBe(128450)
+    expect(useCampaignStore.getState().contractsWon).not.toContain('m01')
+
+    const { o, deploy } = deployAndWin('m01', 2)
+    expect(deploy.economy.quietReplay).toBe(false)
+    expect(o.reward).toBe(85000)
+    expect(netPayout(o)).toBe(85000)
+    expect(useAppStore.getState().credits).toBe(213450)
+    expect(useAppStore.getState().lastAppliedKey).toBe(2)
+    expect(useCampaignStore.getState().contractsWon).toContain('m01')
+  })
+
+  it('AC 2: a generated win, Reward 54,500 CR, 0 hits, bonus 0 adds 54,500 CR', () => {
+    const c = generated(51, 54500)
+    useWorldStore.setState({ contracts: [c] })
+    const { o, deploy } = deployAndWin(c.id, 1)
+    expect(deploy.economy.generated).toBe(true)
+    expect(deploy.economy.quietReplay).toBe(false)
+    expect(o.reward).toBe(54500)
+    expect(o.bonus).toBe(0)
+    expect(netPayout(o)).toBe(54500)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 54500)
+  })
+
+  it('AC 3: after campaign-complete a generated win still adds 54,500 CR', () => {
+    useCampaignStore.setState({ contractsWon: [...AUTHORED_IDS], campaignWon: true })
+    const c = generated(52, 54500)
+    useWorldStore.setState({ contracts: [c] })
+    const { o, deploy } = deployAndWin(c.id, 1)
+    expect(deploy.economy.quietReplay).toBe(false)
+    expect(netPayout(o)).toBe(54500)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS + 54500)
+    expect(useCampaignStore.getState().campaignWon).toBe(true)
+  })
+
+  it('AC 4: Glass Veil won as part of campaign-complete: a later win nets 0 CR, reward still reported', () => {
+    // Reach campaign-complete through the real report path.
+    for (const [i, id] of AUTHORED_IDS.entries()) deployAndWin(id, i + 1)
+    expect(useCampaignStore.getState().campaignWon).toBe(true)
+    const before = useAppStore.getState().credits
+
+    const { o, deploy } = deployAndWin('m01', AUTHORED_IDS.length + 1)
+    expect(deploy.economy.quietReplay).toBe(true)
+    expect(o.reward).toBe(85000)
+    expect(netPayout(o)).toBe(0)
+    expect(useAppStore.getState().credits).toBe(before)
+    expect(useAppStore.getState().lastAppliedKey).toBe(AUTHORED_IDS.length + 1)
+  })
+
+  it('setOutcome alone never moves Credits on a paying win', () => {
+    const o = priceOutcome(winResult(), economySlice(authored('m01'), false, false, 1))
+    expect(netPayout(o)).toBe(85000)
+    useAppStore.setState({ phase: 'mission', missionId: 'm01' })
+    useAppStore.getState().setOutcome(o)
+    expect(useAppStore.getState().credits).toBe(START_CREDITS)
+  })
+})

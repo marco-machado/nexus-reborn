@@ -57,11 +57,11 @@ stories:
     name: "Wins pay in full: loss-retry, generated and post-campaign"
     file: "production/epics/economy-and-contracts/story-011-wins-pay-in-full-loss-retry-generated-and-post-campaign.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1.0
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "EC-004"
     name: "Accepting a contract is free; one pipeline for authored and generated work"
     file: "production/epics/economy-and-contracts/story-004-accepting-a-contract-is-free-one-pipeline-for-authored.md"

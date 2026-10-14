@@ -1,12 +1,12 @@
 # Story 011: Wins pay in full: loss-retry, generated and post-campaign
 
 > **Epic**: Economy and contracts
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -33,10 +33,10 @@
 
 *From GDD `design/gdd/economy-and-contracts.md`, scoped to this story:*
 
-- [ ] GIVEN Glass Veil not yet won after a loss and Credits 128,450 CR, WHEN the retry is won with 0 unique squad civilian hits (World Network apply not run), THEN Credits = 213,450 CR.
-- [ ] GIVEN a generated win, Reward 54,500 CR, 0 unique squad civilian hits and optional bonus 0 CR, WHEN debrief applies, THEN Credits increase by 54,500 CR.
-- [ ] GIVEN campaign-complete is true and a generated win under the same terms, THEN Credits increase by 54,500 CR.
-- [ ] GIVEN Glass Veil already won as part of campaign-complete, WHEN a later win of Glass Veil debriefs, THEN `net_payout = 0 CR`.
+- [x] GIVEN Glass Veil not yet won after a loss and Credits 128,450 CR, WHEN the retry is won with 0 unique squad civilian hits (World Network apply not run), THEN Credits = 213,450 CR.
+- [x] GIVEN a generated win, Reward 54,500 CR, 0 unique squad civilian hits and optional bonus 0 CR, WHEN debrief applies, THEN Credits increase by 54,500 CR.
+- [x] GIVEN campaign-complete is true and a generated win under the same terms, THEN Credits increase by 54,500 CR.
+- [x] GIVEN Glass Veil already won as part of campaign-complete, WHEN a later win of Glass Veil debriefs, THEN `net_payout = 0 CR`.
 
 ---
 
@@ -79,7 +79,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/appStore.test.ts` (apply path with the World Network mutators stubbed). — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/appStore.test.ts`, describe block "Wins pay in full: loss-retry, generated and post-campaign (EC-011)"
 
 ---
 
@@ -87,3 +87,17 @@
 
 - Depends on: Story 010, Story 012
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 4/4 passing (all covered by unit tests; none deferred)
+**Deviations**: None blocking. Advisory:
+- AC1's earlier loss debrief (`applyDebrief('m01')` before `deployAndWin`) runs the real `useWorldStore.applyMissionResult`, not the stub; Test Evidence says "World Network mutators stubbed". Harmless (a loss pays nothing; asserts pass at 128,450 CR). Consider routing the loss through the same stub for consistency.
+- Naming nit: the AC1 loss is built with `winResult({ won: false })`; a neutral `result()` or a separate `lossResult()` would read more clearly.
+- AC3 sets `campaignWon: true` by direct `setState`, while AC4 reaches it through the real report path. Acceptable for a generated win; noted for symmetry.
+**Test Evidence**: Logic: test file at `src/state/appStore.test.ts` (EC-011 describe block). Test file present; the workflow also ran it: 112/112 tests in the file pass (vitest, 2026-10-14).
+**Run result**: N/A — test-only change; no player-visible surface changed (from the /dev-story checkpoint).
+**Code Review**: Ran (/code-review on `src/state/appStore.test.ts`), verdict NOT ASSESSED — the lead-programmer and qa-tester specialist reviews could not be spawned in the unattended workflow (no Agent tool). The reviewer's own pass found no defects: all 4 ACs covered, ADR-0004 and ADR-0021 COMPLIANT (the "setOutcome alone never moves Credits" test pins the manifest's forbidden pattern). Default follow-up per /code-review: get the specialist reviews done, then re-run /code-review.
+**Review gates**: QL-TEST-COVERAGE and LP-CODE-REVIEW skipped — lean review mode. Phase 7 close taken as the recommended default (autonomous mode, COMPLETE WITH NOTES verdict).
