@@ -34,6 +34,7 @@
 
 - [ ] GIVEN Influence I and Intel J and Economy apply only (World Network apply not run), WHEN Economy applies a payout, Tax deposit, research debit or hire debit, THEN Influence is still I and Intel is still J.
 - [ ] GIVEN Economy Credits write only, WHEN a first non-quiet win payout is applied, THEN Influence stays 0.
+- [ ] GIVEN Influence I and Intel J, WHEN Economy alone applies a loss debrief and then a quiet-replay win debrief (each `net_payout = 0`; World Network apply not run), THEN Influence is still I, Intel is still J, and Credits are unchanged by either contract fee.
 
 ---
 
@@ -60,6 +61,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 **What to test**:
 - Seed Influence I and Intel J, run Economy-only apply paths (payout, Tax deposit, research debit, hire debit); both unchanged
 - First non-quiet win payout applied by Economy alone leaves Influence 0
+- Loss then quiet-replay win, Economy apply only: Influence I, Intel J and Credits unchanged
 
 **Edge cases**:
 - Influence 0 and a large Influence
