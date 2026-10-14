@@ -57,7 +57,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/game/data.test.ts`
+
+**What to test**:
+- Glass Veil = 2, Hollow Crown = 4, Rust Haven = 3 days
+- Each differs from the generated value for its apparent threat
+
+**Edge cases**: The authored table does not import `CONTRACT_ETA_DAYS`.
+
+**Existing coverage / gap**: `data.test.ts` asserts `etaDays > 0` only; values live in `src/game/data.ts`.
 
 ---
 

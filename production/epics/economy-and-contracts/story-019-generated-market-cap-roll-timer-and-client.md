@@ -58,7 +58,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/game/contracts.test.ts`, `src/state/worldStore.test.ts`
+
+**What to test**:
+- 3 open instances (Offered or Locked-hidden) stay 3 on a due roll; 2 become 3
+- Client is never Sable Enterprises
+- Next roll due 2-6 h after a roll while under 3
+
+**Edge cases**: A Locked-hidden instance counts toward 3; both window ends; deterministic from `contractRngState`.
+
+**Existing coverage / gap**: Cap is tested (`worldStore.test.ts` ~L398, L1457); no test mentions the Sable client.
 
 ---
 

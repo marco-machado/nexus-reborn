@@ -58,7 +58,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/state/worldStore.test.ts`
+
+**What to test**:
+- Fulfilled, expired and raid-withdrawn instances are gone
+- Expired and withdrawn build no invoice and leave Credits unchanged
+- Locked-hidden instance stays with stamped Reward and ETA
+
+**Edge cases**: Hidden then revealed shows the same Reward and ETA; raid and expiry in one catch-up.
+
+**Existing coverage / gap**: Removal is tested (~L482, L401, L437); Credits/invoice and hidden-keeps-stamp are not.
 
 ---
 

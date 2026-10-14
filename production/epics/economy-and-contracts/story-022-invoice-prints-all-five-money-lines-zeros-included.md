@@ -59,7 +59,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: UI.*
+
+**Automated**: new `src/ui/debriefInvoice.test.ts` on a pure row builder extracted from `src/ui/index.tsx` (~L1560-1617). Assert the five money lines (Reward, Optional bonus, Collateral, Net payout, Account balance) for the four AC cases, zeros printed.
+
+**Gap**: this is a code change. Today CONTRACT VALUE and COLLATERAL PENALTY print only when `won && !quiet && fine > 0`, and OPTIONAL BONUS only when `bonus > 0`, so a zero line, a loss and a quiet replay all omit rows.
+
+**Manual**: Playwright at 1280x720, one screenshot per case in `production/qa/evidence/sprint-004/`; lead-programmer sign-off.
+- [ ] Non-quiet win, Collateral 0: five lines, Collateral shows 0 CR
+- [ ] Zero-priced win: five lines present
+- [ ] Loss: Reward shows the stored value (85,000 CR), payout 0
+- [ ] Quiet-replay win: Reward shows the stored value (62,000 CR), payout 0
+- [ ] No row clipped in the invoice region
 
 ---
 

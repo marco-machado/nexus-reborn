@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/game/contracts.test.ts`, `src/state/worldStore.test.ts`
+
+**What to test**:
+- Expiry - createdT inside 24-48 h (regular) and 8-16 h (priority)
+- Expedite adds exactly 24 h
+
+**Edge cases**: Both ends of each window; Expedite writes no Intel.
+
+**Existing coverage / gap**: Bounds are likely covered (`contracts.test.ts` ~L88, L113; `worldStore.test.ts` ~L362, L427); confirm exactness.
 
 ---
 

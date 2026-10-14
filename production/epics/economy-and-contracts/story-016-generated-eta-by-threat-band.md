@@ -57,7 +57,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/game/contracts.test.ts`
+
+**What to test**:
+- Moderate = 2, High = 3, Severe = 4 days via `contractMission(record).etaDays`
+
+**Edge cases**: The record's own threat decides; a later garrison change keeps the ETA.
+
+**Existing coverage / gap**: No generated-ETA test today; `CONTRACT_ETA_DAYS` is private.
 
 ---
 

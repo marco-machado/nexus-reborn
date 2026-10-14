@@ -57,7 +57,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/game/contracts.test.ts`, `src/state/worldStore.test.ts`
+
+**What to test**:
+- Severe, priority, u = 0.5 = 95,000 CR (102,900 clamped)
+- Expedite (gate waived, +24 h) leaves Reward at R
+- A later Unrest or Control change leaves Reward at R
+
+**Edge cases**: A raw value of exactly 95,000 is unchanged; Reward survives a record clone.
+
+**Existing coverage / gap**: Expedite extension is tested (`worldStore.test.ts` ~L880) but not Reward equality.
 
 ---
 

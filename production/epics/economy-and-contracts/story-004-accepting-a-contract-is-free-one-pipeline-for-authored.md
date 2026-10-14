@@ -58,7 +58,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Integration.*
+
+**Test file**: `src/state/appStore.test.ts`
+
+**What to test**:
+- Accepting an authored or generated contract leaves Credits at 128,450 CR
+- Screens visited end Brief, Assembly, Mission, Debrief in order for both kinds
+- A won Glass Veil stays selectable
+
+**Edge cases**: Backing out of a Brief does not charge; no second pipeline for authored work.
+
+**Existing coverage / gap**: `selectMission` is ~L180 of `appStore.ts`; no test by that name today.
 
 ---
 

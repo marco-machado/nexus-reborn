@@ -57,7 +57,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/state/campaignStore.test.ts`
+
+**What to test**:
+- Two authored wins = false
+- Glass Veil, Hollow Crown and Rust Haven won = true; all three stay selectable
+
+**Edge cases**: The same contract won twice counts once; a generated win does not count.
+
+**Existing coverage / gap**: Mostly covered (~L233, L318, L387); add the two-wins case.
 
 ---
 

@@ -58,7 +58,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/state/appStore.test.ts`
+
+**What to test**:
+- Retry win of an unwon Glass Veil at 128,450 CR = 213,450 CR
+- Generated win, Reward 54,500 CR = +54,500 CR; same after campaign-complete
+- Win of an already-won Glass Veil = `net_payout` 0
+
+**Edge cases**: The retry needs no World Network apply; a repeat win still reports `reward`; Credits unchanged by the repeat.
+
+**Existing coverage / gap**: Builds on the sprint 3 EC-009/010/012 blocks.
 
 ---
 

@@ -60,7 +60,19 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Logic.*
+
+**Test file**: `src/game/contracts.test.ts`
+
+**What to test**:
+- High, u = 0.5, not priority = 54,500 CR
+- High, u = 0.5, priority = 76,500 CR
+- Moderate, u = 0 = 30,500 CR; Moderate, u = 0.75 = 38,500 CR
+- Reward is a field stamped at creation
+
+**Edge cases**: u = 0 and u near 1 stay in 30,000-95,000; priority multiplies once; same seed gives the same Reward.
+
+**Existing coverage / gap**: `rollReward` is private and only "same Threat pays the same" is tested today. Drive it through `rollContract` with a seeded cursor.
 
 ---
 

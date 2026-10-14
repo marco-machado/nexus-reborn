@@ -56,7 +56,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-004-2026-10-14.md` (Sprint 4). Type: Integration.*
+
+**Test file**: `src/state/missionStore.test.ts`, `src/state/appStore.test.ts`
+
+**What to test**:
+- Confirmed Abort on an Offered generated contract: no outcome, no invoice, Credits C, record still Offered
+- Confirmed Abort on an Unwon Glass Veil: same, still Unwon
+
+**Edge cases**: Abort at t = 0; Abort after hits taken; a second Abort is a no-op.
+
+**Existing coverage / gap**: Extends `missionStore.test.ts` ~L228 "abort leaves the World Network blob unchanged".
 
 ---
 
