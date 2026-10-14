@@ -25,7 +25,11 @@ import {
   ARCS,
   SECTOR_VIEW,
   SECTOR_COORD,
+  SECTOR_SHAPES,
+  SECTOR_GLYPH_VIEW,
+  sectorAtGeo,
 } from './atlas'
+import { globeLocation, globePosition, projectGeo, unprojectScan } from './geography'
 
 function parsePts(s: string): Array<[number, number]> {
   return s.split(' ').map((p) => {
@@ -167,9 +171,10 @@ describe('sectorCorp', () => {
 })
 
 describe('Scan geometry', () => {
-  it('anchors the graticule: lat 85 at y 0, one pixel per 0.28 degrees', () => {
-    expect(yOfLat(85)).toBe(0)
-    expect(yOfLat(85 - 0.28)).toBeCloseTo(1, 10)
+  it('includes both poles and the equator in the complete atlas', () => {
+    expect(yOfLat(90)).toBe(0)
+    expect(yOfLat(0)).toBe(SCAN_H / 2)
+    expect(yOfLat(-90)).toBe(SCAN_H)
   })
 
   it('includes a southern graticule line on Antarctica', () => {
@@ -185,6 +190,50 @@ describe('Scan geometry', () => {
     for (const x of LON_LINES) {
       expect(x).toBeGreaterThan(0)
       expect(x).toBeLessThan(SCAN_W)
+    }
+  })
+})
+
+describe('globe geography', () => {
+  it('preserves city locations through atlas and sphere projections', () => {
+    for (const city of CITIES) {
+      const pixel = projectGeo(city)
+      const atlas = unprojectScan(pixel.x, pixel.y)
+      const globe = globeLocation(...globePosition(city, 4.25))
+      for (const actual of [atlas, globe]) {
+        expect(actual.lat).toBeCloseTo(city.lat, 8)
+        expect(actual.lon).toBeCloseTo(city.lon, 8)
+      }
+    }
+  })
+
+  it('anchors Pacifica in northern California and Lagos on the Nigerian coast', () => {
+    expect(cityById('pc')).toMatchObject({ lat: 37.6138, lon: -122.4869 })
+    expect(cityById('lg')).toMatchObject({ lat: 6.4551, lon: 3.3841 })
+  })
+
+  it('picks Europe west of the Urals, Asia east of them, and Antarctic land', () => {
+    expect(sectorAtGeo({ lat: 55.75, lon: 37.62 })).toBe('eu') // Moscow
+    expect(sectorAtGeo({ lat: 53.9, lon: 27.57 })).toBe('eu') // Minsk
+    expect(sectorAtGeo({ lat: 55.0, lon: 82.9 })).toBe('as') // Novosibirsk
+    expect(sectorAtGeo({ lat: 67, lon: -179 })).toBe('as') // Siberia at the dateline
+    expect(sectorAtGeo({ lat: -80, lon: 0 })).toBe('an')
+    expect(sectorAtGeo({ lat: 0, lon: -140 })).toBeNull()
+    const europeanPoints = SECTOR_SHAPES.eu.flatMap((shape) => parsePts(shape.pts))
+    expect(Math.min(...europeanPoints.map(([x]) => unprojectScan(x, 0).lon))).toBeGreaterThan(-30)
+  })
+
+  it('fits every silhouette fragment, including across the dateline, into its icon', () => {
+    for (const id of SECTOR_IDS) {
+      const [x, y, w, h] = SECTOR_GLYPH_VIEW[id].split(' ').map(Number)
+      for (const shape of SECTOR_SHAPES[id]) {
+        for (const [px, py] of parsePts(shape.pts)) {
+          expect(px).toBeGreaterThanOrEqual(x)
+          expect(px).toBeLessThanOrEqual(x + w)
+          expect(py).toBeGreaterThanOrEqual(y)
+          expect(py).toBeLessThanOrEqual(y + h)
+        }
+      }
     }
   })
 })

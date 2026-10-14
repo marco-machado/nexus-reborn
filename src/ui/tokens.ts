@@ -93,6 +93,10 @@ export const ART_BG_PANEL = '#05090b' // recon / satellite frames
 export const ART_BG_TILE = '#04090a' // tactical tiles
 export const ART_BG_INSET = '#070d0c' // nested panel fills
 export const WORLD_GLOW = '#0e2c26' // Scan glow
+export const GLOBE_SPACE = '#010308'
+export const GLOBE_ATMOSPHERE = '#5baeff'
+export const GLOBE_STAR = '#d6e6ff'
+export const GLOBE_SUN = '#fff5e9'
 export const PANEL_GRAD_A = '#0d1a17' // mission-list panel gradient top
 export const PANEL_GRAD_B = '#050b0a' // mission-list panel gradient bottom
 

@@ -1,7 +1,7 @@
 // World Network screen. The sector list, the Scan, the sector readout and the
 // open-contract list all read the same world state, and the transport under
 // the Scan is what moves Strategic time.
-import { useCallback, useMemo, useRef } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useRef } from 'react'
 import { useAppStore } from '../state/appStore'
 import {
   DAY,
@@ -50,7 +50,7 @@ import {
   SECTOR_COORD,
   SECTOR_VIEW,
   SECTOR_GLYPH_VIEW,
-  TERRITORIES,
+  SECTOR_SHAPES,
   sectorCorp,
   sectorDef,
   graticuleY,
@@ -60,9 +60,11 @@ import { Chip, LockGlyph, Panel, ScrollBox, SegBar, TargetGlyph } from './bits'
 import { ScreenChrome } from './Nav'
 import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
-import { ART_BG, RED, WORLD_GLOW } from './tokens'
-import { layoutScanMarks, visibleScanMarks } from './scanMarks'
+import type { GlobeOperation } from './WorldGlobe'
+import { unprojectScan } from '../game/geography'
 import { campaignBanner } from './campaignBanner'
+
+const WorldGlobe = lazy(() => import('./WorldGlobe'))
 
 function WarningGlyph() {
   return <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 2 19 18H1Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M10 7v5m0 2v1" stroke="currentColor" strokeWidth="1.8" /></svg>
@@ -257,31 +259,21 @@ function WorldScan() {
   const owner = useWorldStore((s) => s.owner)
   const selected = useWorldStore((s) => s.selected)
   const contracts = useWorldStore((s) => s.contracts)
-  const crisis = useWorldStore((s) => s.crisis)
   const selectMission = useAppStore((s) => s.selectMission)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
   const marks = useMemo(() => opsFor(null, contracts, intelLevel), [contracts, intelLevel])
-  const scanMarks = useMemo(
-    () =>
-      visibleScanMarks(
-        marks.map(({ m, gen }) => ({
-          id: m.id,
-          codename: m.codename,
-          mapPos: m.mapPos,
-          locked: campaignFailed || missionLocked(m, intelLevel),
-          authored: gen === null,
-        })),
-      ),
-    [marks, campaignFailed, intelLevel],
-  )
-  const layouts = useMemo(() => layoutScanMarks(scanMarks), [scanMarks])
-  const scanOps = useMemo(() => {
-    const ids = new Set(scanMarks.map((m) => m.id))
-    return marks.filter(({ m }) => ids.has(m.id))
-  }, [marks, scanMarks])
+  const operations = useMemo<GlobeOperation[]>(() => marks
+    .filter(({ m, gen }) => gen === null || (!campaignFailed && !missionLocked(m, intelLevel)))
+    .map(({ m }) => ({
+      id: m.id, name: m.codename, city: m.city, sector: m.sector,
+      location: CITIES.find((city) => city.name === m.city) ?? unprojectScan(m.mapPos.x / 100 * SCAN_W, m.mapPos.y / 100 * SCAN_H),
+      locked: campaignFailed || missionLocked(m, intelLevel),
+      requirement: campaignFailed ? 'CAMPAIGN LOST' : intelGate(m.intelReq),
+      type: m.type, chance: chanceFor(m, sectors, researched.length, difficulty), etaDays: m.etaDays,
+    })), [marks, campaignFailed, intelLevel, sectors, researched.length, difficulty])
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -295,169 +287,14 @@ function WorldScan() {
   }, [corps])
   const focusDef = sectorDef(selected)
 
-  const corpOf = (sector: SectorId | null): CorpId => (sector ? corps[sector] : 'unknown')
-
   return (
     <>
-    <div className="wm-map">
-      <svg
-        className="wm-map-svg"
-        viewBox={`0 0 ${SCAN_W} ${SCAN_H}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <radialGradient id="wm-glow" cx="0.5" cy="0.42" r="0.75">
-            <stop offset="0" stopColor={WORLD_GLOW} stopOpacity="0.5" />
-            <stop offset="1" stopColor={WORLD_GLOW} stopOpacity="0" />
-          </radialGradient>
-          <pattern
-            id="wm-crisis-hatch"
-            patternUnits="userSpaceOnUse"
-            width="7"
-            height="7"
-            patternTransform="rotate(35)"
-          >
-            <path d="M0 0 H7" stroke={RED} strokeWidth="2" opacity="0.55" />
-          </pattern>
-        </defs>
-        <rect x="0" y="0" width={SCAN_W} height={SCAN_H} fill={ART_BG} />
-        <rect x="0" y="0" width={SCAN_W} height={SCAN_H} fill="url(#wm-glow)" />
-
-        <g className="wm-grat">
-          {LON_LINES.map((x) => (
-            <line key={'x' + x} x1={x} y1={0} x2={x} y2={SCAN_H} />
-          ))}
-          {LAT_LINES.map((lat) => (
-            <line
-              key={'y' + lat}
-              className={lat === 0 ? 'strong' : undefined}
-              x1={0}
-              y1={graticuleY(lat)}
-              x2={SCAN_W}
-              y2={graticuleY(lat)}
-            />
-          ))}
-        </g>
-        <g className="wm-lat">
-          {LAT_LINES.filter((lat) => lat !== -60).map((lat) => (
-            <text key={'l' + lat} x={7} y={Math.max(10, graticuleY(lat) - 4)}>
-              {lat}
-            </text>
-          ))}
-        </g>
-
-        <g className="wm-land-g">
-          {TERRITORIES.filter((t) => t.sector !== 'an').map((t) => (
-            <polygon
-              key={t.id}
-              className={
-                'wm-land corp-' +
-                corpOf(t.sector) +
-                (t.sector === selected ? ' focus' : '') +
-                (t.sector !== null && crisis.includes(t.sector) ? ' crisis' : '')
-              }
-              points={t.pts}
-              onClick={t.sector && !sectorDef(t.sector).locked ? act(() => useWorldStore.getState().select(t.sector!)) : undefined}
-            />
-          ))}
-          {TERRITORIES.filter((t) => t.sector !== null && crisis.includes(t.sector)).map((t) => (
-            <polygon key={'hatch-' + t.id} className="wm-crisis-hatch" points={t.pts} />
-          ))}
-        </g>
-
-        {SECTORS.map((s) => (
-          <g key={'lt' + s.id} className={'wm-lights corp-' + corps[s.id]}>
-            {(LIGHTS_BY_SECTOR[s.id] ?? []).map((l, i) => (
-              <circle key={i} cx={l.x} cy={l.y} r={l.r} />
-            ))}
-          </g>
-        ))}
-
-        <g className="wm-cities">
-          {CITIES.map((c) => (
-            <g key={c.id} className={'wm-city corp-' + (owner[c.id] ?? c.corp)}>
-              <circle cx={c.x} cy={c.y} r="5.5" className="halo" />
-              <rect x={c.x - 3} y={c.y - 3} width="6" height="6" className="core" />
-              {['nb', 'pc', 'bg', 'sp', 'ln', 'cr', 'lg', 'sg', 'kt', 'sy'].includes(c.id) && <text x={c.x + (c.id === 'kt' || c.id === 'sy' ? -9 : 9)} y={c.y + (c.id === 'nb' ? -12 : -7)} textAnchor={c.id === 'kt' || c.id === 'sy' ? 'end' : 'start'}>{c.name}</text>}
-            </g>
-          ))}
-        </g>
-      </svg>
-
-      <span className="wm-sweep-clip" aria-hidden="true">
-        <span className="wm-sweep" />
-      </span>
-
-      {scanOps.map(({ m, gen }, i) => {
-        const locked = campaignFailed || missionLocked(m, intelLevel)
-        const lay = layouts[i]
-        return (
-          <button
-            key={m.id}
-            type="button"
-            className={'wm-marker' + (locked ? ' locked' : ' live')}
-            style={{ left: lay.pin.x + '%', top: lay.pin.y + '%' }}
-            aria-disabled={locked || undefined}
-            aria-label={
-              locked
-                ? m.codename + ' // LOCKED // ' + intelGate(m.intelReq)
-                : 'OPEN CONTRACT ' + m.codename + ' // ' + m.type + ' // ' + m.city
-            }
-            onClick={locked ? undefined : act(() => selectMission(m.id))}
-          >
-            {!locked && (
-              <>
-                <span className="wm-marker-ring" aria-hidden="true" />
-                <span className="wm-marker-ring d2" aria-hidden="true" />
-              </>
-            )}
-            <span className="wm-marker-core" aria-hidden="true" />
-            <span className={'wm-marker-label ' + lay.side}>
-              {locked && <LockGlyph size={8} />}
-              {m.codename}
-            </span>
-            <span className="tip" aria-hidden="true">
-              <b>{m.codename}</b>
-              {locked ? (
-                <>
-                  <i className="red">LOCKED</i>
-                  <i className="dim">{intelGate(m.intelReq)}</i>
-                </>
-              ) : (
-                <>
-                  <i>
-                    <span>TYPE</span>
-                    {m.type}
-                  </i>
-                  <i>
-                    <span>CHANCE</span>
-                    {chanceFor(m, sectors, researched.length, difficulty)}%
-                  </i>
-                  <i>
-                    <span>ETA</span>
-                    {m.etaDays}D
-                  </i>
-                  <i>
-                    <span>THREAT</span>
-                    {m.threat}
-                  </i>
-                  {gen && (
-                    <i>
-                      <span>EXPIRES</span>
-                      <ExpiryHours at={gen.expiresAtT} />
-                    </i>
-                  )}
-                </>
-              )}
-            </span>
-          </button>
-        )
-      })}
-    </div>
+      <Suspense fallback={<div className="globe-status" role="status">ACQUIRING ORBITAL VIEW</div>}>
+        <WorldGlobe operations={operations} onOpen={(id) => { uiClick(); selectMission(id) }} />
+      </Suspense>
 
       <div className="wm-ov tl">
-        <b>ORBITAL SCAN</b>
+        <b>ORBITAL VIEW</b>
         <span className="dim">SAT-16E // LIVE</span>
         <svg viewBox="0 0 70 16" className="wm-spark" aria-hidden="true">
           <polyline points={unrestSpark(sectors)} />
@@ -511,7 +348,7 @@ function SectorInset(props: { id: SectorId }) {
             <line key={'y' + lat} x1={0} y1={graticuleY(lat)} x2={SCAN_W} y2={graticuleY(lat)} />
           ))}
         </g>
-        {TERRITORIES.filter((t) => t.sector === props.id).map((t) => (
+        {SECTOR_SHAPES[props.id].map((t) => (
           <polygon
             key={t.id}
             className={'wm-inset-land corp-' + corp + (inCrisis ? ' crisis' : '')}
@@ -993,7 +830,7 @@ export function WorldMap() {
                   >
                     <span className="wm-sector-glyph">
                       <svg viewBox={SECTOR_GLYPH_VIEW[sec.id]} aria-hidden="true">
-                        {TERRITORIES.filter((t) => t.sector === sec.id).map((t) => <polygon key={t.id} points={t.pts} />)}
+                        {SECTOR_SHAPES[sec.id].map((t) => <polygon key={t.id} points={t.pts} />)}
                       </svg>
                     </span>
                     <span className="wm-sector-main">

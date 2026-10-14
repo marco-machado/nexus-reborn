@@ -1,10 +1,12 @@
 // CONTRACT FILE. Corporations, sectors, the territory polygons of the Scan,
-// and the cities that carry ownership. The Scan is a stylised 1000x520
-// projection of Natural Earth outlines; latitude is lat = 85 - 0.28 * y, so labels
-// line up with the landmasses.
+// and the cities that carry ownership. Cities use latitude/longitude; the
+// atlas projection and globe share the same geographic source of truth.
 import type { SectorId } from './types'
 import { mulberry32 } from './rng'
 import { SCAN_TERRITORIES } from './scanTerritories'
+import { projectGeo, SCAN_H, SCAN_W, SECTOR_FOCUS } from './geography'
+import type { GeoPoint } from './geography'
+export { SCAN_H, SCAN_W } from './geography'
 
 /* ------------------------------ corporations ------------------------------ */
 
@@ -169,31 +171,36 @@ export interface CityDef {
   id: string
   name: string
   sector: SectorId
+  lat: number
+  lon: number
   x: number
   y: number
   corp: CorpId
 }
 
-export const CITIES: CityDef[] = [
-  { id: 'nb', name: 'NEW BOSTON', sector: 'na', x: 302.6, y: 152.3, corp: 'nexus' },
-  { id: 'pc', name: 'PACIFICA', sector: 'na', x: 159.9, y: 168.7, corp: 'nexus' },
-  { id: 'dt', name: 'DETROIT SPRAWL', sector: 'na', x: 269.3, y: 152.4, corp: 'stratos' },
-  { id: 'bg', name: 'BOGOTA', sector: 'sa', x: 294.3, y: 286.8, corp: 'nexus' },
-  { id: 'sp', name: 'SAO PAULO', sector: 'sa', x: 370.5, y: 387.6, corp: 'stratos' },
-  { id: 'lm', name: 'LIMA', sector: 'sa', x: 286.0, y: 346.6, corp: 'omni' },
-  { id: 'ln', name: 'LONDON', sector: 'eu', x: 499.6, y: 119.6, corp: 'helix' },
-  { id: 'nc', name: 'NEW CARTHAGE', sector: 'eu', x: 506.5, y: 129.1, corp: 'helix' },
-  { id: 'os', name: 'OSLO', sector: 'eu', x: 529.9, y: 89.6, corp: 'omni' },
-  { id: 'cr', name: 'CAIRO', sector: 'af', x: 586.8, y: 196.3, corp: 'omni' },
-  { id: 'lg', name: 'LAGOS', sector: 'af', x: 509.4, y: 280.3, corp: 'omni' },
-  { id: 'jb', name: 'JOHANNESBURG', sector: 'af', x: 577.9, y: 397.1, corp: 'helix' },
-  { id: 'sg', name: 'SHINGANG', sector: 'as', x: 837.4, y: 192.0, corp: 'helix' },
-  { id: 'kt', name: 'KITARU', sector: 'as', x: 888.0, y: 176.2, corp: 'helix' },
-  { id: 'nk', name: 'NEO KOWLOON', sector: 'as', x: 817.1, y: 223.8, corp: 'stratos' },
-  { id: 'sy', name: 'SYDNEY', sector: 'oc', x: 920.0, y: 424.5, corp: 'stratos' },
-  { id: 'pr', name: 'PERTH', sector: 'oc', x: 821.8, y: 417.7, corp: 'stratos' },
-  { id: 'ak', name: 'AUCKLAND', sector: 'oc', x: 985.4, y: 435.2, corp: 'nexus' },
+// Fictional names retain their established real-world anchors (Boston, Paris,
+// Shanghai, Tokyo, Hong Kong). Pacifica and Lagos use their actual city sites.
+const CITY_LOCATIONS: Omit<CityDef, 'x' | 'y'>[] = [
+  { id: 'nb', name: 'NEW BOSTON', sector: 'na', lat: 42.3601, lon: -71.0589, corp: 'nexus' },
+  { id: 'pc', name: 'PACIFICA', sector: 'na', lat: 37.6138, lon: -122.4869, corp: 'nexus' },
+  { id: 'dt', name: 'DETROIT SPRAWL', sector: 'na', lat: 42.3314, lon: -83.0458, corp: 'stratos' },
+  { id: 'bg', name: 'BOGOTA', sector: 'sa', lat: 4.7110, lon: -74.0721, corp: 'nexus' },
+  { id: 'sp', name: 'SAO PAULO', sector: 'sa', lat: -23.5505, lon: -46.6333, corp: 'stratos' },
+  { id: 'lm', name: 'LIMA', sector: 'sa', lat: -12.0464, lon: -77.0428, corp: 'omni' },
+  { id: 'ln', name: 'LONDON', sector: 'eu', lat: 51.5074, lon: -0.1278, corp: 'helix' },
+  { id: 'nc', name: 'NEW CARTHAGE', sector: 'eu', lat: 48.8566, lon: 2.3522, corp: 'helix' },
+  { id: 'os', name: 'OSLO', sector: 'eu', lat: 59.9139, lon: 10.7522, corp: 'omni' },
+  { id: 'cr', name: 'CAIRO', sector: 'af', lat: 30.0444, lon: 31.2357, corp: 'omni' },
+  { id: 'lg', name: 'LAGOS', sector: 'af', lat: 6.4551, lon: 3.3841, corp: 'omni' },
+  { id: 'jb', name: 'JOHANNESBURG', sector: 'af', lat: -26.2041, lon: 28.0473, corp: 'helix' },
+  { id: 'sg', name: 'SHINGANG', sector: 'as', lat: 31.2304, lon: 121.4737, corp: 'helix' },
+  { id: 'kt', name: 'KITARU', sector: 'as', lat: 35.6762, lon: 139.6503, corp: 'helix' },
+  { id: 'nk', name: 'NEO KOWLOON', sector: 'as', lat: 22.3193, lon: 114.1694, corp: 'stratos' },
+  { id: 'sy', name: 'SYDNEY', sector: 'oc', lat: -33.8688, lon: 151.2093, corp: 'stratos' },
+  { id: 'pr', name: 'PERTH', sector: 'oc', lat: -31.9523, lon: 115.8613, corp: 'stratos' },
+  { id: 'ak', name: 'AUCKLAND', sector: 'oc', lat: -36.8485, lon: 174.7633, corp: 'nexus' },
 ]
+export const CITIES: CityDef[] = CITY_LOCATIONS.map((city) => ({ ...city, ...projectGeo(city) }))
 
 export const CITIES_BY_SECTOR: Record<string, CityDef[]> = {}
 for (const c of CITIES) (CITIES_BY_SECTOR[c.sector] ??= []).push(c)
@@ -243,16 +250,8 @@ export function sectorCorp(sector: SectorId, owner: Record<string, CorpId>): Cor
 
 /* ------------------------------ Scan geometry ----------------------------- */
 
-export const SCAN_W = 1000
-export const SCAN_H = 520
-
-// lat = LAT_TOP - LAT_PER_PX * y, fitted so the landmasses sit near their real
-// latitudes. Inverted here to place the graticule.
-const LAT_TOP = 85
-const LAT_PER_PX = 0.28
-
 export function yOfLat(lat: number): number {
-  return (LAT_TOP - lat) / LAT_PER_PX
+  return projectGeo({ lat, lon: 0 }).y
 }
 
 // Clamp the graticule to the visible projection.
@@ -279,6 +278,16 @@ function pointInPoly(poly: number[][], x: number, y: number): boolean {
     if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit
   }
   return hit
+}
+
+const TERRITORY_POLYGONS = TERRITORIES.map((territory) => ({
+  sector: territory.sector,
+  points: parsePts(territory.pts),
+}))
+
+export function sectorAtGeo(location: GeoPoint): SectorId | null {
+  const { x, y } = projectGeo(location)
+  return TERRITORY_POLYGONS.find((territory) => pointInPoly(territory.points, x, y))?.sector ?? null
 }
 
 function bbox(poly: number[][]): [number, number, number, number] {
@@ -318,6 +327,7 @@ function buildLights(): Light[] {
   const rng = mulberry32(0x5ec7043)
   const out: Light[] = []
   for (const t of TERRITORIES) {
+    if (t.sector === 'an') continue
     const poly = parsePts(t.pts)
     const [x0, y0, x1, y1] = bbox(poly)
     const want = Math.max(2, Math.min(26, Math.round(area(poly) / 1500)))
@@ -398,15 +408,25 @@ export const ARCS: Arc[] = LINKS.map(([a, b, hot]) => ({
 // aspect so every sector fills the frame the same way.
 const INSET_ASPECT = 2.5
 
+// Unwrap dateline fragments for local silhouettes. Both the bounds and the
+// displayed polygons use these same shapes, so eastern Siberia and the
+// Aleutians are retained rather than being clipped out of the sidebar icons.
+export const SECTOR_SHAPES: Record<string, TerritoryDef[]> = {}
+for (const sector of SECTORS) {
+  SECTOR_SHAPES[sector.id] = TERRITORIES.filter((t) => t.sector === sector.id).map((t) => {
+    const points = parsePts(t.pts)
+    const offset = sector.id === 'na' && points.every(([x]) => x > 900) ? -SCAN_W
+      : (sector.id === 'as' || sector.id === 'oc') && points.every(([x]) => x < 100) ? SCAN_W : 0
+    return offset === 0 ? t : { ...t, pts: points.map(([x, y]) => `${x + offset},${y}`).join(' ') }
+  })
+}
+
 function sectorBox(id: SectorId, aspect = INSET_ASPECT): [number, number, number, number] {
   let x0 = Infinity
   let y0 = Infinity
   let x1 = -Infinity
   let y1 = -Infinity
-  for (const t of TERRITORIES) {
-    if (t.sector !== id) continue
-    if ((id === 'na' && t.id.startsWith('usa-') && parsePts(t.pts).every(([x]) => x > 900)) ||
-        ((id === 'as' || id === 'oc') && parsePts(t.pts).every(([x]) => x < 100))) continue
+  for (const t of SECTOR_SHAPES[id]) {
     const [a, b, c, d] = bbox(parsePts(t.pts))
     x0 = Math.min(x0, a)
     y0 = Math.min(y0, b)
@@ -438,8 +458,7 @@ for (const s of SECTORS) {
   SECTOR_GLYPH_VIEW[s.id] = sectorBox(s.id, 1).map((v) => v.toFixed(1)).join(' ')
   const [x, y, w, h] = sectorBox(s.id)
   SECTOR_VIEW[s.id] = `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`
-  const lat = LAT_TOP - LAT_PER_PX * (y + h / 2)
-  const lon = (x + w / 2 - SCAN_W / 2) * 0.36
+  const { lat, lon } = SECTOR_FOCUS[s.id]
   SECTOR_COORD[s.id] =
     Math.abs(lat).toFixed(2) + (lat >= 0 ? 'N ' : 'S ') + Math.abs(lon).toFixed(2) + (lon >= 0 ? 'E' : 'W')
 }

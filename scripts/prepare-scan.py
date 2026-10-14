@@ -1,5 +1,6 @@
 """Project Natural Earth country outlines into the game's Scan coordinates.
 
+Requires Shapely (build-time only): python3 -m pip install shapely
 Usage: python3 scripts/prepare-scan.py /path/to/ne_110m_admin_0_countries.geojson
 Source: https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_admin_0_countries.geojson
 Public domain: https://www.naturalearthdata.com/about/terms-of-use/
@@ -9,30 +10,55 @@ of modern political borders. No images or runtime network requests are used.
 import json
 import sys
 from pathlib import Path
+from shapely.geometry import Polygon, shape
+from shapely.ops import unary_union
+
+# A cartographic approximation of the Ural Mountains / Ural River / Caspian /
+# Greater Caucasus / Turkish Straits convention. Split transcontinental
+# countries geometrically; a country's administrative classification must not
+# put all of Russia in Asia. This is a game-sector boundary, not a legal border.
+divide = [(69, 90), (69, 72), (66, 68), (61, 64), (59, 60), (59, 56),
+          (59.5, 54), (59, 52), (55.5, 51.75), (53.4, 51.6), (51.3, 51.2),
+          (51, 49.8), (51.8, 48.2), (51.9, 47.3), (51.3, 46.8), (50, 44),
+          (49.8, 40.5), (48, 41.6), (46, 42.1), (44.5, 42.7), (42.5, 43.1),
+          (40, 43.5), (36, 42), (29.1, 41.2), (29, 41), (26.7, 40.4),
+          (26, 39.8), (26, -90)]
+europe = Polygon([(-180, 90), *divide, (-180, -90)])
+
+
+def polygon_parts(geometry):
+    if geometry.is_empty:
+        return []
+    if geometry.geom_type == 'Polygon':
+        return [geometry]
+    return [part for member in geometry.geoms for part in polygon_parts(member)]
 
 source = json.loads(Path(sys.argv[1]).read_text())
 sectors = {'North America': 'na', 'South America': 'sa', 'Europe': 'eu',
-           'Africa': 'af', 'Asia': 'as', 'Oceania': 'oc'}
+           'Africa': 'af', 'Asia': 'as', 'Oceania': 'oc', 'Antarctica': 'an'}
 rows = []
+sector_geometry = {sector: [] for sector in sectors.values()}
 for feature in source['features']:
     props = feature['properties']
     if props['CONTINENT'] not in sectors:
         continue
-    geometry = feature['geometry']
-    polygons = geometry['coordinates'] if geometry['type'] == 'MultiPolygon' else [geometry['coordinates']]
-    for index, polygon in enumerate(polygons):
-        ring = polygon[0]
+    for index, polygon in enumerate(polygon_parts(shape(feature['geometry']))):
         sector = sectors[props['CONTINENT']]
-        # Russia is in the game's Asian theatre; French Guiana in South America.
-        if props['ADM0_A3'] == 'RUS':
-            sector = 'as'
-        if props['ADM0_A3'] == 'FRA' and sum(p[0] for p in ring) / len(ring) < -20:
+        if props['ADM0_A3'] == 'FRA' and polygon.centroid.x < -20:
             sector = 'sa'
-        points = ' '.join(f'{(lon + 180) / .36:.1f},{max(0, min(520, (85 - lat) / .28)):.1f}' for lon, lat in ring)
-        key = 'gl' if props['ADM0_A3'] == 'GRL' and index == 0 else props['ADM0_A3'].lower() + '-' + str(index)
-        rows.append({'id': key, 'sector': sector, 'pts': points})
-# Antarctica is outside the projection's southern limit and remains unsurveyed.
-rows.append({'id': 'an', 'sector': 'an', 'pts': '60,508 200,498 400,492 600,496 800,492 950,500 950,518 60,518'})
+        pieces = [(sector, polygon)]
+        if props['ADM0_A3'] == 'RUS' and polygon.bounds[2] < 0:
+            pieces = [('as', polygon)]  # Eastern Siberia across the dateline.
+        elif props['ADM0_A3'] in {'RUS', 'KAZ', 'GEO', 'AZE', 'TUR'}:
+            pieces = [('eu', polygon.intersection(europe)), ('as', polygon.difference(europe))]
+        for piece_sector, geometry in pieces:
+            for part_index, part in enumerate(polygon_parts(geometry)):
+                points = ' '.join(f'{(lon + 180) / 360 * 1000:.2f},{(90 - lat) / 180 * 520:.2f}'
+                                  for lon, lat in part.exterior.coords)
+                key = ('gl' if props['ADM0_A3'] == 'GRL' and index == 0 else
+                       f"{props['ADM0_A3'].lower()}-{index}-{piece_sector}-{part_index}")
+                rows.append({'id': key, 'sector': piece_sector, 'pts': points})
+                sector_geometry[piece_sector].append(part)
 target = Path(__file__).resolve().parents[1] / 'src/game/scanTerritories.ts'
 target.write_text('// Country outlines projected from public-domain Natural Earth 1:110m data.\n'
                   '// Rebuild with scripts/prepare-scan.py; provenance and projection live there.\n'
@@ -40,3 +66,17 @@ target.write_text('// Country outlines projected from public-domain Natural Eart
                   'export const SCAN_TERRITORIES: TerritoryDef[] = [\n' +
                   ''.join('  ' + json.dumps(row, separators=(',', ':')) + ',\n' for row in rows) + ']\n')
 print(f'{len(rows)} polygons written to {target}')
+
+# The globe needs sector boundaries, not a mesh of every modern country.
+outlines = []
+for sector, parts in sector_geometry.items():
+    for index, part in enumerate(polygon_parts(unary_union(parts))):
+        points = ' '.join(f'{(lon + 180) / 360 * 1000:.2f},{(90 - lat) / 180 * 520:.2f}'
+                          for lon, lat in part.exterior.coords)
+        outlines.append({'id': f'{sector}-{index}', 'sector': sector, 'pts': points})
+outline_target = target.with_name('sectorOutlines.ts')
+outline_target.write_text('// Dissolved Natural Earth sector outlines. Generated by scripts/prepare-scan.py.\n'
+                          "import type { TerritoryDef } from './atlas'\n\n"
+                          'export const SECTOR_OUTLINES: TerritoryDef[] = [\n' +
+                          ''.join('  ' + json.dumps(row, separators=(',', ':')) + ',\n' for row in outlines) + ']\n')
+print(f'{len(outlines)} sector outlines written to {outline_target}')
