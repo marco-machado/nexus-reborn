@@ -6,7 +6,7 @@
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -36,6 +36,7 @@
 
 - [ ] GIVEN Debrief has applied in this session (payout, sector, Intel, Influence, and roster — or quiet-replay roster + ETA catch-up only) and the director has not entered a Screen, WHEN Debrief is shown, THEN an observable filing-status indicates the invoice is not durable (unfiled) without leaving Debrief. Copy and layout stay Interface.
 - [ ] GIVEN that unfiled Debrief and a successful next-Screen autosave (World Network return or Brief Replay), WHEN reload then Continue, THEN named post-apply campaign fields persist (not S, not doubled) and filing-status is not still unfiled.
+- [ ] GIVEN an unfiled Debrief that held selected contract C, WHEN the director Replays to Brief and the Brief autosave succeeds, THEN filing status is no longer unfiled in session and the selection is still C. (GDD Edge Cases: "If Debrief Replays to Brief": the Brief autosave is the first durable write.)
 
 ---
 

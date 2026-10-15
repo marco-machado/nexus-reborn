@@ -6,7 +6,7 @@
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -35,6 +35,7 @@
 
 - [ ] GIVEN a valid campaign blob and invalid settings data, WHEN the origin reloads, THEN Continue is present.
 - [ ] GIVEN a valid campaign blob and invalid telemetry data, WHEN the origin reloads, THEN Continue is present and Balance has no mission records.
+- [ ] GIVEN a valid campaign blob and invalid settings data, WHEN the origin reloads, THEN every Settings value equals its default and Continue still restores the campaign unchanged from the blob. (GDD Edge Cases: "If settings data is garbage": fall back to settings defaults independently.)
 
 ---
 

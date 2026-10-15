@@ -6,7 +6,7 @@
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -34,6 +34,7 @@
 
 - [ ] GIVEN the campaign blob is replaced with non-JSON text via test inject (not a named storage key), WHEN the origin reloads to Menu, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started. Copy stays Interface.
 - [ ] GIVEN the campaign blob is JSON that fails campaign schema, WHEN the origin reloads to Menu, THEN Continue is absent, Screens are not entered, and Menu state is invalid/unreadable, distinct from never-started.
+- [ ] GIVEN a non-JSON or schema-failing campaign blob, WHEN the origin reloads and the director starts from the Menu, THEN no value from that blob is applied: strategy, roster and laboratories are at the New Operation defaults (no half-load). (GDD Edge Cases: "If the campaign blob is unreadable or invalid".)
 
 ---
 
