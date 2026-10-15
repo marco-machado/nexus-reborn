@@ -11,10 +11,10 @@ import {
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, operativeById } from '../game/data'
-import { nodeById } from '../game/research'
+import { BRANCH_IDS, nodeById, nodesOfBranch } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
-import { useResearchStore } from './researchStore'
+import { labsRunning, nodeState, useResearchStore } from './researchStore'
 import { DAY, initialOwner, resolveMission, sectorReadout, useWorldStore } from './worldStore'
 import { CITIES_BY_SECTOR } from '../game/atlas'
 import { sectorClient } from '../game/contracts'
@@ -2340,5 +2340,97 @@ describe('priced outcome stores Collateral and net payout (ADR-0021 §4)', () =>
   it('settleOutcome prices non-finite reward and bonus as 0', () => {
     const o = settleOutcome({ ...outcome(), reward: Number.NaN, bonus: Number.POSITIVE_INFINITY })
     expect([o.reward, o.bonus, o.collateral, o.netPayout]).toEqual([0, 0, 0, 0])
+  })
+})
+
+// RS-002 / TR-research-005: the production authorize command is
+// appStore.authorizeResearch (owner decision R-5). Success is check, start(),
+// then exactly one spendCredits(cost); Research keeps no Credits ledger.
+describe('Authorize success: start, then one debit (RS-002)', () => {
+  const PROPELLANTS = nodeById('b-propellants')
+  const idle = () => ({ ballistics: null, cybernetics: null, control: null })
+
+  beforeEach(() => {
+    useResearchStore.setState({ done: [], labs: idle() })
+  })
+
+  // Wraps start / spendCredits / addCredits so a test can count calls and
+  // their order. Restored by the caller.
+  function spyAuthorize() {
+    const app = useAppStore.getState()
+    const research = useResearchStore.getState()
+    const calls: string[] = []
+    const spent: number[] = []
+    useResearchStore.setState({
+      start: (node, t) => (calls.push('start'), research.start(node, t)),
+    })
+    useAppStore.setState({
+      spendCredits: (n) => (calls.push('spendCredits'), spent.push(n), app.spendCredits(n)),
+      addCredits: (n) => (calls.push('addCredits'), app.addCredits(n)),
+    })
+    const restore = () => {
+      useResearchStore.setState({ start: research.start })
+      useAppStore.setState({ spendCredits: app.spendCredits, addCredits: app.addCredits })
+    }
+    return { calls, spent, restore }
+  }
+
+  it('each idle lab with one available root project: all three authorized run 3 labs, 1 active each', () => {
+    const roots = BRANCH_IDS.map((b) => nodesOfBranch(b).find((n) => n.needs.length === 0)!)
+    const total = roots.reduce((sum, n) => sum + n.cost, 0)
+    useAppStore.setState({ credits: total })
+    for (const n of roots) expect(nodeState(n, [], idle())).toBe('available')
+
+    for (const n of roots) expect(useAppStore.getState().authorizeResearch(n, 0)).toBe(true)
+
+    const { labs, done } = useResearchStore.getState()
+    expect(labsRunning(labs)).toBe(3)
+    for (const b of BRANCH_IDS) {
+      const active = nodesOfBranch(b).filter((n) => nodeState(n, done, labs) === 'active')
+      expect(active.map((n) => n.id)).toEqual([labs[b]!.id])
+    }
+    expect(useAppStore.getState().credits).toBe(0)
+  })
+
+  for (const C of [16000, 20000]) {
+    it(`Advanced Propellants at 16,000 CR with C = ${C}: start once, spendCredits(16000) once, no addCredits, Credits = C - 16,000`, () => {
+      expect(PROPELLANTS.cost).toBe(16000)
+      useAppStore.setState({ credits: C })
+      expect(nodeState(PROPELLANTS, [], idle())).toBe('available')
+      const { calls, spent, restore } = spyAuthorize()
+      let ok: boolean
+      try {
+        ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+      } finally {
+        restore()
+      }
+      expect(ok).toBe(true)
+      // start first, then exactly one debit; never spend-then-start.
+      expect(calls).toEqual(['start', 'spendCredits'])
+      expect(spent).toEqual([16000])
+      const { labs, done } = useResearchStore.getState()
+      expect(labs.ballistics?.id).toBe(PROPELLANTS.id)
+      expect(nodeState(PROPELLANTS, done, labs)).toBe('active')
+      expect(useAppStore.getState().credits).toBe(C - 16000)
+    })
+  }
+
+  it('a non-positive or non-finite listed cost returns before start(): lab idle, project available, Credits unchanged', () => {
+    useAppStore.setState({ credits: 20000 })
+    for (const cost of [0, -16000, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      const { calls, restore } = spyAuthorize()
+      let ok: boolean
+      try {
+        ok = useAppStore.getState().authorizeResearch({ ...PROPELLANTS, cost }, 0)
+      } finally {
+        restore()
+      }
+      expect(ok).toBe(false)
+      expect(calls).toEqual([])
+      const { labs, done } = useResearchStore.getState()
+      expect(labs.ballistics).toBeNull()
+      expect(nodeState(PROPELLANTS, done, labs)).toBe('available')
+      expect(useAppStore.getState().credits).toBe(20000)
+    }
   })
 })
