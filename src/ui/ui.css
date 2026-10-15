@@ -2640,6 +2640,29 @@
   color: var(--amber-hot);
 }
 
+/* Screen write-failure advisory (P-11): words carry the state, not the hue.
+   The region is always mounted (live region) and draws nothing when empty. */
+.write-fail-region {
+  position: fixed;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  z-index: 40;
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+
+.write-fail-notice {
+  padding: 8px 14px;
+  text-align: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--line-amber);
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.24em;
+  color: var(--amber-hot);
+  pointer-events: none;
+}
+
 .db-actions { display: flex; gap: 10px; }
 .db-actions .btn { flex: 1; }
 

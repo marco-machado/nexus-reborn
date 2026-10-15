@@ -174,8 +174,8 @@ stories:
     name: "Write failure never reports filed"
     file: "production/epics/persistence-and-validation/story-018-write-failure-never-reports-filed.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"

@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { useAppStore } from './state/appStore'
 import { MainMenu, WorldMap, Research, MissionBrief, TeamSelect, Debrief } from './ui'
 import { bindStrategyBed } from './ui/strategyAudio'
+import { WriteFailureNotice } from './ui/WriteFailureNotice'
 
 const MissionScreen = lazy(() => import('./ui/MissionScreen'))
 
@@ -28,6 +29,9 @@ export default function App() {
         </Suspense>
       )}
       {phase === 'debrief' && <Debrief />}
+      {(phase === 'world' || phase === 'research' || phase === 'brief' || phase === 'team') && (
+        <WriteFailureNotice />
+      )}
       <div className="crt-overlay" aria-hidden="true" />
     </div>
   )

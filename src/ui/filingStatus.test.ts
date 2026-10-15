@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { UNFILED_LINE, debriefFilingLine } from './filingStatus'
+import {
+  UNFILED_LINE,
+  WRITE_FAILED_LINE,
+  debriefFilingLine,
+  screenWriteFailureLine,
+} from './filingStatus'
 
 describe('debriefFilingLine (P-19, PV-017)', () => {
   it('unfiled prints the unfiled sentence', () => {
@@ -11,7 +16,16 @@ describe('debriefFilingLine (P-19, PV-017)', () => {
     expect(debriefFilingLine('filed')).toBeNull()
   })
 
-  it('write-failed prints nothing here (Story 018 owns that copy)', () => {
-    expect(debriefFilingLine('write-failed')).toBeNull()
+  it('write-failed prints the failure sentence, never the filed state (PV-018)', () => {
+    expect(debriefFilingLine('write-failed')).toBe(WRITE_FAILED_LINE)
+    expect(WRITE_FAILED_LINE).not.toBe(UNFILED_LINE)
+  })
+})
+
+describe('screenWriteFailureLine (P-11, PV-018)', () => {
+  it('only write-failed shows the Screen advisory', () => {
+    expect(screenWriteFailureLine('write-failed')).toBe(WRITE_FAILED_LINE)
+    expect(screenWriteFailureLine('unfiled')).toBeNull()
+    expect(screenWriteFailureLine('filed')).toBeNull()
   })
 })

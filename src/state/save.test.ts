@@ -20,6 +20,7 @@ import { useResearchStore } from './researchStore'
 import {
   SAVE_KEY,
   captureSave,
+  classifyWriteFailure,
   continueOperation,
   hydrateSave,
   inspectSave,
@@ -36,7 +37,12 @@ import { pressNewOperation } from '../ui/newOperationArm'
 import { SETTINGS_KEY, defaultSettings, initSettings, useSettingsStore } from './settingsStore'
 import { useTutorialStore } from './tutorialStore'
 import { useSaveStatusStore } from './saveStatusStore'
-import { UNFILED_LINE, debriefFilingLine } from '../ui/filingStatus'
+import {
+  UNFILED_LINE,
+  WRITE_FAILED_LINE,
+  debriefFilingLine,
+  screenWriteFailureLine,
+} from '../ui/filingStatus'
 import { freezeDeploy } from './deployFreeze'
 import { useMissionStore } from './missionStore'
 import { TELEMETRY_KEY, aggregate, loadRecords, recordAbort } from './telemetry'
@@ -2376,6 +2382,160 @@ describe('Debrief filing status reads unfiled until the next Screen', () => {
     useSaveStatusStore.setState({ status: 'filed', reason: null })
     vi.advanceTimersByTime(1_000)
     expect(writes).not.toHaveBeenCalled()
+  })
+
+  // PV-018 (TR-persistence-009, ADR-0022): a swallowed campaign write or New
+  // Operation erase never reports filed, and Continue restores the last
+  // durable blob. The throw is injected through the storage seam the save
+  // module was handed, not keyed on a storage key name.
+  describe('write failure never reports filed', () => {
+    const quotaError = () => Object.assign(new Error('full'), { name: 'QuotaExceededError' })
+
+    // Every campaign write through the seam throws until the returned restore.
+    function failWrites(): () => void {
+      const set = vi.spyOn(storage, 'setItem').mockImplementation(() => {
+        throw quotaError()
+      })
+      const remove = vi.spyOn(storage, 'removeItem').mockImplementation(() => {
+        throw quotaError()
+      })
+      return () => {
+        set.mockRestore()
+        remove.mockRestore()
+      }
+    }
+
+    function expectNamedFields(expected: SaveV10): void {
+      const now = captureSave()
+      expect(now.app.credits).toBe(expected.app.credits)
+      expect(now.world.t).toBe(expected.world.t)
+      expect(now.campaign.intelLevel).toBe(expected.campaign.intelLevel)
+      expect(now.campaign.contractsWon).toEqual(expected.campaign.contractsWon)
+      expect(now.campaign.roster).toEqual(expected.campaign.roster)
+    }
+
+    it('AC1: New Operation with the erase and writes failing keeps the desk at F, shows the failure, and reload loads C0', () => {
+      const F = captureSave()
+      const S = reachScreen(false)
+      const C0 = JSON.parse(S) as SaveV10
+      failWrites()
+
+      expect(() => startNewOperation(storage)).not.toThrow()
+      expect(captureSave()).toEqual(F)
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'quota' })
+      expect(screenWriteFailureLine(status())).toBe(WRITE_FAILED_LINE)
+      // The new house's autosave also throws: still not filed, C0 untouched.
+      vi.advanceTimersByTime(1_000)
+      expect(status()).toBe('write-failed')
+      expect(storage.getItem(SAVE_KEY)).toBe(S)
+
+      reloadAndContinue()
+      expectNamedFields(C0)
+    })
+
+    it('a failed erase whose next Screen write lands truthfully files the new house (ADR-0022)', () => {
+      reachScreen(false)
+      vi.spyOn(storage, 'removeItem').mockImplementation(() => {
+        throw quotaError()
+      })
+      startNewOperation(storage)
+      expect(status()).toBe('write-failed')
+      vi.advanceTimersByTime(500)
+      expect(status()).toBe('filed')
+      expect(readSave(storage)?.app.credits).toBe(captureSave().app.credits)
+    })
+
+    it.each([
+      ['World Network return', () => useAppStore.getState().returnFromDebrief()],
+      ['Replay to Brief', () => useAppStore.getState().goto('brief')],
+    ])('AC2 %s: the first Screen write throws; not filed; reload then Continue equals S', (_label, leave) => {
+      const S = reachScreen(false)
+      applyWin(false)
+      failWrites()
+
+      expect(() => {
+        leave()
+        vi.advanceTimersByTime(500)
+      }).not.toThrow()
+      expect(status()).not.toBe('filed')
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'quota' })
+      expect(storage.getItem(SAVE_KEY)).toBe(S)
+
+      reloadAndContinue()
+      expectNamedFields(JSON.parse(S) as SaveV10)
+      // Hydrating the last durable blob is filed: that blob is on disk.
+      expect(status()).toBe('filed')
+    })
+
+    it('AC3: writes keep throwing across World Network and Research; the first success files the post-apply campaign', () => {
+      const S = reachScreen(false)
+      applyWin(false)
+      const applied = captureSave()
+      const restore = failWrites()
+
+      expect(() => {
+        useAppStore.getState().returnFromDebrief()
+        vi.advanceTimersByTime(500)
+      }).not.toThrow()
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'quota' })
+      expect(() => {
+        useAppStore.getState().goto('research')
+        vi.advanceTimersByTime(500)
+      }).not.toThrow()
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'quota' })
+      expect(storage.getItem(SAVE_KEY)).toBe(S)
+
+      restore()
+      useAppStore.getState().goto('world')
+      vi.advanceTimersByTime(500)
+      expect(status()).toBe('filed')
+      expect(screenWriteFailureLine(status())).toBeNull()
+
+      reloadAndContinue()
+      expectNamedFields(applied)
+    })
+
+    it('a plain Screen autosave that throws, before any Debrief, is not filed', () => {
+      const S = reachScreen(false)
+      vi.spyOn(storage, 'setItem').mockImplementation(() => {
+        throw Object.assign(new Error('denied'), { name: 'SecurityError' })
+      })
+      useAppStore.getState().goto('world')
+      vi.advanceTimersByTime(500)
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'unavailable' })
+      expect(storage.getItem(SAVE_KEY)).toBe(S)
+    })
+
+    it('a Debrief applied after an earlier failure keeps write-failed (sticky), never unfiled or filed', () => {
+      reachScreen(false)
+      const restore = failWrites()
+      useAppStore.getState().goto('world')
+      vi.advanceTimersByTime(500)
+      expect(status()).toBe('write-failed')
+      restore()
+      applyWin(false)
+      expect(status()).toBe('write-failed')
+      expect(debriefFilingLine(status())).toBe(WRITE_FAILED_LINE)
+    })
+
+    it('no storage: writeSave and New Operation report write-failed / unavailable', () => {
+      expect(writeSave(null)).toBe(false)
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'unavailable' })
+      useSaveStatusStore.getState().reset()
+      startNewOperation(null)
+      expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'unavailable' })
+    })
+
+    it('classifies failures by name, totally', () => {
+      const named = (name: string) => Object.assign(new Error('x'), { name })
+      expect(classifyWriteFailure(named('QuotaExceededError'))).toBe('quota')
+      expect(classifyWriteFailure(named('NS_ERROR_DOM_QUOTA_REACHED'))).toBe('quota')
+      expect(classifyWriteFailure(named('SecurityError'))).toBe('unavailable')
+      expect(classifyWriteFailure(new TypeError('cyclic'))).toBe('unknown')
+      expect(classifyWriteFailure(null)).toBe('unknown')
+      expect(classifyWriteFailure('boom')).toBe('unknown')
+      expect(classifyWriteFailure({ name: 7 })).toBe('unknown')
+    })
   })
 
   it('startAutosave twice installs one unfiled watcher', () => {

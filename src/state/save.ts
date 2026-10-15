@@ -38,6 +38,7 @@ import { INITIAL_CREDITS, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import type { CampaignRosterEntry } from './campaignStore'
 import { useSaveStatusStore } from './saveStatusStore'
+import type { WriteFailReason } from './saveStatusStore'
 import { useTutorialStore } from './tutorialStore'
 import { useResearchStore } from './researchStore'
 import type { Labs } from './researchStore'
@@ -570,15 +571,34 @@ export function captureSave(): SaveV10 {
   }
 }
 
+/**
+ * Coarse cause of a swallowed campaign write (ADR-0022). Duck-types the
+ * thrown value's `name`, never `instanceof DOMException`: quota names differ
+ * by browser. Total: never throws for null, non-objects, or nameless errors.
+ */
+export function classifyWriteFailure(error: unknown): WriteFailReason {
+  const name =
+    typeof error === 'object' && error !== null && 'name' in error
+      ? (error as { name: unknown }).name
+      : null
+  if (name === 'QuotaExceededError' || name === 'NS_ERROR_DOM_QUOTA_REACHED') return 'quota'
+  if (name === 'SecurityError') return 'unavailable'
+  return 'unknown'
+}
+
 export function writeSave(storage: SaveStorage | null = browserStorage()): boolean {
-  if (!storage) return false
+  if (!storage) {
+    useSaveStatusStore.getState().markWriteFailed('unavailable')
+    return false
+  }
   try {
     storage.setItem(SAVE_KEY, JSON.stringify(captureSave()))
     // Filed only once `setItem` has returned (ADR-0022). A swallowed write
     // never reaches this line, so it is never reported filed.
     useSaveStatusStore.getState().markFiled()
     return true
-  } catch {
+  } catch (error) {
+    useSaveStatusStore.getState().markWriteFailed(classifyWriteFailure(error))
     return false
   }
 }
@@ -915,14 +935,14 @@ export function initializeSaveSystem(): boolean {
 export function startNewOperation(storage: SaveStorage | null = browserStorage()): void {
   cancelPendingAutosave()
   droppedAtBoot = false
-  let erased = false
+  // Without storage the erase cannot happen, so it is a failure, not a no-op
+  // success (ADR-0022).
+  let failure: WriteFailReason | null = storage ? null : 'unavailable'
   try {
-    if (storage) {
-      storage.removeItem(SAVE_KEY)
-      erased = true
-    }
-  } catch {
+    storage?.removeItem(SAVE_KEY)
+  } catch (error) {
     // Resetting in memory is still useful when storage cannot be changed.
+    failure = classifyWriteFailure(error)
   }
 
   const campaign = initialCampaignData()
@@ -966,9 +986,11 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     deploySerial: 0,
     lastAppliedKey: 0,
   })
-  // After the in-memory reset (ADR-0022): a successful erase is filed. The
-  // failed-erase signal is Story 018's write-failed path.
-  if (erased) useSaveStatusStore.getState().markFiled()
+  // After the in-memory reset (ADR-0022), so resetting `lastAppliedKey` cannot
+  // mask the erase result: a successful erase is filed, a failed one is not.
+  const status = useSaveStatusStore.getState()
+  if (failure) status.markWriteFailed(failure)
+  else status.markFiled()
 }
 
 /**
