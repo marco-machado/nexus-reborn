@@ -56,7 +56,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/save.test.ts`.
+- Non-JSON blob: Continue absent; state invalid/unreadable, distinct from never-started
+- Schema-failing JSON: same, and no Screen entered
+- Edge: No half-load: strategy, roster, labs all default
+
+**Gap**: **Source change** (with PV-001): Menu state invalid/unreadable.
 
 ---
 

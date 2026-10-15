@@ -57,7 +57,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/save.test.ts`.
+- Both flags true: dropped, invalid state
+- `campaignWon` true with <3 authored wins: dropped
+- Not won with all 3 authored wins: dropped
+
+**Gap**: Probably test-only; the Menu-state half depends on PV-008.
 
 ---
 

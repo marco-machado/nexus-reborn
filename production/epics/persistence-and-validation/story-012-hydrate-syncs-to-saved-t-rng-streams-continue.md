@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/save.test.ts`.
+- Reload with no tick: t unchanged, nothing fires
+- Next Event matches the recorded continuation
+- Candidate market matches; next refresh continues it
+- Next generated contract matches the recorded continuation
+- Edge: Same Clock speed and wait on both sides of the comparison
+
+**Gap**: Probably test-only.
 
 ---
 

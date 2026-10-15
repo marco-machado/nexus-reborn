@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/telemetry.test.ts`.
+- Abort: campaign = S; abort count +1; row is `aborted` + duration, mission id, seed, roles
+- 2 won, 1 lost, 3 aborted: win rate 2/3, abort count 3
+- 0 won, 2 lost: win rate 0.0
+- 0 won, 0 lost, 3 aborted: no-data marker; no 0, NaN or Infinity in Balance
+- Edge: `win_rate = won / (won + lost)`, aborts excluded (GDD Formulas)
+
+**Gap**: **Source change.** With 0 won + 0 lost Balance shows `0%`; the GDD and AC4 require a no-data marker.
 
 ---
 

@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: UI.*
+
+**Automated**: `src/state/telemetry.test.ts`.
+- Export downloads local JSON, no upload
+- Clear once arms; records remain
+- Confirm: Balance empty; campaign blob untouched
+- Exported non-abort record carries the full field list
+
+**Gap**: Test-only plus screenshots.
+
+**Manual**: Playwright at native 1280x720; screenshots in `production/qa/evidence/sprint-006/`; lead-programmer sign-off.
 
 ---
 

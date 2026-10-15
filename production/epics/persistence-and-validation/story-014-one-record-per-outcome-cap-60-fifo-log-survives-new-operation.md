@@ -58,7 +58,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/telemetry.test.ts`.
+- Debrief adds exactly one row (won or lost)
+- At 60, another row keeps 60 and drops the recorded oldest
+- New Operation keeps toggle and log
+
+**Gap**: Probably test-only.
 
 ---
 

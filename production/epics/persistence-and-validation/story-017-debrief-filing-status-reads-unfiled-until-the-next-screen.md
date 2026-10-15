@@ -58,7 +58,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: UI.*
+
+**Automated**: `src/state/save.test.ts`, `new `src/ui/` builder test`.
+- Applied Debrief shows unfiled (paid and quiet replay)
+- Successful next-Screen write: reload restores post-apply, status not unfiled
+- Edge: Copy and layout are Interface (`/ux-design`); assert the status value
+
+**Gap**: **Source change.** Add a session filing status set at apply and cleared by a successful Screen write.
+
+**Manual**: Playwright at native 1280x720; screenshots in `production/qa/evidence/sprint-006/`; lead-programmer sign-off.
 
 ---
 

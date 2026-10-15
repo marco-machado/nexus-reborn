@@ -58,7 +58,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`.
+- Write throws on New Operation: no throw, desk = F, failure indicator shown, reload loads C0
+- Write throws after Debrief: no throw, not filed, reload gives S
+- Writes keep throwing: unfiled on each Screen; first success files it
+- Edge: Inject the throw through the storage seam, not a named key
+
+**Gap**: **Source change** (needs PV-017's status).
 
 ---
 

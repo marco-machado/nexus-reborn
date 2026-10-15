@@ -56,7 +56,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/save.test.ts`, `src/state/settingsStore.test.ts`, `src/state/telemetry.test.ts`.
+- Valid campaign + bad settings: Continue present
+- Valid campaign + bad telemetry: Continue present, Balance empty
+- Edge: Settings fall back to defaults, not to the campaign
+
+**Gap**: Probably test-only.
 
 ---
 

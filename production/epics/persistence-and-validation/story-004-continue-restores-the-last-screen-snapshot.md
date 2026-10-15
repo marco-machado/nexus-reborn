@@ -61,7 +61,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`.
+- World Network, labs, roster, tutorial-seen, campaign result equal the last Screen
+- Each recorded value incl. selected contract C restored; Focus / Review-time / mission / Debrief not restored
+- Won flag persists
+- Failed campaign stays failed with locked contracts
+- Edge: Review scrub is not restored as live (GDD)
+
+**Gap**: Probably test-only; check every named field in AC2.
 
 ---
 

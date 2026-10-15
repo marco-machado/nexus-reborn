@@ -39,7 +39,7 @@ QA plan: run `/qa-plan sprint` before implementation begins (none exists for Spr
 | 012 | Hydrate calls `researchStore.sync` / `campaignStore.sync` at the saved `t` (`save.ts` ~L755); RNG states live in the blob | Probably test-only |
 | 013 | Telemetry toggle and local log (`src/state/telemetry.ts`, `Settings.tsx`) | Probably test-only |
 | 014 | `TELEMETRY_CAP = 60`, FIFO append (`telemetry.ts`) | Probably test-only |
-| 015 | `aborted` rows exist in `telemetry.ts` | Probably test-only |
+| 015 | `aborted` rows exist in `telemetry.ts`; but `winRate` is 0 with nothing finished and Balance prints `0%` (found by `/qa-plan`; AC4 needs a no-data marker) | Source change |
 | 016 | Balance EXPORT (data URL) and a two-step CLEAR with 3 s timeout (`src/ui/Balance.tsx`) | Test-only plus UI screenshots |
 | 017 | No "unfiled" state anywhere in `src/` | Source change, UI |
 | 018 | `writeSave` catches the throw, but nothing reports filed/unfiled (depends on 017) | Source change |

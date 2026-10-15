@@ -59,7 +59,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`, `src/state/appStore.test.ts`.
+- Reload on Debrief: Continue restores S, not the invoice
+- Debrief open: values do not change again; telemetry has one record
+- Blob unchanged while Debrief is open
+
+**Gap**: Probably test-only.
 
 ---
 

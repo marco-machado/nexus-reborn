@@ -57,7 +57,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/telemetry.test.ts`.
+- New origin: telemetry off, log empty, no Balance entry point
+- Toggle off keeps records; Balance, Export, Clear work; Clear removes the entry point
+- No network request from Debrief, Abort, Balance, Export or Clear
+- Edge: Spy `fetch`/`sendBeacon`/`XMLHttpRequest` in the test
+
+**Gap**: Probably test-only.
 
 ---
 

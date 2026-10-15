@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Logic.*
+
+**Automated**: `src/state/save.test.ts`.
+- Failed with 0–2 authored wins loads
+- Failed, not won, 3 authored wins loads
+- Not failed, not won, empty roster, <3 wins loads and stays not failed
+- Complete then roster emptied: still complete, not failed; contracts replayable
+- Edge: Failed is never re-derived from living count 0
+
+**Gap**: Probably test-only.
 
 ---
 

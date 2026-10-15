@@ -56,7 +56,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/settingsStore.test.ts`, `src/state/save.test.ts`.
+- D, Q, T, A, R unchanged after New Operation
+- D, Q, T, A, R unchanged after a full reload with no Continue
+- Quality Q2 / Difficulty D2 come from the settings slot; the campaign blob has no such field
+- Edge: Remap R is a binding override (`describe('binding overrides')`)
+
+**Gap**: Probably test-only.
 
 ---
 

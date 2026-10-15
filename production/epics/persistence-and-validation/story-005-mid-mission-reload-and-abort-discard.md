@@ -59,7 +59,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`, `src/state/appStore.test.ts`.
+- Reload mid-mission: Continue returns S incl. C, opens World Network, no mission, no outcome
+- Abort then reload: named fields equal S
+- Blob unchanged from S for the whole mission
+- Edge: Telemetry off for AC2 (on is PV-015)
+
+**Gap**: Probably test-only.
 
 ---
 

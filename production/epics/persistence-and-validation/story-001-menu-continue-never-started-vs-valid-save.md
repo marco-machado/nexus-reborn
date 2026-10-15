@@ -58,7 +58,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`.
+- Clean origin: Continue absent, Menu state never-started (no invalid reason), New Operation offered
+- Valid save: Continue present and opens World Network for that campaign
+- Continue restores no mission id and no Debrief outcome; strategy, roster and labs come from the save
+- Edge: Read Menu state from one exported status, not by scanning copy
+- Edge: Copy stays Interface: assert the state value, not text
+
+**Gap**: **Source change.** Menu state must distinguish never-started from invalid/unreadable (shared with PV-008).
 
 ---
 

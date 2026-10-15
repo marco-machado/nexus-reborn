@@ -61,7 +61,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`.
+- World Network return then reload: post-apply values once, selection none
+- Replay to Brief: selection still C
+- Reload after that Brief visit: post-apply values once, still C
+- Quiet replay: t, labs, injuries, Tax and roster post-apply; Intel, Influence, `contractsWon` equal S; Credits = S + Tax
+- Edge: Not doubled: assert exact values, not ≥
+
+**Gap**: Probably test-only.
 
 ---
 

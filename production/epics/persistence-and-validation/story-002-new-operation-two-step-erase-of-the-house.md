@@ -61,7 +61,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-006-2026-10-15.md` (Sprint 6). Type: Integration.*
+
+**Automated**: `src/state/save.test.ts`.
+- One activation arms; blob unchanged; Continue still loads the same Credits / Intel / roster
+- Confirm: Credits, Intel, `contractsWon`, labs, tutorial-seen equal a clean-origin fixture F; prior campaign not restorable
+- Arm lapses or Menu left: blob unchanged
+- Edge: Compare against fixture F, not pasted integers
+
+**Gap**: Probably test-only; the arm is UI state, so drive it through the Menu or extract the arm logic.
 
 ---
 
