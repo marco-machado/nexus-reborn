@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SQUAD, ROSTER } from '../game/data'
+import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
 import { CANDIDATE_REFRESH_SEC } from '../game/recruits'
 import {
   CONTRACT_MIN_SEC,
@@ -11,7 +11,7 @@ import {
 } from '../game/influence'
 import { nodeById } from '../game/research'
 import { settleOutcome, useAppStore } from './appStore'
-import { initialCampaignData, useCampaignStore } from './campaignStore'
+import { initialCampaignData, missionLocked, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import {
   SAVE_KEY,
@@ -1102,6 +1102,149 @@ describe('contradictory campaign flags drop the blob', () => {
   it('not failed, campaignWon false with all three authored wins: Continue absent, Menu invalid', () => {
     reloadWithFlags({ contractsWon: ['m01', 'm02', 'm03'], campaignWon: false, campaignFailed: false })
     expectDroppedToInvalidMenu()
+  })
+})
+
+// PV-011 (TR-persistence-006): every valid flag combination survives an origin
+// reload as stored. Hydrate restores the two booleans verbatim and never
+// re-derives failed from a living count of 0 (ADR-0011, ADR-0020).
+describe('valid flag combinations load as stored', () => {
+  const ALL_AUTHORED = MISSIONS.map((m) => m.id)
+
+  function winOutcome(applyKey: number) {
+    return settleOutcome({
+      applyKey, won: true, kills: 0, casualties: 0, timeSec: 10, civiliansHit: 0,
+      reward: 0, bonus: 0, deadIds: [], survivorHp: {}, quietReplay: false,
+    })
+  }
+
+  function wipeOutcome(applyKey: number, deadIds: string[]) {
+    return settleOutcome({
+      applyKey, won: false, kills: 0, casualties: deadIds.length, timeSec: 10, civiliansHit: 0,
+      reward: 0, bonus: 0, deadIds, survivorHp: {}, quietReplay: false,
+    })
+  }
+
+  // A valid blob on file with these campaign fields, then an origin reload:
+  // memory back to defaults, storage keeps the blob, boot runs on the Menu.
+  function reloadWith(campaign: Partial<SaveV10['campaign']>, squad?: string[]): SaveV10 {
+    useAppStore.setState({ phase: 'world', credits: 4321 })
+    const save = captureSave()
+    Object.assign(save.campaign, campaign)
+    if (squad) save.app.squad = squad
+    storage.setItem(SAVE_KEY, JSON.stringify(save))
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+    return save
+  }
+
+  function expectContinueOffered(): void {
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(storage.getItem(SAVE_KEY)).not.toBeNull()
+    // Continue is offered iff the Menu state is valid.
+    expect(menuSaveStatus(storage)).toBe('valid')
+    expect(useAppStore.getState().phase).toBe('menu')
+  }
+
+  it('failed with 0–2 authored wins: Continue present, loads as failed', () => {
+    for (const contractsWon of [[], ['m01'], ['m01', 'm03']]) {
+      const stored = reloadWith({ contractsWon, campaignWon: false, campaignFailed: true })
+      expect(validateSave(stored)).toBe(true)
+      expectContinueOffered()
+      const state = useCampaignStore.getState()
+      expect(state.campaignFailed).toBe(true)
+      expect(state.campaignWon).toBe(false)
+      expect(state.contractsWon).toEqual(contractsWon)
+      continueOperation()
+      expect(useAppStore.getState().phase).toBe('world')
+    }
+  })
+
+  it('failed, not won, all three authored wins: Continue present, loads as failed and not won', () => {
+    expect(ALL_AUTHORED).toHaveLength(3)
+    const stored = reloadWith({ contractsWon: ALL_AUTHORED, campaignWon: false, campaignFailed: true })
+    expect(validateSave(stored)).toBe(true)
+    expectContinueOffered()
+    const state = useCampaignStore.getState()
+    expect(state.campaignFailed).toBe(true)
+    expect(state.campaignWon).toBe(false)
+    expect(state.contractsWon).toEqual(ALL_AUTHORED)
+  })
+
+  it('not failed, not won, empty roster, fewer than three wins: Continue present and still not failed', () => {
+    for (const contractsWon of [[], ['m01'], ['m01', 'm02']]) {
+      const stored = reloadWith(
+        { contractsWon, campaignWon: false, campaignFailed: false, operatives: [], roster: {} },
+        [],
+      )
+      expect(validateSave(stored)).toBe(true)
+      expectContinueOffered()
+      const state = useCampaignStore.getState()
+      // Hydrate does not re-derive failed from a living count of 0.
+      expect(state.operatives).toEqual([])
+      expect(state.campaignFailed).toBe(false)
+      expect(state.campaignWon).toBe(false)
+      continueOperation()
+      expect(useCampaignStore.getState().campaignFailed).toBe(false)
+    }
+  })
+
+  it('complete then roster emptied: reload + Continue keeps it complete, not failed, contracts replayable', () => {
+    let key = 1
+    for (const id of ALL_AUTHORED) {
+      useCampaignStore.getState().reportMission(id, winOutcome(key++), 0)
+    }
+    expect(useCampaignStore.getState().campaignWon).toBe(true)
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    expect(ids.length).toBeGreaterThan(0)
+    useCampaignStore.getState().reportMission('m01', wipeOutcome(key++, ids), 0)
+    useAppStore.setState({ phase: 'world', squad: [] })
+    expect(useCampaignStore.getState()).toMatchObject({ campaignWon: true, campaignFailed: false })
+    const expected = captureSave()
+    expect(validateSave(expected)).toBe(true)
+    expect(writeSave(storage)).toBe(true)
+
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+    expectContinueOffered()
+    continueOperation()
+    expect(useAppStore.getState().phase).toBe('world')
+
+    const state = useCampaignStore.getState()
+    expect(state.operatives).toEqual([])
+    expect(state.campaignWon).toBe(true)
+    expect(state.campaignFailed).toBe(false)
+    expect(captureSave().campaign).toEqual(expected.campaign)
+    // The World Network locks authored contracts iff campaignFailed or the
+    // intel gate (WorldMap.tsx): every authored contract stays selectable.
+    for (const m of MISSIONS) {
+      expect(state.campaignFailed || missionLocked(m, state.intelLevel)).toBe(false)
+    }
+  })
+
+  it('edge: failed is never re-derived from a living count of 0 on hydrate', () => {
+    const save = captureSave()
+    save.campaign.operatives = []
+    save.campaign.roster = {}
+    save.app.squad = []
+    save.campaign.contractsWon = []
+    save.campaign.campaignWon = false
+    save.campaign.campaignFailed = false
+    expect(validateSave(save)).toBe(true)
+    useCampaignStore.setState({ campaignFailed: true })
+    hydrateSave(save)
+    expect(useCampaignStore.getState().operatives).toEqual([])
+    expect(useCampaignStore.getState().campaignFailed).toBe(false)
+    // And a stored failed flag survives a non-empty roster unchanged.
+    const failed = captureSave()
+    failed.campaign.operatives = structuredClone(initialCampaignData().operatives)
+    failed.campaign.roster = structuredClone(initialCampaignData().roster)
+    failed.app.squad = [...DEFAULT_SQUAD]
+    failed.campaign.campaignFailed = true
+    expect(validateSave(failed)).toBe(true)
+    hydrateSave(failed)
+    expect(useCampaignStore.getState().operatives.length).toBeGreaterThan(0)
+    expect(useCampaignStore.getState().campaignFailed).toBe(true)
   })
 })
 
