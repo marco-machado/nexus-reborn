@@ -27,7 +27,7 @@ import {
   validateSave,
   writeSave,
 } from './save'
-import type { SaveStorage, SaveV9 } from './save'
+import type { SaveStorage, SaveV10 } from './save'
 import { pressNewOperation } from '../ui/newOperationArm'
 import { useTutorialStore } from './tutorialStore'
 import { useWorldStore } from './worldStore'
@@ -62,9 +62,17 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-// A v9 blob with the trickle cursor, as a real v8 save held.
-function downgradeToV8(save: SaveV9): Record<string, unknown> {
+// A v10 blob without the Screen-held selected contract, as a real v9 save held.
+function downgradeToV9(save: SaveV10): Record<string, unknown> {
   const blob = structuredClone(save) as unknown as Record<string, unknown>
+  blob.version = 9
+  delete (blob.app as Record<string, unknown>).missionId
+  return blob
+}
+
+// A v9 blob with the trickle cursor, as a real v8 save held.
+function downgradeToV8(save: SaveV10): Record<string, unknown> {
+  const blob = downgradeToV9(save)
   blob.version = 8
   const world = blob.world as Record<string, unknown>
   world.nextTrickleT = world.nextTaxT
@@ -73,7 +81,7 @@ function downgradeToV8(save: SaveV9): Record<string, unknown> {
 }
 
 // A v8 blob without bay pins, as a real v7 save held.
-function downgradeToV7(save: SaveV9): Record<string, unknown> {
+function downgradeToV7(save: SaveV10): Record<string, unknown> {
   const blob = downgradeToV8(save)
   blob.version = 7
   const campaign = blob.campaign as Record<string, unknown>
@@ -83,7 +91,7 @@ function downgradeToV7(save: SaveV9): Record<string, unknown> {
 }
 
 // A v7 blob without campaignFailed or roster XP, as a real v6 save held.
-function downgradeToV6(save: SaveV9): Record<string, unknown> {
+function downgradeToV6(save: SaveV10): Record<string, unknown> {
   const blob = downgradeToV7(save)
   blob.version = 6
   const campaign = blob.campaign as Record<string, unknown>
@@ -94,7 +102,7 @@ function downgradeToV6(save: SaveV9): Record<string, unknown> {
 }
 
 // A v6 blob without the tutorial section, as a real v5 save held.
-function downgradeToV5(save: SaveV9): Record<string, unknown> {
+function downgradeToV5(save: SaveV10): Record<string, unknown> {
   const blob = downgradeToV6(save)
   blob.version = 5
   delete blob.tutorial
@@ -103,7 +111,7 @@ function downgradeToV5(save: SaveV9): Record<string, unknown> {
 
 // A v5 blob without the influence economy or unrest pressure, as a real v4
 // save held: no world influence fields and no expedited flag on contracts.
-function downgradeToV4(save: SaveV9): Record<string, unknown> {
+function downgradeToV4(save: SaveV10): Record<string, unknown> {
   const blob = downgradeToV5(save)
   blob.version = 4
   const world = blob.world as Record<string, unknown>
@@ -123,7 +131,7 @@ function downgradeToV4(save: SaveV9): Record<string, unknown> {
 }
 
 // A v4 blob without the generated contract market, as a real v3 save held.
-function downgradeToV3(save: SaveV9): Record<string, unknown> {
+function downgradeToV3(save: SaveV10): Record<string, unknown> {
   const blob = downgradeToV4(save)
   blob.version = 3
   const world = blob.world as Record<string, unknown>
@@ -135,7 +143,7 @@ function downgradeToV3(save: SaveV9): Record<string, unknown> {
 
 // Older blobs never carried the live roster: strip the v3 campaign fields so
 // the synthetic downgrade matches what a real v1/v2 save held.
-function downgradeToV2(save: SaveV9): Record<string, unknown> {
+function downgradeToV2(save: SaveV10): Record<string, unknown> {
   const blob = downgradeToV3(save)
   blob.version = 2
   const campaign = blob.campaign as Record<string, unknown>
@@ -151,7 +159,7 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const invalid = structuredClone(save) as SaveV9
+    const invalid = structuredClone(save) as SaveV10
     invalid.campaign.contractsWon = ['unknown']
     expect(validateSave(invalid)).toBe(false)
   })
@@ -159,21 +167,21 @@ describe('save validation', () => {
   it('rejects roster tampering: unknown squad ids, roster/operative mismatch', () => {
     const save = captureSave()
 
-    const badSquad = structuredClone(save) as SaveV9
+    const badSquad = structuredClone(save) as SaveV10
     badSquad.app.squad = ['op99']
     expect(validateSave(badSquad)).toBe(false)
 
-    const badRoster = structuredClone(save) as SaveV9
+    const badRoster = structuredClone(save) as SaveV10
     delete badRoster.campaign.roster.op1
     expect(validateSave(badRoster)).toBe(false)
 
-    const badCandidate = structuredClone(save) as SaveV9
+    const badCandidate = structuredClone(save) as SaveV10
     badCandidate.campaign.candidates[0].cost = 1
     expect(validateSave(badCandidate)).toBe(false)
   })
 
   it('accepts a fully wiped roster so a lost campaign can rebuild', () => {
-    const wiped = structuredClone(captureSave()) as SaveV9
+    const wiped = structuredClone(captureSave()) as SaveV10
     wiped.campaign.operatives = []
     wiped.campaign.roster = {}
     wiped.app.squad = []
@@ -184,8 +192,8 @@ describe('save validation', () => {
   it('rejects malformed loadouts: unknown ids, wrong lengths, unknown items', () => {
     const save = captureSave()
 
-    const badOp = structuredClone(save) as SaveV9
-    badOp.app.loadout = { op99: ['med', null] } as SaveV9['app']['loadout']
+    const badOp = structuredClone(save) as SaveV10
+    badOp.app.loadout = { op99: ['med', null] } as SaveV10['app']['loadout']
     expect(validateSave(badOp)).toBe(false)
 
     const badLength = structuredClone(save)
@@ -205,7 +213,7 @@ describe('save validation', () => {
 
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
-    expect(loaded?.version).toBe(9)
+    expect(loaded?.version).toBe(10)
     expect(loaded?.app.loadout).toEqual({})
     expect(loaded?.campaign.operatives).toEqual(initialCampaignData().operatives)
     expect(loaded?.world.contracts).toEqual([])
@@ -223,7 +231,7 @@ describe('save validation', () => {
     expect(loaded).not.toBeNull()
     if (!loaded) return
     const seeded = initialCampaignData()
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     expect(loaded.campaign.operatives.map((o) => o.id)).toEqual(ROSTER.map((o) => o.id))
     expect(loaded.campaign.candidates).toEqual(seeded.candidates)
     expect(loaded.campaign.recruitRngState).toBe(seeded.recruitRngState)
@@ -238,7 +246,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     expect(loaded.world.contracts).toEqual([])
     expect(loaded.world.contractRngState).toBe(INITIAL_CONTRACT_RNG)
     expect(loaded.world.nextContractT).toBe(9000 + CONTRACT_MIN_SEC)
@@ -262,7 +270,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     expect(loaded.world.influence).toBe(0)
     expect(loaded.world.nextTaxT).toBe(loaded.world.t + TAX_INTERVAL_SEC)
     expect('nextTrickleT' in loaded.world).toBe(false)
@@ -286,7 +294,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     // The pre-tutorial campaign starts the prompts from scratch.
     expect(loaded.tutorial.seen).toEqual([])
   })
@@ -297,7 +305,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     expect(loaded.campaign.campaignFailed).toBe(false)
     expect(Object.values(loaded.campaign.roster).every((e) => e.xp === 0)).toBe(true)
     expect(Object.values(loaded.campaign.roster).every((e) => e.pins && Object.keys(e.pins).length === 0)).toBe(true)
@@ -309,7 +317,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     expect(Object.values(loaded.campaign.roster).every((e) => e.pins && Object.keys(e.pins).length === 0)).toBe(true)
   })
 
@@ -322,7 +330,7 @@ describe('save validation', () => {
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
-    expect(loaded.version).toBe(9)
+    expect(loaded.version).toBe(10)
     expect(loaded.world.nextTaxT).toBe(12000 + TAX_INTERVAL_SEC)
     expect('nextTrickleT' in loaded.world).toBe(false)
     expect(loaded.world.influence).toBe(4)
@@ -426,11 +434,11 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const badId = structuredClone(save) as SaveV9
+    const badId = structuredClone(save) as SaveV10
     badId.tutorial.seen = ['tut-select', 'not-a-real-id']
     expect(validateSave(badId)).toBe(false)
 
-    const duplicate = structuredClone(save) as SaveV9
+    const duplicate = structuredClone(save) as SaveV10
     duplicate.tutorial.seen = ['tut-select', 'tut-select']
     expect(validateSave(duplicate)).toBe(false)
 
@@ -438,7 +446,7 @@ describe('save validation', () => {
     delete missing.tutorial
     expect(validateSave(missing)).toBe(false)
 
-    const good = structuredClone(save) as SaveV9
+    const good = structuredClone(save) as SaveV10
     good.tutorial.seen = ['tut-select', 'hint-lowhp', 'hint-worldmap']
     expect(validateSave(good)).toBe(true)
   })
@@ -450,11 +458,11 @@ describe('save validation', () => {
     expect(save.world.contracts.length).toBeGreaterThan(0)
     expect(validateSave(save)).toBe(true)
 
-    const badReward = structuredClone(save) as SaveV9
+    const badReward = structuredClone(save) as SaveV10
     badReward.world.contracts[0].reward = 1
     expect(validateSave(badReward)).toBe(false)
 
-    const badClient = structuredClone(save) as SaveV9
+    const badClient = structuredClone(save) as SaveV10
     ;(badClient.world.contracts[0] as unknown as Record<string, unknown>).client = 'sable'
     expect(validateSave(badClient)).toBe(false)
   })
@@ -463,29 +471,29 @@ describe('save validation', () => {
     const save = captureSave()
     expect(validateSave(save)).toBe(true)
 
-    const badPoints = structuredClone(save) as SaveV9
+    const badPoints = structuredClone(save) as SaveV10
     badPoints.world.influence = -3
     expect(validateSave(badPoints)).toBe(false)
 
-    const badSpend = structuredClone(save) as SaveV9
+    const badSpend = structuredClone(save) as SaveV10
     badSpend.world.spends = [
       { action: 'stabilize', sector: 'eu', nextT: 100, remaining: 99 },
     ]
     expect(validateSave(badSpend)).toBe(false)
 
-    const badCooldown = structuredClone(save) as SaveV9
+    const badCooldown = structuredClone(save) as SaveV10
     badCooldown.world.cooldowns = { 'eu:bribe': 100 }
     expect(validateSave(badCooldown)).toBe(false)
 
-    const badCrisis = structuredClone(save) as SaveV9
-    badCrisis.world.crisis = ['an' as SaveV9['world']['crisis'][number]]
+    const badCrisis = structuredClone(save) as SaveV10
+    badCrisis.world.crisis = ['an' as SaveV10['world']['crisis'][number]]
     expect(validateSave(badCrisis)).toBe(false)
 
-    const badPressure = structuredClone(save) as SaveV9
+    const badPressure = structuredClone(save) as SaveV10
     badPressure.world.pressure = { zz: 100 }
     expect(validateSave(badPressure)).toBe(false)
 
-    const goodSpend = structuredClone(save) as SaveV9
+    const goodSpend = structuredClone(save) as SaveV10
     goodSpend.world.influence = 14
     goodSpend.world.spends = [
       { action: 'lobby', sector: 'sa', nextT: 6400, remaining: 3 },
@@ -920,7 +928,7 @@ describe('menu continue: never-started vs valid save', () => {
 describe('invalid or unreadable campaign blob: drop all-or-nothing', () => {
   // A lived-in campaign whose strategy, roster and labs all differ from the
   // New Operation desk, so any half-load would show in the stores.
-  function livedInSave(): SaveV9 {
+  function livedInSave(): SaveV10 {
     useAppStore.setState({ phase: 'world', credits: 98765, squad: ['op1', 'op3'] })
     useWorldStore.setState({ t: 5100, influence: 7 })
     useResearchStore.getState().start(nodeById('b-propellants'), 5100)
@@ -940,12 +948,12 @@ describe('invalid or unreadable campaign blob: drop all-or-nothing', () => {
   }
 
   // The New Operation desk, captured from a clean origin.
-  function newOperationFixture(): SaveV9 {
+  function newOperationFixture(): SaveV10 {
     startNewOperation(new MemoryStorage())
     return captureSave()
   }
 
-  function expectNoHalfLoad(fixture: SaveV9): void {
+  function expectNoHalfLoad(fixture: SaveV10): void {
     const now = captureSave()
     expect(now.world).toEqual(fixture.world)
     expect(now.campaign).toEqual(fixture.campaign)
@@ -1053,7 +1061,7 @@ describe('invalid or unreadable campaign blob: drop all-or-nothing', () => {
 describe('new operation: two-step erase of the house', () => {
   // A lived-in campaign whose Credits, Intel, contracts, labs, roster and
   // tutorial progress all differ from the New Operation desk.
-  function livedInCampaign(): SaveV9 {
+  function livedInCampaign(): SaveV10 {
     useAppStore.setState({ phase: 'world', credits: 77777, squad: ['op1', 'op3'] })
     useWorldStore.setState({ t: 3600, influence: 5 })
     useResearchStore.getState().start(nodeById('b-propellants'), 3600)
@@ -1074,14 +1082,14 @@ describe('new operation: two-step erase of the house', () => {
   }
 
   // Fixture F: New Operation from a parallel clean origin.
-  function cleanOriginFixture(): SaveV9 {
+  function cleanOriginFixture(): SaveV10 {
     const clean = new MemoryStorage()
     startNewOperation(clean)
     return captureSave()
   }
 
   // Continue loads the recorded Credits / Intel / roster, not a new desk.
-  function expectContinueLoads(expected: SaveV9): void {
+  function expectContinueLoads(expected: SaveV10): void {
     reloadToMenu()
     continueOperation()
     const now = captureSave()
@@ -1177,5 +1185,266 @@ describe('new operation: two-step erase of the house', () => {
 
     expectContinueLoads(expected)
     expect(storage.getItem(SAVE_KEY)).toBe(blob)
+  })
+})
+
+// PV-004 (TR-persistence-005): reload + Continue returns the last Screen
+// snapshot, including a Screen-held selected contract (Persistence Rule 13).
+describe('continue restores the last screen snapshot', () => {
+  // Origin reload: memory returns to the opening Operation, storage keeps the
+  // blob, boot hydrates it to the Menu, and the director presses Continue.
+  function reloadAndContinue(): void {
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(useAppStore.getState().phase).toBe('menu')
+    continueOperation()
+  }
+
+  // Open two generated contracts on the strategic clock.
+  function openGeneratedContracts(): void {
+    useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
+    useWorldStore.getState().tick(1)
+    useWorldStore.setState({ t: useWorldStore.getState().nextContractT - 1 })
+    useWorldStore.getState().tick(1)
+    expect(useWorldStore.getState().contracts.length).toBeGreaterThan(0)
+  }
+
+  // A lived-in campaign: a won contract, a KIA, an injury, a hire, labs,
+  // influence, market, tutorial progress, and moved sectors.
+  function liveIn(): void {
+    openGeneratedContracts()
+    useCampaignStore.getState().reportMission(
+      'm01',
+      settleOutcome({
+        applyKey: 1,
+        won: true,
+        kills: 5,
+        casualties: 1,
+        timeSec: 500,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: ['op4'],
+        survivorHp: { op1: 0.1, op2: 0.8 },
+        quietReplay: false,
+      }),
+      useWorldStore.getState().t,
+    )
+    useWorldStore.getState().applyMissionResult('m01', settleOutcome({
+      applyKey: 1,
+      won: true,
+      kills: 5,
+      casualties: 1,
+      timeSec: 500,
+      civiliansHit: 0,
+      reward: 85000,
+      bonus: 0,
+      deadIds: ['op4'],
+      survivorHp: {},
+      quietReplay: false,
+    }))
+    const hired = useCampaignStore.getState().candidates[0]
+    useAppStore.getState().hireOperative(hired.id)
+    useResearchStore.getState().start(nodeById('b-propellants'), useWorldStore.getState().t)
+    useTutorialStore.getState().note('select')
+    useTutorialStore.getState().markSeen('hint-worldmap')
+    useWorldStore.setState({
+      speed: 4,
+      paused: true,
+      influence: 11,
+      crisis: ['af'],
+      pressure: { af: 9000 },
+    })
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 60 })
+    useAppStore.setState({ phase: 'world', credits: 301234, squad: ['op2', 'op3'] })
+  }
+
+  it('World Network, labs, roster, tutorial-seen and campaign result match the last Screen visit, not the opening Operation', () => {
+    liveIn()
+    const screen = captureSave()
+    expect(writeSave(storage)).toBe(true)
+
+    startNewOperation(null)
+    const opening = captureSave()
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    continueOperation()
+
+    const restored = captureSave()
+    expect(useAppStore.getState().phase).toBe('world')
+    expect(restored.world).toEqual(screen.world)
+    expect(restored.research).toEqual(screen.research)
+    expect(restored.campaign.operatives).toEqual(screen.campaign.operatives)
+    expect(restored.campaign.roster).toEqual(screen.campaign.roster)
+    expect(restored.tutorial.seen).toEqual(screen.tutorial.seen)
+    expect(restored.campaign.contractsWon).toEqual(screen.campaign.contractsWon)
+    expect(restored.campaign.campaignWon).toBe(screen.campaign.campaignWon)
+    expect(restored.campaign.campaignFailed).toBe(screen.campaign.campaignFailed)
+    // Not the opening Operation.
+    expect(restored.world.t).not.toBe(opening.world.t)
+    expect(restored.research.labs).not.toEqual(opening.research.labs)
+    expect(restored.campaign.operatives).not.toEqual(opening.campaign.operatives)
+    expect(restored.tutorial.seen).not.toEqual(opening.tutorial.seen)
+    expect(restored.campaign.contractsWon).not.toEqual(opening.campaign.contractsWon)
+  })
+
+  it('restores each recorded value including selected contract C; Focus, Review-time, mission and Debrief are not restored', () => {
+    liveIn()
+    // The director picked C on the World Network and is on Brief (a Screen).
+    useAppStore.getState().selectMission('m02')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'brief', missionId: 'm02' })
+    useWorldStore.setState({ selected: 'as', review: 500 })
+    const app = useAppStore.getState()
+    const world = useWorldStore.getState()
+    const research = useResearchStore.getState()
+    const campaign = useCampaignStore.getState()
+    const recorded = {
+      credits: app.credits,
+      squad: [...app.squad],
+      missionId: app.missionId,
+      influence: world.influence,
+      t: world.t,
+      speed: world.speed,
+      paused: world.paused,
+      sectors: structuredClone(world.sectors),
+      owner: { ...world.owner },
+      contracts: structuredClone(world.contracts),
+      done: [...research.done],
+      labs: structuredClone(research.labs),
+      intelLevel: campaign.intelLevel,
+      intelProgress: campaign.intelProgress,
+      operatives: structuredClone(campaign.operatives),
+      roster: structuredClone(campaign.roster),
+      candidates: structuredClone(campaign.candidates),
+    }
+    expect(writeSave(storage)).toBe(true)
+
+    // Then a mission ran and reached Debrief in memory only.
+    useAppStore.setState({
+      phase: 'debrief',
+      outcome: settleOutcome({
+        applyKey: 2,
+        won: true,
+        kills: 3,
+        casualties: 0,
+        timeSec: 100,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: false,
+      }),
+    })
+
+    reloadAndContinue()
+
+    const a = useAppStore.getState()
+    const w = useWorldStore.getState()
+    const r = useResearchStore.getState()
+    const c = useCampaignStore.getState()
+    expect(a.credits).toBe(recorded.credits)
+    expect(a.squad).toEqual(recorded.squad)
+    expect(a.missionId).toBe('m02')
+    expect(w.influence).toBe(recorded.influence)
+    expect(w.t).toBe(recorded.t)
+    expect(w.speed).toBe(recorded.speed)
+    expect(w.paused).toBe(recorded.paused)
+    expect(w.sectors).toEqual(recorded.sectors)
+    expect(w.owner).toEqual(recorded.owner)
+    expect(w.contracts).toEqual(recorded.contracts)
+    expect(r.done).toEqual(recorded.done)
+    expect(r.labs).toEqual(recorded.labs)
+    expect(c.intelLevel).toBe(recorded.intelLevel)
+    expect(c.intelProgress).toBe(recorded.intelProgress)
+    expect(c.operatives).toEqual(recorded.operatives)
+    expect(c.roster).toEqual(recorded.roster)
+    expect(c.candidates).toEqual(recorded.candidates)
+    // Continue opens the World Network, not Brief, even with C selected.
+    expect(a.phase).toBe('world')
+    // Not restored: Focus, Review-time scrub, the mission, the Debrief outcome.
+    expect(w.selected).toBe('eu')
+    expect(w.review).toBeNull()
+    expect(a.outcome).toBeNull()
+    expect(c.lastReport).toBeNull()
+    // Brief can be entered for C without re-selecting it.
+    useAppStore.getState().goto('brief')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'brief', missionId: 'm02' })
+  })
+
+  it('restores a selected generated contract that is still open in the market', () => {
+    liveIn()
+    const generated = useWorldStore.getState().contracts[0]
+    useAppStore.setState({ phase: 'brief', missionId: generated.id })
+    expect(writeSave(storage)).toBe(true)
+
+    reloadAndContinue()
+    expect(useAppStore.getState()).toMatchObject({ phase: 'world', missionId: generated.id })
+    expect(useWorldStore.getState().contracts.some((c) => c.id === generated.id)).toBe(true)
+  })
+
+  it('writes none for a selection that can no longer be resolved, and a blob holding one is invalid', () => {
+    useAppStore.setState({ phase: 'world', missionId: 'gc-gone' })
+    expect(captureSave().app.missionId).toBeNull()
+
+    const bad = structuredClone(captureSave())
+    bad.app.missionId = 'gc-gone'
+    expect(validateSave(bad)).toBe(false)
+    const notString = structuredClone(captureSave()) as unknown as { app: { missionId: unknown } }
+    notString.app.missionId = 7
+    expect(validateSave(notString)).toBe(false)
+  })
+
+  it('a v9 blob upgrades with no selected contract', () => {
+    useAppStore.setState({ phase: 'brief', missionId: 'm01' })
+    const v9 = downgradeToV9(captureSave())
+    storage.setItem(SAVE_KEY, JSON.stringify(v9))
+    reloadAndContinue()
+    expect(useAppStore.getState()).toMatchObject({ phase: 'world', missionId: null })
+  })
+
+  it('an authored contract already won keeps its persisted win flag', () => {
+    liveIn()
+    expect(useCampaignStore.getState().contractsWon).toEqual(['m01'])
+    expect(writeSave(storage)).toBe(true)
+
+    reloadAndContinue()
+    const c = useCampaignStore.getState()
+    expect(c.contractsWon).toEqual(['m01'])
+    expect(c.campaignWon).toBe(false)
+    expect(readSave(storage)?.campaign.contractsWon).toEqual(['m01'])
+  })
+
+  it('a failed campaign (roster emptied by KIA) stays failed, empty, and locked', () => {
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    useCampaignStore.getState().reportMission(
+      'm01',
+      settleOutcome({
+        applyKey: 1,
+        won: false,
+        kills: 0,
+        casualties: ids.length,
+        timeSec: 10,
+        civiliansHit: 0,
+        reward: 0,
+        bonus: 0,
+        deadIds: ids,
+        survivorHp: {},
+        quietReplay: false,
+      }),
+      0,
+    )
+    useAppStore.setState({ phase: 'world', squad: [] })
+    expect(useCampaignStore.getState()).toMatchObject({ campaignFailed: true, campaignWon: false })
+    expect(writeSave(storage)).toBe(true)
+
+    reloadAndContinue()
+    const c = useCampaignStore.getState()
+    expect(c.campaignFailed).toBe(true)
+    expect(c.campaignWon).toBe(false)
+    expect(c.operatives).toEqual([])
+    expect(Object.keys(c.roster)).toEqual([])
+    // Contracts stay locked: selecting one is refused.
+    useAppStore.getState().selectMission('m01')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'world', missionId: null })
   })
 })

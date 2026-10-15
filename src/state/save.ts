@@ -53,7 +53,7 @@ import type { EventKind, EventTone, SectorState, WorldEvent } from './worldStore
 // The storage key never moves; the version field inside the blob is what is
 // bumped, so old campaigns upgrade in place instead of being orphaned.
 export const SAVE_KEY = 'nexus-save-v1'
-const SAVE_VERSION = 9 as const
+const SAVE_VERSION = 10 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
 
@@ -61,12 +61,16 @@ const INITIAL_EVENTS: WorldEvent[] = useWorldStore
   .getState()
   .events.map((event) => ({ ...event }))
 
-export interface SaveV9 {
-  version: 9
+export interface SaveV10 {
+  version: 10
   app: {
     credits: number
     squad: string[]
     loadout: SquadLoadout
+    // Selected contract while a Screen holds it (Persistence Rule 13). An
+    // authored mission id or an open generated contract in `world.contracts`;
+    // null when nothing is selected (Debrief → World Network persists none).
+    missionId: string | null
   }
   world: {
     t: number
@@ -410,7 +414,15 @@ function validPins(value: unknown): value is BayPins {
 
 const SEEN_ID_SET = new Set<string>(SEEN_IDS)
 
-export function validateSave(value: unknown): value is SaveV9 {
+// A restorable selection: none, an authored mission, or a generated contract
+// still open in the same blob's market (so Brief can resolve it after reload).
+function validSelection(value: unknown, contracts: readonly GeneratedContract[]): boolean {
+  if (value === null) return true
+  if (typeof value !== 'string') return false
+  return MISSION_IDS.has(value) || contracts.some((c) => c.id === value)
+}
+
+export function validateSave(value: unknown): value is SaveV10 {
   if (!isObject(value) || value.version !== SAVE_VERSION) return false
   const app = value.app
   const world = value.world
@@ -483,7 +495,8 @@ export function validateSave(value: unknown): value is SaveV9 {
     !finite(campaign.nextCandidateT) ||
     !validIdList(campaign.contractsWon, MISSION_IDS) ||
     typeof campaign.campaignWon !== 'boolean' ||
-    typeof campaign.campaignFailed !== 'boolean'
+    typeof campaign.campaignFailed !== 'boolean' ||
+    !validSelection(app.missionId, world.contracts as GeneratedContract[])
   ) {
     return false
   }
@@ -498,7 +511,7 @@ export function validateSave(value: unknown): value is SaveV9 {
   return (app.squad as string[]).every((id) => roster[id].status === 'READY')
 }
 
-export function captureSave(): SaveV9 {
+export function captureSave(): SaveV10 {
   const app = useAppStore.getState()
   const world = useWorldStore.getState()
   const research = useResearchStore.getState()
@@ -510,6 +523,9 @@ export function captureSave(): SaveV9 {
       credits: app.credits,
       squad: [...app.squad],
       loadout: structuredClone(app.loadout),
+      // A generated contract that left the market can no longer be resolved
+      // after reload, so only a restorable selection is written.
+      missionId: validSelection(app.missionId, world.contracts) ? app.missionId : null,
     },
     world: {
       t: world.t,
@@ -577,7 +593,8 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
 // v6 blob without the tutorial section: the upgrade starts with nothing seen,
 // so an upgraded campaign gets the prompts once like a new one. A v8 blob is
 // a v9 blob with the influence trickle cursor: the upgrade drops the trickle
-// and arms Tax yield from the saved strategic time.
+// and arms Tax yield from the saved strategic time. A v9 blob is a v10 blob
+// without the Screen-held selected contract: the upgrade restores none.
 function upgraded(value: unknown): unknown {
   let v = value
   if (isObject(v) && v.version === 1 && isObject(v.app) && !('loadout' in v.app)) {
@@ -696,6 +713,9 @@ function upgraded(value: unknown): unknown {
     delete world.nextTrickleT
     v = { ...v, version: 9, world }
   }
+  if (isObject(v) && v.version === 9 && isObject(v.app) && !('missionId' in v.app)) {
+    v = { ...v, version: 10, app: { ...v.app, missionId: null } }
+  }
   return v
 }
 
@@ -711,7 +731,7 @@ export type CampaignSlotStatus = 'never-started' | 'valid' | 'invalid'
 
 export interface SaveInspection {
   status: CampaignSlotStatus
-  save: SaveV9 | null
+  save: SaveV10 | null
 }
 
 /**
@@ -743,11 +763,11 @@ export function inspectSave(storage: SaveStorage | null = browserStorage()): Sav
   return { status: 'invalid', save: null }
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV9 | null {
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV10 | null {
   return inspectSave(storage).save
 }
 
-export function hydrateSave(save: SaveV9): void {
+export function hydrateSave(save: SaveV10): void {
   useTutorialStore.getState().hydrate(save.tutorial.seen)
   useCampaignStore.setState({
     intelLevel: save.campaign.intelLevel,
@@ -773,7 +793,9 @@ export function hydrateSave(save: SaveV9): void {
   })
   useAppStore.setState({
     phase: 'menu',
-    missionId: null,
+    // The Screen-held selection restores so Brief can unlock (Rule 13); the
+    // running mission and its Debrief outcome are never restored.
+    missionId: save.app.missionId,
     squad: [...save.app.squad],
     loadout: structuredClone(save.app.loadout),
     credits: save.app.credits,
@@ -930,9 +952,11 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
 
 /**
  * Continue: opens the World Network for the hydrated campaign. Never resumes
- * a mission, Brief, Assembly or Debrief; hydrate already cleared the mission
- * id and outcome, and this clears them again so no path can carry them in.
+ * a mission, Brief, Assembly or Debrief; hydrate already cleared the Debrief
+ * outcome, and this clears it again so no path can carry it in. A selected
+ * contract the last Screen snapshot held stays selected (Persistence Rule 13)
+ * so Brief can be entered without re-selecting it.
  */
 export function continueOperation(): void {
-  useAppStore.setState({ phase: 'world', missionId: null, outcome: null })
+  useAppStore.setState({ phase: 'world', outcome: null })
 }
