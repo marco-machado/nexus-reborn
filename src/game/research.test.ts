@@ -22,6 +22,7 @@ import {
   remaining,
 } from './research'
 import { WEAPONS } from './data'
+import { XP_PER_SURVIVE, xpBonus } from './experience'
 import { generatedReward } from './contracts'
 import { INITIAL_CREDITS } from '../state/appStore'
 
@@ -215,6 +216,43 @@ describe('crewBonus', () => {
     const b = crewBonus(['c-accelerator'])
     expect(b.speed).toBeCloseTo(0.15, 10)
     expect(b.maxHp).toBe(0)
+  })
+})
+
+describe('crewBonus from applied ids (RS-019)', () => {
+  it('is (0, 0) when appliedNodeIds is empty', () => {
+    const applied = appliedNodeIds([], undefined)
+    expect(applied).toEqual([])
+    expect(crewBonus(applied)).toEqual({ maxHp: 0, speed: 0 })
+  })
+
+  it('gives maxHp 14, speed 0 for applied [Pain Inhibitor]', () => {
+    const applied = appliedNodeIds(['c-pain'], undefined)
+    expect(applied).toEqual(['c-pain'])
+    const b = crewBonus(applied)
+    expect(b.maxHp).toBe(14)
+    expect(b.speed).toBeCloseTo(0, 10)
+  })
+
+  it('gives maxHp 18, speed 0.55 for applied [Synaptic Enhancement, Neural Cache Array]', () => {
+    const applied = appliedNodeIds(['c-synaptic', 'c-cache'], undefined)
+    expect(applied).toEqual(['c-synaptic', 'c-cache'])
+    const b = crewBonus(applied)
+    expect(b.maxHp).toBe(18)
+    expect(b.speed).toBeCloseTo(0.55, 10)
+  })
+
+  it('leaves Experience +2 HP / +0.05 m/s out of the research crew bonus', () => {
+    // A survivor with one mission of Experience: Roster owns xpBonus, not Research.
+    const xp = xpBonus(XP_PER_SURVIVE)
+    expect(xp).toEqual({ maxHp: 2, speed: 0.05 })
+    const applied = appliedNodeIds(['c-synaptic', 'c-cache'], undefined)
+    const b = crewBonus(applied)
+    expect(b.maxHp).toBe(18)
+    expect(b.speed).toBeCloseTo(0.55, 10)
+    expect(b.maxHp).not.toBe(18 + xp.maxHp)
+    expect(b.speed).not.toBeCloseTo(0.55 + xp.speed, 10)
+    expect(crewBonus(appliedNodeIds([], undefined))).toEqual({ maxHp: 0, speed: 0 })
   })
 })
 
