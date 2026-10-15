@@ -156,11 +156,11 @@ stories:
     name: "Deploy sampling: Research slice is unslotted ids only"
     file: "production/epics/research/story-016-deploy-sampling-research-slice-is-unslotted-ids-only.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-017"
     name: "Completions after the deploy freeze apply next deploy only"
     file: "production/epics/research/story-017-completions-after-the-deploy-freeze-apply-next-deploy-o.md"

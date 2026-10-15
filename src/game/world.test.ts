@@ -20,6 +20,8 @@ import { useResearchStore } from '../state/researchStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { useWorldStore } from '../state/worldStore'
 import { XP_HP_PER, XP_SPEED_PER } from './experience'
+import { freezeDeploy } from '../state/deployFreeze'
+import worldSrc from './world.ts?raw'
 
 // Mirrors MAX_DT in world.ts.
 const STEP = 0.05
@@ -2230,5 +2232,60 @@ describe('result display and debrief entry delay (IF-009 AC15)', () => {
       unsub()
     }
     expect(outcomes).toBe(1)
+  })
+})
+
+// Story RS-016 (ADR-0009, TR-research-002/004): the deploy composer samples
+// the live stores once. The Research slice keeps completed unslotted ids only;
+// slotted projects reach the mission as resolved wear on the Roster slice.
+describe('deploy sampling: Research slice is unslotted ids only (RS-016)', () => {
+  function pin(id: string, pins: Record<string, string>): void {
+    const roster = useCampaignStore.getState().roster
+    useCampaignStore.setState({ roster: { ...roster, [id]: { ...roster[id], pins } } })
+  }
+
+  it('applies Advanced Propellants to both assigned operatives', () => {
+    useResearchStore.setState({ done: ['b-propellants'] })
+    const squad = ops(['op1', 'op2'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    expect(deploy.roster.appliedIds.op1).toContain('b-propellants')
+    expect(deploy.roster.appliedIds.op2).toContain('b-propellants')
+    expect(deploy.research).toEqual(['b-propellants'])
+  })
+
+  it('has two Neural-unpinned operatives wear the same Neural Interface I', () => {
+    useResearchStore.setState({ done: ['c-interface'] })
+    const squad = ops(['op1', 'op2'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    expect(deploy.roster.wear.op1.NEURAL).toBe('c-interface')
+    expect(deploy.roster.wear.op2.NEURAL).toBe('c-interface')
+    expect(deploy.roster.appliedIds.op1).toContain('c-interface')
+    expect(deploy.roster.appliedIds.op2).toContain('c-interface')
+    // Slotted, so it is worn, not on the Research slice.
+    expect(deploy.research).toEqual([])
+  })
+
+  it('keeps unslotted ids only on the Research slice and worn Interface I on the Roster slice', () => {
+    useResearchStore.setState({ done: ['b-propellants', 'c-interface'] })
+    pin('op1', { CHEST: 'STOCK' })
+    const squad = ops(['op1'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    expect(deploy.research).toEqual(['b-propellants'])
+    expect(Array.isArray(deploy.research)).toBe(true)
+    expect(deploy.research).not.toHaveProperty('pins')
+    expect(deploy.research).not.toContain('c-interface')
+    expect(deploy.roster.wear.op1).toEqual({ NEURAL: 'c-interface' })
+    expect(deploy.roster.appliedIds.op1).toEqual(['b-propellants', 'c-interface'])
+    // A plain clone: no live `done` reference survives on the slice.
+    expect(deploy.research).not.toBe(useResearchStore.getState().done)
+    // createWorld takes the slices as handed; the run uses the frozen totals.
+    const w = createWorld(BARE_MISSION, squad, deploy)
+    expect(w.unit('a1')?.maxHp).toBe(deploy.roster.maxHp.op1)
+  })
+
+  it('createWorld never reads researchStore or re-derives appliedIds (control manifest)', () => {
+    expect(worldSrc).not.toMatch(/researchStore/)
+    expect(worldSrc).not.toMatch(/\bappliedNodeIds\b/)
+    expect(worldSrc).not.toMatch(/\bmissionMods\b/)
   })
 })
