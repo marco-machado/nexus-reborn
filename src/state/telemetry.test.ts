@@ -21,12 +21,18 @@ import {
   telemetryRevision,
 } from './telemetry'
 import { applyDebrief } from './debrief'
-import { captureSave, startNewOperation } from './save'
+import { SAVE_KEY, captureSave, startNewOperation, writeSave } from './save'
 import { useWorldStore } from './worldStore'
 import telemetrySrc from './telemetry.ts?raw'
 import balanceSrc from '../ui/Balance.tsx?raw'
 import balanceGateSrc from '../ui/balanceGate.ts?raw'
-import type { MissionRecord, MissionTelemetry } from './telemetry'
+import { NO_DATA, balanceStatRows } from '../ui/balanceStats'
+import type {
+  AbortRecord,
+  FinishedRecord,
+  MissionRecord,
+  MissionTelemetry,
+} from './telemetry'
 
 class MemoryStorage implements SettingsStorage {
   data = new Map<string, string>()
@@ -92,10 +98,23 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
   })
 }
 
-function record(over: Partial<MissionRecord> = {}): MissionRecord {
+function record(over: Partial<FinishedRecord> = {}): FinishedRecord {
   const built = buildRecord('m01', outcome(), 1000)
   expect(built).not.toBeNull()
-  return { ...(built as MissionRecord), ...over }
+  return { ...(built as FinishedRecord), ...over }
+}
+
+// The thin row recordAbort writes.
+function abortRow(over: Partial<AbortRecord> = {}): AbortRecord {
+  return {
+    at: 1000,
+    missionId: 'm01',
+    outcome: 'aborted',
+    durationSec: 12,
+    seed: 20870514,
+    squadRoles: ['assault'],
+    ...over,
+  }
 }
 
 describe('buildRecord', () => {
@@ -205,7 +224,6 @@ describe('recordAbort', () => {
     expect(records.map((r) => r.outcome)).toEqual(['won', 'aborted'])
     const agg = aggregate(records)
     expect(agg.aborts).toBe(1)
-    expect(agg.abortRate).toBeCloseTo(0.5, 10)
     expect(agg.winRate).toBe(1)
     expect(agg.meanDurationSec).toBeCloseTo(265, 10)
     useSettingsStore.setState({ telemetry: false })
@@ -213,10 +231,10 @@ describe('recordAbort', () => {
 })
 
 describe('aggregate', () => {
-  it('returns zeros over an empty log', () => {
+  it('computes no win rate and zero totals over an empty log', () => {
     const agg = aggregate([])
     expect(agg.missions).toBe(0)
-    expect(agg.winRate).toBe(0)
+    expect(agg.winRate).toBeNull()
     expect(agg.meanFirstContactSec).toBeNull()
     expect(agg.weaponDamage).toEqual([])
     expect(agg.abilityUses).toEqual([])
@@ -414,7 +432,7 @@ describe('one record per outcome, cap 60 FIFO, log survives New Operation (PV-01
   for (const won of [true, false]) {
     it(`AC1: a ${won ? 'won' : 'lost'} Debrief adds exactly one ${won ? 'won' : 'lost'} row (N+1, not N+2)`, () => {
       const N = 3
-      seed([record({ at: 1 }), record({ at: 2 }), record({ at: 3, outcome: 'aborted' })])
+      seed([record({ at: 1 }), record({ at: 2 }), abortRow({ at: 3 })])
       debrief(1, won ? {} : { won: false, reward: 0 })
       // The Debrief screen staying open re-runs the apply; the key makes it a no-op.
       applyDebrief('m01')
@@ -482,5 +500,137 @@ describe('one record per outcome, cap 60 FIFO, log survives New Operation (PV-01
     expect(storage.getItem(TELEMETRY_KEY)).toBe(blob)
     expect(loadRecords(storage)).toEqual(log)
     expect(balanceEntryVisible(loadRecords(storage))).toBe(true)
+  })
+})
+
+// PV-015 (TR-persistence-008, ADR-0015, ADR-0002): the Abort row is thin and
+// never a campaign write; Balance win rate is won / (won + lost) with aborts
+// out of the denominator, and a no-data marker when nothing was decided.
+describe('abort telemetry row and Balance win rate (PV-015)', () => {
+  const statValue = (rows: ReturnType<typeof balanceStatRows>, label: string) =>
+    rows.find((r) => r.label === label)?.value
+
+  // A rendered zero value ('0', '0%', '0 CR', '0 / 0', '0:00'), not a digit in a larger number.
+  const ZERO_NAN_INF = /(^|[^\d.,])0(?![\d.,])|NaN|Infinity/
+
+  function log(won: number, lost: number, aborted: number): MissionRecord[] {
+    const rows: MissionRecord[] = []
+    for (let i = 0; i < won; i++) rows.push(record({ at: rows.length }))
+    for (let i = 0; i < lost; i++) {
+      rows.push(record({ at: rows.length, outcome: 'lost', payout: 0, fine: 0 }))
+    }
+    for (let i = 0; i < aborted; i++) rows.push(abortRow({ at: rows.length }))
+    return rows
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    useSettingsStore.setState({ telemetry: false })
+  })
+
+  it('AC1: Abort from pause with telemetry on leaves the campaign at S and appends one thin aborted row', () => {
+    // The Hud pause-menu Abort records through the default (browser) storage path.
+    vi.stubGlobal('window', { localStorage: storage })
+    useSettingsStore.setState({ telemetry: true })
+    useAppStore.setState({ phase: 'world', credits: 222333 })
+    useWorldStore.setState({ t: 3600, influence: 7 })
+    expect(writeSave(storage)).toBe(true)
+    const S = storage.getItem(SAVE_KEY)
+    const snapshot = captureSave()
+    saveRecords([record({ at: 1 }), abortRow({ at: 2 })], storage)
+    const abortsBefore = aggregate(loadRecords(storage)).aborts
+
+    recordAbort('m03', 45.5, 4242, ['assault', 'medic'])
+
+    // Campaign still equals S: neither the stored blob nor the stores moved.
+    expect(storage.getItem(SAVE_KEY)).toBe(S)
+    expect(captureSave()).toEqual(snapshot)
+    const rows = loadRecords(storage)
+    expect(rows).toHaveLength(3)
+    expect(aggregate(rows).aborts).toBe(abortsBefore + 1)
+    const row = rows[rows.length - 1]
+    expect(row).toMatchObject({
+      outcome: 'aborted',
+      durationSec: 45.5,
+      missionId: 'm03',
+      seed: 4242,
+      squadRoles: ['assault', 'medic'],
+    })
+    // Not a combat invoice: only the thin fields (plus the record time) exist.
+    expect(Object.keys(row).sort()).toEqual(
+      ['at', 'durationSec', 'missionId', 'outcome', 'seed', 'squadRoles'].sort(),
+    )
+    for (const key of ['kills', 'kia', 'reward', 'bonus', 'fine', 'payout', 'damageDealt']) {
+      expect(row).not.toHaveProperty(key)
+    }
+    // The export carries the same thin row.
+    const exported = JSON.parse(exportJson(rows)) as { records: Array<Record<string, unknown>> }
+    expect(exported.records[2]).toEqual(row)
+  })
+
+  it('AC2: 2 won, 1 lost, 3 aborted: win rate 2 / (2 + 1), abort count 3', () => {
+    const agg = aggregate(log(2, 1, 3))
+    expect(agg).toMatchObject({ wins: 2, losses: 1, aborts: 3, decided: 3, missions: 6 })
+    expect(agg.winRate).toBeCloseTo(2 / 3, 10)
+    // Aborts in the denominator would read 2 / 6.
+    expect(agg.winRate).not.toBeCloseTo(2 / 6, 10)
+    const rows = balanceStatRows(agg)
+    expect(statValue(rows, 'WIN RATE')).toBe('67%')
+    expect(statValue(rows, 'ABORTS')).toBe('3')
+  })
+
+  it('AC3: 0 won, 2 lost: win rate is 0.0', () => {
+    const agg = aggregate(log(0, 2, 0))
+    expect(agg.winRate).toBe(0)
+    expect(statValue(balanceStatRows(agg), 'WIN RATE')).toBe('0%')
+  })
+
+  it('AC4: 0 won, 0 lost, 3 aborted: abort count 3, no-data marker, no 0 / NaN / Infinity in Balance', () => {
+    const agg = aggregate(log(0, 0, 3))
+    expect(agg.aborts).toBe(3)
+    expect(agg.decided).toBe(0)
+    expect(agg.winRate).toBeNull()
+    const rows = balanceStatRows(agg)
+    expect(statValue(rows, 'WIN RATE')).toBe(NO_DATA)
+    expect(statValue(rows, 'ABORTS')).toBe('3')
+    for (const row of rows) expect(row.value, row.label).not.toMatch(ZERO_NAN_INF)
+    // The share bars render their empty copy, not zero rows.
+    expect(agg.weaponDamage).toEqual([])
+    expect(agg.abilityUses).toEqual([])
+    // No aggregate number is NaN or Infinity either.
+    for (const [key, value] of Object.entries(agg)) {
+      if (typeof value === 'number') expect(Number.isFinite(value), key).toBe(true)
+    }
+  })
+
+  it('AC4: abort rows written before the thin shape (zeroed combat fields) still read as no data', () => {
+    const legacy = { ...record({ at: 1, payout: 0, fine: 0, reward: 0, kills: 0 }), outcome: 'aborted' }
+    storage.setItem(
+      TELEMETRY_KEY,
+      JSON.stringify({ version: TELEMETRY_VERSION, records: [legacy, legacy, legacy] }),
+    )
+    const agg = aggregate(loadRecords(storage))
+    expect(agg.aborts).toBe(3)
+    expect(agg.winRate).toBeNull()
+    for (const row of balanceStatRows(agg)) expect(row.value, row.label).not.toMatch(ZERO_NAN_INF)
+  })
+
+  it('formula: win_rate = won / (won + lost) for every mix, aborts excluded', () => {
+    for (const [won, lost, aborted] of [
+      [1, 0, 0],
+      [0, 1, 5],
+      [3, 1, 2],
+      [5, 5, 50],
+    ]) {
+      const agg = aggregate(log(won, lost, aborted))
+      expect(agg.winRate).toBeCloseTo(won / (won + lost), 10)
+      expect(agg.aborts).toBe(aborted)
+    }
+  })
+
+  it('Balance computes no abort rate: abort_rate has no defined denominator', () => {
+    expect(aggregate(log(1, 1, 1))).not.toHaveProperty('abortRate')
+    expect(balanceStatRows(aggregate(log(1, 1, 1))).map((r) => r.label)).not.toContain('ABORT RATE')
+    expect(balanceSrc).not.toMatch(/abortRate|ABORT RATE/)
   })
 })

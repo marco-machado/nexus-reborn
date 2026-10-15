@@ -147,11 +147,11 @@ stories:
     name: "Abort telemetry row and Balance win rate"
     file: "production/epics/persistence-and-validation/story-015-abort-telemetry-row-and-balance-win-rate.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-016"
     name: "Balance Export and two-step Clear"
     file: "production/epics/persistence-and-validation/story-016-balance-export-and-two-step-clear.md"

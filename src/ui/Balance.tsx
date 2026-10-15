@@ -13,7 +13,8 @@ import {
 } from '../state/telemetry'
 import { useSettingsStore } from '../state/settingsStore'
 import { Panel } from './bits'
-import { fmt, mmss } from './util'
+import { fmt } from './util'
+import { balanceStatRows } from './balanceStats'
 import { uiClick } from './sound'
 
 function Stat(props: { label: string; value: string; tone?: string }) {
@@ -106,38 +107,9 @@ export default function BalancePanel(props: { onClose: () => void }) {
             <div className="bal-section">
               <div className="hud-menu-group-head">CAMPAIGN AGGREGATES</div>
               <div className="bal-stats">
-                <Stat label="MISSIONS" value={String(agg.missions)} />
-                <Stat
-                  label="WIN RATE"
-                  value={Math.round(agg.winRate * 100) + '%'}
-                  tone={agg.winRate >= 0.5 ? 'teal' : 'red'}
-                />
-                <Stat
-                  label="ABORT RATE"
-                  value={Math.round(agg.abortRate * 100) + '%'}
-                  tone={agg.aborts > 0 ? 'amber' : undefined}
-                />
-                <Stat label="ABORTS" value={String(agg.aborts)} />
-                <Stat label="MEAN DURATION" value={mmss(agg.meanDurationSec)} />
-                <Stat
-                  label="MEAN FIRST CONTACT"
-                  value={agg.meanFirstContactSec === null ? '--' : mmss(agg.meanFirstContactSec)}
-                />
-                <Stat
-                  label="COLLATERAL RATE"
-                  value={Math.round(agg.collateralRate * 100) + '%'}
-                  tone={agg.collateralRate > 0.5 ? 'red' : undefined}
-                />
-                <Stat label="CIVILIANS HIT" value={String(agg.civiliansHitTotal)} />
-                <Stat label="OPERATIVES KIA" value={String(agg.kiaTotal)} tone={agg.kiaTotal > 0 ? 'red' : undefined} />
-                <Stat label="MED / CELL USED" value={agg.medUsedTotal + ' / ' + agg.cellUsedTotal} />
-                <Stat label="MEAN PAYOUT" value={fmt(Math.round(agg.meanPayout)) + ' CR'} />
-                <Stat label="TOTAL PAYOUT" value={fmt(agg.totalPayout) + ' CR'} tone="teal" />
-                <Stat
-                  label="TOTAL FINES"
-                  value={fmt(agg.totalFines) + ' CR'}
-                  tone={agg.totalFines > 0 ? 'red' : undefined}
-                />
+                {balanceStatRows(agg).map((row) => (
+                  <Stat key={row.label} label={row.label} value={row.value} tone={row.tone} />
+                ))}
               </div>
             </div>
             <div className="bal-col">

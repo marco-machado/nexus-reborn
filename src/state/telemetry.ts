@@ -34,10 +34,11 @@ export interface MissionTelemetry {
   squadRoles: string[]
 }
 
-export interface MissionRecord extends MissionTelemetry {
+/** A decided mission (Debrief ran): the full combat record. */
+export interface FinishedRecord extends MissionTelemetry {
   at: number
   missionId: string
-  outcome: 'won' | 'lost' | 'aborted'
+  outcome: 'won' | 'lost'
   durationSec: number
   kills: number
   kia: number
@@ -48,13 +49,28 @@ export interface MissionRecord extends MissionTelemetry {
   payout: number
 }
 
+/**
+ * The thin row an Abort writes (GDD Rule 17): `aborted` plus duration, mission
+ * id, seed and deployed roles. No combat invoice: no kills, fines or payout.
+ */
+export interface AbortRecord {
+  at: number
+  missionId: string
+  outcome: 'aborted'
+  durationSec: number
+  seed: number
+  squadRoles: string[]
+}
+
+export type MissionRecord = FinishedRecord | AbortRecord
+
 // One record from the outcome the sim pushed. Null when the outcome carries no
 // telemetry payload (older saves, headless constructions).
 export function buildRecord(
   missionId: string,
   outcome: MissionOutcome,
   at: number = Date.now(),
-): MissionRecord | null {
+): FinishedRecord | null {
   const t = outcome.telemetry
   if (!t) return null
   return {
@@ -180,6 +196,10 @@ export function recordMissionOutcome(
   saveRecords(appendRecord(loadRecords(storage), record), storage)
 }
 
+/**
+ * Append the thin abort row (only while telemetry is on). Never touches the
+ * campaign blob: an Abort is not a campaign write (ADR-0002).
+ */
 export function recordAbort(
   missionId: string,
   durationSec: number,
@@ -188,31 +208,13 @@ export function recordAbort(
   storage: SettingsStorage | null = browserStorage(),
 ): void {
   if (!useSettingsStore.getState().telemetry) return
-  const record: MissionRecord = {
+  const record: AbortRecord = {
     at: Date.now(),
     missionId,
     outcome: 'aborted',
     durationSec,
     seed,
-    firstContactSec: null,
-    objectiveTimes: [],
-    shotsByWeapon: {},
-    damageByWeapon: {},
-    damageDealt: 0,
-    damageTaken: 0,
-    civilianHitsBySquad: 0,
-    civilianHitsByCorpsec: 0,
-    medUsed: 0,
-    cellUsed: 0,
-    abilityUsesByRole: {},
-    squadRoles,
-    kills: 0,
-    kia: 0,
-    civiliansHit: 0,
-    reward: 0,
-    bonus: 0,
-    fine: 0,
-    payout: 0,
+    squadRoles: [...squadRoles],
   }
   saveRecords(appendRecord(loadRecords(storage), record), storage)
 }
@@ -234,18 +236,26 @@ export interface BalanceAggregate {
   wins: number
   losses: number
   aborts: number
-  winRate: number
-  abortRate: number
-  meanDurationSec: number
+  /** Decided missions: won + lost. Aborts are never decided. */
+  decided: number
+  /**
+   * `win_rate = won / (won + lost)`, aborts excluded (GDD Formulas). Null when
+   * `won + lost = 0`: not computed, Balance shows the no-data marker. There is
+   * deliberately no abort rate: `abort_rate` has no defined denominator (GDD
+   * Open Question 4).
+   */
+  winRate: number | null
+  // Means and rates over decided missions; null when none is decided.
+  meanDurationSec: number | null
   // Over the missions that had a first contact at all.
   meanFirstContactSec: number | null
-  // Fraction of missions with at least one squad-billed civilian hit.
-  collateralRate: number
+  // Fraction of decided missions with at least one squad-billed civilian hit.
+  collateralRate: number | null
   civiliansHitTotal: number
   kiaTotal: number
   medUsedTotal: number
   cellUsedTotal: number
-  meanPayout: number
+  meanPayout: number | null
   totalPayout: number
   totalFines: number
   // Damage share by weapon and ability use by role, sorted descending.
@@ -268,7 +278,6 @@ export function aggregate(records: MissionRecord[]): BalanceAggregate {
   let losses = 0
   let aborts = 0
   let duration = 0
-  let finished = 0
   let contactSum = 0
   let contactN = 0
   let collateralMissions = 0
@@ -281,13 +290,16 @@ export function aggregate(records: MissionRecord[]): BalanceAggregate {
   const damage: Record<string, number> = {}
   const abilities: Record<string, number> = {}
   for (const r of records) {
-    if (r.outcome === 'won') wins += 1
-    else if (r.outcome === 'lost') losses += 1
-    else if (r.outcome === 'aborted') aborts += 1
-    if (r.outcome !== 'aborted') {
-      finished += 1
-      duration += r.durationSec
+    if (r.outcome === 'aborted') {
+      // A thin row: it counts as an abort and feeds nothing else. Rows written
+      // before the thin shape carried zeroed combat fields; skipping them here
+      // gives the same totals.
+      aborts += 1
+      continue
     }
+    if (r.outcome === 'won') wins += 1
+    else losses += 1
+    duration += r.durationSec
     if (r.firstContactSec !== null && r.firstContactSec !== undefined) {
       contactSum += r.firstContactSec
       contactN += 1
@@ -306,21 +318,22 @@ export function aggregate(records: MissionRecord[]): BalanceAggregate {
       abilities[role] = (abilities[role] ?? 0) + v
     }
   }
+  const decided = wins + losses
   return {
     missions: n,
     wins,
     losses,
     aborts,
-    winRate: finished > 0 ? wins / finished : 0,
-    abortRate: n > 0 ? aborts / n : 0,
-    meanDurationSec: finished > 0 ? duration / finished : 0,
+    decided,
+    winRate: decided > 0 ? wins / decided : null,
+    meanDurationSec: decided > 0 ? duration / decided : null,
     meanFirstContactSec: contactN > 0 ? contactSum / contactN : null,
-    collateralRate: finished > 0 ? collateralMissions / finished : 0,
+    collateralRate: decided > 0 ? collateralMissions / decided : null,
     civiliansHitTotal: civilians,
     kiaTotal: kia,
     medUsedTotal: med,
     cellUsedTotal: cell,
-    meanPayout: finished > 0 ? payout / finished : 0,
+    meanPayout: decided > 0 ? payout / decided : null,
     totalPayout: payout,
     totalFines: fines,
     weaponDamage: shareRows(damage),
