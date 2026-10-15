@@ -21,6 +21,7 @@ import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { useWorldStore } from '../state/worldStore'
 import { XP_HP_PER, XP_SPEED_PER } from './experience'
 import { freezeDeploy } from '../state/deployFreeze'
+import { nodeById } from './research'
 import worldSrc from './world.ts?raw'
 
 // Mirrors MAX_DT in world.ts.
@@ -2287,5 +2288,116 @@ describe('deploy sampling: Research slice is unslotted ids only (RS-016)', () =>
     expect(worldSrc).not.toMatch(/researchStore/)
     expect(worldSrc).not.toMatch(/\bappliedNodeIds\b/)
     expect(worldSrc).not.toMatch(/\bmissionMods\b/)
+  })
+})
+
+// Story RS-017 (ADR-0009, TR-research-006): completions and pin changes after a
+// mission's create reach the next deploy only. The test drives the real lab
+// flow (start, then sync past endT) so "active at create" means a running lab.
+describe('completions after the deploy freeze apply next deploy only (RS-017)', () => {
+  // Starts each project on its lab at t = 0; they stay active until finish().
+  function startLabs(...ids: string[]): void {
+    for (const id of ids) expect(useResearchStore.getState().start(nodeById(id), 0)).toBe(true)
+  }
+
+  // Syncs past every running lab's endT, so each active project completes.
+  function finish(): void {
+    useResearchStore.getState().sync(1e9)
+  }
+
+  function pin(id: string, pins: Record<string, string>): void {
+    const roster = useCampaignStore.getState().roster
+    useCampaignStore.setState({ roster: { ...roster, [id]: { ...roster[id], pins } } })
+  }
+
+  function weaponStats(w: WorldApi, id: string) {
+    const wp = w.unit(id)?.weapon
+    return wp && { damage: wp.damage, spread: wp.spread, cooldown: wp.cooldown, reload: wp.reload, range: wp.range }
+  }
+
+  it("leaves a created mission's weapons, crew bonus and Research slice unchanged by a later completion or pin change", () => {
+    // Propellants (unslotted, assault damage) and Synaptic (CHEST, crew speed) apply at create.
+    useResearchStore.setState({ done: ['b-propellants', 'c-synaptic'] })
+    startLabs('b-coating', 'c-interface')
+    const squad = ops(['op1'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    const research = deploy.research.slice()
+    const wear = structuredClone(deploy.roster.wear)
+    const applied = structuredClone(deploy.roster.appliedIds)
+    const w = createWorld(BARE_MISSION, squad, deploy)
+    deployReset()
+    const weapon = weaponStats(w, 'a1')
+    const maxHp = w.unit('a1')?.maxHp
+    const speed = w.unit('a1')?.speed
+
+    // Mid-mission: two completions land, then op1's CHEST bay is pinned to stock.
+    finish()
+    pin('op1', { CHEST: 'STOCK' })
+    expect(useResearchStore.getState().done).toEqual(['b-propellants', 'c-synaptic', 'b-coating', 'c-interface'])
+    warm(w, 1)
+
+    expect(weaponStats(w, 'a1')).toEqual(weapon)
+    expect(w.unit('a1')?.maxHp).toBe(maxHp)
+    expect(w.unit('a1')?.speed).toBe(speed)
+    expect(deploy.research).toEqual(research)
+    expect(deploy.roster.wear).toEqual(wear)
+    expect(deploy.roster.appliedIds).toEqual(applied)
+
+    // The changes are real: the next deploy samples them.
+    const next = freezeDeploy(MISSION, squad, 2)
+    expect(next.research).toEqual(['b-propellants', 'b-coating'])
+    expect(next.roster.wear.op1).toEqual({ NEURAL: 'c-interface' })
+    expect(next.roster.speed.op1).not.toBe(deploy.roster.speed.op1)
+  })
+
+  it('keeps Neural Interface I off the frozen Roster wear and appliedIds when it completes mid-mission', () => {
+    startLabs('c-interface')
+    const squad = ops(['op1'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    expect(deploy.roster.wear.op1.NEURAL).toBeUndefined()
+    expect(deploy.roster.appliedIds.op1).not.toContain('c-interface')
+    const w = createWorld(BARE_MISSION, squad, deploy)
+    deployReset()
+    const cooldown = w.unit('a1')?.weapon?.cooldown
+
+    finish()
+    expect(useResearchStore.getState().done).toEqual(['c-interface'])
+    warm(w, 1)
+
+    // Proof is on the Roster slice: a slotted project is never on the Research slice.
+    expect(deploy.roster.wear.op1.NEURAL).toBeUndefined()
+    expect(deploy.roster.appliedIds.op1).not.toContain('c-interface')
+    expect(w.unit('a1')?.weapon?.cooldown).toBe(cooldown)
+  })
+
+  it("puts completions after mission A's create in mission B's snapshot while A's slices still omit them", () => {
+    startLabs('b-propellants', 'c-interface')
+    const squad = ops(['op1'])
+    const a = freezeDeploy(MISSION, squad, 1)
+    const wa = createWorld(BARE_MISSION, squad, a)
+    deployReset()
+
+    finish()
+    warm(wa, 1)
+    // op1 carries no NEURAL pin, so it wears the current issue.
+    expect(useCampaignStore.getState().roster.op1.pins.NEURAL).toBeUndefined()
+    const b = freezeDeploy(MISSION, squad, 2)
+
+    expect(b.research).toContain('b-propellants')
+    expect(b.roster.wear.op1.NEURAL).toBe('c-interface')
+    expect(b.roster.appliedIds.op1).toContain('c-interface')
+    expect(b.roster.appliedIds.op1).toContain('b-propellants')
+
+    expect(a.research).not.toContain('b-propellants')
+    // Not proof: c-interface is slotted (NEURAL), so it is never on the Research slice.
+    // The Roster wear and appliedIds assertions below carry the proof (AC2 note).
+    expect(a.research).not.toContain('c-interface')
+    expect(a.roster.wear.op1.NEURAL).toBeUndefined()
+    expect(a.roster.appliedIds.op1).not.toContain('b-propellants')
+    expect(a.roster.appliedIds.op1).not.toContain('c-interface')
+    expect(wa.unit('a1')?.weapon?.damage).toBeCloseTo(
+      ROLE_ABILITIES.assault.passive.magnitude * WEAPONS.assault.damage,
+      10,
+    )
   })
 })

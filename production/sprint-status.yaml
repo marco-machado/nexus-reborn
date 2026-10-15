@@ -165,11 +165,11 @@ stories:
     name: "Completions after the deploy freeze apply next deploy only"
     file: "production/epics/research/story-017-completions-after-the-deploy-freeze-apply-next-deploy-o.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-018"
     name: "Weapon sampling from applied ids"
     file: "production/epics/research/story-018-weapon-sampling-from-applied-ids.md"
