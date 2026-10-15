@@ -1649,11 +1649,10 @@ export function Debrief() {
             <DebriefRow key={r.label} index={i} label={r.label} value={r.value} tone={r.tone} />
           ))}
         </div>
-        {filingLine && (
-          <div className="db-filing" role="status">
-            {filingLine}
-          </div>
-        )}
+        {/* Always mounted: a live region that mounts with its text is not announced. */}
+        <div className="db-filing" role="status">
+          {filingLine}
+        </div>
         <div className="db-actions">
           <button type="button" className="btn" onClick={act(returnFromDebrief)}>
             RETURN TO WORLD NETWORK

@@ -10,7 +10,7 @@ import { Panel } from './bits'
 import { fmt } from './util'
 import { balanceStatRows } from './balanceStats'
 import { uiClick } from './sound'
-import { CLEAR_ARM_TIMEOUT_MS, downloadBalanceJson, pressClear } from './balanceActions'
+import { CLEAR_ARM_HINT, CLEAR_ARM_TIMEOUT_MS, downloadBalanceJson, pressClear } from './balanceActions'
 
 function Stat(props: { label: string; value: string; tone?: string }) {
   return (
@@ -130,7 +130,7 @@ export default function BalancePanel(props: { onClose: () => void }) {
             type="button"
             className={'btn' + (clearArmed ? ' amber' : '')}
             disabled={records.length === 0}
-            aria-label={clearArmed ? 'Confirm erasing every record' : 'Clear the telemetry records'}
+            aria-label={clearArmed ? 'CONFIRM // ERASE RECORDS? Erases every record' : 'CLEAR the telemetry records'}
             onClick={onClear}
           >
             {clearArmed ? 'CONFIRM // ERASE RECORDS?' : 'CLEAR'}
@@ -145,6 +145,11 @@ export default function BalancePanel(props: { onClose: () => void }) {
           >
             CLOSE
           </button>
+        </div>
+        {/* P-01 armed-hint slot: always mounted (a polite live region that
+            mounts with its text is not announced); disarm clears it silently. */}
+        <div className="bal-arm-hint" role="status" aria-live="polite">
+          {clearArmed ? CLEAR_ARM_HINT : ''}
         </div>
       </Panel>
     </div>

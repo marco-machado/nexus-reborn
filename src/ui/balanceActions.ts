@@ -10,8 +10,11 @@ import type { SettingsStorage } from '../state/settingsStore'
 /** File name the Export download saves under. */
 export const BALANCE_EXPORT_FILENAME = 'nexus-balance.json'
 
-/** How long an armed Clear waits for its confirm before disarming. */
+/** How long an armed Clear waits for its confirm before disarming (P-01: 3 real seconds). */
 export const CLEAR_ARM_TIMEOUT_MS = 3000
+
+/** P-01 armed hint: names the window and the consequence. Placeholder copy pending /ux-design. */
+export const CLEAR_ARM_HINT = 'PRESS AGAIN WITHIN 3 S TO ERASE RECORDS'
 
 /** The local data: URL carrying the exported log as JSON. */
 export function exportHref(records: MissionRecord[]): string {
@@ -48,11 +51,12 @@ export interface ClearStep {
 
 /**
  * One activation of the Clear control. Unarmed: arms the confirm and leaves the
- * records alone. Armed: erases the telemetry log and disarms.
+ * records alone. Armed: requests the erase and disarms. `cleared` means the
+ * erase was requested; a swallowed storage write is not reported (the panel
+ * re-reads the log, so surviving records stay visible).
  */
 export function pressClear(armed: boolean, storage?: SettingsStorage | null): ClearStep {
   if (!armed) return { armed: true, cleared: false }
-  if (storage === undefined) clearRecords()
-  else clearRecords(storage)
+  clearRecords(storage)
   return { armed: false, cleared: true }
 }

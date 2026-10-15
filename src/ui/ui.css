@@ -2635,17 +2635,22 @@
 .db-row b.dim { color: var(--ink-dim); }
 
 .db-filing {
+  min-height: calc(14px * var(--text-scale));
   font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.24em;
   color: var(--amber-hot);
 }
 
 /* Screen write-failure advisory (P-11): words carry the state, not the hue.
-   The region is always mounted (live region) and draws nothing when empty. */
+   The region is always mounted (live region) and draws nothing when empty.
+   31vh is the one band that covers no text on any of the four Screens at
+   1280x720, 1366x768 and 1920x1080, text scale 100 and 125 (over the globe
+   on World Network); bottom placement hid Feed rows. Measured by
+   production/qa/evidence/team-qa-2026-10-15-s6/fix-verify.mjs. */
 .write-fail-region {
   position: fixed;
   left: 50%;
-  bottom: 72px;
+  top: 31vh;
   transform: translateX(-50%);
   z-index: 40;
   max-width: calc(100vw - 32px);
@@ -3348,6 +3353,17 @@ button.hud-slot:focus-visible {
   font-size: calc(11px * var(--text-scale));
   letter-spacing: 0.08em;
   color: var(--ink);
+}
+
+/* P-01 armed-hint slot under the Balance actions; a reserved line so arming
+   never shifts the layout. */
+.bal-arm-hint {
+  min-height: calc(14px * var(--text-scale));
+  padding-top: 6px;
+  text-align: center;
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.24em;
+  color: var(--amber-hot);
 }
 
 .hud-menu-actions {

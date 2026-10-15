@@ -16,6 +16,7 @@ export interface SaveStatusState {
   reason: WriteFailReason | null
 }
 
+/** Mutators; `save.ts` is the only caller (ADR-0022). */
 export interface SaveStatusActions {
   /** A Debrief applied in memory. No-op while `write-failed` (sticky). */
   markUnfiled(): void
@@ -27,6 +28,7 @@ export interface SaveStatusActions {
   reset(): void
 }
 
+/** Session-only filing-status store. Interface reads it with primitive selectors only. */
 export const useSaveStatusStore = create<SaveStatusState & SaveStatusActions>()((set, get) => {
   // The store changes only on a transition: a mutator that would not change
   // `status` or `reason` does not call `set`.

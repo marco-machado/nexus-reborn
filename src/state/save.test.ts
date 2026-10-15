@@ -2336,7 +2336,7 @@ describe('Debrief filing status reads unfiled until the next Screen', () => {
     expect(debriefFilingLine(status())).toBeNull()
 
     reloadAndContinue()
-    expect(status()).not.toBe('unfiled')
+    expect(status()).toBe('filed')
     const restored = captureSave()
     expect(restored.app.credits).toBe(applied.app.credits)
     expect(restored.world.t).toBe(applied.world.t)
@@ -2371,7 +2371,7 @@ describe('Debrief filing status reads unfiled until the next Screen', () => {
     reachScreen(false)
     applyWin(false)
     expect(writeSave(null)).toBe(false)
-    expect(status()).not.toBe('filed')
+    expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'unavailable' })
   })
 
   it('the status is not in the campaign blob and does not schedule a write', () => {
@@ -2542,14 +2542,15 @@ describe('Debrief filing status reads unfiled until the next Screen', () => {
     vi.useFakeTimers()
     stopAutosave = startAutosave(storage)
     expect(startAutosave(storage)).toBe(stopAutosave)
-    const sets = vi.fn()
-    const unsub = useSaveStatusStore.subscribe(sets)
+    // Count watcher calls, not store sets: transition() drops a repeated
+    // markUnfiled, so a second watcher would not show up as a second set.
+    const markUnfiled = vi.spyOn(useSaveStatusStore.getState(), 'markUnfiled')
     useAppStore.setState({ lastAppliedKey: 1 })
-    expect(sets).toHaveBeenCalledTimes(1)
+    expect(markUnfiled).toHaveBeenCalledTimes(1)
     // A decrease (hydrate / New Operation reset) is ignored.
     useAppStore.setState({ lastAppliedKey: 0 })
-    expect(sets).toHaveBeenCalledTimes(1)
-    unsub()
+    expect(markUnfiled).toHaveBeenCalledTimes(1)
+    markUnfiled.mockRestore()
   })
 })
 

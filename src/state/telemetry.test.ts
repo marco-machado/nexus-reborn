@@ -716,8 +716,8 @@ describe('Balance Export and two-step Clear (PV-016)', () => {
     expect(loadRecords(storage)).toEqual(rows)
     expect(balanceEntryVisible(loadRecords(storage))).toBe(true)
     expect(telemetryRevision()).toBe(before)
-    // The armed confirm times out rather than staying live forever.
-    expect(CLEAR_ARM_TIMEOUT_MS).toBeGreaterThan(0)
+    // The armed confirm times out after the P-01 library window of 3 real seconds.
+    expect(CLEAR_ARM_TIMEOUT_MS).toBe(3000)
   })
 
   it('AC3: confirming an armed Clear empties Balance and leaves the campaign blob untouched', () => {
