@@ -21,11 +21,11 @@ stories:
     name: "Program catalog, costs and fundability gap"
     file: "production/epics/research/story-001-program-catalog-costs-and-fundability-gap.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-004"
     name: "Prerequisite states: locked, available, active"
     file: "production/epics/research/story-004-prerequisite-states-locked-available-active.md"

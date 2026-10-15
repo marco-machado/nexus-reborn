@@ -18,6 +18,8 @@ import {
   wornNode,
 } from './research'
 import { WEAPONS } from './data'
+import { generatedReward } from './contracts'
+import { INITIAL_CREDITS } from '../state/appStore'
 
 const byId = new Map<string, ResearchNode>(NODES.map((n) => [n.id, n]))
 
@@ -279,6 +281,20 @@ describe('authored program sums', () => {
     expect(total).toBe(779000)
   })
 
+  it('lists three laboratories with seven projects each, 21 in all', () => {
+    expect(BRANCHES).toHaveLength(3)
+    expect(BRANCHES.map((b) => b.name)).toEqual(['BALLISTICS', 'CYBERNETICS', 'CONTROL SYSTEMS'])
+    for (const b of BRANCH_IDS) expect(nodesOfBranch(b), b).toHaveLength(7)
+    expect(NODES).toHaveLength(21)
+  })
+
+  it('keeps Ballistics unslotted and every Cybernetics / Control Systems project a bay blueprint', () => {
+    for (const n of NODES) {
+      if (n.branch === 'ballistics') expect(n.augSlot, n.id).toBeUndefined()
+      else expect(AUG_SLOTS, n.id).toContain(n.augSlot)
+    }
+  })
+
   it('runs every tier on the authored hour ladder: 2h, 4h, 8h, 14h by row', () => {
     const HOURS_BY_ROW: Record<number, number> = { 0: 2, 1: 4, 2: 8, 3: 14 }
     for (const n of NODES) {
@@ -340,5 +356,32 @@ describe('effect stacking order', () => {
     expect(a).toEqual(b)
     expect(a.speed).toBeCloseTo(0.2 + 0.25, 12)
     expect(a.maxHp).toBe(14 + 12)
+  })
+})
+
+describe('program fundability gap (GDD research AC, TR-research-002)', () => {
+  // GDD §6 Credits row: one clean pass of the three authored contracts
+  // (85k + 62k + 9k + 41k + 6k). A derived design figure with no code owner.
+  const AUTHORED_CLEAN_PASS = 203000
+  const program = NODES.reduce((acc, n) => acc + n.cost, 0)
+  const gap = program - INITIAL_CREDITS - AUTHORED_CLEAN_PASS
+  // Minimum generated offer: Moderate, u = 0, not initially priority, from the
+  // contracts reward oracle rather than a pasted literal.
+  const minWin = generatedReward('MODERATE', 0, false)
+
+  it('reads the opening Credits and the minimum generated reward from their owners', () => {
+    expect(INITIAL_CREDITS).toBe(128450)
+    expect(minWin).toBe(30500)
+  })
+
+  it('leaves a 447,550 CR gap after opening Credits and one authored pass', () => {
+    expect(gap).toBe(447550)
+  })
+
+  it('funds the gap with 15 minimum-reward generated wins, not 14', () => {
+    expect(15 * minWin).toBe(457500)
+    expect(15 * minWin).toBeGreaterThanOrEqual(gap)
+    expect(14 * minWin).toBe(427000)
+    expect(14 * minWin).toBeLessThan(gap)
   })
 })
