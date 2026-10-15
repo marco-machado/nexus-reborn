@@ -57,7 +57,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Integration.*
+
+**Automated**: `src/state/appStore.test.ts`.
+- 120 s of tactical time: startedT / endT unchanged, not researched
+- Loss debrief: strategic t unchanged, project still active, no `addCredits`
+- Abort: `done` unchanged, Neural Interface I still active, no refund
+- Edge: Drive the sim tick (`src/game/world.ts`) for the 120 s case, not a store setter
+
+**Gap**: Unknown; integration test first, source change only if it fails.
 
 ---
 

@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/researchStore.test.ts`.
+- Targeting AI Suite (endT 7200) before Advanced Propellants (10800) at sync(10800)
+- Sensor Fusion Array before Neural Interface I; currentIssue(Neural) = Neural Interface I
+- Three runs at endT 7200 authorized control, cybernetics, ballistics → done = [Advanced Propellants, Neural Interface I, Targeting AI Suite]
+- Edge: The existing "three branches finishing in one sync land in branch order" test stays as the equal-endT case
+- Edge: A BRANCH_IDS-only or authorize-order append must fail the first and third cases
+
+**Gap**: **Source change.** Sort due runs by endT, ties by `BRANCH_IDS`.
 
 ---
 

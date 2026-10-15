@@ -48,6 +48,8 @@
 
 ---
 
+- **Decided 2026-10-14 (owner, retro task R-5):** the production authorize command is `appStore.authorizeResearch(node, t)` in `src/state/appStore.ts` (ADR-0013 amended; `design/gdd/research.md` Core Rule 3 updated). Tests go in `src/state/appStore.test.ts`.
+
 ## Out of Scope
 
 *Handled by neighbouring stories — do not implement here:*
@@ -59,7 +61,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/appStore.test.ts`.
+- Economy refuses (Credits < cost): `start` not called, lab idle, project available
+- `start` true but post-spend read ≠ C − cost (stub `spendCredits` to no-op): Credits re-read after spend, lab idle, project available, Credits = C, no `addCredits`, no `setState({ credits })`
+- `start` returns false: `spendCredits` not called, Credits unchanged
+- Edge: An early return that never calls `start` must fail the undo test
+- Edge: The undo is internal: no new exported cancel/undo API
+
+**Gap**: **Source change.** No post-spend re-read and no undo (GDD Core Rule 3 marks it Unsatisfied).
 
 ---
 

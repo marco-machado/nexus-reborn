@@ -56,7 +56,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Integration.*
+
+**Automated**: `src/state/appStore.test.ts`.
+- After create, a completion or pin change leaves the mission's weapons, crew bonus and Research slice unchanged
+- Interface I active at create then researched mid-mission: frozen Roster wear and `appliedIds` still omit it
+- Edge: Do not use the Research slice as proof for a slotted project (AC note)
+
+**Gap**: Probably test-only.
 
 ---
 

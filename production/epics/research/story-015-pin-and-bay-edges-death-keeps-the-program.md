@@ -57,7 +57,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/game/research.test.ts`; KIA case in `src/state/appStore.test.ts`.
+- Bays listed Neural, Chest, Arms, Legs; at most one completed slotted project per bay worn
+- Mara KIA at debrief: Neural Interface I stays researched
+- Pinned to Interface I, Mk II completes: currentIssue = Mk II, pinned bay wears Interface I
+- Pin to an id not in done or in the wrong bay falls through to currentIssue
+- Edge: Pin to current issue or tie winner also falls through (GDD)
+
+**Gap**: Probably test-only; KIA-keeps-research unchecked.
 
 ---
 

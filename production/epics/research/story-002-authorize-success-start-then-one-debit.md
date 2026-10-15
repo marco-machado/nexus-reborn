@@ -49,6 +49,8 @@
 
 ---
 
+- **Decided 2026-10-14 (owner, retro task R-5):** the production authorize command is `appStore.authorizeResearch(node, t)` in `src/state/appStore.ts` (ADR-0013 amended; `design/gdd/research.md` Core Rule 3 updated). Tests go in `src/state/appStore.test.ts`.
+
 ## Out of Scope
 
 *Handled by neighbouring stories — do not implement here:*
@@ -60,7 +62,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/appStore.test.ts`.
+- All three labs authorized from idle: 3 running, 1 active each
+- Advanced Propellants at 16,000 CR with C = 16,000 and C = 20,000: `start` once, `spendCredits(16000)` once, no `addCredits`, Credits C − 16,000
+- Non-positive cost returns before `start`: lab idle, project available, Credits unchanged
+- Edge: Exact balance and surplus boundaries
+- Edge: Non-finite cost treated like non-positive
+
+**Gap**: Spy counts on `start`/`spendCredits`/`addCredits`; the GDD's post-spend re-read. Blocked on retro task R-5 (which module owns authorize).
 
 ---
 

@@ -56,7 +56,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/researchStore.test.ts`.
+- Hypervelocity Core locked while Advanced Propellants unresearched
+- After Advanced Propellants completes via `sync`: Hypervelocity Core available, not active; no `addCredits`
+- Barrel Wear Coating stays available while Ballistics runs Advanced Propellants
+- Edge: A node with two prerequisites stays locked with one done
+
+**Gap**: No test names `nodeState`; probably test-only.
 
 ---
 

@@ -59,7 +59,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/game/research.test.ts`.
+- Neural unpinned after Interface I then Mk II → Mk II only
+- [Propellants, Interface I, Mk II] unpinned → [Propellants, Mk II]
+- Neural STOCK → [Propellants]
+- Neural pinned to Interface I → [Propellants, Interface I]
+- Edge: Output keeps `done` order
+- Edge: All four bays STOCK → unslotted ids only (GDD edge case)
+
+**Gap**: Probably test-only; split into the four AC cases.
 
 ---
 

@@ -57,7 +57,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/researchStore.test.ts`; `src/game/research.test.ts`.
+- Injected runs Neural Cache Array and Adaptive Command AI at the same endT: done appends Neural Cache Array first; currentIssue(Neural) = Adaptive Command AI
+- Neural Interface I and Sensor Fusion Array at endT 7200, Sensor Fusion Array authorized first: done appends Neural Interface I first; currentIssue(Neural) = Sensor Fusion Array
+- Edge: Fixture runs set directly on the store, not via production authorize (as the AC says)
+
+**Gap**: **Source change** only if RS-011's tie-break does not already give house order.
 
 ---
 

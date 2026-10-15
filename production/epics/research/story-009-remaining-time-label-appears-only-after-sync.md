@@ -47,6 +47,8 @@
 
 ---
 
+- **Decided 2026-10-14 (owner):** `lastSyncT` lives on `researchStore` and is **not** persisted in the save envelope. Hydrate calls `sync(savedT)` (ADR-0011), which stamps it, so the GDD rule "hydration counts as sync at the loaded t" holds without a save-format change.
+
 ## Out of Scope
 
 *Handled by neighbouring stories — do not implement here:*
@@ -57,7 +59,22 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: UI.*
+
+**Automated**: `src/game/research.test.ts` (oracle); `src/state/researchStore.test.ts` (`lastSyncT`).
+- `remaining` after sync(1000) with endT 7200 = 6200; researched → none
+- `remaining` at t = 7200 and 7201 before sync → none, never 0
+- Store: `lastSyncT` set by `sync(t)`
+- Edge: No `max(0, …)` clamp
+- Edge: New campaign is not hydration: no label until the first sync
+
+**Gap**: **Source change.** Add pure `remaining(run, t)` in `src/game/research.ts`, stamp `lastSyncT` in `sync`, paint the label only when `lastSyncT === t`.
+
+**Manual**: Playwright at 1280x720, screenshots in `production/qa/evidence/sprint-005/`; lead-programmer sign-off.
+- [ ] No remaining label before sync at t = 7199
+- [ ] Label reads 1 after sync(7199)
+- [ ] No countdown on a researched project
+- [ ] Nothing clipped at 1280x720
 
 ---
 

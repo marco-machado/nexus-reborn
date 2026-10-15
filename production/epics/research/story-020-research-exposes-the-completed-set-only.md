@@ -56,7 +56,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Integration.*
+
+**Automated**: `src/game/missionParams.test.ts`; `src/game/forecast.test.ts`.
+- done = [Propellants, Interface I], Neural STOCK → `missionChance` gets researchedCount 2
+- done empty → [Propellants, Interface I] leaves `missionRisk` index and band unchanged
+- Research exports contain no Chance, Risk or Event-forecast computation
+- Edge: Count is the full completed program, not worn or unslotted-only
+
+**Gap**: Unknown; check what count reaches `missionChance`.
 
 ---
 

@@ -57,7 +57,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/researchStore.test.ts`.
+- sync(7199) leaves endT 7200 active
+- sync(7200) completes and idles the lab; Credits unchanged, `addCredits` not called
+- A strategic jump ≥ 7200 then sync completes it
+- Edge: Completes at equality, not one second later
+
+**Gap**: Probably test-only; add the no-payout assertion.
 
 ---
 

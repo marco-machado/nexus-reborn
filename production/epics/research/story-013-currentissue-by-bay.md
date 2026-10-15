@@ -56,7 +56,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/game/research.test.ts`.
+- Advanced Propellants (unslotted) is never a current issue
+- [Neural Interface I, Mk II] → Mk II; reversed → Neural Interface I
+- Empty done → none in every bay
+
+**Gap**: Probably test-only.
 
 ---
 

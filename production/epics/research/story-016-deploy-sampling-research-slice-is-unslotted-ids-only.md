@@ -59,7 +59,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Integration.*
+
+**Automated**: `src/state/appStore.test.ts` (or a new `src/game/deploy.test.ts`).
+- Two operatives, Advanced Propellants done: both `appliedIds` include it
+- Neural Interface I done, both unpinned: both wear the same id
+- Research slice = [Advanced Propellants] only, no pin-map field; Interface I on the Roster slice
+- Edge: Control manifest: `createWorld` never calls `appliedNodeIds` or reads `researchStore`
+
+**Gap**: Probably test-only.
 
 ---
 

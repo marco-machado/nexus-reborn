@@ -57,7 +57,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/researchStore.test.ts`.
+- Advanced Propellants at t = 0 → endT 7200; at t = 1000 → 8200
+- Hypervelocity Core (4h) at t = 0 → 14400
+- All three 14h caps from idle → each endT = startedT + 50400
+- Edge: Hours come from `NODES`, not literals
+
+**Gap**: Probably test-only.
 
 ---
 

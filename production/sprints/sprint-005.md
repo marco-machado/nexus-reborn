@@ -56,7 +56,7 @@ QA plan: run `/qa-plan sprint` before implementation begins (none exists for Spr
 | RS-004 | Prerequisite states: locked, available, active | gameplay-programmer | 0.1 | None | Per story file (TR-research-002) |
 | RS-007 | Lab endT from authorize time and duration | gameplay-programmer | 0.1 | RS-002 | Per story file (TR-research-001) |
 | RS-008 | sync(t) completes projects; completion pays nothing | gameplay-programmer | 0.1 | RS-007 | Per story file (TR-research-001) |
-| RS-002 | Authorize success: start, then one debit | gameplay-programmer | 0.3 | Retro task R-5 (Core Rule 3 home decided) | Per story file (TR-research-005) |
+| RS-002 | Authorize success: start, then one debit | gameplay-programmer | 0.3 | R-5 ✔ | Per story file (TR-research-005) |
 | RS-003 | Authorize when Economy refuses or start() fails | gameplay-programmer | 0.5 | RS-002 | Per story file (TR-research-005) |
 
 ### Should Have
@@ -101,7 +101,7 @@ QA plan: run `/qa-plan sprint` before implementation begins (none exists for Spr
 
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
-| Core Rule 3 home conflict (GDD says `researchStore.ts`, code is `appStore.authorizeResearch`) blocks RS-002/003 | High | Medium | R-5 first; the decision is the owner's |
+| Core Rule 3 home conflict | Closed | — | Decided 2026-10-14: `appStore.authorizeResearch`; GDD amended |
 | Post-spend re-read and undo (RS-003) touches the Credits ledger contract (ADR-0013) | Medium | Medium | Read ADR-0013 and the `appStore.ts` contract header before changing it |
 | RS-011 changes `sync()` ordering, which `done` order feeds (current issue, applied ids in later stories) | Medium | Medium | Keep the existing "branch order" test as the equal-endT case; full suite must stay green |
 | Estimates still over for test-only work | High | Low | 0.1 d sizes; re-check at `/story-readiness` |
@@ -110,7 +110,7 @@ QA plan: run `/qa-plan sprint` before implementation begins (none exists for Spr
 
 ## Dependencies on External Factors
 
-- Owner decision on research.md Core Rule 3 (R-5) before RS-002.
+- None open. Research.md Core Rule 3 (R-5) decided 2026-10-14: authorize stays `appStore.authorizeResearch`.
 
 ## Definition of Done for this Sprint
 

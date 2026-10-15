@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/game/research.test.ts`.
+- Empty → (0, 0)
+- [Pain Inhibitor] → maxHp 14, speed 0
+- [Synaptic Enhancement, Neural Cache Array] → maxHp 18, speed 0.55
+- Experience +2 HP / +0.05 m/s not included
+- Edge: Float compare on speed (`toBeCloseTo`)
+
+**Gap**: Probably test-only; check the exact AC values.
 
 ---
 

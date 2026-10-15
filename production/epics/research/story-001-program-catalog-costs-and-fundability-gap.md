@@ -57,7 +57,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/game/research.test.ts`.
+- 3 laboratories, 7 projects each, 21 total
+- Branch sums 248,000 / 261,000 / 270,000 CR; program 779,000 CR
+- Gap = 779,000 − 128,450 − 203,000 = 447,550 CR; 15 minimum generated wins (15 × 30,500 = 457,500) fund it; 14 do not (427,000)
+- Edge: Read 128,450 from `INITIAL_CREDITS` and 30,500 from the contracts floor, not pasted literals
+
+**Gap**: Exact 21 / 248,000 / 261,000 / 270,000 / 779,000 asserted? Confirm; the fundability predicate (447,550 gap, 15 × 30,500) has no test.
 
 ---
 

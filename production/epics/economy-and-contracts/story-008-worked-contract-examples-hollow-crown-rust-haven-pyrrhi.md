@@ -42,7 +42,7 @@
 
 *Derived from the governing ADRs and the Core Layer Rules:*
 
-- Use the authored contract values from `src/game/contracts.ts`; assert the GDD figures, not re-derived constants.
+- Use the authored contract values from `src/game/data.ts` (`MISSIONS`, read through `economySlice` in `src/game/deploy.ts`); assert the GDD figures, not re-derived constants.
 
 ---
 
@@ -64,7 +64,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 - Pyrrhic non-quiet win (roster emptied, campaign incomplete), Reward 85,000, N = 0, pays 85,000
 
 **Edge cases**:
-- Read Reward from `src/game/contracts.ts`, not a copy
+- Read Reward from `src/game/data.ts` (`MISSIONS`), not a copy
 - Assert the GDD figures, not re-derived constants
 
 **Existing coverage**: No test found naming Hollow Crown or Rust Haven in `appStore.test.ts` or `contracts.test.ts`. Pyrrhic is partly covered by `applyDebrief` > 'pyrrhic win (WN-018)'.
@@ -89,7 +89,7 @@ From `/qa-plan` sprint 3 (2026-10-13). Logic. Test file: `src/state/appStore.tes
 ## Completion Notes
 **Completed**: 2026-10-14
 **Criteria**: 3/3 passing (all auto-verified by unit tests; `npx vitest run src/state/appStore.test.ts -t EC-008` ran 3 passed)
-**Deviations**: ADVISORY — Implementation Notes point to `src/game/contracts.ts` for authored contract values, but the authored rewards (85,000 / 62,000 / 41,000) and optional defs live in `src/game/data.ts` (`MISSIONS`); the test reads them from there through `economySlice` (`src/game/deploy.ts`), so the intent (no copied constants, assert GDD figures) is met. The story's file pointer is stale.
+**Deviations**: ADVISORY — Implementation Notes point to `src/game/contracts.ts` for authored contract values, but the authored rewards (85,000 / 62,000 / 41,000) and optional defs live in `src/game/data.ts` (`MISSIONS`); the test reads them from there through `economySlice` (`src/game/deploy.ts`), so the intent (no copied constants, assert GDD figures) is met. The story's file pointer was stale; fixed 2026-10-14 (retro sprint 4 task R-5).
 **Test Evidence**: Logic: `src/state/appStore.test.ts`, describe "Worked contract examples: Hollow Crown, Rust Haven, pyrrhic win (EC-008)" (3 tests)
 **Run result**: N/A — test-only story; no player-visible surface changed
 **Code Review**: Done 2026-10-14 — lead-programmer: APPROVED WITH SUGGESTIONS, no blocking findings (commits 6839a5b..a79bed1). qa-tester: ADEQUATE. Advisory: values come from `MISSIONS` in `src/game/data`; the pyrrhic case is a hand-built win, not the tiebreak path.

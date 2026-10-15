@@ -48,6 +48,10 @@
 
 ---
 
+- **Decided 2026-10-14 (owner):** "a mission in progress" means `useAppStore.getState().phase === 'mission'` — the router's single phase (ADR-0017). Abort and debrief already leave that phase. `appStore.authorizeResearch` checks it before `start()`.
+
+- **Decided 2026-10-14 (owner, retro task R-5):** the production authorize command is `appStore.authorizeResearch(node, t)` in `src/state/appStore.ts` (ADR-0013 amended; `design/gdd/research.md` Core Rule 3 updated). Tests go in `src/state/appStore.test.ts`.
+
 ## Out of Scope
 
 *Handled by neighbouring stories — do not implement here:*
@@ -58,7 +62,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/state/appStore.test.ts`; export check in `src/game/research.test.ts`.
+- Mission in progress: refused before `start`/`spendCredits`, lab idle, Credits unchanged
+- All 21 researched: every re-authorize refused, labs idle
+- Research exports contain no cancel / stop / abort-project name
+- Edge: "In progress" means `appStore.phase === 'mission'` (decided 2026-10-14)
+- Edge: The Research-screen action set (inspect + one Authorize, no second confirm) is checked in the manual pass
+
+**Gap**: **Source change.** Refuse authorize while a mission is in progress.
 
 ---
 

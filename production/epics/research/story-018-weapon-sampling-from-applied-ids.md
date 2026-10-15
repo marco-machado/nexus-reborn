@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Logic.*
+
+**Automated**: `src/game/research.test.ts`.
+- [Advanced Propellants, Tungsten Sabot] → assault damage = table base × 1.12 × 1.15
+- Caseless Ammo Feed only → smg magazine = round(table magazine + 10)
+- Empty applied → every field equals table base
+- Edge: Read bases from the weapon table at test time; no pasted numbers
+- Edge: Magazine rounds half-up
+
+**Gap**: Probably test-only; check the exact AC values.
 
 ---
 
