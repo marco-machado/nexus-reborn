@@ -7,6 +7,7 @@ import { useAppStore } from '../state/appStore'
 import { useWorldStore } from '../state/worldStore'
 import {
   committedFunds,
+  eligibilityText,
   labsRunning,
   nodeState,
   runProgress,
@@ -262,6 +263,10 @@ function ReqRow(props: { id: string; met: boolean }) {
 function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) {
   const credits = useAppStore((s) => s.credits)
   const authorize = useAppStore((s) => s.authorizeResearch)
+  // The refusal text the last authorize attempt returned, held against the
+  // project and occupancy it was attempted on: it persists until the next
+  // attempt or a state change (research.md UI Requirements).
+  const [refusal, setRefusal] = useState<{ id: string; labs: Labs; done: string[]; text: string } | null>(null)
   const n = props.node
   const branch = branchDef(n.branch)
   const state = nodeState(n, props.done, props.labs)
@@ -270,11 +275,20 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
   const short = credits < n.cost
   const can = state === 'available' && !labBusy && !short
   let sub = 'COMMITS ' + fmt(n.cost) + ' CR // ' + n.hours + 'H IN ' + branch.lab
-  if (state === 'researched') sub = 'PROJECT COMPLETE // APPLIED ON EVERY DEPLOYMENT'
-  else if (state === 'active') sub = 'RUNNING IN ' + branch.lab
-  else if (state === 'locked') sub = 'PREREQUISITES NOT MET'
-  else if (labBusy) sub = branch.lab + ' ENGAGED // ONE PROJECT PER LAB'
+  // Inspect text: the state explanation for a project that cannot start now
+  // (unmet prerequisites named, lab not idle, already researched).
+  const cause = eligibilityText(n, props.done, props.labs)
+  if (state === 'active') sub = 'RUNNING IN ' + branch.lab
+  else if (cause !== null) sub = cause.toUpperCase()
   else if (short) sub = 'INSUFFICIENT CREDITS // ' + fmt(n.cost - credits) + ' CR SHORT'
+  if (
+    refusal &&
+    refusal.id === n.id &&
+    refusal.labs === props.labs &&
+    refusal.done === props.done
+  ) {
+    sub = refusal.text.toUpperCase()
+  }
   return (
     <Panel
       title={nodeTitle(n)}
@@ -361,7 +375,9 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
         onClick={act(() => {
           // appStore.authorizeResearch bills only a lab that actually took the
           // project, against the balance as it stands now (ADR-0013).
-          authorize(n, useWorldStore.getState().t)
+          const r = authorize(n, useWorldStore.getState().t)
+          const { labs, done } = useResearchStore.getState()
+          setRefusal(r.ok ? null : { id: n.id, labs, done, text: r.text })
         })}
       >
         <span className="cta-inner">AUTHORIZE PROJECT</span>

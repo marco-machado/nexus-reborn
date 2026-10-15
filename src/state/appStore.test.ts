@@ -11,10 +11,10 @@ import {
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, operativeById } from '../game/data'
-import { BRANCH_IDS, nodeById, nodesOfBranch } from '../game/research'
+import { BRANCH_IDS, nodeById, nodeTitle, nodesOfBranch } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
-import { labsRunning, nodeState, useResearchStore } from './researchStore'
+import { eligibilityText, labsRunning, nodeState, useResearchStore } from './researchStore'
 import { DAY, initialOwner, resolveMission, sectorReadout, useWorldStore } from './worldStore'
 import { CITIES_BY_SECTOR } from '../game/atlas'
 import { sectorClient } from '../game/contracts'
@@ -839,7 +839,7 @@ describe('Credits ledger (EC-001)', () => {
       .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'] }), 0)
     const project = nodeById('b-propellants')
     for (const cost of [0, -1]) {
-      expect(useAppStore.getState().authorizeResearch({ ...project, cost }, 0)).toBe(false)
+      expect(useAppStore.getState().authorizeResearch({ ...project, cost }, 0).ok).toBe(false)
       expect(useResearchStore.getState().labs.ballistics).toBeNull()
 
       const candidates = useCampaignStore.getState().candidates.slice()
@@ -1346,7 +1346,7 @@ describe('Credits never overdraw (EC-002)', () => {
   it('a non-positive or non-finite listed cost is refused before start()', () => {
     useAppStore.setState({ credits: PRICE })
     for (const cost of [0, -1, NaN, Infinity]) {
-      expect(useAppStore.getState().authorizeResearch({ ...PROJECT, cost }, 0)).toBe(false)
+      expect(useAppStore.getState().authorizeResearch({ ...PROJECT, cost }, 0).ok).toBe(false)
       expect(useResearchStore.getState().labs.ballistics).toBeNull()
       expect(useAppStore.getState().credits).toBe(PRICE)
     }
@@ -1365,7 +1365,7 @@ describe('Credits never overdraw (EC-002)', () => {
     const unsubApp = useAppStore.subscribe(() => wakes++)
     const unsubResearch = useResearchStore.subscribe(() => wakes++)
 
-    expect(useAppStore.getState().authorizeResearch(PROJECT, 0)).toBe(false)
+    expect(useAppStore.getState().authorizeResearch(PROJECT, 0).ok).toBe(false)
 
     unsubApp()
     unsubResearch()
@@ -1400,7 +1400,7 @@ describe('Credits never overdraw (EC-002)', () => {
 
   it('at exactly 16,000 CR the 16,000 CR project starts and Credits = 0', () => {
     useAppStore.setState({ credits: PRICE })
-    expect(useAppStore.getState().authorizeResearch(PROJECT, 100)).toBe(true)
+    expect(useAppStore.getState().authorizeResearch(PROJECT, 100).ok).toBe(true)
     expect(useAppStore.getState().credits).toBe(0)
     expect(useResearchStore.getState().labs.ballistics).toEqual({
       id: PROJECT.id,
@@ -1426,7 +1426,7 @@ describe('Credits never overdraw (EC-002)', () => {
       labs: { ballistics: { id: 'b-coating', startedT: 0, endT: 1e9 }, cybernetics: null, control: null },
     })
     const labs = useResearchStore.getState().labs
-    expect(useAppStore.getState().authorizeResearch(PROJECT, 0)).toBe(false)
+    expect(useAppStore.getState().authorizeResearch(PROJECT, 0).ok).toBe(false)
     expect(useAppStore.getState().credits).toBe(PRICE)
     expect(useResearchStore.getState().labs).toBe(labs)
   })
@@ -2381,7 +2381,7 @@ describe('Authorize success: start, then one debit (RS-002)', () => {
     useAppStore.setState({ credits: total })
     for (const n of roots) expect(nodeState(n, [], idle())).toBe('available')
 
-    for (const n of roots) expect(useAppStore.getState().authorizeResearch(n, 0)).toBe(true)
+    for (const n of roots) expect(useAppStore.getState().authorizeResearch(n, 0).ok).toBe(true)
 
     const { labs, done } = useResearchStore.getState()
     expect(labsRunning(labs)).toBe(3)
@@ -2400,7 +2400,7 @@ describe('Authorize success: start, then one debit (RS-002)', () => {
       const { calls, spent, restore } = spyAuthorize()
       let ok: boolean
       try {
-        ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+        ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0).ok
       } finally {
         restore()
       }
@@ -2421,7 +2421,7 @@ describe('Authorize success: start, then one debit (RS-002)', () => {
       const { calls, restore } = spyAuthorize()
       let ok: boolean
       try {
-        ok = useAppStore.getState().authorizeResearch({ ...PROPELLANTS, cost }, 0)
+        ok = useAppStore.getState().authorizeResearch({ ...PROPELLANTS, cost }, 0).ok
       } finally {
         restore()
       }
@@ -2481,7 +2481,7 @@ describe('Authorize when Economy refuses or start() fails (RS-003)', () => {
     const spy = spyAuthorize(opts)
     let ok: boolean
     try {
-      ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+      ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0).ok
     } finally {
       spy.restore()
     }
@@ -2527,7 +2527,7 @@ describe('Authorize when Economy refuses or start() fails (RS-003)', () => {
       })
       let ok: boolean
       try {
-        ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+        ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0).ok
       } finally {
         spy.restore()
         useResearchStore.setState({ start: research.start })
@@ -2567,7 +2567,7 @@ describe('Authorize when Economy refuses or start() fails (RS-003)', () => {
   it('the undo releases only the lab it took: other running labs are untouched', () => {
     const cyber = nodesOfBranch('cybernetics').find((n) => n.needs.length === 0)!
     useAppStore.setState({ credits: cyber.cost + PROPELLANTS.cost })
-    expect(useAppStore.getState().authorizeResearch(cyber, 0)).toBe(true)
+    expect(useAppStore.getState().authorizeResearch(cyber, 0).ok).toBe(true)
     const running = useResearchStore.getState().labs.cybernetics
     const { ok } = authorize({ spend: 'noop' })
     expect(ok).toBe(false)
@@ -2601,5 +2601,171 @@ describe('Authorize when Economy refuses or start() fails (RS-003)', () => {
     ]) {
       expect(name).not.toMatch(forbidden)
     }
+  })
+})
+
+// RS-005 / research.md UI Requirements: an ineligible authorize returns before
+// start() and spendCredits, even with balance >= cost, and its refusal text
+// names the actual cause plus a credits-unchanged phrase. Assertions are on
+// substrings and index order, never whole sentences. Catalog titles are
+// upper-case house style, so prerequisite names are matched case-insensitively;
+// the catalog title itself is matched verbatim.
+describe('Refusal text for locked, researched and busy-lab projects (RS-005)', () => {
+  const PROPELLANTS = nodeById('b-propellants')
+  const COATING = nodeById('b-coating')
+  const HYPERVELOCITY = nodeById('b-hypervelocity')
+  const SABOT = nodeById('b-sabot')
+  const CREDITS_UNCHANGED = 'Credits did not change'
+  const LAB_NOT_IDLE = 'lab not idle'
+  const ALREADY_RESEARCHED = 'already researched'
+  const idle = () => ({ ballistics: null, cybernetics: null, control: null })
+  const running = (id: string) => ({ ...idle(), ballistics: { id, startedT: 0, endT: 7200 } })
+  // Words that would imply a charge was attempted on the inspect surface.
+  const CHARGE = /credit|charge|spend|spent|debit|bill|cost|\bCR\b/i
+
+  beforeEach(() => {
+    useResearchStore.setState({ done: [], labs: idle() })
+  })
+
+  // Records start / spendCredits / addCredits calls and app-store writes.
+  function authorize(node: typeof PROPELLANTS) {
+    const app = useAppStore.getState()
+    const research = useResearchStore.getState()
+    const calls: string[] = []
+    let writes = 0
+    useResearchStore.setState({ start: (n, t) => (calls.push('start'), research.start(n, t)) })
+    useAppStore.setState({
+      spendCredits: (n) => (calls.push('spendCredits'), app.spendCredits(n)),
+      addCredits: (n) => (calls.push('addCredits'), app.addCredits(n)),
+    })
+    const unsub = useAppStore.subscribe(() => writes++)
+    try {
+      const r = useAppStore.getState().authorizeResearch(node, 0)
+      return { ...r, calls, writes }
+    } finally {
+      unsub()
+      useResearchStore.setState({ start: research.start })
+      useAppStore.setState({ spendCredits: app.spendCredits, addCredits: app.addCredits })
+    }
+  }
+
+  it('locked Hypervelocity Core on an idle lab: refused before start() and spendCredits even with balance >= cost; text names the title, Advanced Propellants, and Credits unchanged', () => {
+    const C = HYPERVELOCITY.cost + 50000
+    useAppStore.setState({ credits: C })
+    expect(nodeState(HYPERVELOCITY, [], idle())).toBe('locked')
+
+    const r = authorize(HYPERVELOCITY)
+
+    expect(r.ok).toBe(false)
+    expect(r.calls).toEqual([])
+    expect(r.writes).toBe(0)
+    const { labs, done } = useResearchStore.getState()
+    expect(labs.ballistics).toBeNull()
+    expect(nodeState(HYPERVELOCITY, done, labs)).toBe('locked')
+    expect(useAppStore.getState().credits).toBe(C)
+    expect(r.text).toContain(nodeTitle(HYPERVELOCITY))
+    expect(r.text.toLowerCase()).toContain('advanced propellants')
+    expect(r.text).toContain(CREDITS_UNCHANGED)
+  })
+
+  it('inspect of locked Hypervelocity Core names the locked state and Advanced Propellants and does not imply a charge', () => {
+    const text = eligibilityText(HYPERVELOCITY, [], idle())!
+    expect(text.toLowerCase()).toContain('locked')
+    expect(text.toLowerCase()).toContain('advanced propellants')
+    expect(text).not.toMatch(CHARGE)
+  })
+
+  it('Tungsten Sabot locked on a busy Ballistics lab: both prerequisites appear before the lab-not-idle phrase, plus title and Credits unchanged', () => {
+    useResearchStore.setState({ done: [], labs: running(PROPELLANTS.id) })
+    const C = SABOT.cost + 1000
+    useAppStore.setState({ credits: C })
+    expect(nodeState(SABOT, [], running(PROPELLANTS.id))).toBe('locked')
+
+    const r = authorize(SABOT)
+
+    expect(r.ok).toBe(false)
+    expect(r.calls).toEqual([])
+    expect(r.writes).toBe(0)
+    expect(useResearchStore.getState().labs.ballistics?.id).toBe(PROPELLANTS.id)
+    expect(useAppStore.getState().credits).toBe(C)
+    expect(r.text).toContain(nodeTitle(SABOT))
+    const lower = r.text.toLowerCase()
+    const rail = lower.indexOf('rail stabilization')
+    const frag = lower.indexOf('smart fragmentation')
+    const busy = r.text.indexOf(LAB_NOT_IDLE)
+    expect(rail).toBeGreaterThanOrEqual(0)
+    expect(frag).toBeGreaterThanOrEqual(0)
+    expect(busy).toBeGreaterThanOrEqual(0)
+    expect(rail).toBeLessThan(busy)
+    expect(frag).toBeLessThan(busy)
+    expect(r.text).toContain(CREDITS_UNCHANGED)
+  })
+
+  it('researched Advanced Propellants on an idle lab: refused before start() and spendCredits, stays researched; text says already researched and Credits unchanged', () => {
+    useResearchStore.setState({ done: [PROPELLANTS.id], labs: idle() })
+    const C = PROPELLANTS.cost * 2
+    useAppStore.setState({ credits: C })
+
+    const r = authorize(PROPELLANTS)
+
+    expect(r.ok).toBe(false)
+    expect(r.calls).toEqual([])
+    expect(r.writes).toBe(0)
+    const { labs, done } = useResearchStore.getState()
+    expect(labs.ballistics).toBeNull()
+    expect(done).toEqual([PROPELLANTS.id])
+    expect(nodeState(PROPELLANTS, done, labs)).toBe('researched')
+    expect(useAppStore.getState().credits).toBe(C)
+    expect(r.text).toContain(ALREADY_RESEARCHED)
+    expect(r.text).toContain(CREDITS_UNCHANGED)
+  })
+
+  it('inspect of researched Advanced Propellants says already researched and does not imply a charge', () => {
+    const text = eligibilityText(PROPELLANTS, [PROPELLANTS.id], idle())!
+    expect(text).toContain(ALREADY_RESEARCHED)
+    expect(text).not.toMatch(CHARGE)
+  })
+
+  it('available Barrel Wear Coating on a busy Ballistics lab: refused before start() and spendCredits, stays available, lab still runs Advanced Propellants; text says lab not idle and Credits unchanged', () => {
+    useResearchStore.setState({ done: [], labs: running(PROPELLANTS.id) })
+    const C = COATING.cost + 1000
+    useAppStore.setState({ credits: C })
+    const runBefore = useResearchStore.getState().labs.ballistics
+
+    const r = authorize(COATING)
+
+    expect(r.ok).toBe(false)
+    expect(r.calls).toEqual([])
+    expect(r.writes).toBe(0)
+    const { labs, done } = useResearchStore.getState()
+    expect(labs.ballistics).toBe(runBefore)
+    expect(nodeState(COATING, done, labs)).toBe('available')
+    expect(useAppStore.getState().credits).toBe(C)
+    expect(r.text).toContain(LAB_NOT_IDLE)
+    expect(r.text).toContain(CREDITS_UNCHANGED)
+  })
+
+  it('a debit that does not land: the undo text says Credits did not change and the lab was not occupied', () => {
+    useAppStore.setState({ credits: 20000 })
+    const app = useAppStore.getState()
+    useAppStore.setState({ spendCredits: () => {} })
+    let r: { ok: boolean; text: string }
+    try {
+      r = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+    } finally {
+      useAppStore.setState({ spendCredits: app.spendCredits })
+    }
+    expect(r.ok).toBe(false)
+    expect(r.text).toContain(CREDITS_UNCHANGED)
+    expect(r.text).toContain('the lab was not occupied')
+    expect(useResearchStore.getState().labs.ballistics).toBeNull()
+  })
+
+  it('inspect text is null for an available project on an idle lab, and a successful authorize returns ok with empty text', () => {
+    expect(eligibilityText(PROPELLANTS, [], idle())).toBeNull()
+    useAppStore.setState({ credits: PROPELLANTS.cost })
+    const r = authorize(PROPELLANTS)
+    expect(r).toMatchObject({ ok: true, text: '' })
+    expect(r.calls).toEqual(['start', 'spendCredits'])
   })
 })

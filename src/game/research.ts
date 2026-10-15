@@ -92,6 +92,7 @@ export const NODES: ResearchNode[] = [
     id: 'b-propellants',
     branch: 'ballistics',
     lines: ['ADV.', 'PROPELLANTS'],
+    full: 'ADVANCED PROPELLANTS',
     glyph: 'rounds',
     col: 0,
     row: 0,

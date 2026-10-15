@@ -70,7 +70,7 @@ Stamp the existing ledger. No migration. No envelope change. No `SAVE_VERSION` b
 
 ### Debit sites (two; both refuse overdraft)
 
-1. `spendCredits(amount)` — `amount > 0 && credits >= amount` then subtract, else identity no-op (`return s`, so refused spends do not notify Zustand subscribers). Research production path (`appStore.authorizeResearch(node, t): boolean`, called by `Research.tsx` AUTHORIZE): re-read `credits`; if short, return `false`; if `!researchStore.start(node, t)`, return `false`; else `spendCredits(cost)` and return `true`. `researchStore.start` is occupancy only and does not read Credits. **Rider:** `design/gdd/research.md` Core Rule 3 extends this protocol with a post-spend `getState()` verification read, an internal occupancy undo, and a visible mismatch sentence — Unsatisfied in code until closed; this ADR's three-step path is the floor, not the ceiling.
+1. `spendCredits(amount)` — `amount > 0 && credits >= amount` then subtract, else identity no-op (`return s`, so refused spends do not notify Zustand subscribers). Research production path (`appStore.authorizeResearch(node, t): { ok: boolean; text: string }`, called by `Research.tsx` AUTHORIZE; amended 2026-10-14 by RS-005 — `text` is the visible refusal sentence, inline type, no reason enum): re-read `credits`; if short, return `ok: false`; if `!researchStore.start(node, t)`, return `ok: false`; else `spendCredits(cost)` and return `ok: true`. `researchStore.start` is occupancy only and does not read Credits. **Rider:** `design/gdd/research.md` Core Rule 3 extends this protocol with a post-spend `getState()` verification read, an internal occupancy undo, and a visible mismatch sentence — Unsatisfied in code until closed; this ADR's three-step path is the floor, not the ceiling.
 2. `hireOperative(candidateId)` — unknown candidate or `credits < cost` → return. Then `acceptHire`; if that fails, return (no debit). Then decrement by `candidate.cost`. Does **not** call `spendCredits`. Do not invert to spend-then-hire (charges a refused roster) or hire-then-`spendCredits` (free hire if spend no-ops).
 
 ### Deposits
@@ -121,7 +121,7 @@ Not this ledger:
 
 - `useAppStore.getState().credits`
 - `spendCredits(amount: number): void` — identity no-op on refuse
-- `authorizeResearch(node: ResearchNode, t: number): boolean` — check → `researchStore.start` → `spendCredits`; `false` and no debit on refuse
+- `authorizeResearch(node: ResearchNode, t: number): { ok: boolean; text: string }` — check → `researchStore.start` → `spendCredits`; `ok: false`, refusal `text`, and no debit on refuse (amended 2026-10-14, RS-005)
 - `addCredits(amount: number): void` — ignores non-positive and non-finite
 - `hireOperative(candidateId: string): void` — check (cost finite and > 0, cost ≤ credits) → `acceptHire` → decrement
 - `netPayout` / `collateralFine` / `INITIAL_CREDITS` / `COLLATERAL_FINE` in `appStore.ts`

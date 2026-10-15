@@ -227,7 +227,7 @@ describe('lab endT from authorize time and duration', () => {
   })
 
   function authorize(node: typeof propellants, t: number): boolean {
-    return useAppStore.getState().authorizeResearch(node, t)
+    return useAppStore.getState().authorizeResearch(node, t).ok
   }
 
   it('catalog hours drive the cases: propellants 2h, hypervelocity 4h, each cap 14h', () => {

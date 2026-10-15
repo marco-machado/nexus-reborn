@@ -75,11 +75,11 @@ stories:
     name: "Refusal text for locked, researched and busy-lab projects"
     file: "production/epics/research/story-005-refusal-text-for-locked-researched-and-busy-lab-project.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-006"
     name: "Other eligibility refusals; no cancel verb"
     file: "production/epics/research/story-006-other-eligibility-refusals-no-cancel-verb.md"

@@ -5,8 +5,9 @@ import type { MissionTelemetry } from './telemetry'
 import { resolveMission } from './worldStore'
 import { LOADOUT_SLOTS, emptyLoadout } from '../game/mass'
 import { MAX_SQUAD, assignedMassKg, canDeploy } from '../game/deployGate'
-import { useResearchStore } from './researchStore'
+import { eligibilityText, useResearchStore } from './researchStore'
 import type { LoadoutItemId, OperativeLoadout, SquadLoadout } from '../game/mass'
+import { nodeTitle } from '../game/research'
 import type { ResearchNode } from '../game/research'
 import { missionLocked, useCampaignStore } from './campaignStore'
 
@@ -169,18 +170,30 @@ export interface AppState {
   toggleOperative: (id: string) => void
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
   spendCredits: (amount: number) => void
-  // Research AUTHORIZE (ADR-0013): re-reads the balance, starts the project,
-  // then bills it and re-reads the balance to confirm the debit landed. A
-  // short balance, a lab that refuses the project, or a debit that did not
-  // land is a full no-op (the occupancy is released). Returns whether the
-  // project started and was billed.
-  authorizeResearch: (node: ResearchNode, t: number) => boolean
+  // Research AUTHORIZE (ADR-0013): checks eligibility, re-reads the balance,
+  // starts the project, then bills it and re-reads the balance to confirm the
+  // debit landed. An ineligible project, a short balance, a lab that refuses
+  // the project, or a debit that did not land is a full no-op (the occupancy
+  // is released). `ok` says whether the project started and was billed; on a
+  // refusal `text` is the visible sentence for the actual cause (research.md
+  // UI Requirements), always ending in a credits-unchanged phrase. Plain
+  // text, no reason enum. `text` is '' on success.
+  authorizeResearch: (node: ResearchNode, t: number) => { ok: boolean; text: string }
   // Tax yield and other income. Does not convert from Influence.
   addCredits: (amount: number) => void
   hireOperative: (candidateId: string) => void
   // Stores the outcome and enters Debrief. Moves no Credits: the payout is
   // deposited by applyDebrief, under the outcome's apply-once key.
   setOutcome: (o: MissionOutcome) => void
+}
+
+// Authorize refusal copy (research.md UI Requirements, canonical substrings).
+// Every refusal ends by saying the ledger was not touched; the mismatch undo
+// and a start() refusal also say the lab was released.
+const CREDITS_UNCHANGED = 'Credits did not change.'
+const NOT_OCCUPIED = 'Credits did not change, and the lab was not occupied.'
+function refused(text: string): { ok: false; text: string } {
+  return { ok: false, text }
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -251,17 +264,24 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Otherwise the undo puts the labs back to their pre-start() value — lab
   // idle, project available. The undo is internal (no cancel API) and never
   // touches the ledger: no addCredits, no setState({ credits }).
+  // Eligibility (prerequisites, idle lab, not already researched) is checked
+  // before start() and before spendCredits, even when the balance covers the
+  // cost, so an ineligible project never reaches the ledger.
   authorizeResearch: (node, t) => {
-    if (!(Number.isFinite(node.cost) && node.cost > 0)) return false
-    if (get().credits < node.cost) return false
+    if (!(Number.isFinite(node.cost) && node.cost > 0)) return refused(CREDITS_UNCHANGED)
     const research = useResearchStore.getState()
+    const cause = eligibilityText(node, research.done, research.labs)
+    if (cause !== null) return refused(nodeTitle(node) + ': ' + cause + ' ' + CREDITS_UNCHANGED)
+    if (get().credits < node.cost) {
+      return refused(nodeTitle(node) + ': listed cost exceeds Credits. ' + CREDITS_UNCHANGED)
+    }
     const labsBefore = research.labs
-    if (!research.start(node, t)) return false
+    if (!research.start(node, t)) return refused(NOT_OCCUPIED)
     const before = get().credits
     get().spendCredits(node.cost)
-    if (get().credits === before - node.cost) return true
+    if (get().credits === before - node.cost) return { ok: true, text: '' }
     useResearchStore.setState({ labs: labsBefore })
-    return false
+    return refused(NOT_OCCUPIED)
   },
   // Signs a recruitment candidate. The fee clears here first, so a blocked
   // hire (unknown candidate, roster at cap, overdraw) costs nothing.

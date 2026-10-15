@@ -2,7 +2,7 @@
 // each of the three labs is running. Projects run on world time, so the same
 // clock that moves the world finishes them; sync() is called from the tick.
 import { create } from 'zustand'
-import { BRANCH_IDS, nodeById } from '../game/research'
+import { BRANCH_IDS, branchDef, nodeById, nodeTitle } from '../game/research'
 import type { BranchId, ResearchNode } from '../game/research'
 
 export interface LabRun {
@@ -91,4 +91,31 @@ export function labsRunning(labs: Labs): number {
   let n = 0
   for (const b of BRANCH_IDS) if (labs[b]) n++
   return n
+}
+
+/* ---------------------------- eligibility text ---------------------------- */
+
+// Inspect surface (research.md UI Requirements): why this project cannot be
+// authorized right now, or null when it can (available on an idle lab).
+// Causes appear in eligibility order: missing prerequisites (every unmet one
+// named), lab not idle, already researched. A state explanation only: it
+// never mentions Credits, so it cannot imply a charge was attempted. Plain
+// text by design; there is no reason enum (ADR-0013 / research.md Core Rule 3).
+export function eligibilityText(node: ResearchNode, done: readonly string[], labs: Labs): string | null {
+  const causes: string[] = []
+  const unmet = node.needs.filter((id) => !done.includes(id))
+  if (unmet.length > 0) {
+    causes.push('Locked: requires ' + unmet.map((id) => nodeTitle(nodeById(id))).join(' and '))
+  }
+  const run = labs[node.branch]
+  if (run) {
+    const lab = branchDef(node.branch).lab
+    causes.push(
+      run.id === node.id
+        ? 'lab not idle: the ' + lab + ' is already running this project'
+        : 'lab not idle: the ' + lab + ' is running ' + nodeTitle(nodeById(run.id)),
+    )
+  }
+  if (done.includes(node.id)) causes.push('already researched')
+  return causes.length > 0 ? causes.join('; ') + '.' : null
 }

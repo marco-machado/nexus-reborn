@@ -112,7 +112,8 @@ describe('lookups', () => {
 
   it('nodeTitle prefers the full name and falls back to joined lines', () => {
     expect(nodeTitle(nodeById('c-accelerator'))).toBe('NEURAL ACCELERATOR MK II')
-    expect(nodeTitle(nodeById('b-propellants'))).toBe('ADV. PROPELLANTS')
+    expect(nodeTitle(nodeById('b-propellants'))).toBe('ADVANCED PROPELLANTS')
+    expect(nodeTitle(nodeById('b-coating'))).toBe('BARREL WEAR COATING')
   })
 })
 
