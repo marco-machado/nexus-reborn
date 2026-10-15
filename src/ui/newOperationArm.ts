@@ -18,3 +18,18 @@ export type NewOperationPress = 'arm' | 'confirm'
 export function pressNewOperation(canContinue: boolean, armed: boolean): NewOperationPress {
   return canContinue && !armed ? 'arm' : 'confirm'
 }
+
+/** P-01 armed hint with a save on file: the confirm erases it (main-menu.md Z5). */
+export const NEW_OPERATION_ERASE_HINT = 'PRESS AGAIN WITHIN 3 S TO ERASE'
+
+/** P-01 armed hint on a clean origin: nothing to erase, the confirm starts (main-menu.md Z5). */
+export const NEW_OPERATION_START_HINT = 'PRESS AGAIN WITHIN 3 S TO START'
+
+/**
+ * Text for the Menu's P-01 message slot (Z5). Empty while idle, so a disarm
+ * clears the slot silently; armed, it names the window and the consequence.
+ */
+export function newOperationArmHint(canContinue: boolean, armed: boolean): string {
+  if (!armed) return ''
+  return canContinue ? NEW_OPERATION_ERASE_HINT : NEW_OPERATION_START_HINT
+}

@@ -654,6 +654,17 @@
   background: rgba(224, 75, 60, 0.09);
 }
 
+/* Z5 P-01 armed-hint slot under the Menu actions; two lines reserved so
+   arming (or a 40% copy expansion) never shifts the layout (main-menu.md). */
+.menu-arm-hint {
+  min-height: calc(2 * 1.4em);
+  line-height: 1.4;
+  text-align: center;
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.24em;
+  color: var(--amber-hot);
+}
+
 .menu-foot {
   display: flex;
   justify-content: space-between;
@@ -3355,10 +3366,13 @@ button.hud-slot:focus-visible {
   color: var(--ink);
 }
 
-/* P-01 armed-hint slot under the Balance actions; a reserved line so arming
-   never shifts the layout. */
-.bal-arm-hint {
-  min-height: calc(14px * var(--text-scale));
+/* P-01 armed-hint slot under the Balance and Pause actions; a reserved line
+   so arming never shifts the layout. */
+.bal-arm-hint,
+.pause-arm-hint {
+  /* border-box: the padding plus one full line, so the text never grows it */
+  min-height: calc(6px + 1.4em);
+  line-height: 1.4;
   padding-top: 6px;
   text-align: center;
   font-size: calc(10px * var(--text-scale));

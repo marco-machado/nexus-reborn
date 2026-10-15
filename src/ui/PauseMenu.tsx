@@ -6,6 +6,7 @@
 // menu from reaching the canvas and ordering the squad across the map.
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { BINDINGS, BINDING_GROUPS } from '../game/bindings'
+import { ABORT_ARM_MS, abortArmHint } from './abortArm'
 import { Chip, Panel } from './bits'
 import SettingsPanel from './Settings'
 import { uiClick } from './sound'
@@ -30,7 +31,7 @@ export default function PauseMenu({
   // Two step abort: first click arms, second confirms, auto resets after 3s.
   useEffect(() => {
     if (!abortArmed) return
-    const id = window.setTimeout(() => setAbortArmed(false), 3000)
+    const id = window.setTimeout(() => setAbortArmed(false), ABORT_ARM_MS)
     return () => window.clearTimeout(id)
   }, [abortArmed])
 
@@ -144,6 +145,11 @@ export default function PauseMenu({
             >
               {abortArmed ? 'CONFIRM?' : 'ABORT'}
             </button>
+          </div>
+          {/* P-01 armed-hint slot: always mounted (a polite live region that
+              mounts with its text is not announced); disarm clears it silently. */}
+          <div className="pause-arm-hint" role="status" aria-live="polite">
+            {abortArmHint(abortArmed)}
           </div>
         </Panel>
       </div>

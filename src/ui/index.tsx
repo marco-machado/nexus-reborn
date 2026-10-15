@@ -19,7 +19,7 @@ import { applyDebrief } from '../state/debrief'
 import { debriefFlags } from './debriefFlags'
 import { debriefFilingLine } from './filingStatus'
 import { useSaveStatusStore } from '../state/saveStatusStore'
-import { NEW_OPERATION_ARM_MS, pressNewOperation } from './newOperationArm'
+import { NEW_OPERATION_ARM_MS, newOperationArmHint, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
@@ -230,6 +230,11 @@ export function MainMenu() {
           >
             SETTINGS
           </button>
+          {/* Z5 P-01 armed-hint slot: always mounted (a polite live region that
+              mounts with its text is not announced); disarm clears it silently. */}
+          <div className="menu-arm-hint" role="status" aria-live="polite">
+            {newOperationArmHint(canContinue, newOperationArmed)}
+          </div>
         </div>
       </div>
       {settingsOpen && (
