@@ -4,18 +4,13 @@
 // URL, and CLEAR erases the log behind a two-step confirm. No chart library:
 // the bars are divs.
 import { useEffect, useMemo, useState } from 'react'
-import {
-  TELEMETRY_CAP,
-  aggregate,
-  clearRecords,
-  exportJson,
-  loadRecords,
-} from '../state/telemetry'
+import { TELEMETRY_CAP, aggregate, loadRecords } from '../state/telemetry'
 import { useSettingsStore } from '../state/settingsStore'
 import { Panel } from './bits'
 import { fmt } from './util'
 import { balanceStatRows } from './balanceStats'
 import { uiClick } from './sound'
+import { CLEAR_ARM_TIMEOUT_MS, downloadBalanceJson, pressClear } from './balanceActions'
 
 function Stat(props: { label: string; value: string; tone?: string }) {
   return (
@@ -62,27 +57,20 @@ export default function BalancePanel(props: { onClose: () => void }) {
 
   useEffect(() => {
     if (!clearArmed) return
-    const id = window.setTimeout(() => setClearArmed(false), 3000)
+    const id = window.setTimeout(() => setClearArmed(false), CLEAR_ARM_TIMEOUT_MS)
     return () => window.clearTimeout(id)
   }, [clearArmed])
 
   const onExport = (): void => {
     uiClick()
-    const a = document.createElement('a')
-    a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(exportJson(records))
-    a.download = 'nexus-balance.json'
-    a.click()
+    downloadBalanceJson(records)
   }
 
   const onClear = (): void => {
     uiClick()
-    if (!clearArmed) {
-      setClearArmed(true)
-      return
-    }
-    clearRecords()
-    setClearArmed(false)
-    setSerial((s) => s + 1)
+    const step = pressClear(clearArmed)
+    setClearArmed(step.armed)
+    if (step.cleared) setSerial((s) => s + 1)
   }
 
   return (

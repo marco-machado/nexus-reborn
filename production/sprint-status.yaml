@@ -156,11 +156,11 @@ stories:
     name: "Balance Export and two-step Clear"
     file: "production/epics/persistence-and-validation/story-016-balance-export-and-two-step-clear.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-017"
     name: "Debrief filing-status reads unfiled until the next Screen"
     file: "production/epics/persistence-and-validation/story-017-debrief-filing-status-reads-unfiled-until-the-next-screen.md"

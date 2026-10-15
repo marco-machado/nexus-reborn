@@ -26,6 +26,15 @@ import { useWorldStore } from './worldStore'
 import telemetrySrc from './telemetry.ts?raw'
 import balanceSrc from '../ui/Balance.tsx?raw'
 import balanceGateSrc from '../ui/balanceGate.ts?raw'
+import balanceActionsSrc from '../ui/balanceActions.ts?raw'
+import {
+  BALANCE_EXPORT_FILENAME,
+  CLEAR_ARM_TIMEOUT_MS,
+  downloadBalanceJson,
+  exportHref,
+  pressClear,
+} from '../ui/balanceActions'
+import type { DownloadAnchor } from '../ui/balanceActions'
 import { NO_DATA, balanceStatRows } from '../ui/balanceStats'
 import type {
   AbortRecord,
@@ -396,8 +405,10 @@ describe('no network egress (PV-013 AC3)', () => {
     expect(telemetrySrc).not.toMatch(forbidden)
     expect(balanceSrc).not.toMatch(forbidden)
     expect(balanceGateSrc).not.toMatch(forbidden)
+    expect(balanceActionsSrc).not.toMatch(forbidden)
     // Export is a local data: URL download, not an upload.
-    expect(balanceSrc).toMatch(/'data:application\/json/)
+    expect(balanceActionsSrc).toMatch(/'data:application\/json/)
+    expect(balanceSrc).toMatch(/downloadBalanceJson\(records\)/)
   })
 })
 
@@ -632,5 +643,143 @@ describe('abort telemetry row and Balance win rate (PV-015)', () => {
     expect(aggregate(log(1, 1, 1))).not.toHaveProperty('abortRate')
     expect(balanceStatRows(aggregate(log(1, 1, 1))).map((r) => r.label)).not.toContain('ABORT RATE')
     expect(balanceSrc).not.toMatch(/abortRate|ABORT RATE/)
+  })
+})
+
+// PV-016 (TR-persistence-008, ADR-0015): Export is a local JSON download with
+// no upload; Clear is two-step and erases only the telemetry log.
+describe('Balance Export and two-step Clear (PV-016)', () => {
+  const egress = { fetch: vi.fn(), sendBeacon: vi.fn(), xhr: vi.fn(), socket: vi.fn() }
+
+  beforeEach(() => {
+    for (const spy of Object.values(egress)) spy.mockClear()
+    vi.stubGlobal('fetch', egress.fetch)
+    vi.stubGlobal('XMLHttpRequest', egress.xhr)
+    vi.stubGlobal('WebSocket', egress.socket)
+    vi.stubGlobal('navigator', { sendBeacon: egress.sendBeacon })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    useSettingsStore.setState({ telemetry: false })
+  })
+
+  function anchor(): DownloadAnchor & { clicks: number } {
+    return {
+      href: '',
+      download: '',
+      clicks: 0,
+      click() {
+        this.clicks += 1
+      },
+    }
+  }
+
+  function decode(href: string): { version: number; records: Array<Record<string, unknown>> } {
+    const prefix = 'data:application/json;charset=utf-8,'
+    expect(href.startsWith(prefix)).toBe(true)
+    return JSON.parse(decodeURIComponent(href.slice(prefix.length)))
+  }
+
+  it('AC1: Export downloads a local JSON file and makes no request', () => {
+    const rows: MissionRecord[] = [record({ at: 1 }), abortRow({ at: 2 })]
+    saveRecords(rows, storage)
+    const a = anchor()
+    const out = downloadBalanceJson(loadRecords(storage), () => a)
+
+    expect(out).toBe(a)
+    expect(a.clicks).toBe(1)
+    expect(a.download).toBe(BALANCE_EXPORT_FILENAME)
+    expect(a.download).toMatch(/\.json$/)
+    // A data: URL is the file itself; no http(s) origin is involved.
+    expect(a.href).not.toMatch(/^(https?:|blob:|\/\/)/)
+    expect(decode(a.href)).toEqual({ version: TELEMETRY_VERSION, records: rows })
+    expect(exportHref(rows)).toBe(a.href)
+    expect(egress.fetch).not.toHaveBeenCalled()
+    expect(egress.sendBeacon).not.toHaveBeenCalled()
+    expect(egress.xhr).not.toHaveBeenCalled()
+    expect(egress.socket).not.toHaveBeenCalled()
+    // Export reads; it never rewrites the log.
+    expect(loadRecords(storage)).toEqual(rows)
+  })
+
+  it('AC2: one Clear press arms the confirm and leaves the records', () => {
+    const rows: MissionRecord[] = [record({ at: 1 }), abortRow({ at: 2 })]
+    saveRecords(rows, storage)
+    const blob = storage.getItem(TELEMETRY_KEY)
+    const before = telemetryRevision()
+
+    const step = pressClear(false, storage)
+
+    expect(step).toEqual({ armed: true, cleared: false })
+    expect(storage.getItem(TELEMETRY_KEY)).toBe(blob)
+    expect(loadRecords(storage)).toEqual(rows)
+    expect(balanceEntryVisible(loadRecords(storage))).toBe(true)
+    expect(telemetryRevision()).toBe(before)
+    // The armed confirm times out rather than staying live forever.
+    expect(CLEAR_ARM_TIMEOUT_MS).toBeGreaterThan(0)
+  })
+
+  it('AC3: confirming an armed Clear empties Balance and leaves the campaign blob untouched', () => {
+    useAppStore.setState({ phase: 'world', credits: 222333 })
+    useWorldStore.setState({ t: 3600, influence: 7 })
+    expect(writeSave(storage)).toBe(true)
+    const S = storage.getItem(SAVE_KEY)
+    const snapshot = captureSave()
+    saveRecords([record({ at: 1 }), record({ at: 2, outcome: 'lost' }), abortRow({ at: 3 })], storage)
+
+    const armed = pressClear(false, storage)
+    const confirmed = pressClear(armed.armed, storage)
+
+    expect(confirmed).toEqual({ armed: false, cleared: true })
+    const rows = loadRecords(storage)
+    expect(rows).toEqual([])
+    expect(aggregate(rows)).toMatchObject({ missions: 0, wins: 0, losses: 0, aborts: 0 })
+    expect(balanceEntryVisible(rows)).toBe(false)
+    expect(storage.getItem(SAVE_KEY)).toBe(S)
+    expect(captureSave()).toEqual(snapshot)
+  })
+
+  it('AC4: a non-abort Debrief record exports outcome, timing, combat, civilians, items, abilities, KIA, payout and roles', () => {
+    vi.stubGlobal('window', { localStorage: storage })
+    useSettingsStore.setState({ telemetry: true })
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', lastAppliedKey: 0 })
+    useAppStore.getState().setOutcome(outcome({ applyKey: 1, deadIds: ['op-2'] }))
+    applyDebrief('m01')
+
+    const rows = loadRecords(storage)
+    expect(rows).toHaveLength(1)
+    const a = anchor()
+    downloadBalanceJson(rows, () => a)
+    const [exported] = decode(a.href).records
+
+    const t = telemetry()
+    expect(exported).toMatchObject({
+      outcome: 'won',
+      durationSec: 265,
+      firstContactSec: t.firstContactSec,
+      objectiveTimes: t.objectiveTimes,
+      shotsByWeapon: t.shotsByWeapon,
+      damageByWeapon: t.damageByWeapon,
+      damageDealt: t.damageDealt,
+      damageTaken: t.damageTaken,
+      civilianHitsBySquad: t.civilianHitsBySquad,
+      civilianHitsByCorpsec: t.civilianHitsByCorpsec,
+      medUsed: t.medUsed,
+      cellUsed: t.cellUsed,
+      abilityUsesByRole: t.abilityUsesByRole,
+      kia: 1,
+      squadRoles: t.squadRoles,
+    })
+    expect(typeof exported.payout).toBe('number')
+    expect(exported.payout).toBe((rows[0] as FinishedRecord).payout)
+    for (const key of [
+      'outcome', 'durationSec', 'firstContactSec', 'objectiveTimes', 'shotsByWeapon',
+      'damageByWeapon', 'damageDealt', 'damageTaken', 'civilianHitsBySquad',
+      'civilianHitsByCorpsec', 'medUsed', 'cellUsed', 'abilityUsesByRole', 'kia',
+      'payout', 'squadRoles',
+    ]) {
+      expect(exported, key).toHaveProperty(key)
+    }
   })
 })
