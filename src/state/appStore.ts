@@ -264,10 +264,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Otherwise the undo puts the labs back to their pre-start() value — lab
   // idle, project available. The undo is internal (no cancel API) and never
   // touches the ledger: no addCredits, no setState({ credits }).
-  // Eligibility (prerequisites, idle lab, not already researched) is checked
-  // before start() and before spendCredits, even when the balance covers the
-  // cost, so an ineligible project never reaches the ledger.
+  // Eligibility (not in the field, prerequisites, idle lab, not already
+  // researched) is checked before start() and before spendCredits, even when
+  // the balance covers the cost, so an ineligible project never reaches the
+  // ledger.
+  // A mission in progress (phase 'mission', the router's single phase —
+  // ADR-0017) is the fourth eligibility cause: labs do not take work from the
+  // field. The Research screen is unreachable in that phase, so this is
+  // store-level defense with no cause text (in-field is not a screen reason).
   authorizeResearch: (node, t) => {
+    if (get().phase === 'mission') return refused(CREDITS_UNCHANGED)
     if (!(Number.isFinite(node.cost) && node.cost > 0)) return refused(CREDITS_UNCHANGED)
     const research = useResearchStore.getState()
     const cause = eligibilityText(node, research.done, research.labs)

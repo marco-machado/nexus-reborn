@@ -84,11 +84,11 @@ stories:
     name: "Other eligibility refusals; no cancel verb"
     file: "production/epics/research/story-006-other-eligibility-refusals-no-cancel-verb.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-011"
     name: "done appends in ascending endT"
     file: "production/epics/research/story-011-done-appends-in-ascending-endt.md"

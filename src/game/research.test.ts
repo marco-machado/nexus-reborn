@@ -386,3 +386,14 @@ describe('program fundability gap (GDD research AC, TR-research-002)', () => {
     expect(14 * minWin).toBeLessThan(gap)
   })
 })
+
+// RS-006 / TR-research-005 (research.md Interface): Research exports no
+// cancel, stop or abort-project method, including one that returns a refusal.
+describe('no cancel verb (RS-006)', () => {
+  it('src/game/research exports no cancel, stop or abort-project name', async () => {
+    const mod = await import('./research')
+    const names = Object.keys(mod)
+    expect(names.length).toBeGreaterThan(0)
+    for (const name of names) expect(name).not.toMatch(/cancel|stop|abort/i)
+  })
+})

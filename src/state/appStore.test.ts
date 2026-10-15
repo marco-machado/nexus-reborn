@@ -11,7 +11,7 @@ import {
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, operativeById } from '../game/data'
-import { BRANCH_IDS, nodeById, nodeTitle, nodesOfBranch } from '../game/research'
+import { BRANCH_IDS, NODES, nodeById, nodeTitle, nodesOfBranch } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
 import { eligibilityText, labsRunning, nodeState, useResearchStore } from './researchStore'
@@ -2767,5 +2767,108 @@ describe('Refusal text for locked, researched and busy-lab projects (RS-005)', (
     const r = authorize(PROPELLANTS)
     expect(r).toMatchObject({ ok: true, text: '' })
     expect(r.calls).toEqual(['start', 'spendCredits'])
+  })
+})
+
+// RS-006 / TR-research-005 (research.md Core Rule 3, Edge Cases): a mission in
+// progress (appStore.phase === 'mission', owner decision 2026-10-14) and an
+// already-researched project are eligibility failures. Both return before
+// start() and spendCredits even when the balance covers the cost.
+describe('Other eligibility refusals; no cancel verb (RS-006)', () => {
+  const PROPELLANTS = nodeById('b-propellants')
+  const idle = () => ({ ballistics: null, cybernetics: null, control: null })
+
+  beforeEach(() => {
+    useResearchStore.setState({ done: [], labs: idle() })
+  })
+
+  // Records start / spendCredits / addCredits calls and app-store writes.
+  function authorize(node: typeof PROPELLANTS) {
+    const app = useAppStore.getState()
+    const research = useResearchStore.getState()
+    const calls: string[] = []
+    let writes = 0
+    useResearchStore.setState({ start: (n, t) => (calls.push('start'), research.start(n, t)) })
+    useAppStore.setState({
+      spendCredits: (n) => (calls.push('spendCredits'), app.spendCredits(n)),
+      addCredits: (n) => (calls.push('addCredits'), app.addCredits(n)),
+    })
+    const unsub = useAppStore.subscribe(() => writes++)
+    try {
+      const r = useAppStore.getState().authorizeResearch(node, 0)
+      return { ...r, calls, writes }
+    } finally {
+      unsub()
+      useResearchStore.setState({ start: research.start })
+      useAppStore.setState({ spendCredits: app.spendCredits, addCredits: app.addCredits })
+    }
+  }
+
+  for (const C of [PROPELLANTS.cost, PROPELLANTS.cost * 4]) {
+    it(`mission in progress, Advanced Propellants available, Credits ${C}: refused before start() and spendCredits, Ballistics idle, project available, Credits unchanged`, () => {
+      useAppStore.setState({ phase: 'mission', credits: C })
+      expect(nodeState(PROPELLANTS, [], idle())).toBe('available')
+
+      const r = authorize(PROPELLANTS)
+
+      expect(r.ok).toBe(false)
+      expect(r.calls).toEqual([])
+      expect(r.writes).toBe(0)
+      const { labs, done } = useResearchStore.getState()
+      expect(labs).toEqual(idle())
+      expect(done).toEqual([])
+      expect(nodeState(PROPELLANTS, done, labs)).toBe('available')
+      expect(useAppStore.getState().credits).toBe(C)
+      expect(useAppStore.getState().phase).toBe('mission')
+      // In-field is not a Research-screen reason: no cause text beyond the
+      // credits-unchanged phrase.
+      expect(r.text).toBe('Credits did not change.')
+    })
+  }
+
+  it('the in-field refusal is phase-scoped: the same authorize from the Research phase succeeds', () => {
+    useAppStore.setState({ phase: 'research', credits: PROPELLANTS.cost })
+    const r = authorize(PROPELLANTS)
+    expect(r.ok).toBe(true)
+    expect(r.calls).toEqual(['start', 'spendCredits'])
+    expect(useResearchStore.getState().labs.ballistics?.id).toBe(PROPELLANTS.id)
+  })
+
+  it('all 21 projects researched: every re-authorize is refused before start() and spendCredits; labs idle, all researched, Credits unchanged', () => {
+    expect(NODES).toHaveLength(21)
+    const all = NODES.map((n) => n.id)
+    useResearchStore.setState({ done: [...all], labs: idle() })
+    const C = NODES.reduce((sum, n) => sum + n.cost, 0)
+    useAppStore.setState({ phase: 'research', credits: C })
+
+    for (const n of NODES) {
+      const r = authorize(n)
+      expect(r.ok).toBe(false)
+      expect(r.calls).toEqual([])
+      expect(r.writes).toBe(0)
+      expect(r.text).toContain('already researched')
+      expect(r.text).toContain('Credits did not change')
+    }
+
+    const { labs, done } = useResearchStore.getState()
+    expect(labs).toEqual(idle())
+    expect(done).toEqual(all)
+    for (const n of NODES) expect(nodeState(n, done, labs)).toBe('researched')
+    expect(useAppStore.getState().credits).toBe(C)
+  })
+
+  it('Research public API: no cancel, stop or abort-project export on the stores or their modules', async () => {
+    const forbidden = /cancel|stop|abort/i
+    const appMod = await import('./appStore')
+    const researchMod = await import('./researchStore')
+    for (const name of [
+      ...Object.keys(researchMod),
+      ...Object.keys(useResearchStore.getState()),
+      // App-store research surface: authorize is the only Research verb.
+      ...Object.keys(appMod),
+      ...Object.keys(useAppStore.getState()),
+    ]) {
+      expect(name).not.toMatch(forbidden)
+    }
   })
 })
