@@ -35,6 +35,8 @@ import type { SaveStorage, SaveV10 } from './save'
 import { pressNewOperation } from '../ui/newOperationArm'
 import { SETTINGS_KEY, defaultSettings, initSettings, useSettingsStore } from './settingsStore'
 import { useTutorialStore } from './tutorialStore'
+import { useSaveStatusStore } from './saveStatusStore'
+import { UNFILED_LINE, debriefFilingLine } from '../ui/filingStatus'
 import { freezeDeploy } from './deployFreeze'
 import { useMissionStore } from './missionStore'
 import { TELEMETRY_KEY, aggregate, loadRecords, recordAbort } from './telemetry'
@@ -2228,6 +2230,198 @@ describe('Next Screen autosave durably commits the Debrief result', () => {
       expect(restored.app.credits).toBe(snapshot.app.credits + tax)
     },
   )
+})
+
+// PV-017 (TR-persistence-009, ADR-0022): the Debrief invoice reads unfiled
+// from the apply until a Screen autosave lands; a reload never reads unfiled.
+describe('Debrief filing status reads unfiled until the next Screen', () => {
+  let C: string
+
+  const status = () => useSaveStatusStore.getState().status
+
+  // A Screen visit holding selected contract C, flushed by autosave.
+  function reachScreen(wonBefore: boolean): string {
+    vi.useFakeTimers()
+    stopAutosave = startAutosave(storage)
+    useAppStore.setState({ phase: 'world' })
+    C = MISSIONS.find((m) => m.id !== 'm01' && !missionLocked(m, 2) && (m.etaDays ?? 0) > 0)!.id
+    useCampaignStore.setState({ intelLevel: 2, contractsWon: wonBefore ? ['m01', C] : ['m01'] })
+    useAppStore.getState().selectMission(C)
+    useAppStore.getState().goto('team')
+    vi.advanceTimersByTime(500)
+    const S = storage.getItem(SAVE_KEY) as string
+    expect(S).not.toBeNull()
+    expect(status()).toBe('filed')
+    return S
+  }
+
+  // Deploy, win on C, and run the Debrief apply as the Debrief screen does.
+  function applyWin(quietReplay: boolean): void {
+    useAppStore.getState().startMission()
+    const app = useAppStore.getState()
+    const applyKey = app.deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const ops = useCampaignStore.getState().operatives.filter((o) => app.squad.includes(o.id))
+    freezeDeploy(resolveMission(C)!, ops, applyKey)
+    useAppStore.getState().setOutcome(
+      settleOutcome({
+        applyKey,
+        won: true,
+        kills: 3,
+        casualties: 0,
+        timeSec: 200,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: [],
+        survivorHp: {},
+        quietReplay,
+      }),
+    )
+    expect(useAppStore.getState().phase).toBe('debrief')
+    applyDebrief(C)
+    expect(useAppStore.getState().lastAppliedKey).toBe(applyKey)
+  }
+
+  function reloadAndContinue(): void {
+    stopAutosave?.()
+    stopAutosave = null
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    continueOperation()
+  }
+
+  it.each([
+    ['paid win', false],
+    ['quiet replay', true],
+  ])('AC1 %s: Debrief reads unfiled and stays unfiled while on Debrief', (_label, quiet) => {
+    const S = reachScreen(quiet)
+    applyWin(quiet)
+    expect(useAppStore.getState().outcome?.quietReplay).toBe(quiet)
+    expect(status()).toBe('unfiled')
+    expect(debriefFilingLine(status())).toBe(UNFILED_LINE)
+    // Debrief never autosaves, so nothing files the invoice while it shows.
+    vi.advanceTimersByTime(5_000)
+    expect(storage.getItem(SAVE_KEY)).toBe(S)
+    expect(status()).toBe('unfiled')
+  })
+
+  it('AC1: Abort applies nothing and never marks unfiled', () => {
+    reachScreen(false)
+    useAppStore.getState().startMission()
+    // Hud pause-menu Abort leaves the field with no Debrief.
+    useAppStore.getState().goto('world')
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+    expect(status()).toBe('filed')
+    vi.advanceTimersByTime(500)
+    expect(status()).toBe('filed')
+  })
+
+  it('AC2: World Network return files; reload then Continue is post-apply and not unfiled', () => {
+    const S = reachScreen(false)
+    applyWin(false)
+    const applied = captureSave()
+    useAppStore.getState().returnFromDebrief()
+    // Navigation alone is not the success signal: still unfiled until the write.
+    expect(status()).toBe('unfiled')
+    vi.advanceTimersByTime(500)
+    expect(storage.getItem(SAVE_KEY)).not.toBe(S)
+    expect(status()).toBe('filed')
+    expect(debriefFilingLine(status())).toBeNull()
+
+    reloadAndContinue()
+    expect(status()).not.toBe('unfiled')
+    const restored = captureSave()
+    expect(restored.app.credits).toBe(applied.app.credits)
+    expect(restored.world.t).toBe(applied.world.t)
+    expect(restored.campaign.contractsWon).toEqual(['m01', C])
+  })
+
+  it('AC3: Replay to Brief files in session and the selection is still C', () => {
+    reachScreen(false)
+    applyWin(false)
+    expect(status()).toBe('unfiled')
+    useAppStore.getState().goto('brief')
+    vi.advanceTimersByTime(500)
+    expect(status()).toBe('filed')
+    expect(useAppStore.getState().missionId).toBe(C)
+    expect(readSave(storage)?.app.missionId).toBe(C)
+  })
+
+  it('a second apply after hydrate (key back to 1) still marks unfiled', () => {
+    reachScreen(false)
+    applyWin(false)
+    useAppStore.getState().returnFromDebrief()
+    vi.advanceTimersByTime(500)
+    reloadAndContinue()
+    stopAutosave = startAutosave(storage)
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+    useAppStore.getState().selectMission(C)
+    applyWin(false)
+    expect(status()).toBe('unfiled')
+  })
+
+  it('a write that cannot happen never reports filed', () => {
+    reachScreen(false)
+    applyWin(false)
+    expect(writeSave(null)).toBe(false)
+    expect(status()).not.toBe('filed')
+  })
+
+  it('the status is not in the campaign blob and does not schedule a write', () => {
+    reachScreen(false)
+    expect(JSON.stringify(captureSave())).not.toMatch(/unfiled|write-failed/)
+    const writes = vi.spyOn(storage, 'setItem')
+    useSaveStatusStore.setState({ status: 'unfiled', reason: null })
+    useSaveStatusStore.setState({ status: 'filed', reason: null })
+    vi.advanceTimersByTime(1_000)
+    expect(writes).not.toHaveBeenCalled()
+  })
+
+  it('startAutosave twice installs one unfiled watcher', () => {
+    vi.useFakeTimers()
+    stopAutosave = startAutosave(storage)
+    expect(startAutosave(storage)).toBe(stopAutosave)
+    const sets = vi.fn()
+    const unsub = useSaveStatusStore.subscribe(sets)
+    useAppStore.setState({ lastAppliedKey: 1 })
+    expect(sets).toHaveBeenCalledTimes(1)
+    // A decrease (hydrate / New Operation reset) is ignored.
+    useAppStore.setState({ lastAppliedKey: 0 })
+    expect(sets).toHaveBeenCalledTimes(1)
+    unsub()
+  })
+})
+
+describe('saveStatusStore transitions (ADR-0022)', () => {
+  beforeEach(() => {
+    useSaveStatusStore.getState().reset()
+  })
+
+  it('changes only on a transition', () => {
+    const sets = vi.fn()
+    const unsub = useSaveStatusStore.subscribe(sets)
+    useSaveStatusStore.getState().markFiled()
+    expect(sets).not.toHaveBeenCalled()
+    useSaveStatusStore.getState().markUnfiled()
+    useSaveStatusStore.getState().markUnfiled()
+    expect(sets).toHaveBeenCalledTimes(1)
+    useSaveStatusStore.getState().markWriteFailed('quota')
+    useSaveStatusStore.getState().markWriteFailed('quota')
+    expect(sets).toHaveBeenCalledTimes(2)
+    unsub()
+  })
+
+  it('write-failed is sticky against markUnfiled; reason is set iff write-failed', () => {
+    const store = useSaveStatusStore.getState()
+    store.markUnfiled()
+    expect(useSaveStatusStore.getState()).toMatchObject({ status: 'unfiled', reason: null })
+    store.markWriteFailed('unknown')
+    store.markUnfiled()
+    expect(useSaveStatusStore.getState()).toMatchObject({ status: 'write-failed', reason: 'unknown' })
+    store.markFiled()
+    expect(useSaveStatusStore.getState()).toMatchObject({ status: 'filed', reason: null })
+  })
 })
 
 // PV-009 (TR-persistence-006, ADR-0011, ADR-0015): settings and telemetry

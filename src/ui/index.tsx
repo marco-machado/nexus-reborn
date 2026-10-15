@@ -17,6 +17,8 @@ import {
 } from '../state/save'
 import { applyDebrief } from '../state/debrief'
 import { debriefFlags } from './debriefFlags'
+import { debriefFilingLine } from './filingStatus'
+import { useSaveStatusStore } from '../state/saveStatusStore'
 import { NEW_OPERATION_ARM_MS, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
 import { WEAPONS } from '../game/data'
@@ -1547,6 +1549,8 @@ export function Debrief() {
   const quiet = outcome?.quietReplay === true
   const fine = outcome ? collateralFine(outcome) : 0
   const flags = debriefFlags(outcome, campaignFailed, missionId)
+  // Persistence reports durability (ADR-0022); a primitive selector, read-only.
+  const filingLine = debriefFilingLine(useSaveStatusStore((s) => s.status))
   const [balanceOpen, setBalanceOpen] = useState(false)
   // Shown only while the local log holds records (ADR-0015).
   const balanceVisible = useBalanceEntryVisible()
@@ -1645,6 +1649,11 @@ export function Debrief() {
             <DebriefRow key={r.label} index={i} label={r.label} value={r.value} tone={r.tone} />
           ))}
         </div>
+        {filingLine && (
+          <div className="db-filing" role="status">
+            {filingLine}
+          </div>
+        )}
         <div className="db-actions">
           <button type="button" className="btn" onClick={act(returnFromDebrief)}>
             RETURN TO WORLD NETWORK

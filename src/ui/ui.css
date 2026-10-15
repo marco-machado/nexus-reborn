@@ -2634,6 +2634,12 @@
 .db-row b.amber { color: var(--amber-hot); }
 .db-row b.dim { color: var(--ink-dim); }
 
+.db-filing {
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.24em;
+  color: var(--amber-hot);
+}
+
 .db-actions { display: flex; gap: 10px; }
 .db-actions .btn { flex: 1; }
 

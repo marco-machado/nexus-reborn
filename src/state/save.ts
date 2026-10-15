@@ -37,6 +37,7 @@ import type { AgentRole, OperativeDef, SectorId } from '../game/types'
 import { INITIAL_CREDITS, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import type { CampaignRosterEntry } from './campaignStore'
+import { useSaveStatusStore } from './saveStatusStore'
 import { useTutorialStore } from './tutorialStore'
 import { useResearchStore } from './researchStore'
 import type { Labs } from './researchStore'
@@ -573,6 +574,9 @@ export function writeSave(storage: SaveStorage | null = browserStorage()): boole
   if (!storage) return false
   try {
     storage.setItem(SAVE_KEY, JSON.stringify(captureSave()))
+    // Filed only once `setItem` has returned (ADR-0022). A swallowed write
+    // never reaches this line, so it is never reported filed.
+    useSaveStatusStore.getState().markFiled()
     return true
   } catch {
     return false
@@ -805,6 +809,8 @@ export function hydrateSave(save: SaveV10): void {
   })
   useResearchStore.getState().sync(save.world.t)
   useCampaignStore.getState().sync(save.world.t)
+  // Memory now equals the blob it came from: a reload never reads unfiled.
+  useSaveStatusStore.getState().reset()
 }
 
 export function hasValidSave(storage: SaveStorage | null = browserStorage()): boolean {
@@ -845,6 +851,14 @@ export function startAutosave(
     useResearchStore.subscribe(scheduleAutosave),
     useCampaignStore.subscribe(scheduleAutosave),
     useTutorialStore.subscribe(scheduleAutosave),
+    // Filing status (ADR-0022): a Debrief apply raises `lastAppliedKey`, and
+    // the invoice is unfiled until the next Screen write lands. Compare with
+    // Zustand's prevState, never a closure value, so the reset to 0 on
+    // hydrate or New Operation cannot mask the next apply; a decrease is
+    // ignored. The status store itself is not subscribed here.
+    useAppStore.subscribe((s, prev) => {
+      if (s.lastAppliedKey > prev.lastAppliedKey) useSaveStatusStore.getState().markUnfiled()
+    }),
   ]
   unsubscribeAutosave = () => {
     cancelPendingAutosave()
@@ -901,8 +915,12 @@ export function initializeSaveSystem(): boolean {
 export function startNewOperation(storage: SaveStorage | null = browserStorage()): void {
   cancelPendingAutosave()
   droppedAtBoot = false
+  let erased = false
   try {
-    storage?.removeItem(SAVE_KEY)
+    if (storage) {
+      storage.removeItem(SAVE_KEY)
+      erased = true
+    }
   } catch {
     // Resetting in memory is still useful when storage cannot be changed.
   }
@@ -948,6 +966,9 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
     deploySerial: 0,
     lastAppliedKey: 0,
   })
+  // After the in-memory reset (ADR-0022): a successful erase is filed. The
+  // failed-erase signal is Story 018's write-failed path.
+  if (erased) useSaveStatusStore.getState().markFiled()
 }
 
 /**
