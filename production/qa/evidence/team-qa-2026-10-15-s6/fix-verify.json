@@ -1,0 +1,214 @@
+{
+ "notice": [
+  {
+   "size": "1280x720",
+   "scale": 100,
+   "screen": "WORLD NETWORK",
+   "y": 223,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 100,
+   "screen": "RESEARCH",
+   "y": 223,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 100,
+   "screen": "BRIEF",
+   "y": 223,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 100,
+   "screen": "ASSEMBLY",
+   "y": 223,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 125,
+   "screen": "WORLD NETWORK",
+   "y": 223,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 125,
+   "screen": "RESEARCH",
+   "y": 223,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 125,
+   "screen": "BRIEF",
+   "y": 223,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1280x720",
+   "scale": 125,
+   "screen": "ASSEMBLY",
+   "y": 223,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 100,
+   "screen": "WORLD NETWORK",
+   "y": 238,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 100,
+   "screen": "RESEARCH",
+   "y": 238,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 100,
+   "screen": "BRIEF",
+   "y": 238,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 100,
+   "screen": "ASSEMBLY",
+   "y": 238,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 125,
+   "screen": "WORLD NETWORK",
+   "y": 238,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 125,
+   "screen": "RESEARCH",
+   "y": 238,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 125,
+   "screen": "BRIEF",
+   "y": 238,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1366x768",
+   "scale": 125,
+   "screen": "ASSEMBLY",
+   "y": 238,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 100,
+   "screen": "WORLD NETWORK",
+   "y": 335,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 100,
+   "screen": "RESEARCH",
+   "y": 335,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 100,
+   "screen": "BRIEF",
+   "y": 335,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 100,
+   "screen": "ASSEMBLY",
+   "y": 335,
+   "h": 29,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 125,
+   "screen": "WORLD NETWORK",
+   "y": 335,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 125,
+   "screen": "RESEARCH",
+   "y": 335,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 125,
+   "screen": "BRIEF",
+   "y": 335,
+   "h": 33,
+   "covers": []
+  },
+  {
+   "size": "1920x1080",
+   "scale": 125,
+   "screen": "ASSEMBLY",
+   "y": 335,
+   "h": 33,
+   "covers": []
+  }
+ ],
+ "balance": {
+  "idle": {
+   "text": "",
+   "role": "status",
+   "live": "polite"
+  },
+  "armed": {
+   "text": "PRESS AGAIN WITHIN 3 S TO ERASE RECORDS",
+   "role": "status",
+   "live": "polite"
+  },
+  "armedName": "CONFIRM // ERASE RECORDS? Erases every record",
+  "lapsed": {
+   "text": "",
+   "role": "status",
+   "live": "polite"
+  }
+ }
+}

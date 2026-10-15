@@ -1,0 +1,357 @@
+{
+  "steps": [
+    {
+      "name": "m3-settings-ui",
+      "before": {
+        "telemetry": "TELEMETRY: LOCAL ONLY // OFF",
+        "difficulty": [
+          "Difficulty STANDARD"
+        ],
+        "quality": [
+          "Render quality auto"
+        ]
+      },
+      "clicked": {
+        "diffLabel": "Difficulty HARDENED",
+        "qLabel": "Render quality high"
+      },
+      "after": {
+        "telemetry": "TELEMETRY: LOCAL ONLY // ON",
+        "difficulty": [
+          "Difficulty HARDENED"
+        ],
+        "quality": [
+          "Render quality high"
+        ]
+      },
+      "storedAfterClick": {
+        "telemetry": true,
+        "difficulty": "hardened",
+        "quality": "high"
+      },
+      "afterReload": {
+        "telemetry": "TELEMETRY: LOCAL ONLY // ON",
+        "difficulty": [
+          "Difficulty HARDENED"
+        ],
+        "quality": [
+          "Render quality high"
+        ]
+      },
+      "telemetryPersisted": true,
+      "difficultyPersisted": true,
+      "qualityPersisted": true
+    },
+    {
+      "name": "m3-after-new-operation",
+      "afterNewOp": {
+        "telemetry": "TELEMETRY: LOCAL ONLY // ON",
+        "difficulty": [
+          "Difficulty HARDENED"
+        ],
+        "quality": [
+          "Render quality high"
+        ]
+      },
+      "sameAsAfterReload": true
+    },
+    {
+      "name": "m2-paid-win",
+      "play": {
+        "result": "won",
+        "simTime": 37,
+        "log": [
+          [
+            0,
+            "ob1",
+            "reach-zone"
+          ],
+          [
+            21,
+            "ob2",
+            "eliminate-tag"
+          ],
+          [
+            22,
+            "ob3",
+            "extract"
+          ]
+        ]
+      },
+      "outcome": {
+        "won": true,
+        "civiliansHit": 0,
+        "quietReplay": false,
+        "casualties": 0,
+        "deadIds": [],
+        "applyKey": 2
+      },
+      "filing": {
+        "status": "unfiled",
+        "reason": null
+      },
+      "unfiledLine": true
+    },
+    {
+      "name": "m2-paid-win-after-next-screen",
+      "filing": {
+        "status": "filed",
+        "reason": null
+      }
+    },
+    {
+      "name": "m2-quiet-replay",
+      "play": {
+        "result": "won",
+        "simTime": 37,
+        "log": [
+          [
+            1,
+            "ob1",
+            "reach-zone"
+          ],
+          [
+            22,
+            "ob3",
+            "extract"
+          ]
+        ]
+      },
+      "outcome": {
+        "won": true,
+        "civiliansHit": 1,
+        "quietReplay": true,
+        "casualties": 0,
+        "deadIds": [],
+        "applyKey": 4
+      },
+      "filing": {
+        "status": "unfiled",
+        "reason": null
+      },
+      "unfiledLine": true
+    },
+    {
+      "name": "m2-quiet-replay-after-next-screen",
+      "filing": {
+        "status": "filed",
+        "reason": null
+      }
+    },
+    {
+      "name": "m1-export",
+      "download": "nexus-balance.json",
+      "savedTo": "/Users/machado/Projects/nexus-reborn/production/qa/evidence/pv-016/m1-nexus-balance-export.json",
+      "topKeys": [
+        "version",
+        "records"
+      ],
+      "recordCount": 2,
+      "records": [
+        {
+          "outcome": "won",
+          "keys": [
+            "at",
+            "missionId",
+            "outcome",
+            "durationSec",
+            "kills",
+            "kia",
+            "civiliansHit",
+            "reward",
+            "bonus",
+            "fine",
+            "payout",
+            "seed",
+            "firstContactSec",
+            "objectiveTimes",
+            "shotsByWeapon",
+            "damageByWeapon",
+            "damageDealt",
+            "damageTaken",
+            "civilianHitsBySquad",
+            "civilianHitsByCorpsec",
+            "medUsed",
+            "cellUsed",
+            "abilityUsesByRole",
+            "squadRoles"
+          ]
+        },
+        {
+          "outcome": "won",
+          "keys": [
+            "at",
+            "missionId",
+            "outcome",
+            "durationSec",
+            "kills",
+            "kia",
+            "civiliansHit",
+            "reward",
+            "bonus",
+            "fine",
+            "payout",
+            "seed",
+            "firstContactSec",
+            "objectiveTimes",
+            "shotsByWeapon",
+            "damageByWeapon",
+            "damageDealt",
+            "damageTaken",
+            "civilianHitsBySquad",
+            "civilianHitsByCorpsec",
+            "medUsed",
+            "cellUsed",
+            "abilityUsesByRole",
+            "squadRoles"
+          ]
+        }
+      ],
+      "networkRequestsDuringExport": []
+    },
+    {
+      "name": "m4-abort",
+      "phaseNow": "world",
+      "writes": [
+        {
+          "at": 5970,
+          "phase": "world",
+          "len": 9501,
+          "afterAbortClick": false,
+          "equalToMissionStartExceptWorld": false,
+          "worldDiffers": true
+        },
+        {
+          "at": 6529,
+          "phase": "world",
+          "len": 9500,
+          "afterAbortClick": false,
+          "equalToMissionStartExceptWorld": false,
+          "worldDiffers": true
+        },
+        {
+          "at": 7084,
+          "phase": "world",
+          "len": 9500,
+          "afterAbortClick": false,
+          "equalToMissionStartExceptWorld": false,
+          "worldDiffers": true
+        },
+        {
+          "at": 7631,
+          "phase": "brief",
+          "len": 9719,
+          "afterAbortClick": false,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 8168,
+          "phase": "team",
+          "len": 9720,
+          "afterAbortClick": false,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 8701,
+          "phase": "team",
+          "len": 9720,
+          "afterAbortClick": false,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": false
+        },
+        {
+          "at": 13830,
+          "phase": "world",
+          "len": 9720,
+          "afterAbortClick": true,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 14337,
+          "phase": "world",
+          "len": 9720,
+          "afterAbortClick": true,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 14888,
+          "phase": "world",
+          "len": 9719,
+          "afterAbortClick": true,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 15426,
+          "phase": "world",
+          "len": 9719,
+          "afterAbortClick": true,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 15970,
+          "phase": "world",
+          "len": 9719,
+          "afterAbortClick": true,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        },
+        {
+          "at": 16514,
+          "phase": "world",
+          "len": 9719,
+          "afterAbortClick": true,
+          "equalToMissionStartExceptWorld": true,
+          "worldDiffers": true
+        }
+      ],
+      "writesInMissionPhase": 0
+    },
+    {
+      "name": "m5-write-failure",
+      "filing": {
+        "status": "write-failed",
+        "reason": "quota"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "notice": {
+        "x": 486,
+        "y": 619,
+        "w": 308,
+        "h": 29
+      },
+      "noticeText": "SAVE FAILED // CAMPAIGN NOT FILED",
+      "feed": {
+        "x": 471,
+        "y": 536,
+        "w": 541,
+        "h": 124
+      },
+      "overlap": {
+        "w": 308,
+        "h": 29
+      },
+      "feedLinesUnderNotice": [
+        "CORPSEC RAID SWEEPS LAGOS",
+        "STRIKE COLUMNS BLOCK NEW CARTHAGE"
+      ],
+      "pageErrors": 0
+    }
+  ],
+  "errors": [
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico"
+  ]
+}

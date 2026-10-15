@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "at": 1792089244312,
+      "missionId": "m01",
+      "outcome": "won",
+      "durationSec": 39.107633333330135,
+      "kills": 16,
+      "kia": 0,
+      "civiliansHit": 0,
+      "reward": 85000,
+      "bonus": 0,
+      "fine": 0,
+      "payout": 85000,
+      "seed": 20870514,
+      "firstContactSec": 2.8536333333303503,
+      "objectiveTimes": [
+        {
+          "id": "ob1",
+          "atSec": 21.132666666666925
+        },
+        {
+          "id": "ob2",
+          "atSec": 21.805633333330636
+        },
+        {
+          "id": "ob3",
+          "atSec": 36.60500000000023
+        }
+      ],
+      "shotsByWeapon": {
+        "assault": 65,
+        "smg": 186,
+        "pistol": 0,
+        "longrifle": 0,
+        "shotgun": 9
+      },
+      "damageByWeapon": {
+        "assault": 459.8000000000003,
+        "smg": 805,
+        "pistol": 0,
+        "longrifle": 0,
+        "shotgun": 182
+      },
+      "damageDealt": 1236.035,
+      "damageTaken": 343.61999999999983,
+      "civilianHitsBySquad": 0,
+      "civilianHitsByCorpsec": 0,
+      "medUsed": 0,
+      "cellUsed": 0,
+      "abilityUsesByRole": {
+        "assault": 0,
+        "recon": 0,
+        "infiltrator": 0,
+        "demolitions": 0,
+        "sniper": 0,
+        "tech": 0,
+        "support": 0,
+        "medic": 0
+      },
+      "squadRoles": [
+        "assault",
+        "recon",
+        "infiltrator",
+        "demolitions"
+      ]
+    },
+    {
+      "at": 1792089272162,
+      "missionId": "m01",
+      "outcome": "won",
+      "durationSec": 39.254699999988,
+      "kills": 12,
+      "kia": 0,
+      "civiliansHit": 1,
+      "reward": 85000,
+      "bonus": 0,
+      "fine": 5000,
+      "payout": 0,
+      "seed": 20870514,
+      "firstContactSec": 1.833966666663688,
+      "objectiveTimes": [
+        {
+          "id": "ob1",
+          "atSec": 21.960933333327713
+        },
+        {
+          "id": "ob2",
+          "atSec": 21.960933333327713
+        },
+        {
+          "id": "ob3",
+          "atSec": 36.747799999997305
+        }
+      ],
+      "shotsByWeapon": {
+        "assault": 46,
+        "smg": 158,
+        "pistol": 0,
+        "longrifle": 0,
+        "shotgun": 7
+      },
+      "damageByWeapon": {
+        "assault": 338.80000000000007,
+        "smg": 847,
+        "pistol": 0,
+        "longrifle": 0,
+        "shotgun": 130
+      },
+      "damageDealt": 1107.9500000000003,
+      "damageTaken": 611.9099999999999,
+      "civilianHitsBySquad": 1,
+      "civilianHitsByCorpsec": 5,
+      "medUsed": 0,
+      "cellUsed": 0,
+      "abilityUsesByRole": {
+        "assault": 0,
+        "recon": 0,
+        "infiltrator": 0,
+        "demolitions": 0,
+        "sniper": 0,
+        "tech": 0,
+        "support": 0,
+        "medic": 0
+      },
+      "squadRoles": [
+        "assault",
+        "recon",
+        "infiltrator",
+        "demolitions"
+      ]
+    }
+  ]
+}
