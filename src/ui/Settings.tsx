@@ -17,6 +17,7 @@ import { DIFFICULTIES } from '../game/missionParams'
 import type { Difficulty } from '../game/missionParams'
 import { useMissionStore } from '../state/missionStore'
 import BalancePanel from './Balance'
+import { useBalanceEntryVisible } from './balanceGate'
 import { Chip, Panel } from './bits'
 import { uiClick } from './sound'
 
@@ -128,6 +129,8 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   const [capture, setCapture] = useState<BindingId | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [balanceOpen, setBalanceOpen] = useState(false)
+  // The Balance entry point follows the log, not the toggle (ADR-0015).
+  const balanceVisible = useBalanceEntryVisible()
   const panelRef = useRef<HTMLDivElement | null>(null)
   const closeRef = useRef<HTMLButtonElement | null>(null)
 
@@ -338,23 +341,25 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                 on={telemetry}
                 onToggle={setTelemetry}
               />
-              <div className="set-toggle">
-                <span className="set-toggle-main">
-                  <b>BALANCE DATA</b>
-                  <i className="dim">Aggregates over the local mission log</i>
-                </span>
-                <button
-                  type="button"
-                  className="btn set-toggle-btn"
-                  aria-label="Open the balance dashboard"
-                  onClick={() => {
-                    uiClick()
-                    setBalanceOpen(true)
-                  }}
-                >
-                  OPEN
-                </button>
-              </div>
+              {balanceVisible && (
+                <div className="set-toggle">
+                  <span className="set-toggle-main">
+                    <b>BALANCE DATA</b>
+                    <i className="dim">Aggregates over the local mission log</i>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn set-toggle-btn"
+                    aria-label="Open the balance dashboard"
+                    onClick={() => {
+                      uiClick()
+                      setBalanceOpen(true)
+                    }}
+                  >
+                    OPEN
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           <div className="set-col">

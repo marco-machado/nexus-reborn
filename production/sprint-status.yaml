@@ -129,11 +129,11 @@ stories:
     name: "Telemetry opt-in default and no network egress"
     file: "production/epics/persistence-and-validation/story-013-telemetry-opt-in-default-and-no-network-egress.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-014"
     name: "One record per outcome; cap 60 FIFO; log survives New Operation"
     file: "production/epics/persistence-and-validation/story-014-one-record-per-outcome-cap-60-fifo-log-survives-new-operation.md"

@@ -86,6 +86,7 @@ import { Portrait } from './portrait'
 import { Figure } from './figure'
 import SettingsPanel from './Settings'
 import BalancePanel from './Balance'
+import { useBalanceEntryVisible } from './balanceGate'
 import { ScreenChrome } from './Nav'
 import { unlockAudio } from './sound'
 import {
@@ -1547,6 +1548,8 @@ export function Debrief() {
   const fine = outcome ? collateralFine(outcome) : 0
   const flags = debriefFlags(outcome, campaignFailed, missionId)
   const [balanceOpen, setBalanceOpen] = useState(false)
+  // Shown only while the local log holds records (ADR-0015).
+  const balanceVisible = useBalanceEntryVisible()
   const bannerRef = useRef<HTMLDivElement>(null)
   // React's autoFocus only focuses form controls, so focus the banner by hand.
   useEffect(() => {
@@ -1653,14 +1656,16 @@ export function Debrief() {
               REPLAY MISSION
             </button>
           )}
-          <button
-            type="button"
-            className="btn"
-            aria-label="Open the balance dashboard over the local mission log"
-            onClick={act(() => setBalanceOpen(true))}
-          >
-            BALANCE DATA
-          </button>
+          {balanceVisible && (
+            <button
+              type="button"
+              className="btn"
+              aria-label="Open the balance dashboard over the local mission log"
+              onClick={act(() => setBalanceOpen(true))}
+            >
+              BALANCE DATA
+            </button>
+          )}
         </div>
         <div className="db-barcode" aria-hidden="true" />
       </div>

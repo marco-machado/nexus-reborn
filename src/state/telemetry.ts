@@ -122,6 +122,25 @@ export function loadRecords(storage: SettingsStorage | null = browserStorage()):
   }
 }
 
+// Change notification for the log. The log is not a Zustand store (ADR-0015),
+// so the screens that gate on it (the Balance entry point) subscribe here and
+// re-read storage when the revision moves. Bumped on every write attempt.
+let revision = 0
+const listeners = new Set<() => void>()
+
+/** Current log revision; changes after every save or clear. */
+export function telemetryRevision(): number {
+  return revision
+}
+
+/** Subscribe to log writes. Returns the unsubscribe function. */
+export function subscribeTelemetry(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
 export function saveRecords(
   records: MissionRecord[],
   storage: SettingsStorage | null = browserStorage(),
@@ -131,6 +150,18 @@ export function saveRecords(
   } catch {
     // Full or read-only storage never blocks the debrief.
   }
+  revision += 1
+  for (const listener of [...listeners]) listener()
+}
+
+/**
+ * Whether Settings and Debrief show the Balance entry point. It follows the
+ * log, not the TELEMETRY toggle: present while records exist (so turning the
+ * toggle off still leaves Export and Clear reachable), gone once the log is
+ * empty — a new origin, or a confirmed Clear.
+ */
+export function balanceEntryVisible(records: readonly MissionRecord[]): boolean {
+  return records.length > 0
 }
 
 export function clearRecords(storage: SettingsStorage | null = browserStorage()): void {

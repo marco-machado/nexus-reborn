@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { settleOutcome } from './appStore'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { settleOutcome, useAppStore } from './appStore'
 import type { MissionOutcome } from './appStore'
 import { initSettings, useSettingsStore } from './settingsStore'
 import type { SettingsStorage } from './settingsStore'
@@ -9,6 +9,7 @@ import {
   TELEMETRY_VERSION,
   aggregate,
   appendRecord,
+  balanceEntryVisible,
   buildRecord,
   clearRecords,
   exportJson,
@@ -16,7 +17,13 @@ import {
   recordAbort,
   recordMissionOutcome,
   saveRecords,
+  subscribeTelemetry,
+  telemetryRevision,
 } from './telemetry'
+import { applyDebrief } from './debrief'
+import telemetrySrc from './telemetry.ts?raw'
+import balanceSrc from '../ui/Balance.tsx?raw'
+import balanceGateSrc from '../ui/balanceGate.ts?raw'
 import type { MissionRecord, MissionTelemetry } from './telemetry'
 
 class MemoryStorage implements SettingsStorage {
@@ -248,5 +255,124 @@ describe('aggregate', () => {
     expect(agg.weaponDamage.reduce((acc, r) => acc + r.share, 0)).toBeCloseTo(1, 10)
     expect(agg.weaponDamage[0]).toMatchObject({ key: 'assault', value: 900 })
     expect(agg.abilityUses.map((r) => r.key)).toEqual(['assault', 'sniper', 'medic'])
+  })
+})
+
+// PV-013 (TR-persistence-008, ADR-0015): opt-in default, the Balance entry
+// point follows the log, and nothing on the telemetry path reaches the network.
+describe('telemetry opt-in default (PV-013 AC1)', () => {
+  it('a new origin has telemetry off, an empty log, and no Balance entry point', () => {
+    const settingsBlob = new MemoryStorage()
+    initSettings(settingsBlob)
+    expect(useSettingsStore.getState().telemetry).toBe(false)
+
+    // A finished mission with telemetry never enabled records nothing.
+    recordMissionOutcome('m01', outcome(), storage)
+    recordAbort('m01', 30, 20870514, ['assault'], storage)
+    expect(storage.getItem(TELEMETRY_KEY)).toBeNull()
+    expect(loadRecords(storage)).toEqual([])
+    expect(balanceEntryVisible(loadRecords(storage))).toBe(false)
+  })
+})
+
+describe('toggle off keeps the log (PV-013 AC2)', () => {
+  afterEach(() => {
+    useSettingsStore.setState({ telemetry: false })
+  })
+
+  it('records survive the toggle; Export and Clear work; Clear removes the entry point', () => {
+    useSettingsStore.getState().setTelemetry(true)
+    recordMissionOutcome('m01', outcome(), storage)
+    expect(loadRecords(storage)).toHaveLength(1)
+
+    useSettingsStore.getState().setTelemetry(false)
+    expect(useSettingsStore.getState().telemetry).toBe(false)
+    const kept = loadRecords(storage)
+    expect(kept).toHaveLength(1)
+    expect(balanceEntryVisible(kept)).toBe(true)
+
+    // Off is a no-op for new outcomes; the existing record stays.
+    recordMissionOutcome('m01', outcome({ won: false, reward: 0 }), storage)
+    recordAbort('m01', 12, 20870514, ['assault'], storage)
+    expect(loadRecords(storage)).toEqual(kept)
+
+    // Export works while off.
+    const exported = JSON.parse(exportJson(kept))
+    expect(exported).toEqual({ version: TELEMETRY_VERSION, records: kept })
+
+    // Clear works while off, and the gate follows the log.
+    const seen: number[] = []
+    const unsubscribe = subscribeTelemetry(() => seen.push(telemetryRevision()))
+    const before = telemetryRevision()
+    clearRecords(storage)
+    unsubscribe()
+    expect(loadRecords(storage)).toEqual([])
+    expect(balanceEntryVisible(loadRecords(storage))).toBe(false)
+    expect(seen).toEqual([before + 1])
+  })
+
+  it('the Settings and Debrief gate reads the log, never the toggle', () => {
+    expect(balanceGateSrc).toMatch(/balanceEntryVisible\(loadRecords\(\)\)/)
+    expect(balanceGateSrc).not.toMatch(/useSettingsStore|\.telemetry\b/)
+  })
+})
+
+describe('no network egress (PV-013 AC3)', () => {
+  const egress = {
+    fetch: vi.fn(),
+    sendBeacon: vi.fn(),
+    xhr: vi.fn(),
+    socket: vi.fn(),
+  }
+
+  beforeEach(() => {
+    for (const spy of Object.values(egress)) spy.mockClear()
+    vi.stubGlobal('fetch', egress.fetch)
+    vi.stubGlobal('XMLHttpRequest', egress.xhr)
+    vi.stubGlobal('WebSocket', egress.socket)
+    vi.stubGlobal('navigator', { sendBeacon: egress.sendBeacon })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    useSettingsStore.setState({ telemetry: false })
+  })
+
+  function runEveryPath(): void {
+    // Debrief apply (records through the default storage path).
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', lastAppliedKey: 0 })
+    useAppStore.getState().setOutcome(outcome({ applyKey: 1 }))
+    applyDebrief('m01')
+    expect(useAppStore.getState().lastAppliedKey).toBe(1)
+    // The same entry points against an inspectable storage.
+    recordMissionOutcome('m01', outcome(), storage)
+    // Abort.
+    recordAbort('m01', 12, 20870514, ['assault'], storage)
+    // Balance view.
+    aggregate(loadRecords(storage))
+    // Export.
+    exportJson(loadRecords(storage))
+    // Clear.
+    clearRecords(storage)
+  }
+
+  for (const on of [true, false]) {
+    it(`emits no request from Debrief, Abort, Balance, Export or Clear with telemetry ${on ? 'on' : 'off'}`, () => {
+      useSettingsStore.setState({ telemetry: on })
+      runEveryPath()
+      expect(egress.fetch).not.toHaveBeenCalled()
+      expect(egress.sendBeacon).not.toHaveBeenCalled()
+      expect(egress.xhr).not.toHaveBeenCalled()
+      expect(egress.socket).not.toHaveBeenCalled()
+    })
+  }
+
+  it('telemetry.ts and the Balance panel hold no network or cookie API', () => {
+    const forbidden = /\bfetch\s*\(|sendBeacon|XMLHttpRequest|WebSocket|EventSource|document\.cookie|navigator\./
+    expect(telemetrySrc).not.toMatch(forbidden)
+    expect(balanceSrc).not.toMatch(forbidden)
+    expect(balanceGateSrc).not.toMatch(forbidden)
+    // Export is a local data: URL download, not an upload.
+    expect(balanceSrc).toMatch(/'data:application\/json/)
   })
 })
