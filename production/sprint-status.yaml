@@ -102,11 +102,11 @@ stories:
     name: "Next Screen autosave durably commits the Debrief result"
     file: "production/epics/persistence-and-validation/story-007-next-screen-autosave-durably-commits-the-debrief-result.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-009"
     name: "Settings and telemetry garbage fall back independently"
     file: "production/epics/persistence-and-validation/story-009-settings-and-telemetry-garbage-fall-back-independently.md"

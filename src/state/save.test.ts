@@ -2019,3 +2019,209 @@ describe('Debrief applies once in session memory', () => {
     expect(readSave(storage)?.campaign.contractsWon).toEqual(applied.contractsWon)
   })
 })
+
+// PV-007 (TR-persistence-004, ADR-0011, ADR-0021, ADR-0001, ADR-0018): the
+// next Screen autosave durably commits the Debrief result. World Network
+// return clears the selected contract; Brief Replay keeps it.
+describe('Next Screen autosave durably commits the Debrief result', () => {
+  let C: string
+  let S: string
+
+  afterEach(() => {
+    useSettingsStore.setState(defaultSettings())
+  })
+
+  // A lived-in Screen visit with selected contract C and a lab running,
+  // flushed by autosave: the last Screen snapshot S. `wonBefore` puts C in the
+  // campaign record so the next win on it is a quiet replay.
+  function reachScreenSnapshot(wonBefore: boolean): SaveV10 {
+    vi.useFakeTimers()
+    stopAutosave = startAutosave(storage)
+    useAppStore.setState({ phase: 'world', credits: 222333 })
+    useWorldStore.setState({ t: 3600, influence: 7 })
+    C = MISSIONS.find((m) => m.id !== 'm01' && !missionLocked(m, 2) && (m.etaDays ?? 0) > 0)!.id
+    useCampaignStore.setState({
+      intelLevel: 2,
+      intelProgress: 35,
+      contractsWon: wonBefore ? ['m01', C] : ['m01'],
+    })
+    useResearchStore.getState().start(nodeById('b-propellants'), 3600)
+    useAppStore.getState().selectMission(C)
+    useAppStore.getState().goto('team')
+    vi.advanceTimersByTime(500)
+    S = storage.getItem(SAVE_KEY) as string
+    expect(S).not.toBeNull()
+    const snapshot = JSON.parse(S) as SaveV10
+    expect(snapshot.app.missionId).toBe(C)
+    return snapshot
+  }
+
+  // Deploy, finish a win on C, and run the Debrief apply as the Debrief screen
+  // does on mount. A paid win kills one operative; a quiet replay wounds one.
+  function finishAndApplyDebrief(quietReplay: boolean): void {
+    useAppStore.getState().startMission()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('mission')
+    const applyKey = app.deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const ops = useCampaignStore.getState().operatives.filter((o) => app.squad.includes(o.id))
+    freezeDeploy(resolveMission(C)!, ops, applyKey)
+    useAppStore.getState().setOutcome(
+      settleOutcome({
+        applyKey,
+        won: true,
+        kills: 5,
+        casualties: quietReplay ? 0 : 1,
+        timeSec: 300,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: quietReplay ? [] : [app.squad[0]],
+        survivorHp: quietReplay ? { [app.squad[1]]: 0.1 } : {},
+        quietReplay,
+      }),
+    )
+    expect(useAppStore.getState().phase).toBe('debrief')
+    applyDebrief(C)
+    expect(useAppStore.getState().lastAppliedKey).toBe(applyKey)
+  }
+
+  // The campaign values the Debrief apply owns, as they stand in memory.
+  function appliedValues() {
+    const save = captureSave()
+    return structuredClone({
+      credits: save.app.credits,
+      squad: save.app.squad,
+      t: save.world.t,
+      influence: save.world.influence,
+      sectors: save.world.sectors,
+      owner: save.world.owner,
+      intelLevel: save.campaign.intelLevel,
+      intelProgress: save.campaign.intelProgress,
+      contractsWon: save.campaign.contractsWon,
+      operatives: save.campaign.operatives,
+      roster: save.campaign.roster,
+      research: save.research,
+    })
+  }
+
+  // Origin reload: the page dies (autosave with it), memory returns to the
+  // opening Operation, storage keeps the blob, boot hydrates, Continue.
+  function reloadAndContinue(): void {
+    stopAutosave?.()
+    stopAutosave = null
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(useAppStore.getState().phase).toBe('menu')
+    continueOperation()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    expect(app.lastAppliedKey).toBe(0)
+  }
+
+  it('World Network return, reload, Continue: post-apply values exactly once, selected contract none', () => {
+    const snapshot = reachScreenSnapshot(false)
+    finishAndApplyDebrief(false)
+    const applied = appliedValues()
+    // The apply moved every named field away from S.
+    expect(applied.credits).toBeGreaterThan(snapshot.app.credits)
+    expect(applied.contractsWon).toEqual(['m01', C])
+    expect(applied.operatives.length).toBe(snapshot.campaign.operatives.length - 1)
+    expect(applied.t).toBeGreaterThan(snapshot.world.t)
+    expect([applied.intelLevel, applied.intelProgress]).not.toEqual([
+      snapshot.campaign.intelLevel,
+      snapshot.campaign.intelProgress,
+    ])
+
+    // Debrief: RETURN TO WORLD NETWORK, then the Screen autosave flushes.
+    useAppStore.getState().returnFromDebrief()
+    vi.advanceTimersByTime(500)
+    expect(storage.getItem(SAVE_KEY)).not.toBe(S)
+
+    reloadAndContinue()
+    expect(useAppStore.getState().missionId).toBeNull()
+    // Exact equality: not S, and not doubled (a second apply would move
+    // Credits, Intel, contractsWon and the clock again).
+    expect(appliedValues()).toEqual(applied)
+    expect(useAppStore.getState().credits).toBe(applied.credits)
+
+    // Continue applied nothing further: staying on the World Network and
+    // flushing again stores the same values.
+    vi.advanceTimersByTime(5_000)
+    expect(appliedValues()).toEqual(applied)
+  })
+
+  it('Replay to Brief after the apply: selected contract is still C', () => {
+    reachScreenSnapshot(false)
+    finishAndApplyDebrief(false)
+    // Debrief: REPLAY MISSION.
+    useAppStore.getState().goto('brief')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'brief', missionId: C })
+    vi.advanceTimersByTime(500)
+    expect(readSave(storage)?.app.missionId).toBe(C)
+  })
+
+  it('reload after that Brief visit: Continue restores post-apply values once and still C', () => {
+    const snapshot = reachScreenSnapshot(false)
+    finishAndApplyDebrief(false)
+    const applied = appliedValues()
+    useAppStore.getState().goto('brief')
+    vi.advanceTimersByTime(500)
+
+    reloadAndContinue()
+    expect(useAppStore.getState().missionId).toBe(C)
+    expect(appliedValues()).toEqual(applied)
+    expect(useAppStore.getState().credits).toBe(applied.credits)
+    expect(useAppStore.getState().credits).not.toBe(snapshot.app.credits)
+    expect(useCampaignStore.getState().contractsWon).toEqual(['m01', C])
+  })
+
+  it.each([
+    ['World Network return', () => useAppStore.getState().returnFromDebrief(), null as string | null],
+    ['Brief Replay', () => useAppStore.getState().goto('brief'), 'C'],
+  ])(
+    'quiet replay then %s, reload, Continue: t, labs, injuries, Tax and roster post-apply; Intel, Influence, contractsWon equal S',
+    (_label, leave, selection) => {
+      const snapshot = reachScreenSnapshot(true)
+      const creditsBefore = useAppStore.getState().credits
+      finishAndApplyDebrief(true)
+      // A quiet replay pays no contract: every Credit the apply added is Tax
+      // from the ETA catch-up.
+      expect(useAppStore.getState().outcome?.quietReplay).toBe(true)
+      const tax = useAppStore.getState().credits - creditsBefore
+      expect(tax).toBeGreaterThan(0)
+      const applied = appliedValues()
+      expect(applied.t).toBeGreaterThan(snapshot.world.t)
+      expect(applied.research).not.toEqual(snapshot.research)
+      // Injuries catch up on the new clock: an operative INJURED in S whose
+      // recovery falls inside the ETA is READY after the apply.
+      const injuredId = Object.keys(snapshot.campaign.roster).find(
+        (id) => snapshot.campaign.roster[id].status === 'INJURED',
+      )
+      expect(injuredId).toBeDefined()
+      expect(snapshot.campaign.roster[injuredId!].recoverAtT).toBeLessThanOrEqual(applied.t)
+      expect(applied.roster[injuredId!].status).toBe('READY')
+
+      leave()
+      vi.advanceTimersByTime(500)
+
+      reloadAndContinue()
+      expect(useAppStore.getState().missionId).toBe(selection === null ? null : C)
+      const restored = captureSave()
+      // Post-apply, not S.
+      expect(restored.world.t).toBe(applied.t)
+      expect(restored.research).toEqual(applied.research)
+      expect(restored.campaign.roster).toEqual(applied.roster)
+      expect(restored.campaign.operatives).toEqual(applied.operatives)
+      expect(restored.campaign.roster[injuredId!].status).toBe('READY')
+      // Equal S: a quiet replay moves no Intel, Influence or contract record.
+      expect(restored.campaign.intelLevel).toBe(snapshot.campaign.intelLevel)
+      expect(restored.campaign.intelProgress).toBe(snapshot.campaign.intelProgress)
+      expect(restored.world.influence).toBe(snapshot.world.influence)
+      expect(restored.campaign.contractsWon).toEqual(snapshot.campaign.contractsWon)
+      // Credits are S plus the catch-up Tax, exactly: no contract payout.
+      expect(restored.app.credits).toBe(snapshot.app.credits + tax)
+    },
+  )
+})
