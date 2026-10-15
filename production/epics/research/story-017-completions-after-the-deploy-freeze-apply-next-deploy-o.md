@@ -4,7 +4,7 @@
 > **Status**: Ready
 > **Layer**: Core
 > **Type**: Integration
-> **Estimate**: 1.0 d
+> **Estimate**: 0.2 d
 > **Manifest Version**: 2026-10-08
 > **Last Updated**: —
 
@@ -35,6 +35,7 @@
 
 - [ ] GIVEN a mission already created, WHEN later research completes or a pin changes, THEN that mission's weapons, crew bonuses and Research slice are unchanged.
 - [ ] GIVEN a mission created while Neural Interface I is active (so absent from that create's Roster resolved wear and appliedIds), WHEN it later becomes researched before that mission ends, THEN those frozen Roster fields still omit it. (Do not use the Research slice as proof: a slotted project is absent there regardless of timing.)
+- [ ] GIVEN mission A created while Advanced Propellants and Neural Interface I are active, WHEN both complete after A's create and mission B is then created (Neural unpinned), THEN B's Research slice includes Advanced Propellants and B's Roster resolved wear and appliedIds include Neural Interface I, while A's frozen slices still omit both.
 
 ---
 
@@ -58,7 +59,7 @@
 
 *From `production/qa/qa-plan-sprint-005-2026-10-14.md` (Sprint 5). Type: Integration.*
 
-**Automated**: `src/state/appStore.test.ts`.
+**Automated**: `src/game/world.test.ts` (beside the RS-016 deploy-sampling tests).
 - After create, a completion or pin change leaves the mission's weapons, crew bonus and Research slice unchanged
 - Interface I active at create then researched mid-mission: frozen Roster wear and `appliedIds` still omit it
 - Edge: Do not use the Research slice as proof for a slotted project (AC note)
@@ -71,7 +72,7 @@
 
 **Story Type**: Integration
 **Required evidence**:
-- Integration: test beside the module — `src/game/world.test.ts`, `src/state/researchStore.test.ts`. — must exist and pass.
+- Integration: test beside the module — `src/game/world.test.ts`. — must exist and pass.
 
 **Status**: [ ] Not yet created
 
