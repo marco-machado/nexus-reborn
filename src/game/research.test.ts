@@ -249,6 +249,62 @@ describe('worn bays', () => {
   })
 })
 
+// RS-014: appliedNodeIds = every completed unslotted id + the worn id per bay,
+// in done order. Unpinned bays wear currentIssue; STOCK wears nothing; a pin
+// wears that older completed project.
+describe('appliedNodeIds for unpinned, stock and pinned bays', () => {
+  const done = ['b-propellants', 'c-interface', 'c-accelerator']
+
+  it('wears only Mk II in an unpinned Neural bay after Interface I then Mk II', () => {
+    const applied = appliedNodeIds(['c-interface', 'c-accelerator'], undefined)
+    expect(applied).toEqual(['c-accelerator'])
+    expect(applied).not.toContain('c-interface')
+  })
+
+  it('applies Propellants and Mk II with Neural unpinned', () => {
+    expect(appliedNodeIds(done, undefined)).toEqual(['b-propellants', 'c-accelerator'])
+    expect(appliedNodeIds(done, {})).toEqual(['b-propellants', 'c-accelerator'])
+  })
+
+  it('applies Propellants only with Neural STOCK', () => {
+    expect(appliedNodeIds(done, { NEURAL: 'STOCK' })).toEqual(['b-propellants'])
+  })
+
+  it('applies Propellants and Interface I with Neural pinned to Interface I', () => {
+    expect(appliedNodeIds(done, { NEURAL: 'c-interface' })).toEqual([
+      'b-propellants',
+      'c-interface',
+    ])
+  })
+
+  it('keeps done order in the output', () => {
+    const mixed = ['c-interface', 'b-propellants', 'c-synaptic', 'b-coating', 'k-swarm']
+    expect(mixed.map((id) => byId.get(id)?.augSlot)).toEqual([
+      'NEURAL',
+      undefined,
+      'CHEST',
+      undefined,
+      'LEGS',
+    ])
+    expect(appliedNodeIds(mixed, undefined)).toEqual(mixed)
+    const pinned = ['c-accelerator', 'b-propellants', 'c-interface']
+    expect(appliedNodeIds(pinned, { NEURAL: 'c-accelerator' })).toEqual([
+      'c-accelerator',
+      'b-propellants',
+    ])
+  })
+
+  it('applies unslotted ids only when all four bays are STOCK', () => {
+    const all = ['c-interface', 'b-propellants', 'c-synaptic', 'c-reflex', 'b-coating', 'k-swarm']
+    expect(new Set(all.map((id) => byId.get(id)?.augSlot))).toEqual(
+      new Set([...AUG_SLOTS, undefined]),
+    )
+    const stock = { NEURAL: 'STOCK', CHEST: 'STOCK', ARMS: 'STOCK', LEGS: 'STOCK' } as const
+    expect(appliedNodeIds(all, undefined)).toEqual(all)
+    expect(appliedNodeIds(all, stock)).toEqual(['b-propellants', 'b-coating'])
+  })
+})
+
 describe('installedAugs', () => {
   it('returns every bay empty for an empty done set', () => {
     const augs = installedAugs([])
