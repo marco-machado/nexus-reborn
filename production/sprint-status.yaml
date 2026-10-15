@@ -30,11 +30,11 @@ stories:
     name: "Prerequisite states: locked, available, active"
     file: "production/epics/research/story-004-prerequisite-states-locked-available-active.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-007"
     name: "Lab endT from authorize time and duration"
     file: "production/epics/research/story-007-lab-endt-from-authorize-time-and-duration.md"

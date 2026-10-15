@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { useResearchStore } from './researchStore'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nodeState, useResearchStore } from './researchStore'
+import { useAppStore } from './appStore'
 import type { Labs } from './researchStore'
 import { nodeById } from '../game/research'
 
@@ -152,5 +153,58 @@ describe('sync', () => {
     const s = useResearchStore.getState()
     expect(s.done).toEqual(['b-propellants', 'c-interface', 'k-targeting'])
     expect(s.labs).toEqual(idle())
+  })
+})
+
+// RS-004: state is derived from done, the active runs and the catalog
+// prerequisites. A busy lab never makes a project locked.
+describe('nodeState', () => {
+  const sabot = nodeById('b-sabot')
+
+  function stateOf(node: typeof hyper) {
+    const s = useResearchStore.getState()
+    return nodeState(node, s.done, s.labs)
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('locks Hypervelocity Core while Advanced Propellants is unresearched', () => {
+    expect(stateOf(hyper)).toBe('locked')
+  })
+
+  it('Hypervelocity Core stays locked while Advanced Propellants is only running', () => {
+    useResearchStore.getState().start(propellants, 0)
+    expect(stateOf(propellants)).toBe('active')
+    expect(stateOf(hyper)).toBe('locked')
+  })
+
+  it('completing Advanced Propellants via sync makes Hypervelocity Core available, not active, and pays nothing', () => {
+    const addCredits = vi.spyOn(useAppStore.getState(), 'addCredits')
+    const creditsBefore = useAppStore.getState().credits
+    useResearchStore.getState().start(propellants, 0)
+    useResearchStore.getState().sync(propellants.hours * HOUR)
+    expect(stateOf(propellants)).toBe('researched')
+    expect(stateOf(hyper)).toBe('available')
+    expect(stateOf(hyper)).not.toBe('active')
+    expect(addCredits).not.toHaveBeenCalled()
+    expect(useAppStore.getState().credits).toBe(creditsBefore)
+  })
+
+  it('Barrel Wear Coating stays available while Ballistics runs Advanced Propellants', () => {
+    expect(useResearchStore.getState().start(propellants, 0)).toBe(true)
+    expect(useResearchStore.getState().labs.ballistics?.id).toBe('b-propellants')
+    expect(stateOf(coating)).toBe('available')
+  })
+
+  it('a node with two prerequisites stays locked with only one done', () => {
+    useResearchStore.setState({ done: ['b-propellants', 'b-hypervelocity', 'b-rail'], labs: idle() })
+    expect(stateOf(sabot)).toBe('locked')
+    useResearchStore.setState({
+      done: ['b-propellants', 'b-hypervelocity', 'b-rail', 'b-coating', 'b-caseless', 'b-fragmentation'],
+      labs: idle(),
+    })
+    expect(stateOf(sabot)).toBe('available')
   })
 })
