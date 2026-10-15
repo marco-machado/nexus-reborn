@@ -9,119 +9,191 @@
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
 
-sprint: 4
-goal: "Finish the Economy and contracts rules behind the invoice: wins pay in full, generated contracts get a stamped Reward, ETA, expiry and market cap, and abort writes nothing to Economy."
+sprint: 5
+goal: "Close the Research epic: one billed start per authorize with refusals before any spend, completions in ascending endT with a house order on ties, bay issue and pins, and deploy sampling frozen at mission create."
 start: "2026-10-15"
 end: "2026-10-28"
 generated: "2026-10-14"
 updated: "2026-10-14"
 
 stories:
-  - id: "EC-014"
-    name: "Generated Reward is stamped from threat band, roll and priority"
-    file: "production/epics/economy-and-contracts/story-014-generated-reward-is-stamped-from-threat-band-roll-and-p.md"
+  - id: "RS-001"
+    name: "Program catalog, costs and fundability gap"
+    file: "production/epics/research/story-001-program-catalog-costs-and-fundability-gap.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-004"
+    name: "Prerequisite states: locked, available, active"
+    file: "production/epics/research/story-004-prerequisite-states-locked-available-active.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-007"
+    name: "Lab endT from authorize time and duration"
+    file: "production/epics/research/story-007-lab-endt-from-authorize-time-and-duration.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-008"
+    name: "sync(t) completes projects; completion pays nothing"
+    file: "production/epics/research/story-008-sync-t-completes-projects-completion-pays-nothing.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-002"
+    name: "Authorize success: start, then one debit"
+    file: "production/epics/research/story-002-authorize-success-start-then-one-debit.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-015"
-    name: "Generated Reward clamp and immutability"
-    file: "production/epics/economy-and-contracts/story-015-generated-reward-clamp-and-immutability.md"
+    completed: ""
+  - id: "RS-003"
+    name: "Authorize when Economy refuses or start() fails"
+    file: "production/epics/research/story-003-authorize-when-economy-refuses-or-start-fails.md"
     priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-016"
-    name: "Generated ETA by threat band"
-    file: "production/epics/economy-and-contracts/story-016-generated-eta-by-threat-band.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-017"
-    name: "Authored ETA table"
-    file: "production/epics/economy-and-contracts/story-017-authored-eta-table.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-011"
-    name: "Wins pay in full: loss-retry, generated and post-campaign"
-    file: "production/epics/economy-and-contracts/story-011-wins-pay-in-full-loss-retry-generated-and-post-campaign.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-004"
-    name: "Accepting a contract is free; one pipeline for authored and generated work"
-    file: "production/epics/economy-and-contracts/story-004-accepting-a-contract-is-free-one-pipeline-for-authored.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-013"
-    name: "Abort writes nothing to Economy"
-    file: "production/epics/economy-and-contracts/story-013-abort-writes-nothing-to-economy.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-018"
-    name: "Generated expiry windows and Expedite extension"
-    file: "production/epics/economy-and-contracts/story-018-generated-expiry-windows-and-expedite-extension.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-019"
-    name: "Generated market cap, roll timer and client"
-    file: "production/epics/economy-and-contracts/story-019-generated-market-cap-roll-timer-and-client.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-021"
-    name: "Campaign-complete from the three authored wins"
-    file: "production/epics/economy-and-contracts/story-021-campaign-complete-from-the-three-authored-wins.md"
-    priority: should-have
-    status: done
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-020"
-    name: "Generated instances leave the market, or are held when hidden"
-    file: "production/epics/economy-and-contracts/story-020-generated-instances-leave-the-market-or-are-held-when-h.md"
+    completed: ""
+  - id: "RS-005"
+    name: "Refusal text for locked, researched and busy-lab projects"
+    file: "production/epics/research/story-005-refusal-text-for-locked-researched-and-busy-lab-project.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+  - id: "RS-006"
+    name: "Other eligibility refusals; no cancel verb"
+    file: "production/epics/research/story-006-other-eligibility-refusals-no-cancel-verb.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+  - id: "RS-011"
+    name: "done appends in ascending endT"
+    file: "production/epics/research/story-011-done-appends-in-ascending-endt.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+  - id: "RS-010"
+    name: "Labs frozen in the field; loss and abort leave Research alone"
+    file: "production/epics/research/story-010-labs-frozen-in-the-field-loss-and-abort-leave-research.md"
     priority: nice-to-have
-    status: done
+    status: backlog
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: "2026-10-14"
-  - id: "EC-022"
-    name: "Invoice prints all five money lines, zeros included"
-    file: "production/epics/economy-and-contracts/story-022-invoice-prints-all-five-money-lines-zeros-included.md"
-    priority: nice-to-have
-    status: done
+    completed: ""
+  - id: "RS-012"
+    name: "Equal-endT house order within a bay"
+    file: "production/epics/research/story-012-equal-endt-house-order-within-a-bay.md"
+    priority: should-have
+    status: backlog
     owner: ""
-    estimate_days: 1.5
+    estimate_days: 0.3
     blocker: ""
-    completed: "2026-10-14"
+    completed: ""
+  - id: "RS-013"
+    name: "currentIssue by bay"
+    file: "production/epics/research/story-013-currentissue-by-bay.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-014"
+    name: "appliedNodeIds for unpinned, stock and pinned bays"
+    file: "production/epics/research/story-014-appliednodeids-for-unpinned-stock-and-pinned-bays.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-009"
+    name: "Remaining time label appears only after sync"
+    file: "production/epics/research/story-009-remaining-time-label-appears-only-after-sync.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+  - id: "RS-015"
+    name: "Pin and bay edges; death keeps the program"
+    file: "production/epics/research/story-015-pin-and-bay-edges-death-keeps-the-program.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "RS-016"
+    name: "Deploy sampling: Research slice is unslotted ids only"
+    file: "production/epics/research/story-016-deploy-sampling-research-slice-is-unslotted-ids-only.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "RS-017"
+    name: "Completions after the deploy freeze apply next deploy only"
+    file: "production/epics/research/story-017-completions-after-the-deploy-freeze-apply-next-deploy-o.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "RS-018"
+    name: "Weapon sampling from applied ids"
+    file: "production/epics/research/story-018-weapon-sampling-from-applied-ids.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-019"
+    name: "crewBonus from applied ids"
+    file: "production/epics/research/story-019-crewbonus-from-applied-ids.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "RS-020"
+    name: "Research exposes the completed set only"
+    file: "production/epics/research/story-020-research-exposes-the-completed-set-only.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: ""
