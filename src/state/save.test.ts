@@ -1055,6 +1055,56 @@ describe('invalid or unreadable campaign blob: drop all-or-nothing', () => {
   })
 })
 
+// PV-010 (TR-persistence-006): contradictory campaign flags make the blob
+// invalid, so boot drops it like any other bad blob (ADR-0011, ADR-0020).
+describe('contradictory campaign flags drop the blob', () => {
+  // A valid blob on file, then its flags rewritten before an origin reload.
+  function reloadWithFlags(flags: {
+    contractsWon: string[]
+    campaignWon: boolean
+    campaignFailed: boolean
+  }): void {
+    useAppStore.setState({ phase: 'world', credits: 4321 })
+    const save = captureSave()
+    expect(validateSave(save)).toBe(true)
+    Object.assign(save.campaign, flags)
+    storage.setItem(SAVE_KEY, JSON.stringify(save))
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+  }
+
+  function expectDroppedToInvalidMenu(): void {
+    const status = loadCampaignAtBoot(storage)
+    expect(status).toBe('invalid')
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    const menu = menuSaveStatus(storage)
+    expect(menu).toBe('invalid')
+    // Continue is offered iff the Menu state is valid.
+    expect(menu === 'valid').toBe(false)
+    expect(useAppStore.getState().phase).toBe('menu')
+    // Distinct from never-started: a clean origin boots to never-started.
+    expect(menu).not.toBe('never-started')
+    expect(loadCampaignAtBoot(new MemoryStorage())).toBe('never-started')
+  }
+
+  it('both campaignWon and campaignFailed true: Continue absent, Menu invalid', () => {
+    reloadWithFlags({ contractsWon: ['m01', 'm02', 'm03'], campaignWon: true, campaignFailed: true })
+    expectDroppedToInvalidMenu()
+  })
+
+  it('not failed, campaignWon true with fewer than three authored wins: Continue absent, Menu invalid', () => {
+    for (const contractsWon of [[], ['m01'], ['m01', 'm03']]) {
+      reloadWithFlags({ contractsWon, campaignWon: true, campaignFailed: false })
+      expectDroppedToInvalidMenu()
+    }
+  })
+
+  it('not failed, campaignWon false with all three authored wins: Continue absent, Menu invalid', () => {
+    reloadWithFlags({ contractsWon: ['m01', 'm02', 'm03'], campaignWon: false, campaignFailed: false })
+    expectDroppedToInvalidMenu()
+  })
+})
+
 // PV-002 (TR-persistence-002): New Operation erases the house in two steps.
 // The arm is Menu-local UI state, so the Menu's own decision (pressNewOperation)
 // drives it here; only a 'confirm' reaches startNewOperation.

@@ -1,12 +1,12 @@
 # Story 010: Contradictory campaign flags drop the blob
 
 > **Epic**: Persistence and validation
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -33,9 +33,9 @@
 
 *From GDD `design/gdd/persistence-and-validation.md`, scoped to this story:*
 
-- [ ] GIVEN a campaign blob with both complete and failed flags true, WHEN the origin reloads, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started.
-- [ ] GIVEN a campaign blob with `campaignFailed` false and `campaignWon` true but fewer than three authored ids in `contractsWon`, WHEN the origin reloads to Menu, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started.
-- [ ] GIVEN a campaign blob with `campaignFailed` false, `campaignWon` false, and all three authored ids in `contractsWon`, WHEN the origin reloads to Menu, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started.
+- [x] GIVEN a campaign blob with both complete and failed flags true, WHEN the origin reloads, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started.
+- [x] GIVEN a campaign blob with `campaignFailed` false and `campaignWon` true but fewer than three authored ids in `contractsWon`, WHEN the origin reloads to Menu, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started.
+- [x] GIVEN a campaign blob with `campaignFailed` false, `campaignWon` false, and all three authored ids in `contractsWon`, WHEN the origin reloads to Menu, THEN Continue is absent and Menu state is invalid/unreadable, distinct from never-started.
 
 ---
 
@@ -74,7 +74,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/save.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/save.test.ts` (3 PV-010 tests in "contradictory campaign flags drop the blob"; full suite 1068/1068 pass, 2026-10-15)
 
 ---
 
@@ -82,3 +82,22 @@
 
 - Depends on: Story 008
 - Unlocks: Story 011
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-15
+**Criteria**: 3/3 passing (all covered by automated tests in `src/state/save.test.ts`, describe "contradictory campaign flags drop the blob"; save.test.ts 54/54 pass, re-run by /story-done 2026-10-15; full suite 1068/1068 per /code-review)
+**Deviations**: None. `src/state/save.ts:509-510` matches GDD Rule 8 and ADR-0020 "cannot be both"; no `CampaignStatus` enum added. Scope: test-only change; `src/state/save.ts` unchanged.
+**Test Evidence**: Logic: test file at `src/state/save.test.ts`
+**Run result**: N/A — save-validation logic with no new visible surface; the Menu-state half is asserted through `loadCampaignAtBoot` / `menuSaveStatus`.
+**Code Review**: Run, verdict NOT ASSESSED (process gap only). /code-review could not spawn lead-programmer or qa-tester (no Agent tool in the workflow subagent); every check it ran itself was clean, with no required changes, and would otherwise be APPROVED WITH SUGGESTIONS. ADR-0011 and ADR-0020: COMPLIANT. Lean mode: answered "Yes — /code-review ran" with this result (autonomous workflow; recorded as-is, not as a pass).
+**QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.
+
+**Advisory findings from /code-review** (not fixed in this story):
+- Process gap: Phase 7 specialist and QA review did not run. To clear it, re-run /code-review from a session that can spawn agents, or accept the gap explicitly.
+- `src/state/save.test.ts` (`expectDroppedToInvalidMenu`): `expect(menu === 'valid').toBe(false)` repeats `expect(menu).toBe('invalid')`. The trailing `loadCampaignAtBoot(new MemoryStorage())` resets the module flag `droppedAtBoot` after the real assertions; it works but is fragile if a later assertion is added after it.
+- `src/state/save.test.ts` (both-flags test): it covers both flags true only with all three authored wins. Looping over `[[], ['m01'], ['m01','m02','m03']]` would prove the both-flags rule (`save.ts:509`) independently of the win-count rule (`save.ts:510`).
+- `production/sprint-status.yaml`: PV-010 `estimate_days: 0.1` vs story Estimate 0.5 d (pre-existing mismatch).
+
+**Autonomous decisions**: Phase 7 close option "Close the story (Recommended)" taken by default (verdict COMPLETE WITH NOTES).
