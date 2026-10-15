@@ -82,4 +82,4 @@ Resolve conditions before advancing. S3/S4 bugs may be deferred to polish (none 
 
 **Left as suggestions:** detached-anchor Export in Firefox (ADR-0015 risk, Chromium-only verified); no render test for Balance/Debrief wiring; Escape closes the Balance panel rather than only disarming (P-01 ambiguity); `startNewOperation` ~60 lines; Menu New Operation also lacks the P-01 armed-hint slot (outside PV-016/017); Sectors panel clips UNREST rows at 125% text scale at 1280x720 (seen in the fix screenshot, outside this sprint's stories).
 
-**Verdict after update:** the recorded verdict stays APPROVED WITH CONDITIONS. All three conditions are now resolved or waived; conditions 1 and 3 take effect once the fixes are committed. Next: commit, then `/gate-check`.
+**Verdict after update:** the recorded verdict stays APPROVED WITH CONDITIONS. All three conditions are now resolved or waived; conditions 1 and 3 landed in db927b2. Next: `/retrospective`, then `/sprint-plan new` (the project stays in Production with Roster, Tactical, Interface and Audio epics open, so no stage `/gate-check` applies yet; the template's generic `/gate-check` step does not apply at sprint close).
