@@ -1,0 +1,478 @@
+{
+  "steps": [
+    {
+      "name": "s1-clean-origin",
+      "status": "never-started",
+      "hasContinue": false,
+      "buttons": [
+        "BEGIN NEW OPERATION",
+        "OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"
+      ],
+      "blob": null
+    },
+    {
+      "name": "s2-invalid-non-json",
+      "status": "invalid",
+      "hasContinue": false,
+      "blobAfterBoot": null
+    },
+    {
+      "name": "s2-invalid-schema",
+      "status": "invalid",
+      "hasContinue": false,
+      "blobAfterBoot": null
+    },
+    {
+      "name": "s2-after-second-reload",
+      "status": "never-started"
+    },
+    {
+      "name": "s3-debrief",
+      "play": "ok",
+      "outcome": {
+        "won": true,
+        "civiliansHit": 1,
+        "quietReplay": false,
+        "casualties": 0,
+        "deadIds": [],
+        "applyKey": 2
+      },
+      "filing": {
+        "status": "unfiled",
+        "reason": null
+      },
+      "unfiledLine": true,
+      "blobUnchangedWhileDebriefOpen": true,
+      "S0": {
+        "phase": "world",
+        "credits": 128450,
+        "contractsWon": [],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:INJURED",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 249.876,
+        "missionId": null,
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "telemetry": [
+        [
+          "nexus-telemetry-v1",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "s4-reload-on-debrief",
+      "menuStatus": "valid",
+      "durableFieldsEqualS0": true,
+      "phaseWorld": true,
+      "outcomeNull": true,
+      "selectedContract": "m01",
+      "after": {
+        "phase": "world",
+        "credits": 128450,
+        "contractsWon": [],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:INJURED",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 927.083999998927,
+        "missionId": "m01",
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "S0": {
+        "phase": "world",
+        "credits": 128450,
+        "contractsWon": [],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:INJURED",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 249.876,
+        "missionId": null,
+        "campaignWon": false,
+        "campaignFailed": false
+      }
+    },
+    {
+      "name": "s5-filed",
+      "filingAtDebrief": {
+        "status": "unfiled",
+        "reason": null
+      },
+      "filingAfterWorld": {
+        "status": "filed",
+        "reason": null
+      },
+      "appliedAtDebrief": {
+        "phase": "debrief",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 174128.60399999964,
+        "missionId": "m01",
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "S1": {
+        "phase": "world",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 174634.16399999955,
+        "missionId": null,
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "restored": {
+        "phase": "world",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 174892.92000000036,
+        "missionId": null,
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "restoredEqualsS1": true,
+      "missionIdAfterDebriefReturn": null,
+      "missionIdAfterContinue": null,
+      "creditsOnce": true,
+      "blobPresent": true
+    },
+    {
+      "name": "s6-mid-mission",
+      "blobUnchangedDuringMission": true,
+      "restored": {
+        "phase": "world",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 175573.12800000116,
+        "missionId": "m01",
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "S": {
+        "phase": "world",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 174904.93200000035,
+        "missionId": null,
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "durableEqual": true,
+      "selectedContract": "m01",
+      "noMissionRunning": true,
+      "outcomeNull": true,
+      "phase": "world"
+    },
+    {
+      "name": "s7-balance",
+      "records": "1/60 RECORDS",
+      "winRate": "100%",
+      "text": "BALANCE DATA\nLOCAL ONLY // 1/60 RECORDS\nCAMPAIGN AGGREGATES\nMISSIONS\n1\nWIN RATE\n100%\nABORTS\n0\nMEAN DURATION\n0:39\nMEAN FIRST CONTACT\n0:05\nCOLLATERAL RATE\n100%\nCIVILIANS HIT\n1\nOPERATIVES KIA\n0\nMED / CELL USED\n0 / 0\nMEAN PAYOUT\n80,000 CR\nTOTAL PAYOUT\n80,000 CR\nTOTAL FINES\n5,000 CR\nWEAPON DAMAGE SHARE\nSMG\n665 // 58%\nASSAULT\n436 // 38%\nSHOTGUN\n52 // 5%\nABILITY USE BY ROLE\nNO ROLE ABILITIES TRIGGERED.\nEXPORT JSON\nCLEAR\nCLOSE\nVER 7.2.1 // BUILD 2087.05.14\nUNAUTHORIZED ACCESS IS A CLASS-1 CORPORATE OFFENSE\nUSER: OPS_DIRECTOR // NEXUS GLOBAL // CLEARANCE: EXECUTIVE"
+    },
+    {
+      "name": "s7-export",
+      "download": "nexus-balance.json"
+    },
+    {
+      "name": "s7-clear",
+      "armedLabel": "CONFIRM // ERASE RECORDS?",
+      "recsWhileArmed": "1",
+      "lapsedLabel": "CLEAR",
+      "recsAfterLapse": "1",
+      "afterConfirmEmpty": true,
+      "records": "0"
+    },
+    {
+      "name": "s8-abort",
+      "afterAbort": {
+        "phase": "world",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 176638.22400000147,
+        "missionId": "m01",
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "telemetrySettingBeforeAssist": false,
+      "blobIdenticalAfterAbort": false,
+      "blobEqualExceptWorldClock": true,
+      "restored": {
+        "phase": "world",
+        "credits": 217405,
+        "contractsWon": [
+          "m01"
+        ],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:READY",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 176909.66400000107,
+        "missionId": "m01",
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "durableEqualS": true,
+      "selectedContract": "m01",
+      "telemetry": [
+        [
+          "nexus-telemetry-v1",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "s8-balance-abort-only",
+      "text": "CAMPAIGN AGGREGATES\nMISSIONS\n1\nWIN RATE\n--\nABORTS\n1\nMEAN DURATION\n--\nMEAN FIRST CONTACT\n--\nCOLLATERAL RATE\n--\nCIVILIANS HIT\n--\nOPERATIVES KIA\n--\nMED / CELL USED\n--\nMEAN PAYOUT\n--\nTOTAL PAYOUT\n--\nTOTAL FINES\n--\nWEAPON DAMAGE SHARE\nNO SQUAD FIRE RECORDED.\nABILITY USE BY ROLE\nNO ROLE ABILITIES TRIGGERED.\nEXPORT JSON\nCLEAR\nCLOSE\nVER 7.2.1 // BUILD 2087.05.14\nUNAUTHORIZED ACCESS IS A CLASS-1 CORPORATE "
+    },
+    {
+      "name": "s9-new-operation",
+      "armed": "CONFIRM NEW OPERATION // ERASE SAVED CAMPAIGN",
+      "lapsed": "BEGIN NEW OPERATION",
+      "blobUnchangedByArmAndLapse": true,
+      "afterConfirm": {
+        "phase": "world",
+        "credits": 128450,
+        "contractsWon": [],
+        "roster": [
+          "MARA:READY",
+          "GHOST:READY",
+          "DART:READY",
+          "TORQ:READY",
+          "RAVEN:INJURED",
+          "SLATE:READY",
+          "VEX:READY",
+          "KESTREL:READY"
+        ],
+        "t": 181.41599999964242,
+        "missionId": null,
+        "campaignWon": false,
+        "campaignFailed": false
+      },
+      "filing": {
+        "status": "filed",
+        "reason": null
+      },
+      "teleBefore": [
+        [
+          "nexus-telemetry-v1",
+          1
+        ]
+      ],
+      "teleAfter": [
+        [
+          "nexus-telemetry-v1",
+          1
+        ]
+      ],
+      "keysBefore": {
+        "nexus-save-v1": 9545,
+        "nexus-telemetry-v1": 194
+      },
+      "keysAfter": {
+        "nexus-save-v1": 4269,
+        "nexus-telemetry-v1": 194
+      }
+    },
+    {
+      "name": "s10-write-failure",
+      "filing": {
+        "status": "write-failed",
+        "reason": "quota"
+      },
+      "noticeShown": true,
+      "pageErrors": 0
+    },
+    {
+      "name": "s11-brief-chance",
+      "ids": [
+        "b-propellants",
+        "b-coating",
+        "b-hypervelocity"
+      ],
+      "chanceReadings_intel1": [
+        {
+          "chance": "36",
+          "risk": null
+        },
+        {
+          "chance": "38",
+          "risk": null
+        },
+        {
+          "chance": "40",
+          "risk": null
+        },
+        {
+          "chance": "42",
+          "risk": null
+        }
+      ],
+      "riskReadings_intel2": [
+        {
+          "chance": null,
+          "risk": "89 // SEVERE"
+        },
+        {
+          "chance": null,
+          "risk": "89 // SEVERE"
+        },
+        {
+          "chance": null,
+          "risk": "89 // SEVERE"
+        },
+        {
+          "chance": null,
+          "risk": "89 // SEVERE"
+        }
+      ],
+      "rIntel2": {
+        "chance": null,
+        "risk": "89 // SEVERE"
+      }
+    },
+    {
+      "name": "s12-frames",
+      "byPhase": {
+        "?": {
+          "n": 854,
+          "p50": 8.3,
+          "p95": 9.2,
+          "max": 241.2,
+          "over50ms": 2
+        }
+      },
+      "spikes": [
+        [
+          1786,
+          208,
+          "?"
+        ],
+        [
+          3412,
+          241,
+          "?"
+        ]
+      ],
+      "long": [
+        [
+          1584,
+          209,
+          "?"
+        ]
+      ]
+    }
+  ],
+  "errors": [
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+    "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico"
+  ]
+}
