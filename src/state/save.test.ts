@@ -31,7 +31,10 @@ import type { SaveStorage, SaveV10 } from './save'
 import { pressNewOperation } from '../ui/newOperationArm'
 import { SETTINGS_KEY, defaultSettings, initSettings, useSettingsStore } from './settingsStore'
 import { useTutorialStore } from './tutorialStore'
-import { useWorldStore } from './worldStore'
+import { freezeDeploy } from './deployFreeze'
+import { useMissionStore } from './missionStore'
+import { TELEMETRY_KEY, loadRecords, recordAbort } from './telemetry'
+import { resolveMission, useWorldStore } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
   data = new Map<string, string>()
@@ -1679,5 +1682,161 @@ describe('settings slot holds Quality and Difficulty, not the campaign blob', ()
     expect(raw).not.toMatch(/"quality"|"difficulty"/)
     expect(captureSave()).not.toHaveProperty('app.quality')
     expect(captureSave()).not.toHaveProperty('app.difficulty')
+  })
+})
+
+// PV-005 (TR-persistence-001, ADR-0002): a mission in progress is memory only.
+// Reload before Debrief returns the last Screen snapshot S; Abort discards the
+// mission without a Debrief and without a campaign write.
+describe('mid-mission reload and Abort discard', () => {
+  let C: string
+  let S: string
+  let writes: number
+
+  // A lived-in Screen visit with selected contract C and a non-default squad,
+  // flushed by autosave: the last Screen snapshot S.
+  function reachScreenSnapshot(): void {
+    vi.useFakeTimers()
+    stopAutosave = startAutosave(storage)
+    useAppStore.setState({ phase: 'world', credits: 222333 })
+    useWorldStore.setState({ t: 3600, influence: 7 })
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 35, contractsWon: ['m01'] })
+    useResearchStore.getState().start(nodeById('b-propellants'), 3600)
+    C = MISSIONS.find((m) => m.id !== 'm01' && !missionLocked(m, 2))!.id
+    useAppStore.getState().selectMission(C)
+    useAppStore.getState().toggleOperative('op4')
+    useAppStore.getState().toggleOperative('op6')
+    useAppStore.getState().goto('team')
+    vi.advanceTimersByTime(500)
+    S = storage.getItem(SAVE_KEY) as string
+    expect(S).not.toBeNull()
+    expect(readSave(storage)?.app).toMatchObject({ missionId: C, squad: ['op1', 'op2', 'op3', 'op6'] })
+    writes = 0
+    const setItem = storage.setItem.bind(storage)
+    storage.setItem = (key, value) => {
+      if (key === SAVE_KEY) writes++
+      setItem(key, value)
+    }
+  }
+
+  // Team Deploy, then the MissionScreen composer: mint the apply-once key,
+  // freeze the deploy, and bring the mission HUD live.
+  function deploy(): void {
+    useAppStore.getState().startMission()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('mission')
+    const applyKey = app.deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const ops = useCampaignStore.getState().operatives.filter((o) => app.squad.includes(o.id))
+    freezeDeploy(resolveMission(C)!, ops, applyKey)
+    useMissionStore.getState().reset()
+    useMissionStore.getState().setLive(true)
+  }
+
+  // The sim pushes HUD updates at a low rate for a long stretch of play.
+  function runMission(seconds: number): void {
+    for (let i = 1; i <= seconds; i++) {
+      useMissionStore.getState().setClock(`0:${String(i % 60).padStart(2, '0')}`)
+      useMissionStore.getState().setAlert(i % 3)
+      useMissionStore.getState().setCiviliansHit(i % 2)
+      vi.advanceTimersByTime(1000)
+    }
+  }
+
+  // Origin reload: the page dies (autosave with it), memory returns to the
+  // opening Operation, storage keeps the blob, boot hydrates to the Menu.
+  function reloadAndContinue(): void {
+    stopAutosave?.()
+    stopAutosave = null
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'menu', outcome: null })
+    continueOperation()
+  }
+
+  afterEach(() => {
+    useSettingsStore.setState(defaultSettings())
+  })
+
+  it('reload before Debrief: Continue returns S including C, opens the World Network, no mission, no outcome', () => {
+    reachScreenSnapshot()
+    const snapshot = JSON.parse(S) as SaveV10
+    deploy()
+    runMission(90)
+
+    reloadAndContinue()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.phase).not.toBe('mission')
+    expect(app.outcome).toBeNull()
+    expect(app.lastAppliedKey).toBe(0)
+    expect(app.missionId).toBe(C)
+    expect(app.squad).toEqual(['op1', 'op2', 'op3', 'op6'])
+    const restored = captureSave()
+    expect(restored.app).toEqual(snapshot.app)
+    expect(restored.world).toEqual(snapshot.world)
+    expect(restored.campaign).toEqual(snapshot.campaign)
+    expect(restored.research).toEqual(snapshot.research)
+
+    // Brief can be entered for C without re-selecting it.
+    useAppStore.getState().goto('brief')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'brief', missionId: C })
+  })
+
+  it('Abort from pause with telemetry off, then reload + Continue: named fields equal S, no Debrief ran', () => {
+    useSettingsStore.setState({ telemetry: false })
+    reachScreenSnapshot()
+    const snapshot = JSON.parse(S) as SaveV10
+    deploy()
+    runMission(45)
+
+    // Hud pause-menu Abort: the telemetry row (a no-op while off), then out.
+    useMissionStore.getState().setPaused(true)
+    recordAbort(C, 45, 1234, ['assault'], storage)
+    useAppStore.getState().goto('world')
+    expect(storage.getItem(TELEMETRY_KEY)).toBeNull()
+    expect(loadRecords(storage)).toEqual([])
+    // No Debrief: no outcome stored, nothing applied.
+    expect(useAppStore.getState().outcome).toBeNull()
+    expect(useAppStore.getState().lastAppliedKey).toBe(0)
+    vi.advanceTimersByTime(500)
+
+    reloadAndContinue()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    const restored = captureSave()
+    expect(restored.app.credits).toBe(snapshot.app.credits)
+    expect(restored.app.squad).toEqual(snapshot.app.squad)
+    expect(restored.world.influence).toBe(snapshot.world.influence)
+    expect(restored.world.sectors).toEqual(snapshot.world.sectors)
+    expect(restored.world.owner).toEqual(snapshot.world.owner)
+    expect(restored.campaign.intelLevel).toBe(snapshot.campaign.intelLevel)
+    expect(restored.campaign.intelProgress).toBe(snapshot.campaign.intelProgress)
+    expect(restored.campaign.operatives).toEqual(snapshot.campaign.operatives)
+    expect(restored.campaign.roster).toEqual(snapshot.campaign.roster)
+    expect(restored.research).toEqual(snapshot.research)
+    expect(restored.campaign.contractsWon).toEqual(snapshot.campaign.contractsWon)
+    expect(restored.campaign.campaignWon).toBe(snapshot.campaign.campaignWon)
+    expect(restored.campaign.campaignFailed).toBe(snapshot.campaign.campaignFailed)
+    // The aborted mission is not restored: the blob carries no mission state.
+    expect(app.phase).not.toBe('mission')
+    expect(storage.getItem(SAVE_KEY)).not.toMatch(/"phase"|"outcome"|"deploySerial"/)
+  })
+
+  it('the stored blob is unchanged from S for the whole mission: no write while in a mission', () => {
+    reachScreenSnapshot()
+    deploy()
+    for (const seconds of [1, 30, 600]) {
+      runMission(seconds)
+      expect(storage.getItem(SAVE_KEY)).toBe(S)
+    }
+    // Store changes made while in the mission never reach the blob either.
+    useWorldStore.setState({ t: 99999, influence: 500 })
+    useCampaignStore.setState({ intelProgress: 99 })
+    useAppStore.setState({ credits: 1 })
+    vi.advanceTimersByTime(10_000)
+    expect(storage.getItem(SAVE_KEY)).toBe(S)
+    expect(writes).toBe(0)
   })
 })
