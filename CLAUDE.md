@@ -34,6 +34,10 @@ Before suggesting three.js, r3f, or React APIs, read `docs/engine-reference/web/
 
 Only hand the user a task you cannot complete yourself. Launching the build, clicking through critical paths, smoke checks, and screenshots are yours: run the dev server and drive it in a browser (Claude in Chrome or another browser tool). If no browser tool is available, ask the user to enable one — do not hand them the manual check.
 
+## Gate Checks
+
+Run `/gate-check` only when moving to a new stage (`production/gate-checks/`). A sprint closes with QA sign-off → `/retrospective` → `/sprint-plan new`, whatever a skill template's "next step" says.
+
 ## Done
 
 Stop every dev server you started (`npm run dev`, `vite preview`) before the turn ends. Confirm the listener on port 4200 is gone.
