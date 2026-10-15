@@ -914,3 +914,134 @@ describe('menu continue: never-started vs valid save', () => {
     expect(menuSaveStatus(storage)).toBe('never-started')
   })
 })
+
+// PV-008 (TR-persistence-006): a bad campaign blob is dropped whole.
+describe('invalid or unreadable campaign blob: drop all-or-nothing', () => {
+  // A lived-in campaign whose strategy, roster and labs all differ from the
+  // New Operation desk, so any half-load would show in the stores.
+  function livedInSave(): SaveV9 {
+    useAppStore.setState({ phase: 'world', credits: 98765, squad: ['op1', 'op3'] })
+    useWorldStore.setState({ t: 5100, influence: 7 })
+    useResearchStore.getState().start(nodeById('b-propellants'), 5100)
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 55, contractsWon: ['m01'] })
+    const roster = structuredClone(useCampaignStore.getState().roster)
+    const firstId = Object.keys(roster)[0]
+    roster[firstId] = { ...roster[firstId], xp: 40 }
+    useCampaignStore.setState({ roster })
+    return captureSave()
+  }
+
+  // An origin reload: memory starts at the New Operation desk on the Menu,
+  // storage keeps whatever blob was on file.
+  function reloadMemory(): void {
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+  }
+
+  // The New Operation desk, captured from a clean origin.
+  function newOperationFixture(): SaveV9 {
+    startNewOperation(new MemoryStorage())
+    return captureSave()
+  }
+
+  function expectNoHalfLoad(fixture: SaveV9): void {
+    const now = captureSave()
+    expect(now.world).toEqual(fixture.world)
+    expect(now.campaign).toEqual(fixture.campaign)
+    expect(now.research).toEqual(fixture.research)
+    expect(now.app).toEqual(fixture.app)
+    expect(now.tutorial).toEqual(fixture.tutorial)
+  }
+
+  it('non-JSON blob injected by the harness: Continue absent, state invalid, distinct from never-started', () => {
+    livedInSave()
+    expect(writeSave(storage)).toBe(true)
+    // Harness inject: overwrite whatever key the module writes to.
+    storage.setItem(SAVE_KEY, 'not a campaign {{{')
+
+    reloadMemory()
+    const status = loadCampaignAtBoot(storage)
+    expect(status).toBe('invalid')
+    expect(status).not.toBe('never-started')
+    expect(menuSaveStatus(storage)).toBe('invalid')
+    // Continue is offered iff the status is valid.
+    expect(menuSaveStatus(storage) === 'valid').toBe(false)
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    expect(useAppStore.getState().phase).toBe('menu')
+
+    // A clean origin reads differently from the dropped blob.
+    expect(menuSaveStatus(new MemoryStorage())).toBe('invalid')
+    startNewOperation(new MemoryStorage())
+    expect(menuSaveStatus(new MemoryStorage())).toBe('never-started')
+  })
+
+  it('schema-failing JSON: Continue absent, no Screen entered, state invalid, distinct from never-started', () => {
+    const save = livedInSave()
+    const blob = structuredClone(save) as unknown as Record<string, unknown>
+    // Valid JSON, wrong schema: an unknown tutorial id in the last section.
+    ;(blob.tutorial as Record<string, unknown>).seen = ['not-a-hint']
+    storage.setItem(SAVE_KEY, JSON.stringify(blob))
+
+    reloadMemory()
+    expect(loadCampaignAtBoot(storage)).toBe('invalid')
+    expect(menuSaveStatus(storage)).toBe('invalid')
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    // Hydrate never ran: the director is still on the Menu, no Screen entered.
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('menu')
+    for (const screen of ['world', 'research', 'brief', 'team'] as const) {
+      expect(app.phase).not.toBe(screen)
+    }
+  })
+
+  it('no half-load: strategy, roster and laboratories stay at the New Operation defaults', () => {
+    const fixture = newOperationFixture()
+    const save = livedInSave()
+    expect(save.app.credits).not.toBe(fixture.app.credits)
+    expect(save.research.labs).not.toEqual(fixture.research.labs)
+
+    // Every section is lived-in and valid except one late field, so a loader
+    // that applied sections as it validated them would leave a trace.
+    const bad = structuredClone(save) as unknown as Record<string, unknown>
+    ;(bad.tutorial as Record<string, unknown>).seen = ['not-a-hint']
+    const injects = ['{"version": 9, "world": ', JSON.stringify(bad)]
+
+    for (const raw of injects) {
+      storage.setItem(SAVE_KEY, raw)
+      reloadMemory()
+      expect(loadCampaignAtBoot(storage)).toBe('invalid')
+      expect(useAppStore.getState().phase).toBe('menu')
+      // The director starts from the Menu: New Operation is the only path.
+      startNewOperation(storage)
+      expectNoHalfLoad(fixture)
+    }
+
+    // Before New Operation, the reloaded Menu memory carries nothing either.
+    storage.setItem(SAVE_KEY, JSON.stringify(bad))
+    reloadMemory()
+    loadCampaignAtBoot(storage)
+    const now = captureSave()
+    expect(now.world).toEqual(fixture.world)
+    expect(now.campaign).toEqual(fixture.campaign)
+    expect(now.research).toEqual(fixture.research)
+    expect(now.app.credits).toBe(fixture.app.credits)
+    expect(now.app.squad).toEqual(fixture.app.squad)
+  })
+
+  it('non-finite or negative Credits drop the whole blob rather than clamping (ADR-0013)', () => {
+    const fixture = newOperationFixture()
+    const save = livedInSave()
+    const json = JSON.stringify(save)
+    const marker = `"credits":${save.app.credits}`
+    expect(json).toContain(marker)
+    // 1e999 parses to Infinity: valid JSON, non-finite Credits.
+    for (const credits of ['1e999', '-1', '-0.5']) {
+      storage.setItem(SAVE_KEY, json.replace(marker, `"credits":${credits}`))
+      reloadMemory()
+      expect(loadCampaignAtBoot(storage)).toBe('invalid')
+      expect(storage.getItem(SAVE_KEY)).toBeNull()
+      expect(useAppStore.getState().credits).toBe(fixture.app.credits)
+      expect(captureSave().research).toEqual(fixture.research)
+    }
+  })
+})
