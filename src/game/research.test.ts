@@ -277,6 +277,32 @@ describe('installedAugs', () => {
   })
 })
 
+// RS-013: currentIssue is the latest completed project in a bay, by done order.
+describe('currentIssue by bay', () => {
+  it('never returns an unslotted Ballistics project for any bay', () => {
+    expect(byId.get('b-propellants')?.augSlot).toBeUndefined()
+    const done = ['b-propellants']
+    for (const slot of AUG_SLOTS) {
+      expect(currentIssue(done, slot)).toBeNull()
+    }
+    const mixed = ['c-interface', 'b-propellants']
+    for (const slot of AUG_SLOTS) {
+      expect(currentIssue(mixed, slot)?.id).not.toBe('b-propellants')
+    }
+  })
+
+  it('issues the later Neural project by done order', () => {
+    expect(currentIssue(['c-interface', 'c-accelerator'], 'NEURAL')?.id).toBe('c-accelerator')
+    expect(currentIssue(['c-accelerator', 'c-interface'], 'NEURAL')?.id).toBe('c-interface')
+  })
+
+  it('returns none in every bay for an empty done', () => {
+    for (const slot of AUG_SLOTS) {
+      expect(currentIssue([], slot)).toBeNull()
+    }
+  })
+})
+
 describe('authored program sums', () => {
   // The design document's authored totals: 248,000 + 261,000 + 270,000 CR.
   const BRANCH_TOTALS: Record<string, number> = {
