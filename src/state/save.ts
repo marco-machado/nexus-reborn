@@ -853,6 +853,8 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
   useResearchStore.setState({
     done: [],
     labs: { ballistics: null, cybernetics: null, control: null },
+    // A new campaign is not hydration: no remaining paints until the first sync.
+    lastSyncT: null,
   })
   useAppStore.setState({
     phase: 'world',

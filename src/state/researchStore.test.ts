@@ -25,7 +25,7 @@ const boot = {
 }
 
 beforeEach(() => {
-  useResearchStore.setState({ done: [], labs: idle() })
+  useResearchStore.setState({ done: [], labs: idle(), lastSyncT: null })
 })
 
 describe('initial state', () => {
@@ -432,5 +432,49 @@ describe('sync(t) completes projects; completion pays nothing', () => {
       expect(s.done).toEqual(['b-propellants'])
       expect(s.labs.ballistics).toBeNull()
     })
+  })
+})
+
+// RS-009: sync(t) stamps lastSyncT, the gate the screen paints remaining on.
+describe('lastSyncT', () => {
+  it('starts unset before any sync', () => {
+    expect(useResearchStore.getInitialState().lastSyncT).toBeNull()
+  })
+
+  it('is stamped by sync(t) when nothing completes', () => {
+    useResearchStore.getState().start(propellants, 0)
+    useResearchStore.getState().sync(7199)
+    const s = useResearchStore.getState()
+    expect(s.lastSyncT).toBe(7199)
+    expect(s.labs.ballistics).not.toBeNull()
+  })
+
+  it('is stamped by sync(t) when a project completes at that t', () => {
+    useResearchStore.getState().start(propellants, 0)
+    useResearchStore.getState().sync(2 * HOUR)
+    const s = useResearchStore.getState()
+    expect(s.lastSyncT).toBe(2 * HOUR)
+    expect(s.done).toEqual([propellants.id])
+  })
+
+  it('is stamped with idle labs and follows each later sync', () => {
+    useResearchStore.getState().sync(10)
+    expect(useResearchStore.getState().lastSyncT).toBe(10)
+    useResearchStore.getState().sync(20)
+    expect(useResearchStore.getState().lastSyncT).toBe(20)
+  })
+
+  it('does not notify subscribers when re-synced at the same t', () => {
+    useResearchStore.getState().sync(50)
+    const spy = vi.fn()
+    const unsub = useResearchStore.subscribe(spy)
+    useResearchStore.getState().sync(50)
+    unsub()
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('is not set by start()', () => {
+    useResearchStore.getState().start(propellants, 1000)
+    expect(useResearchStore.getState().lastSyncT).toBeNull()
   })
 })

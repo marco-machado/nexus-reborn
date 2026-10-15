@@ -3409,7 +3409,10 @@ button.hud-slot:focus-visible {
   white-space: nowrap;
 }
 
-.rs-lab i.mini { font-size: calc(8.5px * var(--text-scale)); letter-spacing: 0.1em; }
+.rs-lab i.mini,
+.rs-lab .rs-remaining.mini { font-size: calc(8.5px * var(--text-scale)); letter-spacing: 0.1em; }
+/* P-22 remaining numeral: tabular so the countdown does not jitter. */
+.rs-remaining { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* the tree plate */
 .rs-tree {

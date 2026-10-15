@@ -28,7 +28,8 @@ import type { Branch, ResearchNode } from '../game/research'
 import { Chip, LockGlyph, Panel, ScrollBox, SegBar } from './bits'
 import { researchShape, type ResearchGlyphId } from './researchGlyphs'
 import { ScreenChrome } from './Nav'
-import { act, fmt, spanLabel } from './util'
+import { RemainingLabel } from './RemainingLabel'
+import { act, fmt } from './util'
 /* ------------------------------- geometry --------------------------------- */
 // One branch column is drawn as a single scaled SVG, so the hexes and the
 // links between them stay aligned at any panel width.
@@ -199,6 +200,7 @@ function BranchColumn(props: {
 /* -------------------------------- side panels ----------------------------- */
 function LabRow(props: { branch: Branch; run: LabRun | null; onSelect: (id: string) => void }) {
   const t = useWorldStore((s) => s.t)
+  const lastSyncT = useResearchStore((s) => s.lastSyncT)
   const run = props.run
   if (!run) {
     return (
@@ -226,19 +228,20 @@ function LabRow(props: { branch: Branch; run: LabRun | null; onSelect: (id: stri
       </span>
       <span className="rs-lab-name">{nodeTitle(node)}</span>
       <SegBar value={p * 100} tone="amber" mini />
-      <i className="dim mini">EST {spanLabel(run.endT - t)} REMAINING</i>
+      <RemainingLabel run={run} t={t} lastSyncT={lastSyncT} className="dim mini" />
     </button>
   )
 }
 function ProgressBlock(props: { run: LabRun }) {
   const t = useWorldStore((s) => s.t)
+  const lastSyncT = useResearchStore((s) => s.lastSyncT)
   const p = runProgress(props.run, t)
   return (
     <div className="rs-box rs-prog">
       <div className="rs-prog-top">
         <label>PROGRESS</label>
         <b className="rs-prog-pct">{Math.round(p * 100)}%</b>
-        <span className="dim">EST {spanLabel(props.run.endT - t)}</span>
+        <RemainingLabel run={props.run} t={t} lastSyncT={lastSyncT} className="dim" />
       </div>
       <SegBar value={p * 100} tone="amber" />
     </div>

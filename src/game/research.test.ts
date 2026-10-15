@@ -17,6 +17,7 @@ import {
   appliedNodeIds,
   wornNode,
   currentIssue,
+  remaining,
 } from './research'
 import { WEAPONS } from './data'
 import { generatedReward } from './contracts'
@@ -490,5 +491,38 @@ describe('no cancel verb (RS-006)', () => {
     const names = Object.keys(mod)
     expect(names.length).toBeGreaterThan(0)
     for (const name of names) expect(name).not.toMatch(/cancel|stop|abort/i)
+  })
+})
+
+// RS-009 / research.md Formulas: the remaining oracle. Querying it is not a
+// screen paint; none collapses not-active, researched and past-endT.
+describe('remaining(run, t) oracle', () => {
+  const run = { id: 'b-propellants', startedT: 0, endT: 7200 }
+
+  it('is endT - t strategic seconds for an active run, not the catalog duration', () => {
+    expect(remaining(run, 1000)).toBe(6200)
+    expect(remaining(run, 1000)).not.toBe(nodeById('b-propellants').hours * 3600)
+  })
+
+  it('is none with no active run (idle lab, researched project): no countdown', () => {
+    expect(remaining(null, 1000)).toBeNull()
+    expect(remaining(undefined, 1000)).toBeNull()
+  })
+
+  it('is none, not 0, at t = endT and after endT before the matching sync', () => {
+    expect(remaining(run, 7200)).toBeNull()
+    expect(remaining(run, 7201)).toBeNull()
+    expect(remaining(run, 1e9)).toBeNull()
+  })
+
+  it('has no max(0, ...) clamp and keeps fractional remainders positive', () => {
+    expect(remaining(run, 7199)).toBe(1)
+    expect(remaining(run, 7199.75)).toBe(0.25)
+    // Before startedT the formula is still endT - t, not clamped to the span.
+    expect(remaining(run, -100)).toBe(7300)
+  })
+
+  it('is none for a non-finite clock rather than painting a bogus value', () => {
+    expect(remaining(run, Number.NaN)).toBeNull()
   })
 })

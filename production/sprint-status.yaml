@@ -138,11 +138,11 @@ stories:
     name: "Remaining time label appears only after sync"
     file: "production/epics/research/story-009-remaining-time-label-appears-only-after-sync.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-015"
     name: "Pin and bay edges; death keeps the program"
     file: "production/epics/research/story-015-pin-and-bay-edges-death-keeps-the-program.md"

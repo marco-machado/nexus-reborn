@@ -494,6 +494,20 @@ export function crewBonus(done: readonly string[]): CrewBonus {
   return out
 }
 
+/**
+ * Remaining strategic seconds on a lab run at world time `t` — the formula
+ * oracle (research.md Formulas, P-22). `null` (none) when there is no active
+ * run or when `t >= endT`; otherwise `endT - t`, unclamped and never 0.
+ * `none` deliberately collapses not-active, researched and past-`endT`-before-
+ * sync. Querying it is not a screen paint: the screen paints only after
+ * `sync(t)` for that same `t` (`lastSyncT`). Not a 0–1 fraction, not catalog
+ * hours.
+ */
+export function remaining(run: { readonly endT: number } | null | undefined, t: number): number | null {
+  if (!run || !(t < run.endT)) return null
+  return run.endT - t
+}
+
 // The latest completed project in a bay. Unpinned bays wear this.
 export function currentIssue(done: readonly string[], slot: AugSlot): ResearchNode | null {
   let latest: ResearchNode | null = null

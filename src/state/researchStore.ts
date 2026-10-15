@@ -20,6 +20,11 @@ interface ResearchStoreState {
   // order, so the list is the record, not a set.
   done: string[]
   labs: Labs
+  // The world time of the last sync(t); null until the first one. The screen
+  // paints remaining only when this equals the current t (P-22). Not saved:
+  // hydrate calls sync(savedT), which stamps it; a new campaign resets it and
+  // waits for the first clock sync.
+  lastSyncT: number | null
   // True when the lab took the project, so the caller only bills a real start.
   start: (node: ResearchNode, t: number) => boolean
   sync: (t: number) => void
@@ -32,6 +37,7 @@ function idleLabs(): Labs {
 export const useResearchStore = create<ResearchStoreState>((set, get) => ({
   done: [],
   labs: idleLabs(),
+  lastSyncT: null,
 
   start: (node, t) => {
     const s = get()
@@ -57,7 +63,12 @@ export const useResearchStore = create<ResearchStoreState>((set, get) => ({
       const run = s.labs[b]
       if (run && t >= run.endT) due.push({ branch: b, run })
     }
-    if (due.length === 0) return
+    // Every sync stamps lastSyncT, due or not; an unchanged stamp skips the
+    // write so a paused clock does not notify subscribers each batch.
+    if (due.length === 0) {
+      if (s.lastSyncT !== t) set({ lastSyncT: t })
+      return
+    }
     due.sort((a, b) => a.run.endT - b.run.endT)
     const labs = { ...s.labs }
     const done = s.done.slice()
@@ -65,7 +76,7 @@ export const useResearchStore = create<ResearchStoreState>((set, get) => ({
       done.push(run.id)
       labs[branch] = null
     }
-    set({ done, labs })
+    set({ done, labs, lastSyncT: t })
   },
 }))
 
