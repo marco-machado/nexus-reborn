@@ -170,8 +170,10 @@ export interface AppState {
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
   spendCredits: (amount: number) => void
   // Research AUTHORIZE (ADR-0013): re-reads the balance, starts the project,
-  // then bills it. A short balance or a lab that refuses the project is a
-  // full no-op. Returns whether the project started.
+  // then bills it and re-reads the balance to confirm the debit landed. A
+  // short balance, a lab that refuses the project, or a debit that did not
+  // land is a full no-op (the occupancy is released). Returns whether the
+  // project started and was billed.
   authorizeResearch: (node: ResearchNode, t: number) => boolean
   // Tax yield and other income. Does not convert from Influence.
   addCredits: (amount: number) => void
@@ -244,12 +246,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   // occupancy only and may still refuse (busy lab, unmet prerequisites).
   // A non-positive or non-finite listed cost is refused before start()
   // (research.md Core Rule 3), so no project can start unbilled.
+  // After the spend, Credits are re-read (getState, same synchronous command):
+  // the debit landed only if the balance fell by exactly the listed cost.
+  // Otherwise the undo puts the labs back to their pre-start() value — lab
+  // idle, project available. The undo is internal (no cancel API) and never
+  // touches the ledger: no addCredits, no setState({ credits }).
   authorizeResearch: (node, t) => {
     if (!(Number.isFinite(node.cost) && node.cost > 0)) return false
     if (get().credits < node.cost) return false
-    if (!useResearchStore.getState().start(node, t)) return false
+    const research = useResearchStore.getState()
+    const labsBefore = research.labs
+    if (!research.start(node, t)) return false
+    const before = get().credits
     get().spendCredits(node.cost)
-    return true
+    if (get().credits === before - node.cost) return true
+    useResearchStore.setState({ labs: labsBefore })
+    return false
   },
   // Signs a recruitment candidate. The fee clears here first, so a blocked
   // hire (unknown candidate, roster at cap, overdraw) costs nothing.

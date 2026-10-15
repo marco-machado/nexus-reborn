@@ -2434,3 +2434,172 @@ describe('Authorize success: start, then one debit (RS-002)', () => {
     }
   })
 })
+
+// RS-003 / TR-research-005 (ADR-0013, research.md Core Rule 3): authorize when
+// Economy refuses, when start() refuses, and when the debit does not land.
+describe('Authorize when Economy refuses or start() fails (RS-003)', () => {
+  const PROPELLANTS = nodeById('b-propellants')
+  const idle = () => ({ ballistics: null, cybernetics: null, control: null })
+
+  beforeEach(() => {
+    useResearchStore.setState({ done: [], labs: idle() })
+  })
+
+  // Wraps start / spendCredits / addCredits, records every call, and counts
+  // app-store
+  // notifications so any credits write — setState({ credits }) included — is
+  // visible. `start` and `spend` override the real behaviour when given.
+  function spyAuthorize(opts: { start?: boolean; spend?: 'noop' } = {}) {
+    const app = useAppStore.getState()
+    const research = useResearchStore.getState()
+    const calls: string[] = []
+    let appWrites = 0
+    useResearchStore.setState({
+      start: (node, t) => {
+        calls.push('start')
+        return opts.start === false ? false : research.start(node, t)
+      },
+    })
+    useAppStore.setState({
+      spendCredits: (n) => {
+        calls.push('spendCredits')
+        if (opts.spend !== 'noop') app.spendCredits(n)
+      },
+      addCredits: (n) => (calls.push('addCredits'), app.addCredits(n)),
+    })
+    // Patched after the setState above, so only authorize's own writes count.
+    const unsub = useAppStore.subscribe(() => appWrites++)
+    const restore = () => {
+      unsub()
+      useResearchStore.setState({ start: research.start })
+      useAppStore.setState({ spendCredits: app.spendCredits, addCredits: app.addCredits })
+    }
+    return { calls, writes: () => appWrites, restore }
+  }
+
+  function authorize(opts: Parameters<typeof spyAuthorize>[0] = {}) {
+    const spy = spyAuthorize(opts)
+    let ok: boolean
+    try {
+      ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+    } finally {
+      spy.restore()
+    }
+    return { ok, calls: spy.calls, writes: spy.writes() }
+  }
+
+  function expectIdleAndAvailable() {
+    const { labs, done } = useResearchStore.getState()
+    expect(labs).toEqual(idle())
+    expect(nodeState(PROPELLANTS, done, labs)).toBe('available')
+  }
+
+  it('Economy refuses the 16,000 CR spend: start() not called, Ballistics idle, project available', () => {
+    expect(PROPELLANTS.cost).toBe(16000)
+    for (const C of [0, 15999]) {
+      useAppStore.setState({ credits: C })
+      expect(nodeState(PROPELLANTS, [], idle())).toBe('available')
+      const { ok, calls, writes } = authorize()
+      expect(ok).toBe(false)
+      expect(calls).toEqual([])
+      expect(writes).toBe(0)
+      expectIdleAndAvailable()
+      expect(useAppStore.getState().credits).toBe(C)
+    }
+  })
+
+  it('start() true but the debit does not land: Credits re-read after spend, undo leaves lab idle, project available, Credits = C, no addCredits or credits write', () => {
+    const C = 20000
+    useAppStore.setState({ credits: C })
+    let labsAfterStart: unknown = 'unset'
+    const research = useResearchStore.getState()
+    const { ok, calls, writes } = (() => {
+      const spy = spyAuthorize({ spend: 'noop' })
+      // Capture the occupancy start() really set, to prove start ran before
+      // the undo (an early return that never called start() fails here).
+      const wrapped = useResearchStore.getState().start
+      useResearchStore.setState({
+        start: (node, t) => {
+          const r = wrapped(node, t)
+          labsAfterStart = useResearchStore.getState().labs.ballistics
+          return r
+        },
+      })
+      let ok: boolean
+      try {
+        ok = useAppStore.getState().authorizeResearch(PROPELLANTS, 0)
+      } finally {
+        spy.restore()
+        useResearchStore.setState({ start: research.start })
+      }
+      return { ok, calls: spy.calls, writes: spy.writes() }
+    })()
+    expect(ok).toBe(false)
+    expect(calls[0]).toBe('start')
+    expect(labsAfterStart).toMatchObject({ id: PROPELLANTS.id })
+    expect(calls).toEqual(['start', 'spendCredits'])
+    expect(calls).not.toContain('addCredits')
+    // No app-store write at all: no setState({ credits }), no restore.
+    expect(writes).toBe(0)
+    expectIdleAndAvailable()
+    expect(useAppStore.getState().credits).toBe(C)
+  })
+
+  it('the post-spend Credits read decides the outcome: same start() and one spendCredits, landed debit keeps the lab, a debit that did not land releases it', () => {
+    // The only difference between the two runs is what Credits read after
+    // spendCredits; without a post-spend re-read both would return true.
+    useAppStore.setState({ credits: 20000 })
+    const landed = authorize()
+    expect(landed.calls).toEqual(['start', 'spendCredits'])
+    expect(landed.ok).toBe(true)
+    expect(useResearchStore.getState().labs.ballistics?.id).toBe(PROPELLANTS.id)
+    expect(useAppStore.getState().credits).toBe(4000)
+
+    useResearchStore.setState({ done: [], labs: idle() })
+    useAppStore.setState({ credits: 20000 })
+    const missed = authorize({ spend: 'noop' })
+    expect(missed.calls).toEqual(['start', 'spendCredits'])
+    expect(missed.ok).toBe(false)
+    expectIdleAndAvailable()
+    expect(useAppStore.getState().credits).toBe(20000)
+  })
+
+  it('the undo releases only the lab it took: other running labs are untouched', () => {
+    const cyber = nodesOfBranch('cybernetics').find((n) => n.needs.length === 0)!
+    useAppStore.setState({ credits: cyber.cost + PROPELLANTS.cost })
+    expect(useAppStore.getState().authorizeResearch(cyber, 0)).toBe(true)
+    const running = useResearchStore.getState().labs.cybernetics
+    const { ok } = authorize({ spend: 'noop' })
+    expect(ok).toBe(false)
+    const { labs } = useResearchStore.getState()
+    expect(labs.ballistics).toBeNull()
+    expect(labs.cybernetics).toBe(running)
+    expect(useAppStore.getState().credits).toBe(PROPELLANTS.cost)
+  })
+
+  it('start() returns false with Credits at least the cost: spendCredits not called, Credits unchanged, lab idle, project available', () => {
+    for (const C of [16000, 20000]) {
+      useAppStore.setState({ credits: C })
+      const { ok, calls, writes } = authorize({ start: false })
+      expect(ok).toBe(false)
+      expect(calls).toEqual(['start'])
+      expect(writes).toBe(0)
+      expectIdleAndAvailable()
+      expect(useAppStore.getState().credits).toBe(C)
+    }
+  })
+
+  it('the undo is internal: no cancel / stop / abort / undo / refund API and no reason enum is exported', async () => {
+    const forbidden = /cancel|stop|abort|undo|refund|release|reason/i
+    const appMod = await import('./appStore')
+    const researchMod = await import('./researchStore')
+    for (const name of [
+      ...Object.keys(appMod),
+      ...Object.keys(researchMod),
+      ...Object.keys(useAppStore.getState()),
+      ...Object.keys(useResearchStore.getState()),
+    ]) {
+      expect(name).not.toMatch(forbidden)
+    }
+  })
+})
