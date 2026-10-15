@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nodeState, useResearchStore } from './researchStore'
 import { useAppStore } from './appStore'
+import { TIME_SCALE, useWorldStore } from './worldStore'
 import type { Labs } from './researchStore'
 import { BRANCH_IDS, nodeById, nodesOfBranch } from '../game/research'
 
@@ -275,6 +276,81 @@ describe('lab endT from authorize time and duration', () => {
       expect(run?.startedT).toBe(starts[i])
       expect(run?.endT).toBe(starts[i] + 50400)
       expect(run?.endT).toBe(starts[i] + cap.hours * HOUR)
+    })
+  })
+})
+
+// RS-008: sync(t) completes a run once t >= endT, at equality and not a
+// second later, and completion pays nothing. The strategic case advances the
+// World Network clock through tick(), the Screen path, then syncs at its t.
+describe('sync(t) completes projects; completion pays nothing', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('sync(7199) leaves a run with endT 7200 active', () => {
+    expect(useResearchStore.getState().start(propellants, 0)).toBe(true)
+    expect(useResearchStore.getState().labs.ballistics?.endT).toBe(7200)
+    useResearchStore.getState().sync(7199)
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual([])
+    expect(s.labs.ballistics).toEqual({ id: 'b-propellants', startedT: 0, endT: 7200 })
+    expect(nodeState(propellants, s.done, s.labs)).toBe('active')
+  })
+
+  it('sync(7200) researches it, idles the lab, and neither calls addCredits nor moves Credits', () => {
+    const addCredits = vi.spyOn(useAppStore.getState(), 'addCredits')
+    useResearchStore.getState().start(propellants, 0)
+    const creditsBefore = useAppStore.getState().credits
+    useResearchStore.getState().sync(7200)
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual(['b-propellants'])
+    expect(s.labs.ballistics).toBeNull()
+    expect(nodeState(propellants, s.done, s.labs)).toBe('researched')
+    expect(addCredits).not.toHaveBeenCalled()
+    expect(useAppStore.getState().credits).toBe(creditsBefore)
+  })
+
+  it('completes at equality, not one second later', () => {
+    useResearchStore.getState().start(propellants, 0)
+    useResearchStore.getState().sync(7199)
+    expect(useResearchStore.getState().done).toEqual([])
+    useResearchStore.getState().sync(7200)
+    expect(useResearchStore.getState().done).toEqual(['b-propellants'])
+    expect(useResearchStore.getState().labs.ballistics).toBeNull()
+  })
+
+  describe('after a strategic clock advance', () => {
+    const T0 = 50_000
+    let worldBefore: ReturnType<typeof useWorldStore.getState>
+
+    beforeEach(() => {
+      worldBefore = { ...useWorldStore.getState() }
+      useWorldStore.setState({ t: T0, speed: 1, paused: false, review: null })
+    })
+
+    afterEach(() => {
+      useWorldStore.setState(worldBefore, true)
+    })
+
+    it('Advanced Propellants started at T0 is researched once t advances >= 7200 and sync runs at that t', () => {
+      expect(useResearchStore.getState().start(propellants, T0)).toBe(true)
+      expect(useResearchStore.getState().labs.ballistics?.endT).toBe(T0 + 7200)
+
+      // One Screen batch short of the end leaves it running.
+      useWorldStore.getState().tick(7199 / TIME_SCALE)
+      expect(useWorldStore.getState().t - T0).toBeLessThan(7200)
+      useResearchStore.getState().sync(useWorldStore.getState().t)
+      expect(useResearchStore.getState().labs.ballistics?.id).toBe('b-propellants')
+
+      // Advance the strategic clock past T0 + 7200, then sync at that t.
+      useWorldStore.getState().tick(2 / TIME_SCALE)
+      const t = useWorldStore.getState().t
+      expect(t - T0).toBeGreaterThanOrEqual(7200)
+      useResearchStore.getState().sync(t)
+      const s = useResearchStore.getState()
+      expect(s.done).toEqual(['b-propellants'])
+      expect(s.labs.ballistics).toBeNull()
     })
   })
 })
