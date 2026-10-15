@@ -29,6 +29,7 @@ import {
 } from './save'
 import type { SaveStorage, SaveV10 } from './save'
 import { pressNewOperation } from '../ui/newOperationArm'
+import { SETTINGS_KEY, defaultSettings, initSettings, useSettingsStore } from './settingsStore'
 import { useTutorialStore } from './tutorialStore'
 import { useWorldStore } from './worldStore'
 
@@ -1639,5 +1640,44 @@ describe('continue restores the last screen snapshot', () => {
     // Contracts stay locked: selecting one is refused.
     useAppStore.getState().selectMission('m01')
     expect(useAppStore.getState()).toMatchObject({ phase: 'world', missionId: null })
+  })
+})
+
+describe('settings slot holds Quality and Difficulty, not the campaign blob', () => {
+  afterEach(() => {
+    initSettings(null)
+    useSettingsStore.setState(defaultSettings())
+  })
+
+  it('Q2 and D2 changed after a valid save come from the settings slot on reload and Continue', () => {
+    initSettings(storage)
+    useAppStore.setState({ phase: 'world', credits: 4242 })
+    expect(writeSave(storage)).toBe(true)
+    const blob = storage.getItem(SAVE_KEY)
+
+    useSettingsStore.getState().setQuality('high')
+    useSettingsStore.getState().setDifficulty('hardened')
+    // Changing Settings never rewrites the campaign blob.
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
+
+    // Origin reload: settings before the save system, then Continue.
+    useSettingsStore.setState(defaultSettings())
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+    initSettings(storage)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    continueOperation()
+
+    expect(useAppStore.getState().credits).toBe(4242)
+    expect(useSettingsStore.getState().quality).toBe('high')
+    expect(useSettingsStore.getState().difficulty).toBe('hardened')
+    expect(JSON.parse(storage.getItem(SETTINGS_KEY) as string)).toMatchObject({
+      quality: 'high',
+      difficulty: 'hardened',
+    })
+    const raw = storage.getItem(SAVE_KEY) as string
+    expect(raw).not.toMatch(/"quality"|"difficulty"/)
+    expect(captureSave()).not.toHaveProperty('app.quality')
+    expect(captureSave()).not.toHaveProperty('app.difficulty')
   })
 })

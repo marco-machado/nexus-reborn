@@ -75,11 +75,11 @@ stories:
     name: "Settings envelope survives New Operation and reload"
     file: "production/epics/persistence-and-validation/story-003-settings-envelope-survives-new-operation-and-reload.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-005"
     name: "Mid-mission reload and Abort discard"
     file: "production/epics/persistence-and-validation/story-005-mid-mission-reload-and-abort-discard.md"

@@ -215,3 +215,50 @@ describe('difficulty and bed levels', () => {
     expect(getAudioLevels().ambience).toBeCloseTo(0.5)
   })
 })
+
+describe('settings envelope survives New Operation and reload', () => {
+  // Settings recorded as D, Q, T, A, R: every field differs from the default.
+  function recordDQTAR(): void {
+    const s = useSettingsStore.getState()
+    s.setDifficulty('hardened')
+    s.setQuality('low')
+    s.setTelemetry(true)
+    s.setVolume('master', 40)
+    s.setVolume('music', 25)
+    s.setMuted(true)
+    s.setBindingOverride('holdGround', ['KeyJ'])
+  }
+
+  function expectDQTAR(): void {
+    const s = useSettingsStore.getState()
+    expect(s.difficulty).toBe('hardened')
+    expect(s.quality).toBe('low')
+    expect(s.telemetry).toBe(true)
+    expect(s.masterVol).toBe(40)
+    expect(s.musicVol).toBe(25)
+    expect(s.muted).toBe(true)
+    expect(s.overrides).toEqual({ holdGround: ['KeyJ'] })
+    // Remap R is a binding override applied to the live table.
+    expect(bindingFor('KeyJ')?.id).toBe('holdGround')
+    expect(bindingFor('KeyH')).toBeUndefined()
+  }
+
+  it('keeps D, Q, T, A, R in memory and in the settings slot after New Operation', () => {
+    recordDQTAR()
+    const before = storage.getItem(SETTINGS_KEY)
+    startNewOperation(null)
+    expectDQTAR()
+    expect(storage.getItem(SETTINGS_KEY)).toBe(before)
+  })
+
+  it('hydrates D, Q, T, A, R on a full origin reload with no campaign and no Continue', () => {
+    recordDQTAR()
+    // Origin reload: memory and the live binding table go back to defaults;
+    // storage keeps only the settings slot (no campaign blob was ever written).
+    useSettingsStore.setState(defaultSettings())
+    applyOverrides({})
+    expect(useSettingsStore.getState().difficulty).toBe('standard')
+    initSettings(storage)
+    expectDQTAR()
+  })
+})
