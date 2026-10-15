@@ -9,191 +9,173 @@
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
 
-sprint: 5
-goal: "Close the Research epic: one billed start per authorize with refusals before any spend, completions in ascending endT with a house order on ties, bay issue and pins, and deploy sampling frozen at mission create."
+sprint: 6
+goal: "Close the Persistence and validation epic: Continue restores exactly the last Screen, a bad or contradictory blob is dropped all-or-nothing with a distinct Menu state, Settings and telemetry survive New Operation, and a Debrief reads unfiled until the next Screen's autosave lands."
 start: "2026-10-15"
 end: "2026-10-28"
-generated: "2026-10-14"
-updated: "2026-10-14"
+generated: "2026-10-15"
+updated: "2026-10-15"
 
 stories:
-  - id: "RS-001"
-    name: "Program catalog, costs and fundability gap"
-    file: "production/epics/research/story-001-program-catalog-costs-and-fundability-gap.md"
+  - id: "PV-001"
+    name: "Menu Continue: never-started vs valid save"
+    file: "production/epics/persistence-and-validation/story-001-menu-continue-never-started-vs-valid-save.md"
     priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.1
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-004"
-    name: "Prerequisite states: locked, available, active"
-    file: "production/epics/research/story-004-prerequisite-states-locked-available-active.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.1
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-007"
-    name: "Lab endT from authorize time and duration"
-    file: "production/epics/research/story-007-lab-endt-from-authorize-time-and-duration.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.1
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-008"
-    name: "sync(t) completes projects; completion pays nothing"
-    file: "production/epics/research/story-008-sync-t-completes-projects-completion-pays-nothing.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.1
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-002"
-    name: "Authorize success: start, then one debit"
-    file: "production/epics/research/story-002-authorize-success-start-then-one-debit.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-003"
-    name: "Authorize when Economy refuses or start() fails"
-    file: "production/epics/research/story-003-authorize-when-economy-refuses-or-start-fails.md"
-    priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-005"
-    name: "Refusal text for locked, researched and busy-lab projects"
-    file: "production/epics/research/story-005-refusal-text-for-locked-researched-and-busy-lab-project.md"
-    priority: should-have
-    status: done
+    completed: ""
+  - id: "PV-008"
+    name: "Invalid or unreadable campaign blob is dropped all-or-nothing"
+    file: "production/epics/persistence-and-validation/story-008-invalid-or-unreadable-campaign-blob-is-dropped-all-or-nothing.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-006"
-    name: "Other eligibility refusals; no cancel verb"
-    file: "production/epics/research/story-006-other-eligibility-refusals-no-cancel-verb.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-011"
-    name: "done appends in ascending endT"
-    file: "production/epics/research/story-011-done-appends-in-ascending-endt.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-010"
-    name: "Labs frozen in the field; loss and abort leave Research alone"
-    file: "production/epics/research/story-010-labs-frozen-in-the-field-loss-and-abort-leave-research.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-012"
-    name: "Equal-endT house order within a bay"
-    file: "production/epics/research/story-012-equal-endt-house-order-within-a-bay.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-013"
-    name: "currentIssue by bay"
-    file: "production/epics/research/story-013-currentissue-by-bay.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.1
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-014"
-    name: "appliedNodeIds for unpinned, stock and pinned bays"
-    file: "production/epics/research/story-014-appliednodeids-for-unpinned-stock-and-pinned-bays.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.1
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-009"
-    name: "Remaining time label appears only after sync"
-    file: "production/epics/research/story-009-remaining-time-label-appears-only-after-sync.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-015"
-    name: "Pin and bay edges; death keeps the program"
-    file: "production/epics/research/story-015-pin-and-bay-edges-death-keeps-the-program.md"
-    priority: nice-to-have
-    status: done
+    completed: ""
+  - id: "PV-002"
+    name: "New Operation: two-step erase of the house"
+    file: "production/epics/persistence-and-validation/story-002-new-operation-two-step-erase-of-the-house.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-016"
-    name: "Deploy sampling: Research slice is unslotted ids only"
-    file: "production/epics/research/story-016-deploy-sampling-research-slice-is-unslotted-ids-only.md"
-    priority: nice-to-have
-    status: done
+    completed: ""
+  - id: "PV-004"
+    name: "Continue restores the last Screen snapshot"
+    file: "production/epics/persistence-and-validation/story-004-continue-restores-the-last-screen-snapshot.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-017"
-    name: "Completions after the deploy freeze apply next deploy only"
-    file: "production/epics/research/story-017-completions-after-the-deploy-freeze-apply-next-deploy-o.md"
-    priority: nice-to-have
-    status: done
+    completed: ""
+  - id: "PV-010"
+    name: "Contradictory campaign flags drop the blob"
+    file: "production/epics/persistence-and-validation/story-010-contradictory-campaign-flags-drop-the-blob.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "PV-011"
+    name: "Valid flag combinations load as stored"
+    file: "production/epics/persistence-and-validation/story-011-valid-flag-combinations-load-as-stored.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "PV-003"
+    name: "Settings envelope survives New Operation and reload"
+    file: "production/epics/persistence-and-validation/story-003-settings-envelope-survives-new-operation-and-reload.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "PV-005"
+    name: "Mid-mission reload and Abort discard"
+    file: "production/epics/persistence-and-validation/story-005-mid-mission-reload-and-abort-discard.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-018"
-    name: "Weapon sampling from applied ids"
-    file: "production/epics/research/story-018-weapon-sampling-from-applied-ids.md"
-    priority: nice-to-have
-    status: done
+    completed: ""
+  - id: "PV-006"
+    name: "Debrief applies once in session memory"
+    file: "production/epics/persistence-and-validation/story-006-debrief-applies-once-in-session-memory.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "PV-007"
+    name: "Next Screen autosave durably commits the Debrief result"
+    file: "production/epics/persistence-and-validation/story-007-next-screen-autosave-durably-commits-the-debrief-result.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "PV-009"
+    name: "Settings and telemetry garbage fall back independently"
+    file: "production/epics/persistence-and-validation/story-009-settings-and-telemetry-garbage-fall-back-independently.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-019"
-    name: "crewBonus from applied ids"
-    file: "production/epics/research/story-019-crewbonus-from-applied-ids.md"
-    priority: nice-to-have
-    status: done
+    completed: ""
+  - id: "PV-012"
+    name: "Hydrate syncs to saved t; RNG streams continue"
+    file: "production/epics/persistence-and-validation/story-012-hydrate-syncs-to-saved-t-rng-streams-continue.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: ""
+  - id: "PV-013"
+    name: "Telemetry opt-in default and no network egress"
+    file: "production/epics/persistence-and-validation/story-013-telemetry-opt-in-default-and-no-network-egress.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: "2026-10-14"
-  - id: "RS-020"
-    name: "Research exposes the completed set only"
-    file: "production/epics/research/story-020-research-exposes-the-completed-set-only.md"
+    completed: ""
+  - id: "PV-014"
+    name: "One record per outcome; cap 60 FIFO; log survives New Operation"
+    file: "production/epics/persistence-and-validation/story-014-one-record-per-outcome-cap-60-fifo-log-survives-new-operation.md"
     priority: nice-to-have
-    status: done
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "PV-015"
+    name: "Abort telemetry row and Balance win rate"
+    file: "production/epics/persistence-and-validation/story-015-abort-telemetry-row-and-balance-win-rate.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+  - id: "PV-016"
+    name: "Balance Export and two-step Clear"
+    file: "production/epics/persistence-and-validation/story-016-balance-export-and-two-step-clear.md"
+    priority: nice-to-have
+    status: backlog
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: "2026-10-14"
+    completed: ""
+  - id: "PV-017"
+    name: "Debrief filing-status reads unfiled until the next Screen"
+    file: "production/epics/persistence-and-validation/story-017-debrief-filing-status-reads-unfiled-until-the-next-screen.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+  - id: "PV-018"
+    name: "Write failure never reports filed"
+    file: "production/epics/persistence-and-validation/story-018-write-failure-never-reports-filed.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
