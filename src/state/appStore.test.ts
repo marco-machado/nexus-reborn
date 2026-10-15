@@ -11,7 +11,7 @@ import {
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, operativeById } from '../game/data'
-import { BRANCH_IDS, NODES, nodeById, nodeTitle, nodesOfBranch } from '../game/research'
+import { BRANCH_IDS, NODES, nodeById, nodeTitle, nodesOfBranch, wornNode } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
 import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
 import { eligibilityText, labsRunning, nodeState, useResearchStore } from './researchStore'
@@ -3048,5 +3048,70 @@ describe('Labs frozen in the field; loss and abort leave Research alone (RS-010)
     expect(calls).toEqual([])
     expect(useAppStore.getState().credits).toBe(creditsAtDeploy)
     expect(useWorldStore.getState().t).toBe(T0)
+  })
+})
+
+describe('Death drops the assignment, not the program (RS-015)', () => {
+  // TR-research-003 / ADR-0005: a KIA operative leaves the roster with her
+  // pins; Research `done` is untouched, and unpinned bays (new hires
+  // included) still follow current issue.
+  const T0 = 4 * 3600
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      t: T0,
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({
+      done: ['c-interface'],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', squad: ['op1', 'op2', 'op4'] })
+  })
+
+  for (const won of [true, false]) {
+    it(`Neural Interface I worn by Mara, Mara KIA at a ${won ? 'win' : 'loss'} debrief: Neural Interface I stays researched`, () => {
+      const mara = useCampaignStore.getState().operatives.find((o) => o.id === 'op1')
+      expect(mara?.codename).toBe('MARA')
+      useCampaignStore.getState().setBay('op1', 'NEURAL', 'c-interface')
+      const pins = useCampaignStore.getState().roster.op1.pins
+      expect(wornNode(useResearchStore.getState().done, pins, 'NEURAL')?.id).toBe('c-interface')
+
+      useAppStore.getState().setOutcome(outcome({ applyKey: 1, won, deadIds: ['op1'] }))
+      applyDebrief('m01')
+
+      const c = useCampaignStore.getState()
+      expect(c.lastReport?.kia).toEqual([{ id: 'op1', codename: 'MARA' }])
+      expect(c.operatives.some((o) => o.id === 'op1')).toBe(false)
+      expect(c.roster.op1).toBeUndefined()
+      expect(useAppStore.getState().squad).not.toContain('op1')
+
+      const { done } = useResearchStore.getState()
+      expect(done).toEqual(['c-interface'])
+      expect(nodeState(nodeById('c-interface'), done, useResearchStore.getState().labs)).toBe(
+        'researched',
+      )
+      // The blueprint is still worn by a surviving, unpinned operative.
+      const op2 = c.roster.op2
+      expect(op2.pins.NEURAL).toBeUndefined()
+      expect(wornNode(done, op2.pins, 'NEURAL')?.id).toBe('c-interface')
+    })
+  }
+
+  it('a new hire after the KIA is unpinned and wears current issue', () => {
+    useCampaignStore.getState().setBay('op1', 'NEURAL', 'c-interface')
+    useAppStore.getState().setOutcome(outcome({ applyKey: 1, won: false, deadIds: ['op1'] }))
+    applyDebrief('m01')
+    const candidate = useCampaignStore.getState().candidates[0]
+    expect(candidate).toBeDefined()
+    if (!candidate) throw new Error('no hire candidate')
+    expect(useCampaignStore.getState().acceptHire(candidate.id)).toBe(true)
+    const entry = useCampaignStore.getState().roster[candidate.id]
+    expect(entry.pins).toEqual({})
+    expect(wornNode(useResearchStore.getState().done, entry.pins, 'NEURAL')?.id).toBe('c-interface')
   })
 })

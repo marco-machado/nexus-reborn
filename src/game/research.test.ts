@@ -16,7 +16,9 @@ import {
   installedAugs,
   appliedNodeIds,
   wornNode,
+  wornAugs,
   currentIssue,
+  completedInBay,
   remaining,
 } from './research'
 import { WEAPONS } from './data'
@@ -303,6 +305,93 @@ describe('appliedNodeIds for unpinned, stock and pinned bays', () => {
     const stock = { NEURAL: 'STOCK', CHEST: 'STOCK', ARMS: 'STOCK', LEGS: 'STOCK' } as const
     expect(appliedNodeIds(all, undefined)).toEqual(all)
     expect(appliedNodeIds(all, stock)).toEqual(['b-propellants', 'b-coating'])
+  })
+})
+
+// RS-015 (TR-research-002 / TR-research-003): four bays, at most one worn
+// slotted project per bay; pins hold an older completed project; any pin that
+// is not in done, belongs to another bay, or names current issue / a tie
+// winner falls through to currentIssue.
+describe('pin and bay edges (RS-015)', () => {
+  it('lists Neural, Chest, Arms, Legs and wears at most one completed slotted project per bay', () => {
+    expect(AUG_SLOTS).toEqual(['NEURAL', 'CHEST', 'ARMS', 'LEGS'])
+    // Every slotted catalog project names one of those four bays.
+    for (const n of NODES) {
+      if (n.augSlot !== undefined) expect(AUG_SLOTS).toContain(n.augSlot)
+    }
+    // Every slotted project completed: each bay has several, wears one.
+    const done = NODES.map((n) => n.id)
+    for (const pins of [undefined, { NEURAL: 'c-interface' }] as const) {
+      const worn = wornAugs(done, pins)
+      expect(worn.map((w) => w.slot)).toEqual(AUG_SLOTS)
+      const applied = appliedNodeIds(done, pins)
+      for (const slot of AUG_SLOTS) {
+        expect(completedInBay(done, slot).length).toBeGreaterThanOrEqual(1)
+        const inBay = applied.filter((id) => byId.get(id)?.augSlot === slot)
+        expect(inBay.length).toBeLessThanOrEqual(1)
+        const node = worn.find((w) => w.slot === slot)?.node
+        expect(inBay).toEqual(node ? [node.id] : [])
+      }
+    }
+  })
+
+  it('a project is a blueprint: every operative may wear the same one', () => {
+    const done = ['c-interface']
+    const mara = wornNode(done, undefined, 'NEURAL')
+    const hire = wornNode(done, {}, 'NEURAL')
+    const pinned = wornNode(done, { NEURAL: 'c-interface' }, 'NEURAL')
+    expect(mara?.id).toBe('c-interface')
+    expect(hire).toBe(mara)
+    expect(pinned).toBe(mara)
+  })
+
+  it('pinned to Interface I, Mk II completes: currentIssue is Mk II, the pinned bay still wears Interface I', () => {
+    const pins = { NEURAL: 'c-interface' }
+    const before = ['c-interface']
+    expect(wornNode(before, pins, 'NEURAL')?.id).toBe('c-interface')
+    const after = [...before, 'c-accelerator']
+    expect(currentIssue(after, 'NEURAL')?.id).toBe('c-accelerator')
+    expect(wornNode(after, pins, 'NEURAL')?.id).toBe('c-interface')
+    // A new completion updates unpinned bays only.
+    expect(wornNode(after, undefined, 'NEURAL')?.id).toBe('c-accelerator')
+    expect(appliedNodeIds(after, pins)).toEqual(['c-interface'])
+  })
+
+  it('a pin naming an id not in done falls through to currentIssue', () => {
+    const done = ['c-interface']
+    expect(byId.get('c-accelerator')?.augSlot).toBe('NEURAL')
+    expect(wornNode(done, { NEURAL: 'c-accelerator' }, 'NEURAL')?.id).toBe('c-interface')
+    expect(wornNode(done, { NEURAL: 'no-such-project' }, 'NEURAL')?.id).toBe('c-interface')
+    expect(appliedNodeIds(done, { NEURAL: 'c-accelerator' })).toEqual(['c-interface'])
+  })
+
+  it('a pin naming a completed project of another bay falls through to currentIssue', () => {
+    const done = ['c-interface', 'c-synaptic']
+    expect(byId.get('c-synaptic')?.augSlot).toBe('CHEST')
+    expect(wornNode(done, { NEURAL: 'c-synaptic' }, 'NEURAL')?.id).toBe('c-interface')
+    // The Chest project is still worn in its own bay, once.
+    expect(appliedNodeIds(done, { NEURAL: 'c-synaptic' })).toEqual(['c-interface', 'c-synaptic'])
+  })
+
+  it('a pin naming an unslotted Ballistics project falls through to currentIssue', () => {
+    const done = ['b-propellants', 'c-interface']
+    expect(wornNode(done, { NEURAL: 'b-propellants' }, 'NEURAL')?.id).toBe('c-interface')
+  })
+
+  it('falls through to none when the bay has no slotted completion', () => {
+    expect(wornNode([], { NEURAL: 'c-interface' }, 'NEURAL')).toBeNull()
+    expect(wornNode(['b-propellants'], { NEURAL: 'c-accelerator' }, 'NEURAL')).toBeNull()
+  })
+
+  it('edge: a pin to current issue or to an equal-endT tie winner resolves to currentIssue', () => {
+    const done = ['c-interface', 'c-accelerator']
+    expect(wornNode(done, { NEURAL: 'c-accelerator' }, 'NEURAL')).toBe(currentIssue(done, 'NEURAL'))
+    // Same-tick Neural tie appended in house order: Sensor Fusion Array issues.
+    const tie = ['c-interface', 'k-sensor']
+    expect(currentIssue(tie, 'NEURAL')?.id).toBe('k-sensor')
+    expect(wornNode(tie, { NEURAL: 'k-sensor' }, 'NEURAL')).toBe(currentIssue(tie, 'NEURAL'))
+    // The tie non-issue stays pinnable.
+    expect(wornNode(tie, { NEURAL: 'c-interface' }, 'NEURAL')?.id).toBe('c-interface')
   })
 })
 
