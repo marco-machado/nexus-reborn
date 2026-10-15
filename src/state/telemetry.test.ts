@@ -21,6 +21,8 @@ import {
   telemetryRevision,
 } from './telemetry'
 import { applyDebrief } from './debrief'
+import { captureSave, startNewOperation } from './save'
+import { useWorldStore } from './worldStore'
 import telemetrySrc from './telemetry.ts?raw'
 import balanceSrc from '../ui/Balance.tsx?raw'
 import balanceGateSrc from '../ui/balanceGate.ts?raw'
@@ -35,6 +37,10 @@ class MemoryStorage implements SettingsStorage {
 
   setItem(key: string, value: string): void {
     this.data.set(key, value)
+  }
+
+  removeItem(key: string): void {
+    this.data.delete(key)
   }
 }
 
@@ -374,5 +380,107 @@ describe('no network egress (PV-013 AC3)', () => {
     expect(balanceGateSrc).not.toMatch(forbidden)
     // Export is a local data: URL download, not an upload.
     expect(balanceSrc).toMatch(/'data:application\/json/)
+  })
+})
+
+// PV-014 (TR-persistence-008, ADR-0015, ADR-0021): one record per outcome, a
+// 60-row FIFO log, and a log that New Operation leaves alone.
+describe('one record per outcome, cap 60 FIFO, log survives New Operation (PV-014)', () => {
+  beforeEach(() => {
+    // applyDebrief records through the default (browser) storage path.
+    vi.stubGlobal('window', { localStorage: storage })
+    useSettingsStore.setState({ telemetry: true })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    useSettingsStore.setState({ telemetry: false })
+  })
+
+  // A mission that reaches Debrief with a fresh apply key, then the invoice applies.
+  function debrief(applyKey: number, over: Partial<MissionOutcome> = {}): void {
+    useAppStore.setState({ phase: 'debrief', missionId: 'm01', lastAppliedKey: applyKey - 1 })
+    useAppStore.getState().setOutcome(outcome({ applyKey, ...over }))
+    applyDebrief('m01')
+  }
+
+  function seed(rows: MissionRecord[]): void {
+    saveRecords(rows, storage)
+    expect(loadRecords(storage)).toHaveLength(rows.length)
+  }
+
+  const identity = (r: MissionRecord) => `${r.outcome}|${r.missionId}|${r.durationSec}`
+
+  for (const won of [true, false]) {
+    it(`AC1: a ${won ? 'won' : 'lost'} Debrief adds exactly one ${won ? 'won' : 'lost'} row (N+1, not N+2)`, () => {
+      const N = 3
+      seed([record({ at: 1 }), record({ at: 2 }), record({ at: 3, outcome: 'aborted' })])
+      debrief(1, won ? {} : { won: false, reward: 0 })
+      // The Debrief screen staying open re-runs the apply; the key makes it a no-op.
+      applyDebrief('m01')
+      const rows = loadRecords(storage)
+      expect(rows).toHaveLength(N + 1)
+      expect(aggregate(rows).missions).toBe(N + 1)
+      const added = rows[rows.length - 1]
+      expect(added.outcome).toBe(won ? 'won' : 'lost')
+      expect(added.outcome).not.toBe('aborted')
+    })
+  }
+
+  const oldest = { outcome: 'lost', missionId: 'm07', durationSec: 123 } as const
+  function fullLog(): MissionRecord[] {
+    const rows = [record({ at: 0, ...oldest, payout: 0, fine: 0 })]
+    for (let i = 1; i < TELEMETRY_CAP; i++) rows.push(record({ at: i }))
+    return rows
+  }
+
+  it('AC2: at 60 records, another Debrief keeps 60 and drops the recorded oldest row', () => {
+    seed(fullLog())
+    const before = loadRecords(storage)
+    expect(identity(before[0])).toBe('lost|m07|123')
+    debrief(1)
+    const rows = loadRecords(storage)
+    expect(rows).toHaveLength(TELEMETRY_CAP)
+    expect(aggregate(rows).missions).toBe(TELEMETRY_CAP)
+    expect(rows.map(identity)).not.toContain('lost|m07|123')
+    expect(rows.slice(0, TELEMETRY_CAP - 1)).toEqual(before.slice(1))
+  })
+
+  it('AC2: at 60 records, an Abort keeps 60 and drops the recorded oldest row', () => {
+    seed(fullLog())
+    const before = loadRecords(storage)
+    recordAbort('m02', 12, 20870514, ['assault'])
+    const rows = loadRecords(storage)
+    expect(rows).toHaveLength(TELEMETRY_CAP)
+    expect(rows.map(identity)).not.toContain('lost|m07|123')
+    expect(rows.slice(0, TELEMETRY_CAP - 1)).toEqual(before.slice(1))
+    expect(rows[TELEMETRY_CAP - 1].outcome).toBe('aborted')
+  })
+
+  it('AC3: confirmed New Operation yields a new campaign and keeps the toggle and the log', () => {
+    // A new Operation from a parallel clean origin is the reference campaign.
+    startNewOperation(new MemoryStorage())
+    const fresh = captureSave()
+
+    // Snapshot S: a lived-in campaign with telemetry on and records present.
+    useAppStore.setState({ phase: 'world', credits: 77777 })
+    useWorldStore.setState({ t: 3600, influence: 5 })
+    seed([record({ at: 1 }), record({ at: 2, outcome: 'lost' })])
+    const toggle = useSettingsStore.getState().telemetry
+    const blob = storage.getItem(TELEMETRY_KEY)
+    const log = loadRecords(storage)
+    expect(toggle).toBe(true)
+
+    startNewOperation(storage)
+
+    const now = captureSave()
+    expect(now.app.credits).toBe(fresh.app.credits)
+    expect(now.campaign).toEqual(fresh.campaign)
+    expect(now.world.t).toBe(fresh.world.t)
+    expect(now.world.influence).toBe(fresh.world.influence)
+    expect(useSettingsStore.getState().telemetry).toBe(toggle)
+    expect(storage.getItem(TELEMETRY_KEY)).toBe(blob)
+    expect(loadRecords(storage)).toEqual(log)
+    expect(balanceEntryVisible(loadRecords(storage))).toBe(true)
   })
 })
