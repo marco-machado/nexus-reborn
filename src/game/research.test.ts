@@ -16,6 +16,7 @@ import {
   installedAugs,
   appliedNodeIds,
   wornNode,
+  currentIssue,
 } from './research'
 import { WEAPONS } from './data'
 import { generatedReward } from './contracts'
@@ -261,6 +262,18 @@ describe('installedAugs', () => {
     const reversed = installedAugs(['c-accelerator', 'c-interface'])
     expect(reversed.find((a) => a.slot === 'NEURAL')?.node?.id).toBe('c-interface')
     expect(reversed.find((a) => a.slot === 'LEGS')?.node).toBeNull()
+  })
+
+  // RS-012: currentIssue is the last same-bay entry of done. For an equal-endT
+  // tie, sync appends in BRANCH_IDS house order, so the later house issues and
+  // the earlier one stays an older completed project that can still be pinned.
+  it('issues the later house for a same-bay tie appended in house order', () => {
+    expect(BRANCH_IDS.indexOf('cybernetics')).toBeLessThan(BRANCH_IDS.indexOf('control'))
+    expect(currentIssue(['c-cache', 'k-adaptive'], 'NEURAL')?.id).toBe('k-adaptive')
+    expect(currentIssue(['c-interface', 'k-sensor'], 'NEURAL')?.id).toBe('k-sensor')
+    expect(wornNode(['c-interface', 'k-sensor'], { NEURAL: 'c-interface' }, 'NEURAL')?.id).toBe(
+      'c-interface',
+    )
   })
 })
 

@@ -197,6 +197,46 @@ describe('done appends in ascending endT', () => {
   })
 })
 
+// RS-012: an equal endT is not "latest". Same-bay completions that land on the
+// same endT append in BRANCH_IDS house order, whatever the authorize order, so
+// the bay's current issue is the later house (control after cybernetics).
+describe('equal endT house order within a bay', () => {
+  const sensor = nodeById('k-sensor')
+
+  it('injected Neural Cache Array and Adaptive Command AI at one endT: cybernetics appends first, control is current issue', () => {
+    const S = 100 * HOUR
+    const endT = S + 14 * HOUR
+    expect(nodeById('c-cache').augSlot).toBe('NEURAL')
+    expect(nodeById('k-adaptive').augSlot).toBe('NEURAL')
+    // Fixture set directly on the store, not via production authorize. The key
+    // order records the authorize order: Adaptive Command AI first.
+    useResearchStore.setState({
+      labs: {
+        control: { id: 'k-adaptive', startedT: S, endT },
+        cybernetics: { id: 'c-cache', startedT: S, endT },
+        ballistics: null,
+      },
+    })
+    useResearchStore.getState().sync(S + 50400)
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual(['c-cache', 'k-adaptive'])
+    expect(currentIssue(s.done, 'NEURAL')?.id).toBe('k-adaptive')
+    expect(s.labs).toEqual(idle())
+  })
+
+  it('Sensor Fusion Array authorized first, both ending at 7200: Neural Interface I appends first, Sensor Fusion Array is current issue', () => {
+    expect(sensor.augSlot).toBe('NEURAL')
+    expect(useResearchStore.getState().start(sensor, 0)).toBe(true)
+    expect(useResearchStore.getState().start(interfaceNode, 0)).toBe(true)
+    expect(useResearchStore.getState().labs.control?.endT).toBe(7200)
+    expect(useResearchStore.getState().labs.cybernetics?.endT).toBe(7200)
+    useResearchStore.getState().sync(7200)
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual(['c-interface', 'k-sensor'])
+    expect(currentIssue(s.done, 'NEURAL')?.id).toBe('k-sensor')
+  })
+})
+
 // RS-004: state is derived from done, the active runs and the catalog
 // prerequisites. A busy lab never makes a project locked.
 describe('nodeState', () => {

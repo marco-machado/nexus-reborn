@@ -111,11 +111,11 @@ stories:
     name: "Equal-endT house order within a bay"
     file: "production/epics/research/story-012-equal-endt-house-order-within-a-bay.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-013"
     name: "currentIssue by bay"
     file: "production/epics/research/story-013-currentissue-by-bay.md"
