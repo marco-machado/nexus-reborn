@@ -2872,3 +2872,181 @@ describe('Other eligibility refusals; no cancel verb (RS-006)', () => {
     }
   })
 })
+
+describe('Labs frozen in the field; loss and abort leave Research alone (RS-010)', () => {
+  // TR-research-001 / TR-research-005 / ADR-0002 / ADR-0001: the World Network
+  // does not tick in the field, so neither do the labs. A loss spends no ETA
+  // and moves no Research state; Abort writes nothing. Neither refunds.
+  const propellants = nodeById('b-propellants')
+  const neural = nodeById('c-interface')
+  const T0 = 5 * 3600
+  const idleLabs = () => ({ ballistics: null, cybernetics: null, control: null })
+
+  // Authorize on the World Network at T0 through the production command.
+  function authorize(node: (typeof NODES)[number]): void {
+    const r = useAppStore.getState().authorizeResearch(node, useWorldStore.getState().t)
+    expect(r.ok).toBe(true)
+  }
+
+  // Brief -> Assembly -> Deploy, then the MissionScreen composer, then
+  // `seconds` of tactical sim driven through the world tick (src/game/world.ts).
+  function deployAndRun(missionId: string, seconds: number) {
+    useAppStore.getState().selectMission(missionId)
+    useAppStore.getState().goto('team')
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+    const mission = resolveMission(missionId)
+    if (!mission) throw new Error('mission did not resolve ' + missionId)
+    const ops = useAppStore.getState().squad.map(liveOperativeById)
+    const applyKey = useAppStore.getState().deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const deploy = freezeDeploy(mission, ops, applyKey)
+    const world = createWorld(mission, ops, deploy)
+    setWorld(world)
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+    while (world.time < seconds) world.tick(0.05)
+    return { world, deploy, applyKey }
+  }
+
+  // Counts addCredits calls by wrapping the store action (the same seam
+  // applyDebrief and the Hud read through getState()). Restored by the caller.
+  function countAddCredits() {
+    const app = useAppStore.getState()
+    const calls: number[] = []
+    useAppStore.setState({ addCredits: (n) => (calls.push(n), app.addCredits(n)) })
+    return { calls, restore: () => useAppStore.setState({ addCredits: app.addCredits }) }
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      t: T0,
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({ done: [], labs: idleLabs() })
+    useAppStore.setState({
+      phase: 'world',
+      missionId: null,
+      squad: [...DEFAULT_SQUAD],
+      loadout: {},
+      credits: START_CREDITS,
+      outcome: null,
+      deploySerial: 0,
+      lastAppliedKey: 0,
+    })
+    setWorld(null)
+    useMissionStore.getState().reset()
+  })
+
+  it('AC 1: Advanced Propellants active, 120 s of tactical time: startedT / endT unchanged, not researched', () => {
+    authorize(propellants)
+    const run = structuredClone(useResearchStore.getState().labs.ballistics)
+    expect(run).toEqual({
+      id: 'b-propellants',
+      startedT: T0,
+      endT: T0 + propellants.hours * 3600,
+    })
+
+    const { world } = deployAndRun('m01', 120)
+    expect(world.time).toBeGreaterThanOrEqual(120)
+    expect(useAppStore.getState().phase).toBe('mission')
+
+    const { labs, done } = useResearchStore.getState()
+    expect(labs.ballistics).toEqual(run)
+    expect(done).toEqual([])
+    expect(nodeState(propellants, done, labs)).toBe('active')
+    // The strategic clock did not move under the tactical one (ADR-0001).
+    expect(useWorldStore.getState().t).toBe(T0)
+    setWorld(null)
+  })
+
+  it('AC 1 edge: even tactical time past endT does not complete the project in the field', () => {
+    // A 2 h project started 60 s before deploy; the sim runs 120 s.
+    useWorldStore.setState({ t: T0 })
+    useResearchStore.setState({
+      done: [],
+      labs: { ...idleLabs(), ballistics: { id: 'b-propellants', startedT: T0 - 7200 + 60, endT: T0 + 60 } },
+    })
+    deployAndRun('m01', 120)
+    const { labs, done } = useResearchStore.getState()
+    expect(labs.ballistics).toEqual({ id: 'b-propellants', startedT: T0 - 7200 + 60, endT: T0 + 60 })
+    expect(done).toEqual([])
+    setWorld(null)
+  })
+
+  it('AC 2: Advanced Propellants active at deploy, a loss debriefs: t unchanged, still active, no addCredits', () => {
+    authorize(propellants)
+    const run = structuredClone(useResearchStore.getState().labs.ballistics)
+    const creditsAtDeploy = useAppStore.getState().credits
+    expect(creditsAtDeploy).toBe(START_CREDITS - propellants.cost)
+
+    const { deploy, applyKey } = deployAndRun('m01', 30)
+    const loss = priceOutcome(
+      {
+        applyKey,
+        won: false,
+        kills: 1,
+        casualties: 1,
+        timeSec: 30,
+        civiliansHit: 0,
+        completedOptionalIds: [],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: deploy.economy.quietReplay,
+      },
+      deploy.economy,
+    )
+    const { calls, restore } = countAddCredits()
+    try {
+      useAppStore.getState().setOutcome(loss)
+      applyDebrief('m01')
+    } finally {
+      restore()
+      setWorld(null)
+    }
+
+    expect(useAppStore.getState().lastAppliedKey).toBe(applyKey)
+    expect(useWorldStore.getState().t).toBe(T0)
+    const { labs, done } = useResearchStore.getState()
+    expect(labs.ballistics).toEqual(run)
+    expect(done).toEqual([])
+    expect(nodeState(propellants, done, labs)).toBe('active')
+    expect(calls).toEqual([])
+    expect(useAppStore.getState().credits).toBe(creditsAtDeploy)
+  })
+
+  it('AC 3: Propellants researched, Neural Interface I active, Abort confirmed: done unchanged, still active, no refund, no addCredits', () => {
+    useResearchStore.setState({ done: ['b-propellants'], labs: idleLabs() })
+    authorize(neural)
+    const run = structuredClone(useResearchStore.getState().labs.cybernetics)
+    expect(run?.id).toBe('c-interface')
+    const creditsAtDeploy = useAppStore.getState().credits
+    expect(creditsAtDeploy).toBe(START_CREDITS - neural.cost)
+
+    deployAndRun('m01', 60)
+    const { calls, restore } = countAddCredits()
+    try {
+      // Hud onAbort, then the MissionScreen effect cleanup.
+      useAppStore.getState().goto('world')
+      setWorld(null)
+      useMissionStore.getState().reset()
+    } finally {
+      restore()
+    }
+
+    expect(useAppStore.getState().phase).toBe('world')
+    expect(useAppStore.getState().outcome).toBeNull()
+    const { labs, done } = useResearchStore.getState()
+    expect(done).toEqual(['b-propellants'])
+    expect(labs.cybernetics).toEqual(run)
+    expect(nodeState(neural, done, labs)).toBe('active')
+    expect(calls).toEqual([])
+    expect(useAppStore.getState().credits).toBe(creditsAtDeploy)
+    expect(useWorldStore.getState().t).toBe(T0)
+  })
+})

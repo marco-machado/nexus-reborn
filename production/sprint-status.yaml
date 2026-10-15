@@ -102,11 +102,11 @@ stories:
     name: "Labs frozen in the field; loss and abort leave Research alone"
     file: "production/epics/research/story-010-labs-frozen-in-the-field-loss-and-abort-leave-research.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
   - id: "RS-012"
     name: "Equal-endT house order within a bay"
     file: "production/epics/research/story-012-equal-endt-house-order-within-a-bay.md"

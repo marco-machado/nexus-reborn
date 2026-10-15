@@ -1,7 +1,7 @@
 // The Debrief apply transaction (ADR-0021). The only caller of the Debrief
 // owner mutators: Credits, campaign report, World Network write-back, squad
 // cleanup and the win ETA catch-up all run here, once, behind one key.
-import { netPayout, useAppStore } from './appStore'
+import { isPaid, netPayout, useAppStore } from './appStore'
 import { useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import { recordMissionOutcome } from './telemetry'
@@ -29,7 +29,9 @@ export function applyDebrief(missionId: string): void {
   const t0 = useWorldStore.getState().t
   // Local telemetry; a no-op unless the TELEMETRY setting is on.
   recordMissionOutcome(missionId, outcome)
-  useAppStore.getState().addCredits(netPayout(outcome))
+  // Only a paid win deposits. A loss or a quiet replay prices netPayout 0 and
+  // does not call addCredits at all (research.md: loss does not call it).
+  if (isPaid(outcome)) useAppStore.getState().addCredits(netPayout(outcome))
   // reportMission writes lastReport, which the World Network feed reads for
   // KIA codenames: it must run before applyMissionResult.
   useCampaignStore.getState().reportMission(missionId, outcome, t0)
