@@ -170,6 +170,32 @@ describe('squadWeapon', () => {
   })
 })
 
+// RS-018 (TR-research-002): bases are read from the weapon-table owner
+// (src/game/data.ts WEAPONS) at sample time, never pasted.
+describe('weapon sampling from applied ids (RS-018)', () => {
+  it('[Advanced Propellants, Tungsten Sabot] → assault damage = table base × 1.12 × 1.15', () => {
+    const base = WEAPONS.assault.damage
+    const w = squadWeapon('assault', ['b-propellants', 'b-sabot'])
+    expect(w.damage).toBeCloseTo(base * 1.12 * 1.15, 12)
+  })
+
+  it('Caseless Ammo Feed only → smg magazine = round(table magazine + 10)', () => {
+    const base = WEAPONS.smg.magazine
+    const smg = squadWeapon('smg', ['b-caseless'])
+    expect(smg.magazine).toBe(Math.round(base + 10))
+    expect(Number.isInteger(smg.magazine)).toBe(true)
+  })
+
+  it('empty applied ids → every field of every weapon equals its table base', () => {
+    for (const id of Object.keys(WEAPONS) as (keyof typeof WEAPONS)[]) {
+      const w = squadWeapon(id, [])
+      for (const field of Object.keys(WEAPONS[id]) as (keyof (typeof WEAPONS)[typeof id])[]) {
+        expect(w[field]).toBe(WEAPONS[id][field])
+      }
+    }
+  })
+})
+
 describe('crewBonus', () => {
   it('is zero for an empty done set and ignores unknown ids', () => {
     expect(crewBonus([])).toEqual({ maxHp: 0, speed: 0 })
