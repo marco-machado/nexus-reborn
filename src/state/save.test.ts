@@ -10,7 +10,7 @@ import {
   TAX_INTERVAL_SEC,
 } from '../game/influence'
 import { nodeById } from '../game/research'
-import { useAppStore } from './appStore'
+import { settleOutcome, useAppStore } from './appStore'
 import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import {
@@ -388,20 +388,20 @@ describe('save validation', () => {
     for (const id of ['m01', 'm02', 'm03']) {
       useCampaignStore.getState().reportMission(
         id,
-        {
+        settleOutcome({
           applyKey: 1, won: true, kills: 0, casualties: 0, timeSec: 10, civiliansHit: 1,
           reward: 0, bonus: 0, deadIds: [], survivorHp: {}, quietReplay: false,
-        },
+        }),
         0,
       )
     }
     const ids = useCampaignStore.getState().operatives.map((o) => o.id)
     useCampaignStore.getState().reportMission(
       'm01',
-      {
+      settleOutcome({
         applyKey: 2, won: false, kills: 0, casualties: ids.length, timeSec: 10, civiliansHit: 0,
         reward: 0, bonus: 0, deadIds: ids, survivorHp: {}, quietReplay: false,
-      },
+      }),
       0,
     )
     useAppStore.setState({ squad: [] })
@@ -533,7 +533,7 @@ describe('save round trip', () => {
       loadout: { op1: ['med', 'cell'], op3: [null, 'med'] },
     })
     useWorldStore.setState({ t: 1000, speed: 4, paused: true, selected: 'as', review: 500 })
-    useWorldStore.getState().applyMissionResult('m01', {
+    useWorldStore.getState().applyMissionResult('m01', settleOutcome({
       applyKey: 1,
       won: true,
       kills: 7,
@@ -545,7 +545,7 @@ describe('save round trip', () => {
       deadIds: [],
       survivorHp: {},
       quietReplay: false,
-    })
+    }))
     useResearchStore.getState().start(nodeById('b-propellants'), 1000)
     useCampaignStore.setState({
       intelLevel: 2,
@@ -625,7 +625,7 @@ describe('save round trip', () => {
     // One KIA opens a bay, one survivor comes back hurt, and a candidate signs.
     useCampaignStore.getState().reportMission(
       'm01',
-      {
+      settleOutcome({
         applyKey: 1,
         won: true,
         kills: 5,
@@ -637,7 +637,7 @@ describe('save round trip', () => {
         deadIds: ['op4'],
         survivorHp: { op1: 0.1, op2: 0.8, op3: 0.9 },
         quietReplay: false,
-      },
+      }),
       2000,
     )
     useAppStore.setState({ squad: ['op2', 'op3'] })
@@ -672,7 +672,7 @@ describe('save round trip', () => {
     const ids = useCampaignStore.getState().operatives.map((o) => o.id)
     useCampaignStore.getState().reportMission(
       'm01',
-      {
+      settleOutcome({
         applyKey: 1,
         won: false,
         kills: 0,
@@ -684,7 +684,7 @@ describe('save round trip', () => {
         deadIds: ids,
         survivorHp: {},
         quietReplay: false,
-      },
+      }),
       0,
     )
     useAppStore.setState({ squad: [] })

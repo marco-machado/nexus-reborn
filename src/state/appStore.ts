@@ -26,6 +26,12 @@ export interface MissionOutcome {
   // Optional-objective pay, priced from the Economy slice. A loss stores it
   // and pays none of it.
   bonus: number
+  // Priced once by Economy (ADR-0021 §4): min(reward, N × COLLATERAL_FINE).
+  // Stored on a loss and a quiet replay too; only a paid win debits it.
+  collateral: number
+  // Credits this Debrief deposits (ADR-0021 §4): reward + bonus − collateral
+  // on a paid win, else 0. Always a finite integer ≥ 0.
+  netPayout: number
   deadIds: string[]
   // End-of-mission health of each surviving deployed operative, as a fraction
   // of max HP. The debrief grades injuries from it (campaignStore).
@@ -64,9 +70,35 @@ export interface OutcomePricing {
 // costs this much off the fee; it can zero the payment, never run up a debt.
 export const COLLATERAL_FINE = 5000
 
-export function collateralFine(o: MissionOutcome): number {
+/** The priced fields `settleOutcome` adds; everything else comes from the sim and the slice. */
+export type UnsettledOutcome = Omit<MissionOutcome, 'collateral' | 'netPayout'>
+
+/**
+ * Economy's payout gate: a win that is not a quiet replay. A loss and a quiet
+ * replay still price Reward, bonus and Collateral, but none of them moves Credits.
+ */
+export function isPaid(o: Pick<MissionOutcome, 'won' | 'quietReplay'>): boolean {
+  return o.won && !o.quietReplay
+}
+
+/**
+ * Prices Collateral and net payout from an outcome's reward, bonus and hit
+ * count, and stores them (ADR-0021 §4). N = max(0, floor(civiliansHit)),
+ * non-finite → 0; Collateral is capped at Reward. Non-finite reward or bonus
+ * price as 0, so both stored fields are always finite integers ≥ 0.
+ */
+export function settleOutcome(o: UnsettledOutcome): MissionOutcome {
+  const reward = Number.isFinite(o.reward) ? Math.max(0, Math.floor(o.reward)) : 0
+  const bonus = Number.isFinite(o.bonus) ? Math.max(0, Math.floor(o.bonus)) : 0
   const hits = Number.isFinite(o.civiliansHit) ? Math.max(0, Math.floor(o.civiliansHit)) : 0
-  return Math.min(o.reward, hits * COLLATERAL_FINE)
+  const collateral = Math.min(reward, hits * COLLATERAL_FINE)
+  const netPayout = isPaid(o) ? reward + bonus - collateral : 0
+  return { ...o, reward, bonus, collateral, netPayout }
+}
+
+/** The stored Collateral of a priced outcome (ADR-0021: helpers read, never derive). */
+export function collateralFine(o: MissionOutcome): number {
+  return o.collateral
 }
 
 // Prices the invoice from the frozen Economy slice. The contract fee is stored
@@ -84,7 +116,7 @@ export function priceOutcome(result: MissionResult, economy: OutcomePricing): Mi
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) continue
     bonus += Math.floor(value)
   }
-  return {
+  return settleOutcome({
     applyKey: result.applyKey,
     won: result.won,
     kills: result.kills,
@@ -97,12 +129,12 @@ export function priceOutcome(result: MissionResult, economy: OutcomePricing): Mi
     survivorHp: result.survivorHp,
     quietReplay: result.quietReplay,
     telemetry: result.telemetry,
-  }
+  })
 }
 
+/** The stored net payout of a priced outcome (ADR-0021: helpers read, never derive). */
 export function netPayout(o: MissionOutcome): number {
-  if (o.quietReplay) return 0
-  return o.won ? o.reward - collateralFine(o) + o.bonus : 0
+  return o.netPayout
 }
 
 export function isQuietReplay(missionId: string | null): boolean {

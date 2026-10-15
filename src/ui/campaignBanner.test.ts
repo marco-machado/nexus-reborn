@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { campaignBanner } from './campaignBanner'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
+import { settleOutcome } from '../state/appStore'
 import type { MissionOutcome } from '../state/appStore'
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
-  return {
+  return settleOutcome({
     applyKey: 1, won: true, kills: 0, casualties: 0, timeSec: 10, civiliansHit: 1,
     reward: 0, bonus: 0, deadIds: [], survivorHp: {}, quietReplay: false, ...over,
-  }
+  })
 }
 
 const banner = () => {

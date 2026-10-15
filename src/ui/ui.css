@@ -4175,3 +4175,10 @@ button.hud-slot:focus-visible {
 .wm-map .wm-marker-ring { display: none; }
 .wm-map .wm-marker-label { opacity: 0; pointer-events: none; }
 .wm-map .wm-marker:hover .wm-marker-label, .wm-map .wm-marker:focus-visible .wm-marker-label { opacity: 1; }
+
+/* Debrief rows stagger in; with reduced motion they appear at once. The
+   opacity reset matters: `animation: none` alone would leave them at 0. */
+:root.s-reduce-motion .db-row {
+  animation: none;
+  opacity: 1;
+}

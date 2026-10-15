@@ -11,7 +11,7 @@ import {
   useWorldStore,
 } from './worldStore'
 import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SECTORS, sectorCorp } from '../game/atlas'
-import { INITIAL_CREDITS, useAppStore } from './appStore'
+import { INITIAL_CREDITS, settleOutcome, useAppStore } from './appStore'
 import {
   CONTRACT_EXPIRY_MIN_SEC,
   CONTRACT_INTEL_REQ,
@@ -306,7 +306,7 @@ describe('events feed', () => {
 })
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
-  return {
+  return settleOutcome({
     applyKey: 1,
     won: true,
     kills: 7,
@@ -319,7 +319,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     survivorHp: {},
     quietReplay: false,
     ...over,
-  }
+  })
 }
 
 // A hand-built record for hook tests: far expiry, client matching the

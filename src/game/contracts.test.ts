@@ -36,7 +36,7 @@ import { isWalkable } from './types'
 import { createWorld } from './world'
 import { EXPEDITE_EXTENSION_SEC } from './influence'
 import { headlessDeploy } from './deploy'
-import { INITIAL_CREDITS, useAppStore } from '../state/appStore'
+import { INITIAL_CREDITS, settleOutcome, useAppStore } from '../state/appStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { applyDebrief } from '../state/debrief'
 import { DAY, useWorldStore } from '../state/worldStore'
@@ -958,7 +958,7 @@ describe('quiet-replay ETA contract stream (story 005)', () => {
     })
     try {
       useAppStore.setState({
-        outcome: {
+        outcome: settleOutcome({
           applyKey: 1,
           won: true,
           kills: 0,
@@ -970,7 +970,7 @@ describe('quiet-replay ETA contract stream (story 005)', () => {
           deadIds: [],
           survivorHp: {},
           quietReplay: true,
-        },
+        }),
       })
       applyDebrief('m01')
     } finally {

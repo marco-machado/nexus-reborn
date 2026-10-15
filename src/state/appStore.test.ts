@@ -3,8 +3,10 @@ import {
   COLLATERAL_FINE,
   INITIAL_CREDITS,
   collateralFine,
+  isPaid,
   netPayout,
   priceOutcome,
+  settleOutcome,
   useAppStore,
 } from './appStore'
 import type { MissionOutcome, MissionResult } from './appStore'
@@ -68,7 +70,7 @@ const boot = {
 const START_CREDITS = 128450
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
-  return {
+  return settleOutcome({
     applyKey: 1,
     won: true,
     kills: 6,
@@ -81,7 +83,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     survivorHp: {},
     quietReplay: false,
     ...over,
-  }
+  })
 }
 
 beforeEach(() => {
@@ -2289,5 +2291,54 @@ describe('Abort writes nothing to Economy (EC-013)', () => {
     expect(next).toBe(burned + 1)
     expect(useAppStore.getState().lastAppliedKey).toBe(0)
     confirmAbort()
+  })
+})
+
+describe('priced outcome stores Collateral and net payout (ADR-0021 §4)', () => {
+  const result: MissionResult = {
+    applyKey: 1,
+    won: true,
+    kills: 0,
+    casualties: 0,
+    timeSec: 60,
+    civiliansHit: 3,
+    completedOptionalIds: ['opt'],
+    deadIds: [],
+    survivorHp: {},
+    quietReplay: false,
+  }
+  const pricing = { reward: 62000, bonusDefs: { opt: 9000 } }
+
+  it('priceOutcome stores collateral and netPayout, and the helpers read them back', () => {
+    const o = priceOutcome(result, pricing)
+    expect(o.collateral).toBe(3 * COLLATERAL_FINE)
+    expect(o.netPayout).toBe(62000 + 9000 - 3 * COLLATERAL_FINE)
+    expect(collateralFine(o)).toBe(o.collateral)
+    expect(netPayout(o)).toBe(o.netPayout)
+  })
+
+  it('helpers do not re-derive: a stored figure wins over the hit count', () => {
+    const o = { ...priceOutcome(result, pricing), civiliansHit: 99 }
+    expect(collateralFine(o)).toBe(3 * COLLATERAL_FINE)
+  })
+
+  it('a loss and a quiet replay store the priced Collateral and a zero payout', () => {
+    for (const over of [{ won: false }, { quietReplay: true }, { won: false, quietReplay: true }]) {
+      const o = priceOutcome({ ...result, ...over }, pricing)
+      expect(o.collateral).toBe(3 * COLLATERAL_FINE)
+      expect(o.netPayout).toBe(0)
+    }
+  })
+
+  it('isPaid is a win that is not a quiet replay', () => {
+    expect(isPaid({ won: true, quietReplay: false })).toBe(true)
+    expect(isPaid({ won: false, quietReplay: false })).toBe(false)
+    expect(isPaid({ won: true, quietReplay: true })).toBe(false)
+    expect(isPaid({ won: false, quietReplay: true })).toBe(false)
+  })
+
+  it('settleOutcome prices non-finite reward and bonus as 0', () => {
+    const o = settleOutcome({ ...outcome(), reward: Number.NaN, bonus: Number.POSITIVE_INFINITY })
+    expect([o.reward, o.bonus, o.collateral, o.netPayout]).toEqual([0, 0, 0, 0])
   })
 })

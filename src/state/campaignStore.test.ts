@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { useAppStore, type MissionOutcome } from './appStore'
+import { settleOutcome, useAppStore, type MissionOutcome } from './appStore'
 import * as campaignModule from './campaignStore'
 import {
   INJURY_HP_FRAC,
@@ -19,7 +19,7 @@ import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recru
 const HOUR = 3600
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
-  return {
+  return settleOutcome({
     applyKey: 1,
     won: true,
     kills: 7,
@@ -32,7 +32,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     survivorHp: {},
     quietReplay: false,
     ...over,
-  }
+  })
 }
 
 beforeEach(() => {

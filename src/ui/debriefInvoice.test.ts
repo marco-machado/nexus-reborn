@@ -154,6 +154,57 @@ describe('debriefInvoiceRows (EC-022)', () => {
     expect(row(rows, 'netPayout').value).toBe('+56,000 CR')
   })
 
+  it('a loss that is also a quiet replay is unpaid: both priced lines tagged and dim, payout 0', () => {
+    const rows = unpaidCase({ won: false, quietReplay: true })
+    expect(moneyLines(rows)).toEqual(FIVE)
+    expect(row(rows, 'collateral')).toMatchObject({ value: '-15,000 CR' + NOT_APPLIED, tone: 'dim' })
+    expect(row(rows, 'bonus')).toMatchObject({ value: '+9,000 CR' + NOT_APPLIED, tone: 'dim' })
+    expect(row(rows, 'netPayout').value).toBe('0 CR')
+  })
+
+  it('a pyrrhic note on an unpaid outcome keeps the order and the NOT APPLIED lines', () => {
+    const o = priceOutcome(result({ won: false, civiliansHit: 3, completedOptionalIds: ['opt'] }), {
+      reward: 62000,
+      bonusDefs: { opt: 9000 },
+    })
+    const rows = debriefInvoiceRows({ outcome: o, credits: C, etaDays: 3, pyrrhicNote: true })
+    expect(rows.map((r) => r.label)).toEqual([
+      'CONTRACT VALUE',
+      'COLLATERAL PENALTY',
+      'OPTIONAL BONUS',
+      'PAYOUT',
+      'NOTE',
+      'ACCOUNT BALANCE',
+    ])
+    expect(row(rows, 'collateral').value).toBe('-15,000 CR' + NOT_APPLIED)
+    expect(row(rows, 'bonus').value).toBe('+9,000 CR' + NOT_APPLIED)
+  })
+
+  it('paid zero rows carry no tone and no NOT APPLIED tag', () => {
+    for (const reward of [0, 85000]) {
+      const rows = build(priced({ won: true, civiliansHit: 0 }, reward))
+      for (const line of ['collateral', 'bonus'] as const) {
+        expect(row(rows, line).tone).toBeUndefined()
+        expect(row(rows, line).value).not.toContain(NOT_APPLIED)
+      }
+    }
+  })
+
+  it('non-finite figures never print NaN or Infinity and keep all five lines', () => {
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      const o: MissionOutcome = {
+        ...priced({ won: true }, 85000),
+        reward: bad,
+        bonus: bad,
+        collateral: bad,
+        netPayout: bad,
+      }
+      const rows = debriefInvoiceRows({ outcome: o, credits: bad, etaDays: 3, pyrrhicNote: false })
+      expect(moneyLines(rows)).toEqual(FIVE)
+      for (const r of rows) expect(r.value).not.toMatch(/NaN|Infinity|∞/)
+    }
+  })
+
   it('keeps ETA on a win and the pyrrhic note between payout and balance', () => {
     const rows = debriefInvoiceRows({
       outcome: priced({ won: true }, 85000),

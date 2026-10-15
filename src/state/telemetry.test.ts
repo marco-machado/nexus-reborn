@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { settleOutcome } from './appStore'
 import type { MissionOutcome } from './appStore'
 import { initSettings, useSettingsStore } from './settingsStore'
 import type { SettingsStorage } from './settingsStore'
@@ -61,7 +62,7 @@ function telemetry(over: Partial<MissionTelemetry> = {}): MissionTelemetry {
 }
 
 function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
-  return {
+  return settleOutcome({
     applyKey: 1,
     won: true,
     kills: 9,
@@ -75,7 +76,7 @@ function outcome(over: Partial<MissionOutcome> = {}): MissionOutcome {
     quietReplay: false,
     telemetry: telemetry(),
     ...over,
-  }
+  })
 }
 
 function record(over: Partial<MissionRecord> = {}): MissionRecord {

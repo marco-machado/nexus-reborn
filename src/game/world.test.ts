@@ -15,7 +15,7 @@ import type { ContractType, GeneratedContract } from './contracts'
 import { DIFFICULTY_FX, missionMods, weatherMul } from './missionParams'
 import { findPath, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
-import { netPayout, useAppStore } from '../state/appStore'
+import { netPayout, settleOutcome, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { useWorldStore } from '../state/worldStore'
@@ -402,7 +402,7 @@ describe('research', () => {
   it('applies survivor experience at the next deployment snapshot', () => {
     useCampaignStore.getState().reportMission(
       MISSION.id,
-      {
+      settleOutcome({
         applyKey: 1,
         won: true,
         kills: 1,
@@ -414,7 +414,7 @@ describe('research', () => {
         deadIds: [],
         survivorHp: { op1: 1 },
         quietReplay: false,
-      },
+      }),
       0,
     )
     expect(useCampaignStore.getState().roster.op1.xp).toBe(1)

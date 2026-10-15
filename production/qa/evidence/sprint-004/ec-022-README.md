@@ -49,3 +49,7 @@ The four original captures predate the owner decision (Economy GDD Closed Questi
 - Tagged rows use `rgb(93, 125, 117)` (`--ink-dim`); paid-win rows keep their default tone. No label or value clipped, no page scroll, `.db-card` bottom 648–662 px. Console: only the known `favicon.ico` 404.
 - Files: `ec-022-<fixture>-1280x720.png`, 6 images (4 replaced, `loss-priced-lines` and `quiet-replay-priced-lines` new).
 - Lead-programmer sign-off: still pending (rows left unchecked).
+
+## Re-capture 2026-10-14 (after the ADR-0021 fix: stored collateral / netPayout)
+
+Same six fixtures and method as above, after `priceOutcome` started storing `collateral` and `netPayout` and the invoice builder was split into row helpers. DOM text is unchanged for all six fixtures; no clipping, no page scroll, only the known `favicon.ico` 404. Reduced motion: with `:root.s-reduce-motion` the last three `.db-row`s are at opacity 1 within 60 ms of entering Debrief (0 without it, still staggering). Dev server stopped afterwards; port 4200 free.
