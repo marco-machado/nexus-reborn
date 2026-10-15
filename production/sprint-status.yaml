@@ -111,11 +111,11 @@ stories:
     name: "Settings and telemetry garbage fall back independently"
     file: "production/epics/persistence-and-validation/story-009-settings-and-telemetry-garbage-fall-back-independently.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-012"
     name: "Hydrate syncs to saved t; RNG streams continue"
     file: "production/epics/persistence-and-validation/story-012-hydrate-syncs-to-saved-t-rng-streams-continue.md"

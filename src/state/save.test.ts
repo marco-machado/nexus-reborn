@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { applyOverrides } from '../game/bindings'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
 import { CANDIDATE_REFRESH_SEC } from '../game/recruits'
 import {
@@ -34,7 +35,7 @@ import { SETTINGS_KEY, defaultSettings, initSettings, useSettingsStore } from '.
 import { useTutorialStore } from './tutorialStore'
 import { freezeDeploy } from './deployFreeze'
 import { useMissionStore } from './missionStore'
-import { TELEMETRY_KEY, loadRecords, recordAbort } from './telemetry'
+import { TELEMETRY_KEY, aggregate, loadRecords, recordAbort } from './telemetry'
 import { resolveMission, useWorldStore } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
@@ -2222,6 +2223,106 @@ describe('Next Screen autosave durably commits the Debrief result', () => {
       expect(restored.campaign.contractsWon).toEqual(snapshot.campaign.contractsWon)
       // Credits are S plus the catch-up Tax, exactly: no contract payout.
       expect(restored.app.credits).toBe(snapshot.app.credits + tax)
+    },
+  )
+})
+
+// PV-009 (TR-persistence-006, ADR-0011, ADR-0015): settings and telemetry
+// garbage fall back on their own slots; neither inherits the campaign
+// drop-all policy, so a valid campaign blob still offers Continue.
+describe('settings and telemetry garbage fall back independently', () => {
+  afterEach(() => {
+    initSettings(null)
+    useSettingsStore.setState(defaultSettings())
+    applyOverrides({})
+  })
+
+  // A lived-in campaign written to the campaign slot, with non-default
+  // settings recorded beside it so a fallback to defaults is visible.
+  function validCampaignOnFile(): SaveV10 {
+    initSettings(storage)
+    useSettingsStore.getState().setDifficulty('hardened')
+    useSettingsStore.getState().setQuality('low')
+    useSettingsStore.getState().setTelemetry(true)
+    useAppStore.setState({ phase: 'world', credits: 77777, squad: ['op1', 'op3'] })
+    useWorldStore.setState({ t: 3300, influence: 5 })
+    useCampaignStore.setState({ intelLevel: 1, intelProgress: 20, contractsWon: ['m01'] })
+    const save = captureSave()
+    expect(writeSave(storage)).toBe(true)
+    return save
+  }
+
+  // An origin reload: settings memory and bindings back to defaults, the
+  // campaign desk back to New Operation on the Menu, storage untouched.
+  // Settings boot before the campaign, as in main.tsx.
+  function reloadOrigin(): void {
+    useSettingsStore.setState(defaultSettings())
+    applyOverrides({})
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+    initSettings(storage)
+  }
+
+  const badSettings = [
+    ['non-JSON', 'settings {{{'],
+    ['wrong version', JSON.stringify({ version: 999, difficulty: 'hardened', quality: 'low' })],
+    ['non-object', JSON.stringify([1, 2, 3])],
+  ] as const
+
+  const badTelemetry = [
+    ['non-JSON', 'telemetry {{{'],
+    ['wrong version', JSON.stringify({ version: 999, records: [{ missionId: 'm01', outcome: 'won' }] })],
+    ['non-array records', JSON.stringify({ version: 1, records: { missionId: 'm01', outcome: 'won' } })],
+  ] as const
+
+  it.each(badSettings)('valid campaign + %s settings: Continue present', (_label, raw) => {
+    validCampaignOnFile()
+    const blob = storage.getItem(SAVE_KEY)
+    storage.setItem(SETTINGS_KEY, raw)
+
+    reloadOrigin()
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(menuSaveStatus(storage)).toBe('valid')
+    // The campaign slot is not dropped by the settings fallback.
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
+  })
+
+  it.each(badTelemetry)(
+    'valid campaign + %s telemetry: Continue present, Balance has no mission records',
+    (_label, raw) => {
+      validCampaignOnFile()
+      const blob = storage.getItem(SAVE_KEY)
+      storage.setItem(TELEMETRY_KEY, raw)
+
+      reloadOrigin()
+      expect(loadCampaignAtBoot(storage)).toBe('valid')
+      expect(menuSaveStatus(storage)).toBe('valid')
+      expect(storage.getItem(SAVE_KEY)).toBe(blob)
+      // Balance reads the log through loadRecords: an empty log, no rows.
+      const records = loadRecords(storage)
+      expect(records).toEqual([])
+      expect(aggregate(records).missions).toBe(0)
+      // Settings were valid: they hydrate as recorded, untouched by telemetry.
+      expect(useSettingsStore.getState().difficulty).toBe('hardened')
+    },
+  )
+
+  it.each(badSettings)(
+    'valid campaign + %s settings: every Settings value is its default and Continue restores the campaign unchanged',
+    (_label, raw) => {
+      const expected = validCampaignOnFile()
+      storage.setItem(SETTINGS_KEY, raw)
+
+      reloadOrigin()
+      // Settings fall back to their own defaults, not to the campaign.
+      expect(useSettingsStore.getState()).toMatchObject(defaultSettings())
+      expect(loadCampaignAtBoot(storage)).toBe('valid')
+      continueOperation()
+
+      expect(useAppStore.getState().phase).toBe('world')
+      const restored = captureSave()
+      expect(restored).toEqual(expected)
+      expect(useAppStore.getState().credits).toBe(77777)
     },
   )
 })
