@@ -1,0 +1,354 @@
+{
+ "steps": [
+  {
+   "name": "p1-launch",
+   "phase": "world",
+   "credits": 128450
+  },
+  {
+   "name": "p2-catalog",
+   "screenNodes": 21,
+   "labs": 3,
+   "projects": 21
+  },
+  {
+   "name": "p3-authorize",
+   "creditsBefore": 128450,
+   "afterTargeting": 110450,
+   "targetingCost": 18000,
+   "afterPropellants": 94450,
+   "propellantsDebit": 16000,
+   "labs": {
+    "ballistics": {
+     "id": "b-propellants",
+     "startedT": 4502.591999999642,
+     "endT": 11702.591999999642
+    },
+    "cybernetics": null,
+    "control": {
+     "id": "k-targeting",
+     "startedT": 902.5919999996424,
+     "endT": 8102.591999999642
+    }
+   }
+  },
+  {
+   "name": "p3-refusals",
+   "locked": {
+    "label": "AUTHORIZE HYPERVELOCITY CORE // LOCKED: REQUIRES ADVANCED PROPELLANTS; LAB NOT IDLE: THE BALLISTICS LAB IS RUNNING ADVANCED PROPELLANTS.",
+    "disabled": true
+   },
+   "busy": {
+    "label": "AUTHORIZE BARREL WEAR COATING // LAB NOT IDLE: THE BALLISTICS LAB IS RUNNING ADVANCED PROPELLANTS.",
+    "disabled": true
+   },
+   "storeRefusal": {
+    "ok": false,
+    "text": "HYPERVELOCITY CORE: Locked: requires ADVANCED PROPELLANTS; lab not idle: the BALLISTICS LAB is running ADVANCED PROPELLANTS. Credits did not change.",
+    "creditsFlat": true
+   },
+   "creditsAfter": 94450
+  },
+  {
+   "name": "p5-remaining",
+   "t": 4562.591999999642,
+   "lastSyncTBefore": 4502.591999999642,
+   "labelsBeforeMove": [
+    {
+     "sec": 7200,
+     "text": "2:00:00 REMAINING"
+    },
+    {
+     "sec": 3600,
+     "text": "1:00:00 REMAINING"
+    }
+   ],
+   "labelsAfterMoveNoSync": [
+    {
+     "sec": 7140,
+     "text": "1:59:00 REMAINING"
+    },
+    {
+     "sec": 3540,
+     "text": "0:59:00 REMAINING"
+    }
+   ],
+   "labelsAfterSync": [
+    {
+     "sec": 7140,
+     "text": "1:59:00 REMAINING"
+    },
+    {
+     "sec": 3540,
+     "text": "0:59:00 REMAINING"
+    }
+   ],
+   "expectedSec": [
+    7140,
+    3540
+   ]
+  },
+  {
+   "name": "p5-ascending-endT",
+   "done": [
+    "k-targeting",
+    "b-propellants"
+   ],
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "expected": [
+    "k-targeting",
+    "b-propellants"
+   ]
+  },
+  {
+   "name": "p3-researched-refusal",
+   "researched": {
+    "label": "AUTHORIZE ADVANCED PROPELLANTS // ALREADY RESEARCHED.",
+    "disabled": true
+   }
+  },
+  {
+   "name": "p6-pre-deploy",
+   "done": [
+    "k-targeting",
+    "b-propellants",
+    "c-interface"
+   ],
+   "labs": {
+    "ballistics": null,
+    "cybernetics": {
+     "id": "c-synaptic",
+     "startedT": 177666.4319999996,
+     "endT": 184866.4319999996
+    },
+    "control": null
+   },
+   "pinnedOp": "op1",
+   "t": 177666.4319999996
+  },
+  {
+   "name": "p6-stats",
+   "stats": [
+    {
+     "opId": "op1",
+     "applied": [
+      "k-targeting",
+      "b-propellants"
+     ],
+     "maxHp": 124,
+     "expectHp": 124,
+     "xp": 0,
+     "speed": 4.75,
+     "expectSpeedMin": 4.6,
+     "damage": 13.55,
+     "tableDamage": 11,
+     "researchedDamage": 12.32
+    },
+    {
+     "opId": "op2",
+     "applied": [
+      "k-targeting",
+      "b-propellants",
+      "c-interface"
+     ],
+     "maxHp": 110,
+     "expectHp": 110,
+     "xp": 0,
+     "speed": 5.35,
+     "expectSpeedMin": 5.2,
+     "damage": 7,
+     "tableDamage": 7,
+     "researchedDamage": 7
+    },
+    {
+     "opId": "op3",
+     "applied": [
+      "k-targeting",
+      "b-propellants",
+      "c-interface"
+     ],
+     "maxHp": 98,
+     "expectHp": 98,
+     "xp": 0,
+     "speed": 5.75,
+     "expectSpeedMin": 5.6,
+     "damage": 7,
+     "tableDamage": 7,
+     "researchedDamage": 7
+    },
+    {
+     "opId": "op4",
+     "applied": [
+      "k-targeting",
+      "b-propellants",
+      "c-interface"
+     ],
+     "maxHp": 132,
+     "expectHp": 132,
+     "xp": 0,
+     "speed": 4.35,
+     "expectSpeedMin": 4.2,
+     "damage": 26,
+     "tableDamage": 26,
+     "researchedDamage": 26
+    }
+   ]
+  },
+  {
+   "name": "p4-authorize-in-field",
+   "ok": false,
+   "text": "Credits did not change.",
+   "creditsFlat": true,
+   "phase": "mission"
+  },
+  {
+   "name": "p7-abort",
+   "phase": "world",
+   "doneSame": true,
+   "labsSame": true,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": {
+     "id": "c-synaptic",
+     "startedT": 177666.4319999996,
+     "endT": 184866.4319999996
+    },
+    "control": null
+   },
+   "credits": 66619,
+   "creditsBefore": 66619
+  },
+  {
+   "name": "p7-loss",
+   "play": "lost",
+   "outcomeWon": false,
+   "doneSame": true,
+   "labsSame": true,
+   "tBefore": 178417.89599999916,
+   "tAfter": 178824.28799999895,
+   "credits": [
+    66619,
+    66619
+   ]
+  },
+  {
+   "name": "p6-midmission-completion",
+   "doneAfterForcedSync": [
+    "k-targeting",
+    "b-propellants",
+    "c-interface",
+    "c-synaptic"
+   ],
+   "before": [
+    {
+     "maxHp": 92,
+     "speed": 4.55,
+     "damage": 46
+    },
+    {
+     "maxHp": 104,
+     "speed": 4.95,
+     "damage": 7
+    },
+    {
+     "maxHp": 118,
+     "speed": 4.55,
+     "damage": 12.32
+    },
+    {
+     "maxHp": 100,
+     "speed": 5.15,
+     "damage": 10
+    }
+   ],
+   "after": [
+    {
+     "maxHp": 92,
+     "speed": 4.55,
+     "damage": 46
+    },
+    {
+     "maxHp": 104,
+     "speed": 4.95,
+     "damage": 7
+    },
+    {
+     "maxHp": 118,
+     "speed": 4.55,
+     "damage": 12.32
+    },
+    {
+     "maxHp": 100,
+     "speed": 5.15,
+     "damage": 10
+    }
+   ]
+  },
+  {
+   "name": "p8-reload",
+   "before": {
+    "done": [
+     "k-targeting",
+     "b-propellants",
+     "c-interface",
+     "c-synaptic"
+    ],
+    "labs": {
+     "ballistics": null,
+     "cybernetics": null,
+     "control": null
+    },
+    "credits": 66619
+   },
+   "after": {
+    "done": [
+     "k-targeting",
+     "b-propellants",
+     "c-interface",
+     "c-synaptic"
+    ],
+    "labs": {
+     "ballistics": null,
+     "cybernetics": null,
+     "control": null
+    },
+    "credits": 66619,
+    "phase": "world",
+    "lastSyncT": 180537.11999999825,
+    "t": 180537.11999999825
+   }
+  },
+  {
+   "name": "p9-frames",
+   "world": {
+    "n": 801,
+    "p50": 6.3,
+    "p95": 6.7,
+    "p99": 7,
+    "max": 250,
+    "over50ms": 2,
+    "longTasks": 1,
+    "longestTask": 187
+   },
+   "mission": {
+    "n": 831,
+    "p50": 6.3,
+    "p95": 6.6,
+    "p99": 12.6,
+    "max": 256.4,
+    "over50ms": 1,
+    "longTasks": 1,
+    "longestTask": 243
+   }
+  },
+  {
+   "name": "console-errors",
+   "errs": [],
+   "all": 3
+  }
+ ]
+}
