@@ -6,7 +6,7 @@
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -36,6 +36,7 @@
 
 - [ ] GIVEN Menu with Continue and recorded Credits / Intel / roster, WHEN the director activates New Operation once, THEN the control arms a confirm, the campaign blob is unchanged, and Continue still loads the same Credits / Intel / roster.
 - [ ] GIVEN New Operation armed and a parallel clean-origin New Operation fixture F, WHEN the director confirms, THEN Credits, Intel, `contractsWon`, laboratories, and tutorial-seen equal F (Economy / World Network / Research / Roster opening desk — do not copy integers here), and the prior campaign cannot be restored.
+- [ ] GIVEN New Operation armed, WHEN the confirm is not given (the arm lapses or the director leaves the Menu), THEN the campaign blob is unchanged and Continue still loads the same Credits / Intel / roster. (GDD Edge Cases: "If New Operation is cancelled".)
 
 ---
 

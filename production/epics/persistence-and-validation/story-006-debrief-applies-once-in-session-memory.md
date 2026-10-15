@@ -6,7 +6,7 @@
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -36,6 +36,7 @@
 
 - [ ] GIVEN snapshot S on a Screen, then a finished mission whose Debrief has applied in this session, WHEN the origin is reloaded while still on Debrief, THEN Continue restores S, not the invoice mutations.
 - [ ] GIVEN a Debrief that has already applied payout, sector, Intel, Influence, and roster, WHEN Debrief stays open, THEN those campaign values do not change again, and telemetry (if on) still has exactly one record for that outcome.
+- [ ] GIVEN a Debrief that has applied in this session, WHEN Debrief stays open for any length of time, THEN the stored campaign blob is unchanged from S (Debrief does not autosave); the first durable write is the next Screen's. (GDD Edge Cases: "If the director is on Debrief".)
 
 ---
 

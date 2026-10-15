@@ -6,7 +6,7 @@
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -34,6 +34,7 @@
 
 - [ ] GIVEN Settings recorded as Difficulty D, Quality Q, telemetry toggle T, audio A, remap R, WHEN New Operation is confirmed, THEN Settings still equal D, Q, T, A, R.
 - [ ] GIVEN Settings recorded as Difficulty D, Quality Q, telemetry toggle T, audio A, remap R (no campaign required), WHEN the origin is fully reloaded, THEN Settings still equal D, Q, T, A, R with Continue not required to hydrate Settings.
+- [ ] GIVEN a valid campaign save and Quality then changed to Q2 and Difficulty to D2 in Settings, WHEN the origin reloads and Continue runs, THEN Quality is Q2 and Difficulty is D2 from the settings slot, and the campaign blob holds no Quality or Difficulty field. (GDD Edge Cases: "If Quality is changed", "If Difficulty is changed".)
 
 ---
 

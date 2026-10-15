@@ -6,7 +6,7 @@
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -34,6 +34,7 @@
 
 - [ ] GIVEN a clean origin with no campaign blob, WHEN the Menu loads, THEN Continue is absent, Menu state is never-started (no invalid-blob reason), and New Operation is offered. Copy stays Interface.
 - [ ] GIVEN a campaign that reached a Screen so a valid local save exists, WHEN the origin is reloaded to the Menu, THEN Continue is present and opens the World Network for that campaign (not a new one, not a mission, not Brief, not Assembly).
+- [ ] GIVEN a valid local save written while a Screen was showing, WHEN Continue is activated, THEN no mission id and no Debrief outcome are restored (hydrate never restores them), and the campaign lands on the World Network with strategy, roster and laboratories from that save. (GDD Edge Cases: "If hydrate runs".)
 
 ---
 

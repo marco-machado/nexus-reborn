@@ -6,7 +6,7 @@
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -36,6 +36,7 @@
 
 - [ ] GIVEN a Screen snapshot S that held selected contract C and squad assignment, then a mission in progress, WHEN the origin is reloaded before Debrief, THEN Continue returns strategic / roster state from S including C (Brief can be entered for C without re-selecting it); Continue opens the World Network; the mission is not resumed; there is no Debrief outcome.
 - [ ] GIVEN snapshot S, telemetry off, a mission in progress, WHEN the director Aborts from pause and later reloads + Continue, THEN Credits, Influence, Intel, roster, sectors, labs, `contractsWon`, and campaign banners equal S; no Debrief ran; the aborted mission is not restored.
+- [ ] GIVEN snapshot S and a mission in progress, WHEN the mission runs for any length of time before Debrief or Abort, THEN the stored campaign blob is unchanged from S (no write while in a mission). (GDD Edge Cases: "If the director is in a mission".)
 
 ---
 

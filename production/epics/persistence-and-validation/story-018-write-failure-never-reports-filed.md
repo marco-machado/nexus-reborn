@@ -6,7 +6,7 @@
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -35,6 +35,7 @@
 
 - [ ] GIVEN recorded campaign C0 and the next campaign-blob write is injected to throw (harness; not a named storage key), WHEN New Operation is confirmed, THEN the session does not throw; in-session desk matches new-Operation fixture F; the Interface write-failure indicator is present and the erase is not reported as filed; WHEN the origin reloads to Menu, THEN Continue loads C0.
 - [ ] GIVEN snapshot S, Debrief applied in this session, and the next Screen campaign-blob write is injected to throw (harness; not a named storage key), WHEN the director returns to the World Network or Replays to Brief, THEN the session does not throw and filing-status does not read filed; WHEN reload then Continue, THEN named campaign fields equal S.
+- [ ] GIVEN snapshot S, Debrief applied in this session, and every campaign-blob write injected to throw (harness), WHEN the director visits World Network and then Research, THEN the session does not throw and filing status stays unfiled on each Screen; WHEN the injection is removed and the next Screen write succeeds, THEN filing status reads filed and reload + Continue restores the post-apply campaign values. (GDD Edge Cases: "If write storage throws": a swallowed write is not filed.)
 
 ---
 
