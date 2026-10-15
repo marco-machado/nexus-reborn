@@ -11,6 +11,7 @@ import {
 } from '../game/influence'
 import { nodeById } from '../game/research'
 import { settleOutcome, useAppStore } from './appStore'
+import { applyDebrief } from './debrief'
 import { initialCampaignData, missionLocked, useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import {
@@ -1838,5 +1839,183 @@ describe('mid-mission reload and Abort discard', () => {
     vi.advanceTimersByTime(10_000)
     expect(storage.getItem(SAVE_KEY)).toBe(S)
     expect(writes).toBe(0)
+  })
+})
+
+// PV-006 (TR-persistence-004, ADR-0021, ADR-0011): Debrief applies once in
+// session memory. The invoice mutations are never durable while Debrief is
+// open; a reload on Debrief returns the last Screen snapshot S.
+describe('Debrief applies once in session memory', () => {
+  let C: string
+  let S: string
+  let writes: number
+  // The browser origin's localStorage, where applyDebrief's telemetry row lands.
+  let browser: MemoryStorage
+
+  beforeEach(() => {
+    browser = new MemoryStorage()
+    vi.stubGlobal('window', { localStorage: browser })
+    useSettingsStore.setState({ telemetry: true })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    useSettingsStore.setState(defaultSettings())
+  })
+
+  // A lived-in Screen visit with selected contract C, flushed by autosave: S.
+  function reachScreenSnapshot(): void {
+    vi.useFakeTimers()
+    stopAutosave = startAutosave(storage)
+    useAppStore.setState({ phase: 'world', credits: 222333 })
+    useWorldStore.setState({ t: 3600, influence: 7 })
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 35, contractsWon: ['m01'] })
+    useResearchStore.getState().start(nodeById('b-propellants'), 3600)
+    C = MISSIONS.find((m) => m.id !== 'm01' && !missionLocked(m, 2))!.id
+    useAppStore.getState().selectMission(C)
+    useAppStore.getState().goto('team')
+    vi.advanceTimersByTime(500)
+    S = storage.getItem(SAVE_KEY) as string
+    expect(S).not.toBeNull()
+    writes = 0
+    const setItem = storage.setItem.bind(storage)
+    storage.setItem = (key, value) => {
+      if (key === SAVE_KEY) writes++
+      setItem(key, value)
+    }
+  }
+
+  // Deploy, finish the mission with a paid win that kills one operative, and
+  // run the Debrief apply exactly as the Debrief screen does on mount.
+  function finishAndApplyDebrief(): void {
+    useAppStore.getState().startMission()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('mission')
+    const applyKey = app.deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const ops = useCampaignStore.getState().operatives.filter((o) => app.squad.includes(o.id))
+    freezeDeploy(resolveMission(C)!, ops, applyKey)
+    useAppStore.getState().setOutcome(
+      settleOutcome({
+        applyKey,
+        won: true,
+        kills: 5,
+        casualties: 1,
+        timeSec: 300,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: [app.squad[0]],
+        survivorHp: {},
+        quietReplay: false,
+        // The sim's telemetry payload, so the TELEMETRY-on apply writes a row.
+        telemetry: {
+          seed: 1,
+          firstContactSec: 30,
+          objectiveTimes: [{ id: 'ob1', atSec: 120 }],
+          shotsByWeapon: { assault: 40, smg: 0, pistol: 0, longrifle: 0, shotgun: 0 },
+          damageByWeapon: { assault: 400, smg: 0, pistol: 0, longrifle: 0, shotgun: 0 },
+          damageDealt: 400,
+          damageTaken: 120,
+          civilianHitsBySquad: 0,
+          civilianHitsByCorpsec: 0,
+          medUsed: 0,
+          cellUsed: 0,
+          abilityUsesByRole: {},
+          squadRoles: [],
+        },
+      }),
+    )
+    expect(useAppStore.getState().phase).toBe('debrief')
+    applyDebrief(C)
+    expect(useAppStore.getState().lastAppliedKey).toBe(applyKey)
+  }
+
+  // The campaign values the Debrief apply owns: payout, sector, Intel,
+  // Influence, roster (plus the clock and labs the win catch-up moves).
+  function appliedValues() {
+    const save = captureSave()
+    return structuredClone({
+      credits: save.app.credits,
+      squad: save.app.squad,
+      t: save.world.t,
+      influence: save.world.influence,
+      sectors: save.world.sectors,
+      owner: save.world.owner,
+      intelLevel: save.campaign.intelLevel,
+      intelProgress: save.campaign.intelProgress,
+      contractsWon: save.campaign.contractsWon,
+      operatives: save.campaign.operatives,
+      roster: save.campaign.roster,
+      research: save.research,
+    })
+  }
+
+  it('reload while still on Debrief: Continue restores S, not the invoice mutations', () => {
+    reachScreenSnapshot()
+    const snapshot = JSON.parse(S) as SaveV10
+    finishAndApplyDebrief()
+    const invoice = appliedValues()
+    // The apply really moved the campaign in memory.
+    expect(invoice.credits).not.toBe(snapshot.app.credits)
+    expect(invoice.contractsWon).toContain(C)
+    // The player lingers on Debrief before the reload.
+    vi.advanceTimersByTime(5_000)
+
+    // Origin reload on Debrief: the page dies, storage keeps S.
+    stopAutosave?.()
+    stopAutosave = null
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    continueOperation()
+
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    expect(app.lastAppliedKey).toBe(0)
+    const restored = captureSave()
+    expect(restored.app).toEqual(snapshot.app)
+    expect(restored.world).toEqual(snapshot.world)
+    expect(restored.campaign).toEqual(snapshot.campaign)
+    expect(restored.research).toEqual(snapshot.research)
+    expect(restored.app.credits).not.toBe(invoice.credits)
+    expect(restored.campaign.contractsWon).not.toContain(C)
+  })
+
+  it('Debrief stays open: applied values do not change again and telemetry has exactly one record', () => {
+    reachScreenSnapshot()
+    finishAndApplyDebrief()
+    const applied = appliedValues()
+    expect(loadRecords(browser)).toHaveLength(1)
+
+    // The Debrief screen re-renders / remounts and time passes.
+    for (const ms of [16, 1000, 60_000]) {
+      applyDebrief(C)
+      vi.advanceTimersByTime(ms)
+      expect(appliedValues()).toEqual(applied)
+    }
+    expect(useAppStore.getState().phase).toBe('debrief')
+    const records = loadRecords(browser)
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({ missionId: C, outcome: 'won' })
+  })
+
+  it('Debrief open for any length of time: the stored blob is unchanged from S; the next Screen writes first', () => {
+    reachScreenSnapshot()
+    finishAndApplyDebrief()
+    for (const ms of [1, 500, 30_000, 3_600_000]) {
+      vi.advanceTimersByTime(ms)
+      expect(storage.getItem(SAVE_KEY)).toBe(S)
+    }
+    expect(writes).toBe(0)
+
+    // Leaving Debrief for the World Network: the first durable write is the
+    // Screen's, and it carries the applied values.
+    const applied = appliedValues()
+    useAppStore.getState().returnFromDebrief()
+    vi.advanceTimersByTime(500)
+    expect(writes).toBe(1)
+    expect(readSave(storage)?.app.credits).toBe(applied.credits)
+    expect(readSave(storage)?.campaign.contractsWon).toEqual(applied.contractsWon)
   })
 })

@@ -93,11 +93,11 @@ stories:
     name: "Debrief applies once in session memory"
     file: "production/epics/persistence-and-validation/story-006-debrief-applies-once-in-session-memory.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-007"
     name: "Next Screen autosave durably commits the Debrief result"
     file: "production/epics/persistence-and-validation/story-007-next-screen-autosave-durably-commits-the-debrief-result.md"
