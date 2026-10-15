@@ -12,7 +12,7 @@ import { useSettingsStore } from '../state/settingsStore'
 import { resolveMission, useWorldStore } from '../state/worldStore'
 import {
   continueOperation,
-  hasValidSave,
+  menuSaveStatus,
   startNewOperation,
 } from '../state/save'
 import { applyDebrief } from '../state/debrief'
@@ -143,7 +143,8 @@ function augLine(node: ResearchNode): string {
 /* ================================ MAIN MENU =============================== */
 export function MainMenu() {
   const clock = useUtcClock()
-  const [canContinue] = useState(() => hasValidSave())
+  const [saveStatus] = useState(() => menuSaveStatus())
+  const canContinue = saveStatus === 'valid'
   const [newOperationArmed, setNewOperationArmed] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   useEffect(() => {
@@ -166,7 +167,7 @@ export function MainMenu() {
   }
 
   return (
-    <div className="screen menu">
+    <div className="screen menu" data-save-status={saveStatus}>
       <div className="menu-gridbg" aria-hidden="true" />
       <div className="menu-scanbar" aria-hidden="true" />
       <header className="menu-top">

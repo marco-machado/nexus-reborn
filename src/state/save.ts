@@ -699,23 +699,52 @@ function upgraded(value: unknown): unknown {
   return v
 }
 
-export function readSave(storage: SaveStorage | null = browserStorage()): SaveV9 | null {
-  if (!storage) return null
+/**
+ * What the Menu knows about the campaign slot. One exported value, so the
+ * Menu reads state and never infers it from copy (Persistence Rule 8):
+ * - `never-started`: no campaign blob on this origin.
+ * - `valid`: a campaign blob that upgrades and validates; Continue is offered.
+ * - `invalid`: a blob was present but unreadable or invalid, and was dropped
+ *   whole. Distinct from never-started; Continue is not offered.
+ */
+export type CampaignSlotStatus = 'never-started' | 'valid' | 'invalid'
+
+export interface SaveInspection {
+  status: CampaignSlotStatus
+  save: SaveV9 | null
+}
+
+/**
+ * Reads the campaign slot and classifies it. A present but bad blob is
+ * removed all-or-nothing (ADR-0011) and reported as `invalid`; nothing is
+ * half-loaded. Unavailable storage reads as `never-started`.
+ */
+export function inspectSave(storage: SaveStorage | null = browserStorage()): SaveInspection {
+  if (!storage) return { status: 'never-started', save: null }
   let raw: string | null = null
   try {
     raw = storage.getItem(SAVE_KEY)
-    if (!raw) return null
-    const value: unknown = upgraded(JSON.parse(raw))
-    if (validateSave(value)) return value
   } catch {
-    // Invalid or unavailable storage is treated as no campaign.
+    // Storage that refuses reads is treated as no campaign.
+    return { status: 'never-started', save: null }
+  }
+  if (!raw) return { status: 'never-started', save: null }
+  try {
+    const value: unknown = upgraded(JSON.parse(raw))
+    if (validateSave(value)) return { status: 'valid', save: value }
+  } catch {
+    // Unparseable JSON falls through to the drop below.
   }
   try {
     storage.removeItem(SAVE_KEY)
   } catch {
     // A read-only storage surface still must not block boot.
   }
-  return null
+  return { status: 'invalid', save: null }
+}
+
+export function readSave(storage: SaveStorage | null = browserStorage()): SaveV9 | null {
+  return inspectSave(storage).save
 }
 
 export function hydrateSave(save: SaveV9): void {
@@ -806,19 +835,50 @@ export function startAutosave(
 
 let initialized = false
 let loadedAtBoot = false
+// Set when boot dropped a bad blob; cleared by New Operation. The drop removes
+// the blob, so without this the Menu would re-read the slot as never-started.
+let droppedAtBoot = false
+
+/**
+ * Boot-time load, as on an origin reload: classifies the slot, hydrates a
+ * valid campaign (which always lands on the Menu, never a mission, Brief or
+ * Assembly), and records whether a bad blob was dropped. Returns the status
+ * the Menu shows.
+ */
+export function loadCampaignAtBoot(
+  storage: SaveStorage | null = browserStorage(),
+): CampaignSlotStatus {
+  const { status, save } = inspectSave(storage)
+  if (save) hydrateSave(save)
+  droppedAtBoot = status === 'invalid'
+  return status
+}
+
+/**
+ * The Menu's campaign state. `valid` iff a valid blob is on file now (so
+ * Continue is offered); otherwise `invalid` if boot dropped a bad blob, else
+ * `never-started`.
+ */
+export function menuSaveStatus(
+  storage: SaveStorage | null = browserStorage(),
+): CampaignSlotStatus {
+  const now = inspectSave(storage).status
+  if (now === 'valid') return 'valid'
+  return droppedAtBoot || now === 'invalid' ? 'invalid' : 'never-started'
+}
 
 export function initializeSaveSystem(): boolean {
   if (initialized) return loadedAtBoot
-  const save = readSave()
-  if (save) hydrateSave(save)
+  const status = loadCampaignAtBoot()
   startAutosave()
   initialized = true
-  loadedAtBoot = save !== null
+  loadedAtBoot = status === 'valid'
   return loadedAtBoot
 }
 
 export function startNewOperation(storage: SaveStorage | null = browserStorage()): void {
   cancelPendingAutosave()
+  droppedAtBoot = false
   try {
     storage?.removeItem(SAVE_KEY)
   } catch {
@@ -868,6 +928,11 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
   })
 }
 
+/**
+ * Continue: opens the World Network for the hydrated campaign. Never resumes
+ * a mission, Brief, Assembly or Debrief; hydrate already cleared the mission
+ * id and outcome, and this clears them again so no path can carry them in.
+ */
 export function continueOperation(): void {
-  useAppStore.setState({ phase: 'world' })
+  useAppStore.setState({ phase: 'world', missionId: null, outcome: null })
 }

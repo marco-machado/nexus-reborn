@@ -16,7 +16,11 @@ import { useResearchStore } from './researchStore'
 import {
   SAVE_KEY,
   captureSave,
+  continueOperation,
   hydrateSave,
+  inspectSave,
+  loadCampaignAtBoot,
+  menuSaveStatus,
   readSave,
   startAutosave,
   startNewOperation,
@@ -811,5 +815,102 @@ describe('autosave boundary', () => {
       world: { t: 999 },
       campaign: { intelProgress: 99 },
     })
+  })
+})
+
+// PV-001 (TR-persistence-001): the Menu reads one exported status, never copy.
+describe('menu continue: never-started vs valid save', () => {
+  // A lived-in campaign, as if the player reached a Screen and autosave ran.
+  function playToScreen(): void {
+    useAppStore.setState({ phase: 'world', credits: 123456, squad: ['op1', 'op3'] })
+    useWorldStore.setState({ t: 4200, influence: 9 })
+    useResearchStore.getState().start(nodeById('b-propellants'), 4200)
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 40, contractsWon: ['m01'] })
+  }
+
+  it('clean origin: Continue absent, state never-started (no invalid reason), New Operation offered', () => {
+    const clean = new MemoryStorage()
+    expect(loadCampaignAtBoot(clean)).toBe('never-started')
+    expect(inspectSave(clean)).toEqual({ status: 'never-started', save: null })
+    const status = menuSaveStatus(clean)
+    expect(status).toBe('never-started')
+    expect(status).not.toBe('invalid')
+    // Continue is offered iff the status is valid; New Operation is always on.
+    expect(status === 'valid').toBe(false)
+  })
+
+  it('unavailable storage reads as never-started, not invalid', () => {
+    expect(loadCampaignAtBoot(null)).toBe('never-started')
+    expect(menuSaveStatus(null)).toBe('never-started')
+  })
+
+  it('valid save: reload offers Continue, which opens the World Network for that campaign', () => {
+    playToScreen()
+    const expected = captureSave()
+    expect(writeSave(storage)).toBe(true)
+
+    // Reload: memory goes back to defaults, storage keeps the blob.
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(menuSaveStatus(storage)).toBe('valid')
+    expect(useAppStore.getState().phase).toBe('menu')
+
+    continueOperation()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.phase).not.toBe('brief')
+    expect(app.phase).not.toBe('team')
+    expect(app.phase).not.toBe('mission')
+    // That campaign, not a new one.
+    expect(captureSave()).toEqual(expected)
+    expect(app.credits).toBe(123456)
+  })
+
+  it('Continue restores no mission id and no Debrief outcome; strategy, roster and labs come from the save', () => {
+    playToScreen()
+    const expected = captureSave()
+    expect(writeSave(storage)).toBe(true)
+
+    // After the save, the player went on to a mission and reached Debrief.
+    useAppStore.setState({
+      phase: 'debrief',
+      missionId: 'm02',
+      outcome: settleOutcome({
+        applyKey: 3,
+        won: true,
+        kills: 4,
+        casualties: 0,
+        timeSec: 200,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: false,
+      }),
+    })
+
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(useAppStore.getState()).toMatchObject({ phase: 'menu', missionId: null, outcome: null })
+
+    continueOperation()
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.missionId).toBeNull()
+    expect(app.outcome).toBeNull()
+    const restored = captureSave()
+    expect(restored.world).toEqual(expected.world)
+    expect(restored.campaign).toEqual(expected.campaign)
+    expect(restored.research).toEqual(expected.research)
+    expect(restored.app).toEqual(expected.app)
+  })
+
+  it('a dropped bad blob stays distinct from never-started until New Operation', () => {
+    storage.setItem(SAVE_KEY, '{not json')
+    expect(loadCampaignAtBoot(storage)).toBe('invalid')
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    expect(menuSaveStatus(storage)).toBe('invalid')
+    startNewOperation(storage)
+    expect(menuSaveStatus(storage)).toBe('never-started')
   })
 })
