@@ -32,7 +32,7 @@ Before suggesting three.js, r3f, or React APIs, read `docs/engine-reference/web/
 
 ## Do It Yourself
 
-Only hand the user a task you cannot complete yourself. Launching the build, clicking through critical paths, smoke checks, and screenshots are yours: run the dev server and drive it in a browser (Claude in Chrome or another browser tool). If no browser tool is available, ask the user to enable one — do not hand them the manual check.
+Only hand the user a task you cannot complete yourself. Launching the build, clicking through critical paths, smoke checks, and screenshots are yours: run the dev server and drive it in a browser. In the desktop app, use the in-app browser (`mcp__Claude_Browser__*`). On the CLI, use `playwright-cli` (`npx playwright-cli`, the `@playwright/cli` package — not the regular `playwright` test runner) or Playwright. Never use the user's own Chrome (Claude in Chrome) unless they ask for it. If no browser tool is available, ask the user to enable one — do not hand them the manual check.
 
 ## Gate Checks
 

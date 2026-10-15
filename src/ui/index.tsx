@@ -533,7 +533,7 @@ export function MissionBrief() {
             className="mb-tac"
             bodyClassName="mb-tac-body"
           >
-            <div className="mb-tac-rail">
+            <ScrollBox className="mb-tac-rail">
               <TacStat label="CITY BLOCKS" value={tac.counts.blocks} />
               <TacStat label="STREETS" value={pad2(tac.counts.streets)} />
               <TacStat label="CIVILIANS" value={pad2(tac.counts.civilians)} />
@@ -563,7 +563,7 @@ export function MissionBrief() {
               ) : (
                 <TacStat label="PROJECTED SUCCESS" value={chance + '%'} tone="teal" />
               )}
-            </div>
+            </ScrollBox>
             <div className="mb-tac-plate">
               <svg
                 viewBox={'0 0 ' + tac.size + ' ' + tac.size}
