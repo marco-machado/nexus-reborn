@@ -9,6 +9,9 @@ import {
   sectorEventWeight,
 } from './forecast'
 import { CRISIS_EVENT_WEIGHT_MUL } from './influence'
+import { MISSIONS } from './data'
+import { missionMods, riskWeather, weatherMul } from './missionParams'
+import { useResearchStore } from '../state/researchStore'
 import type { SectorForecastInput } from './forecast'
 
 const INPUTS: SectorForecastInput[] = [
@@ -108,5 +111,31 @@ describe('mission risk', () => {
     )
     expect(empty.index).toBe(0)
     expect(empty.band).toBe('LOW')
+  })
+})
+
+// RS-020 / research.md (TR-research-004): Risk index is Tactical / Brief's and
+// reads deployment counts, toughness and clearer-weather sight only. Completing
+// research changes none of its inputs, so index and band hold.
+describe('mission risk ignores the completed program (RS-020)', () => {
+  it('done empty -> [Propellants, Interface I] leaves missionRisk index and band unchanged', () => {
+    const mission = MISSIONS[0]
+    const counts = { patrols: 6, garrison: 4, civilians: 14 }
+    // Inputs built the way the Brief readout builds them (ui/index.tsx).
+    const riskFor = () => {
+      const mods = missionMods(mission)
+      return missionRisk(counts, {
+        enemyHpMul: mods.enemyHpMul,
+        visionMul: weatherMul(riskWeather(mission)).visionMul,
+      })
+    }
+    useResearchStore.setState({ done: [] })
+    const before = riskFor()
+    useResearchStore.setState({ done: ['b-propellants', 'c-interface'] })
+    const after = riskFor()
+    expect(after).toEqual(before)
+    expect(after.index).toBe(before.index)
+    expect(after.band).toBe(before.band)
+    useResearchStore.setState({ done: [] })
   })
 })

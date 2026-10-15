@@ -6,6 +6,8 @@ import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
 import { useAppStore } from '../state/appStore'
 import { mulberry32 } from './rng'
+import { appliedNodeIds, nodeById, wornAugs } from './research'
+import type { BayPins } from './research'
 import {
   DIFFICULTY_FX,
   DUSK_END,
@@ -231,5 +233,54 @@ describe('deploy freeze: World Network slice', () => {
     useCampaignStore.setState({ contractsWon: [mission.id] })
     expect(fresh.economy.quietReplay).toBe(false)
     expect(freezeDeploy(mission, squad, 1).economy.quietReplay).toBe(true)
+  })
+})
+
+// RS-020 / research.md Rule 11 (TR-research-004): authored chance counts the
+// full completed program. Research exports the completed set (`done`); the
+// count Brief and the World Network map hand missionChance is its length,
+// never the worn or unslotted-only subset.
+describe('chance reads the full completed program (RS-020)', () => {
+  const mission = MISSIONS[0]
+  const mods = missionMods(mission)
+  const done = ['b-propellants', 'c-interface']
+  const pins: BayPins = { NEURAL: 'STOCK' }
+
+  beforeEach(() => {
+    useResearchStore.setState({ done: done.slice() })
+  })
+
+  it('done = [Propellants, Interface I], Neural STOCK -> missionChance gets researchedCount 2', () => {
+    expect(nodeById('b-propellants').augSlot).toBeUndefined()
+    expect(nodeById('c-interface').augSlot).toBe('NEURAL')
+    // The completed-set export the screens read (ui/index.tsx, ui/WorldMap.tsx).
+    const exported = useResearchStore.getState().done
+    expect(exported).toEqual(done)
+    const researchedCount = exported.length
+    expect(researchedCount).toBe(2)
+    expect(missionChance(mission, mods, researchedCount)).toBe(
+      missionChance(mission, mods, 0) + 4,
+    )
+  })
+
+  it('edge: the count is not the worn or unslotted-only count', () => {
+    const worn = wornAugs(done, pins).filter((b) => b.node !== null).length
+    const applied = appliedNodeIds(done, pins).length
+    const unslotted = done.filter((id) => !nodeById(id).augSlot).length
+    expect(worn).toBe(0)
+    expect(applied).toBe(1)
+    expect(unslotted).toBe(1)
+    const full = missionChance(mission, mods, useResearchStore.getState().done.length)
+    expect(full).not.toBe(missionChance(mission, mods, worn))
+    expect(full).not.toBe(missionChance(mission, mods, applied))
+    expect(full).not.toBe(missionChance(mission, mods, unslotted))
+  })
+
+  it('stock in every bay still gains chance when the lab completes', () => {
+    const allStock: BayPins = { NEURAL: 'STOCK', CHEST: 'STOCK', ARMS: 'STOCK', LEGS: 'STOCK' }
+    expect(wornAugs(done, allStock).every((b) => b.node === null)).toBe(true)
+    const before = missionChance(mission, mods, 0)
+    const after = missionChance(mission, mods, useResearchStore.getState().done.length)
+    expect(after).toBeGreaterThan(before)
   })
 })

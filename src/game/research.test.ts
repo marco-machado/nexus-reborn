@@ -679,3 +679,38 @@ describe('remaining(run, t) oracle', () => {
     expect(remaining(run, Number.NaN)).toBeNull()
   })
 })
+
+// RS-020 / research.md Rule 11 and the Forbidden list: Research exposes the
+// completed set only. Chance, Risk index and Event forecast stay with their
+// owners (missionParams.ts, forecast.ts).
+describe('Research exposes the completed set only (RS-020)', () => {
+  const FORBIDDEN = /chance|risk|forecast/i
+
+  it('src/game/research exports no Chance, Risk or Event-forecast name', async () => {
+    const mod = await import('./research')
+    const names = Object.keys(mod)
+    expect(names.length).toBeGreaterThan(0)
+    for (const name of names) expect(name).not.toMatch(FORBIDDEN)
+  })
+
+  it('the research store exports and state carry no Chance, Risk or forecast field', async () => {
+    const store = await import('../state/researchStore')
+    for (const name of Object.keys(store)) expect(name).not.toMatch(FORBIDDEN)
+    const state = store.useResearchStore.getState()
+    for (const key of Object.keys(state)) expect(key).not.toMatch(FORBIDDEN)
+    expect(Array.isArray(state.done)).toBe(true)
+  })
+
+  it('returned research state names no Chance, Risk or forecast number', () => {
+    const done = ['b-propellants', 'c-interface']
+    const shapes: object[] = [
+      crewBonus(done),
+      ...installedAugs(done),
+      ...wornAugs(done, { NEURAL: 'STOCK' }),
+      squadWeapon(Object.keys(WEAPONS)[0] as Parameters<typeof squadWeapon>[0], done),
+    ]
+    for (const shape of shapes) {
+      for (const key of Object.keys(shape)) expect(key).not.toMatch(FORBIDDEN)
+    }
+  })
+})

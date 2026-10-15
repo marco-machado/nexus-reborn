@@ -192,8 +192,8 @@ stories:
     name: "Research exposes the completed set only"
     file: "production/epics/research/story-020-research-exposes-the-completed-set-only.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-14"
