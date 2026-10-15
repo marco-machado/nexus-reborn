@@ -1,12 +1,12 @@
 # Story 011: done appends in ascending endT
 
 > **Epic**: Research
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-14
 
 ## Context
 
@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/research.md`, scoped to this story:*
 
-- [ ] GIVEN empty done, Targeting AI Suite authorized at t = 0 (endT = 7200) and Advanced Propellants authorized at t = 3600 (endT = 10800), WHEN sync(t = 10800) runs directly, THEN both are researched and done appends Targeting AI Suite before Advanced Propellants. A BRANCH_IDS append fails.
-- [ ] GIVEN empty done, Sensor Fusion Array authorized at t = 0 (endT = 7200) and Neural Interface I at t = 3600 (endT = 10800), WHEN sync(10800) runs, THEN done appends Sensor Fusion Array before Neural Interface I and currentIssue(Neural) is Neural Interface I (later by time).
-- [ ] GIVEN empty done and t = 0, Targeting AI Suite (control), then Neural Interface I (cybernetics), then Advanced Propellants (ballistics), each authorized at t = 0 (endT = 7200), WHEN sync(7200) runs, THEN done = [Advanced Propellants, Neural Interface I, Targeting AI Suite]. An authorize-order append fails.
+- [x] GIVEN empty done, Targeting AI Suite authorized at t = 0 (endT = 7200) and Advanced Propellants authorized at t = 3600 (endT = 10800), WHEN sync(t = 10800) runs directly, THEN both are researched and done appends Targeting AI Suite before Advanced Propellants. A BRANCH_IDS append fails.
+- [x] GIVEN empty done, Sensor Fusion Array authorized at t = 0 (endT = 7200) and Neural Interface I at t = 3600 (endT = 10800), WHEN sync(10800) runs, THEN done appends Sensor Fusion Array before Neural Interface I and currentIssue(Neural) is Neural Interface I (later by time).
+- [x] GIVEN empty done and t = 0, Targeting AI Suite (control), then Neural Interface I (cybernetics), then Advanced Propellants (ballistics), each authorized at t = 0 (endT = 7200), WHEN sync(7200) runs, THEN done = [Advanced Propellants, Neural Interface I, Targeting AI Suite]. An authorize-order append fails.
 
 ---
 
@@ -75,7 +75,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/research.test.ts`, `src/state/researchStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/researchStore.test.ts` (describe "done appends in ascending endT", 3 tests); 32/32 passing on 2026-10-14
 
 ---
 
@@ -83,3 +83,17 @@
 
 - Depends on: Story 008
 - Unlocks: Story 012, Story 013
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-14
+**Criteria**: 3/3 passing (all covered by unit tests in `src/state/researchStore.test.ts`, describe "done appends in ascending endT"; vitest 32/32 passing on 2026-10-14)
+**Deviations**: None blocking. Advisory:
+- Doc drift fixed: removed the stale "Unsatisfied in code" note from `design/gdd/research.md` Core Rule 4 (sync now appends in ascending endT).
+- Traceability: TR-research-003 ("Death drops assignment, not the program; unpinned bays follow current issue") covers done ordering only indirectly via current issue. Consider citing or adding a TR that names the ascending-endT append.
+- Minor (not a defect): `sync()` allocates a small `due` array per call, including no-op calls; callers (`src/state/save.ts`, `src/state/debrief.ts`) are not per-frame. No per-frame React state introduced.
+**Test Evidence**: Logic: `src/state/researchStore.test.ts` (3 new tests; existing equal-endT test "three branches finishing in one sync land in branch order" retained). Tests discriminate: a BRANCH_IDS scan fails AC1/AC2, an authorize-order append fails AC3.
+**Run result**: N/A — change is internal store ordering with no on-screen surface named in the acceptance criteria.
+**Code Review**: Complete — /code-review ran on `src/state/researchStore.ts`, `src/state/researchStore.test.ts`: verdict NOT ASSESSED (lead-programmer and qa-tester specialists could not be spawned: no Agent tool in the workflow subagent); parent review found no defects and would otherwise read APPROVED WITH SUGGESTIONS. Workflow accepted the parent-only review. ADR-0005 compliance: COMPLIANT. `tsc -b` exit 0. Re-run /code-review from an agent-capable context if a strict gate is required.
+**Story-done decisions (autonomous)**: Phase 4b QL-TEST-COVERAGE skipped (lean mode); Phase 5 lean prompt answered "Yes — /code-review approved with suggestions"; Phase 7 took the default "Close the story".

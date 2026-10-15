@@ -48,18 +48,24 @@ export const useResearchStore = create<ResearchStoreState>((set, get) => ({
 
   sync: (t) => {
     const s = get()
-    let changed = false
+    // Due runs append in ascending endT, so done reads in the order the
+    // projects finished on world time, not the order they were authorized.
+    // Equal endT falls back to BRANCH_IDS house order: the scan below visits
+    // branches in that order and Array.prototype.sort is stable.
+    const due: Array<{ branch: BranchId; run: LabRun }> = []
+    for (const b of BRANCH_IDS) {
+      const run = s.labs[b]
+      if (run && t >= run.endT) due.push({ branch: b, run })
+    }
+    if (due.length === 0) return
+    due.sort((a, b) => a.run.endT - b.run.endT)
     const labs = { ...s.labs }
     const done = s.done.slice()
-    for (const b of BRANCH_IDS) {
-      const run = labs[b]
-      if (run && t >= run.endT) {
-        done.push(run.id)
-        labs[b] = null
-        changed = true
-      }
+    for (const { branch, run } of due) {
+      done.push(run.id)
+      labs[branch] = null
     }
-    if (changed) set({ done, labs })
+    set({ done, labs })
   },
 }))
 

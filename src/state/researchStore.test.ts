@@ -3,7 +3,7 @@ import { nodeState, useResearchStore } from './researchStore'
 import { useAppStore } from './appStore'
 import { TIME_SCALE, useWorldStore } from './worldStore'
 import type { Labs } from './researchStore'
-import { BRANCH_IDS, nodeById, nodesOfBranch } from '../game/research'
+import { BRANCH_IDS, currentIssue, nodeById, nodesOfBranch } from '../game/research'
 
 const HOUR = 3600
 
@@ -154,6 +154,46 @@ describe('sync', () => {
     const s = useResearchStore.getState()
     expect(s.done).toEqual(['b-propellants', 'c-interface', 'k-targeting'])
     expect(s.labs).toEqual(idle())
+  })
+})
+
+// RS-011: one sync that finishes several labs appends them in ascending endT;
+// only equal endT falls back to BRANCH_IDS house order. Neither a BRANCH_IDS
+// scan nor authorize order passes the first and third cases.
+describe('done appends in ascending endT', () => {
+  const sensor = nodeById('k-sensor')
+
+  it('Targeting AI Suite (endT 7200) lands before Advanced Propellants (endT 10800)', () => {
+    expect(useResearchStore.getState().start(targeting, 0)).toBe(true)
+    expect(useResearchStore.getState().start(propellants, 3600)).toBe(true)
+    expect(useResearchStore.getState().labs.control?.endT).toBe(7200)
+    expect(useResearchStore.getState().labs.ballistics?.endT).toBe(10800)
+    useResearchStore.getState().sync(10800)
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual(['k-targeting', 'b-propellants'])
+    expect(nodeState(targeting, s.done, s.labs)).toBe('researched')
+    expect(nodeState(propellants, s.done, s.labs)).toBe('researched')
+    expect(s.labs).toEqual(idle())
+  })
+
+  it('Sensor Fusion Array lands before Neural Interface I; the Neural bay issues Neural Interface I', () => {
+    expect(useResearchStore.getState().start(sensor, 0)).toBe(true)
+    expect(useResearchStore.getState().start(interfaceNode, 3600)).toBe(true)
+    expect(useResearchStore.getState().labs.control?.endT).toBe(7200)
+    expect(useResearchStore.getState().labs.cybernetics?.endT).toBe(10800)
+    useResearchStore.getState().sync(10800)
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual(['k-sensor', 'c-interface'])
+    expect(currentIssue(s.done, 'NEURAL')?.id).toBe('c-interface')
+  })
+
+  it('equal endT authorized control, cybernetics, ballistics lands in BRANCH_IDS order', () => {
+    expect(useResearchStore.getState().start(targeting, 0)).toBe(true)
+    expect(useResearchStore.getState().start(interfaceNode, 0)).toBe(true)
+    expect(useResearchStore.getState().start(propellants, 0)).toBe(true)
+    for (const b of BRANCH_IDS) expect(useResearchStore.getState().labs[b]?.endT).toBe(7200)
+    useResearchStore.getState().sync(7200)
+    expect(useResearchStore.getState().done).toEqual(['b-propellants', 'c-interface', 'k-targeting'])
   })
 })
 
