@@ -120,11 +120,11 @@ stories:
     name: "Hydrate syncs to saved t; RNG streams continue"
     file: "production/epics/persistence-and-validation/story-012-hydrate-syncs-to-saved-t-rng-streams-continue.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-013"
     name: "Telemetry opt-in default and no network egress"
     file: "production/epics/persistence-and-validation/story-013-telemetry-opt-in-default-and-no-network-egress.md"

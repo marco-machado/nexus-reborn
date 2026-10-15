@@ -4,8 +4,10 @@ import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
 import { CANDIDATE_REFRESH_SEC } from '../game/recruits'
 import {
   CONTRACT_MIN_SEC,
+  CONTRACT_TARGET,
   INITIAL_CONTRACT_RNG,
 } from '../game/contracts'
+import type { GeneratedContract } from '../game/contracts'
 import {
   PRESSURE_INTERVAL_SEC,
   TAX_INTERVAL_SEC,
@@ -36,7 +38,8 @@ import { useTutorialStore } from './tutorialStore'
 import { freezeDeploy } from './deployFreeze'
 import { useMissionStore } from './missionStore'
 import { TELEMETRY_KEY, aggregate, loadRecords, recordAbort } from './telemetry'
-import { resolveMission, useWorldStore } from './worldStore'
+import { INITIAL_WORLD_RNG, TIME_SCALE, resolveMission, useWorldStore } from './worldStore'
+import type { WorldEvent } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
   data = new Map<string, string>()
@@ -2325,4 +2328,192 @@ describe('settings and telemetry garbage fall back independently', () => {
       expect(useAppStore.getState().credits).toBe(77777)
     },
   )
+})
+
+describe('hydrate syncs to saved t; RNG streams continue', () => {
+  // Origin reload: memory returns to the opening Operation, storage keeps the
+  // blob, boot hydrates it to the Menu, and the director presses Continue.
+  function reloadAndContinue(): void {
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(useAppStore.getState().phase).toBe('menu')
+    continueOperation()
+    expect(useAppStore.getState().phase).toBe('world')
+  }
+
+  // The Screen clock runs in fixed frames. Both sides of every comparison use
+  // the same frame, the same Clock speed and the same frame count, so the
+  // strategic wait is identical.
+  const FRAME_SEC = 1 / 20
+  const CLOCK_SPEED = 4
+  const WAIT_SEC = 8 * 3600
+  const WAIT_FRAMES = Math.ceil(WAIT_SEC / (FRAME_SEC * CLOCK_SPEED * TIME_SCALE))
+
+  function runClock(): void {
+    useWorldStore.setState({ speed: CLOCK_SPEED, paused: false })
+    for (let i = 0; i < WAIT_FRAMES; i++) useWorldStore.getState().tick(FRAME_SEC)
+  }
+
+  // A campaign several world days in: the Feed, the generated market and the
+  // candidate market have all moved off the opening Operation.
+  function liveInDays(): void {
+    useWorldStore.getState().advanceDays(3)
+    useCampaignStore.getState().sync(useWorldStore.getState().t)
+    useAppStore.setState({ phase: 'world' })
+    const opening = initialCampaignData()
+    expect(useWorldStore.getState().rngState).not.toBe(INITIAL_WORLD_RNG)
+    expect(useWorldStore.getState().contractRngState).not.toBe(INITIAL_CONTRACT_RNG)
+    expect(useCampaignStore.getState().recruitRngState).not.toBe(opening.recruitRngState)
+  }
+
+  // What a rolled Event or generated contract is, without its id or time.
+  const eventIdentity = (e: WorldEvent) => ({ sector: e.sector, kind: e.kind, tone: e.tone, text: e.text })
+  const contractIdentity = (c: GeneratedContract) => ({
+    sector: c.sector,
+    cityId: c.cityId,
+    district: c.district,
+    type: c.type,
+    client: c.client,
+    threat: c.threat,
+    reward: c.reward,
+    seed: c.seed,
+  })
+
+  function eventsAfter(lastId: number): WorldEvent[] {
+    return useWorldStore.getState().events.filter((e) => e.id > lastId)
+  }
+
+  function contractsNotIn(ids: ReadonlySet<string>): GeneratedContract[] {
+    return useWorldStore.getState().contracts.filter((c) => !ids.has(c.id))
+  }
+
+  it('reload + Continue with no Screen tick: t unchanged, no lab completes, no Tax, Feed, candidate or contract fires', () => {
+    liveInDays()
+    const T = useWorldStore.getState().t
+    // Every process is armed one strategic second after the recorded t.
+    expect(useResearchStore.getState().start(nodeById('b-propellants'), T - 3600)).toBe(true)
+    const run = useResearchStore.getState().labs.ballistics!
+    useResearchStore.setState({ labs: { ...useResearchStore.getState().labs, ballistics: { ...run, endT: T + 1 } } })
+    useWorldStore.setState({
+      paused: true,
+      nextTaxT: T + 1,
+      nextEventT: T + 1,
+      nextContractT: T + 1,
+      contracts: [],
+    })
+    useCampaignStore.setState({ nextCandidateT: T + 1 })
+    const recorded = captureSave()
+    const credits = useAppStore.getState().credits
+    expect(writeSave(storage)).toBe(true)
+
+    reloadAndContinue()
+
+    const restored = captureSave()
+    expect(useWorldStore.getState().t).toBe(T)
+    // No laboratory completes: the run is still active and done is unchanged.
+    expect(restored.research).toEqual(recorded.research)
+    expect(useResearchStore.getState().labs.ballistics).toEqual({ ...run, endT: T + 1 })
+    // The identity sync ran at the saved t, not a wall-clock t.
+    expect(useResearchStore.getState().lastSyncT).toBe(T)
+    // No Tax, Feed or generated-contract fire.
+    expect(restored.world).toEqual(recorded.world)
+    expect(useAppStore.getState().credits).toBe(credits)
+    // No candidate refresh.
+    expect(restored.campaign).toEqual(recorded.campaign)
+    expect(restored).toEqual(recorded)
+
+    // Control: one Screen second later every armed process does fire, so the
+    // fixture really was due and only the reload granted nothing.
+    useWorldStore.setState({ speed: 1, paused: false })
+    useWorldStore.getState().tick(2 / TIME_SCALE)
+    const t2 = useWorldStore.getState().t
+    useResearchStore.getState().sync(t2)
+    useCampaignStore.getState().sync(t2)
+    expect(t2).toBeGreaterThan(T)
+    expect(useWorldStore.getState().nextTaxT).toBeGreaterThan(T + 1)
+    expect(useWorldStore.getState().nextEventT).toBeGreaterThan(T + 1)
+    expect(useWorldStore.getState().nextContractT).toBeGreaterThan(T + 1)
+    expect(useWorldStore.getState().contracts.length).toBe(1)
+    expect(useResearchStore.getState().done).toContain(run.id)
+    expect(useCampaignStore.getState().nextCandidateT).toBeGreaterThan(T + 1)
+  })
+
+  it('the next rolled Event after reload + Continue matches the recorded continuation, not the opening sequence', () => {
+    liveInDays()
+    expect(captureSave().world.events).not.toEqual(useWorldStore.getInitialState().events)
+    expect(writeSave(storage)).toBe(true)
+    const lastId = useWorldStore.getState().events.at(-1)!.id
+
+    // The recorded continuation: the same campaign kept running in memory.
+    runClock()
+    const recorded = eventsAfter(lastId)
+    expect(recorded.length).toBeGreaterThan(0)
+
+    reloadAndContinue()
+    expect(useWorldStore.getState().events.at(-1)!.id).toBe(lastId)
+    runClock()
+    const continued = eventsAfter(lastId)
+    expect(continued).toEqual(recorded)
+
+    // A New Operation over the same wait at the same Clock speed.
+    startNewOperation(null)
+    const openingLastId = useWorldStore.getState().events.at(-1)!.id
+    runClock()
+    const opening = eventsAfter(openingLastId)
+    expect(opening.length).toBeGreaterThan(0)
+    expect(continued.map(eventIdentity)).not.toEqual(opening.map(eventIdentity))
+    expect(eventIdentity(continued[0])).not.toEqual(eventIdentity(opening[0]))
+  })
+
+  it('the candidate market matches the recorded list; the next refresh continues it, not the opening pool', () => {
+    liveInDays()
+    const recordedMarket = structuredClone(useCampaignStore.getState().candidates)
+    const recordedT = useWorldStore.getState().t
+    const refreshT = useCampaignStore.getState().nextCandidateT
+    expect(writeSave(storage)).toBe(true)
+
+    // The recorded continuation: the next refresh in memory.
+    useCampaignStore.getState().sync(refreshT)
+    const recordedNext = structuredClone(useCampaignStore.getState().candidates)
+    expect(recordedNext).not.toEqual(recordedMarket)
+
+    reloadAndContinue()
+    expect(useWorldStore.getState().t).toBe(recordedT)
+    expect(useCampaignStore.getState().candidates).toEqual(recordedMarket)
+    expect(useCampaignStore.getState().nextCandidateT).toBe(refreshT)
+    useCampaignStore.getState().sync(refreshT)
+    expect(useCampaignStore.getState().candidates).toEqual(recordedNext)
+
+    // Not the opening pool, nor the opening pool's first refresh.
+    startNewOperation(null)
+    const openingPool = structuredClone(useCampaignStore.getState().candidates)
+    useCampaignStore.getState().sync(CANDIDATE_REFRESH_SEC)
+    const openingNext = useCampaignStore.getState().candidates
+    expect(recordedMarket).not.toEqual(openingPool)
+    expect(recordedNext).not.toEqual(openingNext)
+  })
+
+  it('the next generated contract after reload + Continue matches the recorded continuation, not the opening sequence', () => {
+    liveInDays()
+    // Leave room in the market so the next generation checkpoint rolls.
+    useWorldStore.setState({ contracts: useWorldStore.getState().contracts.slice(0, CONTRACT_TARGET - 1) })
+    expect(writeSave(storage)).toBe(true)
+    const heldIds = new Set(useWorldStore.getState().contracts.map((c) => c.id))
+
+    runClock()
+    const recorded = contractsNotIn(heldIds)
+    expect(recorded.length).toBeGreaterThan(0)
+
+    reloadAndContinue()
+    runClock()
+    const continued = contractsNotIn(heldIds)
+    expect(continued).toEqual(recorded)
+
+    // A New Operation over the same wait at the same Clock speed.
+    startNewOperation(null)
+    runClock()
+    const opening = useWorldStore.getState().contracts
+    expect(opening.length).toBeGreaterThan(0)
+    expect(contractIdentity(continued[0])).not.toEqual(contractIdentity(opening[0]))
+  })
 })
