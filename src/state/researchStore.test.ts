@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nodeState, useResearchStore } from './researchStore'
 import { useAppStore } from './appStore'
 import type { Labs } from './researchStore'
-import { nodeById } from '../game/research'
+import { BRANCH_IDS, nodeById, nodesOfBranch } from '../game/research'
 
 const HOUR = 3600
 
@@ -206,5 +206,75 @@ describe('nodeState', () => {
       labs: idle(),
     })
     expect(stateOf(sabot)).toBe('available')
+  })
+})
+
+// RS-007: endT = startedT + hours × 3600, with hours read from the catalog.
+// Each case goes through appStore.authorizeResearch, the authorize path the
+// Research screen calls, so the run under test is a billed start.
+describe('lab endT from authorize time and duration', () => {
+  const caps = [nodeById('b-sabot'), nodeById('c-cache'), nodeById('k-adaptive')]
+  let creditsBefore: number
+
+  beforeEach(() => {
+    creditsBefore = useAppStore.getState().credits
+    useAppStore.setState({ credits: 1e9 })
+  })
+
+  afterEach(() => {
+    useAppStore.setState({ credits: creditsBefore })
+  })
+
+  function authorize(node: typeof propellants, t: number): boolean {
+    return useAppStore.getState().authorizeResearch(node, t)
+  }
+
+  it('catalog hours drive the cases: propellants 2h, hypervelocity 4h, each cap 14h', () => {
+    expect(propellants.hours).toBe(2)
+    expect(hyper.hours).toBe(4)
+    for (const cap of caps) expect(cap.hours).toBe(14)
+  })
+
+  it('Advanced Propellants authorized at t = 0 ends at 7200', () => {
+    expect(authorize(propellants, 0)).toBe(true)
+    const run = useResearchStore.getState().labs.ballistics
+    expect(run).toEqual({ id: 'b-propellants', startedT: 0, endT: 7200 })
+    expect(run?.endT).toBe(propellants.hours * HOUR)
+  })
+
+  it('Advanced Propellants authorized at t = 1000 ends at 8200', () => {
+    expect(authorize(propellants, 1000)).toBe(true)
+    const run = useResearchStore.getState().labs.ballistics
+    expect(run).toEqual({ id: 'b-propellants', startedT: 1000, endT: 8200 })
+    expect(run?.endT).toBe(1000 + propellants.hours * HOUR)
+  })
+
+  it('Hypervelocity Core (4h) authorized at t = 0 ends at 14400', () => {
+    useResearchStore.setState({ done: ['b-propellants'] })
+    expect(authorize(hyper, 0)).toBe(true)
+    const run = useResearchStore.getState().labs.ballistics
+    expect(run).toEqual({ id: 'b-hypervelocity', startedT: 0, endT: 14400 })
+    expect(run?.endT).toBe(hyper.hours * HOUR)
+  })
+
+  it('all three 14h caps from idle labs run at once, each endT = startedT + 50400', () => {
+    const capIds = new Set(caps.map((c) => c.id))
+    const prereqs = BRANCH_IDS.flatMap((b) => nodesOfBranch(b))
+      .map((n) => n.id)
+      .filter((id) => !capIds.has(id))
+    useResearchStore.setState({ done: prereqs, labs: idle() })
+    for (const cap of caps) expect(nodeState(cap, prereqs, idle())).toBe('available')
+
+    const starts = [0, 1000, 2500]
+    caps.forEach((cap, i) => expect(authorize(cap, starts[i])).toBe(true))
+
+    const labs = useResearchStore.getState().labs
+    caps.forEach((cap, i) => {
+      const run = labs[cap.branch]
+      expect(run?.id).toBe(cap.id)
+      expect(run?.startedT).toBe(starts[i])
+      expect(run?.endT).toBe(starts[i] + 50400)
+      expect(run?.endT).toBe(starts[i] + cap.hours * HOUR)
+    })
   })
 })
