@@ -80,7 +80,7 @@
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [x] Created — `src/ui/debriefInvoice.test.ts` (8 tests); screenshots and click-through note in `production/qa/evidence/sprint-004/ec-022-*` (README + 4 PNGs at 1280x720)
+**Status**: [x] Created — `src/ui/debriefInvoice.test.ts` (11 tests since c85960c); screenshots and click-through note in `production/qa/evidence/sprint-004/ec-022-*` (README + 6 PNGs at 1280x720, re-captured after c85960c)
 
 ---
 
@@ -109,3 +109,9 @@
 - Evidence README: lead-programmer sign-off still pending (not required for a UI story by the story-done gate); text scales 90/110/125 not captured, deferred to IF-011.
 
 **Follow-up 2026-10-14 — owner decision on unpaid outcomes (option A):** On a loss or quiet replay, Collateral and optional bonus keep their priced values but print dim (`--ink-dim`) with a ` — NOT APPLIED` tag; a paid win keeps red/teal, untagged. Code: `src/ui/debriefInvoice.ts` (`unpaid`, `NOT_APPLIED`), `src/ui/ui.css` (`.db-row b.dim`). Tests: `src/ui/debriefInvoice.test.ts` now 11 (AC2/AC3 expectations updated; added loss and quiet replay with 3 hits + 9,000 CR optional, and the paid-win control) — closes the advisory test gap. GDD: `design/gdd/economy-and-contracts.md` UI Requirements, new AC, Closed Question 4; `design/gdd/interface.md` Rule 18 pointer. Verified: vitest 921/921, lint clean, build OK; Debrief rendered at 1280x720 in the in-app browser for loss, quiet replay and paid win (harness assist: priced outcome injected via `appStore.setState`, no mission played), no clipped rows, no console errors.
+
+**Code review re-run 2026-10-14 (specialists spawned: ui-programmer, lead-programmer, qa-tester; commits c1303ec, c85960c): APPROVED WITH SUGGESTIONS.** No required changes after verification. Two specialist "Required" items were downgraded: localization (no localization system exists in `src/`; every screen hardcodes copy, so this is project-wide) and row label/value association (pre-existing for every Debrief row; the NOT APPLIED text is in the DOM, so colour is not the only signal).
+- ADR DRIFT (warning, pre-existing in `src/state/appStore.ts`, not this story's diff): ADR-0021 says the priced `MissionOutcome` stores `collateral` and `netPayout` and the helpers read them; `priceOutcome` stores neither and `collateralFine` / `netPayout` derive them on read. The invoice calls those Economy helpers and prices nothing itself. Follow-up: store both fields or amend the ADR.
+- Suggestions (verified): `unpaid()` re-implements Economy's payout gate, export one predicate beside `netPayout`; `debriefInvoiceRows` cyclomatic complexity about 12 (limit 10), split into row helpers; doc comments missing on `InvoiceRow`, `InvoiceInput`, `NOT_APPLIED`; `--ink-dim` (#5d7d75) on the panel is about 4.25:1, under WCAG AA 4.5:1 for the 15px NOT APPLIED values; `.db-row` stagger ignores `:root.s-reduce-motion` (pre-existing); tests to add: loss + quiet together, pyrrhic note on an unpaid outcome, tone/tag absent on paid zero rows, NaN inputs to the builder.
+- Owner note: the COLLATERAL count row stays red on unpaid outcomes beside the dim penalty row; Closed Question 4 names only the penalty and bonus lines.
+- Closes Sprint 4 QA sign-off condition 2 (lead-programmer review recorded here).
