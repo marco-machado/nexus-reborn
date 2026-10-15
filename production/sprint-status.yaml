@@ -39,11 +39,11 @@ stories:
     name: "New Operation: two-step erase of the house"
     file: "production/epics/persistence-and-validation/story-002-new-operation-two-step-erase-of-the-house.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "PV-004"
     name: "Continue restores the last Screen snapshot"
     file: "production/epics/persistence-and-validation/story-004-continue-restores-the-last-screen-snapshot.md"

@@ -17,6 +17,7 @@ import {
 } from '../state/save'
 import { applyDebrief } from '../state/debrief'
 import { debriefFlags } from './debriefFlags'
+import { NEW_OPERATION_ARM_MS, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
@@ -154,12 +155,12 @@ export function MainMenu() {
   }, [])
   useEffect(() => {
     if (!newOperationArmed) return
-    const id = window.setTimeout(() => setNewOperationArmed(false), 3000)
+    const id = window.setTimeout(() => setNewOperationArmed(false), NEW_OPERATION_ARM_MS)
     return () => window.clearTimeout(id)
   }, [newOperationArmed])
 
   const beginNewOperation = () => {
-    if (canContinue && !newOperationArmed) {
+    if (pressNewOperation(canContinue, newOperationArmed) === 'arm') {
       setNewOperationArmed(true)
       return
     }

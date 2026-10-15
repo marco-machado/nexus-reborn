@@ -28,6 +28,7 @@ import {
   writeSave,
 } from './save'
 import type { SaveStorage, SaveV9 } from './save'
+import { pressNewOperation } from '../ui/newOperationArm'
 import { useTutorialStore } from './tutorialStore'
 import { useWorldStore } from './worldStore'
 
@@ -1043,5 +1044,138 @@ describe('invalid or unreadable campaign blob: drop all-or-nothing', () => {
       expect(useAppStore.getState().credits).toBe(fixture.app.credits)
       expect(captureSave().research).toEqual(fixture.research)
     }
+  })
+})
+
+// PV-002 (TR-persistence-002): New Operation erases the house in two steps.
+// The arm is Menu-local UI state, so the Menu's own decision (pressNewOperation)
+// drives it here; only a 'confirm' reaches startNewOperation.
+describe('new operation: two-step erase of the house', () => {
+  // A lived-in campaign whose Credits, Intel, contracts, labs, roster and
+  // tutorial progress all differ from the New Operation desk.
+  function livedInCampaign(): SaveV9 {
+    useAppStore.setState({ phase: 'world', credits: 77777, squad: ['op1', 'op3'] })
+    useWorldStore.setState({ t: 3600, influence: 5 })
+    useResearchStore.getState().start(nodeById('b-propellants'), 3600)
+    useCampaignStore.setState({ intelLevel: 2, intelProgress: 30, contractsWon: ['m01'] })
+    const roster = structuredClone(useCampaignStore.getState().roster)
+    const firstId = Object.keys(roster)[0]
+    roster[firstId] = { ...roster[firstId], xp: 25 }
+    useCampaignStore.setState({ roster })
+    useTutorialStore.getState().skipTutorial()
+    return captureSave()
+  }
+
+  // Origin reload onto the Menu: memory at the desk, storage keeps the blob.
+  function reloadToMenu(): void {
+    startNewOperation(null)
+    useAppStore.setState({ phase: 'menu' })
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+  }
+
+  // Fixture F: New Operation from a parallel clean origin.
+  function cleanOriginFixture(): SaveV9 {
+    const clean = new MemoryStorage()
+    startNewOperation(clean)
+    return captureSave()
+  }
+
+  // Continue loads the recorded Credits / Intel / roster, not a new desk.
+  function expectContinueLoads(expected: SaveV9): void {
+    reloadToMenu()
+    continueOperation()
+    const now = captureSave()
+    expect(useAppStore.getState().phase).toBe('world')
+    expect(now.app.credits).toBe(expected.app.credits)
+    expect(now.campaign.intelLevel).toBe(expected.campaign.intelLevel)
+    expect(now.campaign.intelProgress).toBe(expected.campaign.intelProgress)
+    expect(now.campaign.roster).toEqual(expected.campaign.roster)
+  }
+
+  it('one activation only arms: the blob is unchanged and Continue still loads the same campaign', () => {
+    const expected = livedInCampaign()
+    expect(writeSave(storage)).toBe(true)
+    const blob = storage.getItem(SAVE_KEY)
+    reloadToMenu()
+    const canContinue = menuSaveStatus(storage) === 'valid'
+    expect(canContinue).toBe(true)
+
+    // First press with a save on file arms; nothing reaches the save module.
+    expect(pressNewOperation(canContinue, false)).toBe('arm')
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
+    expect(menuSaveStatus(storage)).toBe('valid')
+
+    expectContinueLoads(expected)
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
+  })
+
+  it('confirm: Credits, Intel, contractsWon, labs and tutorial-seen equal clean-origin fixture F; the prior campaign is gone', () => {
+    const fixture = cleanOriginFixture()
+    const lived = livedInCampaign()
+    // Fixture and lived-in campaign differ on every compared field.
+    expect(lived.app.credits).not.toBe(fixture.app.credits)
+    expect(lived.campaign.intelLevel).not.toBe(fixture.campaign.intelLevel)
+    expect(lived.campaign.contractsWon).not.toEqual(fixture.campaign.contractsWon)
+    expect(lived.research.labs).not.toEqual(fixture.research.labs)
+    expect(lived.tutorial).not.toEqual(fixture.tutorial)
+    expect(writeSave(storage)).toBe(true)
+    reloadToMenu()
+
+    const canContinue = menuSaveStatus(storage) === 'valid'
+    expect(pressNewOperation(canContinue, false)).toBe('arm')
+    expect(pressNewOperation(canContinue, true)).toBe('confirm')
+    startNewOperation(storage)
+
+    const now = captureSave()
+    expect(now.app.credits).toBe(fixture.app.credits)
+    expect(now.campaign.intelLevel).toBe(fixture.campaign.intelLevel)
+    expect(now.campaign.intelProgress).toBe(fixture.campaign.intelProgress)
+    expect(now.campaign.contractsWon).toEqual(fixture.campaign.contractsWon)
+    expect(now.campaign.roster).toEqual(fixture.campaign.roster)
+    expect(now.research.labs).toEqual(fixture.research.labs)
+    expect(now.tutorial).toEqual(fixture.tutorial)
+    // Whole desk, not only the named fields.
+    expect(now).toEqual(fixture)
+    expect(useAppStore.getState()).toMatchObject({ deploySerial: 0, lastAppliedKey: 0 })
+
+    // Not restorable: the slot is empty and a reload offers no Continue.
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    expect(readSave(storage)).toBeNull()
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('never-started')
+    expect(menuSaveStatus(storage)).toBe('never-started')
+    expect(captureSave().app.credits).toBe(fixture.app.credits)
+  })
+
+  it('no save on file: the single press starts at once (nothing to erase)', () => {
+    expect(pressNewOperation(false, false)).toBe('confirm')
+  })
+
+  it('arm lapses or the director leaves the Menu: the blob is unchanged and Continue still loads the same campaign', () => {
+    vi.useFakeTimers()
+    const expected = livedInCampaign()
+    expect(writeSave(storage)).toBe(true)
+    const blob = storage.getItem(SAVE_KEY)
+    reloadToMenu()
+    stopAutosave = startAutosave(storage)
+    const canContinue = menuSaveStatus(storage) === 'valid'
+
+    // Lapse: armed, then the window passes with no confirm. The Menu drops
+    // the arm, so the next press arms again rather than erasing.
+    expect(pressNewOperation(canContinue, false)).toBe('arm')
+    vi.advanceTimersByTime(10_000)
+    expect(pressNewOperation(canContinue, false)).toBe('arm')
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
+
+    // Leave: armed, then the Menu unmounts with no confirm. The arm is
+    // component state, so it goes with the Menu and nothing was written.
+    expect(pressNewOperation(canContinue, false)).toBe('arm')
+    vi.advanceTimersByTime(10_000)
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
+    stopAutosave()
+    stopAutosave = null
+
+    expectContinueLoads(expected)
+    expect(storage.getItem(SAVE_KEY)).toBe(blob)
   })
 })
