@@ -34,6 +34,7 @@
 
 - [ ] **14.** **GIVEN** cover between shooter and a Unit on the lane, **WHEN** a miss continues down the fire lane, **THEN** cover interrupts the lane and that Unit is not hit.
 - [ ] **25.** **GIVEN** `hit_chance = clamp((0.78 − 0.28 × d/r + (u − 0.5) × 0.1) × a, 0.05, 0.95)` with `d/r = 0.5` (half range) and zero jitter `u = 0.5`, **WHEN** chance is evaluated for an operative (`a = 1.0`) and for Standard CorpSec (`a = 0.45`), **THEN** chance is 64% and 28.8% respectively. Logic unit/fixture only — do not invent a playtest. Hardened CorpSec uses `a = 0.495` (0.45 × 1.1); Deadeye bypasses the hit roll.
+- [ ] **R5-a.** *(Story criterion: the Hardened case of GDD AC 25, from the QA test cases.)* **GIVEN** the same `hit_chance` formula with `d/r = 0.5` and `u = 0.5`, **WHEN** chance is evaluated for Hardened CorpSec (`a = 0.495`, 0.45 × 1.1), **THEN** chance is 31.68%.
 
 ---
 

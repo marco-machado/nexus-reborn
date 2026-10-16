@@ -34,6 +34,7 @@
 
 - [ ] **15.** **GIVEN** an eliminate-tag required objective whose tag is garrison (street patrols untagged), **WHEN** every tagged Unit is dead and at least one untagged street patrol is still alive, **THEN** the eliminate objective completes and the required sequence can complete with that untagged patrol alive. Untagged street patrols do not gate eliminate.
 - [ ] **16.** **GIVEN** every required objective complete and every optional ignored or failed, **WHEN** the mission result is read, **THEN** the result is Win; optionals never gate the win; failing or ignoring an optional costs nothing to the win (bonus may be 0).
+- [ ] **R5-a.** *(Story criterion: the QA edge case for AC 15, so the eliminate test can fail.)* **GIVEN** an eliminate-tag required objective whose tag is garrison, **WHEN** every untagged street patrol is dead and at least one garrison-tagged Unit is still alive, **THEN** the eliminate objective is not complete and the required sequence does not complete.
 
 ---
 
