@@ -25,7 +25,7 @@ import {
   WEAPONS,
   weaponNoise,
 } from './data'
-import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER } from './abilities'
+import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER, operativeKit } from './abilities'
 import { MISSION_CLOCK_BASE, weatherAt, weatherMul } from './missionParams'
 import { squadWeapon } from './research'
 import { loadoutPools } from './mass'
@@ -1846,7 +1846,7 @@ export function createWorld(
       if (u.kind !== 'agent') continue
       const op = u.operative
       if (!op) continue
-      const kit = ROLE_ABILITIES[op.role]
+      const kit = operativeKit(op)
       rows.push({
         unitId: u.id,
         slot: u.agentSlot ?? 0,

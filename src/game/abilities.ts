@@ -12,7 +12,7 @@
 // - radius: meters of area the effect covers. 0 when the effect is not areal.
 // - magnitude: the one balance number the effect scales by; a multiplier for
 //   rate/damage/speed effects, flat HP for heals and blasts.
-import type { AgentRole } from './types'
+import type { AgentRole, OperativeDef } from './types'
 
 export interface ActiveAbilityDef {
   id: string
@@ -196,4 +196,11 @@ export const ROLE_ABILITIES: Record<AgentRole, RoleKit> = {
       magnitude: 1,
     },
   },
+}
+
+// An operative's kit, resolved from its definition's role. Deployment carries
+// the operative definitions alongside the Roster slice, so the kit is never a
+// field on the slice: two operatives of one role always share one kit.
+export function operativeKit(op: Pick<OperativeDef, 'role'>): RoleKit {
+  return ROLE_ABILITIES[op.role]
 }
