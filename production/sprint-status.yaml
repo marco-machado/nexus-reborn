@@ -39,11 +39,11 @@ stories:
     name: "Mass tier: light and standard bands"
     file: "production/epics/roster-and-assembly/story-004-mass-tier-light-and-standard-bands.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "RA-005"
     name: "Mass tier heavy band and the 400 kg limit"
     file: "production/epics/roster-and-assembly/story-005-mass-tier-heavy-band-and-400-kg-limit.md"

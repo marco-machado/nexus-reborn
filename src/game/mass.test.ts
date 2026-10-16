@@ -18,6 +18,8 @@ import {
 } from './mass'
 import type { OperativeLoadout, SquadLoadout } from './mass'
 import type { OperativeDef } from './types'
+import { rosterSlice } from './deploy'
+import { canDeploy } from './deployGate'
 
 const OP1 = operativeById('op1')
 
@@ -208,5 +210,82 @@ describe('item-slot and pool mass terms (TR-roster-001)', () => {
     const loadout: SquadLoadout = { op1: [null, null], op7: ['med', 'cell'] }
     expect(squadMassKg(squad, 0, loadout)).toBeCloseTo(73.9, 10)
     expect(loadoutPools(squad, loadout)).toEqual({ med: 0, cell: 0 })
+  })
+})
+
+// Story RA-004: Mass tier light and standard bands (GDD AC 53, 54, 70, 71).
+describe('mass tier light and standard bands (TR-roster-002)', () => {
+  const deployAt = (massKg: number) =>
+    canDeploy({
+      missionSelected: true,
+      assignedIds: ['op1'],
+      statusById: { op1: 'READY' },
+      massKg,
+    })
+  const delta = (kg: number) => tierSpeedDelta(massTier(kg))
+
+  it('samples +0.15 m/s once for the whole default four at 286.1 kg (AC 70)', () => {
+    const squad = DEFAULT_SQUAD.map(operativeById)
+    const slice = rosterSlice(squad, [], {}, {})
+    expect(slice.massKg).toBeCloseTo(286.1, 10)
+    expect(slice.massTier).toBe('light')
+    expect(delta(slice.massKg)).toBe(0.15)
+    // One squad-wide adjustment: every body gets exactly +0.15, not a
+    // per-operative figure and not applied twice.
+    for (const op of squad) {
+      expect(slice.speed[op.id]).toBeCloseTo(op.speed + 0.15, 10)
+    }
+  })
+
+  it('maps any mass to exactly one of +0.15, 0 or -0.15 m/s (AC 71)', () => {
+    const sweep: Array<[number, number]> = [
+      [0, 0.15],
+      [286.1, 0.15],
+      [340, 0.15],
+      [340.1, 0],
+      [360, 0],
+      [380, 0],
+      [380.1, -0.15],
+      [400, -0.15],
+    ]
+    for (const [kg, expected] of sweep) {
+      const d = delta(kg)
+      expect([0.15, 0, -0.15]).toContain(d)
+      expect(d).toBe(expected)
+    }
+  })
+
+  it('gives +0.15 m/s at exactly 340 kg and allows Deploy (AC 53)', () => {
+    expect(massTier(340)).toBe('light')
+    expect(delta(340)).toBe(0.15)
+    expect(deployAt(340).ok).toBe(true)
+  })
+
+  it('gives 0 m/s at 340.1 kg and allows Deploy (AC 54)', () => {
+    expect(massTier(340.1)).toBe('standard')
+    expect(delta(340.1)).toBe(0)
+    expect(deployAt(340.1).ok).toBe(true)
+  })
+
+  it('reads a computed four-body sum of 340 kg as light', () => {
+    // Ghost, Dart, Torq and Slate with three med+med pairs and one cell+cell:
+    // 66.3 + 63.3 + 76.6 + 64.8 bodies plus 60 kg of items, summed by the
+    // model rather than written as a literal.
+    const squad = ['op2', 'op3', 'op4', 'op6'].map(operativeById)
+    const loadout: SquadLoadout = {
+      op2: ['med', 'med'],
+      op3: ['med', 'med'],
+      op4: ['med', 'med'],
+      op6: ['cell', 'cell'],
+    }
+    const kg = squadMassKg(squad, 0, loadout)
+    expect(kg).toBe(340)
+    expect(massTier(kg)).toBe('light')
+    expect(rosterSlice(squad, [], {}, loadout).massTier).toBe('light')
+  })
+
+  it('applies no epsilon: a hair over 340 kg is standard', () => {
+    expect(massTier(340.0000001)).toBe('standard')
+    expect(massTier(340 + Number.EPSILON * 340)).toBe('standard')
   })
 })
