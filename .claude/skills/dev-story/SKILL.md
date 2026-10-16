@@ -533,6 +533,38 @@ Before collecting anything:
 specific breakage, and offer to resume the agent. Do **not** emit
 "Implementation Complete", and do not advance the story's status.
 
+### Mutation check (Logic and Integration, `qa.level` standard/full)
+
+A test that passes is not shown to test anything until it has failed against
+broken code. `/story-done` will not close a Logic or Integration story without
+this line, so run it here, in the main session, after the suite is green:
+
+1. Pick one source line the story's new test is meant to guard (a constant, a
+   comparison, a branch in the code under test — not in the test file).
+2. Copy that source file to the scratchpad, then make **one** small break in
+   it (change a literal, flip a comparison, drop a statement).
+3. Run only the story's test file (`commands.test` with the file path, e.g.
+   `npx vitest run src/game/world.test.ts`). At least one named test of this
+   story must fail.
+4. Restore the file by copying the scratchpad copy back — **not**
+   `git checkout`, which would also discard the uncommitted implementation —
+   and confirm with `cmp` that it matches the copy. Re-run the test file and
+   confirm it passes.
+
+One break per run; never leave the repo holding the mutant. Report exactly one
+line:
+
+- `Mutation check: FAILED AS EXPECTED — <file:line> <break> → <test name> failed; restored (cmp match, test file green)`
+- `Mutation check: SURVIVED — <file:line> <break>; no test failed` — the test
+  cannot catch this break. Fix the test (pin a spec literal, not the module's
+  own constant) and run the check again; do not report the story ready.
+- `Mutation check: NOT RUN — <reason>` — the reason must name why no break was
+  possible or why the run failed. "Test-only story" is not a reason: the code
+  under test still exists and can still be broken.
+
+Skip this section, and say so in the summary, only for UI, Visual/Feel and
+Config/Data stories, and for every story at `qa.level: minimal`.
+
 ### Then collect:
 
 - Files created or modified (with paths)
@@ -555,6 +587,7 @@ Present a concise implementation summary:
 
 **Verification**: [what was run] — [result, or `NOT VERIFIED — <reason>`]
 **Run result**: [`OBSERVED — <what was on screen>` + retained path | `NOT VERIFIED — <reason>` | `N/A — <reason>`] — see `.claude/docs/run-and-observe.md`
+**Mutation check**: [`FAILED AS EXPECTED — …` | `SURVIVED — …` | `NOT RUN — <reason>` | `skipped — <story type or qa.level>`] — see "Mutation check" above
 
 **Acceptance criteria covered**:
 - [x] [criterion] — implemented in [file:function]

@@ -194,6 +194,37 @@ The retained image **is** the `Run result: OBSERVED` from `/dev-story` Phase 6 s
 
 Any BLOCKING test evidence gap prevents the COMPLETE verdict in Phase 6.
 
+### Mutation Check Requirement (Logic and Integration)
+
+A test file that exists and passes has not shown it can fail. Sprint 7 closed 23
+stories on green suites, and a later sweep found 24 tests that could not fail
+while the code under test was wrong. So a Logic or Integration story also needs
+one recorded mutation check: a break in the code under test that made one of the
+story's tests fail, then a restore.
+
+**Applies** to Logic and Integration stories at `qa.level` standard and full.
+**Skipped** for UI, Visual/Feel and Config/Data, and at `qa.level: minimal` —
+say so by name in the report ("Mutation check: skipped — UI story"), never
+silently.
+
+Read the `Mutation check:` line from the `/dev-story` summary (the checkpoint in
+`production/session-state/active.md` when its **Current task** names this story)
+or from the story's `## Completion Notes`. Then:
+
+| Line found | Result |
+|---|---|
+| `FAILED AS EXPECTED — <file:line> <break> → <test name> failed; restored …` | Check that the named source file has no stray mutant: `git diff -- <file>` must show only the story's own intended changes (read the hunk at that line). Then **met**. |
+| `SURVIVED — …` | **BLOCKED**: a known break went undetected. The test needs fixing, then the check re-run. |
+| `NOT RUN — <reason>` | **NOT ASSESSED**, unless the reason names why nothing could be broken (e.g. the story only adds data and its test reads that data). "Test-only story" or "no time" is not such a reason. |
+| No line at all | **NOT ASSESSED** — nobody showed the tests can fail. Name the gap: run the "Mutation check" section of `/dev-story` (or do it by hand: copy the source file aside, break one line, run the story's test file, see a named test fail, copy the file back, `cmp`), record the line, then re-run `/story-done`. |
+
+A line that names no test, or no file and line, counts as no line.
+
+This skill does not write to the code root (CONTRACT.md), so it does not run
+the mutation itself. It checks that the record exists, names a real test in the
+story's test file (`Grep` the test name), and that the working tree holds no
+mutant.
+
 ---
 
 ## Phase 4: Check for Deviations
@@ -264,14 +295,36 @@ Skip this phase for Config/Data stories (no code tests required).
 
 **Review mode check** — apply before spawning LP-CODE-REVIEW:
 - `solo` → skip. Note: "LP-CODE-REVIEW skipped — Solo mode." Proceed to Phase 6 (completion report).
-- `lean` → use `AskUserQuestion` before proceeding:
-  - Prompt: "Code review is skipped in lean mode. Did you run `/code-review` on the implemented files?"
+- `lean` → LP-CODE-REVIEW is not spawned, but a specialist `/code-review` verdict is still **required** (see "Specialist review requirement" below). Look for it first in the story's `## Completion Notes`, the `/dev-story` checkpoint, or the caller's message (the `implement-stories` workflow passes it). Only if none is found, ask via `AskUserQuestion`:
+  - Prompt: "This story changed code or tests. What did `/code-review` return, with specialists?"
   - Options:
-    - `Yes — /code-review passed or was approved with suggestions`
-    - `No — skipping code review for this story`
-    - `No — I'll run /code-review before the sprint close-out`
-  - Record the answer in the completion notes (Phase 7). All three options proceed to Phase 6.
-- `full` → spawn as normal.
+    - `APPROVED or APPROVED WITH SUGGESTIONS — specialists ran (name them)`
+    - `CHANGES REQUIRED — not yet fixed`
+    - `Not run, or NOT ASSESSED`
+    - `Waive review for this story (give the reason)`
+  - Record the answer in the completion notes (Phase 7). Each answer maps to the table below.
+- `full` → spawn as normal, **and** apply the specialist review requirement below.
+
+### Specialist review requirement
+
+Applies to every story whose implementation changed a file under the code root
+or the test root, in every review mode except `solo`. A story that changed no
+code and no tests (docs or evidence only) is exempt; say so in the report.
+
+Sprints 5 to 7 closed stories on `/code-review: NOT ASSESSED` because the
+specialists could not be spawned. When they finally ran, they found blocking
+issues in stories already marked Complete. So "review was attempted" no longer
+counts; the review has to have run.
+
+| Review record | Result |
+|---|---|
+| APPROVED or APPROVED WITH SUGGESTIONS, naming at least lead-programmer and qa-tester as specialists that returned | **met**; record the advisory findings |
+| CHANGES REQUIRED, or blocking findings not yet fixed and re-reviewed | **BLOCKED** |
+| NOT ASSESSED, specialists missing or not named, "skipped", or no record | **NOT ASSESSED** — name what is missing and how to get it: run `/code-review [files]` from a session that has the Agent tool |
+| A written waiver: a reason and who accepted it (e.g. "Waived by Marco: comment-only change") | **met, with a note**; the waiver goes in Completion Notes word for word |
+
+In `solo` mode the requirement does not apply; the report says
+"Specialist review: not required — Solo mode".
 
 Spawn `lead-programmer` via `Agent` using gate **LP-CODE-REVIEW** (`.claude/docs/director-gates/lp-code-review.md`).
 
@@ -310,6 +363,10 @@ Before updating any files, present the full report:
 **Story Type**: [Logic | Integration | Visual/Feel | UI | Config/Data | Not declared]
 **Required evidence**: [unit test file | integration test or playtest | screenshot + sign-off | screenshot of each screen touched | smoke check pass]
 **Evidence found**: [YES — `[path]` | NO — BLOCKING | NO — ADVISORY]
+**Mutation check**: [MET — `<file:line>` → `<test name>` | SURVIVED — BLOCKED | MISSING / NOT RUN — NOT ASSESSED | skipped — <story type or qa.level>]
+
+### Code Review
+**Specialist review**: [MET — <verdict>, specialists: <names> | WAIVED — <who>: <reason> | CHANGES REQUIRED — BLOCKED | MISSING / NOT ASSESSED — NOT ASSESSED | not required — <Solo mode / no code or test change>]
 
 ### Deviations
 [NONE] OR:
@@ -338,6 +395,8 @@ Emit it when any of:
 - An acceptance criterion **cannot be evaluated at all** — it names no observable outcome, so no evidence could settle it either way. > **Not the same as Phase 3's `DEFERRED`.** A criterion that is evaluable but > needs a playtest is `DEFERRED — requires playtest session`, it does **not** > block, and Phase 3 keeps ownership of it. This trigger is for a criterion no > session could ever settle as written. If Phase 3 already marked it DEFERRED, > that classification stands and this trigger does not fire.
 - A criterion the user answered **`Not tested yet`** (Phase 3) — it could be checked, but nobody has. Name it and what would settle it: launch the build, check it, then re-run `/story-done`.
 - QL-TEST-COVERAGE or LP-CODE-REVIEW returned **NOT ASSESSED** and the input it named was not supplied.
+- The **specialist review requirement** (Phase 5) is not met: no specialist verdict, a NOT ASSESSED review, or no named specialists, and no written waiver. (Unfixed CHANGES REQUIRED is **BLOCKED**, not this.)
+- The **mutation check requirement** (Phase 3) is not met for a Logic or Integration story: no `Mutation check:` line, or `NOT RUN` without a valid reason. (`SURVIVED` is **BLOCKED**, not this.)
 - The **test evidence is present but unreadable or unclassifiable** — corrupt, empty, or of a type that cannot be determined. > **Absent evidence is Phase 3's, not this trigger's.** Phase 3 resolves a > missing file through `testing.strict`: BLOCKING types produce **BLOCKED**, > ADVISORY types produce **COMPLETE WITH NOTES**. Both outrank or are already > decided, so re-routing "absent" here would silently override an explicit > advisory ruling. *Unreadable* is the genuinely unassessable case, and it is > the only one this trigger claims.
 - **`/test-evidence-review` returned `NOT ASSESSED`** for this story — applicable only when that skill was actually run against it, which this skill does not do itself. It propagates: that skill's whole point is that "could not check" is not "checked and fine", and collapsing its unknown into a COMPLETE here would undo the distinction one skill downstream. `coding-standards.md` marks Logic and Integration evidence BLOCKING, so this is the path where an unverifiable story would otherwise acquire a verdict saying somebody verified it.
 - A **deviation's severity cannot be determined** because the GDD or ADR it would be judged against is missing.
@@ -374,7 +433,8 @@ If "Close", "Close and log tech debt", or "Accept deviations": edit the story fi
 **Criteria**: [X/Y passing] ([any deferred items listed])
 **Deviations**: [None] or [list of advisory deviations]
 **Test Evidence**: [Logic: test file at path | Visual/Feel: evidence doc at path | None required (Config/Data)]
-**Code Review**: [Pending / Complete / Skipped]
+**Code Review**: [verdict] — specialists: [names that returned] | Waived by [who]: [reason] | Not required — [Solo mode / no code or test change]
+**Mutation Check**: [the `Mutation check:` line verbatim] | skipped — [story type or qa.level]
 ```
 
 4. If the user chose "Close and log tech debt": append each advisory deviation to `docs/tech-debt-register.md` as one row of `/tech-debt`'s register table — the format under "Debt Register Format" in `.claude/skills/tech-debt/SKILL.md` — so `/tech-debt report` can date it from its `Added` column:

@@ -66,8 +66,12 @@ const BUILD = {
       items: { type: 'string' },
       description: 'repo-relative paths of every source and test file this step created or changed; not the story file or production/sprint-status.yaml',
     },
+    mutation: {
+      type: 'string',
+      description: 'the dev-story "Mutation check:" line verbatim (FAILED AS EXPECTED / SURVIVED / NOT RUN / skipped)',
+    },
   },
-  required: [...STEP.required, 'files'],
+  required: [...STEP.required, 'files', 'mutation'],
 }
 const REVIEW = {
   type: 'object',
@@ -190,12 +194,18 @@ ok=true only if the verdict lets implementation start. If the story is already i
   const built = await agent(
     `Invoke the dev-story skill (Skill tool) on ${story}. ${HEADLESS}
 If the story is already implemented and its tests pass, verify that instead of rewriting it, and list the files its implementation touched.
-Before returning, ${VERIFY}; ok=true only if all three pass. Stop any dev server you started. Do not commit.`,
+Before returning, ${VERIFY}; ok=true only if all three pass. Then run the skill's "Mutation check" section (Logic and Integration stories) and return its one line verbatim in "mutation"; a SURVIVED line means ok=false. Stop any dev server you started. Do not commit.`,
     { phase: 'Implement', schema: BUILD, label: `dev:${name}` },
   )
   record.steps.implement = built
   if (!built?.ok) { stopAt(record, 'implement', built); break }
   if (!built.files.length) { stopAt(record, 'implement', built, ['dev-story reported no changed files to review']); break }
+  // story-done will not close a Logic or Integration story without a mutation
+  // check that failed as expected; stop here rather than review a story that
+  // cannot close.
+  if (!/^Mutation check: (FAILED AS EXPECTED|skipped)/.test(built.mutation.trim())) {
+    stopAt(record, 'mutation check', built, [built.mutation || 'dev-story returned no Mutation check line']); break
+  }
   let files = built.files
 
   // Workflow subagents have no Agent tool, so /code-review cannot spawn its
@@ -220,12 +230,15 @@ ${ran.length ? ran.map((r) => `### ${r.specialist}: ${r.summary}\n${r.findings.m
 ${missing.length ? `These specialists did not return, so the verdict is NOT ASSESSED; name them: ${missing.join(', ')}.` : ''}
 Do not edit files. Classify each finding as blocking (bug, broken acceptance criterion, CLAUDE.md guardrail breach) or advisory.`,
       { phase: 'Review', schema: REVIEW, label: `${label}:${name}` },
-    )
+    ).then((r) => r && { ...r, specialists: ran.map((s) => s.specialist), missing })
   }
 
   let review = await reviewStory('review')
   record.steps.review = review
   if (!review) { stopAt(record, 'review', null); break }
+  // story-done treats a review without its specialists as NOT ASSESSED and
+  // will not close the story; stop before the fix pass.
+  if (review.missing.length) { stopAt(record, 'review', { summary: review.verdict }, [`specialists did not return: ${review.missing.join(', ')}`]); break }
   if (review.blocking.length) {
     const fixed = await agent(
       `Fix these blocking review findings for ${story}:\n- ${review.blocking.join('\n- ')}\n${HEADLESS}
@@ -239,17 +252,20 @@ Then ${VERIFY}; ok=true only if every finding is fixed and all three pass. In fi
     review = await reviewStory('re-review')
     record.steps.rereview = review
     if (!review) { stopAt(record, 're-review', null); break }
+    if (review.missing.length) { stopAt(record, 're-review', { summary: review.verdict }, [`specialists did not return: ${review.missing.join(', ')}`]); break }
     if (review.blocking.length) {
       stopAt(record, 're-review', { summary: `still blocking after one fix pass: ${review.verdict}` }, review.blocking)
       break
     }
   }
-  const reviewNote = `${record.steps.fix ? 'blocking findings were fixed and the re-review' : '/code-review'} returned "${review.verdict}". Advisory findings: ${review.advisory.length ? `\n- ${review.advisory.join('\n- ')}` : 'none'}`
+  const reviewNote = `${record.steps.fix ? 'blocking findings were fixed and the re-review' : '/code-review'} returned "${review.verdict}" with specialists ${review.specialists.join(', ')}. Advisory findings: ${review.advisory.length ? `\n- ${review.advisory.join('\n- ')}` : 'none'}`
 
   const done = await agent(
     `Invoke the story-done skill (Skill tool) on ${story}. ${HEADLESS}
 Code review already ran in this workflow on ${files.join(', ')}: ${reviewNote}
-Where the skill asks whether /code-review ran, answer that it did with the result above. Record the advisory findings in the story's Completion Notes.
+Where the skill asks whether /code-review ran, answer that it did with the result above, naming the specialists. Record the advisory findings in the story's Completion Notes.
+Mutation check from dev-story: ${built.mutation}
+Record it in the Completion Notes "Mutation Check" line verbatim.
 ok=true only if the story is marked Complete in its file and in production/sprint-status.yaml. Do not commit.`,
     { phase: 'Done', schema: STEP, label: `done:${name}` },
   )

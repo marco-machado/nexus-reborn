@@ -75,6 +75,8 @@ verdict set at all, so a reader had nothing to branch on.
 - Never auto-fixes failing acceptance criteria — report failures and ask the user what to do
 - Never proceeds to Phase 7 (file update) on its own when the verdict is BLOCKED or NOT ASSESSED — list blockers and offer help resolving them; Phase 7 is reached only on the user's explicit request to close anyway, and then always prompts (`scope_changes`), even in autonomous mode
 - Never silently overrides a BLOCKED verdict — if the user insists on advancing despite blockers, document the override risk explicitly in `## Completion Notes`
+- Never closes a story that changed code-root or test-root files on a missing or NOT ASSESSED specialist `/code-review` without a written waiver (who and why) — the verdict is NOT ASSESSED; unfixed CHANGES REQUIRED is BLOCKED (not in `solo` review mode)
+- Never closes a Logic or Integration story at `qa.level` standard/full without a recorded `Mutation check: FAILED AS EXPECTED` line naming a source `file:line` and a test that failed — a missing line or `NOT RUN` without a valid reason is NOT ASSESSED; `SURVIVED` is BLOCKED. This skill checks the record and that no mutant is left in the tree; it does not run the mutation (it never writes to the code root)
 
 ## Downstream Skill Expects
 **Next skill:** `/gate-check` (Production → Polish gate, or end-of-sprint review)
