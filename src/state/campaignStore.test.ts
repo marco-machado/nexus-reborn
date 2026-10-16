@@ -668,17 +668,8 @@ describe('Assembly assign and unassign edits (RA-008)', () => {
     useAppStore.setState({ squad: ['op1', 'op2', 'op3'] })
   })
 
-  it('focusing a dossier without an assign action leaves the assigned set unchanged (AC 5)', () => {
-    const before = [...useAppStore.getState().squad]
-    // What the dossier focus reads: live operative lookups and roster entries.
-    for (const o of useCampaignStore.getState().operatives) {
-      liveOperativeById(o.id)
-      void useCampaignStore.getState().roster[o.id]
-    }
-    expect(useAppStore.getState().squad).toEqual(before)
-    // The store exposes no focus action that could write the squad.
-    expect(Object.keys(useAppStore.getState()).some((k) => /focus/i.test(k))).toBe(false)
-  })
+  // AC 5 (dossier focus never edits the squad) is tested against the real
+  // Assembly click handlers in src/ui/assemblyRows.test.ts.
 
   it('refuses to unassign the only assigned operative, who stays assigned (AC 6)', () => {
     useAppStore.setState({ squad: ['op2'] })
@@ -693,18 +684,20 @@ describe('Assembly assign and unassign edits (RA-008)', () => {
   })
 
   it('refuses an assign that would exceed four (AC 75)', () => {
+    // op6 is Ready, so only the four-bay cap can refuse this assign.
+    expect(useCampaignStore.getState().roster.op6.status).toBe('READY')
     useAppStore.setState({ squad: ['op1', 'op2', 'op3', 'op4'] })
     useAppStore.getState().toggleOperative('op6')
     expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3', 'op4'])
   })
 
-  it('never assigns the same operative twice (AC 75)', () => {
+  // toggleOperative is the only squad writer, so a second assign of the same
+  // operative cannot be requested: the same key on an assigned row unassigns.
+  it('never assigns the same operative twice: the assign key on an assigned row unassigns (AC 75)', () => {
     useAppStore.getState().toggleOperative('op6')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3', 'op6'])
     useAppStore.getState().toggleOperative('op6')
-    useAppStore.getState().toggleOperative('op6')
-    const squad = useAppStore.getState().squad
-    expect(squad.filter((id) => id === 'op6')).toHaveLength(1)
-    expect(new Set(squad).size).toBe(squad.length)
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3'])
   })
 
   it('refuses to assign an Injured operative (AC 75)', () => {
@@ -729,6 +722,7 @@ describe('Assembly assign and unassign edits (RA-008)', () => {
     useAppStore.setState({ squad: [] })
     useAppStore.getState().toggleOperative('op1')
     expect(useAppStore.getState().squad).toEqual([])
+    expect(useCampaignStore.getState().roster.op7.status).toBe('READY')
     useAppStore.getState().toggleOperative('op7')
     expect(useAppStore.getState().squad).toEqual(['op7'])
   })

@@ -22,6 +22,7 @@ import { useSaveStatusStore } from '../state/saveStatusStore'
 import { NEW_OPERATION_ARM_MS, newOperationArmHint, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
 import { deployRefusalCopy } from './deployRefusal'
+import { assemblyRowHandlers } from './assemblyRows'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { ROSTER_CAP } from '../game/recruits'
@@ -1012,6 +1013,7 @@ export function TeamSelect() {
   const roster = useCampaignStore((s) => s.roster)
   const operatives = useCampaignStore((s) => s.operatives)
   const [focusId, setFocusId] = useState<string | null>(null)
+  const assemblyActions = { focus: setFocusId, toggle }
   const [recruitOpen, setRecruitOpen] = useState(false)
   const mission = missionId ? resolveMission(missionId) : null
   const focus = useMemo(() => {
@@ -1158,7 +1160,7 @@ export function TeamSelect() {
                         ' // ' +
                         condition
                       }
-                      onClick={act(() => setFocusId(o.id))}
+                      onClick={act(assemblyRowHandlers(o.id, assemblyActions).read)}
                     >
                       <span className="ts-row-idx">{pad2(i + 1)}</span>
                       <span className="ts-row-name">{o.codename}</span>
@@ -1183,7 +1185,7 @@ export function TeamSelect() {
                             ? 'UNASSIGN'
                             : 'ASSIGN'
                       }
-                      onClick={act(() => toggle(o.id))}
+                      onClick={act(assemblyRowHandlers(o.id, assemblyActions).assign)}
                     >
                       {inSquad ? '−' : '+'}
                     </button>
@@ -1235,7 +1237,7 @@ export function TeamSelect() {
                 aria-label={
                   'BAY ' + pad2(slot + 1) + ' // ' + o.codename + ' // READ THE DOSSIER'
                 }
-                onClick={act(() => setFocusId(id))}
+                onClick={act(assemblyRowHandlers(id, assemblyActions).read)}
               >
                 <div className="ts-bay-top">
                   <b>{pad2(slot + 1)}</b>
