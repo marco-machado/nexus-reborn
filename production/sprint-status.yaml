@@ -120,11 +120,11 @@ stories:
     name: "Eliminate counts tagged Units only; optionals never gate the win"
     file: "production/epics/tactical-mission/story-012-eliminate-tags-and-optionals-never-gate-the-win.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-013"
     name: "Loss conditions; abort emits no outcome DTO"
     file: "production/epics/tactical-mission/story-013-loss-conditions-and-abort-emits-no-outcome.md"

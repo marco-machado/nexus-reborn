@@ -3720,3 +3720,154 @@ describe('cover interrupts the fire lane; hit chance formula (TM-011, AC 14 / 25
     expect(worldSrc).toMatch(/const ENEMY_ACC = 0\.45\b/)
   })
 })
+
+// TM-012 (Sprint 8, story 012; TR-tactical-010, ADR-0016): an eliminate-tag
+// objective counts only the Units carrying its tag, so untagged street patrols
+// never gate it (AC 15, R5-a); optionals never gate the win (AC 16).
+describe('eliminate counts tagged Units only; optionals never gate the win (TM-012, AC 15 / 16 / R5-a)', () => {
+  // Keeps an enemy alive but harmless, so it cannot end the run on its own.
+  function muzzle(u: Unit): void {
+    u.holdFire = true
+    u.reloading = 999
+    u.alerted = false
+    u.path.length = 0
+    u.patrol!.length = 0
+  }
+
+  function reachGate(w: WorldApi): void {
+    const a1 = w.unit('a1')!
+    a1.pos.x = w.city.checkpoint.x
+    a1.pos.z = w.city.checkpoint.z
+    a1.path.length = 0
+    w.tick(STEP)
+  }
+
+  function extractAll(w: WorldApi): void {
+    for (const u of w.units) {
+      if (u.kind === 'agent' && u.stance !== 'dead') {
+        u.pos.x = w.city.extraction.x
+        u.pos.z = w.city.extraction.z
+        u.path.length = 0
+      }
+    }
+    w.tick(STEP)
+  }
+
+  function enemies(w: WorldApi) {
+    const all = w.units.filter((u) => u.kind === 'enemy')
+    return {
+      garrison: all.filter((u) => u.tag === 'garrison'),
+      untagged: all.filter((u) => u.tag === undefined),
+    }
+  }
+
+  it('every garrison Unit dead with an untagged street patrol alive completes eliminate and the win (AC 15)', () => {
+    expect(MISSION.objectives[1]).toMatchObject({ kind: 'eliminate-tag', tag: 'garrison' })
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const { garrison, untagged } = enemies(w)
+    expect(garrison.length).toBeGreaterThan(0)
+    expect(untagged.length).toBeGreaterThan(0)
+
+    reachGate(w)
+    expect(useMissionStore.getState().objectives[1].active).toBe(true)
+
+    for (const u of garrison) u.stance = 'dead'
+    const patrol = untagged[0]
+    muzzle(patrol)
+    w.tick(STEP)
+    expect(patrol.stance).not.toBe('dead')
+    let rows = useMissionStore.getState().objectives
+    expect(rows[1].done).toBe(true)
+    expect(rows[2].active).toBe(true)
+
+    extractAll(w)
+    rows = useMissionStore.getState().objectives
+    expect(rows.every((o) => o.done)).toBe(true)
+    expect(useMissionStore.getState().result).toBe('won')
+    expect(patrol.stance).not.toBe('dead')
+  })
+
+  it('every untagged patrol dead with one garrison Unit alive leaves eliminate open and no win (AC R5-a)', () => {
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const { garrison, untagged } = enemies(w)
+    expect(garrison.length).toBeGreaterThan(1)
+    expect(untagged.length).toBeGreaterThan(0)
+
+    reachGate(w)
+    for (const u of untagged) u.stance = 'dead'
+    for (const u of garrison.slice(1)) u.stance = 'dead'
+    const holdout = garrison[0]
+    muzzle(holdout)
+    w.tick(STEP)
+    expect(holdout.stance).not.toBe('dead')
+    let rows = useMissionStore.getState().objectives
+    expect(rows[1].done).toBe(false)
+    expect(rows[1].active).toBe(true)
+    expect(rows[2].active).toBe(false)
+
+    // Standing on the pad does not skip the open eliminate step.
+    extractAll(w)
+    warm(w, 1)
+    rows = useMissionStore.getState().objectives
+    expect(rows[1].done).toBe(false)
+    expect(rows[2].done).toBe(false)
+    expect(useMissionStore.getState().result).toBe('none')
+  })
+
+  it('every required objective done with one optional ignored and one failed is a Win at bonus 0 (AC 16)', () => {
+    // Both optionals precede the first required step, so they go live at
+    // insertion; their zones sit in a far corner no agent walks to.
+    const far: Zone = { x: 2, z: 2, r: 1 }
+    const ignored: ObjectiveDef = {
+      id: 'opt-ignored',
+      label: 'IGNORED SIDE JOB',
+      kind: 'interact',
+      zone: far,
+      durationSec: 5,
+      optional: true,
+      bonusReward: 9000,
+    }
+    const failed: ObjectiveDef = {
+      id: 'opt-failed',
+      label: 'FAILED SIDE JOB',
+      kind: 'interact',
+      zone: far,
+      durationSec: 5,
+      optional: true,
+      bonusReward: 6000,
+      failSec: 1,
+    }
+    const m: MissionDef = { ...MISSION, objectives: [ignored, failed, ...MISSION.objectives] }
+    const w = spawn(m, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+
+    // Let the optional's fail window close: it fails, the mission does not.
+    warm(w, 1.5)
+    let rows = useMissionStore.getState().objectives
+    expect(rows[1]).toMatchObject({ id: 'opt-failed', failed: true, done: false })
+    expect(useMissionStore.getState().result).toBe('none')
+
+    reachGate(w)
+    w.tick(STEP)
+    extractAll(w)
+    rows = useMissionStore.getState().objectives
+    expect(rows[0]).toMatchObject({ id: 'opt-ignored', done: false, failed: false })
+    expect(rows[1]).toMatchObject({ id: 'opt-failed', done: false, failed: true })
+    expect(rows.filter((o) => !o.optional).every((o) => o.done)).toBe(true)
+    expect(useMissionStore.getState().result).toBe('won')
+
+    warm(w, 3)
+    const out = useAppStore.getState().outcome
+    expect(out?.won).toBe(true)
+    // No optional completed, so the outcome prices no bonus.
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('BONUS SECURED'))).toBe(false)
+    expect(out?.bonus).toBe(0)
+    expect(out ? netPayout(out) : -1).toBe(MISSION.reward)
+  })
+})
