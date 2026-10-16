@@ -11,10 +11,12 @@ import {
   rollCandidate,
 } from './recruits'
 
-const HP_MIN = Math.min(...ROSTER.map((o) => o.maxHp))
-const HP_MAX = Math.max(...ROSTER.map((o) => o.maxHp))
-const SPEED_MIN = Math.min(...ROSTER.map((o) => o.speed))
-const SPEED_MAX = Math.max(...ROSTER.map((o) => o.speed))
+// The authored starting-roster envelope (living spec §8 Starting roster):
+// HP 92 (Raven) to 132 (Torq), speed 4.2 (Torq) to 5.6 m/s (Dart).
+const HP_MIN = 92
+const HP_MAX = 132
+const SPEED_MIN = 4.2
+const SPEED_MAX = 5.6
 
 describe('candidate generation', () => {
   it('is deterministic: the same cursor state rolls the same candidate', () => {
