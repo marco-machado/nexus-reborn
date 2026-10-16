@@ -1674,3 +1674,135 @@ describe('candidate market offers and hire cost (RA-022)', () => {
     }
   })
 })
+
+// RA-023 (GDD AC 30/31/32/33, ADR-0013): hire refusals and success through
+// the authorize path, appStore.hireOperative. Refusals are identity no-ops on
+// both Credits and the roster. Post-hire offer count and backfill are Open
+// Question 2 and are deliberately not asserted.
+describe('hire refusals and success (RA-023)', () => {
+  beforeEach(() => {
+    useAppStore.setState(useAppStore.getInitialState(), true)
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+      lastSyncT: null,
+    })
+  })
+
+  // Frees one roster place by losing `opId` on a debrief.
+  function lose(opId: string) {
+    useCampaignStore.getState().reportMission('m01', outcome({ casualties: 1, deadIds: [opId] }), 0)
+  }
+
+  function snapshot() {
+    const c = useCampaignStore.getState()
+    return {
+      credits: useAppStore.getState().credits,
+      operatives: c.operatives,
+      roster: c.roster,
+      candidates: c.candidates,
+    }
+  }
+
+  it('living 8: hire is refused, living stays 8, Credits unchanged (AC 30)', () => {
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.setState({ credits: candidate.cost * 4 })
+    expect(useCampaignStore.getState().operatives).toHaveLength(ROSTER_CAP)
+    const before = snapshot()
+
+    useAppStore.getState().hireOperative(candidate.id)
+
+    expect(snapshot()).toEqual(before)
+    expect(useCampaignStore.getState().operatives).toHaveLength(8)
+    expect(useAppStore.getState().credits).toBe(candidate.cost * 4)
+  })
+
+  it('Credits 1 below the hire cost: roster unchanged and nothing debited (AC 31)', () => {
+    lose('op1')
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.setState({ credits: candidate.cost - 1 })
+    const before = snapshot()
+
+    useAppStore.getState().hireOperative(candidate.id)
+
+    expect(snapshot()).toEqual(before)
+    expect(useCampaignStore.getState().operatives).toHaveLength(7)
+    expect(useAppStore.getState().credits).toBe(candidate.cost - 1)
+  })
+
+  it('Credits 0: roster unchanged and Credits stay 0, never negative (AC 31)', () => {
+    lose('op1')
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.setState({ credits: 0 })
+    const before = snapshot()
+
+    useAppStore.getState().hireOperative(candidate.id)
+
+    expect(snapshot()).toEqual(before)
+    expect(useAppStore.getState().credits).toBe(0)
+  })
+
+  it('living 7, success: living +1, the hire is Ready with 4 unpinned bays on current issue (AC 32)', () => {
+    useResearchStore.setState({ done: ['c-interface', 'k-sensor', 'c-synaptic', 'k-targeting'] })
+    lose('op1')
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.setState({ credits: candidate.cost + 500 })
+
+    useAppStore.getState().hireOperative(candidate.id)
+
+    const c = useCampaignStore.getState()
+    expect(c.operatives).toHaveLength(8)
+    expect(c.operatives.some((o) => o.id === candidate.id)).toBe(true)
+    expect(c.roster[candidate.id]).toEqual({ status: 'READY', recoverAtT: null, xp: 0, pins: {} })
+    const done = useResearchStore.getState().done
+    const bays = wornAugs(done, c.roster[candidate.id].pins)
+    expect(bays.map((b) => b.slot)).toEqual(AUG_SLOTS)
+    expect(bays).toHaveLength(4)
+    for (const bay of bays) {
+      expect(bay.pinned).toBe(false)
+      expect(bay.node).toBe(currentIssue(done, bay.slot))
+    }
+    expect(useAppStore.getState().credits).toBe(500)
+  })
+
+  it('Credits exactly equal to the hire cost: hire succeeds and Credits reach 0 (edge case)', () => {
+    lose('op1')
+    const candidate = useCampaignStore.getState().candidates[0]
+    useAppStore.setState({ credits: candidate.cost })
+
+    useAppStore.getState().hireOperative(candidate.id)
+
+    expect(useCampaignStore.getState().operatives).toHaveLength(8)
+    expect(useCampaignStore.getState().roster[candidate.id]?.status).toBe('READY')
+    expect(useAppStore.getState().credits).toBe(0)
+  })
+
+  it('7 living incl. an Assault + an Assault candidate: 8 living, both Assault ids, hired id leaves the offers (AC 33)', () => {
+    lose('op8')
+    const living = useCampaignStore.getState().operatives
+    expect(living).toHaveLength(7)
+    expect(useCampaignStore.getState().campaignFailed).toBe(false)
+    const incumbent = living.find((o) => o.role === 'assault')!
+    expect(incumbent).toBeDefined()
+
+    const base = useCampaignStore.getState().candidates[0]
+    const assault = { ...base, id: base.id + '-assault', role: 'assault' as const, weapon: 'assault' as const }
+    expect(living.some((o) => o.id === assault.id)).toBe(false)
+    useCampaignStore.setState({
+      candidates: [assault, ...useCampaignStore.getState().candidates.slice(1)],
+    })
+    useAppStore.setState({ credits: assault.cost })
+
+    useAppStore.getState().hireOperative(assault.id)
+
+    const c = useCampaignStore.getState()
+    expect(c.operatives).toHaveLength(8)
+    const ids = c.operatives.map((o) => o.id)
+    expect(ids).toContain(incumbent.id)
+    expect(ids).toContain(assault.id)
+    expect(c.operatives.filter((o) => o.role === 'assault').map((o) => o.id)).toEqual(
+      expect.arrayContaining([incumbent.id, assault.id]),
+    )
+    expect(c.candidates.some((o) => o.id === assault.id)).toBe(false)
+  })
+})

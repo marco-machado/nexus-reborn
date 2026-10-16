@@ -210,11 +210,11 @@ stories:
     name: "Hire refusals and success"
     file: "production/epics/roster-and-assembly/story-023-hire-refusals-and-success.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-025"
     name: "Roster save and reload"
     file: "production/epics/roster-and-assembly/story-025-roster-save-and-reload.md"
