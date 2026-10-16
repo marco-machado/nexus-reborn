@@ -44,6 +44,7 @@
 
 - Tactical computes both `missionChance` and `missionRisk` regardless of intel; Chance vs Risk chrome is Interface/Brief.
 - Severe band is risk_index ≥ 75.
+- Performance: no performance impact expected — missionRisk (src/game/forecast.ts:106) runs at brief and deploy time, outside the sim tick, and the Opening hour changes no per-tick sight or noise value. No per-frame work.
 
 ---
 

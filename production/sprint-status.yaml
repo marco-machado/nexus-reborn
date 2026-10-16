@@ -75,7 +75,7 @@ stories:
     name: "Same seed builds the same mission; brief and deploy agree"
     file: "production/epics/tactical-mission/story-007-same-seed-same-mission-and-brief-agrees.md"
     priority: must-have
-    status: ready-for-dev
+    status: in-progress
     owner: ""
     estimate_days: 0.3
     blocker: ""

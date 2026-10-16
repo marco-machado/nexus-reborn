@@ -45,6 +45,7 @@
 
 - Accuracy, movement, and the 4.5 m omni notice do not change with weather.
 - Assert that noise radius strictly decreases with rain intensity; do not paste `noiseMul` (code-owned, GDD OQ7).
+- Performance: no performance impact expected — the weather front retunes sight and noise once in applyWeatherFront (src/game/world.ts:1967); after that the per-tick cost is one `frontLogged` flag check. No new per-frame work.
 
 ---
 

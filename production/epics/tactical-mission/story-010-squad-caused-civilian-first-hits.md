@@ -44,6 +44,7 @@
 
 - First hit, not death; one civilian counts once.
 - CorpSec-caused hits never increment `civiliansHit` (telemetry may record them separately).
+- Performance: no performance impact expected — civilian hits are counted per hit in applyDamage (src/game/world.ts:719-728) with one Set lookup, and only for civilians the squad hits. No per-frame work.
 
 ---
 

@@ -34,6 +34,8 @@
 
 - [ ] **21.** **GIVEN** the same contract on Standard vs Hardened, **WHEN** extras and minimap data are read, **THEN** Hardened applies +2 street patrols, +6 civilians, sight-confirm ×1.15, CorpSec accuracy ×1.1, +1 m vision after weather, optional time-limit ×0.85; Standard matches the authored baseline; Hardened does not hide minimap cones or patrols (Tactical still emits them). Minimap chrome is Interface presentation of that data.
 - [ ] **22.** **GIVEN** a live mission, **WHEN** camera and minimap orientation are read, **THEN** the camera does not rotate or tilt in play (fixed 45° yaw, 55° elevation); minimap up is screen up (shared yaw). Not a HUD-clipping check.
+- [ ] **R5-a.** *(GDD rule 19: Control does not add CorpSec HP.)* **GIVEN** the same contract in sectors with different Control values, on Standard and on Hardened, **WHEN** CorpSec units are created, **THEN** their HP does not change with Control.
+- [ ] **R5-b.** *(GDD Formulas: accuracy `a`.)* **GIVEN** a Hardened mission, **WHEN** a CorpSec unit's hit chance is evaluated at half range with zero jitter (`d/r = 0.5`, `u = 0.5`), **THEN** it uses `a = 0.495` (0.45 × 1.1) and the chance is 31.68%. Depends on the TM-011 hit-chance seam.
 
 ---
 
@@ -44,6 +46,7 @@
 - Standard matches the authored baseline.
 - Minimap chrome is Interface presentation; HUD clipping is not checked here.
 - CameraRig `useFrame` priority 0 after WorldTicker (ADR-0016 Verification).
+- Performance: no performance impact expected — the Hardened profile is a static table read at mission build (src/game/missionParams.ts:103), and the camera pose is constants (src/scene/CameraRig.tsx:14, CAMERA_YAW). The new camera test reads constants only. No per-frame work.
 
 ---
 
@@ -64,7 +67,7 @@
 **What to test**:
 - AC 21: Hardened vs Standard on one contract: +2 street patrols, +6 civilians, sight-confirm ×1.15, CorpSec accuracy ×1.1, +1 m vision after weather, optional time limit ×0.85 (Hollow Crown 90 s → 76.5 s); Standard equals the authored baseline; minimap cones and patrols still emitted
 - AC 22: camera yaw 45° and elevation 55° are constants; minimap yaw equals camera yaw
-**Proposed extra criteria (R-5)**: Control does not add CorpSec HP on Hardened; Hardened accuracy `a` = 0.495 feeds the hit chance (TM-011)
+**Extra criteria (R-5)** (promoted to acceptance criteria R5-a onward, 2026-10-16): Control does not add CorpSec HP on Hardened; Hardened accuracy `a` = 0.495 feeds the hit chance (TM-011)
 **Manual**: camera does not move after input (screenshot pair)
 **Mutation check**: change the Hardened optional mul to 0.9 → AC 21 fails
 **Estimated test count**: ~6

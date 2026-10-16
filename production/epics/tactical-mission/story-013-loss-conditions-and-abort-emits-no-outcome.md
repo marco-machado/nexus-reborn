@@ -35,6 +35,9 @@
 
 - [ ] **17.** **GIVEN** a live mission, **WHEN** (a) no living operatives remain, or (b) a required escort VIP dies, or (c) a required objective timer expires, **THEN** the result is Loss.
 - [ ] **18.** **GIVEN** a mission in progress, **WHEN** Abort is confirmed, **THEN** there is no debrief, Tactical emits no outcome DTO, Credits / roster / sectors / labs are unchanged, and the result is not Loss. **GIVEN** abort telemetry enabled, **THEN** at most a thin telemetry record is appended and that record is not a campaign write. **GIVEN** telemetry disabled, **THEN** no telemetry record.
+- [ ] **R5-a.** *(GDD Edge Case: same-step tiebreak.)* **GIVEN** a live mission, **WHEN** the last operative dies in the same step that the last required objective completes, **THEN** the result is Win, and the dead still grade KIA at debrief. A required VIP death or required time-limit expiry in that same step is still Loss.
+- [ ] **R5-b.** *(GDD Edge Case: If Loss.)* **GIVEN** a mission that ends in Loss, **WHEN** Tactical emits the outcome, **THEN** it emits the outcome DTO with `won=false`, `civiliansHit`, and the ids of the completed optional objectives.
+- [ ] **R5-c.** *(GDD Edge Case: optional timer.)* **GIVEN** a live mission with an optional objective on a time limit, **WHEN** that timer expires, **THEN** only that optional fails, the result is not Loss, and the required sequence is not gated.
 
 ---
 
@@ -45,6 +48,7 @@
 - Abort discards the mission with no debrief and no outcome; Credits, roster, sectors, labs unchanged.
 - Abort telemetry (when enabled) is at most a thin, local, non-campaign record written outside `src/game/`.
 - Same-step wipe vs required-complete tiebreak (TR-tactical-012) is resolved in the living spec; do not retune it here.
+- Performance: no performance impact expected — loss and abort are mission-end events, not per-frame work; abort emits nothing and writes no campaign state.
 
 ---
 
@@ -66,7 +70,7 @@
 **What to test**:
 - AC 17: Loss on (a) wipe, (b) required VIP death, (c) required timer expiry — one test each, reading `won === false`
 - AC 18: Abort → no outcome DTO, no Debrief phase, Credits / roster / sectors / labs unchanged, not a Loss; telemetry on → at most one thin record, not a campaign write; telemetry off → none
-**Proposed extra criteria (R-5)**: same-step wipe and required completion → Win (GDD tiebreak); Loss still emits `civiliansHit` and completed optional ids; optional timer expiry fails only that optional
+**Extra criteria (R-5)** (promoted to acceptance criteria R5-a onward, 2026-10-16): same-step wipe and required completion → Win (GDD tiebreak); Loss still emits `civiliansHit` and completed optional ids; optional timer expiry fails only that optional
 **Mutation check**: let abort call the outcome emitter → AC 18 fails
 **Estimated test count**: ~6
 

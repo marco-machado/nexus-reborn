@@ -43,6 +43,7 @@
 
 - Land within 18 m snaps onto pavement within 2.5 m.
 - Blast: 70 damage at centre falling to 35 at 3.5 m edge, LOS only.
+- Performance: no performance impact expected — orderGrenade (src/game/world.ts:2404) runs once per confirm, and the blast resolves once per throw. No per-frame work.
 
 ---
 

@@ -45,6 +45,7 @@
 
 - Economy / World Network own the zeroed currencies and sector shoves — do not re-own them here.
 - A weather front retunes sight/noise without re-sampling Research.
+- Performance: no performance impact expected — the deploy freeze is built once at mission start (src/game/world.ts:193), and a weather front does not re-read Research. No per-frame work.
 
 ---
 

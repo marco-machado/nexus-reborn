@@ -43,6 +43,7 @@
 
 - Untagged street patrols do not gate eliminate.
 - A Win with ignored or failed optionals may carry bonus 0.
+- Performance: no performance impact expected — the eliminate-tag check is the existing scan of the unit list in objectiveMet (src/game/world.ts:1615); the story counts only tagged Units and adds no new scan. No new per-frame work.
 
 ---
 

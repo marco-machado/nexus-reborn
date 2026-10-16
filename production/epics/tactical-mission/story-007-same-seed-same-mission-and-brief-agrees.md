@@ -1,12 +1,12 @@
 # Story 007: Same seed builds the same mission; brief and deploy agree
 
 > **Epic**: Tactical mission
-> **Status**: Ready
+> **Status**: In Progress
 > **Layer**: Feature
 > **Type**: Integration
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-16
 
 ## Context
 
@@ -35,6 +35,9 @@
 
 - [ ] **7.** **GIVEN** the same mission seed, **WHEN** the district, weather script, and Opening hour are built twice, **THEN** both builds match: same district, same weather script, same Opening hour.
 - [ ] **8.** **GIVEN** a selected contract’s brief and the deployed mission from that seed, **WHEN** insertion, sequential objectives, extraction, force/civilian counts, Opening hour, and weather-front timing are compared, **THEN** brief and deploy agree on all six. A mismatch is a Tactical/brief bug, not a sample of generated coverage.
+- [ ] **R5-a.** *(Story criterion so the AC 7 test can fail; not a GDD AC.)* **GIVEN** two different mission seeds, **WHEN** the district is built from each, **THEN** the two districts differ.
+- [ ] **R5-b.** *(GDD Edge Case: unrest > 20.)* **GIVEN** a contract in a sector with unrest above 20, **WHEN** the brief and the deployed mission are compared, **THEN** both include the extra 6 civilians and 1 street patrol, and their force and civilian counts agree.
+- [ ] **R5-c.** *(GDD rule 19, Difficulty extras.)* **GIVEN** a contract on Hardened, **WHEN** the brief and the deployed mission are compared, **THEN** both include the Hardened extra street patrols and civilians, and their force and civilian counts agree.
 
 ---
 
@@ -44,6 +47,7 @@
 
 - District, weather script, Opening hour, and objectives share one seed and one unsaved lifetime.
 - A brief/deploy mismatch on insertion, sequential objectives, extraction, force/civilian counts, Opening hour, or weather-front timing is a Tactical/brief bug.
+- Performance: no performance impact expected — the city is generated once per mission in createWorld (src/game/world.ts:203) and once for the brief map (src/ui/briefMap.ts:120); the story checks they agree. No per-frame work.
 
 ---
 
@@ -65,7 +69,7 @@
 **What to test**:
 - AC 7: two builds from one seed produce equal district (walk grid, road rects, spawns), weather script and Opening hour
 - AC 8: brief params vs the created world agree on insertion, objective sequence, extraction, force/civilian counts, Opening hour and weather-front time
-**Proposed extra criteria (R-5)**: a different seed changes the district (the test can fail); unrest > 20 extras (+6 civilians, +1 street patrol) appear in both brief and deploy; Hardened extras appear in both
+**Extra criteria (R-5)** (promoted to acceptance criteria R5-a onward, 2026-10-16): a different seed changes the district (the test can fail); unrest > 20 extras (+6 civilians, +1 street patrol) appear in both brief and deploy; Hardened extras appear in both
 **Mutation check**: seed `generateCity` from `Math.random` once → AC 7 fails
 **Estimated test count**: ~4
 

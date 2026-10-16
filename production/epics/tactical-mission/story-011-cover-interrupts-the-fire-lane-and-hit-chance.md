@@ -43,6 +43,7 @@
 
 - Hit chance test is a logic unit/fixture only; do not invent a playtest.
 - Hardened CorpSec uses a = 0.495 (0.45 × 1.1); Deadeye bypasses the hit roll.
+- Performance: no performance impact expected — extracting the hit-chance seam from the shot (src/game/world.ts:852) keeps it per shot, not per frame; it must keep the `rng()` call count and order (QA plan finding 3). No new per-frame work.
 
 ---
 
