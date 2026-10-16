@@ -101,7 +101,7 @@
 
 ## Completion Notes
 **Completed**: 2026-10-16
-**Criteria**: 2/2 passing (AC 10, AC 26). AC 10 lighting half: screenshots at `production/qa/evidence/tm-009/` (README, 01-03); qa-lead sign-off named in the QA plan is not yet recorded.
+**Criteria**: 2/2 passing (AC 10, AC 26). AC 10 lighting half: screenshots at `production/qa/evidence/tm-009/` (README, 01-03); qa-lead signed off 2026-10-16 in the Sprint 8 `/team-qa` run (QA sign-off (qa-lead, 2026-10-16): TM-009 manual evidence production/qa/evidence/tm-009/ accepted — HUD clock advanced 22:14:10 to 22:14:43 (33.12 s sim) while sky grade and shadow direction stayed identical, dusk (18:14) and night (22:14) show visibly different grades at open, all shots 1280x720, only favicon 404s in the console.)
 **Deviations**: None. Test files touched (`src/game/forecast.test.ts`, `src/game/missionParams.test.ts`, `src/game/world.test.ts`) match the Test Evidence section; `forecast.test.ts` is named by the QA plan, not the story's Required evidence line (dev-story open question, recorded).
 **Test Evidence**: Logic: `src/game/forecast.test.ts`, `src/game/missionParams.test.ts`, `src/game/world.test.ts` (11/11 TM-009 tests pass, `npx vitest run ... -t TM-009`, 2026-10-16); manual half: `production/qa/evidence/tm-009/README.md`
 **Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer. Advisory findings (not applied; follow-up):

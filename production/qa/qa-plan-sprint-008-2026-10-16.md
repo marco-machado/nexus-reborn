@@ -235,9 +235,11 @@ Project convention puts tests beside their module (`*.test.ts`, vitest), not und
 **Verification method**: Manual step-through in the in-app browser at 1280x720
 **Who must sign off**: qa-lead
 **Evidence to capture**: two screenshots of one mission 30+ s of tactical time apart, saved to `production/qa/evidence/tm-009/`
-- [ ] HUD clock differs between the two screenshots
-- [ ] Sky colour and light direction are the same in both
-- [ ] A dusk mission and a night mission show different lighting at open
+- [x] HUD clock differs between the two screenshots
+- [x] Sky colour and light direction are the same in both
+- [x] A dusk mission and a night mission show different lighting at open
+
+QA sign-off (qa-lead, 2026-10-16): TM-009 manual evidence production/qa/evidence/tm-009/ accepted — HUD clock advanced 22:14:10 to 22:14:43 (33.12 s sim) while sky grade and shadow direction stayed identical, dusk (18:14) and night (22:14) show visibly different grades at open, all shots 1280x720, only favicon 404s in the console.
 
 ### TM-015 — Fixed camera (visual half of AC 22)
 **Verification method**: Manual step-through in the in-app browser at 1280x720
@@ -250,8 +252,10 @@ Project convention puts tests beside their module (`*.test.ts`, vitest), not und
 QA sign-off (qa-lead, 2026-10-16): TM-015 manual evidence production/qa/evidence/tm-015/ accepted — 1280x720 before/after pairs for drag (01→02), wheel (02→03) and arrows (03→04) show yaw and elevation unchanged (footprint bearings -45/-135 and ratios 1.3675/0.8129 held), with only zoom or pan changing; minimap up matches screen up (01); Hardened is confirmed active (06, vision 12.2 vs 11.2) and the minimap still draws patrol cones after Pulse Scan (05/05b).
 
 ### TM-007 / TM-013 — smoke paths
-- [ ] Brief for a selected contract matches the deployed mission's insertion, objectives, extraction, and weather-front time
-- [ ] Abort mid-mission returns to the World Network with no Debrief and unchanged Credits and roster
+- [x] Brief for a selected contract matches the deployed mission's insertion, objectives, extraction, and weather-front time
+- [x] Abort mid-mission returns to the World Network with no Debrief and unchanged Credits and roster
+
+Executed 2026-10-16 in the Sprint 8 `/team-qa` run: `production/qa/test-cases/tm-007-brief-matches-deploy-cases.md` and `tm-013-abort-no-outcome-cases.md` (execution records). Both PASS.
 
 ---
 

@@ -5,7 +5,7 @@
 - Result: **pass** for the three checklist items of the story's manual half.
 - Story: `production/epics/tactical-mission/story-009-opening-hour-is-presentation-and-risk-index.md` (GDD `design/gdd/tactical-mission.md` AC 10, ADR-0007).
 - Changed behaviour under test: none. The story changed tests only. This run checks the existing `src/scene/Atmosphere.tsx` look in the app.
-- Sign-off: the story names qa-lead. This run was captured by an unattended `/story-done` session. qa-lead sign-off is **not** recorded here.
+- Sign-off: the story names qa-lead. This run was captured by an unattended `/story-done` session. qa-lead reviewed it in the Sprint 8 `/team-qa` run. QA sign-off (qa-lead, 2026-10-16): TM-009 manual evidence production/qa/evidence/tm-009/ accepted — HUD clock advanced 22:14:10 to 22:14:43 (33.12 s sim) while sky grade and shadow direction stayed identical, dusk (18:14) and night (22:14) show visibly different grades at open, all shots 1280x720, only favicon 404s in the console.
 
 ## Source and environment
 
