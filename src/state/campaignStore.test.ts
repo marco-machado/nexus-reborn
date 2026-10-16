@@ -1329,3 +1329,139 @@ describe('campaign fail on empty roster (RA-024)', () => {
     expect(flags()).toEqual({ campaignWon: false, campaignFailed: true })
   })
 })
+
+// RA-018 (TR-roster-004, GDD AC 24/74 + Edge Cases "If Loss", "win ETA
+// finishes recovery", Persistence rule 10 / WN-011): quiet replay zeros the
+// payout only (ADR-0004); the roster apply at t0 runs on every debrief, and
+// only a win (quiet replay included) spends ETA to t1 (ADR-0001).
+describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
+  const DAY = 24 * HOUR
+  const T0 = 5 * HOUR
+  // f = 0.175 is 30 h of downtime; f = 0.01 sits near the 48 h maximum.
+  const F_30H = 0.175
+  const F_DEEP = 0.01
+  const resetStores = () => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+  }
+  beforeEach(() => {
+    resetStores()
+    useWorldStore.setState({ t: T0 })
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3', 'op4'], lastAppliedKey: 0 })
+  })
+  afterEach(resetStores)
+
+  const debrief = (missionId: string, over: Partial<MissionOutcome>) => {
+    useAppStore.setState({ outcome: outcome(over) })
+    applyDebrief(missionId)
+    return useCampaignStore.getState()
+  }
+
+  it('a quiet-replay win still applies KIA, injury, +1 Experience and the t1 catch-up (AC 74)', () => {
+    useCampaignStore.setState({ contractsWon: ['m01'] })
+    const D = injuryRecoverySec(F_30H)
+    const state = debrief('m01', {
+      quietReplay: true,
+      casualties: 1,
+      deadIds: ['op4'],
+      survivorHp: { op1: F_30H, op2: 1, op3: 0.5 },
+    })
+    const t1 = useWorldStore.getState().t
+    expect(t1).toBe(T0 + missionById('m01').etaDays * DAY)
+    // KIA: gone from the living roster and its loadout.
+    expect(state.operatives.some((o) => o.id === 'op4')).toBe(false)
+    expect(state.roster.op4).toBeUndefined()
+    expect(state.lastReport?.kia).toEqual([{ id: 'op4', codename: 'TORQ' }])
+    expect(useAppStore.getState().loadout.op4).toBeUndefined()
+    // Injury recorded at t0 with D, bay cleared, then caught up at t1.
+    expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: D }])
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
+    expect(state.roster.op1).toMatchObject({ status: 'READY', recoverAtT: null })
+    // Experience +1 per survivor, none for the KIA.
+    expect(state.lastReport?.xp.map((x) => [x.id, x.gained])).toEqual([
+      ['op1', 1],
+      ['op2', 1],
+      ['op3', 1],
+    ])
+    expect([state.roster.op1.xp, state.roster.op2.xp, state.roster.op3.xp]).toEqual([1, 1, 1])
+  })
+
+  it('a loss that records injury at t0 runs no t1 jump; remaining downtime is still D (AC 24)', () => {
+    const D = injuryRecoverySec(F_30H)
+    const state = debrief('m01', {
+      won: false,
+      reward: 0,
+      survivorHp: { op1: F_30H, op2: 1 },
+    })
+    expect(useWorldStore.getState().t).toBe(T0)
+    expect(state.roster.op1).toMatchObject({ status: 'INJURED', recoverAtT: T0 + D })
+    expect(remainingDowntimeSec(state.roster.op1.recoverAtT, useWorldStore.getState().t)).toBe(D)
+  })
+
+  it('a loss with deadIds and survivors still applies KIA, injury and +1 Experience at t0 (Edge Cases: If Loss)', () => {
+    const D = injuryRecoverySec(F_30H)
+    const state = debrief('m02', {
+      won: false,
+      reward: 0,
+      casualties: 2,
+      deadIds: ['op3', 'op4'],
+      survivorHp: { op1: F_30H, op2: 0.9 },
+    })
+    expect(useWorldStore.getState().t).toBe(T0)
+    expect(state.operatives.map((o) => o.id)).not.toContain('op3')
+    expect(state.operatives.map((o) => o.id)).not.toContain('op4')
+    expect(state.lastReport?.kia.map((k) => k.id)).toEqual(['op3', 'op4'])
+    expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: D }])
+    expect(state.roster.op1).toMatchObject({ status: 'INJURED', recoverAtT: T0 + D, xp: 1 })
+    expect(state.roster.op2).toMatchObject({ status: 'READY', xp: 1 })
+    expect(state.lastReport?.xp.map((x) => x.id)).toEqual(['op1', 'op2'])
+    expect(useAppStore.getState().squad).toEqual(['op2'])
+  })
+
+  it.each([
+    ['a paid win', false],
+    ['a quiet-replay win', true],
+  ])(
+    '%s whose ETA reaches t0 + D for every injury clears them all; bays stay empty; lines keep D (Edge Cases)',
+    (_label, quietReplay) => {
+      if (quietReplay) useCampaignStore.setState({ contractsWon: ['m01'] })
+      const dMara = injuryRecoverySec(F_30H)
+      const dGhost = injuryRecoverySec(F_DEEP)
+      const state = debrief('m01', {
+        quietReplay,
+        survivorHp: { op1: F_30H, op2: F_DEEP, op3: 1, op4: 1 },
+      })
+      const t1 = useWorldStore.getState().t
+      expect(t1).toBeGreaterThanOrEqual(T0 + Math.max(dMara, dGhost))
+      for (const id of ['op1', 'op2']) {
+        expect(state.roster[id]).toMatchObject({ status: 'READY', recoverAtT: null })
+        expect(remainingDowntimeSec(state.roster[id].recoverAtT, t1)).toBe(0)
+      }
+      expect(useAppStore.getState().squad).toEqual(['op3', 'op4'])
+      expect(state.lastReport?.injured).toEqual([
+        { id: 'op1', codename: 'MARA', downtimeSec: dMara },
+        { id: 'op2', codename: 'GHOST', downtimeSec: dGhost },
+      ])
+      expect(state.lastReport!.injured.map((i) => injuryLineHours(i.downtimeSec))).toEqual([
+        injuryLineHours(dMara),
+        injuryLineHours(dGhost),
+      ])
+      expect(injuryLineHours(dMara)).toBe(30)
+    },
+  )
+
+  it('a quiet-replay win applies roster and ETA catch-up and awards no intel (Persistence rule 10; WN-011)', () => {
+    useCampaignStore.setState({ contractsWon: ['m01'], intelLevel: 2, intelProgress: 25 })
+    const state = debrief('m01', {
+      quietReplay: true,
+      civiliansHit: 0,
+      survivorHp: { op1: F_30H, op2: 1 },
+    })
+    expect(state.intelLevel).toBe(2)
+    expect(state.intelProgress).toBe(25)
+    expect(useWorldStore.getState().t).toBe(T0 + missionById('m01').etaDays * DAY)
+    expect(state.roster.op1).toMatchObject({ status: 'READY', recoverAtT: null, xp: 1 })
+    expect(state.roster.op2.xp).toBe(1)
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3', 'op4'])
+  })
+})

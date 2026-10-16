@@ -165,11 +165,11 @@ stories:
     name: "Loss and quiet-replay debrief roster apply"
     file: "production/epics/roster-and-assembly/story-018-loss-and-quiet-replay-roster-apply.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-019"
     name: "Abort writes no roster; debrief applies roster once"
     file: "production/epics/roster-and-assembly/story-019-abort-and-apply-once-roster.md"
