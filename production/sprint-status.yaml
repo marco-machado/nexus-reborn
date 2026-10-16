@@ -111,11 +111,11 @@ stories:
     name: "Cover interrupts the fire lane; hit chance formula"
     file: "production/epics/tactical-mission/story-011-cover-interrupts-the-fire-lane-and-hit-chance.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-012"
     name: "Eliminate counts tagged Units only; optionals never gate the win"
     file: "production/epics/tactical-mission/story-012-eliminate-tags-and-optionals-never-gate-the-win.md"

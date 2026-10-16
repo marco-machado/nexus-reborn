@@ -190,6 +190,18 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
 
+/**
+ * Chance that one round hits what it was aimed at (GDD tactical-mission,
+ * AC 25): `clamp((0.78 - 0.28 * d/r + (u - 0.5) * 0.1) * a, 0.05, 0.95)`.
+ * `dOverR` is distance over weapon range, `u` the shot's jitter draw in [0, 1),
+ * `a` the shooter's accuracy multiplier (1 for an operative, 0.45 for Standard
+ * CorpSec, 0.495 for Hardened). Pure: the caller draws `u` from the mission rng,
+ * and Deadeye skips the roll against this chance, not the draw.
+ */
+export function hitChance(dOverR: number, u: number, a: number): number {
+  return Math.min(0.95, Math.max(0.05, (0.78 - dOverR * 0.28 + (u - 0.5) * 0.1) * a))
+}
+
 // The mission is built only from the deploy freeze (game/deploy.ts): the
 // four slices plus mods and district. createWorld reads no strategy store.
 export function createWorld(
@@ -849,7 +861,7 @@ export function createWorld(
     if (deadeye) u.abilityUntil = 0
     const dmg = deadeye ? w.damage * ROLE_ABILITIES.sniper.active.magnitude : w.damage
     const d = dist(u.pos, t.pos)
-    const chance = Math.min(0.95, Math.max(0.05, (0.78 - (d / w.range) * 0.28 + (rng() - 0.5) * 0.1) * accMul))
+    const chance = hitChance(d / w.range, rng(), accMul)
     const hit = deadeye || rng() < chance
     const len = Math.max(d, 0.001)
     const nx = (t.pos.x - u.pos.x) / len

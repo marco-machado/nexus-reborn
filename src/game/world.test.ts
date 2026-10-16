@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MissionDef, ObjectiveDef, OperativeDef, Unit, Vec2, WorldApi, Zone } from './types'
 import { ENEMY_VISION, isWalkable } from './types'
-import { createWorld } from './world'
+import { createWorld, hitChance } from './world'
 import { clickSelection, openingSelection, selectAll, selectSlot } from './selection'
 import { tickIfLive } from './frameTick'
 import { headlessDeploy } from './deploy'
@@ -3604,5 +3604,119 @@ describe('civiliansHit counts unique squad-caused civilian first-hits (TM-010, A
     const out = useAppStore.getState().outcome
     expect(out?.won).toBe(false)
     expect(out?.civiliansHit).toBe(1)
+  })
+})
+
+// TM-011 (Sprint 8, story 011; TR-tactical-006, ADR-0016): a missed round
+// keeps travelling down the fire lane, and cover between the shooter and a
+// body on that lane takes the round instead (AC 14). The hit roll is
+// `clamp((0.78 - 0.28 * d/r + (u - 0.5) * 0.1) * a, 0.05, 0.95)` (AC 25).
+describe('cover interrupts the fire lane; hit chance formula (TM-011, AC 14 / 25)', () => {
+  const TOUGH = 100000
+
+  // One squad shooter facing one pinned, muzzled enemy 4 m north, with one
+  // pinned bystander 6 m north: behind the target, so only a miss reaches it.
+  function missLane(covered: boolean) {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = w.units.find((u) => u.kind === 'enemy')!
+    for (const u of w.units) if (u.kind === 'enemy' && u !== enemy) u.stance = 'dead'
+    Object.assign(enemy.pos, { x: a1.pos.x, z: a1.pos.z - 4 })
+    enemy.path.length = 0
+    enemy.patrol!.length = 0
+    enemy.holdGround = true
+    enemy.reloading = 999
+    enemy.hp = TOUGH
+    enemy.maxHp = TOUGH
+    const civs = w.units.filter((u) => u.kind === 'civilian')
+    civs.slice(1).forEach((c) => (c.stance = 'dead'))
+    const civ = civs[0]
+    Object.assign(civ.pos, { x: a1.pos.x, z: a1.pos.z - 6 })
+    civ.path.length = 0
+    civ.holdGround = true
+    civ.hp = TOUGH
+    civ.maxHp = TOUGH
+    if (covered) {
+      // Close the bystander's own cell: the sight line to the target stays
+      // open, the one to the body behind it does not.
+      w.city.walk[Math.floor(civ.pos.z) * w.city.size + Math.floor(civ.pos.x)] = 0
+    }
+    expect(hasLos(w.city, a1.pos, enemy.pos)).toBe(true)
+    expect(hasLos(w.city, a1.pos, civ.pos)).toBe(!covered)
+    return { w, a1, enemy, civ }
+  }
+
+  // Ticks `seconds` with a1 attacking; counts shots fired and the enemy's hits.
+  function fireFor(w: WorldApi, a1: Unit, enemy: Unit, seconds: number) {
+    w.orderAttack(['a1'], enemy.id)
+    let shots = 0
+    let hits = 0
+    let mag = a1.magazine
+    let hp = enemy.hp
+    const until = w.time + seconds
+    while (w.time < until) {
+      w.tick(STEP)
+      if (a1.magazine < mag) shots += mag - a1.magazine
+      mag = a1.magazine
+      if (enemy.hp < hp) hits += 1
+      hp = enemy.hp
+    }
+    return { shots, hits }
+  }
+
+  it('with no cover, a miss carried past the target strikes the body behind it (AC 14 control)', () => {
+    const { w, a1, enemy, civ } = missLane(false)
+    const { shots, hits } = fireFor(w, a1, enemy, 30)
+    expect(hits).toBeLessThan(shots)
+    expect(civ.hp).toBeLessThan(TOUGH)
+  })
+
+  it('cover between the shooter and a body on the lane stops a miss: that body is not hit (AC 14)', () => {
+    const { w, a1, enemy, civ } = missLane(true)
+    const { shots, hits } = fireFor(w, a1, enemy, 30)
+    // Rounds did miss and carry on down the lane, yet none reached the body.
+    expect(shots).toBeGreaterThan(0)
+    expect(hits).toBeLessThan(shots)
+    expect(civ.hp).toBe(TOUGH)
+    expect(civ.stance).not.toBe('dead')
+    expect(useMissionStore.getState().civiliansHit).toBe(0)
+  })
+
+  it('at half range with zero jitter: 64% for an operative, 28.8% for Standard CorpSec (AC 25)', () => {
+    expect(hitChance(0.5, 0.5, 1.0)).toBeCloseTo(0.64, 10)
+    expect(hitChance(0.5, 0.5, 0.45)).toBeCloseTo(0.288, 10)
+  })
+
+  it('at half range with zero jitter: 31.68% for Hardened CorpSec, a = 0.495 (AC R5-a)', () => {
+    expect(0.45 * DIFFICULTY_FX.hardened.enemyAccMul).toBeCloseTo(0.495, 10)
+    expect(hitChance(0.5, 0.5, 0.495)).toBeCloseTo(0.3168, 10)
+    expect(hitChance(0.5, 0.5, 0.45 * DIFFICULTY_FX.hardened.enemyAccMul)).toBeCloseTo(0.3168, 10)
+  })
+
+  it('jitter moves the chance by at most ±5 points before the accuracy multiplier (AC 25)', () => {
+    expect(hitChance(0.5, 0, 1)).toBeCloseTo(0.59, 10)
+    expect(hitChance(0.5, 1, 1)).toBeCloseTo(0.69, 10)
+    expect(hitChance(0, 0.5, 1)).toBeCloseTo(0.78, 10)
+    expect(hitChance(1, 0.5, 1)).toBeCloseTo(0.5, 10)
+  })
+
+  it('clamps to a 5% floor and a 95% ceiling (edge cases)', () => {
+    // d = r, lowest jitter, a tiny multiplier: 0.45 * 0.05 = 0.0225 → 0.05.
+    expect(hitChance(1, 0, 0.05)).toBe(0.05)
+    // Point blank, highest jitter, a large multiplier: 0.83 * 1.5 → 0.95.
+    expect(hitChance(0, 1, 1.5)).toBe(0.95)
+  })
+
+  it('every shot rolls against this chance, drawing the jitter from the mission rng (seam)', () => {
+    // One call site, with the jitter drawn in place, keeps the rng call count
+    // and order the determinism tests pin. Deadeye skips only the roll.
+    const calls = worldSrc.match(/hitChance\(/g) ?? []
+    expect(calls).toHaveLength(2) // the definition and the one shot
+    expect(worldSrc).toContain('const chance = hitChance(d / w.range, rng(), accMul)')
+    expect(worldSrc).toContain('const hit = deadeye || rng() < chance')
+    expect(worldSrc).toContain('tryFire(e, tgt, ENEMY_ACC * mods.enemyAccMul)')
+    expect(worldSrc).toMatch(/const ENEMY_ACC = 0\.45\b/)
   })
 })
