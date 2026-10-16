@@ -59,29 +59,34 @@ describe('ROLE_ABILITIES', () => {
 // RA-011 (GDD roster-and-assembly AC 42, AC 43). Effect rows (§8) and the Q
 // keypress are Tactical and are not asserted here.
 describe('role kits (RA-011)', () => {
-  it('gives each of the 8 roles exactly 1 active and 1 passive', () => {
-    const roles: AgentRole[] = [
-      'assault',
-      'recon',
-      'infiltrator',
-      'demolitions',
-      'sniper',
-      'tech',
-      'support',
-      'medic',
-    ]
-    expect([...ROLES].sort()).toEqual([...roles].sort())
-    for (const role of roles) {
+  // Living spec §8 Roles: one active and one passive per role. Active names
+  // come from the spec table; effect, duration, range and cooldown rows are
+  // Tactical and are not asserted here (GDD AC 42 note).
+  const KITS: Record<AgentRole, { active: string; passive: string }> = {
+    assault: { active: 'OVERDRIVE', passive: 'COMBAT DRILLS' },
+    recon: { active: 'PULSE SCAN', passive: 'SENSOR MESH' },
+    infiltrator: { active: 'GHOST VEIL', passive: 'LOW PROFILE' },
+    demolitions: { active: 'FRAG CHARGE', passive: 'BLAST PLATING' },
+    sniper: { active: 'DEADEYE', passive: 'MATCH OPTICS' },
+    tech: { active: 'EM BURST', passive: 'OPS UPLINK' },
+    support: { active: 'SUPPRESSION SWEEP', passive: 'AMMO DISCIPLINE' },
+    medic: { active: 'FIELD STIM', passive: 'FIELD TRIAGE' },
+  }
+  const names = (kit: { active: { name: string }; passive: { name: string } }) => ({
+    active: kit.active.name,
+    passive: kit.passive.name,
+  })
+
+  it('gives each of the 8 roles exactly 1 active and 1 passive (AC 42)', () => {
+    expect([...ROLES].sort()).toEqual(Object.keys(KITS).sort())
+    for (const role of ROLES) {
       const kit = ROLE_ABILITIES[role]
       expect(Object.keys(kit).sort()).toEqual(['active', 'passive'])
-      expect(Array.isArray(kit.active)).toBe(false)
-      expect(Array.isArray(kit.passive)).toBe(false)
-      expect(typeof kit.active.id).toBe('string')
-      expect(typeof kit.passive.id).toBe('string')
+      expect(names(kit)).toEqual(KITS[role])
     }
   })
 
-  it('resolves each assigned operative kit from its definition role through the deploy inputs', () => {
+  it('resolves each assigned operative kit from its definition role through the deploy inputs (AC 43)', () => {
     const mission = MISSIONS[0]
     const operatives = ROSTER.slice(0, 4)
     const deploy = headlessDeploy(mission, operatives)
@@ -89,14 +94,12 @@ describe('role kits (RA-011)', () => {
     expect(Object.keys(deploy.roster)).not.toContain('active')
     expect(Object.keys(deploy.roster)).not.toContain('passive')
     expect(Object.keys(deploy.roster)).not.toContain('kits')
-    expect(deploy.roster.ids).toEqual(operatives.map((op) => op.id))
-    for (const id of deploy.roster.ids) {
-      const op = operatives.find((o) => o.id === id) as OperativeDef
-      const kit = operativeKit(op)
-      expect(kit).toBe(ROLE_ABILITIES[op.role])
-      expect(kit.active.id).toBe(ROLE_ABILITIES[op.role].active.id)
-      expect(kit.passive.id).toBe(ROLE_ABILITIES[op.role].passive.id)
-    }
+    expect(deploy.roster.ids).toEqual(['op1', 'op2', 'op3', 'op4'])
+    // Mara assault, Ghost recon, Dart infiltrator, Torq demolitions (§8 roster).
+    const resolved = deploy.roster.ids.map((id) =>
+      names(operativeKit(operatives.find((o) => o.id === id) as OperativeDef)).active,
+    )
+    expect(resolved).toEqual(['OVERDRIVE', 'PULSE SCAN', 'GHOST VEIL', 'FRAG CHARGE'])
   })
 
   it('resolves a hired duplicate-role operative to the same canonical kit', () => {
@@ -115,6 +118,6 @@ describe('role kits (RA-011)', () => {
     const deploy = headlessDeploy(MISSIONS[0], [base, dup])
     expect(deploy.roster.ids).toEqual([base.id, dup.id])
     expect(operativeKit(dup)).toBe(operativeKit(base))
-    expect(operativeKit(dup)).toBe(ROLE_ABILITIES[base.role])
+    expect(names(operativeKit(dup))).toEqual(KITS.assault)
   })
 })
