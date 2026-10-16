@@ -34,6 +34,7 @@ import { economySlice } from '../game/deploy'
 import { freezeDeploy } from './deployFreeze'
 import { createWorld } from '../game/world'
 import { useMissionStore } from './missionStore'
+import { abortMission, composeMission, teardownMission } from './missionLifecycle'
 import { getWorld, setWorld } from '../game/runtime'
 import { visibleContracts } from '../game/contracts'
 
@@ -3162,28 +3163,19 @@ describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
     })
   }
 
-  // Team Deploy, then the MissionScreen composer: mint the key, freeze the
-  // deploy, build and publish the world.
-  function deploy(): { world: ReturnType<typeof createWorld>; applyKey: number } {
-    useAppStore.setState({ phase: 'team', missionId: MISSION_ID, squad: [...DEFAULT_SQUAD] })
+  // Team Deploy, then the real MissionScreen composer (composeMission).
+  function deploy(squad: string[] = [...DEFAULT_SQUAD]): { world: ReturnType<typeof createWorld>; applyKey: number } {
+    useAppStore.setState({ phase: 'team', missionId: MISSION_ID, squad })
     useAppStore.getState().startMission()
     expect(useAppStore.getState().phase).toBe('mission')
-    const ops = useAppStore.getState().squad.map(liveOperativeById)
-    const applyKey = useAppStore.getState().deploySerial + 1
-    useAppStore.setState({ deploySerial: applyKey })
-    const world = createWorld(BARE, ops, freezeDeploy(BARE, ops, applyKey))
-    setWorld(world)
-    const ms = useMissionStore.getState()
-    ms.reset()
-    ms.setLive(true)
-    return { world, applyKey }
+    return composeMission(BARE, useAppStore.getState().squad)
   }
 
-  // Hud onAbort (after the P-01 confirm), then the MissionScreen cleanup.
+  // The real Hud onAbort (abortMission, after the P-01 confirm), then the
+  // real MissionScreen cleanup (teardownMission).
   function confirmAbort(): void {
-    useAppStore.getState().goto('world')
-    setWorld(null)
-    useMissionStore.getState().reset()
+    abortMission(MISSION_ID)
+    teardownMission()
   }
 
   beforeEach(() => {
@@ -3296,6 +3288,42 @@ describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
     expect(rosterState()).toEqual(R)
   })
 
+  it('ADR-0021: a stale lower applyKey is rejected, and the next deploy\'s higher key applies', () => {
+    const first = deploy()
+    expect(first.applyKey).toBe(useAppStore.getState().deploySerial)
+    teardownMission()
+    useAppStore.setState({ phase: 'debrief', squad: [...DEFAULT_SQUAD] })
+    useAppStore.getState().setOutcome(
+      outcome({ applyKey: first.applyKey, casualties: 1, deadIds: ['op4'], survivorHp: { op1: 0.2 } }),
+    )
+    applyDebrief(MISSION_ID)
+    expect(useAppStore.getState().lastAppliedKey).toBe(first.applyKey)
+    const applied = rosterState()
+    expect(applied.roster.op4).toBeUndefined()
+
+    // A second deploy mints a strictly higher key.
+    const second = deploy([...useAppStore.getState().squad])
+    expect(second.applyKey).toBe(first.applyKey + 1)
+    teardownMission()
+
+    // A stale outcome carrying a lower key (or the same one) writes nothing.
+    useAppStore.setState({ phase: 'debrief' })
+    useAppStore.getState().setOutcome(
+      outcome({ applyKey: first.applyKey - 1, casualties: 1, deadIds: ['op2'], survivorHp: {} }),
+    )
+    applyDebrief(MISSION_ID)
+    expect(useAppStore.getState().lastAppliedKey).toBe(first.applyKey)
+    expect(rosterState()).toEqual(applied)
+
+    // The next deploy's higher key applies.
+    useAppStore.getState().setOutcome(
+      outcome({ applyKey: second.applyKey, casualties: 1, deadIds: ['op2'], survivorHp: {} }),
+    )
+    applyDebrief(MISSION_ID)
+    expect(useAppStore.getState().lastAppliedKey).toBe(second.applyKey)
+    expect(rosterState().roster.op2).toBeUndefined()
+  })
+
   it('Edge: the apply-once key survives the Screen autosave, so a re-apply after it writes nothing', () => {
     const blobs: string[] = []
     const storage: SaveStorage = {
@@ -3306,6 +3334,9 @@ describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
     vi.useFakeTimers()
     const stop = startAutosave(storage)
     try {
+      // Fresh subscription: startAutosave would ignore `storage` if a leftover
+      // one were still running, so nothing may have been written yet.
+      expect(blobs).toHaveLength(0)
       useAppStore.setState({ phase: 'debrief', missionId: MISSION_ID, squad: [...DEFAULT_SQUAD] })
       useAppStore.getState().setOutcome(
         outcome({ applyKey: 3, casualties: 1, deadIds: ['op2'], survivorHp: { op1: 0.3 } }),

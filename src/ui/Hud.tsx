@@ -7,7 +7,7 @@ import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
 import { resolveMission } from '../state/worldStore'
 import { useCampaignStore } from '../state/campaignStore'
-import { recordAbort } from '../state/telemetry'
+import { abortMission } from '../state/missionLifecycle'
 import { noteTutorial } from '../state/tutorialStore'
 import { WEAPONS } from '../game/data'
 import { WEATHER_LABEL } from '../game/missionParams'
@@ -105,7 +105,6 @@ export default function Hud() {
   const setSelected = useMissionStore((s) => s.setSelected)
   const setGrenadeTargeting = useMissionStore((s) => s.setGrenadeTargeting)
   const credits = useAppStore((s) => s.credits)
-  const goto = useAppStore((s) => s.goto)
   const missionId = useAppStore((s) => s.missionId)
   const operatives = useCampaignStore((s) => s.operatives)
   const mission = missionId ? resolveMission(missionId) : null
@@ -593,18 +592,7 @@ export default function Hud() {
         <PauseMenu
           returnRef={pauseBtnRef}
           onResume={() => setPaused(false)}
-          onAbort={() => {
-            const world = getWorld()
-            recordAbort(
-              missionId ?? world?.mission.id ?? 'unknown',
-              world?.time ?? 0,
-              world?.mission.seed ?? 0,
-              (world?.units ?? [])
-                .filter((u) => u.kind === 'agent' && u.operative)
-                .map((u) => u.operative!.role),
-            )
-            goto('world')
-          }}
+          onAbort={() => abortMission(missionId)}
         />
       )}
     </div>
