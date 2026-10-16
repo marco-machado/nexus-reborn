@@ -95,16 +95,17 @@ Reaching the AC 1 state needs a mission outcome; use the dev Balance/debug path 
 ## Completion Notes
 **Completed**: 2026-10-16
 **Criteria**: 2/2 passing (GDD AC 7, AC 23); QA checklist 6/6 observed. No deferred items.
-**Deviations**: None. No source files changed; the behavior already existed in `src/state/debrief.ts`, `src/state/appStore.ts` and `src/ui/index.tsx` (`TeamSelect`, Injured assign title at line 1187).
+**Deviations**: None. No source files changed; the behavior already existed in `src/state/debrief.ts`, `src/state/appStore.ts` and `src/ui/index.tsx` (`TeamSelect`, Injured assign title; since f6a1d1a the click handlers live in `src/ui/assemblyRows.ts`).
 **Test Evidence**: UI: retained screenshots `production/qa/evidence/ra-009/01-assembly-empty-bays-1280x720.png`, `02-injured-dossier-focused-1280x720.png`, `03-injured-dossier-125pct-1280x720.png`; click-through record `production/qa/evidence/ra-009/README.md`. Store-level test files present (existence only, not run here): `src/state/campaignStore.test.ts:696` and `:953`.
 **Code Review**: Complete. `/code-review` returned APPROVED WITH SUGGESTIONS (evidence-only scope; ADR-0019 COMPLIANT; Engine Specialist N/A).
+**Specialist Code Review (2026-10-16)**: APPROVED WITH SUGGESTIONS. Specialists spawned from the main session: ui-programmer AWS, qa-tester TESTABLE. Fixes: debrief.ts comment no longer reads as an auto-refill; stale line references updated. Suggestions recorded: no render test of TeamSelect covers the "when Assembly is opened" half of AC 7 (screenshot 01 covers it); the disabled Injured assign key gives keyboard and screen-reader users no reason in its aria-label; UI strings are not localized (project-wide).
 **Gates**: QL-TEST-COVERAGE skipped (lean mode). LP-CODE-REVIEW lean prompt answered "Yes — /code-review passed or was approved with suggestions" (unattended run). Phase 7 close option auto-picked "Close the story (Recommended)" under autonomous mode.
 
 **Traceability**:
 
 | Criterion | Test | Status |
 |-----------|------|--------|
-| AC 7: no auto-assign with all bays empty | `production/qa/evidence/ra-009/01-assembly-empty-bays-1280x720.png`; `src/state/campaignStore.test.ts:953` | COVERED |
+| AC 7: no auto-assign with all bays empty | `production/qa/evidence/ra-009/01-assembly-empty-bays-1280x720.png`; `src/state/campaignStore.test.ts` "the last assigned dying with Ready left leaves the bay empty, auto-assigns nobody…" | COVERED |
 | AC 23: Injured dossier inspect-only | `production/qa/evidence/ra-009/02-injured-dossier-focused-1280x720.png`; `src/state/campaignStore.test.ts:696` | COVERED |
 
 **Advisory findings (from /code-review, carried forward)**:

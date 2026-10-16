@@ -40,8 +40,8 @@ export function applyDebrief(missionId: string): void {
     .getState()
     .applyMissionResult(missionId, outcome, report?.kia.map((k) => k.codename) ?? [])
 
-  // Dead or newly injured operatives leave the squad so the bays are
-  // refilled before the next deployment; the dead also lose their loadout.
+  // Dead or newly injured operatives leave the squad; the player re-fills the
+  // bays in Assembly (nothing auto-assigns). The dead also lose their loadout.
   const out = new Set([...outcome.deadIds, ...(report?.injured.map((i) => i.id) ?? [])])
   if (out.size > 0) {
     const dead = new Set(outcome.deadIds)

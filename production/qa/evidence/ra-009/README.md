@@ -11,7 +11,7 @@
 
 | Field | Recorded value |
 | --- | --- |
-| Tested revision | 0563485f8d52b4d2d7eda21052acc7379cb96b53 |
+| Tested revision | 0563485f8d52b4d2d7eda21052acc7379cb96b53 (f6a1d1a later moved the Assembly click handlers into `src/ui/assemblyRows.ts` with the same behaviour; re-checked by click-through 2026-10-16, see `../ra-008/`) |
 | Working-tree changes | Story header and `production/sprint-status.yaml` status edits only; no source changes |
 | Build and tools | Vite dev server (`npm run dev -- --strictPort`, port 4200); Node v24.16.0, npm 11.18.0 |
 | Machine | Apple M5 Pro |
