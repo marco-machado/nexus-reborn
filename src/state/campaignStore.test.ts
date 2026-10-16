@@ -16,7 +16,7 @@ import {
 } from './campaignStore'
 import { applyDebrief } from './debrief'
 import { freezeDeploy } from './deployFreeze'
-import { useResearchStore } from './researchStore'
+import { nodeState, useResearchStore } from './researchStore'
 import { startNewOperation, type SaveStorage } from './save'
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
@@ -28,7 +28,14 @@ import {
   operativeMassKg,
   tierSpeedDelta,
 } from '../game/mass'
-import { crewBonus } from '../game/research'
+import {
+  AUG_SLOTS,
+  appliedNodeIds,
+  crewBonus,
+  currentIssue,
+  nodeById,
+  wornAugs,
+} from '../game/research'
 import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
 import { CLOCK_BATCH_SEC, startWorldClock } from '../ui/clock'
 
@@ -1463,5 +1470,115 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
     expect(state.roster.op1).toMatchObject({ status: 'READY', recoverAtT: null, xp: 1 })
     expect(state.roster.op2.xp).toBe(1)
     expect(useAppStore.getState().squad).toEqual(['op2', 'op3', 'op4'])
+  })
+})
+
+// RA-021: the Roster-side view of bay wear. Resolution itself is
+// `wornNode`/`appliedNodeIds` (research epic Stories 013-015); these tests read
+// it through the live stores the way Assembly and the deploy freeze do: the
+// Research slice's completed set plus each operative's pins on the Roster slice.
+describe('augmentation bay wear resolution (RA-021)', () => {
+  beforeEach(() => {
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+      lastSyncT: null,
+    })
+  })
+
+  // Completes a project through the lab: start at the last sync, sync to endT.
+  function complete(id: string) {
+    const node = nodeById(id)
+    const t = useResearchStore.getState().lastSyncT ?? 0
+    expect(useResearchStore.getState().start(node, t)).toBe(true)
+    useResearchStore.getState().sync(useResearchStore.getState().labs[node.branch]!.endT)
+    expect(useResearchStore.getState().done.at(-1)).toBe(id)
+  }
+
+  function wearOf(opId: string) {
+    const done = useResearchStore.getState().done
+    return wornAugs(done, useCampaignStore.getState().roster[opId].pins)
+  }
+
+  it('lists 4 bays per operative, each wearing at most 1 completed project of that bay (AC 35)', () => {
+    // Two NEURAL, two CHEST, one ARMS completed; LEGS has none.
+    for (const id of ['c-interface', 'k-sensor', 'c-synaptic', 'c-pain', 'k-targeting']) complete(id)
+    useCampaignStore.getState().setBay('op2', 'NEURAL', 'c-interface')
+    useCampaignStore.getState().setBay('op3', 'CHEST', 'STOCK')
+    // A pin that names another bay's project (only reachable through a bad
+    // save; setBay refuses it) still never puts a foreign project in the bay.
+    const op4 = useCampaignStore.getState().roster.op4
+    useCampaignStore.setState({
+      roster: { ...useCampaignStore.getState().roster, op4: { ...op4, pins: { ARMS: 'c-pain' } } },
+    })
+    const done = useResearchStore.getState().done
+    for (const op of useCampaignStore.getState().operatives) {
+      const bays = wearOf(op.id)
+      expect(bays.map((b) => b.slot)).toEqual(AUG_SLOTS)
+      expect(AUG_SLOTS).toHaveLength(4)
+      for (const bay of bays) {
+        if (bay.node === null) continue
+        expect(bay.node.augSlot).toBe(bay.slot)
+        expect(done).toContain(bay.node.id)
+      }
+      const pins = useCampaignStore.getState().roster[op.id].pins
+      const slotted = appliedNodeIds(done, pins).filter((id) => nodeById(id).augSlot)
+      expect(slotted.length).toBeLessThanOrEqual(4)
+      expect(new Set(slotted.map((id) => nodeById(id).augSlot)).size).toBe(slotted.length)
+    }
+    expect(wearOf('op4').find((b) => b.slot === 'ARMS')?.node?.id).toBe('k-targeting')
+    expect(wearOf('op1').find((b) => b.slot === 'LEGS')?.node).toBeNull()
+  })
+
+  it('unpinned bays, including a new hire, wear current issue (AC 36)', () => {
+    for (const id of ['c-interface', 'k-sensor', 'c-synaptic', 'k-targeting']) complete(id)
+    // Free a roster place so the hire is accepted.
+    useCampaignStore.getState().reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'] }), 0)
+    const candidate = useCampaignStore.getState().candidates[0]
+    expect(useCampaignStore.getState().acceptHire(candidate.id)).toBe(true)
+    expect(useCampaignStore.getState().roster[candidate.id].pins).toEqual({})
+
+    const done = useResearchStore.getState().done
+    for (const op of useCampaignStore.getState().operatives) {
+      for (const bay of wearOf(op.id)) {
+        expect(bay.pinned).toBe(false)
+        expect(bay.node).toBe(currentIssue(done, bay.slot))
+      }
+    }
+    const hire = wearOf(candidate.id)
+    expect(hire.map((b) => b.node?.id ?? null)).toEqual(['k-sensor', 'c-synaptic', 'k-targeting', null])
+  })
+
+  it('a new same-bay completion leaves pinned bays alone and moves unpinned ones (AC 37)', () => {
+    complete('c-interface')
+    useCampaignStore.getState().setBay('op1', 'NEURAL', 'STOCK')
+    useCampaignStore.getState().setBay('op2', 'NEURAL', 'c-interface')
+    const neural = (opId: string) => wearOf(opId).find((b) => b.slot === 'NEURAL')!
+    expect(neural('op1')).toMatchObject({ node: null, pinned: true })
+    expect(neural('op2').node?.id).toBe('c-interface')
+    expect(neural('op3').node?.id).toBe('c-interface')
+
+    complete('k-sensor')
+
+    // Stock pin and older-project pin are unchanged; the unpinned bay updates.
+    expect(useCampaignStore.getState().roster.op1.pins).toEqual({ NEURAL: 'STOCK' })
+    expect(useCampaignStore.getState().roster.op2.pins).toEqual({ NEURAL: 'c-interface' })
+    expect(neural('op1')).toMatchObject({ node: null, pinned: true })
+    expect(neural('op2')).toMatchObject({ pinned: true })
+    expect(neural('op2').node?.id).toBe('c-interface')
+    for (const op of useCampaignStore.getState().operatives) {
+      if (op.id === 'op1' || op.id === 'op2') continue
+      expect(neural(op.id)).toMatchObject({ pinned: false })
+      expect(neural(op.id).node?.id).toBe('k-sensor')
+    }
+
+    // The program stays researched whatever an operative wears.
+    const s = useResearchStore.getState()
+    expect(s.done).toEqual(['c-interface', 'k-sensor'])
+    expect(nodeState(nodeById('c-interface'), s.done, s.labs)).toBe('researched')
+    expect(nodeState(nodeById('k-sensor'), s.done, s.labs)).toBe('researched')
+    expect(appliedNodeIds(s.done, useCampaignStore.getState().roster.op1.pins)).toEqual([])
+    expect(appliedNodeIds(s.done, useCampaignStore.getState().roster.op2.pins)).toEqual(['c-interface'])
+    expect(appliedNodeIds(s.done, useCampaignStore.getState().roster.op3.pins)).toEqual(['k-sensor'])
   })
 })

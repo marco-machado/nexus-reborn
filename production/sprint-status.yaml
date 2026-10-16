@@ -192,11 +192,11 @@ stories:
     name: "Augmentation bay wear resolution"
     file: "production/epics/roster-and-assembly/story-021-augmentation-bay-wear-resolution.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-022"
     name: "Candidate market offers and hire cost"
     file: "production/epics/roster-and-assembly/story-022-candidate-market-offers-and-cost.md"
