@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { settleOutcome, useAppStore, type MissionOutcome } from './appStore'
 import * as campaignModule from './campaignStore'
 import {
@@ -16,6 +16,8 @@ import { applyDebrief } from './debrief'
 import { startNewOperation, type SaveStorage } from './save'
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
+import { canDeploy } from '../game/deployGate'
+import { emptyLoadout } from '../game/mass'
 import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
 
 const HOUR = 3600
@@ -892,5 +894,97 @@ describe('debrief classifies survivors as Ready, Injured, or KIA (RA-013)', () =
     expect(state.lastReport?.xp.some((x) => x.id === 'op2')).toBe(false)
     expect(state.roster.op2).toBeUndefined()
     expect(state.operatives.some((o) => o.id === 'op2')).toBe(false)
+  })
+})
+
+// RA-014 (TR-roster-006, GDD AC 15/16 + Edge Cases): a KIA at the Debrief
+// apply leaves the living roster with no Dead state, empties its Squad bay,
+// earns no Experience, and reaches World Network only as a codename.
+describe('KIA removes the operative from the living roster (RA-014)', () => {
+  const resetStores = () => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+  }
+  beforeEach(() => {
+    resetStores()
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3'], lastAppliedKey: 0, missionId: 'm01' })
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+    resetStores()
+  })
+
+  const debrief = (over: Partial<MissionOutcome>) => {
+    useAppStore.setState({ outcome: outcome({ won: false, reward: 0, ...over }) })
+    applyDebrief('m01')
+  }
+  const kiaEvents = () => useWorldStore.getState().events.filter((e) => e.kind === 'kia')
+
+  it('drops X from the living roster with no Dead state, empties its bay, lists it under KIA (AC 15)', () => {
+    useAppStore.setState({ loadout: { op2: emptyLoadout() } })
+    debrief({ casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    expect(state.operatives.map((o) => o.id)).not.toContain('op2')
+    expect(state.roster.op2).toBeUndefined()
+    // No Dead state anywhere: every remaining entry is READY or INJURED.
+    for (const entry of Object.values(state.roster)) {
+      expect(['READY', 'INJURED']).toContain(entry.status)
+    }
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
+    expect(useAppStore.getState().loadout.op2).toBeUndefined()
+    expect(state.lastReport?.kia).toEqual([{ id: 'op2', codename: 'GHOST' }])
+    const events = kiaEvents()
+    expect(events).toHaveLength(1)
+    expect(events[0].text).toContain('GHOST')
+  })
+
+  it('the last assigned dying with Ready left leaves the bay empty, auto-assigns nobody, and Deploy needs one Ready (Edge Cases)', () => {
+    useAppStore.setState({ squad: ['op1'] })
+    debrief({ casualties: 1, deadIds: ['op1'], survivorHp: {} })
+    const { roster } = useCampaignStore.getState()
+    expect(Object.values(roster).some((e) => e.status === 'READY')).toBe(true)
+    expect(useAppStore.getState().squad).toEqual([])
+
+    // Assembly reads the same empty Squad; the gate refuses as none-assigned.
+    const gate = canDeploy({
+      missionSelected: true,
+      assignedIds: useAppStore.getState().squad,
+      statusById: {},
+      massKg: 0,
+    })
+    expect(gate).toMatchObject({ ok: false, reason: 'none-assigned' })
+    useAppStore.setState({ phase: 'team' })
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('team')
+
+    // The player assigns a Ready operative by hand; the dead one cannot return.
+    useAppStore.getState().toggleOperative('op1')
+    expect(useAppStore.getState().squad).toEqual([])
+    useAppStore.getState().toggleOperative('op2')
+    expect(useAppStore.getState().squad).toEqual(['op2'])
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+  })
+
+  it('X in deadIds receives 0 Experience while survivors earn theirs (Edge Cases)', () => {
+    debrief({ won: true, reward: 85000, casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    expect(state.lastReport?.xp.map((x) => x.id)).toEqual(['op1', 'op3'])
+    expect(state.lastReport?.xp.some((x) => x.id === 'op2')).toBe(false)
+    expect(state.roster.op2).toBeUndefined()
+    expect(state.roster.op1.xp).toBe(1)
+  })
+
+  it('World Network reads the kia names only and never queries the live Roster (Edge Cases)', () => {
+    const spy = vi.spyOn(useCampaignStore, 'getState')
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0, deadIds: ['op2'] }), ['GHOST'])
+    expect(spy).not.toHaveBeenCalled()
+    const events = kiaEvents()
+    expect(events).toHaveLength(1)
+    expect(events[0].text).toContain('GHOST')
+    // Every other roster codename stays out of the feed line.
+    for (const op of ROSTER.filter((o) => o.id !== 'op2')) {
+      expect(events[0].text).not.toContain(op.codename)
+    }
   })
 })

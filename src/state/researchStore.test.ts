@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nodeState, useResearchStore } from './researchStore'
-import { useAppStore } from './appStore'
+import { settleOutcome, useAppStore } from './appStore'
+import { initialCampaignData, useCampaignStore } from './campaignStore'
 import { TIME_SCALE, useWorldStore } from './worldStore'
 import type { Labs } from './researchStore'
+import { applyDebrief } from './debrief'
 import { BRANCH_IDS, currentIssue, nodeById, nodesOfBranch } from '../game/research'
 
 const HOUR = 3600
@@ -476,5 +478,43 @@ describe('lastSyncT', () => {
   it('is not set by start()', () => {
     useResearchStore.getState().start(propellants, 1000)
     expect(useResearchStore.getState().lastSyncT).toBeNull()
+  })
+})
+
+// RA-014 (TR-roster-006, GDD AC 16): a KIA at the Debrief apply leaves the
+// Research program alone; completed projects stay researched.
+describe('KIA keeps completed research (RA-014)', () => {
+  afterEach(() => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+    useCampaignStore.setState(initialCampaignData())
+  })
+
+  it('completed projects stay researched after X is KIA', () => {
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({ done: [propellants.id, coating.id], labs: idle(), lastSyncT: 0 })
+    useAppStore.setState({
+      squad: ['op1', 'op2'],
+      lastAppliedKey: 0,
+      outcome: settleOutcome({
+        applyKey: 1,
+        won: false,
+        kills: 0,
+        casualties: 1,
+        timeSec: 300,
+        civiliansHit: 0,
+        reward: 0,
+        bonus: 0,
+        deadIds: ['op1'],
+        survivorHp: { op2: 1 },
+        quietReplay: false,
+      }),
+    })
+    applyDebrief('m01')
+    expect(useCampaignStore.getState().operatives.some((o) => o.id === 'op1')).toBe(false)
+    const { done } = useResearchStore.getState()
+    expect(done).toEqual([propellants.id, coating.id])
+    expect(nodeState(propellants, done, useResearchStore.getState().labs)).toBe('researched')
+    expect(nodeState(coating, done, useResearchStore.getState().labs)).toBe('researched')
   })
 })

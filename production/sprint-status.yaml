@@ -111,11 +111,11 @@ stories:
     name: "KIA removes the operative from the living roster"
     file: "production/epics/roster-and-assembly/story-014-kia-removes-from-living-roster.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-015"
     name: "Experience award and deploy sampling"
     file: "production/epics/roster-and-assembly/story-015-experience-award-and-deploy-sampling.md"
