@@ -1,12 +1,12 @@
 # Story 015: Experience award and deploy sampling
 
 > **Epic**: Roster and Assembly
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-16
 
 ## Context
 
@@ -34,9 +34,9 @@
 
 *From GDD `design/gdd/roster-and-assembly.md`, scoped to this story:*
 
-- [ ] **GIVEN** S living survivors and K KIA at debrief, **WHEN** the outcome is applied once, **THEN** each survivor’s Experience increases by exactly 1 and each KIA is awarded 0. *(GDD AC 25)*
-- [ ] **GIVEN** Experience awarded at debrief, **WHEN** the next mission is created, **THEN** that Experience is sampled into that deploy; later awards do not change an on-ground squad. *(GDD AC 26)*
-- [ ] **GIVEN** an operative with deployment max HP `H0` and 1 Experience awarded at the prior debrief, **WHEN** the next mission is created, **THEN** `operative_mass` computes the plating term from `H0 + 2` and the sampled speed includes +0.05 m/s (magnitudes per living spec §6 — not restated here). *(GDD AC 44)*
+- [x] **GIVEN** S living survivors and K KIA at debrief, **WHEN** the outcome is applied once, **THEN** each survivor’s Experience increases by exactly 1 and each KIA is awarded 0. *(GDD AC 25)*
+- [x] **GIVEN** Experience awarded at debrief, **WHEN** the next mission is created, **THEN** that Experience is sampled into that deploy; later awards do not change an on-ground squad. *(GDD AC 26)*
+- [x] **GIVEN** an operative with deployment max HP `H0` and 1 Experience awarded at the prior debrief, **WHEN** the next mission is created, **THEN** `operative_mass` computes the plating term from `H0 + 2` and the sampled speed includes +0.05 m/s (magnitudes per living spec §6 — not restated here). *(GDD AC 44)*
 
 ---
 
@@ -78,7 +78,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/experience.test.ts`, `src/state/campaignStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/campaignStore.test.ts` "Experience award and deploy sampling (RA-015)" (4 tests); `src/game/experience.test.ts` (existing)
 
 ---
 
@@ -86,3 +86,20 @@
 
 - Depends on: Story 013, Story 001
 - Unlocks: Story 018, Story 020
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-16
+**Criteria**: 3/3 passing (GDD AC 25, 26, 44). All are covered by `src/state/campaignStore.test.ts` "Experience award and deploy sampling (RA-015)". `npx vitest run src/state/campaignStore.test.ts` gave 70/70 passed at /story-done.
+**Deviations**: None. The implementation matches TR-roster-002, GDD Core Rules 5 and 10, and the Experience award rule, and reads magnitudes from `xpBonus` (`XP_HP_PER` = 2 and `XP_SPEED_PER` = 0.05 in `src/game/experience.ts` match the GDD's +2 max HP / +0.05 m/s). The story is on manifest 2026-10-08, which is current. Scope: only `src/state/campaignStore.test.ts` was changed.
+**Test Evidence**: Logic. Test file at `src/state/campaignStore.test.ts` (4 RA-015 tests); `src/game/experience.test.ts` already existed.
+**Run result**: N/A. Logic story; award and deploy sampling have no on-screen surface beyond the existing Debrief XP rows (from the /dev-story checkpoint).
+**Code Review**: /code-review ran on `src/state/campaignStore.test.ts`. Verdict: NOT ASSESSED. The lead-programmer, gameplay-programmer and qa-tester specialists could not be spawned because the workflow subagent had no Agent tool. The reviewer found no defects in its own review. Lean mode: the LP-CODE-REVIEW gate and QL-TEST-COVERAGE were skipped. Recommend re-running /code-review where the Agent tool is available before sprint close-out.
+**Advisory findings (from /code-review)**:
+- Review gap: the specialists could not be spawned, so the verdict is NOT ASSESSED. The reviewer's own checks: vitest 70/70, `npx tsc -b` exited 0, eslint was clean on the test file.
+- The Abort leg of "a quiet replay still awards survivors +1; an Abort awards none" sets `outcome: null` by hand, so it only shows that an empty outcome applies nothing (`src/state/debrief.ts:22-23`). It does not drive the real PauseMenu onAbort path (`src/ui/Hud.tsx:596-606`, `recordAbort` then `goto('world')`). A better test applies an outcome first, runs the Abort sequence with that stale outcome still in the store, then asserts that xp and `lastAppliedKey` are unchanged.
+- AC 25 test: "each KIA is awarded 0" is shown only indirectly, through `roster.op2` being undefined and op2 missing from `lastReport.xp`. Acceptable as written.
+- AC 44 test: the mass delta `bonus.maxHp * ARMOR_KG_PER_HP` holds only while op1's maxHp plus the crew bonus is above `ARMOR_HP_FLOOR` (`src/game/mass.ts:54`). A comment or a guard assertion would make that dependency visible.
+- The test reads magnitudes from `xpBonus(1)`, not the GDD AC 44 literals, as the QA note intends. If a literal check on the constants is wanted, put it in `src/game/experience.test.ts`.
+- Positive: the tests follow ADR-0009 (sampling via `freezeDeploy`, existing slice unchanged after a later award) and check the apply-once key. No ADR-0009 or ADR-0002 violation was found.

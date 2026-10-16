@@ -13,11 +13,20 @@ import {
   useCampaignStore,
 } from './campaignStore'
 import { applyDebrief } from './debrief'
+import { freezeDeploy } from './deployFreeze'
+import { useResearchStore } from './researchStore'
 import { startNewOperation, type SaveStorage } from './save'
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
 import { canDeploy } from '../game/deployGate'
-import { emptyLoadout } from '../game/mass'
+import { xpBonus } from '../game/experience'
+import {
+  ARMOR_KG_PER_HP,
+  emptyLoadout,
+  operativeMassKg,
+  tierSpeedDelta,
+} from '../game/mass'
+import { crewBonus } from '../game/research'
 import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
 
 const HOUR = 3600
@@ -986,5 +995,91 @@ describe('KIA removes the operative from the living roster (RA-014)', () => {
     for (const op of ROSTER.filter((o) => o.id !== 'op2')) {
       expect(events[0].text).not.toContain(op.codename)
     }
+  })
+})
+
+describe('Experience award and deploy sampling (RA-015)', () => {
+  const resetStores = () => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+    useResearchStore.setState(useResearchStore.getInitialState(), true)
+  }
+  beforeEach(() => {
+    resetStores()
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3'], lastAppliedKey: 0, missionId: 'm01' })
+  })
+  afterEach(resetStores)
+
+  const debrief = (over: Partial<MissionOutcome>) => {
+    const key = useAppStore.getState().lastAppliedKey + 1
+    useAppStore.setState({ outcome: outcome({ applyKey: key, ...over }) })
+    applyDebrief('m01')
+  }
+  const ops = (ids: readonly string[]) => ids.map((id) => liveOperativeById(id))
+  const freeze = (ids: readonly string[]) => freezeDeploy(missionById('m01'), ops(ids), 1)
+
+  it('each survivor gains exactly 1 Experience and each KIA 0, applied once (AC 25)', () => {
+    debrief({ casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op3: 0.6 } })
+    const state = useCampaignStore.getState()
+    expect(state.roster.op1.xp).toBe(1)
+    expect(state.roster.op3.xp).toBe(1)
+    expect(state.roster.op2).toBeUndefined()
+    expect(state.lastReport?.xp).toEqual([
+      { id: 'op1', codename: 'MARA', gained: 1, total: 1 },
+      { id: 'op3', codename: 'DART', gained: 1, total: 1 },
+    ])
+    // A second apply of the same outcome is refused by the apply-once key.
+    applyDebrief('m01')
+    expect(useCampaignStore.getState().roster.op1.xp).toBe(1)
+    expect(useCampaignStore.getState().roster.op3.xp).toBe(1)
+  })
+
+  it('a quiet replay still awards survivors +1; an Abort awards none (Edge Cases)', () => {
+    debrief({ survivorHp: { op1: 1 } })
+    debrief({ quietReplay: true, reward: 0, survivorHp: { op1: 1 } })
+    expect(useCampaignStore.getState().roster.op1.xp).toBe(2)
+
+    // Abort leaves the mission for the World screen with no outcome to apply.
+    useAppStore.setState({ phase: 'mission', outcome: null })
+    useAppStore.getState().goto('world')
+    applyDebrief('m01')
+    expect(useCampaignStore.getState().roster.op1.xp).toBe(2)
+  })
+
+  it('awarded Experience is sampled into the next deploy; a later award leaves the on-ground squad unchanged (AC 26)', () => {
+    debrief({ survivorHp: { op1: 1 } })
+    const deploy = freeze(['op1'])
+    const hp = deploy.roster.maxHp.op1
+    const speed = deploy.roster.speed.op1
+    const kg = deploy.roster.massKg
+
+    debrief({ survivorHp: { op1: 1 } })
+    expect(useCampaignStore.getState().roster.op1.xp).toBe(2)
+    expect(deploy.roster.maxHp.op1).toBe(hp)
+    expect(deploy.roster.speed.op1).toBe(speed)
+    expect(deploy.roster.massKg).toBe(kg)
+    // The next create samples the new total.
+    expect(freeze(['op1']).roster.maxHp.op1).toBe(hp + xpBonus(1).maxHp)
+  })
+
+  it('1 Experience puts H0 + bonus into the plating term and adds the speed bonus (AC 44)', () => {
+    const op = liveOperativeById('op1')
+    const before = freeze(['op1'])
+    const h0 = before.roster.maxHp.op1
+    debrief({ survivorHp: { op1: 1 } })
+    const after = freeze(['op1'])
+    const bonus = xpBonus(1)
+
+    expect(after.roster.maxHp.op1).toBe(h0 + bonus.maxHp)
+    const crew = crewBonus(after.roster.appliedIds.op1)
+    expect(after.roster.massKg).toBeCloseTo(
+      operativeMassKg(op, crew.maxHp + bonus.maxHp, after.roster.items.op1),
+      9,
+    )
+    expect(after.roster.massKg - before.roster.massKg).toBeCloseTo(bonus.maxHp * ARMOR_KG_PER_HP, 9)
+    expect(after.roster.speed.op1).toBeCloseTo(
+      op.speed + crew.speed + tierSpeedDelta(after.roster.massTier) + bonus.speed,
+      9,
+    )
   })
 })

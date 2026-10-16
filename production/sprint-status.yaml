@@ -120,11 +120,11 @@ stories:
     name: "Experience award and deploy sampling"
     file: "production/epics/roster-and-assembly/story-015-experience-award-and-deploy-sampling.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-016"
     name: "Injury recovery on strategic sync"
     file: "production/epics/roster-and-assembly/story-016-injury-recovery-on-strategic-sync.md"
