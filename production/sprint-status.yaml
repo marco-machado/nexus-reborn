@@ -102,11 +102,11 @@ stories:
     name: "civiliansHit counts unique squad-caused civilian first-hits"
     file: "production/epics/tactical-mission/story-010-squad-caused-civilian-first-hits.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-011"
     name: "Cover interrupts the fire lane; hit chance formula"
     file: "production/epics/tactical-mission/story-011-cover-interrupts-the-fire-lane-and-hit-chance.md"

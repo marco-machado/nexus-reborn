@@ -3430,3 +3430,179 @@ describe('Opening hour changes no sight or noise (TM-009, AC 10)', () => {
     expect(nightClock.startsWith('23:05:2')).toBe(true)
   })
 })
+
+// TM-010 (Sprint 8, story 010; TR-tactical-006, ADR-0016): civiliansHit
+// counts N, the bystanders the squad's own fire struck at least once. A
+// first hit counts, not a death; a repeat on the same body never stacks;
+// CorpSec rounds are recorded in telemetry only.
+describe('civiliansHit counts unique squad-caused civilian first-hits (TM-010, AC 11 / 12 / 13)', () => {
+  const TOUGH = 100000
+
+  // One live enemy, pinned where it stands, the rest of the garrison dead.
+  function isolate(w: WorldApi, at: Vec2, muzzled: boolean) {
+    const enemy = w.units.find((u) => u.kind === 'enemy')!
+    for (const u of w.units) if (u.kind === 'enemy' && u !== enemy) u.stance = 'dead'
+    enemy.pos.x = at.x
+    enemy.pos.z = at.z
+    enemy.path.length = 0
+    enemy.patrol!.length = 0
+    enemy.holdGround = true
+    enemy.hp = TOUGH
+    enemy.maxHp = TOUGH
+    if (muzzled) enemy.reloading = 999
+    return enemy
+  }
+
+  // Keeps the first `n` civilians, pinned and too tough to drop; every other
+  // bystander is removed so nobody wanders onto the lane mid-test.
+  function bystanders(w: WorldApi, spots: Vec2[]) {
+    const civs = w.units.filter((u) => u.kind === 'civilian')
+    expect(civs.length).toBeGreaterThanOrEqual(spots.length)
+    civs.slice(spots.length).forEach((c) => (c.stance = 'dead'))
+    return spots.map((at, i) => {
+      const c = civs[i]
+      c.pos.x = at.x
+      c.pos.z = at.z
+      c.path.length = 0
+      c.holdGround = true
+      c.hp = TOUGH
+      c.maxHp = TOUGH
+      return c
+    })
+  }
+
+  const billedLines = () =>
+    useMissionStore.getState().log.filter((e) => e.msg.startsWith('CIVILIAN HIT. COLLATERAL COUNT'))
+
+  // Ticks until `u` has been struck `n` more times (hp drops counted).
+  function untilStruck(w: WorldApi, u: Unit, n: number, maxSec: number): number {
+    let last = u.hp
+    let strikes = 0
+    runUntil(
+      w,
+      () => {
+        if (u.hp < last) {
+          strikes += 1
+          last = u.hp
+        }
+        return strikes >= n
+      },
+      maxSec,
+    )
+    return strikes
+  }
+
+  it('a squad miss carried past the target into a civilian counts 1 on the first hit, not a death (AC 11)', () => {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolate(w, { x: a1.pos.x, z: a1.pos.z - 4 }, true)
+    // Behind the target: a hit stops on the target, so only a missed round
+    // that keeps travelling down the lane can reach this body.
+    const [civ] = bystanders(w, [{ x: a1.pos.x, z: a1.pos.z - 6 }])
+    expect(hasLos(w.city, a1.pos, civ.pos)).toBe(true)
+
+    w.orderAttack(['a1'], enemy.id)
+    expect(untilStruck(w, civ, 1, 30)).toBe(1)
+    expect(civ.stance).not.toBe('dead')
+    expect(civ.hp).toBeGreaterThan(0)
+    expect(useMissionStore.getState().civiliansHit).toBe(1)
+    expect(billedLines().map((e) => e.msg)).toEqual(['CIVILIAN HIT. COLLATERAL COUNT 1.'])
+  })
+
+  it('the squad striking the same civilian again does not raise the count (AC 12)', () => {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    const enemy = isolate(w, { x: a1.pos.x, z: a1.pos.z - 4 }, true)
+    // Square on the lane short of the target: hits and misses both wear it.
+    const [civ] = bystanders(w, [{ x: a1.pos.x, z: a1.pos.z - 2 }])
+
+    w.orderAttack(['a1'], enemy.id)
+    expect(untilStruck(w, civ, 1, 30)).toBe(1)
+    expect(useMissionStore.getState().civiliansHit).toBe(1)
+    expect(untilStruck(w, civ, 3, 30)).toBe(3)
+    expect(useMissionStore.getState().civiliansHit).toBe(1)
+    expect(billedLines()).toHaveLength(1)
+  })
+
+  it('CorpSec-only civilian harm leaves the count at 0, in the store and the outcome (AC 13)', () => {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    warm(w, 1.2)
+    const a1 = w.unit('a1')!
+    a1.hp = TOUGH
+    a1.maxHp = TOUGH
+    w.orderHoldFire(['a1'], true)
+    w.orderHold(['a1'], true)
+    const enemy = isolate(w, { x: a1.pos.x, z: a1.pos.z - 4 }, false)
+    enemy.reloading = 0
+    const [civ] = bystanders(w, [{ x: a1.pos.x, z: a1.pos.z - 2 }])
+
+    expect(untilStruck(w, civ, 2, 60)).toBe(2)
+    expect(useMissionStore.getState().civiliansHit).toBe(0)
+    expect(billedLines()).toHaveLength(0)
+
+    // Step the bystander off the lane and let CorpSec finish the operative:
+    // the Loss outcome still carries N = 0, and telemetry keeps the CorpSec
+    // hits on their own counter.
+    civ.pos.x = a1.pos.x + 6
+    a1.hp = 1
+    a1.maxHp = 100
+    expect(runUntil(w, () => useMissionStore.getState().result === 'lost', 60)).toBe(true)
+    warm(w, 3)
+    const out = useAppStore.getState().outcome
+    expect(out?.won).toBe(false)
+    expect(out?.civiliansHit).toBe(0)
+    expect(out?.telemetry?.civilianHitsBySquad).toBe(0)
+    expect(out?.telemetry?.civilianHitsByCorpsec ?? 0).toBeGreaterThanOrEqual(2)
+  })
+
+  it('one squad grenade on two civilians counts 2, once each; a second blast adds nothing (edge cases)', () => {
+    // The tech role carries a second power cell, so two grenades are in stock.
+    const w = spawn(BARE_MISSION, ops(['op1', 'op6']))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')!
+    const at = { x: a1.pos.x, z: a1.pos.z - 3 }
+    const [c1, c2] = bystanders(w, [at, { x: at.x, z: at.z - 0.5 }])
+
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(c1.hp).toBeLessThan(TOUGH)
+    expect(c2.hp).toBeLessThan(TOUGH)
+    expect(useMissionStore.getState().civiliansHit).toBe(2)
+
+    // Past the cooldown, the same two bystanders take a second blast.
+    const hp1 = c1.hp
+    const hp2 = c2.hp
+    warm(w, 5)
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(c1.hp).toBeLessThan(hp1)
+    expect(c2.hp).toBeLessThan(hp2)
+    expect(useMissionStore.getState().civiliansHit).toBe(2)
+    expect(billedLines()).toHaveLength(2)
+  })
+
+  it('a Loss still emits N on the outcome (edge case)', () => {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')!
+    // The operative's own grenade at their feet wipes the squad and strikes
+    // the bystander beside them in the same blast.
+    bystanders(w, [{ x: a1.pos.x, z: a1.pos.z - 1 }])
+    a1.hp = 1
+    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(a1.stance).toBe('dead')
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+    warm(w, 3)
+    const out = useAppStore.getState().outcome
+    expect(out?.won).toBe(false)
+    expect(out?.civiliansHit).toBe(1)
+  })
+})
