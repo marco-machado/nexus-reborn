@@ -65,6 +65,9 @@ describe('deploy freeze of the Roster slice (RA-020)', () => {
     const { params, world } = deploy(['op1', 'op8'])
     const roster = structuredClone(params.roster)
     const research = params.research.slice()
+    const speedBefore = params.roster.speed.op1
+    const maxHpBefore = params.roster.maxHp.op1
+    const massKgBefore = params.roster.massKg
     const stats = unitStats(world, 2)
     const pools = { ...useMissionStore.getState().inventory }
     expect(roster.wear.op1.NEURAL).toBe('c-interface')
@@ -82,7 +85,12 @@ describe('deploy freeze of the Roster slice (RA-020)', () => {
 
     for (let i = 0; i < 40; i++) world.tick(STEP)
 
+    // Compared to primitives captured before the change, not to a clone of
+    // the object under test.
     expect(params.roster).toEqual(roster)
+    expect(params.roster.speed.op1).toBe(speedBefore)
+    expect(params.roster.maxHp.op1).toBe(maxHpBefore)
+    expect(params.roster.massKg).toBe(massKgBefore)
     expect(params.research).toEqual(research)
     expect(unitStats(world, 2)).toEqual(stats)
     expect(world.unit('a2')).toBeDefined()
@@ -94,6 +102,9 @@ describe('deploy freeze of the Roster slice (RA-020)', () => {
     expect(next.research).toEqual([])
     expect(next.roster.items.op1).toEqual(['cell', null])
     expect(next.roster.maxHp.op1).not.toBe(roster.maxHp.op1)
+    // Experience moves speed, so the old freeze held the old value and the
+    // new freeze the new one (the old one is unchanged above).
+    expect(next.roster.speed.op1).not.toBe(speedBefore)
   })
 
   it('keeps pools M and C when Assembly item slots change after create (AC 45)', () => {
@@ -117,37 +128,63 @@ describe('deploy freeze of the Roster slice (RA-020)', () => {
   })
 
   it('samples pools as base + role grants + 1 med kit + 1 power cell from the slots (AC 49)', () => {
-    // Base pools are 2 med / 1 cell; a medic grants +2 med.
     const empty = deploy(['op8'])
-    expect(useMissionStore.getState().inventory).toEqual({ med: 2 + 2, cell: 1 })
+    const base = { ...useMissionStore.getState().inventory }
     expect(empty.params.roster.items.op8).toEqual([null, null])
 
     useAppStore.getState().setLoadout('op8', 0, 'med')
     useAppStore.getState().setLoadout('op8', 1, 'cell')
     const loaded = deploy(['op8'])
+    const full = { ...useMissionStore.getState().inventory }
     expect(loaded.params.roster.items.op8).toEqual(['med', 'cell'])
-    expect(useMissionStore.getState().inventory).toEqual({ med: 2 + 2 + 1, cell: 1 + 0 + 1 })
+    expect({ med: full.med - base.med, cell: full.cell - base.cell }).toEqual({ med: 1, cell: 1 })
+
+    // Items on an operative who is not deployed are not counted.
+    useAppStore.getState().setLoadout('op1', 0, 'med')
+    useAppStore.getState().setLoadout('op1', 1, 'cell')
+    deploy(['op8'])
+    expect(useMissionStore.getState().inventory).toEqual(full)
   })
 
   it('freezes by clone: no live reference and no Object.freeze of live arrays (ADR-0009 edge case)', () => {
-    useResearchStore.setState({ done: ['b-propellants'] })
+    // Non-empty wear (worn Neural Interface I), pins and Experience.
+    useResearchStore.setState({ done: ['b-propellants', 'c-interface'] })
+    setXp('op1', 2)
     useAppStore.getState().setLoadout('op1', 0, 'med')
     const liveLoadout = useAppStore.getState().loadout.op1
     const liveDone = useResearchStore.getState().done
-    const livePins = useCampaignStore.getState().roster.op1.pins
+    const liveEntry = useCampaignStore.getState().roster.op1
+    const livePins = liveEntry.pins
     const params = freezeDeploy(MISSION, ops(['op1']), 1)
 
+    expect(params.roster.wear.op1.NEURAL).toBe('c-interface')
     expect(params.roster.items.op1).not.toBe(liveLoadout)
     expect(params.research).not.toBe(liveDone)
     expect(Object.isFrozen(liveLoadout)).toBe(false)
     expect(Object.isFrozen(liveDone)).toBe(false)
     expect(Object.isFrozen(livePins)).toBe(false)
+    expect(Object.isFrozen(liveEntry)).toBe(false)
+    const before = structuredClone(params)
+    const speedBefore = params.roster.speed.op1
+    const maxHpBefore = params.roster.maxHp.op1
 
-    // An in-place write to a live array still cannot reach the slice.
+    // In-place writes to the live data still cannot reach the slice.
     liveLoadout[0] = 'cell'
-    ;(liveDone as string[]).push('c-interface')
+    ;(liveDone as string[]).push('c-weave')
+    livePins.NEURAL = 'STOCK' // would remove the worn node
+    livePins.CHEST = 'STOCK'
+    liveEntry.xp = 9 // would raise HP and speed
+    expect(params).toEqual(before)
     expect(params.roster.items.op1).toEqual(['med', null])
     expect(params.research).toEqual(['b-propellants'])
-    expect(params.roster.wear.op1).toEqual({})
+    expect(params.roster.wear.op1.NEURAL).toBe('c-interface')
+    expect(params.roster.speed.op1).toBe(speedBefore)
+    expect(params.roster.maxHp.op1).toBe(maxHpBefore)
+
+    // The writes were real: a fresh freeze sees them.
+    const next = freezeDeploy(MISSION, ops(['op1']), 2)
+    expect(next.roster.wear.op1.NEURAL).toBeUndefined()
+    expect(next.roster.maxHp.op1).not.toBe(maxHpBefore)
+    expect(next.roster.speed.op1).not.toBe(speedBefore)
   })
 })
