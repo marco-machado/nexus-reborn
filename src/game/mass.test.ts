@@ -269,8 +269,9 @@ describe('mass tier light and standard bands (TR-roster-002)', () => {
 
   it('reads a computed four-body sum of 340 kg as light', () => {
     // Ghost, Dart, Torq and Slate with three med+med pairs and one cell+cell:
-    // 66.3 + 63.3 + 76.6 + 64.8 bodies plus 60 kg of items, summed by the
-    // model rather than written as a literal.
+    // 69.3 + 66.3 + 76.6 + 67.8 = 280 kg of bodies plus 3 × 16 + 12 = 60 kg of
+    // items, summed by the model rather than written as a literal. Exact
+    // equality is intentional: the GDD tier boundary has no epsilon.
     const squad = ['op2', 'op3', 'op4', 'op6'].map(operativeById)
     const loadout: SquadLoadout = {
       op2: ['med', 'med'],
