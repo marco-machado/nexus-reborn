@@ -2215,10 +2215,12 @@ export function createWorld(
       if (u.holdFire !== hold) changed = true
       u.holdFire = hold
       if (!hold) continue
-      // Dropping the target stops the shooting this tick rather than one
-      // acquire interval later. A standing order goes with it, otherwise the
-      // card would read TIGHT while the agent kept firing; an attack ordered
-      // after the flag is set still fires through.
+      // A standing Explicit target survives Hold Fire (ADR-0016, GDD OQ2):
+      // Hold Fire only stops automatic fire, and an Attack ordered before or
+      // after the flag still fires through.
+      if (u.explicitTarget) continue
+      // Dropping an automatic target stops the shooting this tick rather
+      // than one acquire interval later.
       u.targetId = null
       u.explicitTarget = false
       if (u.stance === 'attacking') u.stance = 'idle'

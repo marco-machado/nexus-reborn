@@ -669,28 +669,6 @@ describe('orders', () => {
     expect(dist(a1.pos, dest)).toBeLessThan(0.5)
   })
 
-  it('hold fire clears the standing attack order and shows on the squad card', () => {
-    const w = spawn(MISSION, ops(['op1']))
-    deployReset()
-    w.tick(STEP)
-    const a1 = w.unit('a1')
-    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')
-    expect(a1).toBeDefined()
-    expect(enemy).toBeDefined()
-    if (!a1 || !enemy) return
-
-    w.orderAttack(['a1'], enemy.id)
-    expect(a1.targetId).toBe(enemy.id)
-
-    w.orderHoldFire(['a1'], true)
-    expect(a1.holdFire).toBe(true)
-    expect(a1.targetId).toBeNull()
-    expect(useMissionStore.getState().squad.find((r) => r.unitId === 'a1')?.holdFire).toBe(true)
-
-    w.orderHoldFire(['a1'], false)
-    expect(a1.holdFire).toBe(false)
-  })
-
   it('ignores orders naming unknown units or invalid targets', () => {
     const w = spawn(BARE_MISSION, ops(['op1']))
     deployReset()
@@ -2867,5 +2845,115 @@ describe('Idle auto-acquire and Attack under Hold Ground and Hold Fire (TM-004, 
     expect(a1.holdFire).toBe(true)
     expect(a1.path.length).toBe(0)
     expect(dist(a1.pos, start)).toBeLessThan(0.5)
+  })
+})
+
+// TM-005 (Sprint 8, story 005): Hold Fire clears automatic targets only. A
+// standing Explicit target survives it (ADR-0016 resolves GDD OQ2), and a
+// later Attack fires through without clearing the bit.
+describe('Hold Fire clears automatic targets but keeps a standing Explicit (TM-005, AC 5 / 5b / 5c)', () => {
+  // One operative and one muzzled hostile pinned 10 m north on the open road,
+  // inside op1's opening range (16 m, pinned in the TM-004 block above).
+  function stage() {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')!
+    const post = { x: a1.pos.x, z: a1.pos.z - 10 }
+    const dealt = { hp: 0 }
+    const pin = () => {
+      if (enemy.stance === 'dead') return
+      dealt.hp = enemy.maxHp - enemy.hp
+      enemy.pos.x = post.x
+      enemy.pos.z = post.z
+      enemy.path.length = 0
+      enemy.reloading = 999
+    }
+    pin()
+    const run = (seconds: number, each?: () => void) => {
+      const until = w.time + seconds
+      while (w.time < until) {
+        pin()
+        w.tick(STEP)
+        each?.()
+      }
+    }
+    // Run until a1 auto-acquires the hostile (no order given).
+    const acquire = () => {
+      const until = w.time + 3
+      while (w.time < until && a1.targetId !== enemy.id) {
+        pin()
+        w.tick(STEP)
+      }
+    }
+    return { w, a1, enemy, dealt, run, acquire }
+  }
+
+  it('clears an automatic target, does not re-acquire, and shows on the squad card (AC 5)', () => {
+    const { w, a1, enemy, dealt, run, acquire } = stage()
+    acquire()
+    expect(a1.targetId).toBe(enemy.id)
+
+    w.orderHoldFire(['a1'], true)
+    expect(a1.holdFire).toBe(true)
+    expect(a1.targetId).toBeNull()
+    expect(useMissionStore.getState().squad.find((r) => r.unitId === 'a1')?.holdFire).toBe(true)
+
+    // Many acquire intervals (0.12 s each): nothing is picked up, nothing fires.
+    const magazine0 = a1.magazine
+    const hp0 = dealt.hp
+    let reacquired = false
+    run(2, () => {
+      if (a1.targetId !== null) reacquired = true
+    })
+    expect(reacquired).toBe(false)
+    expect(a1.magazine).toBe(magazine0)
+    expect(dealt.hp).toBe(hp0)
+    expect(useMissionStore.getState().squad.find((r) => r.unitId === 'a1')?.holdFire).toBe(true)
+  })
+
+  it('Hold Fire off again: auto-acquire resumes (edge case)', () => {
+    const { w, a1, enemy, run } = stage()
+    w.orderHoldFire(['a1'], true)
+    run(1)
+    expect(a1.targetId).toBeNull()
+    w.orderHoldFire(['a1'], false)
+    expect(a1.holdFire).toBe(false)
+    let acquired = false
+    run(2, () => {
+      if (a1.targetId === enemy.id) acquired = true
+    })
+    expect(acquired).toBe(true)
+  })
+
+  it('a later Attack fires through Hold Fire and the bit stays on (AC 5b)', () => {
+    const { w, a1, enemy, dealt, run } = stage()
+    w.orderHoldFire(['a1'], true)
+    run(0.5)
+    const magazine0 = a1.magazine
+    w.orderAttack(['a1'], enemy.id)
+    expect(a1.targetId).toBe(enemy.id)
+    run(3)
+    expect(a1.magazine).toBeLessThan(magazine0)
+    expect(dealt.hp).toBeGreaterThan(0)
+    expect(a1.holdFire).toBe(true)
+  })
+
+  it('a standing Explicit target is not nulled when Hold Fire is turned on (AC 5c)', () => {
+    const { w, a1, enemy, dealt, run } = stage()
+    w.orderAttack(['a1'], enemy.id)
+    expect(a1.targetId).toBe(enemy.id)
+
+    w.orderHoldFire(['a1'], true)
+    expect(a1.holdFire).toBe(true)
+    expect(a1.targetId).toBe(enemy.id)
+
+    // The standing order keeps firing under Hold Fire.
+    const magazine0 = a1.magazine
+    run(3)
+    expect(a1.magazine).toBeLessThan(magazine0)
+    expect(dealt.hp).toBeGreaterThan(0)
+    expect(a1.holdFire).toBe(true)
   })
 })
