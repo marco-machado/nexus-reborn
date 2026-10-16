@@ -174,11 +174,11 @@ stories:
     name: "Abort writes no roster; debrief applies roster once"
     file: "production/epics/roster-and-assembly/story-019-abort-and-apply-once-roster.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-020"
     name: "Deploy freeze of the Roster slice"
     file: "production/epics/roster-and-assembly/story-020-deploy-freeze-of-roster-slice.md"

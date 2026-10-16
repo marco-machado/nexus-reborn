@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   COLLATERAL_FINE,
   INITIAL_CREDITS,
@@ -13,14 +13,20 @@ import type { MissionOutcome, MissionResult } from './appStore'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER, operativeById } from '../game/data'
 import { BRANCH_IDS, NODES, nodeById, nodeTitle, nodesOfBranch, wornNode } from '../game/research'
 import { INFLUENCE_ACTIONS, TAX_INTERVAL_SEC } from '../game/influence'
-import { initialCampaignData, liveOperativeById, useCampaignStore } from './campaignStore'
+import {
+  initialCampaignData,
+  liveOperativeById,
+  remainingDowntimeSec,
+  useCampaignStore,
+} from './campaignStore'
 import { eligibilityText, labsRunning, nodeState, useResearchStore } from './researchStore'
 import { DAY, initialOwner, resolveMission, sectorReadout, useWorldStore } from './worldStore'
 import { CITIES_BY_SECTOR } from '../game/atlas'
 import { sectorClient } from '../game/contracts'
 import type { GeneratedContract } from '../game/contracts'
 import { applyDebrief } from './debrief'
-import { SAVE_KEY, captureSave, readSave, validateSave } from './save'
+import { SAVE_KEY, captureSave, readSave, startAutosave, validateSave } from './save'
+import type { SaveStorage } from './save'
 import { assignedMassKg } from '../game/deployGate'
 import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
 import { xpBonus } from '../game/experience'
@@ -3127,5 +3133,208 @@ describe('Death drops the assignment, not the program (RS-015)', () => {
     const entry = useCampaignStore.getState().roster[candidate.id]
     expect(entry.pins).toEqual({})
     expect(wornNode(useResearchStore.getState().done, entry.pins, 'NEURAL')?.id).toBe('c-interface')
+  })
+})
+
+// RA-019 (TR-roster-006, GDD AC 12/13/14; ADR-0002, ADR-0021): a mission is
+// memory only. Abort discards it and writes no roster; Tactical time never
+// touches roster, downtime or the candidate market; the Debrief apply writes
+// the roster once per apply-once key, and that key outlives the Screen
+// autosave because it is session memory, never part of the blob.
+describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
+  const MISSION_ID = MISSIONS[0].id
+  // Empty objectives: ticking never ends the mission, so it stays in progress.
+  const BARE = { ...MISSIONS[0], objectives: [] }
+  const T0 = 2 * 3600
+
+  // Everything the Roster owns: living operatives, condition, Experience,
+  // recovery clocks, the candidate market and its cursor, and the last report.
+  const rosterState = () => {
+    const c = useCampaignStore.getState()
+    return structuredClone({
+      operatives: c.operatives,
+      roster: c.roster,
+      candidates: c.candidates,
+      recruitRngState: c.recruitRngState,
+      nextCandidateT: c.nextCandidateT,
+      lastReport: c.lastReport,
+      campaignFailed: c.campaignFailed,
+    })
+  }
+
+  // Team Deploy, then the MissionScreen composer: mint the key, freeze the
+  // deploy, build and publish the world.
+  function deploy(): { world: ReturnType<typeof createWorld>; applyKey: number } {
+    useAppStore.setState({ phase: 'team', missionId: MISSION_ID, squad: [...DEFAULT_SQUAD] })
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+    const ops = useAppStore.getState().squad.map(liveOperativeById)
+    const applyKey = useAppStore.getState().deploySerial + 1
+    useAppStore.setState({ deploySerial: applyKey })
+    const world = createWorld(BARE, ops, freezeDeploy(BARE, ops, applyKey))
+    setWorld(world)
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+    return { world, applyKey }
+  }
+
+  // Hud onAbort (after the P-01 confirm), then the MissionScreen cleanup.
+  function confirmAbort(): void {
+    useAppStore.getState().goto('world')
+    setWorld(null)
+    useMissionStore.getState().reset()
+  }
+
+  beforeEach(() => {
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      t: T0,
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useResearchStore.setState({
+      done: [],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    setWorld(null)
+    useMissionStore.getState().reset()
+  })
+
+  afterEach(() => {
+    setWorld(null)
+    useMissionStore.getState().reset()
+  })
+
+  it('AC 1: Abort mid-mission opens no debrief and leaves the roster deep-equal to R, no Experience awarded', () => {
+    const R = rosterState()
+    const { world } = deploy()
+    while (world.time < 60) world.tick(0.05)
+    expect(useMissionStore.getState().result).toBe('none')
+    confirmAbort()
+
+    const app = useAppStore.getState()
+    expect(app.phase).toBe('world')
+    expect(app.outcome).toBeNull()
+    expect(app.lastAppliedKey).toBe(0)
+    expect(getWorld()).toBeNull()
+    expect(rosterState()).toEqual(R)
+    // Abort awards no Experience: every surviving deployed operative keeps its xp.
+    for (const id of DEFAULT_SQUAD) expect(useCampaignStore.getState().roster[id].xp).toBe(R.roster[id].xp)
+    // Nothing applies afterwards either: there is no outcome to apply.
+    applyDebrief(MISSION_ID)
+    expect(rosterState()).toEqual(R)
+  })
+
+  it('AC 2: the same outcome applied twice writes KIA, injury and Experience once', () => {
+    useAppStore.setState({ phase: 'debrief', missionId: MISSION_ID, squad: [...DEFAULT_SQUAD] })
+    const o = outcome({
+      applyKey: 1,
+      won: false,
+      reward: 0,
+      casualties: 1,
+      deadIds: ['op4'],
+      survivorHp: { op1: 0.2, op2: 1, op3: 0.9 },
+    })
+    useAppStore.getState().setOutcome(o)
+    const campaign = useCampaignStore.getState()
+    let reports = 0
+    useCampaignStore.setState({
+      reportMission: (...a) => (reports++, campaign.reportMission(...a)),
+    })
+    try {
+      applyDebrief(MISSION_ID)
+      const once = rosterState()
+      const squadOnce = [...useAppStore.getState().squad]
+      // The first apply really wrote the roster.
+      expect(once.operatives.some((op) => op.id === 'op4')).toBe(false)
+      expect(once.roster.op1.status).toBe('INJURED')
+      expect([once.roster.op1.xp, once.roster.op2.xp, once.roster.op3.xp]).toEqual([1, 1, 1])
+
+      // Debrief re-mount, and the very same DTO handed back in again.
+      applyDebrief(MISSION_ID)
+      useAppStore.getState().setOutcome(structuredClone(o))
+      applyDebrief(MISSION_ID)
+
+      expect(reports).toBe(1)
+      const after = rosterState()
+      expect(after).toEqual(once)
+      expect(after.lastReport?.kia).toEqual([{ id: 'op4', codename: 'TORQ' }])
+      expect(after.lastReport?.injured.map((i) => i.id)).toEqual(['op1'])
+      expect([after.roster.op1.xp, after.roster.op2.xp, after.roster.op3.xp]).toEqual([1, 1, 1])
+      expect(useAppStore.getState().squad).toEqual(squadOnce)
+    } finally {
+      useCampaignStore.setState({ reportMission: campaign.reportMission })
+    }
+  })
+
+  it('AC 3: Tactical time leaves the living roster, Injured downtime and the market unchanged', () => {
+    // op5 opens Injured with a running recovery clock; it sits out the deploy.
+    const before = useCampaignStore.getState()
+    expect(before.roster.op5.status).toBe('INJURED')
+    const R = rosterState()
+    const downtime = remainingDowntimeSec(before.roster.op5.recoverAtT, useWorldStore.getState().t)
+    expect(downtime).toBeGreaterThan(0)
+
+    const { world } = deploy()
+    // Three minutes of sim time in MAX_DT frames, checking every second.
+    let nextCheck = 0
+    while (world.time < 180) {
+      world.tick(0.05)
+      if (world.time >= nextCheck) {
+        nextCheck += 1
+        expect(rosterState()).toEqual(R)
+        const c = useCampaignStore.getState()
+        expect(remainingDowntimeSec(c.roster.op5.recoverAtT, useWorldStore.getState().t)).toBe(downtime)
+      }
+    }
+    expect(useMissionStore.getState().result).toBe('none')
+    expect(useAppStore.getState().phase).toBe('mission')
+    expect(useWorldStore.getState().t).toBe(T0)
+    confirmAbort()
+    expect(rosterState()).toEqual(R)
+  })
+
+  it('Edge: the apply-once key survives the Screen autosave, so a re-apply after it writes nothing', () => {
+    const blobs: string[] = []
+    const storage: SaveStorage = {
+      getItem: () => blobs.at(-1) ?? null,
+      setItem: (_key, value) => void blobs.push(value),
+      removeItem: () => void (blobs.length = 0),
+    }
+    vi.useFakeTimers()
+    const stop = startAutosave(storage)
+    try {
+      useAppStore.setState({ phase: 'debrief', missionId: MISSION_ID, squad: [...DEFAULT_SQUAD] })
+      useAppStore.getState().setOutcome(
+        outcome({ applyKey: 3, casualties: 1, deadIds: ['op2'], survivorHp: { op1: 0.3 } }),
+      )
+      applyDebrief(MISSION_ID)
+      // Debrief never autosaves.
+      vi.advanceTimersByTime(1000)
+      expect(blobs).toHaveLength(0)
+
+      useAppStore.getState().returnFromDebrief()
+      vi.advanceTimersByTime(1000)
+      expect(blobs.length).toBeGreaterThan(0)
+      const applied = rosterState()
+
+      // The key is session memory: the flush keeps it and never persists it.
+      expect(useAppStore.getState().lastAppliedKey).toBe(3)
+      const blob = JSON.parse(blobs.at(-1)!) as { app: Record<string, unknown> }
+      expect(blob.app).not.toHaveProperty('lastAppliedKey')
+      expect(blob.app).not.toHaveProperty('deploySerial')
+
+      // A stray re-apply of the stored outcome after the autosave is a no-op.
+      expect(useAppStore.getState().outcome?.applyKey).toBe(3)
+      applyDebrief(MISSION_ID)
+      expect(rosterState()).toEqual(applied)
+      expect(applied.roster.op2).toBeUndefined()
+      expect(applied.roster.op1.xp).toBe(1)
+    } finally {
+      stop()
+      vi.useRealTimers()
+    }
   })
 })
