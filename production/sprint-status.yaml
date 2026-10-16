@@ -21,11 +21,11 @@ stories:
     name: "Opening selection and Select-all are the living set"
     file: "production/epics/tactical-mission/story-001-opening-selection-and-select-all-are-the-living-set.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-002"
     name: "Dead ids, empty selection, and Attack on a Device are no-ops"
     file: "production/epics/tactical-mission/story-002-dead-and-empty-recipients-are-no-ops.md"

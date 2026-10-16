@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
 import { ENEMY_VISION, isWalkable } from './types'
 import { createWorld } from './world'
+import { clickSelection, openingSelection, selectAll, selectSlot } from './selection'
 import { tickIfLive } from './frameTick'
 import { headlessDeploy } from './deploy'
 import type { DeployInputs } from './deploy'
@@ -2445,5 +2446,70 @@ describe('completions after the deploy freeze apply next deploy only (RS-017)', 
       ROLE_ABILITIES.assault.passive.magnitude * WEAPONS.assault.damage,
       10,
     )
+  })
+})
+
+// TM-001 (Sprint 8, story 001): the opening selection, Select-all and the slot
+// keys all resolve to the living set. A dead row stands in for a KIA slot.
+describe('selection is the living set (TM-001, AC 1a / 1b / 1d)', () => {
+  function kill(w: WorldApi, id: string): void {
+    const u = w.unit(id)!
+    u.hp = 0
+    u.stance = 'dead'
+  }
+
+  it('opens a mission with one dead operative selecting exactly the living ids (AC 1a)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    kill(w, 'a2')
+    expect(openingSelection(w)).toEqual(['a1', 'a3', 'a4'])
+  })
+
+  it('opens a mission with all four living selecting all four', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    expect(openingSelection(w)).toEqual(['a1', 'a2', 'a3', 'a4'])
+  })
+
+  it('Select-all (0 / backtick) picks exactly the living ids (AC 1b)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    kill(w, 'a4')
+    expect(selectAll(w)).toEqual(['a1', 'a2', 'a3'])
+  })
+
+  it('Select-all with only one living operative picks only that one', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    kill(w, 'a1')
+    kill(w, 'a2')
+    kill(w, 'a4')
+    expect(selectAll(w)).toEqual(['a3'])
+  })
+
+  it('Select-all after a death mid-mission drops the fallen operative', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    warm(w, 1)
+    expect(selectAll(w)).toEqual(['a1', 'a2', 'a3', 'a4'])
+    kill(w, 'a3')
+    warm(w, 0.5)
+    expect(selectAll(w)).toEqual(['a1', 'a2', 'a4'])
+  })
+
+  it('a slot key on a dead slot leaves the selection unchanged (AC 1d)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    kill(w, 'a2')
+    const current = ['a1', 'a3']
+    expect(selectSlot(w, 2, current)).toBe(current)
+    expect(selectSlot(w, 2, current)).toEqual(['a1', 'a3'])
+  })
+
+  it('a slot key on a living slot selects exactly that slot (AC 1d)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    kill(w, 'a2')
+    expect(selectSlot(w, 3, ['a1', 'a4'])).toEqual(['a3'])
+    expect(selectSlot(w, 1, [])).toEqual(['a1'])
+  })
+
+  it('clicking a hostile does not clear the selection (GDD edge case)', () => {
+    const current = ['a1', 'a2']
+    expect(clickSelection(current, { id: 'e1', agent: false }, false)).toEqual(['a1', 'a2'])
+    expect(clickSelection(current, null, false)).toEqual([])
   })
 })

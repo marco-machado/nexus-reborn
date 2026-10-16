@@ -15,9 +15,11 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { bindingFor, codeOf } from '../game/bindings'
 import { getWorld } from '../game/runtime'
+import { clickSelection, isAlive as alive, isLivingAgent, openingSelection, selectAll, selectSlot } from '../game/selection'
+import type { SelectionPick as Pick } from '../game/selection'
 import { noteTutorial } from '../state/tutorialStore'
 import { useMissionStore } from '../state/missionStore'
-import type { Unit, WorldApi } from '../game/types'
+import type { WorldApi } from '../game/types'
 import { pushClickMarker } from './clickMarkers'
 import { setMarquee } from './marquee'
 
@@ -29,13 +31,6 @@ const DRAG_MIN = 5
 const PICK_Y = 0.95
 const PROJ = new THREE.Vector3()
 
-// A unit under the pointer. Agents are selection targets, enemies are not, but
-// both count as something rather than bare ground.
-interface Pick {
-  id: string
-  agent: boolean
-}
-
 // Screen space box in canvas pixels, plus the canvas size it was measured in.
 interface Box {
   x0: number
@@ -46,28 +41,9 @@ interface Box {
   height: number
 }
 
-function alive(u: Unit | undefined): boolean {
-  return !!u && u.stance !== 'dead' && u.hp > 0
-}
-
-function livingAgents(w: WorldApi): string[] {
-  const out: string[] = []
-  for (const u of w.units) {
-    if (u.kind === 'agent' && alive(u)) out.push(u.id)
-  }
-  return out
-}
-
 // The selection minus anyone who has died since it was made.
 function selectedAgents(w: WorldApi): string[] {
-  return useMissionStore.getState().selected.filter((id) => {
-    const u = w.unit(id)
-    return !!u && u.kind === 'agent' && alive(u)
-  })
-}
-
-function toggle(ids: string[], id: string): string[] {
-  return ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]
+  return useMissionStore.getState().selected.filter((id) => isLivingAgent(w.unit(id)))
 }
 
 // Living agents whose chest point projects inside the box, squad order. One
@@ -154,15 +130,15 @@ export default function Input() {
         case 'selectSlot': {
           // Slot n is the digit the code ends in, so the number row and the
           // keypad stay one entry.
-          const id = 'a' + code.slice(-1)
-          if (alive(w.unit(id))) {
-            ms.setSelected([id])
+          const next = selectSlot(w, Number(code.slice(-1)), ms.selected)
+          if (next !== ms.selected) {
+            ms.setSelected(next)
             noteTutorial('select')
           }
           break
         }
         case 'selectAll':
-          ms.setSelected(livingAgents(w))
+          ms.setSelected(selectAll(w))
           noteTutorial('select')
           break
         case 'clearSelection':
@@ -226,7 +202,7 @@ export default function Input() {
     const w = getWorld()
     if (!w) return
     const ms = useMissionStore.getState()
-    if (ms.selected.length === 0) ms.setSelected(livingAgents(w))
+    if (ms.selected.length === 0) ms.setSelected(openingSelection(w))
     return () => {
       document.body.style.cursor = ''
     }
@@ -318,11 +294,11 @@ export default function Input() {
         // An enemy is not a selection target, but it is not bare ground
         // either: clicking one leaves the squad selected to be ordered onto it.
         if (pick.agent) {
-          ms.setSelected(add ? toggle(base, pick.id) : [pick.id])
+          ms.setSelected(clickSelection(base, pick, add))
           noteTutorial('select')
         }
       } else if (!add) {
-        ms.setSelected([])
+        ms.setSelected(clickSelection(base, null, add))
       }
     }
 
