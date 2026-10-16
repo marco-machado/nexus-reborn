@@ -1,12 +1,12 @@
 # Story 001: Operative mass reference values
 
 > **Epic**: Roster and Assembly
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-15
 
 ## Context
 
@@ -32,10 +32,10 @@
 
 *From GDD `design/gdd/roster-and-assembly.md`, scoped to this story:*
 
-- [ ] **GIVEN** Mara with deployment max HP 124, primary 4.2 kg, sidearm 1.2 kg, no research/Experience/filled Item slots, **WHEN** `operative_mass` is computed, **THEN** it is 73.9 kg. *(GDD AC 61)*
-- [ ] **GIVEN** Ghost / Dart / Torq under the same no-research/Experience/slots conditions, **WHEN** each `operative_mass` is computed, **THEN** Ghost is 69.3 kg, Dart is 66.3 kg, Torq is 76.6 kg. *(GDD AC 62)*
-- [ ] **GIVEN** `H ≤ 90` and pistol + pistol (1.2 + 1.2 kg) with empty Item slots, **WHEN** `operative_mass` is computed, **THEN** it is 62.4 kg (plating term 0). *(GDD AC 63)*
-- [ ] **GIVEN** Mara as in AC 61 with 1 med-kit slot and 1 power-cell slot, **WHEN** `operative_mass` is computed, **THEN** it is 87.9 kg. *(GDD AC 64)*
+- [x] **GIVEN** Mara with deployment max HP 124, primary 4.2 kg, sidearm 1.2 kg, no research/Experience/filled Item slots, **WHEN** `operative_mass` is computed, **THEN** it is 73.9 kg. *(GDD AC 61)*
+- [x] **GIVEN** Ghost / Dart / Torq under the same no-research/Experience/slots conditions, **WHEN** each `operative_mass` is computed, **THEN** Ghost is 69.3 kg, Dart is 66.3 kg, Torq is 76.6 kg. *(GDD AC 62)*
+- [x] **GIVEN** `H ≤ 90` and pistol + pistol (1.2 + 1.2 kg) with empty Item slots, **WHEN** `operative_mass` is computed, **THEN** it is 62.4 kg (plating term 0). *(GDD AC 63)*
+- [x] **GIVEN** Mara as in AC 61 with 1 med-kit slot and 1 power-cell slot, **WHEN** `operative_mass` is computed, **THEN** it is 87.9 kg. *(GDD AC 64)*
 
 ---
 
@@ -79,7 +79,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/mass.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/mass.test.ts` (`operativeMassKg reference values (TR-roster-001)` block); `npx vitest run src/game/mass.test.ts` passed 18/18 on 2026-10-15
 
 ---
 
@@ -87,3 +87,23 @@
 
 - Depends on: None
 - Unlocks: Story 002, Story 003, Story 015
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-15
+**Criteria**: 4/4 passing (AC 61, 62, 63, 64), plus the H 90 / H 91 edge cases; none deferred
+**Deviations**:
+- ADVISORY (traceability): the story names `TR-roster-001`, but `docs/architecture/tr-registry.yaml:350-353` defines TR-roster-001 as "Deploy gate requires 1–4 Ready operatives; empty bays are legal; squad mass must be ≤ 400 kg", not operative-mass reference values. No TR entry for operative mass exists. Owner to confirm the right TR ID or add one; the `(TR-roster-001)` label in the test describe block follows whatever is decided.
+- ADVISORY (scope): AC 64 (item-slot mass) overlaps Story 002's item-slot terms; already implemented in `src/game/mass.ts`, so it is only tested here.
+- ADR-0019 Decision: COMPLIANT. `src/game/mass.ts` owns operativeMassKg/squadMassKg/massTier/MASS_LIMIT_KG; nothing added to `world.ts` or `src/scene`; no CLAUDE.md guardrail breached. `src/game/mass.ts` unchanged by this story.
+**Test Evidence**: Logic: test file at `src/game/mass.test.ts` (present; 18/18 passed in this workflow's run)
+**Run result**: N/A — pure `src/game` logic with no player-visible surface changed; the Assembly mass readout is unchanged (from /dev-story checkpoint)
+**Code Review**: Complete — /code-review ran in this workflow on `src/game/mass.ts` and `src/game/mass.test.ts` and returned "Verdict: NOT ASSESSED": the engine-specialist and qa-tester reviews could not be spawned (no Agent tool in the unattended subagent; no `web-specialist` definition in `.claude/agents/`). The reviewer's own pass found no code defects. QL-TEST-COVERAGE skipped — Lean mode.
+**Code review advisory findings**:
+- Review coverage, not a code defect: Phase 7 specialist reviews (lead-programmer, qa-tester) did not run; re-run /code-review where agents can be spawned.
+- Traceability: TR-roster-001 mismatch (see Deviations).
+- Duplicate tests in `src/game/mass.test.ts`: the reference-values block repeats 73.9 kg for Mara (existing 'sums base, both weapon slots...' test) and 87.9 kg with med + cell (existing 'adds the authored item masses' test); the older H<90 'featherweight' test overlaps the AC 63 clamp check. Harmless; older duplicates could be folded together.
+- The AC 61 test asserts data literals (maxHp 124, primary 4.2 kg, sidearm 1.2 kg) as drift guards, which also pins `src/game/data.ts` (CONTRACT FILE): a rebalance of those weapons breaks this test as well as the oracle.
+**Autonomous decisions**: Phase 5 lean prompt answered "Yes — /code-review ran" (with the result above); Phase 7 took the recommended "Close the story" option; no tech-debt rows logged.
+

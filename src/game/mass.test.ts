@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_SQUAD, operativeById } from './data'
+import { DEFAULT_SQUAD, WEAPONS, operativeById } from './data'
 import {
+  emptyLoadout,
   HEAVY_MASS_KG,
   ITEM_MASS_KG,
   LIGHT_MASS_KG,
@@ -39,6 +40,48 @@ describe('operativeMassKg', () => {
   it('charges no armor mass below the HP floor', () => {
     const featherweight: OperativeDef = { ...OP1, maxHp: 80 }
     expect(operativeMassKg(featherweight, 0)).toBeCloseTo(60 + 4.2 + 1.2, 10)
+  })
+})
+
+// Story RA-001: GDD reference values (AC 61-64). Inputs come from the
+// authored roster and weapon table; the expected kilograms are the GDD oracles.
+describe('operativeMassKg reference values (TR-roster-001)', () => {
+  it('weighs Mara at 73.9 kg with no research, Experience or items (AC 61)', () => {
+    const mara = operativeById('op1')
+    expect(mara.codename).toBe('MARA')
+    expect(mara.maxHp).toBe(124)
+    expect(WEAPONS[mara.weapon].massKg).toBe(4.2)
+    expect(WEAPONS[mara.sidearm].massKg).toBe(1.2)
+    expect(operativeMassKg(mara, 0, emptyLoadout())).toBeCloseTo(73.9, 10)
+  })
+
+  it('weighs Ghost 69.3, Dart 66.3 and Torq 76.6 kg under the same conditions (AC 62)', () => {
+    const expected: Array<[string, string, number]> = [
+      ['op2', 'GHOST', 69.3],
+      ['op3', 'DART', 66.3],
+      ['op4', 'TORQ', 76.6],
+    ]
+    for (const [id, codename, kg] of expected) {
+      const op = operativeById(id)
+      expect(op.codename).toBe(codename)
+      expect(operativeMassKg(op, 0, emptyLoadout())).toBeCloseTo(kg, 10)
+    }
+  })
+
+  it('weighs pistol + pistol at H <= 90 with empty slots at 62.4 kg, plating 0 (AC 63)', () => {
+    const pistols: OperativeDef = { ...OP1, maxHp: 90, weapon: 'pistol', sidearm: 'pistol' }
+    expect(operativeMassKg(pistols, 0, emptyLoadout())).toBeCloseTo(62.4, 10)
+    // Well under the floor the plating term clamps at 0, never negative.
+    expect(operativeMassKg({ ...pistols, maxHp: 40 }, 0)).toBeCloseTo(62.4, 10)
+  })
+
+  it('adds 0.25 kg of plating at H 91, one point over the floor', () => {
+    const pistols: OperativeDef = { ...OP1, maxHp: 91, weapon: 'pistol', sidearm: 'pistol' }
+    expect(operativeMassKg(pistols, 0)).toBeCloseTo(62.65, 10)
+  })
+
+  it('weighs Mara with one med kit and one power cell at 87.9 kg (AC 64)', () => {
+    expect(operativeMassKg(operativeById('op1'), 0, ['med', 'cell'])).toBeCloseTo(87.9, 10)
   })
 })
 
