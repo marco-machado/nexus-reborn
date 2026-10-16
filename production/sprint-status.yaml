@@ -219,8 +219,8 @@ stories:
     name: "Roster save and reload"
     file: "production/epics/roster-and-assembly/story-025-roster-save-and-reload.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"

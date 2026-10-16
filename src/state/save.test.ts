@@ -2872,3 +2872,165 @@ describe('hydrate syncs to saved t; RNG streams continue', () => {
     expect(contractIdentity(continued[0])).not.toEqual(contractIdentity(opening[0]))
   })
 })
+
+describe('roster save and reload (RA-025)', () => {
+  // An origin reload: memory returns to the opening Operation, storage keeps
+  // the blob, boot hydrates it to the Menu, and the director presses Continue.
+  function reloadAndContinue(): void {
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    expect(useAppStore.getState().phase).toBe('menu')
+    continueOperation()
+    expect(useAppStore.getState().phase).toBe('world')
+  }
+
+  // A roster with every saved field off its opening value: one KIA, one
+  // Injured survivor, Experience, a hire, bay pins and filled Item slots.
+  function livedInRoster(): void {
+    useWorldStore.setState({ t: 2000 })
+    useCampaignStore.getState().reportMission(
+      'm01',
+      settleOutcome({
+        applyKey: 1,
+        won: true,
+        kills: 5,
+        casualties: 1,
+        timeSec: 500,
+        civiliansHit: 0,
+        reward: 85000,
+        bonus: 0,
+        deadIds: ['op4'],
+        survivorHp: { op1: 0.1, op2: 0.8, op3: 0.9 },
+        quietReplay: false,
+      }),
+      2000,
+    )
+    useAppStore.setState({ phase: 'world', squad: ['op2', 'op3'] })
+    const hired = useCampaignStore.getState().candidates[0]
+    useAppStore.getState().hireOperative(hired.id)
+    expect(useCampaignStore.getState().operatives.at(-1)?.id).toBe(hired.id)
+    useCampaignStore.getState().setBay('op2', 'CHEST', 'c-synaptic')
+    useCampaignStore.getState().setBay('op3', 'NEURAL', 'STOCK')
+    useAppStore.setState({ loadout: { op2: ['med', 'cell'], op3: ['med', null] } })
+  }
+
+  it('AC1: roster, pins, Experience, injuries, candidates, Item slots and flags match the pre-save blob; no mission or debrief restored', () => {
+    livedInRoster()
+    const expected = captureSave()
+    expect(validateSave(expected)).toBe(true)
+    expect(expected.campaign.roster.op1.status).toBe('INJURED')
+    expect(expected.campaign.roster.op2.pins).toEqual({ CHEST: 'c-synaptic' })
+    expect(writeSave(storage)).toBe(true)
+
+    // A mission is running when the page reloads.
+    useAppStore.setState({ phase: 'mission', missionId: 'm02' })
+
+    startNewOperation(null)
+    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    const atMenu = useAppStore.getState()
+    expect(atMenu.phase).toBe('menu')
+    expect(atMenu.missionId).toBeNull()
+    expect(atMenu.outcome).toBeNull()
+    continueOperation()
+    expect(useAppStore.getState().phase).toBe('world')
+
+    const restored = captureSave()
+    expect(restored.campaign.operatives).toEqual(expected.campaign.operatives)
+    expect(restored.campaign.roster).toEqual(expected.campaign.roster)
+    expect(restored.campaign.roster.op2.pins).toEqual({ CHEST: 'c-synaptic' })
+    expect(restored.campaign.roster.op3.pins).toEqual({ NEURAL: 'STOCK' })
+    expect(restored.campaign.roster.op1.xp).toBe(expected.campaign.roster.op1.xp)
+    expect(restored.campaign.candidates).toEqual(expected.campaign.candidates)
+    expect(restored.campaign.campaignWon).toBe(expected.campaign.campaignWon)
+    expect(restored.campaign.campaignFailed).toBe(expected.campaign.campaignFailed)
+    expect(restored.campaign.contractsWon).toEqual(expected.campaign.contractsWon)
+    expect(restored.campaign).toEqual(expected.campaign)
+    expect(restored.app.squad).toEqual(expected.app.squad)
+    expect(restored.app.loadout).toEqual({ op2: ['med', 'cell'], op3: ['med', null] })
+    expect(useAppStore.getState().outcome).toBeNull()
+    expect(useCampaignStore.getState().lastReport).toBeNull()
+  })
+
+  it('AC2: an Injured operative keeps its remaining downtime across reload + Continue with no Screen tick', () => {
+    livedInRoster()
+    const t = useWorldStore.getState().t
+    const before = useCampaignStore.getState().roster.op1
+    expect(before.status).toBe('INJURED')
+    expect(before.recoverAtT).not.toBeNull()
+    const remaining = before.recoverAtT! - t
+    expect(remaining).toBeGreaterThan(0)
+    expect(writeSave(storage)).toBe(true)
+
+    reloadAndContinue()
+
+    const after = useCampaignStore.getState().roster.op1
+    expect(useWorldStore.getState().t).toBe(t)
+    expect(after.status).toBe('INJURED')
+    expect(after.recoverAtT! - useWorldStore.getState().t).toBe(remaining)
+    expect(after).toEqual(before)
+  })
+
+  it('AC3: a tampered roster (unknown squad id, or Item slots with m + c > 2) drops the whole blob', () => {
+    startNewOperation(new MemoryStorage())
+    const fixture = captureSave()
+    startNewOperation(storage)
+    livedInRoster()
+    const save = captureSave()
+
+    const unknownSquad = structuredClone(save)
+    unknownSquad.app.squad = ['op2', 'op99']
+    const slotOverflow = structuredClone(save)
+    ;(slotOverflow.app.loadout as Record<string, unknown>).op2 = ['med', 'cell', 'med']
+
+    for (const bad of [unknownSquad, slotOverflow]) {
+      expect(validateSave(bad)).toBe(false)
+      storage.setItem(SAVE_KEY, JSON.stringify(bad))
+      // Origin reload: memory starts at the New Operation desk on the Menu.
+      startNewOperation(null)
+      useAppStore.setState({ phase: 'menu' })
+      expect(loadCampaignAtBoot(storage)).toBe('invalid')
+      expect(storage.getItem(SAVE_KEY)).toBeNull()
+      expect(useAppStore.getState().phase).toBe('menu')
+      // Nothing half-loaded: every section is still the New Operation desk.
+      const now = captureSave()
+      expect(now.campaign).toEqual(fixture.campaign)
+      expect(now.world).toEqual(fixture.world)
+      expect(now.research).toEqual(fixture.research)
+      expect(now.app).toEqual(fixture.app)
+    }
+  })
+
+  it('AC4: the candidate market continues from the saved cursor at the next 24 h due, not the opening pool', () => {
+    expect(CANDIDATE_REFRESH_SEC).toBe(24 * 3600)
+    useWorldStore.getState().advanceDays(3)
+    useCampaignStore.getState().sync(useWorldStore.getState().t)
+    useAppStore.setState({ phase: 'world' })
+    const recordedMarket = structuredClone(useCampaignStore.getState().candidates)
+    const recordedCursor = useCampaignStore.getState().recruitRngState
+    const due = useCampaignStore.getState().nextCandidateT
+    expect(writeSave(storage)).toBe(true)
+
+    // The recorded continuation: the same campaign kept running in memory.
+    useCampaignStore.getState().sync(due)
+    const recordedNext = structuredClone(useCampaignStore.getState().candidates)
+    expect(recordedNext).not.toEqual(recordedMarket)
+
+    reloadAndContinue()
+    const market = useCampaignStore.getState().candidates
+    // Names and hire figures read the same as before the reload.
+    expect(market.map((c) => [c.name, c.codename, c.cost])).toEqual(
+      recordedMarket.map((c) => [c.name, c.codename, c.cost]),
+    )
+    expect(market).toEqual(recordedMarket)
+    expect(useCampaignStore.getState().recruitRngState).toBe(recordedCursor)
+    expect(useCampaignStore.getState().nextCandidateT).toBe(due)
+
+    useCampaignStore.getState().sync(due)
+    expect(useCampaignStore.getState().candidates).toEqual(recordedNext)
+
+    // Not the opening pool's first refresh.
+    startNewOperation(null)
+    useCampaignStore.getState().sync(CANDIDATE_REFRESH_SEC)
+    expect(useCampaignStore.getState().candidates).not.toEqual(recordedNext)
+  })
+})
