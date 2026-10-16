@@ -112,10 +112,10 @@ describe('massGateOk', () => {
     expect(massGateOk(squadMassKg(DEFAULT_SQUAD.map(operativeById), 0))).toBe(true)
   })
 
-  it('allows exactly the limit and refuses anything over it (AC 69)', () => {
-    expect(massGateOk(MASS_LIMIT_KG - 0.1)).toBe(true)
-    expect(massGateOk(MASS_LIMIT_KG)).toBe(true)
-    expect(massGateOk(MASS_LIMIT_KG + 0.1)).toBe(false)
+  it('allows exactly 400 kg and refuses anything over it (AC 69)', () => {
+    expect(massGateOk(399.9)).toBe(true)
+    expect(massGateOk(400)).toBe(true)
+    expect(massGateOk(400.1)).toBe(false)
   })
 })
 
@@ -133,9 +133,9 @@ describe('mass tiers', () => {
     expect(tierSpeedDelta('heavy')).toBe(-TIER_SPEED_DELTA)
   })
 
-  it('keeps the tier lines under the deploy limit', () => {
-    expect(LIGHT_MASS_KG).toBeLessThan(HEAVY_MASS_KG)
-    expect(HEAVY_MASS_KG).toBeLessThan(MASS_LIMIT_KG)
+  it('pins the tier lines, the tier delta and the deploy limit to the GDD (340 / 380 / 400 kg, 0.15 m/s)', () => {
+    expect([LIGHT_MASS_KG, HEAVY_MASS_KG, MASS_LIMIT_KG]).toEqual([340, 380, 400])
+    expect(TIER_SPEED_DELTA).toBe(0.15)
   })
 })
 
@@ -159,22 +159,17 @@ describe('loadout helpers', () => {
 
 // Story RA-002: Item-slot and pool mass terms (GDD AC 46, 47, 48, 65).
 describe('item-slot and pool mass terms (TR-roster-001)', () => {
-  // Body, rig, both weapons and plating: everything but the Item slots.
-  function bodyKg(op: OperativeDef): number {
-    return (
-      60 +
-      WEAPONS[op.weapon].massKg +
-      WEAPONS[op.sidearm].massKg +
-      Math.max(0, op.maxHp - 90) * 0.25
-    )
-  }
+  // Empty-slot body masses, worked by hand from the §8 formula and roster:
+  // Slate 60 + 3.1 + 1.2 + 14 x 0.25 = 67.8; Vex 60 + 4.2 + 1.2 + 28 x 0.25 = 72.4;
+  // Kestrel 60 + 1.2 + 1.2 + 10 x 0.25 = 64.9. Mara is 73.9 (AC 61).
+  const BODY_KG: Record<string, number> = { op1: 73.9, op6: 67.8, op7: 72.4, op8: 64.9 }
 
   it('adds 0 kg for base and role-granted mission pools (AC 46)', () => {
     // The medic, support and tech roles grant mission pool stock in world.ts;
     // none of it reaches the kilogram sum.
     for (const id of ['op6', 'op7', 'op8']) {
       const op = operativeById(id)
-      expect(operativeMassKg(op, 0, emptyLoadout())).toBeCloseTo(bodyKg(op), 10)
+      expect(operativeMassKg(op, 0, emptyLoadout())).toBeCloseTo(BODY_KG[id], 10)
       const unpooled: OperativeDef = { ...op, role: 'assault' }
       expect(operativeMassKg(op, 0)).toBeCloseTo(operativeMassKg(unpooled, 0), 10)
     }
@@ -183,16 +178,17 @@ describe('item-slot and pool mass terms (TR-roster-001)', () => {
   })
 
   it('weighs Item slots at 8m + 6c kg for every m + c <= 2 (AC 47)', () => {
-    const cases: Array<[OperativeLoadout, number, number]> = [
-      [[null, null], 0, 0],
-      [['med', null], 1, 0],
-      [[null, 'cell'], 0, 1],
-      [['med', 'med'], 2, 0],
-      [['med', 'cell'], 1, 1],
-      [['cell', 'cell'], 0, 2],
+    // [slots, slot kg = 8m + 6c worked by hand]
+    const cases: Array<[OperativeLoadout, number]> = [
+      [[null, null], 0],
+      [['med', null], 8],
+      [[null, 'cell'], 6],
+      [['med', 'med'], 16],
+      [['med', 'cell'], 14],
+      [['cell', 'cell'], 12],
     ]
-    for (const [items, m, c] of cases) {
-      expect(operativeMassKg(OP1, 0, items) - bodyKg(OP1)).toBeCloseTo(8 * m + 6 * c, 10)
+    for (const [items, slotKg] of cases) {
+      expect(operativeMassKg(OP1, 0, items)).toBeCloseTo(BODY_KG.op1 + slotKg, 10)
     }
   })
 
@@ -318,8 +314,8 @@ describe('mass tier heavy band and the 400 kg limit (TR-roster-001)', () => {
     'allows Deploy at exactly 400 kg with %i distinct Ready operatives, delta -0.15 (AC 51)',
     (n) => {
       const ids = ['op1', 'op2', 'op3', 'op4'].slice(0, n)
-      expect(deployAt(MASS_LIMIT_KG, ids)).toEqual({ ok: true, reason: null, overKg: 0 })
-      expect(delta(MASS_LIMIT_KG)).toBe(-0.15)
+      expect(deployAt(400, ids)).toEqual({ ok: true, reason: null, overKg: 0 })
+      expect(delta(400)).toBe(-0.15)
     },
   )
 
@@ -332,11 +328,12 @@ describe('mass tier heavy band and the 400 kg limit (TR-roster-001)', () => {
   })
 
   it('refuses one Ready body over 400 kg alone as over-mass, not as an empty Squad', () => {
+    // Mara + 1400 max HP: 73.9 + 1400 x 0.25 = 423.9 kg, 23.9 kg over.
     const kg = operativeMassKg(OP1, 1400)
-    expect(kg).toBeGreaterThan(MASS_LIMIT_KG)
+    expect(kg).toBeCloseTo(423.9, 10)
     const g = deployAt(kg)
     expect(g.ok).toBe(false)
     expect(g.reason).toBe('over-mass')
-    expect(g.overKg).toBeCloseTo(kg - MASS_LIMIT_KG, 10)
+    expect(g.overKg).toBeCloseTo(23.9, 10)
   })
 })
