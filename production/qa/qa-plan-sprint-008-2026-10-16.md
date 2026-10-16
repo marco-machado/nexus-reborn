@@ -243,9 +243,11 @@ Project convention puts tests beside their module (`*.test.ts`, vitest), not und
 **Verification method**: Manual step-through in the in-app browser at 1280x720
 **Who must sign off**: qa-lead
 **Evidence to capture**: screenshots before and after mouse drag, wheel and arrow keys, saved to `production/qa/evidence/tm-015/`
-- [ ] Camera angle unchanged after drag, wheel and arrow input
-- [ ] Minimap "up" points the same way as screen up
-- [ ] On Hardened, the minimap still shows patrol cones
+- [x] Camera angle unchanged after drag, wheel and arrow input
+- [x] Minimap "up" points the same way as screen up
+- [x] On Hardened, the minimap still shows patrol cones
+
+QA sign-off (qa-lead, 2026-10-16): TM-015 manual evidence production/qa/evidence/tm-015/ accepted — 1280x720 before/after pairs for drag (01→02), wheel (02→03) and arrows (03→04) show yaw and elevation unchanged (footprint bearings -45/-135 and ratios 1.3675/0.8129 held), with only zoom or pan changing; minimap up matches screen up (01); Hardened is confirmed active (06, vision 12.2 vs 11.2) and the minimap still draws patrol cones after Pulse Scan (05/05b).
 
 ### TM-007 / TM-013 — smoke paths
 - [ ] Brief for a selected contract matches the deployed mission's insertion, objectives, extraction, and weather-front time

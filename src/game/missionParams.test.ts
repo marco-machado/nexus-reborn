@@ -105,6 +105,54 @@ describe('difficulty modifiers', () => {
   })
 })
 
+// TM-015 (TR-tactical-009, ADR-0016, AC 21): Hardened is a discrete profile.
+// Spec literals from the GDD, not the module's own table.
+describe('Hardened profile (TM-015, AC 21)', () => {
+  it('Hardened is +2 patrols, +6 civilians, confirm x1.15, accuracy x1.1, +1 m sight, optional x0.85', () => {
+    expect(DIFFICULTY_FX.hardened).toEqual({
+      extraPatrol: 2,
+      extraCivilians: 6,
+      sightConfirmMul: 1.15,
+      enemyAccMul: 1.1,
+      visionAdd: 1,
+      optFailMul: 0.85,
+    })
+  })
+
+  it('Standard is the authored baseline: no extras, every multiplier 1', () => {
+    expect(DIFFICULTY_FX.standard).toEqual({
+      extraPatrol: 0,
+      extraCivilians: 0,
+      sightConfirmMul: 1,
+      enemyAccMul: 1,
+      visionAdd: 0,
+      optFailMul: 1,
+    })
+    // An omitted difficulty is Standard.
+    for (const m of MISSIONS) expect(missionMods(m, undefined, 'standard')).toEqual(missionMods(m))
+  })
+
+  it('on one contract, Hardened differs from Standard only in the profile knobs', () => {
+    const m = MISSIONS[1]
+    const std = missionMods(m, undefined, 'standard')
+    const hard = missionMods(m, undefined, 'hardened')
+    expect(hard).toEqual({
+      ...std,
+      enemyExtra: std.enemyExtra + 2,
+      civilianCount: std.civilianCount + 6,
+      sightConfirmMul: 1.15,
+      enemyAccMul: 1.1,
+      visionAdd: 1,
+      optFailMul: 0.85,
+    })
+    // Hollow Crown's 90 s server window tightens to 76.5 s.
+    const failSec = m.objectives.find((o) => o.id === 'hc-opt')?.failSec
+    expect(failSec).toBe(90)
+    expect(failSec! * hard.optFailMul).toBeCloseTo(76.5, 10)
+    expect(failSec! * std.optFailMul).toBe(90)
+  })
+})
+
 describe('weather script', () => {
   it('keeps adjacent steps and treats clearer weather as the worse fight', () => {
     expect(adjacentWeather('heavy')).toEqual(['light'])

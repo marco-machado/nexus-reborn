@@ -1,0 +1,97 @@
+{
+ "steps": [
+  {
+   "label": "before drag",
+   "focus": {
+    "x": 48,
+    "z": 84.5
+   },
+   "rightEdgeDeg": -45,
+   "upDeg": -135,
+   "topOverBottom": 1.3675,
+   "depthOverBottom": 0.8129,
+   "bottomWidthM": 49.1276,
+   "file": "01-hardened-before-drag-1280x720.png"
+  },
+  {
+   "label": "after drag",
+   "focus": {
+    "x": 48,
+    "z": 84.5
+   },
+   "rightEdgeDeg": -45,
+   "upDeg": -135,
+   "topOverBottom": 1.3675,
+   "depthOverBottom": 0.8129,
+   "bottomWidthM": 49.1276,
+   "file": "02-hardened-after-drag-1280x720.png"
+  },
+  {
+   "label": "after wheel out",
+   "focus": {
+    "x": 48,
+    "z": 84.5
+   },
+   "rightEdgeDeg": -45,
+   "upDeg": -135,
+   "topOverBottom": 1.3675,
+   "depthOverBottom": 0.8129,
+   "bottomWidthM": 78.4676,
+   "file": "03-hardened-after-wheel-1280x720.png"
+  },
+  {
+   "label": "after arrows up+right",
+   "focus": {
+    "x": 46.102,
+    "z": 23.7024
+   },
+   "rightEdgeDeg": -45,
+   "upDeg": -135,
+   "topOverBottom": 1.3675,
+   "depthOverBottom": 0.8129,
+   "bottomWidthM": 78.4678,
+   "file": "04-hardened-after-arrows-1280x720.png"
+  },
+  {
+   "label": "pulse scan",
+   "focus": {
+    "x": 46.1021,
+    "z": 23.7023
+   },
+   "rightEdgeDeg": -45,
+   "upDeg": -135,
+   "topOverBottom": 1.3675,
+   "depthOverBottom": 0.8129,
+   "bottomWidthM": 78.4678,
+   "file": "05-hardened-pulse-scan-cones-1280x720.png"
+  }
+ ],
+ "mission": {
+  "codename": "GLASS VEIL",
+  "weather": "heavy",
+  "difficulty": "hardened",
+  "vision": 12.2,
+  "standardVision": 11.2,
+  "enemies": 17,
+  "patrolling": 17,
+  "cameraYawDeg": 45
+ },
+ "scan": {
+  "scanOn": true,
+  "simTime": 9.68,
+  "scanUntil": 16.85,
+  "conesDrawn": 15,
+  "byState": {
+   "patrol": 15
+  }
+ },
+ "hardenedPressed": "true",
+ "viewport": {
+  "width": 1280,
+  "height": 720
+ },
+ "errs": [
+  "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico",
+  "console Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:4200/favicon.ico"
+ ]
+}

@@ -1775,6 +1775,148 @@ describe('hardened difficulty', () => {
   })
 })
 
+// TM-015 (TR-tactical-009, ADR-0016): Hardened is a discrete profile that turns
+// the readable knobs and hides nothing the minimap draws. The minimap reads
+// enemy units (position, heading, aiState) and world.vision; all still flow.
+describe('Hardened keeps minimap data (TM-015, AC 21 / R5-a / R5-b)', () => {
+  const alive = (w: WorldApi, kind: Unit['kind']): Unit[] =>
+    w.units.filter((u) => u.kind === kind && u.stance !== 'dead' && u.hp > 0)
+
+  it('Hardened deploys +2 street patrols and +6 civilians and still emits cones and patrols (AC 21)', () => {
+    const std = spawn(MISSION, ops(['op1']), { mods: missionMods(MISSION, undefined, 'standard') })
+    const stdEnemies = alive(std, 'enemy')
+    const stdCivs = alive(std, 'civilian')
+    const stdVision = std.vision
+    const hard = spawn(MISSION, ops(['op1']), { mods: missionMods(MISSION, undefined, 'hardened') })
+    const hardEnemies = alive(hard, 'enemy')
+    expect(hardEnemies.length - stdEnemies.length).toBe(2)
+    expect(alive(hard, 'civilian').length - stdCivs.length).toBe(6)
+    // Every guard the minimap draws a cone for has a pose and a state.
+    expect(hardEnemies.length).toBeGreaterThan(0)
+    for (const e of hardEnemies) {
+      expect(Number.isFinite(e.pos.x) && Number.isFinite(e.pos.z)).toBe(true)
+      expect(Number.isFinite(e.heading)).toBe(true)
+      expect(e.aiState).toBe('patrol')
+    }
+    // Patrol routes are still there, and more of them than on Standard.
+    const routed = (us: Unit[]): number => us.filter((u) => (u.patrol?.length ?? 0) > 0).length
+    expect(routed(hardEnemies)).toBeGreaterThan(0)
+    expect(routed(hardEnemies)).toBeGreaterThanOrEqual(routed(stdEnemies))
+    // Cone radius: Standard is the authored sight, Hardened +1 m on top.
+    expect(stdVision).toBeCloseTo(ENEMY_VISION * weatherMul(MISSION.weather).visionMul, 10)
+    expect(hard.vision).toBeCloseTo(stdVision + 1, 10)
+  })
+
+  it('Hollow Crown optional window: 90 s on Standard, 76.5 s on Hardened (AC 21)', () => {
+    const HC = MISSIONS[1]
+    expect(HC.codename).toBe('HOLLOW CROWN')
+    // Drop the gate so the server pull is live from the first tick.
+    const timed: MissionDef = { ...HC, objectives: HC.objectives.filter((o) => o.id !== 'hc1') }
+    const opt = timed.objectives.findIndex((o) => o.id === 'hc-opt')
+    expect(timed.objectives[opt].failSec).toBe(90)
+
+    const std = spawn(timed, ops(['op1']), { mods: missionMods(timed, undefined, 'standard') })
+    deployReset()
+    std.tick(STEP)
+    expect(useMissionStore.getState().objectives[opt].timer).toBe('1:30')
+
+    const hard = spawn(timed, ops(['op1']), { mods: missionMods(timed, undefined, 'hardened') })
+    deployReset()
+    hard.tick(STEP)
+    // 90 s * 0.85 = 76.5 s, shown rounded up.
+    expect(90 * missionMods(timed, undefined, 'hardened').optFailMul).toBeCloseTo(76.5, 10)
+    expect(useMissionStore.getState().objectives[opt].timer).toBe('1:17')
+  })
+
+  it('CorpSec HP does not change with sector Control, on Standard or Hardened (R5-a)', () => {
+    const hpOf = (control: number, difficulty: 'standard' | 'hardened'): number[] => {
+      const sector = { control, unrest: 10 }
+      const w = spawn(MISSION, ops(['op1']), {
+        sector,
+        mods: missionMods(MISSION, sector, difficulty),
+      })
+      return alive(w, 'enemy').map((u) => u.maxHp)
+    }
+    for (const difficulty of ['standard', 'hardened'] as const) {
+      const low = hpOf(10, difficulty)
+      const high = hpOf(95, difficulty)
+      expect(low.length).toBeGreaterThan(0)
+      expect(high).toEqual(low)
+    }
+  })
+
+  it('Hardened CorpSec fires with a = 0.495: 31.68% at half range, zero jitter (R5-b)', () => {
+    const mods = missionMods(MISSION, undefined, 'hardened')
+    const a = 0.45 * mods.enemyAccMul
+    expect(a).toBeCloseTo(0.495, 10)
+    expect(hitChance(0.5, 0.5, a)).toBeCloseTo(0.3168, 10)
+    // Standard stays on the authored 0.45.
+    expect(0.45 * missionMods(MISSION, undefined, 'standard').enemyAccMul).toBe(0.45)
+  })
+
+  // Sim-internal certainty one guard builds on a1, which stands `d` metres
+  // away in the middle of its cone, over `sec` seconds of clear sight. The
+  // rest of the garrison is dead, a1 holds fire, and the guard is pinned in
+  // place and facing a1, so sight is the only input to its certainty.
+  function certaintyAfter(mods: ReturnType<typeof missionMods>, d: number, sec: number): number {
+    const w = spawn(BARE_MISSION, ops(['op1']), { mods })
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    w.orderHoldFire(['a1'], true)
+    const g = w.units.find((u) => u.kind === 'enemy' && (u.archetype ?? 'trooper') === 'trooper')!
+    for (const u of w.units) if (u.kind === 'enemy' && u !== g) u.stance = 'dead'
+    g.patrol!.length = 0
+    g.holdGround = true
+    const dirs: Vec2[] = [
+      { x: 1, z: 0 },
+      { x: -1, z: 0 },
+      { x: 0, z: 1 },
+      { x: 0, z: -1 },
+    ]
+    const dir = dirs.find((v) => {
+      const p = { x: a1.pos.x + v.x * d, z: a1.pos.z + v.z * d }
+      return isWalkable(w.city, p.x, p.z) && hasLos(w.city, p, a1.pos)
+    })
+    expect(dir).toBeDefined()
+    g.pos.x = a1.pos.x + dir!.x * d
+    g.pos.z = a1.pos.z + dir!.z * d
+    const sim = g as Unit & { awareness?: number }
+    sim.awareness = 0
+    expect(g.aiState).toBe('patrol')
+    const until = w.time + sec
+    while (w.time < until - 1e-9) {
+      g.heading = Math.atan2(-dir!.x, -dir!.z)
+      g.path.length = 0
+      w.tick(STEP)
+    }
+    expect(g.aiState).not.toBe('combat') // still building, not yet clamped at 1
+    return sim.awareness ?? 0
+  }
+
+  it('Hardened stretches sight-confirm time by ×1.15 in the sim (AC 21)', () => {
+    const std = missionMods(BARE_MISSION, undefined, 'standard')
+    const hard = missionMods(BARE_MISSION, undefined, 'hardened')
+    expect(hard.sightConfirmMul).toBe(1.15)
+    // Hold the sight range at Standard's so only the confirm multiplier
+    // differs: the +1 m vision add-on also moves the near/far blend.
+    const hardConfirmOnly = { ...std, sightConfirmMul: hard.sightConfirmMul }
+    const d = 6
+    const sec = 0.5
+    const stdAware = certaintyAfter(std, d, sec)
+    const hardAware = certaintyAfter(hardConfirmOnly, d, sec)
+    expect(stdAware).toBeGreaterThan(0)
+    // Certainty builds linearly, so time to confirm scales by the inverse.
+    expect(stdAware / hardAware).toBeCloseTo(1.15, 6)
+    // Full Hardened mods are slower still than Standard at the same spot.
+    expect(certaintyAfter(hard, d, sec)).toBeLessThan(stdAware)
+    // Source pin: the multiplier divides the per-second gain.
+    expect(worldSrc).toContain(
+      'return 1 / ((SIGHT_NEAR_T + (SIGHT_FAR_T - SIGHT_NEAR_T) * k) * mods.sightConfirmMul)',
+    )
+  })
+})
+
 describe('scripted playthrough', () => {
   const ALL = ['a1', 'a2', 'a3', 'a4']
 
