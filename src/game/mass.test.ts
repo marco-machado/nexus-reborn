@@ -5,6 +5,7 @@ import {
   HEAVY_MASS_KG,
   ITEM_MASS_KG,
   LIGHT_MASS_KG,
+  LOADOUT_SLOTS,
   MASS_LIMIT_KG,
   TIER_SPEED_DELTA,
   loadoutPools,
@@ -15,6 +16,7 @@ import {
   squadMassKg,
   tierSpeedDelta,
 } from './mass'
+import type { OperativeLoadout, SquadLoadout } from './mass'
 import type { OperativeDef } from './types'
 
 const OP1 = operativeById('op1')
@@ -150,5 +152,61 @@ describe('loadout helpers', () => {
       op5: ['cell', 'cell'],
     })
     expect(pools).toEqual({ med: 2, cell: 1 })
+  })
+})
+
+// Story RA-002: Item-slot and pool mass terms (GDD AC 46, 47, 48, 65).
+describe('item-slot and pool mass terms (TR-roster-001)', () => {
+  // Body, rig, both weapons and plating: everything but the Item slots.
+  function bodyKg(op: OperativeDef): number {
+    return (
+      60 +
+      WEAPONS[op.weapon].massKg +
+      WEAPONS[op.sidearm].massKg +
+      Math.max(0, op.maxHp - 90) * 0.25
+    )
+  }
+
+  it('adds 0 kg for base and role-granted mission pools (AC 46)', () => {
+    // The medic, support and tech roles grant mission pool stock in world.ts;
+    // none of it reaches the kilogram sum.
+    for (const id of ['op6', 'op7', 'op8']) {
+      const op = operativeById(id)
+      expect(operativeMassKg(op, 0, emptyLoadout())).toBeCloseTo(bodyKg(op), 10)
+      const unpooled: OperativeDef = { ...op, role: 'assault' }
+      expect(operativeMassKg(op, 0)).toBeCloseTo(operativeMassKg(unpooled, 0), 10)
+    }
+    // Empty Item slots contribute no pool stock either.
+    expect(loadoutPools(['op6', 'op7', 'op8'].map(operativeById))).toEqual({ med: 0, cell: 0 })
+  })
+
+  it('weighs Item slots at 8m + 6c kg for every m + c <= 2 (AC 47)', () => {
+    const cases: Array<[OperativeLoadout, number, number]> = [
+      [[null, null], 0, 0],
+      [['med', null], 1, 0],
+      [[null, 'cell'], 0, 1],
+      [['med', 'med'], 2, 0],
+      [['med', 'cell'], 1, 1],
+      [['cell', 'cell'], 0, 2],
+    ]
+    for (const [items, m, c] of cases) {
+      expect(operativeMassKg(OP1, 0, items) - bodyKg(OP1)).toBeCloseTo(8 * m + 6 * c, 10)
+    }
+  })
+
+  it('keeps both slots occupied when m + c = 2 and offers no third slot (AC 48)', () => {
+    const full: SquadLoadout = { op1: ['med', 'cell'] }
+    expect(LOADOUT_SLOTS).toBe(2)
+    expect(operativeItems(full, 'op1')).toEqual(['med', 'cell'])
+    expect(loadoutPools([OP1], full)).toEqual({ med: 1, cell: 1 })
+    expect(squadMassKg([OP1], 0, full)).toBeCloseTo(73.9 + 14, 10)
+  })
+
+  it('adds 0 kg and 0 Item-slot pools for an unassigned operative (AC 65)', () => {
+    const squad = ['op1'].map(operativeById)
+    // op7 has a full loadout entry but is not in the squad.
+    const loadout: SquadLoadout = { op1: [null, null], op7: ['med', 'cell'] }
+    expect(squadMassKg(squad, 0, loadout)).toBeCloseTo(73.9, 10)
+    expect(loadoutPools(squad, loadout)).toEqual({ med: 0, cell: 0 })
   })
 })

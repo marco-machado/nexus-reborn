@@ -134,6 +134,15 @@ describe('setLoadout', () => {
     })
   })
 
+  it('fills both slots when m + c = 2 and refuses neither fill (RA-002, AC 48)', () => {
+    useAppStore.getState().setLoadout('op1', 0, 'med')
+    useAppStore.getState().setLoadout('op1', 1, 'med')
+    expect(useAppStore.getState().loadout.op1).toEqual(['med', 'med'])
+    // A third item has no slot to land in; the two filled slots stay put.
+    useAppStore.getState().setLoadout('op1', 2, 'cell')
+    expect(useAppStore.getState().loadout.op1).toEqual(['med', 'med'])
+  })
+
   it('ignores an out-of-range slot index', () => {
     useAppStore.getState().setLoadout('op1', 2, 'med')
     useAppStore.getState().setLoadout('op1', -1, 'med')
