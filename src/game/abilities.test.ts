@@ -158,6 +158,9 @@ describe('role kits (RA-011)', () => {
     const dup = hireRole(base.role)
     const squad = [base, dup, ROSTER[7]]
     const mission = MISSIONS[0]
+    // Clear rows another test may have left, so only this world's sync is read.
+    useMissionStore.getState().reset()
+    expect(useMissionStore.getState().squad).toEqual([])
     const world = createWorld(mission, squad, headlessDeploy(mission, squad))
     world.tick(0.05)
     const rows = useMissionStore.getState().squad

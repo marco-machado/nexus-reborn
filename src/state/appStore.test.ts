@@ -35,6 +35,8 @@ import { freezeDeploy } from './deployFreeze'
 import { createWorld } from '../game/world'
 import { useMissionStore } from './missionStore'
 import { abortMission, composeMission, teardownMission } from './missionLifecycle'
+import { useSettingsStore } from './settingsStore'
+import { loadRecords } from './telemetry'
 import { getWorld, setWorld } from '../game/runtime'
 import { visibleContracts } from '../game/contracts'
 
@@ -3217,6 +3219,37 @@ describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
     // Nothing applies afterwards either: there is no outcome to apply.
     applyDebrief(MISSION_ID)
     expect(rosterState()).toEqual(R)
+  })
+
+  it('Abort appends one telemetry abort row with the mission id, time, seed and squad roles', () => {
+    const mem = new Map<string, string>()
+    const storage = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    }
+    vi.stubGlobal('window', { localStorage: storage })
+    const telemetryBefore = useSettingsStore.getState().telemetry
+    useSettingsStore.setState({ telemetry: true })
+    try {
+      const { world } = deploy(['op1', 'op3'])
+      for (let i = 0; i < 20; i++) world.tick(0.05)
+      const time = world.time
+      expect(time).toBeGreaterThan(0)
+      confirmAbort()
+      const rows = loadRecords(storage)
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({
+        missionId: MISSION_ID,
+        outcome: 'aborted',
+        durationSec: time,
+        seed: BARE.seed,
+        squadRoles: ['assault', 'infiltrator'],
+      })
+    } finally {
+      useSettingsStore.setState({ telemetry: telemetryBefore })
+      vi.unstubAllGlobals()
+    }
   })
 
   it('AC 2: the same outcome applied twice writes KIA, injury and Experience once', () => {
