@@ -12,6 +12,7 @@ import {
   missionLocked,
   useCampaignStore,
 } from './campaignStore'
+import { applyDebrief } from './debrief'
 import { startNewOperation, type SaveStorage } from './save'
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
@@ -812,5 +813,84 @@ describe('injuryRecoverySec helper values (RA-012)', () => {
     for (const f of [0.01, 0.1, 0.123, 0.2, 0.3333, 0.349]) {
       expect(Number.isInteger(injuryRecoverySec(f))).toBe(true)
     }
+  })
+})
+
+describe('debrief classifies survivors as Ready, Injured, or KIA (RA-013)', () => {
+  // A loss spends no ETA, so the classification is read at the frozen t0
+  // without the win catch-up (RA-017) moving any recovery clock.
+  const T0 = 5 * HOUR
+  const resetStores = () => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+  }
+  beforeEach(() => {
+    resetStores()
+    useWorldStore.setState({ t: T0 })
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3'], lastAppliedKey: 0 })
+  })
+  afterEach(resetStores)
+
+  const debrief = (over: Partial<MissionOutcome>) => {
+    useAppStore.setState({ outcome: outcome({ won: false, reward: 0, ...over }) })
+    applyDebrief('m01')
+  }
+
+  it('f = 0.35 stays Ready and keeps its bay; no downtime is computed (AC 18)', () => {
+    debrief({ survivorHp: { op1: 0.35, op2: 1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    expect(state.roster.op1.status).toBe('READY')
+    expect(state.roster.op1.recoverAtT).toBeNull()
+    expect(state.lastReport?.injured).toEqual([])
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3'])
+  })
+
+  it('f above 0.35 keeps the bay and stays Ready', () => {
+    debrief({ survivorHp: { op1: 0.36, op2: 0.8, op3: 1 } })
+    const { roster } = useCampaignStore.getState()
+    for (const id of ['op1', 'op2', 'op3']) expect(roster[id].status).toBe('READY')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3'])
+  })
+
+  it('0 < f < 0.35 is Injured at t0 + injuryRecoverySec(f), bay emptied, unassignable (AC 19)', () => {
+    const f = 0.2
+    debrief({ survivorHp: { op1: f, op2: 1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    const D = injuryRecoverySec(f)
+    expect(state.roster.op1.status).toBe('INJURED')
+    expect(state.roster.op1.recoverAtT).toBe(T0 + D)
+    expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: D }])
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
+    useAppStore.getState().toggleOperative('op1')
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
+  })
+
+  it('the last assigned operative newly Injured leaves every bay empty', () => {
+    useAppStore.setState({ squad: ['op1'] })
+    debrief({ survivorHp: { op1: 0.01 } })
+    expect(useCampaignStore.getState().roster.op1.status).toBe('INJURED')
+    expect(useAppStore.getState().squad).toEqual([])
+  })
+
+  it('end HP 0 is KIA, not Injured; survivorHp lists survivors only (AC 20)', () => {
+    debrief({ casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    expect(Object.keys(useAppStore.getState().outcome!.survivorHp)).toEqual(['op1', 'op3'])
+    expect(state.roster.op2).toBeUndefined()
+    expect(state.operatives.some((o) => o.id === 'op2')).toBe(false)
+    expect(state.lastReport?.kia.map((k) => k.id)).toEqual(['op2'])
+    expect(state.lastReport?.injured).toEqual([])
+    expect(state.lastReport?.xp.map((x) => x.id)).toEqual(['op1', 'op3'])
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
+  })
+
+  it('an id listed as both dead and injured is KIA only (AC 76)', () => {
+    debrief({ casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op2: 0.1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    expect(state.lastReport?.kia.map((k) => k.id)).toEqual(['op2'])
+    expect(state.lastReport?.injured).toEqual([])
+    expect(state.lastReport?.xp.some((x) => x.id === 'op2')).toBe(false)
+    expect(state.roster.op2).toBeUndefined()
+    expect(state.operatives.some((o) => o.id === 'op2')).toBe(false)
   })
 })

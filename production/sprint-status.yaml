@@ -102,11 +102,11 @@ stories:
     name: "Debrief classifies survivors as Ready, Injured, or KIA"
     file: "production/epics/roster-and-assembly/story-013-debrief-ready-injured-or-kia-by-end-hp.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-014"
     name: "KIA removes the operative from the living roster"
     file: "production/epics/roster-and-assembly/story-014-kia-removes-from-living-roster.md"
