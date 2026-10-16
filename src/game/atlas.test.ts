@@ -61,9 +61,9 @@ describe('sectors', () => {
     for (const s of SECTORS) expect(sectorDef(s.id)).toBe(s)
   })
 
-  it('opens exactly the unlocked sectors', () => {
-    expect(OPEN_SECTORS).toEqual(SECTORS.filter((s) => !s.locked).map((s) => s.id))
-    expect(OPEN_SECTORS).not.toContain('an')
+  it('opens exactly the six sectors, Antarctica locked (world-network.md rule 5)', () => {
+    expect(OPEN_SECTORS).toEqual(['na', 'sa', 'eu', 'af', 'as', 'oc'])
+    expect(sectorDef('an').locked).toBe(true)
   })
 
   it('keeps the numbers in range', () => {
