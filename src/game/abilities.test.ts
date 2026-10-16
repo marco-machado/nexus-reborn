@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES, SUPPRESS_LINGER, operativeKit } from './abilities'
 import { MISSIONS, ROSTER } from './data'
 import { headlessDeploy } from './deploy'
+import { useMissionStore } from '../state/missionStore'
+import { createWorld } from './world'
 import { candidateToOperative, rollCandidate } from './recruits'
 import type { AgentRole, OperativeDef } from './types'
 
@@ -86,38 +88,94 @@ describe('role kits (RA-011)', () => {
     }
   })
 
-  it('resolves each assigned operative kit from its definition role through the deploy inputs (AC 43)', () => {
-    const mission = MISSIONS[0]
-    const operatives = ROSTER.slice(0, 4)
-    const deploy = headlessDeploy(mission, operatives)
+  // Ids are not in the GDD or game-design §8 (names only); these literals are
+  // copied from the current ROLE_ABILITIES data and pinned here on purpose.
+  const IDS: Record<AgentRole, { active: string; passive: string }> = {
+    assault: { active: 'overdrive', passive: 'combat-drills' },
+    recon: { active: 'pulse-scan', passive: 'sensor-mesh' },
+    infiltrator: { active: 'ghost-veil', passive: 'low-profile' },
+    demolitions: { active: 'frag-charge', passive: 'blast-plating' },
+    sniper: { active: 'deadeye', passive: 'match-optics' },
+    tech: { active: 'em-burst', passive: 'ops-uplink' },
+    support: { active: 'suppression-sweep', passive: 'ammo-discipline' },
+    medic: { active: 'field-stim', passive: 'field-triage' },
+  }
+  const ids = (kit: { active: { id: string }; passive: { id: string } }) => ({
+    active: kit.active.id,
+    passive: kit.passive.id,
+  })
+  // Test-local hire of the first recruit whose role matches, walking the
+  // deterministic recruit cursor.
+  const hireRole = (role: AgentRole): OperativeDef => {
+    let state = 1
+    for (let i = 0; i < 500; i++) {
+      const rolled = rollCandidate(state)
+      state = rolled.state
+      if (rolled.candidate.role === role) return candidateToOperative(rolled.candidate)
+    }
+    throw new Error('no recruit rolled for ' + role)
+  }
+
+  it('pins literal ids for all 8 roles and 8 distinct active ids', () => {
+    expect(ROSTER.map((o) => o.role).sort()).toEqual(Object.keys(IDS).sort())
+    for (const role of ROLES) expect(ids(ROLE_ABILITIES[role])).toEqual(IDS[role])
+    const actives = Object.values(IDS).map((k) => k.active)
+    expect(actives).toHaveLength(8)
+    expect(new Set(actives).size).toBe(8)
+  })
+
+  it('resolves every ROSTER operative to its literal kit through the deploy inputs (AC 43)', () => {
+    const deploy = headlessDeploy(MISSIONS[0], ROSTER.slice(0, 4))
     // The Roster slice carries no kit fields; the kit comes from the definition.
     expect(Object.keys(deploy.roster)).not.toContain('active')
     expect(Object.keys(deploy.roster)).not.toContain('passive')
     expect(Object.keys(deploy.roster)).not.toContain('kits')
-    expect(deploy.roster.ids).toEqual(['op1', 'op2', 'op3', 'op4'])
-    // Mara assault, Ghost recon, Dart infiltrator, Torq demolitions (§8 roster).
-    const resolved = deploy.roster.ids.map((id) =>
-      names(operativeKit(operatives.find((o) => o.id === id) as OperativeDef)).active,
-    )
-    expect(resolved).toEqual(['OVERDRIVE', 'PULSE SCAN', 'GHOST VEIL', 'FRAG CHARGE'])
+    expect(ROSTER).toHaveLength(8)
+    for (const op of ROSTER) {
+      expect(ids(operativeKit(op))).toEqual(IDS[op.role])
+      expect(names(operativeKit(op))).toEqual(KITS[op.role])
+    }
   })
 
-  it('resolves a hired duplicate-role operative to the same canonical kit', () => {
+  it('resolves from role, ignoring a stale or misleading extra field', () => {
+    const medic = ROSTER.find((o) => o.role === 'medic') as OperativeDef
+    const assault = ROSTER.find((o) => o.role === 'assault') as OperativeDef
+    const stale = { ...assault, role: 'medic' as const, kit: ROLE_ABILITIES.assault, active: 'overdrive' }
+    expect(ids(operativeKit(stale))).toEqual(IDS.medic)
+    expect(ids(operativeKit({ ...medic, kit: ROLE_ABILITIES.assault } as OperativeDef))).toEqual(IDS.medic)
+  })
+
+  it('resolves a hired duplicate-role operative to the literal kit of its role', () => {
     const base = ROSTER[0]
-    // Walk the deterministic recruit cursor until it offers the same role.
-    let state = 1
-    let hired: OperativeDef | undefined
-    for (let i = 0; i < 200 && !hired; i++) {
-      const rolled = rollCandidate(state)
-      state = rolled.state
-      if (rolled.candidate.role === base.role) hired = candidateToOperative(rolled.candidate)
-    }
-    expect(hired).toBeDefined()
-    const dup = hired as OperativeDef
+    const dup = hireRole(base.role)
     expect(dup.id).not.toBe(base.id)
-    const deploy = headlessDeploy(MISSIONS[0], [base, dup])
-    expect(deploy.roster.ids).toEqual([base.id, dup.id])
-    expect(operativeKit(dup)).toBe(operativeKit(base))
-    expect(names(operativeKit(dup))).toEqual(KITS.assault)
+    expect(ids(operativeKit(dup))).toEqual(IDS.assault)
+    expect(ids(operativeKit(base))).toEqual(IDS.assault)
+  })
+
+  it('carries the literal kit onto both duplicate-role agents in the created world squad rows', () => {
+    const base = ROSTER[0]
+    const dup = hireRole(base.role)
+    const squad = [base, dup, ROSTER[7]]
+    const mission = MISSIONS[0]
+    const world = createWorld(mission, squad, headlessDeploy(mission, squad))
+    world.tick(0.05)
+    const rows = useMissionStore.getState().squad
+    expect(rows).toHaveLength(3)
+    // Rows expose the active name only; map it back through the pinned literals.
+    const idByName = new Map(ROLES.map((r) => [KITS[r].active, IDS[r].active]))
+    expect(rows.map((r) => idByName.get(r.abilityName))).toEqual([
+      IDS.assault.active,
+      IDS.assault.active,
+      IDS.medic.active,
+    ])
+    expect(rows.map((r) => r.codename)).toEqual([base.codename, dup.codename, ROSTER[7].codename])
+    for (const row of rows) {
+      const unit = world.unit(row.unitId)
+      expect(unit?.operative).toBeDefined()
+      expect(ids(operativeKit(unit?.operative as OperativeDef))).toEqual(
+        IDS[(unit?.operative as OperativeDef).role],
+      )
+    }
   })
 })
