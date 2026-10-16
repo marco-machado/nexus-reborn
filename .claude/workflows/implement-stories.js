@@ -6,7 +6,7 @@ export const meta = {
     { title: 'Plan', detail: 'clean-tree check; open stories from sprint-status.yaml in order' },
     { title: 'Readiness', detail: '/story-readiness' },
     { title: 'Implement', detail: '/dev-story' },
-    { title: 'Review', detail: '/code-review, one fix pass and a re-review on blocking findings' },
+    { title: 'Review', detail: 'specialist agents, then /code-review; one fix pass and a re-review on blocking findings' },
     { title: 'Done', detail: '/story-done' },
     { title: 'Commit', detail: 'one commit per completed story' },
     { title: 'Finish', detail: 'confirm no dev server is left on port 4200' },
@@ -97,6 +97,40 @@ const PORT = {
   required: ['free', 'summary'],
 }
 
+const SPECIALIST = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string' },
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          file: { type: 'string' },
+          line: { type: 'number' },
+          severity: { type: 'string', enum: ['blocking', 'advisory'] },
+          claim: { type: 'string' },
+          evidence: { type: 'string' },
+        },
+        required: ['file', 'line', 'severity', 'claim', 'evidence'],
+      },
+    },
+  },
+  required: ['summary', 'findings'],
+}
+
+// The code-review skill's Phase 7 specialists, from project.yaml `specialists`:
+// code → lead-programmer, ui → ui-programmer, shader → technical-artist,
+// additional → gameplay-programmer (simulation code), plus qa-tester for
+// testability. Engine "Web" has no primary <engine>-specialist.
+function specialistsFor(files) {
+  const team = ['lead-programmer', 'qa-tester']
+  if (files.some((f) => f.startsWith('src/ui/') || f.endsWith('.tsx'))) team.push('ui-programmer')
+  if (files.some((f) => f.startsWith('src/game/'))) team.push('gameplay-programmer')
+  if (files.some((f) => /\.(glsl|wgsl|frag|vert)$/.test(f) || /^src\/scene\/.*(shader|material)/i.test(f))) team.push('technical-artist')
+  return team
+}
+
 const opts = args ?? {}
 const commit = opts.commit ?? true
 
@@ -164,11 +198,30 @@ Before returning, ${VERIFY}; ok=true only if all three pass. Stop any dev server
   if (!built.files.length) { stopAt(record, 'implement', built, ['dev-story reported no changed files to review']); break }
   let files = built.files
 
-  const reviewStory = (label) => agent(
-    `Invoke the code-review skill (Skill tool) with arguments: ${files.join(' ')} ${story}. ${HEADLESS}
+  // Workflow subagents have no Agent tool, so /code-review cannot spawn its
+  // Phase 7 specialists itself. Run them here as their own agent types and
+  // hand their findings to the review agent.
+  const reviewStory = async (label) => {
+    const team = specialistsFor(files)
+    const found = await parallel(team.map((type) => () => agent(
+      `You are the ${type} specialist for the /code-review of ${story}. Review these files: ${files.join(' ')}.
+${type === 'qa-tester'
+  ? `Read the story's ## Acceptance Criteria and ## QA Test Cases. Check: every AC maps to a test that can fail when the code is wrong (no tautologies: asserting a constant against itself, recomputing the formula in the test, asserting only what the test set up); test hooks are exposed; no AC is untestable as implemented; new edge cases the QA cases miss; side effects that should have a test. For a UI story, check that the manual verification state is reachable.`
+  : `Review from your specialty: correctness, the story's ADRs and the CLAUDE.md guardrails (per-frame data out of React state, deterministic RNG, CONTRACT FILE headers, layer boundaries), standards and architecture.`}
+Do not edit any file. Every finding must give file, line and evidence (quoted code, or the concrete input that triggers it). Report nothing you cannot point to.`,
+      { phase: 'Review', schema: SPECIALIST, agentType: type, label: `${label}:${type}:${name}` },
+    ).then((r) => r && { ...r, specialist: type })))
+    const ran = found.filter(Boolean)
+    const missing = team.filter((t) => !ran.some((r) => r.specialist === t))
+    return agent(
+      `Invoke the code-review skill (Skill tool) with arguments: ${files.join(' ')} ${story}. ${HEADLESS}
+Phase 7 specialists already ran in this workflow as their own agents; do not try to spawn them. Use their findings below as the Phase 7 results, and verify each one as the skill requires (VERIFIED or UNVERIFIED).
+${ran.length ? ran.map((r) => `### ${r.specialist}: ${r.summary}\n${r.findings.map((f) => `- ${f.file}:${f.line} [${f.severity}] ${f.claim} — evidence: ${f.evidence}`).join('\n') || '- no findings'}`).join('\n\n') : '(none ran)'}
+${missing.length ? `These specialists did not return, so the verdict is NOT ASSESSED; name them: ${missing.join(', ')}.` : ''}
 Do not edit files. Classify each finding as blocking (bug, broken acceptance criterion, CLAUDE.md guardrail breach) or advisory.`,
-    { phase: 'Review', schema: REVIEW, label: `${label}:${name}` },
-  )
+      { phase: 'Review', schema: REVIEW, label: `${label}:${name}` },
+    )
+  }
 
   let review = await reviewStory('review')
   record.steps.review = review
