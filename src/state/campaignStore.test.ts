@@ -629,3 +629,77 @@ describe('campaign complete from the three authored wins (EC-021)', () => {
     }
   })
 })
+
+// RA-008 (TR-roster-001, GDD AC 5/6/17/75): Assembly edits go through
+// appStore.toggleOperative only; the dossier focus is TeamSelect-local view
+// state (src/ui/index.tsx row body → setFocusId) and never writes the squad.
+describe('Assembly assign and unassign edits (RA-008)', () => {
+  beforeEach(() => {
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3'] })
+  })
+
+  it('focusing a dossier without an assign action leaves the assigned set unchanged (AC 5)', () => {
+    const before = [...useAppStore.getState().squad]
+    // What the dossier focus reads: live operative lookups and roster entries.
+    for (const o of useCampaignStore.getState().operatives) {
+      liveOperativeById(o.id)
+      void useCampaignStore.getState().roster[o.id]
+    }
+    expect(useAppStore.getState().squad).toEqual(before)
+    // The store exposes no focus action that could write the squad.
+    expect(Object.keys(useAppStore.getState()).some((k) => /focus/i.test(k))).toBe(false)
+  })
+
+  it('refuses to unassign the only assigned operative, who stays assigned (AC 6)', () => {
+    useAppStore.setState({ squad: ['op2'] })
+    useAppStore.getState().toggleOperative('op2')
+    expect(useAppStore.getState().squad).toEqual(['op2'])
+  })
+
+  it('unassigns one of two assigned operatives', () => {
+    useAppStore.setState({ squad: ['op1', 'op2'] })
+    useAppStore.getState().toggleOperative('op1')
+    expect(useAppStore.getState().squad).toEqual(['op2'])
+  })
+
+  it('refuses an assign that would exceed four (AC 75)', () => {
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3', 'op4'] })
+    useAppStore.getState().toggleOperative('op6')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3', 'op4'])
+  })
+
+  it('never assigns the same operative twice (AC 75)', () => {
+    useAppStore.getState().toggleOperative('op6')
+    useAppStore.getState().toggleOperative('op6')
+    useAppStore.getState().toggleOperative('op6')
+    const squad = useAppStore.getState().squad
+    expect(squad.filter((id) => id === 'op6')).toHaveLength(1)
+    expect(new Set(squad).size).toBe(squad.length)
+  })
+
+  it('refuses to assign an Injured operative (AC 75)', () => {
+    expect(useCampaignStore.getState().roster.op5.status).toBe('INJURED')
+    useAppStore.getState().toggleOperative('op5')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3'])
+  })
+
+  it('refuses to assign a KIA operative (AC 17, AC 75)', () => {
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ casualties: 1, deadIds: ['op6'] }), 0)
+    expect(useCampaignStore.getState().roster.op6).toBeUndefined()
+    useAppStore.getState().toggleOperative('op6')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op2', 'op3'])
+  })
+
+  it('assigns a Ready operative into an empty bay after a KIA wipe', () => {
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'] }), 0)
+    useAppStore.setState({ squad: [] })
+    useAppStore.getState().toggleOperative('op1')
+    expect(useAppStore.getState().squad).toEqual([])
+    useAppStore.getState().toggleOperative('op7')
+    expect(useAppStore.getState().squad).toEqual(['op7'])
+  })
+})
