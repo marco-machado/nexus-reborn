@@ -4,6 +4,9 @@ import { CITY_SIZE } from '../game/types'
 import { MISSIONS } from '../game/data'
 import { findPath, hasLos } from '../game/pathfind'
 import { generateCity } from './citygen'
+import { contractMission } from '../game/contracts'
+import type { GeneratedContract } from '../game/contracts'
+import { defaultDistrict } from '../game/missionParams'
 
 function makeMission(seed: number): MissionDef {
   return {
@@ -283,5 +286,73 @@ describe('checkpoint crowd', () => {
       const queued = city.civilians.filter((c) => c.x >= 45 && c.x < 52 && c.z > gate.z && c.z < gate.z + 10)
       expect(queued.length, `seed ${seed}`).toBeGreaterThanOrEqual(Math.floor(22 / 3))
     }
+  })
+})
+
+// TM-007 (Sprint 8, story 007; TR-tactical-001 / 007, ADR-0006 / 0007): one
+// mission seed builds the district, the weather script and the Opening hour.
+// Each build starts from a fresh contract record so the contractMission cache
+// cannot hand back the first build's object.
+describe('same seed builds the same mission (TM-007, AC 7 / R5-a)', () => {
+  function record(seed: number): GeneratedContract {
+    return {
+      id: 'gc-tm007-' + seed,
+      createdT: 0,
+      expiresAtT: 86400,
+      sector: 'eu',
+      cityId: 'ln',
+      district: 7,
+      type: 'SEIZURE',
+      client: 'omni',
+      threat: 'HIGH',
+      reward: 50000,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  function build(seed: number) {
+    const mission = contractMission(record(seed))
+    const city = generateCity(mission, defaultDistrict(mission))
+    return { mission, city }
+  }
+
+  // Equal district: walk grid, road rects, buildings, spawns, enemies with
+  // their patrols, civilians, landmarks and extraction.
+  function district(city: CityData) {
+    return {
+      walk: Array.from(city.walk),
+      roadRects: city.roadRects,
+      buildings: city.buildings,
+      spawnAgents: city.spawnAgents,
+      enemies: city.enemies,
+      civilians: city.civilians,
+      landmarks: city.landmarks,
+      extraction: city.extraction,
+    }
+  }
+
+  it.each([12345, 777, 0x9e3779b9])(
+    'seed %i: two builds give the same district, weather script and Opening hour (AC 7)',
+    (seed) => {
+      const a = build(seed)
+      const b = build(seed)
+      expect(a.mission).not.toBe(b.mission)
+      expect(district(b.city)).toEqual(district(a.city))
+      expect(b.mission.weather).toBe(a.mission.weather)
+      expect(b.mission.weatherFront).toEqual(a.mission.weatherFront)
+      expect(b.mission.openingHour).toBe(a.mission.openingHour)
+      expect(b.mission.objectives).toEqual(a.mission.objectives)
+    },
+  )
+
+  it('two different seeds build different districts (R5-a)', () => {
+    const a = build(12345)
+    const b = build(777)
+    const sameWalk = firstWalkDiff(a.city.walk, b.city.walk) === -1
+    const sameRoads = JSON.stringify(a.city.roadRects) === JSON.stringify(b.city.roadRects)
+    expect(sameWalk && sameRoads).toBe(false)
+    expect(district(b.city)).not.toEqual(district(a.city))
   })
 })

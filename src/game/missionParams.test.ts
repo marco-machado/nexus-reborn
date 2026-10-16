@@ -1,5 +1,12 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_SQUAD, MISSIONS, operativeById } from './data'
+import type { MissionDef } from './types'
+import { createWorld } from './world'
+import { contractMission } from './contracts'
+import type { ContractType, GeneratedContract } from './contracts'
+import { buildTacticalMap } from '../ui/briefMap'
+import { useMissionStore } from '../state/missionStore'
+import { useSettingsStore } from '../state/settingsStore'
 import { freezeDeploy } from '../state/deployFreeze'
 import { useWorldStore } from '../state/worldStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
@@ -19,10 +26,12 @@ import {
   clearerWeather,
   clearWeatherNote,
   difficultyNote,
+  formatClock,
   missionChance,
   missionClockAt,
   missionMods,
   missionPeriod,
+  missionVariant,
   riskWeather,
   rollOpeningHour,
   rollWeatherFront,
@@ -282,5 +291,183 @@ describe('chance reads the full completed program (RS-020)', () => {
     const before = missionChance(mission, mods, 0)
     const after = missionChance(mission, mods, useResearchStore.getState().done.length)
     expect(after).toBeGreaterThan(before)
+  })
+})
+
+// TM-007 (Sprint 8, story 007; TR-tactical-001 / 003 / 007, ADR-0006 / 0007):
+// the brief and the deployed mission are built from one seed and must agree.
+// The brief side mirrors MissionBrief (ui/index.tsx): variant from
+// contractsWon, mods from the live sector and difficulty, then
+// buildTacticalMap. The deploy side is the real path: freezeDeploy then
+// createWorld, read back through the world and the mission store the HUD reads.
+describe('brief and deploy agree (TM-007, AC 8 / R5-b / R5-c)', () => {
+  const squad = DEFAULT_SQUAD.map(operativeById)
+  const STEP = 0.05
+
+  function record(type: ContractType, seed: number): GeneratedContract {
+    return {
+      id: 'gc-tm007-' + type.toLowerCase() + '-' + seed,
+      createdT: 0,
+      expiresAtT: 86400,
+      sector: 'eu',
+      cityId: 'ln',
+      district: 7,
+      type,
+      client: 'omni',
+      threat: 'HIGH',
+      reward: 50000,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  // Authored missions plus generated contracts across the four types. Seeds
+  // are fixed; the case list is checked below to hold at least one front.
+  const CASES: MissionDef[] = [
+    ...MISSIONS,
+    ...(['SEIZURE', 'SUPPRESSION', 'EXTRACTION', 'SABOTAGE'] as ContractType[]).flatMap((t) =>
+      [11, 4242, 90001].map((seed) => contractMission(record(t, seed))),
+    ),
+  ]
+
+  function setSector(m: MissionDef, unrest: number): void {
+    useWorldStore.setState({
+      sectors: { ...useWorldStore.getState().sectors, [m.sector]: { control: 50, unrest } },
+    })
+  }
+
+  function brief(m: MissionDef) {
+    const sectors = useWorldStore.getState().sectors
+    const won = useCampaignStore.getState().contractsWon
+    const difficulty = useSettingsStore.getState().difficulty
+    const spec = missionVariant(m, won.includes(m.id))
+    const mods = missionMods(m, sectors[m.sector], difficulty)
+    const tac = buildTacticalMap(m, spec, {
+      enemyExtra: mods.enemyExtra,
+      civilianCount: mods.civilianCount,
+      officerCount: mods.officerCount,
+      heavyCount: mods.heavyCount,
+    })
+    return {
+      tac,
+      force: tac.counts.patrols + tac.counts.garrison,
+      civilians: tac.counts.civilians,
+      objectives: m.objectives.map((o) => o.id),
+      requiredFirst: m.objectives.find((o) => !o.optional)?.id,
+      opening: formatClock(m.openingHour ?? MISSION_CLOCK_BASE),
+      front: m.weatherFront
+        ? { to: m.weatherFront.to, at: missionClockAt(m.weatherFront.atSec, m.openingHour) }
+        : null,
+      label: weatherBriefLabel(m),
+    }
+  }
+
+  function deploy(m: MissionDef) {
+    const w = createWorld(m, squad, freezeDeploy(m, squad, 1))
+    const atCreate = {
+      force: w.units.filter((u) => u.kind === 'enemy').length,
+      civilians: w.units.filter((u) => u.kind === 'civilian').length,
+      insertion: { x: w.unit('a1')!.pos.x, z: w.unit('a1')!.pos.z },
+      extraction: { x: w.city.extraction.x, z: w.city.extraction.z },
+    }
+    // MissionScreen resets the store right after createWorld; the first tick
+    // runs startup(), which publishes objectives and the clock.
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+    w.tick(STEP)
+    const store = useMissionStore.getState()
+    const objectives = store.objectives.map((o) => o.id)
+    const active = store.objectives.filter((o) => o.active && !o.optional).map((o) => o.id)
+    const clockAtStart = store.clock
+    let front: { to: string; at: string } | null = null
+    if (m.weatherFront) {
+      const opening0 = w.weather
+      while (w.weather === opening0 && w.time < m.weatherFront.atSec + 5) w.tick(STEP)
+      const line = useMissionStore
+        .getState()
+        .log.filter((e) => e.msg.startsWith('WEATHER FRONT'))
+        .at(-1)
+      front = { to: w.weather, at: line?.t ?? '' }
+    }
+    return { ...atCreate, objectives, active, clockAtStart, front }
+  }
+
+  beforeEach(() => {
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({ done: [] })
+    useAppStore.setState({ loadout: {} })
+    useSettingsStore.setState({ difficulty: 'standard' })
+  })
+
+  afterEach(() => {
+    useSettingsStore.setState({ difficulty: 'standard' })
+    useMissionStore.getState().reset()
+  })
+
+  it('the case list includes a weather front and a front-free mission', () => {
+    expect(CASES.some((m) => m.weatherFront)).toBe(true)
+    expect(CASES.some((m) => !m.weatherFront)).toBe(true)
+  })
+
+  it.each(CASES.map((m) => [m.id, m] as const))(
+    '%s: insertion, objectives, extraction, counts, Opening hour and front agree (AC 8)',
+    (_id, m) => {
+      setSector(m, 10)
+      const b = brief(m)
+      const d = deploy(m)
+      // Insertion and extraction: the plotted points are the deployed ones.
+      // Spawns snap to the nearest walkable cell, which a brief point already is.
+      expect(d.insertion).toEqual(b.tac.insertion)
+      expect(d.extraction).toEqual(b.tac.extraction)
+      // Sequential objectives: same ids in the same order, and the deployed
+      // mission opens on the brief's first required objective.
+      expect(d.objectives).toEqual(b.objectives)
+      expect(d.active).toEqual(b.requiredFirst ? [b.requiredFirst] : [])
+      // Force and civilian counts.
+      expect(d.force).toBe(b.force)
+      expect(d.civilians).toBe(b.civilians)
+      // Opening hour: the HUD clock at the first tick reads the brief's hour.
+      expect(d.clockAtStart).toBe(b.opening)
+      expect(b.label).toContain(b.front ? b.front.at : b.opening)
+      // Weather front: same target intensity, logged at the brief's clock time.
+      expect(d.front).toEqual(b.front)
+    },
+  )
+
+  it('unrest above 20 adds 6 civilians and 1 street patrol in both brief and deploy (R5-b)', () => {
+    const m = CASES.find((c) => c.id.startsWith('gc-tm007-seizure'))!
+    setSector(m, 10)
+    const calmB = brief(m)
+    const calmD = deploy(m)
+    setSector(m, 25)
+    const hotB = brief(m)
+    const hotD = deploy(m)
+    expect(hotB.civilians - calmB.civilians).toBe(6)
+    expect(hotB.force - calmB.force).toBe(1)
+    expect(hotD.civilians - calmD.civilians).toBe(6)
+    expect(hotD.force - calmD.force).toBe(1)
+    expect(hotD.civilians).toBe(hotB.civilians)
+    expect(hotD.force).toBe(hotB.force)
+  })
+
+  it('Hardened adds its street patrols and civilians in both brief and deploy (R5-c)', () => {
+    const m = MISSIONS[0]
+    setSector(m, 10)
+    const stdB = brief(m)
+    const stdD = deploy(m)
+    useSettingsStore.setState({ difficulty: 'hardened' })
+    const hardB = brief(m)
+    const hardD = deploy(m)
+    const fx = DIFFICULTY_FX.hardened
+    expect(fx.extraPatrol).toBeGreaterThan(0)
+    expect(fx.extraCivilians).toBeGreaterThan(0)
+    expect(hardB.force - stdB.force).toBe(fx.extraPatrol)
+    expect(hardB.civilians - stdB.civilians).toBe(fx.extraCivilians)
+    expect(hardD.force - stdD.force).toBe(fx.extraPatrol)
+    expect(hardD.civilians - stdD.civilians).toBe(fx.extraCivilians)
+    expect(hardD.force).toBe(hardB.force)
+    expect(hardD.civilians).toBe(hardB.civilians)
   })
 })

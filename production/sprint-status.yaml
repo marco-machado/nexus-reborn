@@ -75,11 +75,11 @@ stories:
     name: "Same seed builds the same mission; brief and deploy agree"
     file: "production/epics/tactical-mission/story-007-same-seed-same-mission-and-brief-agrees.md"
     priority: must-have
-    status: in-progress
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-008"
     name: "Weather retunes CorpSec sight and weapon noise only"
     file: "production/epics/tactical-mission/story-008-weather-retunes-sight-and-noise-only.md"
