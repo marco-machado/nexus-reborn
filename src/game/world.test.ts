@@ -4422,3 +4422,152 @@ describe('deploy freeze: quiet replay outcome and the frozen slices (TM-014, AC 
     expect(deploy.research).not.toContain('b-propellants')
   })
 })
+
+// TM-016 (Sprint 8, story 016; ADR-0016, TR-tactical-002): a confirmed grenade
+// spends exactly one power cell and resolves the blast on LOS only; a refused
+// throw (no cell, cooldown running, out of range) spends nothing.
+describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => {
+  const TOUGH = 100000
+
+  function setup(squad: string[]) {
+    const w = spawn(BARE_MISSION, ops(squad))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')!
+    // Keep the thrower alive and out of every blast under test.
+    a1.hp = TOUGH
+    a1.maxHp = TOUGH
+    return { w, a1 }
+  }
+
+  // Parks a hold-ground civilian at `at`, the rest dead, so damage is readable.
+  function probe(w: WorldApi, at: Vec2) {
+    const civs = w.units.filter((u) => u.kind === 'civilian')
+    expect(civs.length).toBeGreaterThan(0)
+    civs.slice(1).forEach((c) => (c.stance = 'dead'))
+    const c = civs[0]
+    c.pos.x = at.x
+    c.pos.z = at.z
+    c.path.length = 0
+    c.holdGround = true
+    c.hp = TOUGH
+    c.maxHp = TOUGH
+    return c
+  }
+
+  const cells = () => useMissionStore.getState().inventory.cell
+  // The HUD slice refreshes every SYNC_INTERVAL (0.2 s), so settle past one push.
+  const cooldown = (w: WorldApi) => {
+    warm(w, 0.25)
+    return useMissionStore.getState().abilities.grenade.cooldownRemaining
+  }
+
+  // A walkable blast point near the thrower with a walkable cell inside the
+  // blast radius that has no line of sight to it (a wall between).
+  function wallPair(w: WorldApi, a1: Unit): { blast: Vec2; hidden: Vec2 } {
+    for (let dx = -12; dx <= 12; dx += 0.5) {
+      for (let dz = -12; dz <= 12; dz += 0.5) {
+        const blast = { x: a1.pos.x + dx, z: a1.pos.z + dz }
+        if (!isWalkable(w.city, blast.x, blast.z) || !hasLos(w.city, a1.pos, blast)) continue
+        for (let ex = -3; ex <= 3; ex += 0.5) {
+          for (let ez = -3; ez <= 3; ez += 0.5) {
+            const hidden = { x: blast.x + ex, z: blast.z + ez }
+            if (dist(blast, hidden) > 3.4 || !isWalkable(w.city, hidden.x, hidden.z)) continue
+            if (!hasLos(w.city, blast, hidden)) return { blast, hidden }
+          }
+        }
+      }
+    }
+    throw new Error('no wall pair found near the thrower')
+  }
+
+  it('AC 23: a valid throw spends exactly one cell, arms the cooldown and deals 70 at the centre', () => {
+    const { w, a1 } = setup(['op1', 'op6']) // tech carries a second cell
+    expect(cells()).toBe(2)
+    const at = { x: a1.pos.x, z: a1.pos.z - 3 }
+    const c = probe(w, at)
+    expect(hasLos(w.city, at, c.pos)).toBe(true)
+
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(c.hp).toBeCloseTo(TOUGH - 70, 5)
+    expect(cooldown(w)).toBeGreaterThan(0)
+    expect(cells()).toBe(1)
+  })
+
+  it('AC 23: damage falls to 35 at the 3.5 m edge and is 0 beyond it', () => {
+    const { w, a1 } = setup(['op1', 'op6'])
+    const at = { x: a1.pos.x, z: a1.pos.z - 3 }
+    const edge = probe(w, { x: at.x, z: at.z - 3.49 })
+    expect(hasLos(w.city, at, edge.pos)).toBe(true)
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(edge.hp).toBeCloseTo(TOUGH - 35.1, 1)
+
+    warm(w, 5)
+    edge.hp = TOUGH
+    edge.pos.z = at.z - 3.6
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(edge.hp).toBe(TOUGH)
+  })
+
+  it('edge case: a body behind a wall inside the radius takes 0 and the cell is still spent', () => {
+    const { w, a1 } = setup(['op1'])
+    const { blast, hidden } = wallPair(w, a1)
+    const c = probe(w, hidden)
+    expect(w.orderGrenade('a1', blast)).toBe(true)
+    expect(c.hp).toBe(TOUGH)
+    warm(w, 0.25)
+    expect(cells()).toBe(0)
+  })
+
+  it('AC 24: with zero cells the throw is refused and the cooldown stays idle', () => {
+    const { w, a1 } = setup(['op1'])
+    const at = { x: a1.pos.x, z: a1.pos.z - 3 }
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    warm(w, 5)
+    expect(cells()).toBe(0)
+    expect(cooldown(w)).toBe(0)
+
+    const c = probe(w, at)
+    expect(w.orderGrenade('a1', at)).toBe(false)
+    expect(cells()).toBe(0)
+    expect(cooldown(w)).toBe(0)
+    expect(c.hp).toBe(TOUGH)
+  })
+
+  it('AC 24: a running cooldown refuses the throw and leaves the cells and cooldown unchanged', () => {
+    const { w, a1 } = setup(['op1', 'op6'])
+    const at = { x: a1.pos.x, z: a1.pos.z - 3 }
+    expect(w.orderGrenade('a1', at)).toBe(true)
+    const before = cooldown(w)
+    expect(before).toBeGreaterThan(0)
+    expect(cells()).toBe(1)
+
+    const c = probe(w, at)
+    expect(w.orderGrenade('a1', at)).toBe(false)
+    expect(c.hp).toBe(TOUGH)
+    // The refusal changed nothing: the cooldown kept running down (a re-armed
+    // one would read near 4 s again), and the cell count is still one.
+    warm(w, 1)
+    const after = useMissionStore.getState().abilities.grenade.cooldownRemaining
+    expect(after).toBeGreaterThan(0)
+    expect(after).toBeLessThanOrEqual(before - 0.8)
+    expect(cells()).toBe(1)
+  })
+
+  it('edge case: a land beyond 18 m is refused and spends nothing', () => {
+    const { w, a1 } = setup(['op1'])
+    let far: Vec2 | null = null
+    for (let d = 19; d < 40 && !far; d += 0.5) {
+      for (const [sx, sz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const p = { x: a1.pos.x + sx * d, z: a1.pos.z + sz * d }
+        if (isWalkable(w.city, p.x, p.z)) { far = p; break }
+      }
+    }
+    expect(far).not.toBeNull()
+    expect(dist(a1.pos, far!)).toBeGreaterThan(18)
+    expect(w.orderGrenade('a1', far!)).toBe(false)
+    expect(cooldown(w)).toBe(0)
+    expect(cells()).toBe(1)
+  })
+})
