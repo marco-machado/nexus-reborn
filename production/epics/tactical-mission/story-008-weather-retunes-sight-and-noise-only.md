@@ -1,12 +1,12 @@
 # Story 008: Weather retunes CorpSec sight and weapon noise only
 
 > **Epic**: Tactical mission
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-16
 
 ## Context
 
@@ -79,7 +79,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/world.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/world.test.ts` (`Weather retunes CorpSec sight and weapon noise only (TM-008, AC 9a / 9b / 9c)`, 7 tests)
 
 ---
 
@@ -87,3 +87,25 @@
 
 - Depends on: Story 007
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-16
+**Criteria**: 3/3 passing (9a, 9b, 9c), each covered by an automated test in the TM-008 describe block; none deferred
+**Deviations**: None blocking. Scope: only `src/game/world.test.ts` changed (no source change); `src/game/world.ts` has no working-tree diff.
+**Test Evidence**: Logic: test file at `src/game/world.test.ts` (`describe('Weather retunes CorpSec sight and weapon noise only (TM-008, AC 9a / 9b / 9c)')`, 7 tests). Code review re-ran `npx vitest run src/game/world.test.ts -t "TM-008"`: 7 passed, 126 skipped.
+**Run result**: N/A — sim-only Logic story; no player-visible surface changed (test-only, no source change)
+**Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer (lead-programmer engine result CLEAN; ADR-0006 COMPLIANT; Standards 6/6; Architecture CLEAN; SOLID COMPLIANT). Blocking findings were fixed and re-reviewed before this close.
+**Mutation Check**: Mutation check: FAILED AS EXPECTED — src/game/world.ts:1272 enemy accuracy multiplied by mods.visionMul (rain multiplier applied to accuracy) → "accuracy and movement match clear weather; omni notice is 4.5 m in every weather (AC 9b)" failed; restored (cmp match, test file green)
+
+**Advisory findings from /code-review (not fixed in this story):**
+- Test Evidence line said 6 tests; the describe block has 7 `it` cases. Corrected to 7 in this close.
+- `src/game/world.test.ts:3221` — the CorpSec half of "movement unchanged" compares only the static `speed` field on guards that are already dead; weather scaling applied to guard movement at move time would still pass. Only operative a1's walk is checked through behaviour. Whether AC 9b's "movement" covers CorpSec movement is not spelled out in the story (owner question).
+- `src/game/world.test.ts:3197` — the duel helper writes the sim-internal `awareness` field through a cast (declared only at `src/game/world.ts:168`, not in `src/game/types.ts`). A rename would make the write a silent no-op while the test keeps passing. Consider a typed test hook.
+- `src/game/world.test.ts:3233` — the Hardened light-rain 13.6 m test sits partly in Story 015's scope (Out of Scope lists Hardened +1 m vision), though this story's QA Test Cases list it as an edge case. The `describe('hardened difficulty')` test at line 1723 already covers the formula. Documentation question, not a defect.
+- `src/game/world.test.ts:3108` — `g.patrol!.length = 0` uses a non-null assertion; a kept trooper with no patrol would crash every TM-008 test with a TypeError. Suggest `g.patrol?.splice(0)`. Not checked whether any seed spawns such a trooper.
+- Partly refuted: no TM-008-local test covers Hardened +1 m re-added when a front hits (`src/game/world.ts:1975`), but the full suite covers it (`world.test.ts:1723-1737`). Optional TM-008-local case.
+- The review did not itself run the QA plan's mutation check (read-only); it was run in /dev-story — see Mutation Check above.
+
+**Autonomous decisions (logged):** Phase 5 specialist-review answer taken from the workflow's code-review record; Phase 7 took the recommended "Close the story" option (verdict COMPLETE WITH NOTES); tech-debt register not updated.

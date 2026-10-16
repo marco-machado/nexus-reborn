@@ -2,7 +2,7 @@
 // drives both the city generator and the in-world rng, and the tests drive
 // tick() by hand, so no timers or real clocks are involved.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { MissionDef, ObjectiveDef, OperativeDef, Vec2, WorldApi, Zone } from './types'
+import type { MissionDef, ObjectiveDef, OperativeDef, Unit, Vec2, WorldApi, Zone } from './types'
 import { ENEMY_VISION, isWalkable } from './types'
 import { createWorld } from './world'
 import { clickSelection, openingSelection, selectAll, selectSlot } from './selection'
@@ -3071,5 +3071,239 @@ describe('Hold Ground pins and parks; Stop clears pathing and keeps stance bits 
     const at = { x: a1.pos.x, z: a1.pos.z }
     warm(w, 1)
     expect(dist(a1.pos, at)).toBeLessThan(0.05)
+  })
+})
+
+// TM-008 (Sprint 8, story 008): weather retunes CorpSec sight and weapon
+// noise, and nothing else. Noise is read through behaviour (the farthest
+// spot a guard still hears a shot), never through the code-owned noiseMul.
+describe('Weather retunes CorpSec sight and weapon noise only (TM-008, AC 9a / 9b / 9c)', () => {
+  // Pinned literals from the GDD (tactical-mission §9, AC 9a / 9b).
+  const SIGHT = { none: 14, light: 12.6, heavy: 11.2 } as const
+  const NOTICE = 4.5
+  // Scripted front time for the test missions, fixed at create.
+  const FRONT_AT = 5
+  const WEATHERS = ['none', 'light', 'heavy'] as const
+
+  function still(weather: MissionDef['weather']): MissionDef {
+    return { ...BARE_MISSION, weather, weatherFront: undefined }
+  }
+  function front(from: MissionDef['weather'], to: MissionDef['weather']): MissionDef {
+    return { ...BARE_MISSION, weather: from, weatherFront: { to, atSec: FRONT_AT } }
+  }
+
+  // One operative and `keep` trooper guards, the rest of the garrison
+  // dead. Kept guards are parked where they stand until a probe places them.
+  function stage(m: MissionDef, keep: number) {
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const guards = w.units
+      .filter((u) => u.kind === 'enemy' && (u.archetype ?? 'trooper') === 'trooper')
+      .slice(0, keep)
+    for (const u of w.units) if (u.kind === 'enemy' && !guards.includes(u)) u.stance = 'dead'
+    for (const g of guards) {
+      g.path.length = 0
+      g.patrol!.length = 0
+      g.holdGround = true
+    }
+    return { w, a1, guards }
+  }
+
+  // Direction (unit axis) from a1 toward the map centre along x.
+  function inward(w: WorldApi, a1: Unit): number {
+    return a1.pos.x < w.city.size / 2 ? 1 : -1
+  }
+
+  // Does a guard `d` metres from a1 hear a1's rifle? The shot target is a
+  // muzzled guard 2 m away; the listener is past any sight range (d > 14).
+  function hears(m: MissionDef, d: number, after = 0): boolean {
+    const { w, a1, guards } = stage(m, 2)
+    const [target, listener] = guards
+    warm(w, after)
+    target.pos.x = a1.pos.x
+    target.pos.z = a1.pos.z - 2
+    target.reloading = 999
+    listener.pos.x = a1.pos.x + inward(w, a1) * d
+    listener.pos.z = a1.pos.z
+    expect(listener.aiState).toBe('patrol')
+    w.orderAttack(['a1'], target.id)
+    expect(runUntil(w, () => w.tracers.length > 0, 3)).toBe(true)
+    warm(w, 0.4)
+    return listener.aiState !== 'patrol'
+  }
+
+  // Farthest distance (to ~3 cm) at which the shot is still heard.
+  function earshot(m: MissionDef, after = 0): number {
+    let lo = 15
+    let hi = 30
+    expect(hears(m, lo, after)).toBe(true)
+    expect(hears(m, hi, after)).toBe(false)
+    for (let i = 0; i < 9; i++) {
+      const mid = (lo + hi) / 2
+      if (hears(m, mid, after)) lo = mid
+      else hi = mid
+    }
+    return lo
+  }
+
+  // Does a guard `d` metres from a1 notice it within `window` seconds of
+  // `after`? It faces straight away from a1 (omni notice only) unless
+  // `toward`, when a1 sits dead centre of its cone (live sight range).
+  function notices(m: MissionDef, d: number, after = 0, toward = false, window = 0.6): boolean {
+    const { w, a1, guards } = stage(m, 1)
+    const g = guards[0]
+    warm(w, after)
+    w.orderHoldFire(['a1'], true)
+    const dirs: Vec2[] = [
+      { x: 1, z: 0 },
+      { x: -1, z: 0 },
+      { x: 0, z: 1 },
+      { x: 0, z: -1 },
+    ]
+    const dir = dirs.find((v) => {
+      const p = { x: a1.pos.x + v.x * d, z: a1.pos.z + v.z * d }
+      return isWalkable(w.city, p.x, p.z) && hasLos(w.city, p, a1.pos)
+    })
+    expect(dir).toBeDefined()
+    g.pos.x = a1.pos.x + dir!.x * d
+    g.pos.z = a1.pos.z + dir!.z * d
+    const away = Math.atan2(dir!.x, dir!.z)
+    const heading = toward ? Math.atan2(-dir!.x, -dir!.z) : away
+    expect(g.aiState).toBe('patrol')
+    const until = w.time + window
+    while (w.time < until) {
+      g.heading = heading
+      g.path.length = 0
+      w.tick(STEP)
+    }
+    return g.aiState !== 'patrol'
+  }
+
+  // Damage a trooper already in combat deals to a1 at 2 m in 8 s, and damage
+  // a1 deals to a muzzled guard at 2 m in 0.6 s.
+  function duel(m: MissionDef, after = 0): { taken: number; dealt: number } {
+    const a = stage(m, 1)
+    warm(a.w, after)
+    a.w.orderHoldFire(['a1'], true)
+    const shooter = a.guards[0]
+    shooter.pos.x = a.a1.pos.x
+    shooter.pos.z = a.a1.pos.z - 2
+    shooter.aiState = 'combat'
+    shooter.alerted = true
+    shooter.targetId = a.a1.id
+    // Sim-internal certainty: already sure, so sight gain cannot gate fire.
+    ;(shooter as Unit & { awareness?: number }).awareness = 1
+    warm(a.w, 8)
+    const taken = a.a1.maxHp - a.a1.hp
+
+    const b = stage(m, 1)
+    warm(b.w, after)
+    const target = b.guards[0]
+    target.pos.x = b.a1.pos.x
+    target.pos.z = b.a1.pos.z - 2
+    target.reloading = 999
+    b.w.orderAttack(['a1'], target.id)
+    warm(b.w, 0.6)
+    return { taken, dealt: target.maxHp - target.hp }
+  }
+
+  // Where a1 is after walking 1.5 s toward a fixed spot.
+  function walk(m: MissionDef, after = 0): { pos: Vec2; speeds: number[] } {
+    const { w, a1 } = stage(m, 0)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    warm(w, after)
+    w.orderMove(['a1'], { x: a1.pos.x + inward(w, a1) * 8, z: a1.pos.z })
+    warm(w, 1.5)
+    return {
+      pos: { x: a1.pos.x, z: a1.pos.z },
+      speeds: w.units.filter((u) => u.kind === 'enemy').map((u) => u.speed),
+    }
+  }
+
+  it('Standard cone range is 14 / 12.6 / 11.2 m for none / light / heavy (AC 9a)', () => {
+    for (const weather of WEATHERS) {
+      const w = spawn(still(weather), ops(['op1']), { mods: missionMods(still(weather)) })
+      expect(w.weather).toBe(weather)
+      expect(w.vision).toBeCloseTo(SIGHT[weather], 10)
+    }
+  })
+
+  it('Hardened light rain reads 13.6 m: the +1 m lands after the weather scale (AC 9a edge)', () => {
+    const m = still('light')
+    const w = spawn(m, ops(['op1']), { mods: missionMods(m, undefined, 'hardened') })
+    expect(w.vision).toBeCloseTo(13.6, 10)
+  })
+
+  it('accuracy and movement match clear weather; omni notice is 4.5 m in every weather (AC 9b)', () => {
+    const clearDuel = duel(still('none'))
+    const clearWalk = walk(still('none'))
+    expect(clearDuel.taken).toBeGreaterThan(0)
+    expect(clearDuel.dealt).toBeGreaterThan(0)
+    for (const weather of WEATHERS) {
+      expect(duel(still(weather)), weather).toEqual(clearDuel)
+      expect(walk(still(weather)), weather).toEqual(clearWalk)
+      expect(notices(still(weather), NOTICE - 0.1), weather).toBe(true)
+      expect(notices(still(weather), NOTICE + 0.1), weather).toBe(false)
+    }
+  })
+
+  it('weapon-noise radius strictly decreases as rain intensity increases (AC 9b / 9c)', () => {
+    const none = earshot(still('none'))
+    const light = earshot(still('light'))
+    const heavy = earshot(still('heavy'))
+    expect(none).toBeGreaterThan(light)
+    expect(light).toBeGreaterThan(heavy)
+  })
+
+  it('a front into heavier rain shortens sight and noise at its fixed time, logs, and leaves the rest alone (AC 9c)', () => {
+    const m = front('light', 'heavy')
+    const w = spawn(m, ops(['op1']), { mods: missionMods(m) })
+    deployReset()
+    warm(w, FRONT_AT - 0.1)
+    expect(w.weather).toBe('light')
+    expect(w.vision).toBeCloseTo(SIGHT.light, 10)
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('WEATHER FRONT'))).toBe(false)
+    warm(w, 0.2)
+    expect(w.weather).toBe('heavy')
+    expect(w.vision).toBeCloseTo(SIGHT.heavy, 10)
+    expect(useMissionStore.getState().weather).toBe('heavy')
+    expect(useMissionStore.getState().log.filter((e) => e.msg.includes('WEATHER FRONT'))).toHaveLength(1)
+
+    const after = FRONT_AT + 0.1
+    expect(earshot(m, after)).toBeLessThan(earshot(m))
+    expect(earshot(m, after)).toBeCloseTo(earshot(still('heavy')), 1)
+    // The front changes nothing else: same fight and walk as with no front.
+    const noFront = still('light')
+    expect(duel(m, after)).toEqual(duel(noFront, after))
+    expect(walk(m, after)).toEqual(walk(noFront, after))
+    expect(notices(m, NOTICE - 0.1, after)).toBe(true)
+    expect(notices(m, NOTICE + 0.1, after)).toBe(false)
+  })
+
+  it('guards see by the live range: a1 at 11.9 m is seen before a light-to-heavy front, not after (AC 9c)', () => {
+    // 11.9 m sits between the heavy (11.2) and light (12.6) cones, so this
+    // reads the range the guards actually use, not only the exported field.
+    const m = front('light', 'heavy')
+    const D = (SIGHT.light + SIGHT.heavy) / 2
+    // Window ends at FRONT_AT - 0.1: still light rain throughout.
+    expect(notices(m, D, FRONT_AT - 0.7, true)).toBe(true)
+    // Window starts at FRONT_AT + 0.1: heavy rain throughout.
+    expect(notices(m, D, FRONT_AT + 0.1, true)).toBe(false)
+    // Controls: the same spot without a front.
+    expect(notices(still('light'), D, FRONT_AT + 0.1, true)).toBe(true)
+    expect(notices(still('heavy'), D, FRONT_AT - 0.7, true)).toBe(false)
+  })
+
+  it('a front from heavy to light raises sight and carries shots farther (AC 9c edge)', () => {
+    const m = front('heavy', 'light')
+    const w = spawn(m, ops(['op1']), { mods: missionMods(m) })
+    deployReset()
+    expect(w.vision).toBeCloseTo(SIGHT.heavy, 10)
+    warm(w, FRONT_AT + 0.1)
+    expect(w.vision).toBeCloseTo(SIGHT.light, 10)
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('RAIN LIFTS'))).toBe(true)
+    expect(earshot(m, FRONT_AT + 0.1)).toBeGreaterThan(earshot(m))
   })
 })
