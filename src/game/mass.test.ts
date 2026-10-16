@@ -327,8 +327,7 @@ describe('mass tier heavy band and the 400 kg limit (TR-roster-001)', () => {
     expect(g.ok).toBe(false)
     expect(g.reason).toBe('over-mass')
     expect(g.overKg).toBeCloseTo(0.1, 10)
-    // The Team screen's refusal copy formats overKg to one decimal.
-    expect(g.overKg.toFixed(1)).toBe('0.1')
+    // The button copy that names the overage is tested in src/ui/deployRefusal.test.ts.
   })
 
   it('refuses one Ready body over 400 kg alone as over-mass, not as an empty Squad', () => {

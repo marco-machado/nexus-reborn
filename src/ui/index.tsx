@@ -21,6 +21,7 @@ import { debriefFilingLine } from './filingStatus'
 import { useSaveStatusStore } from '../state/saveStatusStore'
 import { NEW_OPERATION_ARM_MS, newOperationArmHint, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
+import { deployRefusalCopy } from './deployRefusal'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { ROSTER_CAP } from '../game/recruits'
@@ -1080,17 +1081,7 @@ export function TeamSelect() {
   })
   const overKg = gate.overKg
   const deployable = gate.ok
-  // Presentation only (ADR-0019): Roster owns the rule, Interface says why.
-  const refusal = {
-    'no-contract': ['NO CONTRACT SELECTED', 'SELECT A CONTRACT ON THE WORLD NETWORK'],
-    'none-assigned': ['NO OPERATIVES ASSIGNED', 'ASSIGN AT LEAST ONE READY OPERATIVE'],
-    'not-ready': ['INJURED OPERATIVE ASSIGNED', 'REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT'],
-    'over-mass': [
-      overKg.toFixed(1) + ' KG OVER THE MASS LIMIT',
-      'OFFLOAD ' + overKg.toFixed(1) + ' KG BEFORE DEPLOYMENT',
-    ],
-  } as const
-  const refused = gate.reason ? refusal[gate.reason] : null
+  const refused = deployRefusalCopy(gate)
   const augs = wornAugs(done, roster[focus.id]?.pins)
   const cycleBay = (slot: AugSlot): void => {
     const options: Array<BayPin | null> = [null]
