@@ -59,7 +59,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/mass.test.ts`
+**What to test**:
+- Base and role-granted mission pools add 0 kg (AC 1)
+- Slot mass `8m + 6c` for (m, c) ∈ {(0,0), (1,0), (0,1), (2,0), (1,1), (0,2)} (AC 2)
+- m + c = 2 fills both slots; neither refused (AC 3)
+- Unassigned operative adds 0 kg and 0 Item-slot pools (AC 4)
+
+**Edge cases to cover**: a third item when m + c = 2 (expect refusal or no slot — confirm against the loadout validator in `save.ts`); empty loadout entry reads as empty.
+**Estimated test count**: ~5 unit tests
 
 ---
 

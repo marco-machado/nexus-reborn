@@ -56,7 +56,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/abilities.test.ts` or `src/game/data.test.ts`
+**What to test**:
+- Each of 8 roles has exactly 1 active and 1 passive (AC 1)
+- Assigned operatives in deploy inputs resolve their kit from their definition's role (AC 2)
+
+**Edge cases to cover**: a hired duplicate-role operative resolves the same kit. Do not assert §8 effect rows or Q keypress (Tactical).
+**Estimated test count**: ~3 unit tests
 
 ---
 

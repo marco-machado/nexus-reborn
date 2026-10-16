@@ -57,7 +57,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts` (+ label helper test if extracted)
+**What to test** (`remaining_downtime = max(0, t0 + D − t1)`):
+- Remaining equals the formula (AC 1)
+- t0 0, D 108000, t1 172800 → 0, Ready, bay empty, injury line 30 h (AC 2)
+- Injury line reports original D in hours (ceil), not remaining (AC 3)
+
+**Edge cases to cover**: t1 < t0 + D leaves positive remaining; D not a multiple of 3600 rounds the line up.
+**Estimated test count**: ~4 unit tests
 
 ---
 

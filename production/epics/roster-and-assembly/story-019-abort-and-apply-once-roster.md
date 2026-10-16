@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/appStore.test.ts`, `src/state/save.test.ts`
+**What to test**:
+- Abort mid-mission → no debrief; roster equals R deep-equal (AC 1)
+- Same outcome applied twice → roster writes once (KIA, injury, Experience counts) (AC 2)
+- Tactical time advance → roster, Injured remaining downtime and candidate market unchanged until debrief/Abort (AC 3)
+
+**Edge cases to cover**: Abort awards no Experience; apply-once key survives the Screen autosave (ADR-0021).
+**Estimated test count**: ~4 integration tests
 
 ---
 

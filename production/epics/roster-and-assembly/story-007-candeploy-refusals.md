@@ -57,7 +57,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/deployGate.test.ts`
+**What to test**:
+- No selected contract → refused (AC 1)
+- Contract + 0 assigned → refused (AC 2)
+- Contract + an Injured id built directly into the assigned set → refused, reason not-ready (AC 3)
+
+**Edge cases to cover**: status `undefined` for an id missing from the roster (save drift) also refused; empty bays alongside 1 Ready do not block.
+**Estimated test count**: ~4 unit tests
 
 ---
 

@@ -60,7 +60,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/mass.test.ts`
+**What to test** (`mass_tier_delta = 0.15 if ≤ 340; −0.15 if > 380; else 0`):
+- Default four at 286.1 kg → +0.15, applied once squad-wide (AC 1)
+- Any mass maps to exactly one of {+0.15, 0, −0.15} — sweep 0, 286.1, 340, 340.1, 360, 380, 380.1, 400 (AC 2)
+- 340 → +0.15 and Deploy allowed (AC 3)
+- 340.1 → 0 and Deploy allowed (AC 4)
+
+**Edge cases to cover**: floating-point sums that land at 340.0000001 from four bodies (sum computed, not literal).
+**Estimated test count**: ~4 unit tests
 
 ---
 

@@ -55,7 +55,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`
+**What to test**:
+- Living count 8; every status ∈ {Ready, Injured}; Raven Injured; other 7 Ready (AC 1)
+- Raven remaining downtime 86400 s at first read (AC 2)
+
+**Edge cases to cover**: New Operation after a lived-in campaign resets to the same eight (no carried-over hires or KIA).
+**Estimated test count**: ~3 unit tests
 
 ---
 

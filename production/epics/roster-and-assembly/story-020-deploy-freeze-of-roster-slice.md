@@ -60,7 +60,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/deployFreeze.test.ts` (create if absent), `src/state/missionStore.test.ts`
+**What to test**:
+- After create, changing wear, pins, items, assignment or Experience on campaign leaves the on-ground squad unchanged (AC 1)
+- Item slots changed after create → pools stay M and C (AC 2)
+- 1 med kit + 1 power cell in slots → pools = base + role grants + 1 + 1 (AC 3)
+
+**Edge cases to cover**: freeze is a clone, not `Object.freeze` of live arrays and not a live reference (control manifest, ADR-0009).
+**Estimated test count**: ~4 integration tests
 
 ---
 

@@ -59,7 +59,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: new `src/game/assembly.test.ts` (if the rule is extracted) or `src/state/campaignStore.test.ts`
+**What to test**:
+- Focusing a dossier does not change the assigned set (AC 1)
+- Unassigning the only assigned operative is refused; they stay assigned (AC 2)
+- Assign refused when it would exceed 4, duplicate, Injured, or KIA (AC 3)
+- KIA X assign refused (AC 4)
+
+**Edge cases to cover**: unassign with 2 assigned succeeds; assign into an empty bay after a KIA wipe succeeds for a Ready operative.
+**Estimated test count**: ~6 unit tests
+*Source change probable — see finding 1.*
 
 ---
 

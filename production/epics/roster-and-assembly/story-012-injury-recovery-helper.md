@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`
+**What to test** (`round(43200 + (1 − clamp(f, 0, 0.35) / 0.35) × 129600)`):
+- f = 0.175 → 108000 (AC 1)
+- f = 0 → 172800, and the injury rule does not call it for KIA (AC 2)
+- f = 0.35 → 43200, and the injury rule applies no injury (AC 3)
+
+**Edge cases to cover**: f < 0 and f > 0.35 clamp; result is an integer.
+**Estimated test count**: ~4 unit tests
 
 ---
 

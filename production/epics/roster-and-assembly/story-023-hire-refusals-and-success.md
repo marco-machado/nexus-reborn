@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`
+**What to test**:
+- Living 8 → refused; living 8; Credits unchanged (AC 1)
+- Credits below cost → roster unchanged (AC 2)
+- Living ≤ 7, success → +1, Ready, 4 bays unpinned on current issue (AC 3)
+- 7 living incl. an Assault + Assault candidate + enough Credits → 8 living, both Assault ids, hired id gone from offers (AC 4)
+
+**Edge cases to cover**: Credits exactly equal → success, Credits 0; Credits 1 below → refused.
+**Estimated test count**: ~6 unit tests
 
 ---
 

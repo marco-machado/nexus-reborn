@@ -58,7 +58,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`, `src/state/appStore.test.ts`
+**What to test**:
+- Quiet-replay win with `deadIds`, injured survivor, other survivors → KIA, injury (bay clear + D), +1 Experience each, ETA t1 catch-up (AC 1)
+- Loss with injury at t0 → no t1 jump; remaining downtime still D (AC 2)
+
+**Proposed criteria for R-2**: loss still applies KIA and Experience at t0; quiet replay awards no intel (already covered by WN-011, cite); a win's ETA ≥ max D clears every injury from that debrief.
+**Estimated test count**: ~4 integration tests
 
 ---
 

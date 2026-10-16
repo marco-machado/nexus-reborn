@@ -54,7 +54,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/save.test.ts`
+**What to test**:
+- Living roster, pins, Experience, injuries, candidates, Item slots and campaign flags match the pre-save blob after save + reload; no running mission or debrief restored (AC 1)
+
+**Proposed criteria for R-2**: reload does not grant offline recovery (Injured remaining unchanged with no Screen tick, ADR-0011); a tampered roster blob (unknown squad id, Item slot overflow) drops all-or-nothing; the candidate market continues from the saved cursor.
+**Estimated test count**: ~4 integration tests (extend L654 "lived-in roster")
 
 ---
 

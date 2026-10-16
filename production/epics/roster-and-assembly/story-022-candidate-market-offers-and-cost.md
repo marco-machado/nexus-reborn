@@ -57,7 +57,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/recruits.test.ts`, `src/state/campaignStore.test.ts`
+**What to test**:
+- New campaign: 3 offers; name survives save/reload; hash figure from id + codename; one of 8 roles; role primary; Ready; current issue in 4 bays; HP/speed in §8 ranges (AC 1)
+- 3 offers + 24 h, no hire → still 3 (AC 2)
+- Hire cost in [16000, 34000] inclusive (AC 3)
+
+**Edge cases to cover**: do not assert the count after a hire (Open Question 2); cost bounds read from `HIRE_MIN_COST` / `HIRE_MAX_COST` only, not the quality curve.
+**Estimated test count**: ~4 unit tests
 
 ---
 

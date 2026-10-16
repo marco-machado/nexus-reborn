@@ -61,7 +61,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`
+**What to test**:
+- f = 0.35 stays Ready; helper not invoked (AC 1)
+- 0 < f < 0.35 → Injured, bay cleared, unassignable, D = injuryRecoverySec(f) (AC 2)
+- End HP 0 → KIA, helper not invoked, `survivorHp` lists survivors only (AC 3)
+- Id in both dead and injured lists → KIA only (AC 4)
+
+**Edge cases to cover**: f > 0.35 keeps the bay; the last assigned newly Injured leaves all bays empty.
+**Estimated test count**: ~5 unit tests
 
 ---
 

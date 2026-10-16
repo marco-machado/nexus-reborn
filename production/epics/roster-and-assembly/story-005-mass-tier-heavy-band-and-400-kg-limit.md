@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/mass.test.ts`, `src/game/deployGate.test.ts`
+**What to test**:
+- 380 → 0, not heavy, Deploy allowed (AC 1)
+- 380.1 → −0.15, Deploy allowed (AC 2)
+- 400 with contract and 1–4 distinct Ready → Deploy allowed, delta −0.15 (AC 3)
+- 400.1 → refused, `overKg` = 0.1 (rounded to 1 dp) and the label names it (AC 4)
+
+**Edge cases to cover**: one body over 400 kg alone still refused (GDD "always deploying 1 Ready"); refusal reason is over-mass, not empty bays.
+**Estimated test count**: ~5 unit tests (+1 label test if the string is extracted)
 
 ---
 

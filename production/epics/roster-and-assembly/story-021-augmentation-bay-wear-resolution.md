@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`, `src/state/researchStore.test.ts`
+**What to test**:
+- 4 bays; each wears ≤ 1 completed slotted project of that bay (AC 1)
+- Unpinned bays (incl. new hire) wear current issue (AC 2)
+- Pinned bay unchanged when a new same-bay project completes; unpinned bays update (AC 3)
+
+**Edge cases to cover**: pin to stock issue vs pin to an older project; program stays researched.
+**Estimated test count**: ~3 unit tests
 
 ---
 

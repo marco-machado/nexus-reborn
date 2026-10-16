@@ -57,7 +57,21 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Verification method**: In-app browser (or `playwright-cli`) click-through + retained screenshots
+**Who must sign off**: ui-programmer (lean mode: story owner) with qa-tester review
+**Evidence to capture**: `production/qa/evidence/ra-009/` — screenshots at 1280x720 and at 125% text scale
+
+Checklist:
+- [ ] After a debrief where every assigned operative is KIA or newly Injured and ≥ 1 Ready remains, Assembly opens with all 4 Squad bays empty (AC 1)
+- [ ] Deploy is refused on that screen with the NO OPERATIVES ASSIGNED reason (not a mass or contract reason)
+- [ ] Focusing an Injured row body opens its dossier (inspection allowed) (AC 2)
+- [ ] The Injured row's assign key is disabled and its tooltip reads `OPERATIVE INJURED // ADVANCE WORLD TIME TO RECOVER` (AC 2)
+- [ ] Focusing any dossier leaves the bay contents unchanged
+- [ ] No row, tooltip or bay text is clipped at 1280x720 or 125% text scale (Sprint 6 Sectors clipping risk)
+
+Reaching the AC 1 state needs a mission outcome; use the dev Balance/debug path or a constructed save, and record which in the evidence doc.
 
 ---
 

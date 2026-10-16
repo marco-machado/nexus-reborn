@@ -60,7 +60,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`
+**What to test**:
+- `sync(t ≥ T)` with `recoverAtT = T` → Ready; bay stays empty (AC 1, AC 2)
+- Recovery and a candidate due both at T → Ready and market `min(3, N + 1)` (AC 3)
+
+**Edge cases to cover**: `sync(T − 1)` still Injured; two Injured with the same T both recover.
+**Estimated test count**: ~4 unit tests
 
 ---
 

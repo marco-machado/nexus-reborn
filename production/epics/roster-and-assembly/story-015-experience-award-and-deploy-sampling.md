@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`, deploy-freeze test
+**What to test**:
+- Each survivor +1 Experience, each KIA 0, applied once (AC 1)
+- Experience sampled into the next deploy; a later award does not change an on-ground squad (AC 2)
+- H0 + 2 enters the plating term and sampled speed includes +0.05 m/s (AC 3)
+
+**Edge cases to cover**: quiet-replay survivors still +1; Abort awards none. Read magnitudes from `xpBonus`, do not copy `XP_HP_PER` / `XP_SPEED_PER`.
+**Estimated test count**: ~4 unit tests
 
 ---
 

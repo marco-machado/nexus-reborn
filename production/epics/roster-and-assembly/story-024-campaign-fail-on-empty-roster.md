@@ -57,7 +57,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`
+**What to test**:
+- Incomplete campaign, living 0 → failed-empty-roster, not complete, contracts locked (AC 1)
+- Already complete, living 0 → stays complete, not failed (AC 2)
+- Never hired, living 0 on incomplete → failed, not complete (AC 3)
+
+**Edge cases to cover**: one Injured operative counts as living. Existing WN-018/019 tests cover much of this; cite them in the story's evidence instead of duplicating.
+**Estimated test count**: ~3 unit tests (some already exist)
 
 ---
 

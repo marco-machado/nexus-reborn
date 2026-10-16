@@ -59,7 +59,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/game/mass.test.ts`
+**What to test** (`operative_mass = 60 + Wprimary + Wsidearm + 0.25 × max(0, H − 90) + 8m + 6c`):
+- Mara (H 124, 4.2 + 1.2 kg, no research/Experience/slots) → 73.9 kg (AC 1)
+- Ghost 69.3, Dart 66.3, Torq 76.6 under the same conditions (AC 2)
+- H ≤ 90, pistol + pistol, empty slots → 62.4 kg, plating 0 (AC 3)
+- Mara + 1 med kit + 1 power cell → 87.9 kg (AC 4)
+
+**Edge cases to cover**: H exactly 90 (plating 0, never negative); H 91 (+0.25); values read from the authored roster, not restated literals where the data is the source.
+**Estimated test count**: ~5 unit tests
 
 ---
 

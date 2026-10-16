@@ -59,7 +59,15 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-007-2026-10-15.md` (2026-10-15).*
+
+**Test file path**: `src/state/campaignStore.test.ts`, `src/state/researchStore.test.ts`
+**What to test**:
+- X assigned and in `deadIds` → absent from living roster (no Dead state), bay empty, listed under KIA, in kia names (AC 1)
+- Completed Research projects stay researched after X's KIA (AC 2)
+
+**Proposed criteria for R-2** (from GDD Edge Cases): last assigned dies with Ready remaining → bay empty, no auto-assign; KIA receives 0 Experience; World Network reads kia names only (not the live roster).
+**Estimated test count**: ~4 integration tests
 
 ---
 
