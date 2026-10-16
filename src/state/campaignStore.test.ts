@@ -774,3 +774,43 @@ describe('new campaign roster (RA-010)', () => {
     expect(state.lastReport).toBeNull()
   })
 })
+
+// RA-012 (TR-roster-003, GDD AC 57/58/59): injuryRecoverySec is
+// round(43200 + (1 - clamp(f, 0, 0.35) / 0.35) * 129600). The helper may be
+// evaluated anywhere in that range; the injury rule only calls it for a
+// survivor with 0 < f < 0.35.
+describe('injuryRecoverySec helper values (RA-012)', () => {
+  it('returns 108000 s at living f = 0.175 (AC 57)', () => {
+    expect(injuryRecoverySec(0.175)).toBe(108000)
+  })
+
+  it('returns 172800 s at f = 0, and the injury rule never invokes it for a KIA (AC 58)', () => {
+    expect(injuryRecoverySec(0)).toBe(172800)
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'], survivorHp: {} }), 9000)
+    const state = useCampaignStore.getState()
+    expect(state.roster.op1).toBeUndefined()
+    expect(state.lastReport?.kia).toEqual([{ id: 'op1', codename: 'MARA' }])
+    expect(state.lastReport?.injured).toEqual([])
+  })
+
+  it('returns 43200 s at f = 0.35, and the injury rule applies no injury there (AC 59)', () => {
+    expect(injuryRecoverySec(0.35)).toBe(43200)
+    useCampaignStore
+      .getState()
+      .reportMission('m01', outcome({ survivorHp: { op1: 0.35 } }), 9000)
+    const state = useCampaignStore.getState()
+    expect(state.roster.op1).toEqual({ status: 'READY', recoverAtT: null, xp: 1, pins: {} })
+    expect(state.lastReport?.injured).toEqual([])
+  })
+
+  it('clamps f below 0 and above 0.35 and always returns an integer', () => {
+    expect(injuryRecoverySec(-0.5)).toBe(172800)
+    expect(injuryRecoverySec(0.9)).toBe(43200)
+    expect(injuryRecoverySec(1)).toBe(43200)
+    for (const f of [0.01, 0.1, 0.123, 0.2, 0.3333, 0.349]) {
+      expect(Number.isInteger(injuryRecoverySec(f))).toBe(true)
+    }
+  })
+})

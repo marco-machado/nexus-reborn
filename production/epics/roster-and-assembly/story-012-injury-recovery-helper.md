@@ -1,12 +1,12 @@
 # Story 012: injuryRecoverySec helper values
 
 > **Epic**: Roster and Assembly
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-16
 
 ## Context
 
@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/roster-and-assembly.md`, scoped to this story:*
 
-- [ ] **GIVEN** living `f = 0.175`, **WHEN** `injuryRecoverySec` is computed, **THEN** `D = 108000` s. *(GDD AC 57)*
-- [ ] **GIVEN** the helper is evaluated at `f = 0`, **WHEN** `injuryRecoverySec` is computed, **THEN** it returns 172800 s; the injury rule still does not invoke it because `f = 0` is KIA. *(GDD AC 58)*
-- [ ] **GIVEN** the helper is evaluated at `f = 0.35`, **WHEN** `injuryRecoverySec` is computed, **THEN** it returns 43200 s; the injury rule does not invoke it and applies no new injury. *(GDD AC 59)*
+- [x] **GIVEN** living `f = 0.175`, **WHEN** `injuryRecoverySec` is computed, **THEN** `D = 108000` s. *(GDD AC 57)*
+- [x] **GIVEN** the helper is evaluated at `f = 0`, **WHEN** `injuryRecoverySec` is computed, **THEN** it returns 172800 s; the injury rule still does not invoke it because `f = 0` is KIA. *(GDD AC 58)*
+- [x] **GIVEN** the helper is evaluated at `f = 0.35`, **WHEN** `injuryRecoverySec` is computed, **THEN** it returns 43200 s; the injury rule does not invoke it and applies no new injury. *(GDD AC 59)*
 
 ---
 
@@ -75,7 +75,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/state/campaignStore.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/state/campaignStore.test.ts` (`describe('injuryRecoverySec helper values (RA-012)')`, 4 tests; file 56/56 passing on 2026-10-16)
 
 ---
 
@@ -83,3 +83,20 @@
 
 - Depends on: None
 - Unlocks: Story 013
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-16
+**Criteria**: 3/3 passing (none deferred). AC 57, 58, 59 each covered by a unit test in `src/state/campaignStore.test.ts`; `npx vitest run src/state/campaignStore.test.ts` → 56/56 passed.
+**Deviations**: None. Implementation in `src/state/campaignStore.ts` matches the GDD formula `round(43200 + (1 − clamp(f, 0, 0.35) / 0.35) × 129600)`; durations come from the `INJURY_RECOVERY_MIN`/`INJURY_RECOVERY_MAX`/`INJURY_HP_FRAC` constants. Only the test file changed (helper already existed); within scope.
+**Test Evidence**: Logic: test file at `src/state/campaignStore.test.ts`
+**Run result**: N/A — pure helper with no player-visible surface change (from the /dev-story checkpoint).
+**Code Review**: Complete — /code-review ran on `src/state/campaignStore.ts` and `src/state/campaignStore.test.ts` with verdict NOT ASSESSED (lead-programmer and qa-tester specialists could not be spawned); the reviewer found no blocking defects. ADR-0001 COMPLIANT, Standards 5/6, Architecture CLEAN, SOLID COMPLIANT. Re-run /code-review where specialists can be spawned for an APPROVED verdict. LP-CODE-REVIEW and QL-TEST-COVERAGE gates skipped — lean mode.
+**Advisory findings from /code-review**:
+- Process gap: specialist reviews (lead-programmer, qa-tester) did not run, hence NOT ASSESSED rather than APPROVED.
+- Missing doc comment: exported `injuryRecoverySec` (`src/state/campaignStore.ts`) has no doc comment of its own; the comment above `INJURY_HP_FRAC` describes the scaling (Standards 5/6).
+- Weak AC 58 check: the KIA non-invocation is shown indirectly (empty `lastReport.injured`, roster entry removed), not via a spy; adequate for the AC as worded, and a spy would not catch an intra-module call anyway.
+- Edge case not covered: `injuryRecoverySec(NaN)` returns NaN (so `recoverAtT` could become NaN if `survivorHp` held NaN). Not required by the QA plan; hardening suggestion only.
+- Overlapping tests: existing min/max endpoint tests (via constants) overlap the new RA-012 literal-value tests; both can stay.
+**Autonomous decisions**: Phase 5 code-review question and Phase 7 close choice taken at their defaults; logged in `production/session-logs/decision-log.md`.

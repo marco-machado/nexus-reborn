@@ -14,7 +14,7 @@ goal: "Land the Roster and Assembly rules: the deploy gate and mass tiers hold a
 start: "2026-10-15"
 end: "2026-10-28"
 generated: "2026-10-15"
-updated: "2026-10-15"
+updated: "2026-10-16"
 
 stories:
   - id: "RA-001"
@@ -93,11 +93,11 @@ stories:
     name: "injuryRecoverySec helper values"
     file: "production/epics/roster-and-assembly/story-012-injury-recovery-helper.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-013"
     name: "Debrief classifies survivors as Ready, Injured, or KIA"
     file: "production/epics/roster-and-assembly/story-013-debrief-ready-injured-or-kia-by-end-hp.md"
