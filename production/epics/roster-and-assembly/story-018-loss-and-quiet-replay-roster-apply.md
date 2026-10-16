@@ -36,6 +36,9 @@
 
 - [ ] **GIVEN** a quiet-replay win with `deadIds`, living `f` in (0, 0.35), and survivors, **WHEN** debrief applies, **THEN** KIA, injury (bay clear + D), Experience +1 per survivor, and ETA `t1` catch-up all still apply. *(GDD AC 74)*
 - [ ] **GIVEN** a loss debrief that recorded injury at `t0` with duration D, **WHEN** that debrief finishes, **THEN** no ETA `t1` jump runs and remaining downtime is still D. *(GDD AC 24)*
+- [ ] **GIVEN** a loss debrief with `deadIds` and survivors, **WHEN** debrief applies at `t0`, **THEN** KIA, injury and Experience +1 per survivor still apply at `t0`. *(GDD Edge Cases: If Loss; added by R-2)*
+- [ ] **GIVEN** a win (including quiet replay) whose ETA catch-up reaches `t1 ≥ t0 + D` for every injury recorded at that debrief, **WHEN** debrief finishes, **THEN** every such operative is Ready with remaining downtime 0, their Squad bays stay empty, and the injury line still reports the original D in hours. *(GDD Edge Cases: win ETA finishes recovery; added by R-2)*
+- [ ] **GIVEN** a quiet-replay win, **WHEN** debrief applies, **THEN** roster and ETA catch-up apply and no intel is awarded. *(Persistence GDD rule 10; World Network WN-011; added by R-2)*
 
 ---
 

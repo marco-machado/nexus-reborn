@@ -33,6 +33,9 @@
 *From GDD `design/gdd/roster-and-assembly.md`, scoped to this story:*
 
 - [ ] **GIVEN** living roster, pins, Experience, injuries, candidates, Item slots, and campaign flags, **WHEN** strategy save and reload, **THEN** those values match the pre-save roster blob and running mission/debrief are not restored. *(GDD AC 41)*
+- [ ] **GIVEN** a saved campaign with an Injured operative, **WHEN** the page reloads and Continue runs with no Screen tick, **THEN** that operative's remaining downtime is unchanged (reload grants no offline hours). *(GDD Detailed Design rule 15; ADR-0011; added by R-2)*
+- [ ] **GIVEN** a campaign blob whose roster is tampered (unknown squad id, or Item slots with m + c > 2), **WHEN** it is loaded, **THEN** the whole blob is dropped and nothing is half-loaded. *(Persistence GDD rule 8; added by R-2)*
+- [ ] **GIVEN** a saved candidate market, **WHEN** the campaign reloads and the next 24 h candidate due fires, **THEN** the market continues from the saved RNG cursor (names and hash figures match before reload; the next candidate is the one the saved cursor yields), not the opening pool. *(GDD Visual: same hash on reload; ADR-0011 RNG streams in the blob; added by R-2)*
 
 ---
 

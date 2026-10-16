@@ -36,6 +36,9 @@
 
 - [ ] **GIVEN** operative X living and assigned, **WHEN** debrief applies X in `deadIds`, **THEN** X is absent from the living roster (no Dead state), X’s Squad bay is empty, X is listed under KIA, and kia names include X. *(GDD AC 15)*
 - [ ] **GIVEN** X is KIA, **WHEN** the Research program is read, **THEN** completed projects stay researched. *(GDD AC 16)*
+- [ ] **GIVEN** the last assigned operative is KIA at debrief and at least 1 Ready operative remains on the Roster, **WHEN** Assembly is next read, **THEN** that Squad bay is empty, no operative is auto-assigned, and Deploy still needs ≥ 1 assigned Ready. *(GDD Edge Cases: last assigned dies; added by R-2)*
+- [ ] **GIVEN** X is in `deadIds` at debrief, **WHEN** Experience is awarded, **THEN** X receives 0 Experience. *(GDD Edge Cases / Experience award rule; added by R-2)*
+- [ ] **GIVEN** X is KIA at debrief, **WHEN** World Network reads the outcome, **THEN** it reads the kia names only and never queries the live Roster. *(GDD Edge Cases: both KIA and injury; World Network query forbidden; added by R-2)*
 
 ---
 
