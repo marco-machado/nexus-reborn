@@ -183,11 +183,11 @@ stories:
     name: "Deploy freeze of the Roster slice"
     file: "production/epics/roster-and-assembly/story-020-deploy-freeze-of-roster-slice.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-021"
     name: "Augmentation bay wear resolution"
     file: "production/epics/roster-and-assembly/story-021-augmentation-bay-wear-resolution.md"
