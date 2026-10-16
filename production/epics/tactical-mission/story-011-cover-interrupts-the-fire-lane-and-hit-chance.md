@@ -106,6 +106,12 @@
 - `src/game/world.test.ts:3695` (VERIFIED): duplicate assertion; L3693 already pins `0.45 * DIFFICULTY_FX.hardened.enemyAccMul` ≈ 0.495.
 - `src/game/world.test.ts:3663` (VERIFIED in part): `if (enemy.hp < hp) hits += 1` counts at most one hit per tick while shots counts every round; harmless today (every weapon cooldown in `src/game/data.ts`, min 0.09, exceeds STEP 0.05) but the invariant is not asserted.
 - `src/game/world.ts:201` (VERIFIED): formula constants are bare literals (see Deviations).
+- `src/game/world.test.ts:3712-3721` (VERIFIED): the operative `a = 1` at `src/game/world.ts:988/998/1032` is not pinned by any TM-011 test.
+- `src/game/world.test.ts:3663` (VERIFIED in part): Assault Overdrive halves the fire delay (`src/game/abilities.ts:51`), which would take the 0.09 cooldown below STEP; the fixture does not activate it.
+- `src/game/world.test.ts:3701-3705` (VERIFIED): the clamp tests use multipliers no live call site passes (0.05, 1.5); with today's callers (1, 0.45 × {1, 1.1}) and d/r in [0,1] the chance stays about 0.20–0.83, so both clamp branches are unreachable in game. Note for the GDD owner, not a defect.
+- `docs/architecture/adr-0016-tactical-sim-contract.md:87` (VERIFIED, MINOR DEVIATION / doc drift): the ADR says the expression lives in the GDD and `tryFire`; since TM-011 it lives in the exported `hitChance` (`src/game/world.ts:201`), called from `tryFire` at line 864.
+
+**story-done re-run (2026-10-16, workflow wf_3fc7d7b5-2a8):** /code-review re-run verdict APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer; TM-011 re-run 7 passed, 157 skipped. Story was already Complete (commit c643725); this run only appended the advisory findings above. `src/game/world.ts` has no working-tree diff (no stray mutant). Autonomous defaults: Phase 4b skipped — Lean mode; Phase 7 "Close the story (Recommended)", no tech-debt rows logged.
 - Story file checkboxes and Test Evidence status (VERIFIED): updated by this /story-done run.
 
 **Autonomous decisions (story-done):** Phase 3 gameplay criterion AC 14 counted as covered by its unit test rather than asked; Phase 4b QL-TEST-COVERAGE skipped — Lean mode; Phase 5 specialist verdict taken from the implement-stories workflow; Phase 7 took the default "Close the story (Recommended)" (no tech-debt rows logged).
