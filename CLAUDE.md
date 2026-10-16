@@ -17,6 +17,8 @@
 
 Use imperative subject line, then a body that says what changed by file, why, and what was verified (lint, build, the click-through).
 
+Commit to `main` unless I ask for a branch.
+
 ## Technology Stack
 
 - **Engine**: React 19.2.8 + Vite 6.4.3 + @react-three/fiber 9.6.1 / three.js 0.185.1 (`WebGPURenderer`, WebGL2 fallback)
