@@ -2957,3 +2957,119 @@ describe('Hold Fire clears automatic targets but keeps a standing Explicit (TM-0
     expect(a1.holdFire).toBe(true)
   })
 })
+
+// TM-006 (Sprint 8, story 006): Hold Ground pins the operative on its tile and
+// parks the path (restored on release); separation never shoves a held
+// operative. Stop clears pathing (the parked path too), chase and targeting,
+// and leaves the Hold Ground and Hold Fire stance bits on (GDD OQ8).
+describe('Hold Ground pins and parks; Stop clears pathing and keeps stance bits (TM-006, AC 4 / 6)', () => {
+  // The parked path is internal sim state, not on the public Unit type.
+  const parked = (u: object) => (u as { suspended?: Vec2[] }).suspended
+
+  function walking(ids: string[]) {
+    const w = spawn(BARE_MISSION, ops(ids))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const dest = { x: a1.pos.x, z: a1.pos.z - 8 }
+    w.orderMove(['a1'], dest)
+    warm(w, 0.5)
+    expect(a1.stance).toBe('moving')
+    expect(a1.path.length).toBeGreaterThan(0)
+    return { w, a1, dest }
+  }
+
+  it('pins the walking operative on its tile and parks the path, restored on release (AC 4)', () => {
+    const { w, a1, dest } = walking(['op1'])
+    const route = a1.path.map((p) => ({ x: p.x, z: p.z }))
+
+    w.orderHold(['a1'], true)
+    expect(a1.holdGround).toBe(true)
+    expect(a1.path).toHaveLength(0)
+    expect(parked(a1)).toEqual(route)
+    expect(a1.stance).toBe('idle')
+
+    const held = { x: a1.pos.x, z: a1.pos.z }
+    for (let i = 0; i < 40; i++) {
+      w.tick(STEP)
+      expect(a1.pos.x).toBe(held.x)
+      expect(a1.pos.z).toBe(held.z)
+    }
+
+    w.orderHold(['a1'], false)
+    expect(a1.holdGround).toBe(false)
+    expect(parked(a1)).toBeUndefined()
+    expect(a1.path.length).toBeGreaterThan(0)
+    expect(a1.path[a1.path.length - 1]).toEqual(route[route.length - 1])
+    expect(a1.stance).toBe('moving')
+    warm(w, 3)
+    expect(dist(a1.pos, dest)).toBeLessThan(0.5)
+  })
+
+  it('a squadmate pressing into the held tile does not shove the held operative (AC 4, separation)', () => {
+    const w = spawn(BARE_MISSION, ops(['op1', 'op2']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const a2 = w.unit('a2')!
+    w.orderHold(['a1'], true)
+    const held = { x: a1.pos.x, z: a1.pos.z }
+    // Pin a2 almost on top of a1 every tick (well inside the 0.7 m separation
+    // radius) so separation pushes against the held operative throughout.
+    const press = { x: held.x + 0.1, z: held.z }
+    let pushedA2 = false
+    for (let i = 0; i < 40; i++) {
+      a2.pos.x = press.x
+      a2.pos.z = press.z
+      a2.path.length = 0
+      w.tick(STEP)
+      if (a2.pos.x !== press.x || a2.pos.z !== press.z) pushedA2 = true
+      expect(a1.pos.x).toBe(held.x)
+      expect(a1.pos.z).toBe(held.z)
+    }
+    // Separation did run: the free squadmate was the one moved.
+    expect(pushedA2).toBe(true)
+  })
+
+  it('Stop clears path, parked path, chase and target; Hold Ground and Hold Fire stay on (AC 6)', () => {
+    const { w, a1 } = walking(['op1'])
+    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')!
+    w.orderAttack(['a1'], enemy.id)
+    w.orderHold(['a1'], true)
+    w.orderHoldFire(['a1'], true)
+    expect(a1.targetId).toBe(enemy.id)
+    expect(parked(a1)?.length ?? 0).toBeGreaterThan(0)
+    expect(a1.holdGround).toBe(true)
+    expect(a1.holdFire).toBe(true)
+
+    w.orderStop(['a1'])
+    expect(a1.path).toHaveLength(0)
+    expect(parked(a1)).toBeUndefined()
+    expect(a1.targetId).toBeNull()
+    expect(a1.stance).toBe('idle')
+    expect(a1.holdGround).toBe(true)
+    expect(a1.holdFire).toBe(true)
+
+    // No chase: the operative stays put on later ticks.
+    const at = { x: a1.pos.x, z: a1.pos.z }
+    warm(w, 1)
+    expect(a1.pos.x).toBe(at.x)
+    expect(a1.pos.z).toBe(at.z)
+    expect(a1.path).toHaveLength(0)
+  })
+
+  it('releasing Hold Ground after Stop does not resume the walk (edge case, GDD OQ8)', () => {
+    const { w, a1 } = walking(['op1'])
+    w.orderHold(['a1'], true)
+    expect(parked(a1)?.length ?? 0).toBeGreaterThan(0)
+    w.orderStop(['a1'])
+    w.orderHold(['a1'], false)
+    expect(a1.holdGround).toBe(false)
+    expect(a1.path).toHaveLength(0)
+    expect(parked(a1)).toBeUndefined()
+    expect(a1.stance).toBe('idle')
+    const at = { x: a1.pos.x, z: a1.pos.z }
+    warm(w, 1)
+    expect(dist(a1.pos, at)).toBeLessThan(0.05)
+  })
+})
