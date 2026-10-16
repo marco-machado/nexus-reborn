@@ -2040,6 +2040,52 @@ describe('objectives and outcome', () => {
     expect(app.credits).toBe(128450)
   })
 
+  // GDD roster-and-assembly (survivorHp lists survivors only; a dead operative
+  // is KIA, never an injury at f = 0), RA-013 AC 20.
+  it('a win with one death reports the dead id in deadIds and omits it from survivorHp', () => {
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    w.tick(STEP)
+
+    // A real grenade kill on a1's squadmate (not a stance flip), fired from a1.
+    const thrower = w.unit('a1')!
+    const victim = w.unit('a2')!
+    const deadOpId = victim.operative!.id
+    victim.pos.x = thrower.pos.x + 4
+    victim.pos.z = thrower.pos.z
+    victim.path.length = 0
+    victim.hp = 10
+    expect(w.orderGrenade('a1', { x: victim.pos.x, z: victim.pos.z })).toBe(true)
+    expect(victim.stance).toBe('dead')
+
+    // Objectives: gate, garrison (already down), then extract every living agent.
+    thrower.pos.x = w.city.checkpoint.x
+    thrower.pos.z = w.city.checkpoint.z
+    thrower.path.length = 0
+    w.tick(STEP)
+    for (const u of w.units) {
+      if (u.kind === 'agent' && u.stance !== 'dead') {
+        u.pos.x = w.city.extraction.x
+        u.pos.z = w.city.extraction.z
+        u.path.length = 0
+      }
+    }
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('won')
+    warm(w, 3)
+
+    const outcome = useAppStore.getState().outcome!
+    expect(outcome.won).toBe(true)
+    expect(outcome.deadIds).toEqual([deadOpId])
+    expect(deadOpId).toBe('op2')
+    expect(Object.keys(outcome.survivorHp)).not.toContain(deadOpId)
+    expect(Object.keys(outcome.survivorHp).sort()).toEqual(['op1', 'op3', 'op4'])
+    // Every listed survivor is strictly alive: the sim never reports f = 0.
+    for (const frac of Object.values(outcome.survivorHp)) expect(frac).toBeGreaterThan(0)
+  })
+
   it('reports a loss and pays nothing when the squad is wiped', () => {
     const w = spawn(MISSION, ops(DEFAULT_SQUAD))
     deployReset()
