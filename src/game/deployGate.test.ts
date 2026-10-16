@@ -46,6 +46,35 @@ describe('canDeploy', () => {
   })
 })
 
+describe('canDeploy refusals (RA-007)', () => {
+  it('refuses with no selected contract (GDD AC 8)', () => {
+    expect(gate(ids(2), { missionSelected: false })).toMatchObject({ ok: false, reason: 'no-contract' })
+  })
+
+  it('refuses a selected contract with 0 assigned operatives (GDD AC 9)', () => {
+    expect(gate([], { statusById: {} })).toMatchObject({ ok: false, reason: 'none-assigned' })
+  })
+
+  it('refuses an Injured id built directly into the assigned set as not-ready (GDD AC 10)', () => {
+    const assigned = ['op1', 'op2']
+    expect(gate(assigned, { statusById: { op1: 'READY', op2: 'INJURED' } })).toMatchObject({
+      ok: false,
+      reason: 'not-ready',
+    })
+  })
+
+  it('refuses an assigned id missing from the roster (status undefined, save drift) as not-ready', () => {
+    expect(gate(['op1', 'ghost'], { statusById: { op1: 'READY' } })).toMatchObject({
+      ok: false,
+      reason: 'not-ready',
+    })
+  })
+
+  it('does not block on empty bays alongside 1 Ready operative', () => {
+    expect(gate(['op1'])).toMatchObject({ ok: true, reason: null })
+  })
+})
+
 describe('assignedMassKg', () => {
   const ops = DEFAULT_SQUAD.map(operativeById)
   const roster = Object.fromEntries(DEFAULT_SQUAD.map((id) => [id, { pins: {}, xp: 0 }]))

@@ -740,6 +740,11 @@ describe('startMission (ADR-0019)', () => {
     expectNoOp()
   })
 
+  it('no-ops when an assigned id is missing from the roster (save drift, RA-007)', () => {
+    useAppStore.setState({ squad: [DEFAULT_SQUAD[0], 'missing-op'] })
+    expectNoOp()
+  })
+
   it('no-ops with zero assigned operatives (AC 6)', () => {
     useAppStore.setState({ squad: [] })
     expectNoOp()
