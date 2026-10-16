@@ -21,17 +21,10 @@ import { captureSave, hydrateSave, startNewOperation, type SaveStorage, type Sav
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
 import { canDeploy } from '../game/deployGate'
-import { xpBonus } from '../game/experience'
-import {
-  ARMOR_KG_PER_HP,
-  emptyLoadout,
-  operativeMassKg,
-  tierSpeedDelta,
-} from '../game/mass'
+import { emptyLoadout } from '../game/mass'
 import {
   AUG_SLOTS,
   appliedNodeIds,
-  crewBonus,
   currentIssue,
   nodeById,
   wornAugs,
@@ -878,7 +871,8 @@ describe('debrief classifies survivors as Ready, Injured, or KIA (RA-013)', () =
     const f = 0.2
     debrief({ survivorHp: { op1: f, op2: 1, op3: 1 } })
     const state = useCampaignStore.getState()
-    const D = injuryRecoverySec(f)
+    // round(43200 + (1 - 0.2 / 0.35) * 129600) = 98743 s.
+    const D = 98743
     expect(state.roster.op1.status).toBe('INJURED')
     expect(state.roster.op1.recoverAtT).toBe(T0 + D)
     expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: D }])
@@ -897,7 +891,7 @@ describe('debrief classifies survivors as Ready, Injured, or KIA (RA-013)', () =
   it('end HP 0 is KIA, not Injured; survivorHp lists survivors only (AC 20)', () => {
     debrief({ casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op3: 1 } })
     const state = useCampaignStore.getState()
-    expect(Object.keys(useAppStore.getState().outcome!.survivorHp)).toEqual(['op1', 'op3'])
+    // survivorHp omitting the dead is the sim's job; world.test.ts covers it.
     expect(state.roster.op2).toBeUndefined()
     expect(state.operatives.some((o) => o.id === 'op2')).toBe(false)
     expect(state.lastReport?.kia.map((k) => k.id)).toEqual(['op2'])
@@ -1070,28 +1064,25 @@ describe('Experience award and deploy sampling (RA-015)', () => {
     expect(deploy.roster.speed.op1).toBe(speed)
     expect(deploy.roster.massKg).toBe(kg)
     // The next create samples the new total.
-    expect(freeze(['op1']).roster.maxHp.op1).toBe(hp + xpBonus(1).maxHp)
+    // Mara: 124 HP + 2 per point (living spec §6), so 126 after one award, 128 after two.
+    expect(hp).toBe(126)
+    expect(freeze(['op1']).roster.maxHp.op1).toBe(128)
   })
 
-  it('1 Experience puts H0 + bonus into the plating term and adds the speed bonus (AC 44)', () => {
-    const op = liveOperativeById('op1')
+  it('1 Experience puts H0 + 2 into the plating term and adds +0.05 m/s (AC 44)', () => {
     const before = freeze(['op1'])
-    const h0 = before.roster.maxHp.op1
     debrief({ survivorHp: { op1: 1 } })
     const after = freeze(['op1'])
-    const bonus = xpBonus(1)
 
-    expect(after.roster.maxHp.op1).toBe(h0 + bonus.maxHp)
-    const crew = crewBonus(after.roster.appliedIds.op1)
-    expect(after.roster.massKg).toBeCloseTo(
-      operativeMassKg(op, crew.maxHp + bonus.maxHp, after.roster.items.op1),
-      9,
-    )
-    expect(after.roster.massKg - before.roster.massKg).toBeCloseTo(bonus.maxHp * ARMOR_KG_PER_HP, 9)
-    expect(after.roster.speed.op1).toBeCloseTo(
-      op.speed + crew.speed + tierSpeedDelta(after.roster.massTier) + bonus.speed,
-      9,
-    )
+    // Mara, no research or items (AC 61): H0 124, 73.9 kg, 4.6 m/s + 0.15 light tier.
+    expect(before.roster.maxHp.op1).toBe(124)
+    expect(before.roster.massKg).toBeCloseTo(73.9, 9)
+    expect(before.roster.speed.op1).toBeCloseTo(4.75, 9)
+    // H0 + 2 = 126 puts 0.25 kg/HP x 2 = 0.5 kg more plating on; speed gains 0.05.
+    expect(after.roster.maxHp.op1).toBe(126)
+    expect(after.roster.massKg).toBeCloseTo(74.4, 9)
+    expect(after.roster.massTier).toBe('light')
+    expect(after.roster.speed.op1).toBeCloseTo(4.8, 9)
   })
 })
 
@@ -1213,21 +1204,21 @@ describe('win ETA catch-up of injury downtime (RA-017)', () => {
   })
   afterEach(resetStores)
 
+  // [t0, D, t1, remaining]: remaining is max(0, t0 + D - t1) worked by hand.
   it.each([
-    [0, 108000, 172800],
-    [0, 108000, 100000],
-    [5 * HOUR, 48 * HOUR, 20 * HOUR],
-    [5 * HOUR, 12 * HOUR, 17 * HOUR],
-    [5 * HOUR, 12 * HOUR, 17 * HOUR - 1],
+    [0, 108000, 172800, 0],
+    [0, 108000, 100000, 8000],
+    [5 * HOUR, 48 * HOUR, 20 * HOUR, 33 * HOUR],
+    [5 * HOUR, 12 * HOUR, 17 * HOUR, 0],
+    [5 * HOUR, 12 * HOUR, 17 * HOUR - 1, 1],
   ])(
     'remaining downtime after catch-up equals max(0, t0 + D - t1) for t0 %i, D %i, t1 %i (AC 72)',
-    (t0, D, t1) => {
+    (t0, D, t1, expected) => {
       useCampaignStore.setState((state) => ({
         roster: { ...state.roster, op1: { ...state.roster.op1, status: 'INJURED', recoverAtT: t0 + D } },
       }))
       useCampaignStore.getState().sync(t1)
       const entry = useCampaignStore.getState().roster.op1
-      const expected = Math.max(0, t0 + D - t1)
       expect(remainingDowntimeSec(entry.recoverAtT, t1)).toBe(expected)
       expect(entry.status).toBe(expected > 0 ? 'INJURED' : 'READY')
     },
@@ -1269,11 +1260,10 @@ describe('win ETA catch-up of injury downtime (RA-017)', () => {
     expect(injuryLineHours(12 * HOUR)).toBe(12)
     expect(injuryLineHours(12 * HOUR + 1)).toBe(13)
     expect(injuryLineHours(108000 - 1)).toBe(30)
-    const f = 0.2
-    const D = injuryRecoverySec(f)
-    expect(D % HOUR).not.toBe(0)
-    expect(injuryLineHours(D)).toBe(Math.ceil(D / HOUR))
-    expect(injuryLineHours(D)).toBeGreaterThan(D / HOUR)
+    // f = 0.2 gives D = 98743 s, 27.43 h, which the line prints as 28 h.
+    const D = injuryRecoverySec(0.2)
+    expect(D).toBe(98743)
+    expect(injuryLineHours(D)).toBe(28)
   })
 })
 
@@ -1433,8 +1423,9 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
     '%s whose ETA reaches t0 + D for every injury clears them all; bays stay empty; lines keep D (Edge Cases)',
     (_label, quietReplay) => {
       if (quietReplay) useCampaignStore.setState({ contractsWon: ['m01'] })
-      const dMara = injuryRecoverySec(F_30H)
-      const dGhost = injuryRecoverySec(F_DEEP)
+      // D at f = 0.175 is 108000 s (30 h); at f = 0.01 it is 169097 s (47 h).
+      const dMara = 108000
+      const dGhost = 169097
       const state = debrief('m01', {
         quietReplay,
         survivorHp: { op1: F_30H, op2: F_DEEP, op3: 1, op4: 1 },
@@ -1450,11 +1441,7 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
         { id: 'op1', codename: 'MARA', downtimeSec: dMara },
         { id: 'op2', codename: 'GHOST', downtimeSec: dGhost },
       ])
-      expect(state.lastReport!.injured.map((i) => injuryLineHours(i.downtimeSec))).toEqual([
-        injuryLineHours(dMara),
-        injuryLineHours(dGhost),
-      ])
-      expect(injuryLineHours(dMara)).toBe(30)
+      expect(state.lastReport!.injured.map((i) => injuryLineHours(i.downtimeSec))).toEqual([30, 47])
     },
   )
 
@@ -1604,11 +1591,18 @@ describe('candidate market offers and hire cost (RA-022)', () => {
     const roles = new Set(ROSTER.map((o) => o.role))
     expect(roles.size).toBe(8)
     const roleWeapon = new Map(ROSTER.map((o) => [o.role, o.weapon]))
-    const hpMin = Math.min(...ROSTER.map((o) => o.maxHp))
-    const hpMax = Math.max(...ROSTER.map((o) => o.maxHp))
-    const speedMin = Math.min(...ROSTER.map((o) => o.speed))
-    const speedMax = Math.max(...ROSTER.map((o) => o.speed))
-    const done = useResearchStore.getState().done
+    // §8 starting-roster ranges: HP 92-132, speed 4.2-5.6 m/s.
+    const [hpMin, hpMax, speedMin, speedMax] = [92, 132, 4.2, 5.6]
+    // A new campaign has no completed projects, so current issue is stock in
+    // every bay, and a candidate carries no pins to override it.
+    expect(useResearchStore.getState().done).toEqual([])
+    const bays = wornAugs(useResearchStore.getState().done, undefined)
+    expect(bays.map((b) => [b.node, b.pinned])).toEqual([
+      [null, false],
+      [null, false],
+      [null, false],
+      [null, false],
+    ])
     for (const c of candidates) {
       expect(roles.has(c.role)).toBe(true)
       expect(c.weapon).toBe(roleWeapon.get(c.role))
@@ -1617,14 +1611,7 @@ describe('candidate market offers and hire cost (RA-022)', () => {
       expect(c.maxHp).toBeLessThanOrEqual(hpMax)
       expect(c.speed).toBeGreaterThanOrEqual(speedMin)
       expect(c.speed).toBeLessThanOrEqual(speedMax)
-      // A candidate carries no pins: all four bays read current issue.
       expect('pins' in c).toBe(false)
-      const bays = wornAugs(done, undefined)
-      expect(bays).toHaveLength(4)
-      for (const bay of bays) {
-        expect(bay.pinned).toBe(false)
-        expect(bay.node).toEqual(currentIssue(done, bay.slot))
-      }
     }
 
     // The figure hash is a pure function of id + codename (ui/portrait.tsx);
@@ -1750,12 +1737,13 @@ describe('hire refusals and success (RA-023)', () => {
     expect(c.roster[candidate.id]).toEqual({ status: 'READY', recoverAtT: null, xp: 0, pins: {} })
     const done = useResearchStore.getState().done
     const bays = wornAugs(done, c.roster[candidate.id].pins)
-    expect(bays.map((b) => b.slot)).toEqual(AUG_SLOTS)
-    expect(bays).toHaveLength(4)
-    for (const bay of bays) {
-      expect(bay.pinned).toBe(false)
-      expect(bay.node).toBe(currentIssue(done, bay.slot))
-    }
+    // Current issue for this done set: newest per bay, LEGS still stock.
+    expect(bays.map((b) => [b.slot, b.node?.id ?? null, b.pinned])).toEqual([
+      ['NEURAL', 'k-sensor', false],
+      ['CHEST', 'c-synaptic', false],
+      ['ARMS', 'k-targeting', false],
+      ['LEGS', null, false],
+    ])
     expect(useAppStore.getState().credits).toBe(500)
   })
 
