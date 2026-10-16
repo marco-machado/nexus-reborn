@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { applyOverrides } from '../game/bindings'
 import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
-import { CANDIDATE_REFRESH_SEC } from '../game/recruits'
+import { CANDIDATE_REFRESH_SEC, INITIAL_RECRUIT_RNG } from '../game/recruits'
 import {
   CONTRACT_MIN_SEC,
   CONTRACT_TARGET,
@@ -2922,15 +2922,40 @@ describe('roster save and reload (RA-025)', () => {
     expect(expected.campaign.roster.op2.pins).toEqual({ CHEST: 'c-synaptic' })
     expect(writeSave(storage)).toBe(true)
 
-    // A mission is running when the page reloads.
-    useAppStore.setState({ phase: 'mission', missionId: 'm02' })
+    // Memory holds a running mission, a Debrief outcome and a report. Hydrate
+    // runs over them WITHOUT the New Operation wipe, so it must clear them.
+    const savedMissionId = expected.app.missionId
+    useAppStore.setState({
+      phase: 'mission',
+      missionId: 'm02',
+      outcome: settleOutcome({
+        applyKey: 2,
+        won: false,
+        kills: 1,
+        casualties: 0,
+        timeSec: 10,
+        civiliansHit: 0,
+        reward: 0,
+        bonus: 0,
+        deadIds: [],
+        survivorHp: { op2: 1, op3: 1 },
+        quietReplay: false,
+      }),
+    })
+    useCampaignStore.setState({
+      lastReport: { kia: [{ id: 'op4', codename: 'x' }], injured: [], xp: [] },
+    })
+    expect(useAppStore.getState().outcome).not.toBeNull()
+    expect(useCampaignStore.getState().lastReport).not.toBeNull()
 
-    startNewOperation(null)
-    expect(loadCampaignAtBoot(storage)).toBe('valid')
+    const blob = readSave(storage)
+    expect(blob).not.toBeNull()
+    hydrateSave(blob!)
     const atMenu = useAppStore.getState()
     expect(atMenu.phase).toBe('menu')
-    expect(atMenu.missionId).toBeNull()
+    expect(atMenu.missionId).toBe(savedMissionId)
     expect(atMenu.outcome).toBeNull()
+    expect(useCampaignStore.getState().lastReport).toBeNull()
     continueOperation()
     expect(useAppStore.getState().phase).toBe('world')
 
@@ -2951,6 +2976,21 @@ describe('roster save and reload (RA-025)', () => {
     expect(useCampaignStore.getState().lastReport).toBeNull()
   })
 
+  it('AC1: a failed campaign is still failed (and not won) after reload', () => {
+    livedInRoster()
+    useCampaignStore.setState({ campaignFailed: true, campaignWon: false })
+    const expected = captureSave()
+    expect(expected.campaign.campaignFailed).toBe(true)
+    expect(validateSave(expected)).toBe(true)
+    expect(writeSave(storage)).toBe(true)
+
+    reloadAndContinue()
+
+    expect(useCampaignStore.getState().campaignFailed).toBe(true)
+    expect(useCampaignStore.getState().campaignWon).toBe(false)
+    expect(captureSave().campaign).toEqual(expected.campaign)
+  })
+
   it('AC2: an Injured operative keeps its remaining downtime across reload + Continue with no Screen tick', () => {
     livedInRoster()
     const t = useWorldStore.getState().t
@@ -2961,7 +3001,14 @@ describe('roster save and reload (RA-025)', () => {
     expect(remaining).toBeGreaterThan(0)
     expect(writeSave(storage)).toBe(true)
 
-    reloadAndContinue()
+    // The wall clock jumps 48 h between write and reload; game time must not.
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(Date.now() + 48 * 3600 * 1000)
+      reloadAndContinue()
+    } finally {
+      vi.useRealTimers()
+    }
 
     const after = useCampaignStore.getState().roster.op1
     expect(useWorldStore.getState().t).toBe(t)
@@ -2970,7 +3017,7 @@ describe('roster save and reload (RA-025)', () => {
     expect(after).toEqual(before)
   })
 
-  it('AC3: a tampered roster (unknown squad id, or Item slots with m + c > 2) drops the whole blob', () => {
+  it('AC3: a tampered roster (unknown squad id, Item slots with m + c > 2, unknown pin, INJURED without recoverAtT, negative XP) drops the whole blob', () => {
     startNewOperation(new MemoryStorage())
     const fixture = captureSave()
     startNewOperation(storage)
@@ -2982,7 +3029,21 @@ describe('roster save and reload (RA-025)', () => {
     const slotOverflow = structuredClone(save)
     ;(slotOverflow.app.loadout as Record<string, unknown>).op2 = ['med', 'cell', 'med']
 
-    for (const bad of [unknownSquad, slotOverflow]) {
+    const unknownPin = structuredClone(save)
+    unknownPin.campaign.roster.op2.pins = { CHEST: 'no-such-node' }
+    const injuredNoRecovery = structuredClone(save)
+    expect(injuredNoRecovery.campaign.roster.op1.status).toBe('INJURED')
+    injuredNoRecovery.campaign.roster.op1.recoverAtT = null
+    const negativeXp = structuredClone(save)
+    negativeXp.campaign.roster.op1.xp = -1
+
+    for (const bad of [
+      unknownSquad,
+      slotOverflow,
+      unknownPin,
+      injuredNoRecovery,
+      negativeXp,
+    ]) {
       expect(validateSave(bad)).toBe(false)
       storage.setItem(SAVE_KEY, JSON.stringify(bad))
       // Origin reload: memory starts at the New Operation desk on the Menu.
@@ -3028,9 +3089,8 @@ describe('roster save and reload (RA-025)', () => {
     useCampaignStore.getState().sync(due)
     expect(useCampaignStore.getState().candidates).toEqual(recordedNext)
 
-    // Not the opening pool's first refresh.
-    startNewOperation(null)
-    useCampaignStore.getState().sync(CANDIDATE_REFRESH_SEC)
-    expect(useCampaignStore.getState().candidates).not.toEqual(recordedNext)
+    // The cursor advanced past the opening one: it was restored, not reseeded.
+    expect(recordedCursor).not.toBe(INITIAL_RECRUIT_RNG)
+    expect(useCampaignStore.getState().recruitRngState).not.toBe(INITIAL_RECRUIT_RNG)
   })
 })
