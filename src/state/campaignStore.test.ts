@@ -6,10 +6,12 @@ import {
   INJURY_RECOVERY_MAX,
   INJURY_RECOVERY_MIN,
   initialCampaignData,
+  injuryLineHours,
   injuryRecoverySec,
   isCampaignFailed,
   liveOperativeById,
   missionLocked,
+  remainingDowntimeSec,
   useCampaignStore,
 } from './campaignStore'
 import { applyDebrief } from './debrief'
@@ -1183,4 +1185,86 @@ describe('injury recovery on strategic sync (RA-016)', () => {
       expect(state.nextCandidateT).toBe(T + CANDIDATE_REFRESH_SEC)
     },
   )
+})
+
+// RA-017 (TR-roster-003, GDD AC 60/72/73): a win's ETA catch-up moves strategic
+// t from the frozen t0 to t1, and the recovery clock catches up in the same
+// apply. Remaining downtime is max(0, t0 + D - t1); the debrief injury line
+// still reports the original D.
+describe('win ETA catch-up of injury downtime (RA-017)', () => {
+  const DAY = 24 * HOUR
+  // f = 0.175 sits halfway down the injury band: 12 h + 0.5 * 36 h = 30 h.
+  const F_30H = 0.175
+  const resetStores = () => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+  }
+  beforeEach(() => {
+    resetStores()
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3'], lastAppliedKey: 0 })
+  })
+  afterEach(resetStores)
+
+  it.each([
+    [0, 108000, 172800],
+    [0, 108000, 100000],
+    [5 * HOUR, 48 * HOUR, 20 * HOUR],
+    [5 * HOUR, 12 * HOUR, 17 * HOUR],
+    [5 * HOUR, 12 * HOUR, 17 * HOUR - 1],
+  ])(
+    'remaining downtime after catch-up equals max(0, t0 + D - t1) for t0 %i, D %i, t1 %i (AC 72)',
+    (t0, D, t1) => {
+      useCampaignStore.setState((state) => ({
+        roster: { ...state.roster, op1: { ...state.roster.op1, status: 'INJURED', recoverAtT: t0 + D } },
+      }))
+      useCampaignStore.getState().sync(t1)
+      const entry = useCampaignStore.getState().roster.op1
+      const expected = Math.max(0, t0 + D - t1)
+      expect(remainingDowntimeSec(entry.recoverAtT, t1)).toBe(expected)
+      expect(entry.status).toBe(expected > 0 ? 'INJURED' : 'READY')
+    },
+  )
+
+  it('t1 short of t0 + D leaves positive remaining and the operative Injured (Edge Cases)', () => {
+    expect(remainingDowntimeSec(108000, 100000)).toBe(8000)
+    expect(remainingDowntimeSec(null, 100000)).toBe(0)
+    expect(remainingDowntimeSec(108000, 108000)).toBe(0)
+    expect(remainingDowntimeSec(108000, 200000)).toBe(0)
+  })
+
+  it('t0 0, D 108000, win to t1 172800: remaining 0, Ready, bay empty, line 30 h (AC 73)', () => {
+    expect(injuryRecoverySec(F_30H)).toBe(108000)
+    expect(missionById('m01').etaDays).toBe(2)
+    useWorldStore.setState({ t: 0 })
+    useAppStore.setState({ outcome: outcome({ survivorHp: { op1: F_30H, op2: 1, op3: 1 } }) })
+    applyDebrief('m01')
+    const t1 = useWorldStore.getState().t
+    expect(t1).toBe(2 * DAY)
+    expect(t1).toBe(172800)
+    const state = useCampaignStore.getState()
+    expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: 108000 }])
+    expect(remainingDowntimeSec(state.roster.op1.recoverAtT, t1)).toBe(0)
+    expect(state.roster.op1.status).toBe('READY')
+    expect(state.roster.op1.recoverAtT).toBeNull()
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
+    expect(injuryLineHours(state.lastReport!.injured[0].downtimeSec)).toBe(30)
+  })
+
+  it('the injury line reports the original D in hours, not remaining downtime (AC 60)', () => {
+    expect(injuryLineHours(108000)).toBe(30)
+    // Mid-recovery, remaining is 8000 s (3 h rounded up) but the line stays 30 h.
+    expect(remainingDowntimeSec(108000, 100000)).toBe(8000)
+    expect(injuryLineHours(108000)).not.toBe(injuryLineHours(8000))
+  })
+
+  it('a D that is not a whole number of hours rounds the line up (Edge Cases)', () => {
+    expect(injuryLineHours(12 * HOUR)).toBe(12)
+    expect(injuryLineHours(12 * HOUR + 1)).toBe(13)
+    expect(injuryLineHours(108000 - 1)).toBe(30)
+    const f = 0.2
+    const D = injuryRecoverySec(f)
+    expect(D % HOUR).not.toBe(0)
+    expect(injuryLineHours(D)).toBe(Math.ceil(D / HOUR))
+    expect(injuryLineHours(D)).toBeGreaterThan(D / HOUR)
+  })
 })

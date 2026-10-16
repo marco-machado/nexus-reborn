@@ -65,6 +65,24 @@ export function injuryRecoverySec(hpFrac: number): number {
   )
 }
 
+/**
+ * Downtime still owed at strategic time `t` by an injury that recovers at
+ * `recoverAtT` (stamped `t0 + D`): `max(0, t0 + D - t)`. A Ready entry
+ * (`recoverAtT` null) owes nothing. A win's ETA catch-up can bring this to 0.
+ */
+export function remainingDowntimeSec(recoverAtT: number | null, t: number): number {
+  return recoverAtT === null ? 0 : Math.max(0, recoverAtT - t)
+}
+
+/**
+ * Whole hours the debrief injury line reports for an injury of original
+ * downtime `downtimeSec`, rounded up. Always the original D, never the
+ * remaining downtime after a win ETA catch-up.
+ */
+export function injuryLineHours(downtimeSec: number): number {
+  return Math.ceil(downtimeSec / HOUR)
+}
+
 export interface CampaignState {
   intelLevel: number
   intelProgress: number

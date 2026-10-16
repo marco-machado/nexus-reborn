@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { collateralFine, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
-import { useCampaignStore } from '../state/campaignStore'
+import { injuryLineHours, useCampaignStore } from '../state/campaignStore'
 import { useSettingsStore } from '../state/settingsStore'
 import { resolveMission, useWorldStore } from '../state/worldStore'
 import {
@@ -1592,7 +1592,7 @@ export function Debrief() {
     ...(outcome && report
       ? report.injured.map((inj) => ({
           label: 'INJURED // ' + inj.codename,
-          value: Math.ceil(inj.downtimeSec / 3600) + 'H RECOVERY',
+          value: injuryLineHours(inj.downtimeSec) + 'H RECOVERY',
           tone: 'amber',
         }))
       : []),

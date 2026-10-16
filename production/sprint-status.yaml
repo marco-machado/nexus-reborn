@@ -138,11 +138,11 @@ stories:
     name: "Win ETA catch-up of injury downtime"
     file: "production/epics/roster-and-assembly/story-017-win-eta-catch-up-of-injury.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-024"
     name: "Campaign fail on empty roster"
     file: "production/epics/roster-and-assembly/story-024-campaign-fail-on-empty-roster.md"
