@@ -2609,3 +2609,121 @@ describe('selection is the living set (TM-001, AC 1a / 1b / 1d)', () => {
     expect(clickSelection(current, null, false)).toEqual([])
   })
 })
+
+// TM-003 (Sprint 8, story 003): Move clears the Explicit target and Hold
+// Ground, and a walking operative stops to engage unless Hold Fire is on.
+describe('Move clears target and Hold Ground; stop-to-engage (TM-003, AC 2 / 2b / 2c)', () => {
+  // One operative, one muzzled hostile parked just off the route.
+  function stage() {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')!
+    const start = { x: a1.pos.x, z: a1.pos.z }
+    const post = { x: start.x + 2, z: start.z - 4 }
+    const dest = { x: start.x, z: start.z - 12 }
+    const dealt = { hp: 0 }
+    const pin = () => {
+      if (enemy.stance === 'dead') return
+      dealt.hp = enemy.maxHp - enemy.hp
+      enemy.pos.x = post.x
+      enemy.pos.z = post.z
+      enemy.path.length = 0
+      enemy.reloading = 999
+    }
+    pin()
+    return { w, a1, enemy, start, dest, pin, dealt }
+  }
+
+  it('Move clears an Explicit target and releases Hold Ground (AC 2)', () => {
+    const { w, a1, enemy, dest } = stage()
+    w.orderAttack(['a1'], enemy.id)
+    w.orderHold(['a1'], true)
+    expect(a1.targetId).toBe(enemy.id)
+    expect(a1.holdGround).toBe(true)
+
+    w.orderMove(['a1'], dest)
+
+    expect(a1.targetId).toBeNull()
+    expect(a1.holdGround).toBe(false)
+    expect(a1.stance).toBe('moving')
+  })
+
+  it('a Move to a blocked tile snaps to walkable ground and still clears both (AC 2 edge)', () => {
+    const { w, a1, enemy } = stage()
+    w.orderAttack(['a1'], enemy.id)
+    w.orderHold(['a1'], true)
+    let wall: Vec2 | null = null
+    for (let x = 1; x < 96 && !wall; x++)
+      for (let z = 1; z < 96 && !wall; z++)
+        if (!isWalkable(w.city, x + 0.5, z + 0.5)) wall = { x: x + 0.5, z: z + 0.5 }
+    expect(wall).not.toBeNull()
+
+    w.orderMove(['a1'], wall!)
+
+    expect(a1.holdGround).toBe(false)
+    expect(a1.targetId).toBeNull()
+    expect(a1.path.length).toBeGreaterThan(0)
+  })
+
+  it('stops to engage a visible in-range hostile, fires, then resumes the path (AC 2b)', () => {
+    const { w, a1, enemy, dest, pin, dealt } = stage()
+    w.orderMove(['a1'], dest)
+    const magazine0 = a1.magazine
+    let stopped = false
+    let stoppedAt: Vec2 | null = null
+    const until = w.time + 12
+    while (w.time < until) {
+      pin()
+      w.tick(STEP)
+      if (a1.stance === 'attacking' && !stopped) {
+        stopped = true
+        stoppedAt = { x: a1.pos.x, z: a1.pos.z }
+      }
+    }
+    expect(stopped).toBe(true)
+    expect(a1.magazine).toBeLessThan(magazine0)
+    expect(dealt.hp).toBeGreaterThan(0)
+    expect(enemy.stance).toBe('dead')
+    // The route resumed after the engagement and reached the destination.
+    expect(dist(a1.pos, dest)).toBeLessThan(dist(stoppedAt!, dest))
+    expect(dist(a1.pos, dest)).toBeLessThan(1)
+  })
+
+  it('does not stop or fire with Hold Fire on; the path continues (AC 2c)', () => {
+    const { w, a1, dest, pin } = stage()
+    w.orderHoldFire(['a1'], true)
+    w.orderMove(['a1'], dest)
+    const magazine0 = a1.magazine
+    const until = w.time + 12
+    let everAttacking = false
+    while (w.time < until) {
+      pin()
+      w.tick(STEP)
+      if (a1.stance === 'attacking') everAttacking = true
+    }
+    expect(everAttacking).toBe(false)
+    expect(a1.magazine).toBe(magazine0)
+    expect(dist(a1.pos, dest)).toBeLessThan(1)
+  })
+
+  it('a weapon that is not free does not stop the walk (weapons-free edge)', () => {
+    for (const spoil of ['reloading', 'empty', 'drawing'] as const) {
+      const { w, a1, dest, pin } = stage()
+      if (spoil === 'reloading') a1.reloading = 999
+      if (spoil === 'empty') a1.magazine = 0
+      if (spoil === 'drawing') a1.swapReadyAt = 999
+      w.orderMove(['a1'], dest)
+      const until = w.time + 12
+      let everAttacking = false
+      while (w.time < until && dist(a1.pos, dest) >= 1) {
+        pin()
+        w.tick(STEP)
+        if (a1.stance === 'attacking') everAttacking = true
+      }
+      expect(everAttacking, spoil).toBe(false)
+      expect(dist(a1.pos, dest), spoil).toBeLessThan(1)
+    }
+  })
+})

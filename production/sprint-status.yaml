@@ -39,11 +39,11 @@ stories:
     name: "Move clears target and Hold Ground; stop-to-engage on the path"
     file: "production/epics/tactical-mission/story-003-move-clears-target-and-stop-to-engage.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-004"
     name: "Idle auto-acquire and Attack under Hold Ground and Hold Fire"
     file: "production/epics/tactical-mission/story-004-idle-auto-acquire-and-attack-under-hold-ground.md"

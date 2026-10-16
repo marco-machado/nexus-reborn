@@ -942,6 +942,19 @@ export function createWorld(
     u.targetId = t ? t.id : null
   }
 
+  // GDD tactical-mission §4 weapons-free: drawn weapon, round in the magazine,
+  // no reload running, cooldown finished, not mid-draw. Hold Fire is checked
+  // separately by refreshAutoTarget.
+  function weaponsFree(u: SimUnit): boolean {
+    return (
+      !!u.weapon &&
+      u.magazine > 0 &&
+      u.reloading <= 0 &&
+      u.cooldown <= 0 &&
+      world.time >= (u.swapReadyAt ?? 0)
+    )
+  }
+
   function updateAgents(dt: number): void {
     for (const u of units) {
       if (u.kind !== 'agent' || u.stance === 'dead') continue
@@ -991,7 +1004,17 @@ export function createWorld(
       refreshAutoTarget(u)
       const t = u.targetId !== null ? byId.get(u.targetId) : undefined
       const w = u.weapon
-      if (t && w && t.stance !== 'dead' && dist(u.pos, t.pos) <= w.range && hasLos(city, u.pos, t.pos)) {
+      // A walker only stops to engage while weapons-free; once the stop has
+      // begun, the engagement holds through the cooldown between shots.
+      const mayStop = u.path.length === 0 || u.stance === 'attacking' || weaponsFree(u)
+      if (
+        t &&
+        w &&
+        mayStop &&
+        t.stance !== 'dead' &&
+        dist(u.pos, t.pos) <= w.range &&
+        hasLos(city, u.pos, t.pos)
+      ) {
         u.stance = 'attacking'
         faceToward(u, t.pos, dt)
         tryFire(u, t, 1)
