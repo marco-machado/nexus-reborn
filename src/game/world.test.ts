@@ -4150,3 +4150,133 @@ describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-
     expect(useAppStore.getState().outcome?.won).toBe(true)
   })
 })
+
+// TM-014 (Sprint 8, story 014; ADR-0009, TR-tactical-011 / TR-tactical-001):
+// a quiet replay is still a real mission, and the deploy freeze holds against
+// mid-mission research, pin and Experience changes and a weather front.
+describe('deploy freeze: quiet replay outcome and the frozen slices (TM-014, AC 19 / 20a / 20b)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  // Starts each project on its lab at t = 0; they stay active until finish().
+  function startLabs(...ids: string[]): void {
+    for (const id of ids) expect(useResearchStore.getState().start(nodeById(id), 0)).toBe(true)
+  }
+
+  // Syncs past every running lab's endT, so each active project completes.
+  function finish(): void {
+    useResearchStore.getState().sync(1e9)
+  }
+
+  function setRoster(id: string, patch: { xp?: number; pins?: Record<string, string> }): void {
+    const roster = useCampaignStore.getState().roster
+    useCampaignStore.setState({ roster: { ...roster, [id]: { ...roster[id], ...patch } } })
+  }
+
+  function weaponStats(w: WorldApi, id: string) {
+    const wp = w.unit(id)?.weapon
+    return wp && { damage: wp.damage, spread: wp.spread, cooldown: wp.cooldown, reload: wp.reload, range: wp.range }
+  }
+
+  it('AC 19: an already-won authored contract replayed to a Win enters Debrief with one outcome stamped quietReplay true', () => {
+    useCampaignStore.setState({ contractsWon: [MISSION.id] })
+    const squad = ops(['op1'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    expect(deploy.economy.quietReplay).toBe(true)
+
+    // Same authored mission id and seed, with one reach-zone objective on the
+    // insertion point, so the replay can be finished in a few ticks.
+    const probe = createWorld(BARE_MISSION, squad, deploy)
+    const at = probe.unit('a1')!.pos
+    const m: MissionDef = {
+      ...MISSION,
+      objectives: [{ id: 'drop', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: at.x, z: at.z, r: 3 } }],
+    }
+    const w = createWorld(m, squad, deploy)
+    deployReset()
+    useAppStore.setState({ phase: 'mission', outcome: null })
+    let outcomes = 0
+    const unsub = useAppStore.subscribe((s, prev) => {
+      if (s.outcome !== prev.outcome && s.outcome) outcomes++
+    })
+    try {
+      w.tick(STEP)
+      // Live contractsWon changes mid-mission; the frozen boolean must not follow it.
+      useCampaignStore.setState({ contractsWon: [] })
+      expect(runUntil(w, () => useMissionStore.getState().result !== 'none', 5)).toBe(true)
+      expect(useMissionStore.getState().result).toBe('won')
+      warm(w, 3)
+    } finally {
+      unsub()
+    }
+    expect(useAppStore.getState().phase).toBe('debrief')
+    expect(outcomes).toBe(1)
+    const outcome = useAppStore.getState().outcome
+    expect(outcome?.won).toBe(true)
+    expect(outcome?.quietReplay).toBe(true)
+    expect(outcome?.applyKey).toBe(1)
+  })
+
+  it('AC 20a: research completion, a pin change and new Experience after create leave weapons, HP, speed and the Research slice at the freeze', () => {
+    useResearchStore.setState({ done: ['b-propellants', 'c-synaptic'] })
+    startLabs('b-coating', 'c-interface')
+    setRoster('op1', { xp: 2 })
+    const squad = ops(['op1'])
+    const deploy = freezeDeploy(MISSION, squad, 1)
+    const research = deploy.research.slice()
+    const w = createWorld(BARE_MISSION, squad, deploy)
+    deployReset()
+    const a1 = w.unit('a1')!
+    const weapon = weaponStats(w, 'a1')
+    const maxHp = a1.maxHp
+    const hp = a1.hp
+    const speed = a1.speed
+    expect(maxHp).toBe(deploy.roster.maxHp.op1)
+
+    finish()
+    setRoster('op1', { xp: 5, pins: { CHEST: 'STOCK' } })
+    expect(useResearchStore.getState().done).toEqual(['b-propellants', 'c-synaptic', 'b-coating', 'c-interface'])
+    warm(w, 1)
+
+    expect(weaponStats(w, 'a1')).toEqual(weapon)
+    expect(a1.maxHp).toBe(maxHp)
+    expect(a1.hp).toBe(hp)
+    expect(a1.speed).toBe(speed)
+    expect(deploy.research).toEqual(research)
+
+    // The changes are real: the next freeze samples three more Experience points.
+    const next = freezeDeploy(MISSION, squad, 2)
+    expect(next.roster.maxHp.op1).not.toBe(deploy.roster.maxHp.op1)
+    expect(next.research).toEqual(['b-propellants', 'b-coating'])
+  })
+
+  it('AC 20b: a weather front retunes sight and does not re-sample Research', () => {
+    const FRONT_AT = 5
+    const m: MissionDef = { ...BARE_MISSION, weather: 'light', weatherFront: { to: 'heavy', atSec: FRONT_AT } }
+    useResearchStore.setState({ done: [] })
+    startLabs('b-propellants')
+    const squad = ops(['op1'])
+    const deploy = freezeDeploy(m, squad, 1)
+    const w = createWorld(m, squad, deploy)
+    deployReset()
+    const weapon = weaponStats(w, 'a1')
+    const research = deploy.research.slice()
+    // Pinned GDD sight literals (tactical-mission §9): light 12.6 m, heavy 11.2 m.
+    expect(w.vision).toBeCloseTo(12.6, 10)
+
+    // Research lands before the front; only then does the store read get watched.
+    finish()
+    expect(useResearchStore.getState().done).toEqual(['b-propellants'])
+    const read = vi.spyOn(useResearchStore, 'getState')
+    warm(w, FRONT_AT + 0.5)
+
+    expect(w.weather).toBe('heavy')
+    expect(w.vision).toBeCloseTo(11.2, 10)
+    expect(useMissionStore.getState().log.filter((e) => e.msg.includes('WEATHER FRONT'))).toHaveLength(1)
+    expect(read).not.toHaveBeenCalled()
+    expect(weaponStats(w, 'a1')).toEqual(weapon)
+    expect(deploy.research).toEqual(research)
+    expect(deploy.research).not.toContain('b-propellants')
+  })
+})

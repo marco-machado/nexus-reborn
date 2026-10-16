@@ -138,11 +138,11 @@ stories:
     name: "Quiet replay outcome and the deploy freeze"
     file: "production/epics/tactical-mission/story-014-quiet-replay-and-the-deploy-freeze.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-015"
     name: "Hardened profile keeps minimap data; camera pose is fixed"
     file: "production/epics/tactical-mission/story-015-hardened-profile-and-fixed-camera-pose.md"
