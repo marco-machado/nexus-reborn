@@ -75,13 +75,14 @@ export default function Input() {
   const grenadeTargeting = useMissionStore((s) => s.grenadeTargeting)
   const size = world ? world.city.size : 96
   // Wave spawns grow the unit list mid-mission; tracking the count keeps the
-  // pick proxies covering them. Devices are attack targets like enemies.
+  // pick proxies covering them. Devices get no proxy: they are not Attack
+  // targets (ADR-0016), so a click on one falls through to the ground.
   const [unitCount, setUnitCount] = useState(world ? world.units.length : 0)
   const picks = useMemo(() => {
     if (!world) return []
     void unitCount
     return world.units
-      .filter((u) => u.kind === 'agent' || u.kind === 'enemy' || u.kind === 'device')
+      .filter((u) => u.kind === 'agent' || u.kind === 'enemy')
       .map((u): Pick => ({ id: u.id, agent: u.kind === 'agent' }))
   }, [world, unitCount])
   const proxies = useRef<Map<string, THREE.Mesh>>(new Map())

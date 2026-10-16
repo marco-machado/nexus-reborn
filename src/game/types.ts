@@ -319,6 +319,8 @@ export interface WorldApi {
   scanUntil: number
   tick(dt: number): void
   orderMove(agentIds: string[], dest: Vec2): void
+  // Sets an Explicit target on the living agents among `agentIds`. A target
+  // that is not a living enemy (unknown, dead, or a Device) is a no-op.
   orderAttack(agentIds: string[], targetId: string): void
   // Cancels the route and the target. Leaves holdGround and holdFire alone, so
   // a free fire agent may pick a new target up on its own; the cease-fire is

@@ -2098,8 +2098,9 @@ export function createWorld(
 
   function orderAttack(agentIds: string[], targetId: string): void {
     const t = byId.get(targetId)
-    // Devices are legal attack targets: gunfire is the slow demolition tool.
-    if (!t || (t.kind !== 'enemy' && t.kind !== 'device') || t.stance === 'dead') return
+    // Attack names a living hostile only. A Device is never an Explicit target
+    // (no Demolish verb, ADR-0016); grenades and charges still reach it.
+    if (!t || t.kind !== 'enemy' || t.stance === 'dead') return
     const shooters = ordered(agentIds)
     if (shooters.length === 0) return
     noteTutorial('attack')

@@ -30,11 +30,11 @@ stories:
     name: "Dead ids, empty selection, and Attack on a Device are no-ops"
     file: "production/epics/tactical-mission/story-002-dead-and-empty-recipients-are-no-ops.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-003"
     name: "Move clears target and Hold Ground; stop-to-engage on the path"
     file: "production/epics/tactical-mission/story-003-move-clears-target-and-stop-to-engage.md"

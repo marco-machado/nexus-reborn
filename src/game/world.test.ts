@@ -700,6 +700,102 @@ describe('orders', () => {
     expect(w.unit('a1')?.targetId).toBeNull()
     expect(w.unit('zz')).toBeUndefined()
   })
+
+  // TM-002: dead ids, empty selection, and Attack on a Device are no-ops.
+  // `kill` marks a known operative dead in place, so the id still resolves.
+  function kill(w: WorldApi, id: string): void {
+    const u = w.unit(id)!
+    u.hp = 0
+    u.stance = 'dead'
+  }
+
+  function orderState(w: WorldApi) {
+    return w.units.map((u) => ({
+      id: u.id,
+      stance: u.stance,
+      path: u.path.map((p) => ({ x: p.x, z: p.z })),
+      targetId: u.targetId,
+      holdGround: u.holdGround,
+      abilityReadyAt: u.abilityReadyAt,
+      abilityUntil: u.abilityUntil,
+    }))
+  }
+
+  it('a Move or Attack naming a dead operative changes nothing on it (AC 1c)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')!
+    kill(w, 'a1')
+    const a1 = w.unit('a1')!
+    const before = orderState(w).find((s) => s.id === 'a1')
+
+    w.orderMove(['a1'], { x: 48, z: 80 })
+    w.orderAttack(['a1'], enemy.id)
+    w.orderAbility(['a1'])
+
+    expect(a1.stance).toBe('dead')
+    expect(a1.path).toHaveLength(0)
+    expect(a1.targetId).toBeNull()
+    expect(orderState(w).find((s) => s.id === 'a1')).toEqual(before)
+  })
+
+  it('a Move naming one dead and one living id moves only the living one (AC 1c)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    kill(w, 'a1')
+
+    w.orderMove(['a1', 'a2'], { x: 48, z: 80 })
+
+    expect(w.unit('a1')!.path).toHaveLength(0)
+    expect(w.unit('a1')!.stance).toBe('dead')
+    expect(w.unit('a2')!.path.length).toBeGreaterThan(0)
+    expect(w.unit('a2')!.stance).toBe('moving')
+  })
+
+  it('Move, Attack and Q with an empty selection change no unit (AC 1e)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')!
+    const before = orderState(w)
+
+    w.orderMove([], { x: 48, z: 80 })
+    w.orderAttack([], enemy.id)
+    w.orderAbility([])
+
+    expect(orderState(w)).toEqual(before)
+    for (const u of w.units) if (u.kind === 'agent') expect(u.targetId).toBeNull()
+  })
+
+  it('a grenade with no living thrower spends no cell (AC 1e edge case)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    kill(w, 'a1')
+    const a2 = w.unit('a2')!
+    const at = { x: a2.pos.x, z: a2.pos.z }
+
+    expect(w.orderGrenade('', at)).toBe(false)
+    expect(w.orderGrenade('a1', at)).toBe(false)
+    // The cell is still there: a living thrower can spend it.
+    expect(w.orderGrenade('a2', at)).toBe(true)
+  })
+
+  it('Attack on a Device sets no Explicit target (AC 5d)', () => {
+    const w = spawn(MISSIONS[2], ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const device = w.units.find((u) => u.kind === 'device' && u.stance !== 'dead')
+    const a1 = w.unit('a1')!
+    expect(device).toBeDefined()
+    if (!device) return
+
+    w.orderAttack(['a1'], device.id)
+
+    expect(a1.targetId).toBeNull()
+  })
 })
 
 describe('weapon swap', () => {
