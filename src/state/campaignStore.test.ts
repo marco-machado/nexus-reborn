@@ -12,6 +12,7 @@ import {
   missionLocked,
   useCampaignStore,
 } from './campaignStore'
+import { startNewOperation, type SaveStorage } from './save'
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
 import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
@@ -701,5 +702,75 @@ describe('Assembly assign and unassign edits (RA-008)', () => {
     expect(useAppStore.getState().squad).toEqual([])
     useAppStore.getState().toggleOperative('op7')
     expect(useAppStore.getState().squad).toEqual(['op7'])
+  })
+})
+
+describe('new campaign roster (RA-010)', () => {
+  const RAVEN = 'op5'
+
+  // In-memory slot so startNewOperation can erase without a browser.
+  function memoryStorage(): SaveStorage {
+    const data = new Map<string, string>()
+    return {
+      getItem: (key) => data.get(key) ?? null,
+      setItem: (key, value) => void data.set(key, value),
+      removeItem: (key) => void data.delete(key),
+    }
+  }
+
+  function expectFreshRoster(): void {
+    const { operatives, roster } = useCampaignStore.getState()
+    expect(operatives).toHaveLength(8)
+    expect(Object.keys(roster)).toHaveLength(8)
+    expect(operatives.map((o) => o.id)).toEqual(ROSTER.map((o) => o.id))
+    expect(operatives.find((o) => o.id === RAVEN)?.codename).toBe('RAVEN')
+    for (const op of operatives) {
+      expect(['READY', 'INJURED']).toContain(roster[op.id].status)
+      expect(roster[op.id].status).toBe(op.id === RAVEN ? 'INJURED' : 'READY')
+      expect(roster[op.id].xp).toBe(0)
+    }
+    expect(Object.values(roster).filter((e) => e.status === 'READY')).toHaveLength(7)
+  }
+
+  it('holds eight living operatives, Raven Injured and the other seven Ready (AC 34)', () => {
+    startNewOperation(memoryStorage())
+    expectFreshRoster()
+  })
+
+  it('first read shows Raven with 86400 s of strategic downtime remaining (AC 21)', () => {
+    startNewOperation(memoryStorage())
+    const t = useWorldStore.getState().t
+    expect(t).toBe(0)
+    const raven = useCampaignStore.getState().roster[RAVEN]
+    expect(raven.recoverAtT).not.toBeNull()
+    expect((raven.recoverAtT as number) - t).toBe(86400)
+    // A sync at the campaign's first instant recovers nothing.
+    useCampaignStore.getState().sync(t)
+    expect(useCampaignStore.getState().roster[RAVEN].status).toBe('INJURED')
+    useCampaignStore.getState().sync(t + 86400 - 1)
+    expect(useCampaignStore.getState().roster[RAVEN].status).toBe('INJURED')
+  })
+
+  it('New Operation after a lived-in campaign resets to the same eight', () => {
+    startNewOperation(memoryStorage())
+    const hire = useCampaignStore.getState().candidates[0]
+    useCampaignStore.getState().reportMission(
+      'm01',
+      outcome({ casualties: 1, deadIds: ['op1'], survivorHp: { op2: 0.1 } }),
+      9000,
+    )
+    expect(useCampaignStore.getState().acceptHire(hire.id)).toBe(true)
+    useCampaignStore.getState().sync(9000 + 200 * HOUR)
+    const lived = useCampaignStore.getState()
+    expect(lived.roster.op1).toBeUndefined()
+    expect(lived.roster[hire.id]).toBeDefined()
+    expect(lived.roster[RAVEN].status).toBe('READY')
+
+    startNewOperation(memoryStorage())
+    expectFreshRoster()
+    const state = useCampaignStore.getState()
+    expect(state.roster[hire.id]).toBeUndefined()
+    expect(state.roster[RAVEN].recoverAtT).toBe(86400)
+    expect(state.lastReport).toBeNull()
   })
 })
