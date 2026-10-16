@@ -104,6 +104,7 @@
 **Run result**: N/A — Logic story; tests-only Roster-side view of existing wear resolution, no surface changed (from the /dev-story checkpoint).
 **QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.
 **Code Review**: Complete — `/code-review` on `src/state/campaignStore.test.ts` returned "Verdict: NOT ASSESSED" solely because the lead-programmer and qa-tester specialist reviews could not run (no Agent tool in that subagent). Its own review found no blocking code defects; ADR-0005 COMPLIANT; tests 99/99. Recorded as a tooling gap, not a design decision. Lean-mode prompt answered in autonomous mode as "Yes — /code-review passed or was approved with suggestions" (closest option; formal approval pending a re-run from a session that can spawn agents).
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 0564a8f. Suggestions recorded: AC 36 compares most bays against currentIssue(); the hire's literal ids carry the check. This supersedes the NOT ASSESSED result above.
 **Advisory findings (from /code-review)**:
 - Process gap: Phase 7 lead-programmer and qa-tester reviews not run (no Agent tool). Re-run `/code-review` from a session that can spawn agents if a formal APPROVED is needed.
 - `src/state/campaignStore.test.ts:1518` — `expect(AUG_SLOTS).toHaveLength(4)` sits inside the per-operative loop and checks a constant. Assert once with the bays result (e.g. `expect(bays).toHaveLength(4)`).

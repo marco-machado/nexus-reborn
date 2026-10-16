@@ -105,6 +105,7 @@
 **Test Evidence**: Logic: test file at `src/state/campaignStore.test.ts` (78/78 passed in this run).
 **Run result**: N/A — Logic story; recovery behaviour already in `sync()`, no new visible surface (from /dev-story checkpoint).
 **Code Review**: Complete with caveat — `/code-review` ran on src/state/campaignStore.test.ts, src/state/campaignStore.ts, src/ui/clock.ts and returned **NOT ASSESSED**: the inline review found nothing blocking (ADR-0001, ADR-0018 compliant; standards and architecture clean), but the lead-programmer and qa-tester specialist reviews were never spawned (no Agent tool in the workflow subagent). Lean mode: LP-CODE-REVIEW and QL-TEST-COVERAGE gates skipped.
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 0564a8f. Suggestions recorded: none. This supersedes the NOT ASSESSED result above.
 **Unattended decisions** (workflow run, defaults taken): Phase 5 lean prompt answered "/code-review ran" with the result above; Phase 7 took "Close the story (Recommended)".
 
 **Advisory findings from /code-review** (not blocking):

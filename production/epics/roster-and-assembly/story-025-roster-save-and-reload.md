@@ -106,6 +106,7 @@
 **Run result**: N/A — persistence-only story; no player-visible surface changed (tests only).
 **QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.
 **Code Review**: Complete, verdict NOT ASSESSED. `/code-review` ran on `src/state/save.test.ts` in the implement-stories workflow; the lead-programmer and qa-tester specialist reviews could not be spawned (no Agent tool in the unattended subagent). All other phases ran inline with no required changes, so it would be APPROVED WITH SUGGESTIONS if those reviews come back clean. Checks: vitest 108/108, `tsc -b --noEmit` and eslint clean, ADR-0011 (Decision, Consequences) COMPLIANT. Re-run `/code-review` from a session with the Agent tool to clear NOT ASSESSED.
+**Specialist Code Review (2026-10-16)**: APPROVED WITH SUGGESTIONS. Specialists spawned from the main session: lead-programmer AWS, qa-tester TESTABLE. Fixes: b1f2832. Suggestions recorded: add the app loadout to the wipe-based AC 1 test. This supersedes the NOT ASSESSED result above.
 
 **Advisory findings from /code-review**:
 - AC1: `expect(useAppStore.getState().outcome).toBeNull()` always passes. No debrief outcome is set before the reload, and phase/missionId are set only after `writeSave`, so they never reach the blob. Set a debrief outcome and mission state in memory before `writeSave` to truly test "running mission/debrief are not restored".

@@ -99,6 +99,7 @@
 **Deviations**: None. All changes within stated scope: the only code change is the RA-013 test block in `src/state/campaignStore.test.ts` (lines 819-896). The classification logic was already present in `src/state/campaignStore.ts` `reportMission` (lines 236-275) and `src/state/debrief.ts` (squad cleanup, lines 44-52).
 **Test Evidence**: Logic: `src/state/campaignStore.test.ts` (RA-013 describe block, 6 tests). Vitest for the file ran during `/story-done`: 62/62 passed.
 **Code Review**: Ran (`/code-review` on `src/state/campaignStore.test.ts`, `src/state/campaignStore.ts`, `src/state/debrief.ts`). Verdict: NOT ASSESSED — the lead-programmer and qa-tester specialist reviews could not be spawned (the workflow subagent had no Agent tool). The reviewer's own pass found nothing blocking; ADR-0002 and ADR-0021 COMPLIANT; `tsc -b` and eslint clean. Lean mode: the LP-CODE-REVIEW gate was not spawned; QL-TEST-COVERAGE skipped (Lean mode). Recommended: re-run `/code-review` from a session that can spawn agents if specialist sign-off is needed.
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 1a3f655, 4545bed, 0564a8f. Suggestions recorded: world.test survivorHp test hard-codes op2 from DEFAULT_SQUAD order. This supersedes the NOT ASSESSED result above.
 **Run result**: N/A — Logic story; no player-visible surface changed (from the `/dev-story` checkpoint).
 
 **Traceability**:

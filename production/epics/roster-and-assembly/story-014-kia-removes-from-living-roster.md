@@ -105,6 +105,7 @@
 **Run result**: N/A — behavior already existed in `src/state/debrief.ts` and `campaignStore.reportMission`; the story adds tests only and changes nothing on screen.
 **QA Coverage Gate**: QL-TEST-COVERAGE skipped — Lean mode.
 **Code Review**: Complete — /code-review ran on both test files. Its verdict was NOT ASSESSED (lead-programmer and qa-tester specialist reviews could not be spawned: no Agent tool in the workflow). Its own review found no blocking issues: ADR Compliance COMPLIANT (ADR-0002, ADR-0005), Architecture CLEAN. Lean-mode code-review question answered automatically (autonomous mode): "Yes — /code-review ran", recorded with that verdict.
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 0564a8f. Suggestions recorded: the direct canDeploy line in the last-assigned test checks nothing on its own. This supersedes the NOT ASSESSED result above.
 **Advisory findings from /code-review** (not blocking; candidates for a follow-up):
 - Process: re-run /code-review where the Agent tool is available for a full specialist verdict.
 - `src/state/researchStore.test.ts` "completed projects stay researched after X is KIA" uses a loss (`won: false`); `applyDebrief` in `src/state/debrief.ts` only runs `useResearchStore.sync` on a win, so the assertion holds trivially. A won mission with a KIA would be a stronger guard for AC 16.

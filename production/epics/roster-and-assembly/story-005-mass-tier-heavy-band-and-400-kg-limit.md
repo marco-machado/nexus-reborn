@@ -96,6 +96,7 @@
 **Test Evidence**: Logic: test file at `src/game/mass.test.ts`. vitest run on `src/game/mass.test.ts` + `src/game/deployGate.test.ts`: 47/47 passed (2026-10-15).
 **Run result**: N/A — pure-logic tests only; no runtime or on-screen code changed.
 **Code Review**: Complete. /code-review on `src/game/mass.test.ts` returned NOT ASSESSED. No defects found, but the lead-programmer and qa-tester specialist reviews could not run because the workflow subagent had no Agent tool, so the review was done inline. ADR-0019 COMPLIANT, TESTABLE, standards 6/6, architecture CLEAN, SOLID COMPLIANT; eslint and `tsc -b` printed no errors. Unattended run: the default was taken and the inline review was treated as sufficient (lean mode, story-done Phase 5 answer: "Yes — /code-review passed or was approved with suggestions").
+**Specialist Code Review (2026-10-16)**: APPROVED WITH SUGGESTIONS. Specialists spawned from the main session: lead-programmer AWS, qa-tester TESTABLE (first pass BLOCKING: AC 52 label untested). Fixes: db04a63 (deployRefusalCopy helper + test). Suggestions recorded: overKg.toFixed(1) under-reports a 0.05 kg tail: 400.15 kg reads '0.1 KG OVER' (pre-existing rounding; a design call whether to round up). This supersedes the NOT ASSESSED result above.
 **QA gate**: QL-TEST-COVERAGE skipped — Lean mode.
 
 **Advisory findings from /code-review** (not blocking):

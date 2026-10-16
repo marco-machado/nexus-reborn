@@ -100,6 +100,7 @@
 **Test Evidence**: Logic: test file at `src/game/mass.test.ts` (present; 18/18 passed in this workflow's run)
 **Run result**: N/A — pure `src/game` logic with no player-visible surface changed; the Assembly mass readout is unchanged (from /dev-story checkpoint)
 **Code Review**: Complete — /code-review ran in this workflow on `src/game/mass.ts` and `src/game/mass.test.ts` and returned "Verdict: NOT ASSESSED": the engine-specialist and qa-tester reviews could not be spawned (no Agent tool in the unattended subagent; no `web-specialist` definition in `.claude/agents/`). The reviewer's own pass found no code defects. QL-TEST-COVERAGE skipped — Lean mode.
+**Specialist Code Review (2026-10-16)**: APPROVED WITH SUGGESTIONS. Specialists spawned from the main session: lead-programmer AWS, gameplay-programmer APPROVED, qa-tester TESTABLE. Fixes: no fix needed. Suggestions recorded: doc comments on mass.ts exports; exact float sum at 340 kg could be built from integer tenths. This supersedes the NOT ASSESSED result above.
 **Code review advisory findings**:
 - Review coverage, not a code defect: Phase 7 specialist reviews (lead-programmer, qa-tester) did not run; re-run /code-review where agents can be spawned.
 - Traceability: TR-roster-001 mismatch (see Deviations).

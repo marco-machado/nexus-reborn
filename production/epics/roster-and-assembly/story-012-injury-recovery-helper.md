@@ -93,6 +93,7 @@
 **Test Evidence**: Logic: test file at `src/state/campaignStore.test.ts`
 **Run result**: N/A — pure helper with no player-visible surface change (from the /dev-story checkpoint).
 **Code Review**: Complete — /code-review ran on `src/state/campaignStore.ts` and `src/state/campaignStore.test.ts` with verdict NOT ASSESSED (lead-programmer and qa-tester specialists could not be spawned); the reviewer found no blocking defects. ADR-0001 COMPLIANT, Standards 5/6, Architecture CLEAN, SOLID COMPLIANT. Re-run /code-review where specialists can be spawned for an APPROVED verdict. LP-CODE-REVIEW and QL-TEST-COVERAGE gates skipped — lean mode.
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 0564a8f. Suggestions recorded: none. This supersedes the NOT ASSESSED result above.
 **Advisory findings from /code-review**:
 - Process gap: specialist reviews (lead-programmer, qa-tester) did not run, hence NOT ASSESSED rather than APPROVED.
 - Missing doc comment: exported `injuryRecoverySec` (`src/state/campaignStore.ts`) has no doc comment of its own; the comment above `INJURY_HP_FRAC` describes the scaling (Standards 5/6).

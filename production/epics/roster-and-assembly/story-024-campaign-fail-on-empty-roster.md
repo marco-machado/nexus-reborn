@@ -99,6 +99,7 @@
 **Test Evidence**: Logic: test file at `src/state/campaignStore.test.ts` (RA-024 block, 3 tests; WN-018/019 cited).
 **Run result**: N/A — pure store logic; no change to anything a player sees (the existing fail banner and contract-lock UI are unchanged).
 **Code Review**: Ran. `/code-review` verdict NOT ASSESSED — the lead-programmer and qa-tester specialist reviews could not be spawned (no Agent tool in the workflow subagent). Own review: no Required Changes; ADR-0020 COMPLIANT, Standards 6/6, Architecture CLEAN, SOLID COMPLIANT; vitest 90/90, `tsc -b` and eslint clean. Lean mode: QL-TEST-COVERAGE skipped; LP-CODE-REVIEW answered "yes, /code-review ran" (autonomous default, logged).
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: no fix needed. Suggestions recorded: AC 39 and AC 77 largely duplicate WN-018. This supersedes the NOT ASSESSED result above.
 **Advisory findings (from /code-review)**:
 - Review gap (tooling): re-run `/code-review` from a context that can spawn agents if an APPROVED verdict is required.
 - Possible duplicate test: the RA-024 AC 39 test nearly duplicates WN-018 "a completed campaign stays complete after a later roster wipe"; the AC 77 test overlaps WN-018's pyrrhic test and adds only the never-hired roster check. The QA Test Cases asked to cite WN-018/019 rather than duplicate. Consider dropping the AC 39 duplicate in a follow-up and citing WN-018.

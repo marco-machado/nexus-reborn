@@ -97,6 +97,7 @@
 **Run result**: N/A — store logic with no new visible surface (from /dev-story checkpoint).
 **QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.
 **Code Review**: Ran (lean-mode prompt answered "Yes — /code-review ran"). /code-review verdict: NOT ASSESSED, because the lead-programmer and qa-tester sub-reviews could not be spawned (no Agent tool in the unattended workflow run). Self-review found no required changes; reviewer states it would otherwise be APPROVED WITH SUGGESTIONS. `npx tsc -b` and `npx eslint src/state/campaignStore.test.ts` exited 0. Advisory findings:
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 1a3f655, 0564a8f. Suggestions recorded: none. This supersedes the NOT ASSESSED result above.
 - Process gap: re-run /code-review where agents can be spawned, or accept the self-review.
 - Test hygiene: the RA-023 block resets stores in beforeEach but has no afterEach; the AC 32 test leaves researchStore.done set to 4 nodes. Consider `afterEach(resetStores)` to match neighbouring blocks.
 - AC 33 test builds the Assault candidate by copying candidates[0] (skips the market's duplicate-check path); the arrayContaining assertion duplicates the two toContain checks above it.

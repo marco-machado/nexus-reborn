@@ -97,6 +97,7 @@
 **Test Evidence**: Logic: `src/game/deployGate.test.ts`, `src/state/appStore.test.ts` present; `npx vitest run` on both files at /story-done: 178/178 passed.
 **Run result**: N/A — pure logic gate already wired; no new visible surface (from the /dev-story checkpoint).
 **Code Review**: Complete — /code-review ran in the implement-stories workflow with verdict NOT ASSESSED (specialist reviews could not be spawned: no Agent tool in the unattended run); it reported nothing that needs to change, ADR-0019 COMPLIANT, all 3 ACs covered. Lean-mode prompt answered with the workflow default (review ran). QL-TEST-COVERAGE skipped — Lean mode.
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, gameplay-programmer AWS, qa-tester TESTABLE. Fixes: no fix needed. Suggestions recorded: the new block repeats older canDeploy cases. This supersedes the NOT ASSESSED result above.
 **Advisory findings (from /code-review)**:
 - Review process: specialist reviews (lead-programmer, gameplay-programmer, qa-tester) were not spawned, so the review verdict is NOT ASSESSED rather than APPROVED. Not a code defect.
 - `src/game/deployGate.test.ts:76`: the "does not block on empty bays alongside 1 Ready operative" test calls `gate(['op1'])`. Empty bays are not represented in `assignedIds`, so it repeats the `it.each` n=1 case at line 13 and does not exercise empty bays. Build the squad from the store/UI shape that has empty bays, or rename the test.

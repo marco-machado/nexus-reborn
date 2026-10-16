@@ -95,6 +95,7 @@
 **Traceability**: AC 27 -> campaignStore.test.ts "a new campaign offers 3 Ready candidates..." COVERED; AC 28 -> campaignStore.test.ts "3 offers and 24 strategic hours..." COVERED; AC 29 -> recruits.test.ts "pins the range constants..." and campaignStore.test.ts "every candidate hire cost..." COVERED.
 **Run result**: N/A — Logic story; tests only, no player-visible surface changed (from the /dev-story checkpoint).
 **Code Review**: Complete — /code-review ran in the implement-stories workflow. Verdict NOT ASSESSED only because the lead-programmer, gameplay-programmer and qa-tester specialists could not be spawned (no Agent tool in that subagent); the reviewer's own check found no required changes, ADR-0001 COMPLIANT, Architecture CLEAN, SOLID COMPLIANT. Recorded under lean mode's "Yes — /code-review passed or was approved with suggestions" (autonomous default).
+**Specialist Code Review (2026-10-16)**: APPROVED WITH SUGGESTIONS. Specialists spawned from the main session: lead-programmer AWS, gameplay-programmer AWS, qa-tester TESTABLE. Fixes: 1a3f655, 0564a8f. Suggestions recorded: the AC 27 bays check reads wornAugs(done) not the candidate; hire cost uses a quality curve the GDD says not to add (Open Question, raise with game-designer). This supersedes the NOT ASSESSED result above.
 **QA coverage gate**: QL-TEST-COVERAGE skipped — Lean mode.
 **Story-done decision (autonomous)**: Phase 7 "Close the story (Recommended)" taken by default; no tech debt logged.
 **Advisory review findings**:

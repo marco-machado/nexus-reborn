@@ -105,6 +105,7 @@
 **Test Evidence**: Integration: src/state/deployFreeze.test.ts (4/4 passing on 2026-10-16)
 **Run result**: N/A — implementation pre-existed; only a test was added, no player-visible surface changed.
 **Code Review**: Complete — /code-review verdict NOT ASSESSED (no Agent tool, so the lead-programmer/qa-tester specialist pass could not be spawned); inline review found no required changes; ADR-0009 COMPLIANT. QL-TEST-COVERAGE skipped — Lean mode. Lean-mode code-review question answered autonomously: "Yes — /code-review ran" with that result.
+**Specialist Code Review (2026-10-16)**: APPROVED. Specialists spawned from the main session: lead-programmer APPROVED, qa-tester TESTABLE. Fixes: 73c89f3. Suggestions recorded: live pins/xp into freezeDeploy cannot be observed (resolved eagerly); not an untested AC. This supersedes the NOT ASSESSED result above.
 **Advisory findings (from /code-review)**:
 - Re-run /code-review in a session that can spawn agents if a formal APPROVED verdict is needed.
 - AC 49 test hardcodes base pools (2 med / 1 cell) and medic grant (+2 med); derive from source constants or assert +1/+1 over the empty-slot baseline so tuning changes do not break it.
