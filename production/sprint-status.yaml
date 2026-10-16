@@ -147,11 +147,11 @@ stories:
     name: "Campaign fail on empty roster"
     file: "production/epics/roster-and-assembly/story-024-campaign-fail-on-empty-roster.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-009"
     name: "Assembly opens without auto-assign; Injured dossier is inspect-only"
     file: "production/epics/roster-and-assembly/story-009-assembly-opens-without-auto-assign-injured-dossier.md"

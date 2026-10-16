@@ -1268,3 +1268,64 @@ describe('win ETA catch-up of injury downtime (RA-017)', () => {
     expect(injuryLineHours(D)).toBeGreaterThan(D / HOUR)
   })
 })
+
+describe('campaign fail on empty roster (RA-024)', () => {
+  // "Campaign fail state" and WN-018/WN-019 above already cover the flag
+  // invariants, the stays-complete wipe and the Injured-counts-as-living edge;
+  // these pin the story's three criteria end to end, including the lock.
+  const resetApp = () => useAppStore.setState(useAppStore.getInitialState(), true)
+  beforeEach(resetApp)
+  afterEach(resetApp)
+
+  const wipe = (missionId: string, won = false) => {
+    const ids = useCampaignStore.getState().operatives.map((o) => o.id)
+    useCampaignStore.getState().reportMission(
+      missionId,
+      outcome({ won, reward: won ? 85000 : 0, casualties: ids.length, deadIds: ids }),
+      0,
+    )
+  }
+  const flags = () => {
+    const { campaignWon, campaignFailed } = useCampaignStore.getState()
+    return { campaignWon, campaignFailed }
+  }
+  // Tries every authored contract through the real selection action.
+  const selectable = () =>
+    ['m01', 'm02', 'm03'].filter((id) => {
+      useAppStore.setState({ phase: 'world', missionId: null })
+      useAppStore.getState().selectMission(id)
+      return useAppStore.getState().phase === 'brief' && useAppStore.getState().missionId === id
+    })
+
+  it('an incomplete campaign at living 0 is failed, not complete, and locks contracts (AC 38)', () => {
+    useCampaignStore.getState().reportMission('m01', outcome({ civiliansHit: 1 }), 0)
+    // Intel gates are not under test; lift them so only the fail flag decides.
+    useCampaignStore.setState({ intelLevel: 3 })
+    expect(selectable()).toEqual(['m01', 'm02', 'm03'])
+    wipe('m02')
+    expect(useCampaignStore.getState().operatives).toEqual([])
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: true })
+    expect(selectable()).toEqual([])
+    expect(useAppStore.getState()).toMatchObject({ phase: 'world', missionId: null })
+  })
+
+  it('an already complete campaign at living 0 stays complete and is not failed (AC 39)', () => {
+    for (const id of ['m01', 'm02', 'm03']) {
+      useCampaignStore.getState().reportMission(id, outcome({ civiliansHit: 1 }), 0)
+    }
+    expect(flags()).toEqual({ campaignWon: true, campaignFailed: false })
+    wipe('m01')
+    expect(useCampaignStore.getState().operatives).toEqual([])
+    expect(flags()).toEqual({ campaignWon: true, campaignFailed: false })
+  })
+
+  it('a director who never hires and reaches living 0 on an incomplete campaign fails it (AC 77)', () => {
+    const starting = initialCampaignData().operatives.map((o) => o.id)
+    expect(useCampaignStore.getState().operatives.map((o) => o.id)).toEqual(starting)
+    wipe('m01', true)
+    const state = useCampaignStore.getState()
+    expect(state.operatives).toEqual([])
+    expect(state.contractsWon).toEqual(['m01'])
+    expect(flags()).toEqual({ campaignWon: false, campaignFailed: true })
+  })
+})
