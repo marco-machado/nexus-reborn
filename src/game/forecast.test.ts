@@ -8,7 +8,6 @@ import {
   missionRisk,
   sectorEventWeight,
 } from './forecast'
-import { CRISIS_EVENT_WEIGHT_MUL } from './influence'
 import { MISSIONS } from './data'
 import { missionMods, riskWeather, weatherMul } from './missionParams'
 import { useResearchStore } from '../state/researchStore'
@@ -38,9 +37,8 @@ describe('generator weights', () => {
   })
 
   it('crisis doubles a sector selection weight', () => {
-    expect(sectorEventWeight(40, true)).toBe(
-      sectorEventWeight(40, false) * CRISIS_EVENT_WEIGHT_MUL,
-    )
+    // Living spec §5 World Events: crisis doubles how often events pick that sector.
+    expect(sectorEventWeight(40, true)).toBe(2 * sectorEventWeight(40, false))
     expect(sectorEventWeight(60, false)).toBeGreaterThan(sectorEventWeight(10, false))
   })
 

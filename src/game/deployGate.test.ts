@@ -34,8 +34,8 @@ describe('canDeploy', () => {
     expect(heavy.overKg).toBeCloseTo(0.1, 10)
   })
 
-  it('allows exactly the mass limit', () => {
-    expect(gate(['op1'], { massKg: MASS_LIMIT_KG })).toEqual({ ok: true, reason: null, overKg: 0 })
+  it('allows exactly the 400 kg limit (GDD mass_gate)', () => {
+    expect(gate(['op1'], { massKg: 400 })).toEqual({ ok: true, reason: null, overKg: 0 })
   })
 
   it('names the first failing check when several fail', () => {
