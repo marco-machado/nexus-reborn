@@ -28,6 +28,7 @@ import {
 } from '../game/mass'
 import { crewBonus } from '../game/research'
 import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
+import { CLOCK_BATCH_SEC, startWorldClock } from '../ui/clock'
 
 const HOUR = 3600
 
@@ -1082,4 +1083,104 @@ describe('Experience award and deploy sampling (RA-015)', () => {
       9,
     )
   })
+})
+
+// RA-016 (TR-roster-003, GDD AC 22/40/78): Injury recovery runs on strategic
+// t through campaignStore.sync(t), from any strategy Screen tick (Assembly
+// included) and the debrief catch-up. Recovery sets Ready and never refills
+// the Squad bay cleared at injury.
+describe('injury recovery on strategic sync (RA-016)', () => {
+  const T = 30 * HOUR
+  const resetStores = () => {
+    useWorldStore.setState(useWorldStore.getInitialState(), true)
+    useAppStore.setState(useAppStore.getInitialState(), true)
+  }
+  const injure = (...ids: string[]) =>
+    useCampaignStore.setState((state) => {
+      const roster = { ...state.roster }
+      for (const id of ids) roster[id] = { ...roster[id], status: 'INJURED', recoverAtT: T }
+      return { roster }
+    })
+  beforeEach(() => {
+    resetStores()
+    // Keep the market quiet unless a test schedules it, so only recovery moves.
+    useCampaignStore.setState({ nextCandidateT: 10 * T })
+    injure('op2')
+    // op2's bay was cleared at injury; the squad holds the other two.
+    useAppStore.setState({ squad: ['op1', 'op3'], phase: 'team' })
+  })
+  afterEach(resetStores)
+
+  it('a strategy Screen tick reaching t >= T sets Ready and leaves the cleared bay empty (AC 40)', () => {
+    useWorldStore.setState({ t: T - 1, paused: false, speed: 1 })
+    let wall = 0
+    let pending: ((now: number) => void) | null = null
+    const stop = startWorldClock(
+      {
+        tick: (dt) => useWorldStore.getState().tick(dt),
+        syncResearch: (t) => useResearchStore.getState().sync(t),
+        syncCampaign: (t) => useCampaignStore.getState().sync(t),
+      },
+      {
+        now: () => wall,
+        request: (cb) => {
+          pending = cb
+          return 1
+        },
+        cancel: () => {
+          pending = null
+        },
+      },
+    )
+    // One 50 ms batch at TIME_SCALE 60 moves strategic t by 3 s, past T.
+    wall += CLOCK_BATCH_SEC * 1000
+    const cb = pending as ((now: number) => void) | null
+    cb?.(wall)
+    stop()
+    expect(useWorldStore.getState().t).toBeGreaterThanOrEqual(T)
+    const entry = useCampaignStore.getState().roster.op2
+    expect(entry.status).toBe('READY')
+    expect(entry.recoverAtT).toBeNull()
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
+  })
+
+  it('a recovered operative becomes Ready but the bay cleared at injury stays empty (AC 22)', () => {
+    useCampaignStore.getState().sync(T + HOUR)
+    expect(useCampaignStore.getState().roster.op2.status).toBe('READY')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
+    expect(useAppStore.getState().squad).not.toContain('op2')
+    // Ready again, so the player may assign them back by hand.
+    useAppStore.getState().toggleOperative('op2')
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3', 'op2'])
+  })
+
+  it('sync(T - 1) leaves the operative Injured with recoverAtT unchanged (Edge Cases)', () => {
+    useCampaignStore.getState().sync(T - 1)
+    const entry = useCampaignStore.getState().roster.op2
+    expect(entry.status).toBe('INJURED')
+    expect(entry.recoverAtT).toBe(T)
+  })
+
+  it('two Injured operatives with the same T both recover in one sync (Edge Cases)', () => {
+    injure('op4')
+    useCampaignStore.getState().sync(T)
+    const { roster } = useCampaignStore.getState()
+    expect(roster.op2.status).toBe('READY')
+    expect(roster.op4.status).toBe('READY')
+    expect(roster.op2.recoverAtT).toBeNull()
+    expect(roster.op4.recoverAtT).toBeNull()
+  })
+
+  it.each([0, 1, 2, 3])(
+    'recovery and a candidate due both at T complete in one sync: Ready and market min(3, N + 1) for N = %i (AC 78)',
+    (n) => {
+      const pool = useCampaignStore.getState().candidates.slice(0, n)
+      useCampaignStore.setState({ candidates: pool, nextCandidateT: T })
+      useCampaignStore.getState().sync(T)
+      const state = useCampaignStore.getState()
+      expect(state.roster.op2.status).toBe('READY')
+      expect(state.candidates).toHaveLength(Math.min(CANDIDATE_POOL, n + 1))
+      expect(state.nextCandidateT).toBe(T + CANDIDATE_REFRESH_SEC)
+    },
+  )
 })

@@ -129,11 +129,11 @@ stories:
     name: "Injury recovery on strategic sync"
     file: "production/epics/roster-and-assembly/story-016-injury-recovery-on-strategic-sync.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-017"
     name: "Win ETA catch-up of injury downtime"
     file: "production/epics/roster-and-assembly/story-017-win-eta-catch-up-of-injury.md"
