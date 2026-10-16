@@ -201,11 +201,11 @@ stories:
     name: "Candidate market offers and hire cost"
     file: "production/epics/roster-and-assembly/story-022-candidate-market-offers-and-cost.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "RA-023"
     name: "Hire refusals and success"
     file: "production/epics/roster-and-assembly/story-023-hire-refusals-and-success.md"

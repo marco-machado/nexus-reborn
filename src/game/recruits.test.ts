@@ -93,3 +93,19 @@ describe('candidate generation', () => {
     expect(CANDIDATE_POOL).toBeLessThanOrEqual(ROSTER_CAP)
   })
 })
+
+// RA-022 (GDD AC 29): hire cost is a range constant, 16000–34000 CR inclusive.
+// Bounds come from HIRE_MIN_COST / HIRE_MAX_COST only, never the quality curve.
+describe('hire cost range (RA-022)', () => {
+  it('pins the range constants to the GDD band and keeps 200 rolled costs inside it (AC 29)', () => {
+    expect(HIRE_MIN_COST).toBe(16000)
+    expect(HIRE_MAX_COST).toBe(34000)
+    let state = INITIAL_RECRUIT_RNG
+    for (let i = 0; i < 200; i++) {
+      const rolled = rollCandidate(state)
+      state = rolled.state
+      expect(rolled.candidate.cost).toBeGreaterThanOrEqual(HIRE_MIN_COST)
+      expect(rolled.candidate.cost).toBeLessThanOrEqual(HIRE_MAX_COST)
+    }
+  })
+})

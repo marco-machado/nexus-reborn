@@ -17,7 +17,7 @@ import {
 import { applyDebrief } from './debrief'
 import { freezeDeploy } from './deployFreeze'
 import { nodeState, useResearchStore } from './researchStore'
-import { startNewOperation, type SaveStorage } from './save'
+import { captureSave, hydrateSave, startNewOperation, type SaveStorage, type SaveV10 } from './save'
 import { useWorldStore } from './worldStore'
 import { ROSTER, missionById } from '../game/data'
 import { canDeploy } from '../game/deployGate'
@@ -36,8 +36,15 @@ import {
   nodeById,
   wornAugs,
 } from '../game/research'
-import { CANDIDATE_POOL, CANDIDATE_REFRESH_SEC, ROSTER_CAP } from '../game/recruits'
+import {
+  CANDIDATE_POOL,
+  CANDIDATE_REFRESH_SEC,
+  HIRE_MAX_COST,
+  HIRE_MIN_COST,
+  ROSTER_CAP,
+} from '../game/recruits'
 import { CLOCK_BATCH_SEC, startWorldClock } from '../ui/clock'
+import { hashOf } from '../ui/util'
 
 const HOUR = 3600
 
@@ -1580,5 +1587,90 @@ describe('augmentation bay wear resolution (RA-021)', () => {
     expect(appliedNodeIds(s.done, useCampaignStore.getState().roster.op1.pins)).toEqual([])
     expect(appliedNodeIds(s.done, useCampaignStore.getState().roster.op2.pins)).toEqual(['c-interface'])
     expect(appliedNodeIds(s.done, useCampaignStore.getState().roster.op3.pins)).toEqual(['k-sensor'])
+  })
+})
+
+// RA-022 (TR-roster-003, GDD AC 27/28/29): the candidate market on a new
+// campaign. Post-hire count is Open Question 2 and is deliberately not asserted.
+describe('candidate market offers and hire cost (RA-022)', () => {
+  function memoryStorage(): SaveStorage {
+    const data = new Map<string, string>()
+    return {
+      getItem: (key) => data.get(key) ?? null,
+      setItem: (key, value) => void data.set(key, value),
+      removeItem: (key) => void data.delete(key),
+    }
+  }
+
+  it('a new campaign offers 3 Ready candidates on the role kit, current issue and §8 envelopes, stable across save/reload (AC 27)', () => {
+    startNewOperation(memoryStorage())
+    const { candidates } = useCampaignStore.getState()
+    expect(candidates).toHaveLength(3)
+
+    const roles = new Set(ROSTER.map((o) => o.role))
+    expect(roles.size).toBe(8)
+    const roleWeapon = new Map(ROSTER.map((o) => [o.role, o.weapon]))
+    const hpMin = Math.min(...ROSTER.map((o) => o.maxHp))
+    const hpMax = Math.max(...ROSTER.map((o) => o.maxHp))
+    const speedMin = Math.min(...ROSTER.map((o) => o.speed))
+    const speedMax = Math.max(...ROSTER.map((o) => o.speed))
+    const done = useResearchStore.getState().done
+    for (const c of candidates) {
+      expect(roles.has(c.role)).toBe(true)
+      expect(c.weapon).toBe(roleWeapon.get(c.role))
+      expect(c.status).toBe('READY')
+      expect(c.maxHp).toBeGreaterThanOrEqual(hpMin)
+      expect(c.maxHp).toBeLessThanOrEqual(hpMax)
+      expect(c.speed).toBeGreaterThanOrEqual(speedMin)
+      expect(c.speed).toBeLessThanOrEqual(speedMax)
+      // A candidate carries no pins: all four bays read current issue.
+      expect('pins' in c).toBe(false)
+      const bays = wornAugs(done, undefined)
+      expect(bays).toHaveLength(4)
+      for (const bay of bays) {
+        expect(bay.pinned).toBe(false)
+        expect(bay.node).toEqual(currentIssue(done, bay.slot))
+      }
+    }
+
+    // The figure hash is a pure function of id + codename (ui/portrait.tsx);
+    // name, id and codename survive a save/reload, so name and figure match.
+    const before = candidates.map((c) => ({
+      name: c.name,
+      figure: hashOf(c.id + ':' + c.codename),
+    }))
+    const reloaded = JSON.parse(JSON.stringify(captureSave())) as SaveV10
+    useCampaignStore.setState(initialCampaignData())
+    useCampaignStore.setState({ candidates: [] })
+    hydrateSave(reloaded)
+    const after = useCampaignStore.getState().candidates.map((c) => ({
+      name: c.name,
+      figure: hashOf(c.id + ':' + c.codename),
+    }))
+    expect(after).toEqual(before)
+  })
+
+  it('3 offers and 24 strategic hours with no hire still holds 3 offers (AC 28)', () => {
+    startNewOperation(memoryStorage())
+    const t = useWorldStore.getState().t
+    expect(useCampaignStore.getState().candidates).toHaveLength(3)
+    useCampaignStore.getState().sync(t + 24 * HOUR)
+    expect(useCampaignStore.getState().candidates).toHaveLength(3)
+  })
+
+  it('every candidate hire cost is inside 16000–34000 CR inclusive (AC 29)', () => {
+    expect(HIRE_MIN_COST).toBe(16000)
+    expect(HIRE_MAX_COST).toBe(34000)
+    startNewOperation(memoryStorage())
+    // The opening offers plus 20 days of refreshes.
+    const seen = [...useCampaignStore.getState().candidates]
+    for (let day = 1; day <= 20; day++) {
+      useCampaignStore.getState().sync(day * 24 * HOUR)
+      seen.push(useCampaignStore.getState().candidates.at(-1)!)
+    }
+    for (const c of seen) {
+      expect(c.cost).toBeGreaterThanOrEqual(HIRE_MIN_COST)
+      expect(c.cost).toBeLessThanOrEqual(HIRE_MAX_COST)
+    }
   })
 })
