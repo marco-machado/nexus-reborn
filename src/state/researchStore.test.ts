@@ -492,18 +492,21 @@ describe('KIA keeps completed research (RA-014)', () => {
 
   it('completed projects stay researched after X is KIA', () => {
     useCampaignStore.setState(initialCampaignData())
+    useWorldStore.setState({ t: 0 })
     useResearchStore.setState({ done: [propellants.id, coating.id], labs: idle(), lastSyncT: 0 })
+    // A win, so the Debrief apply spends m01's 2-day ETA and runs the
+    // Research sync at t1 = 172800 with the KIA already applied.
     useAppStore.setState({
       squad: ['op1', 'op2'],
       lastAppliedKey: 0,
       outcome: settleOutcome({
         applyKey: 1,
-        won: false,
+        won: true,
         kills: 0,
         casualties: 1,
         timeSec: 300,
         civiliansHit: 0,
-        reward: 0,
+        reward: 85000,
         bonus: 0,
         deadIds: ['op1'],
         survivorHp: { op2: 1 },
@@ -512,8 +515,11 @@ describe('KIA keeps completed research (RA-014)', () => {
     })
     applyDebrief('m01')
     expect(useCampaignStore.getState().operatives.some((o) => o.id === 'op1')).toBe(false)
+    // The research sync ran at the post-ETA time.
+    expect(useWorldStore.getState().t).toBe(172800)
+    expect(useResearchStore.getState().lastSyncT).toBe(172800)
     const { done } = useResearchStore.getState()
-    expect(done).toEqual([propellants.id, coating.id])
+    expect(done).toEqual(['b-propellants', 'b-coating'])
     expect(nodeState(propellants, done, useResearchStore.getState().labs)).toBe('researched')
     expect(nodeState(coating, done, useResearchStore.getState().labs)).toBe('researched')
   })

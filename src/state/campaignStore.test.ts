@@ -16,6 +16,7 @@ import {
 } from './campaignStore'
 import { applyDebrief } from './debrief'
 import { freezeDeploy } from './deployFreeze'
+import { abortMission, teardownMission } from './missionLifecycle'
 import { nodeState, useResearchStore } from './researchStore'
 import { captureSave, hydrateSave, startNewOperation, type SaveStorage, type SaveV10 } from './save'
 import { useWorldStore } from './worldStore'
@@ -23,7 +24,6 @@ import { ROSTER, missionById } from '../game/data'
 import { canDeploy } from '../game/deployGate'
 import { emptyLoadout } from '../game/mass'
 import {
-  AUG_SLOTS,
   appliedNodeIds,
   currentIssue,
   nodeById,
@@ -769,18 +769,27 @@ describe('new campaign roster (RA-010)', () => {
 
   it('New Operation after a lived-in campaign resets to the same eight', () => {
     startNewOperation(memoryStorage())
-    const hire = useCampaignStore.getState().candidates[0]
+    const opening = useCampaignStore.getState().candidates
+    const hire = opening[0]
     useCampaignStore.getState().reportMission(
       'm01',
       outcome({ casualties: 1, deadIds: ['op1'], survivorHp: { op2: 0.1 } }),
       9000,
     )
+    // GHOST ended at f = 0.1: Injured for 135771 s from t0 = 9000.
+    expect(useCampaignStore.getState().roster.op2).toMatchObject({
+      status: 'INJURED',
+      recoverAtT: 9000 + 135771,
+    })
     expect(useCampaignStore.getState().acceptHire(hire.id)).toBe(true)
     useCampaignStore.getState().sync(9000 + 200 * HOUR)
     const lived = useCampaignStore.getState()
     expect(lived.roster.op1).toBeUndefined()
     expect(lived.roster[hire.id]).toBeDefined()
     expect(lived.roster[RAVEN].status).toBe('READY')
+    // 200 h of refreshes moved the market off the opening three offers.
+    expect(lived.candidates.map((c) => c.id)).not.toContain(hire.id)
+    expect(lived.nextCandidateT).toBeGreaterThan(86400)
 
     startNewOperation(memoryStorage())
     expectFreshRoster()
@@ -788,6 +797,11 @@ describe('new campaign roster (RA-010)', () => {
     expect(state.roster[hire.id]).toBeUndefined()
     expect(state.roster[RAVEN].recoverAtT).toBe(86400)
     expect(state.lastReport).toBeNull()
+    // The market is back to the opening three offers and the first 24 h refresh.
+    expect(state.candidates).toHaveLength(3)
+    expect(state.candidates).toEqual(opening)
+    expect(state.candidates[0].id).toBe(hire.id)
+    expect(state.nextCandidateT).toBe(86400)
   })
 })
 
@@ -819,6 +833,12 @@ describe('injuryRecoverySec helper values (RA-012)', () => {
     const state = useCampaignStore.getState()
     expect(state.roster.op1).toEqual({ status: 'READY', recoverAtT: null, xp: 1, pins: {} })
     expect(state.lastReport?.injured).toEqual([])
+  })
+
+  it('returns the rounded literals at non-midpoint f: 0.2 -> 98743 s, 0.1 -> 135771 s (AC 57)', () => {
+    // 43200 + (1 - 0.2 / 0.35) * 129600 = 98742.86; 43200 + (1 - 0.1 / 0.35) * 129600 = 135771.43.
+    expect(injuryRecoverySec(0.2)).toBe(98743)
+    expect(injuryRecoverySec(0.1)).toBe(135771)
   })
 
   it('clamps f below 0 and above 0.35 and always returns an integer', () => {
@@ -878,6 +898,16 @@ describe('debrief classifies survivors as Ready, Injured, or KIA (RA-013)', () =
     expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: D }])
     expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
     useAppStore.getState().toggleOperative('op1')
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
+  })
+
+  it('f = 0.349, just under the threshold, is Injured at t0 + 43570 (AC 19)', () => {
+    // round(43200 + (1 - 0.349 / 0.35) * 129600) = round(43570.29) = 43570 s.
+    debrief({ survivorHp: { op1: 0.349, op2: 1, op3: 1 } })
+    const state = useCampaignStore.getState()
+    expect(state.roster.op1.status).toBe('INJURED')
+    expect(state.roster.op1.recoverAtT).toBe(T0 + 43570)
+    expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: 43570 }])
     expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
   })
 
@@ -981,23 +1011,31 @@ describe('KIA removes the operative from the living roster (RA-014)', () => {
   })
 
   it('X in deadIds receives 0 Experience while survivors earn theirs (Edge Cases)', () => {
-    debrief({ won: true, reward: 85000, casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op3: 1 } })
+    // op2 is listed as dead and as a survivor: the death wins, so no award.
+    debrief({ won: true, reward: 85000, casualties: 1, deadIds: ['op2'], survivorHp: { op1: 1, op2: 1, op3: 1 } })
     const state = useCampaignStore.getState()
     expect(state.lastReport?.xp.map((x) => x.id)).toEqual(['op1', 'op3'])
     expect(state.lastReport?.xp.some((x) => x.id === 'op2')).toBe(false)
+    expect(state.lastReport?.kia).toEqual([{ id: 'op2', codename: 'GHOST' }])
+    expect(state.lastReport?.injured).toEqual([])
     expect(state.roster.op2).toBeUndefined()
+    expect(state.operatives.some((o) => o.id === 'op2')).toBe(false)
     expect(state.roster.op1.xp).toBe(1)
+    expect(state.roster.op3.xp).toBe(1)
   })
 
   it('World Network reads the kia names only and never queries the live Roster (Edge Cases)', () => {
     const spy = vi.spyOn(useCampaignStore, 'getState')
-    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0, deadIds: ['op2'] }), ['GHOST'])
+    // deadIds names op2 (GHOST) but the kia list says ZZZ: the feed must print
+    // the list it was given, not a codename looked up from the dead id.
+    useWorldStore.getState().applyMissionResult('m01', outcome({ won: false, reward: 0, deadIds: ['op2'] }), ['ZZZ'])
     expect(spy).not.toHaveBeenCalled()
     const events = kiaEvents()
     expect(events).toHaveLength(1)
-    expect(events[0].text).toContain('GHOST')
-    // Every other roster codename stays out of the feed line.
-    for (const op of ROSTER.filter((o) => o.id !== 'op2')) {
+    expect(events[0].text).toContain('ZZZ')
+    expect(events[0].text).not.toContain('GHOST')
+    // No roster codename reaches the feed line.
+    for (const op of ROSTER) {
       expect(events[0].text).not.toContain(op.codename)
     }
   })
@@ -1044,11 +1082,19 @@ describe('Experience award and deploy sampling (RA-015)', () => {
     debrief({ quietReplay: true, reward: 0, survivorHp: { op1: 1 } })
     expect(useCampaignStore.getState().roster.op1.xp).toBe(2)
 
-    // Abort leaves the mission for the World screen with no outcome to apply.
-    useAppStore.setState({ phase: 'mission', outcome: null })
-    useAppStore.getState().goto('world')
+    // The applied outcome stays in the store; the next mission is aborted
+    // through the real Hud sequence (abortMission, then MissionScreen cleanup).
+    const keyBefore = useAppStore.getState().lastAppliedKey
+    expect(keyBefore).toBe(2)
+    expect(useAppStore.getState().outcome).not.toBeNull()
+    useAppStore.setState({ phase: 'mission' })
+    abortMission('m01')
+    teardownMission()
+    expect(useAppStore.getState().phase).toBe('world')
+    // A stray apply after the Abort finds only the already-applied key.
     applyDebrief('m01')
     expect(useCampaignStore.getState().roster.op1.xp).toBe(2)
+    expect(useAppStore.getState().lastAppliedKey).toBe(2)
   })
 
   it('awarded Experience is sampled into the next deploy; a later award leaves the on-ground squad unchanged (AC 26)', () => {
@@ -1087,28 +1133,40 @@ describe('Experience award and deploy sampling (RA-015)', () => {
 })
 
 // RA-016 (TR-roster-003, GDD AC 22/40/78): Injury recovery runs on strategic
-// t through campaignStore.sync(t), from any strategy Screen tick (Assembly
-// included) and the debrief catch-up. Recovery sets Ready and never refills
-// the Squad bay cleared at injury.
+// t through campaignStore.sync(t). These tests drive it from a strategy Screen
+// tick (the world clock) and from direct sync calls; the win catch-up sync
+// inside the Debrief apply is covered by RA-017 and RA-018. Recovery sets
+// Ready and never refills the Squad bay cleared at injury.
 describe('injury recovery on strategic sync (RA-016)', () => {
+  // f = 0.175 at t0 = 0 is D = 108000 s, so recovery is due at T = 30 h.
   const T = 30 * HOUR
+  let key = 0
   const resetStores = () => {
     useWorldStore.setState(useWorldStore.getInitialState(), true)
     useAppStore.setState(useAppStore.getInitialState(), true)
   }
-  const injure = (...ids: string[]) =>
-    useCampaignStore.setState((state) => {
-      const roster = { ...state.roster }
-      for (const id of ids) roster[id] = { ...roster[id], status: 'INJURED', recoverAtT: T }
-      return { roster }
-    })
+  // Injures through the real path: a lost debrief at t0 = 0 (a loss spends no
+  // ETA, so no catch-up sync runs), which also clears the injured bays.
+  const injure = (...ids: string[]) => {
+    key += 1
+    const survivorHp = Object.fromEntries(
+      useAppStore.getState().squad.map((id) => [id, ids.includes(id) ? 0.175 : 1]),
+    )
+    useAppStore.setState({ outcome: outcome({ applyKey: key, won: false, reward: 0, survivorHp }) })
+    applyDebrief('m01')
+  }
   beforeEach(() => {
     resetStores()
+    key = 0
+    useWorldStore.setState({ t: 0 })
+    useAppStore.setState({ squad: ['op1', 'op2', 'op3', 'op4'], lastAppliedKey: 0, phase: 'team' })
+    injure('op2')
     // Keep the market quiet unless a test schedules it, so only recovery moves.
     useCampaignStore.setState({ nextCandidateT: 10 * T })
-    injure('op2')
-    // op2's bay was cleared at injury; the squad holds the other two.
-    useAppStore.setState({ squad: ['op1', 'op3'], phase: 'team' })
+    // The debrief recorded the injury at T and cleared op2's bay.
+    expect(useCampaignStore.getState().roster.op2).toMatchObject({ status: 'INJURED', recoverAtT: 108000 })
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3', 'op4'])
+    useAppStore.setState({ phase: 'team' })
   })
   afterEach(resetStores)
 
@@ -1142,17 +1200,17 @@ describe('injury recovery on strategic sync (RA-016)', () => {
     const entry = useCampaignStore.getState().roster.op2
     expect(entry.status).toBe('READY')
     expect(entry.recoverAtT).toBeNull()
-    expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3', 'op4'])
   })
 
   it('a recovered operative becomes Ready but the bay cleared at injury stays empty (AC 22)', () => {
     useCampaignStore.getState().sync(T + HOUR)
     expect(useCampaignStore.getState().roster.op2.status).toBe('READY')
-    expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3', 'op4'])
     expect(useAppStore.getState().squad).not.toContain('op2')
     // Ready again, so the player may assign them back by hand.
     useAppStore.getState().toggleOperative('op2')
-    expect(useAppStore.getState().squad).toEqual(['op1', 'op3', 'op2'])
+    expect(useAppStore.getState().squad).toEqual(['op1', 'op3', 'op4', 'op2'])
   })
 
   it('sync(T - 1) leaves the operative Injured with recoverAtT unchanged (Edge Cases)', () => {
@@ -1164,6 +1222,7 @@ describe('injury recovery on strategic sync (RA-016)', () => {
 
   it('two Injured operatives with the same T both recover in one sync (Edge Cases)', () => {
     injure('op4')
+    expect(useCampaignStore.getState().roster.op4).toMatchObject({ status: 'INJURED', recoverAtT: 108000 })
     useCampaignStore.getState().sync(T)
     const { roster } = useCampaignStore.getState()
     expect(roster.op2.status).toBe('READY')
@@ -1225,6 +1284,13 @@ describe('win ETA catch-up of injury downtime (RA-017)', () => {
   )
 
   it('t1 short of t0 + D leaves positive remaining and the operative Injured (Edge Cases)', () => {
+    // Injured at t0 = 0 with f = 0.175 (D = 108000), then caught up to t1 = 100000.
+    useCampaignStore.getState().reportMission('m01', outcome({ survivorHp: { op1: F_30H } }), 0)
+    useCampaignStore.getState().sync(100000)
+    const entry = useCampaignStore.getState().roster.op1
+    expect(entry.status).toBe('INJURED')
+    expect(entry.recoverAtT).toBe(108000)
+    expect(remainingDowntimeSec(entry.recoverAtT, 100000)).toBe(8000)
     expect(remainingDowntimeSec(108000, 100000)).toBe(8000)
     expect(remainingDowntimeSec(null, 100000)).toBe(0)
     expect(remainingDowntimeSec(108000, 108000)).toBe(0)
@@ -1250,6 +1316,16 @@ describe('win ETA catch-up of injury downtime (RA-017)', () => {
   })
 
   it('the injury line reports the original D in hours, not remaining downtime (AC 60)', () => {
+    // A win from t0 = 0: the ETA catch-up to t1 = 172800 finishes recovery, so
+    // remaining is 0, yet the line still reads the original 108000 s as 30 h.
+    useWorldStore.setState({ t: 0 })
+    useAppStore.setState({ outcome: outcome({ survivorHp: { op1: F_30H, op2: 1, op3: 1 } }) })
+    applyDebrief('m01')
+    expect(useWorldStore.getState().t).toBe(172800)
+    const report = useCampaignStore.getState().lastReport!
+    expect(report.injured[0].downtimeSec).toBe(108000)
+    expect(injuryLineHours(report.injured[0].downtimeSec)).toBe(30)
+    expect(remainingDowntimeSec(useCampaignStore.getState().roster.op1.recoverAtT, 172800)).toBe(0)
     expect(injuryLineHours(108000)).toBe(30)
     // Mid-recovery, remaining is 8000 s (3 h rounded up) but the line stays 30 h.
     expect(remainingDowntimeSec(108000, 100000)).toBe(8000)
@@ -1357,7 +1433,7 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
 
   it('a quiet-replay win still applies KIA, injury, +1 Experience and the t1 catch-up (AC 74)', () => {
     useCampaignStore.setState({ contractsWon: ['m01'] })
-    const D = injuryRecoverySec(F_30H)
+    const D = 108000 // f = 0.175: 30 h
     const state = debrief('m01', {
       quietReplay: true,
       casualties: 1,
@@ -1385,7 +1461,8 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
   })
 
   it('a loss that records injury at t0 runs no t1 jump; remaining downtime is still D (AC 24)', () => {
-    const D = injuryRecoverySec(F_30H)
+    // f = 0.175 is D = 108000 s (30 h).
+    const D = 108000
     const state = debrief('m01', {
       won: false,
       reward: 0,
@@ -1394,10 +1471,18 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
     expect(useWorldStore.getState().t).toBe(T0)
     expect(state.roster.op1).toMatchObject({ status: 'INJURED', recoverAtT: T0 + D })
     expect(remainingDowntimeSec(state.roster.op1.recoverAtT, useWorldStore.getState().t)).toBe(D)
+    // The loss still clears the injured bay and awards +1 Experience to each survivor.
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3', 'op4'])
+    expect(state.roster.op1.xp).toBe(1)
+    expect(state.roster.op2.xp).toBe(1)
+    expect(state.lastReport?.xp).toEqual([
+      { id: 'op1', codename: 'MARA', gained: 1, total: 1 },
+      { id: 'op2', codename: 'GHOST', gained: 1, total: 1 },
+    ])
   })
 
   it('a loss with deadIds and survivors still applies KIA, injury and +1 Experience at t0 (Edge Cases: If Loss)', () => {
-    const D = injuryRecoverySec(F_30H)
+    const D = 108000 // f = 0.175: 30 h
     const state = debrief('m02', {
       won: false,
       reward: 0,
@@ -1502,8 +1587,7 @@ describe('augmentation bay wear resolution (RA-021)', () => {
     const done = useResearchStore.getState().done
     for (const op of useCampaignStore.getState().operatives) {
       const bays = wearOf(op.id)
-      expect(bays.map((b) => b.slot)).toEqual(AUG_SLOTS)
-      expect(AUG_SLOTS).toHaveLength(4)
+      expect(bays.map((b) => b.slot)).toEqual(['NEURAL', 'CHEST', 'ARMS', 'LEGS'])
       for (const bay of bays) {
         if (bay.node === null) continue
         expect(bay.node.augSlot).toBe(bay.slot)
@@ -1634,9 +1718,19 @@ describe('candidate market offers and hire cost (RA-022)', () => {
   it('3 offers and 24 strategic hours with no hire still holds 3 offers (AC 28)', () => {
     startNewOperation(memoryStorage())
     const t = useWorldStore.getState().t
-    expect(useCampaignStore.getState().candidates).toHaveLength(3)
+    expect(t).toBe(0)
+    const opening = useCampaignStore.getState().candidates.map((c) => c.id)
+    expect(opening).toHaveLength(3)
+    expect(useCampaignStore.getState().nextCandidateT).toBe(86400)
     useCampaignStore.getState().sync(t + 24 * HOUR)
-    expect(useCampaignStore.getState().candidates).toHaveLength(3)
+    const after = useCampaignStore.getState()
+    expect(after.candidates).toHaveLength(3)
+    // The refresh fired: the oldest offer dropped, a new one appended, next due at 48 h.
+    const ids = after.candidates.map((c) => c.id)
+    expect(ids).not.toContain(opening[0])
+    expect(ids.slice(0, 2)).toEqual(opening.slice(1))
+    expect(opening).not.toContain(ids[2])
+    expect(after.nextCandidateT).toBe(172800)
   })
 
   it('every candidate hire cost is inside 16000–34000 CR inclusive (AC 29)', () => {
@@ -1647,8 +1741,12 @@ describe('candidate market offers and hire cost (RA-022)', () => {
     const seen = [...useCampaignStore.getState().candidates]
     for (let day = 1; day <= 20; day++) {
       useCampaignStore.getState().sync(day * 24 * HOUR)
-      seen.push(useCampaignStore.getState().candidates.at(-1)!)
+      const rolled = useCampaignStore.getState().candidates.at(-1)!
+      // Each daily sync rolled a candidate not seen before.
+      expect(seen.map((c) => c.id)).not.toContain(rolled.id)
+      seen.push(rolled)
     }
+    expect(new Set(seen.map((c) => c.id)).size).toBe(23)
     for (const c of seen) {
       expect(c.cost).toBeGreaterThanOrEqual(HIRE_MIN_COST)
       expect(c.cost).toBeLessThanOrEqual(HIRE_MAX_COST)
@@ -1770,6 +1868,8 @@ describe('hire refusals and success (RA-023)', () => {
     const base = useCampaignStore.getState().candidates[0]
     const assault = { ...base, id: base.id + '-assault', role: 'assault' as const, weapon: 'assault' as const }
     expect(living.some((o) => o.id === assault.id)).toBe(false)
+    const others = useCampaignStore.getState().candidates.slice(1).map((o) => o.id)
+    expect(others).toHaveLength(2)
     useCampaignStore.setState({
       candidates: [assault, ...useCampaignStore.getState().candidates.slice(1)],
     })
@@ -1786,5 +1886,7 @@ describe('hire refusals and success (RA-023)', () => {
       expect.arrayContaining([incumbent.id, assault.id]),
     )
     expect(c.candidates.some((o) => o.id === assault.id)).toBe(false)
+    // The two offers not hired are still on the market.
+    for (const id of others) expect(c.candidates.map((o) => o.id)).toContain(id)
   })
 })
