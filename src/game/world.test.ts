@@ -3871,3 +3871,282 @@ describe('eliminate counts tagged Units only; optionals never gate the win (TM-0
     expect(out ? netPayout(out) : -1).toBe(MISSION.reward)
   })
 })
+
+// TM-013 (Sprint 8, story 013; TR-tactical-010, ADR-0002, ADR-0021): Loss on a
+// wipe, a required VIP death or a required timer (AC 17); the same-step
+// tiebreak (R5-a); a Loss still emits its counters (R5-b); an optional timer
+// fails only itself (R5-c). Abort (AC 18) is covered in src/state/appStore.test.ts.
+describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-b / R5-c)', () => {
+  const HOLLOW_CROWN = MISSIONS[1]
+  const TOUGH = 100000
+  const ELIMINATE: ObjectiveDef = {
+    id: 'clear',
+    label: 'CLEAR THE GARRISON',
+    kind: 'eliminate-tag',
+    tag: 'garrison',
+  }
+
+  function put(u: { pos: Vec2; path: Vec2[] }, at: Vec2): void {
+    u.pos.x = at.x
+    u.pos.z = at.z
+    u.path.length = 0
+  }
+
+  // Keeps a Unit alive, pinned and harmless.
+  function pin(u: Unit, hp: number): void {
+    u.holdFire = true
+    u.holdGround = true
+    u.reloading = 999
+    u.alerted = false
+    u.path.length = 0
+    if (u.patrol) u.patrol.length = 0
+    u.hp = hp
+    u.maxHp = Math.max(hp, 1)
+  }
+
+  // Every enemy dead except one garrison holdout, which is returned.
+  function lastGarrison(w: WorldApi): Unit {
+    const garrison = w.units.filter((u) => u.kind === 'enemy' && u.tag === 'garrison')
+    expect(garrison.length).toBeGreaterThan(0)
+    const holdout = garrison[0]
+    for (const u of w.units) if (u.kind === 'enemy' && u !== holdout) u.stance = 'dead'
+    return holdout
+  }
+
+  // Where operative a1 inserts on `m`'s city (deterministic from the seed).
+  function insertion(m: MissionDef): Vec2 {
+    const probe = spawn({ ...m, objectives: [] }, ops(['op1']))
+    const a1 = probe.unit('a1')!
+    return { x: a1.pos.x, z: a1.pos.z }
+  }
+
+  const logHas = (s: string) => useMissionStore.getState().log.some((e) => e.msg.includes(s))
+
+  it('AC 17a: no living operative left is a Loss, and the outcome reads won === false', () => {
+    const w = spawn(MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'agent') u.stance = 'dead'
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+    expect(logHas('SQUAD ELIMINATED')).toBe(true)
+    warm(w, 3)
+    expect(useAppStore.getState().outcome?.won).toBe(false)
+  })
+
+  it('AC 17b: the required escort VIP dying is a Loss with a living squad, and the outcome reads won === false', () => {
+    expect(HOLLOW_CROWN.objectives.some((d) => d.kind === 'escort' && !d.optional)).toBe(true)
+    const w = spawn(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const vip = w.units.find((u) => u.kind === 'vip')!
+    const a1 = w.unit('a1')!
+    put(a1, { x: vip.pos.x + 5, z: vip.pos.z })
+    expect(w.orderGrenade('a1', { x: vip.pos.x, z: vip.pos.z })).toBe(true)
+    expect(vip.stance).toBe('dead')
+    expect(w.units.some((u) => u.kind === 'agent' && u.stance !== 'dead')).toBe(true)
+    expect(useMissionStore.getState().result).toBe('lost')
+    expect(logHas('THE ASSET IS DEAD')).toBe(true)
+    warm(w, 3)
+    expect(useAppStore.getState().outcome?.won).toBe(false)
+  })
+
+  it('AC 17c: a required time limit expiring is a Loss, and the outcome reads won === false', () => {
+    const m: MissionDef = {
+      ...MISSION,
+      objectives: [{ id: 'drop', label: 'REACH THE DROP', kind: 'reach-zone', zone: { x: 2, z: 2, r: 1 }, failSec: 2 }],
+    }
+    const w = spawn(m, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    warm(w, 1.5)
+    expect(useMissionStore.getState().result).toBe('none')
+    warm(w, 1)
+    expect(useMissionStore.getState().result).toBe('lost')
+    expect(useMissionStore.getState().objectives[0].failed).toBe(true)
+    expect(w.units.some((u) => u.kind === 'agent' && u.stance !== 'dead')).toBe(true)
+    warm(w, 3)
+    expect(useAppStore.getState().outcome?.won).toBe(false)
+  })
+
+  it('R5-a: the last operative dying in the step the last required objective completes is a Win; the dead grade KIA', () => {
+    const m: MissionDef = { ...MISSION, objectives: [ELIMINATE] }
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const holdout = lastGarrison(w)
+    // One squad grenade at the operative's feet drops both the last garrison
+    // Unit (the last required objective) and the last operative.
+    put(holdout, a1.pos)
+    pin(holdout, 1)
+    a1.hp = 1
+    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(a1.stance).toBe('dead')
+    expect(holdout.stance).toBe('dead')
+    expect(useMissionStore.getState().result).toBe('none')
+
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('won')
+    expect(logHas('SQUAD ELIMINATED')).toBe(false)
+    warm(w, 3)
+    const out = useAppStore.getState().outcome
+    expect(out?.won).toBe(true)
+    expect(out?.deadIds).toEqual(['op1'])
+    expect(out?.casualties).toBe(1)
+    expect(out?.survivorHp).toEqual({})
+  })
+
+  it('R5-a control: the same blast with the garrison holdout surviving is a Loss', () => {
+    const m: MissionDef = { ...MISSION, objectives: [ELIMINATE] }
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const holdout = lastGarrison(w)
+    put(holdout, a1.pos)
+    pin(holdout, TOUGH)
+    a1.hp = 1
+    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(a1.stance).toBe('dead')
+    expect(holdout.stance).not.toBe('dead')
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+  })
+
+  it('R5-a: a required VIP death in the same blast that wipes the squad and drops the last garrison Unit is a Loss', () => {
+    const m: MissionDef = {
+      ...HOLLOW_CROWN,
+      objectives: [ELIMINATE, ...HOLLOW_CROWN.objectives.filter((d) => d.kind === 'escort' && !d.optional)],
+    }
+    expect(m.objectives).toHaveLength(2)
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const vip = w.units.find((u) => u.kind === 'vip')!
+    const holdout = lastGarrison(w)
+    put(holdout, a1.pos)
+    pin(holdout, 1)
+    put(vip, a1.pos)
+    vip.hp = 1
+    a1.hp = 1
+    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect([a1.stance, holdout.stance, vip.stance]).toEqual(['dead', 'dead', 'dead'])
+    // The VIP death decides the step: the Loss lands before the eliminate
+    // completion can be counted.
+    expect(useMissionStore.getState().result).toBe('lost')
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+    expect(logHas('THE ASSET IS DEAD')).toBe(true)
+    warm(w, 3)
+    expect(useAppStore.getState().outcome?.won).toBe(false)
+  })
+
+  it('R5-a: a required time limit expiring in the step its objective would complete is a Loss', () => {
+    const at = insertion(MISSION)
+    const zone: Zone = { x: at.x, z: at.z, r: 2 }
+    const drop: ObjectiveDef = { id: 'drop', label: 'REACH THE DROP', kind: 'reach-zone', zone }
+
+    // Control: with no time limit the operative stands in the zone and wins on step 1.
+    const open = spawn({ ...MISSION, objectives: [drop] }, ops(['op1']))
+    deployReset()
+    open.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('won')
+
+    // A window shorter than one step closes in that same step: Loss.
+    const w = spawn({ ...MISSION, objectives: [{ ...drop, failSec: 0.01 }] }, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const s = useMissionStore.getState()
+    expect(s.result).toBe('lost')
+    expect(s.objectives[0]).toMatchObject({ done: false, failed: true })
+    expect(logHas('THE WINDOW CLOSED')).toBe(true)
+  })
+
+  it('R5-b: a Loss emits the outcome DTO with won=false, civiliansHit and the completed optional ids', () => {
+    const at = insertion(MISSION)
+    const near: ObjectiveDef = {
+      id: 'opt-near',
+      label: 'TAG THE DROP',
+      kind: 'reach-zone',
+      zone: { x: at.x, z: at.z, r: 2 },
+      optional: true,
+      bonusReward: 4000,
+    }
+    const far: ObjectiveDef = {
+      id: 'opt-far',
+      label: 'FAR SIDE JOB',
+      kind: 'interact',
+      zone: { x: 2, z: 2, r: 1 },
+      durationSec: 5,
+      optional: true,
+      bonusReward: 7000,
+    }
+    const m: MissionDef = { ...MISSION, objectives: [near, far, ELIMINATE] }
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    expect(useMissionStore.getState().objectives[0].done).toBe(true)
+    const a1 = w.unit('a1')!
+    const holdout = lastGarrison(w)
+    pin(holdout, TOUGH)
+    // One bystander beside the operative takes the squad's own blast.
+    const civs = w.units.filter((u) => u.kind === 'civilian')
+    expect(civs.length).toBeGreaterThan(0)
+    civs.slice(1).forEach((c) => (c.stance = 'dead'))
+    put(civs[0], { x: a1.pos.x, z: a1.pos.z })
+    civs[0].hp = TOUGH
+    civs[0].maxHp = TOUGH
+    a1.hp = 1
+    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    w.tick(STEP)
+    expect(useMissionStore.getState().result).toBe('lost')
+
+    warm(w, 3)
+    const out = useAppStore.getState().outcome
+    expect(out).not.toBeNull()
+    expect(out?.won).toBe(false)
+    expect(out?.civiliansHit).toBe(1)
+    // The stored outcome is the Economy-priced DTO: the emitted completed
+    // optional ids survive as the bonus priced from exactly those ids (4000
+    // for opt-near; opt-far's 7000 absent), stored on a loss and paid as 0.
+    expect(out?.bonus).toBe(4000)
+    expect(out ? netPayout(out) : -1).toBe(0)
+    expect(out?.telemetry?.objectiveTimes.map((o) => o.id)).toEqual(['opt-near'])
+  })
+
+  it('R5-c: an optional time limit expiring fails only that optional, is not a Loss, and does not gate the required sequence', () => {
+    const timedOpt: ObjectiveDef = {
+      id: 'opt-timed',
+      label: 'PULL THE SERVER',
+      kind: 'interact',
+      zone: { x: 2, z: 2, r: 1 },
+      durationSec: 5,
+      optional: true,
+      failSec: 1,
+    }
+    const m: MissionDef = { ...MISSION, objectives: [timedOpt, ELIMINATE] }
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const holdout = lastGarrison(w)
+    pin(holdout, TOUGH)
+
+    expect(runUntil(w, () => useMissionStore.getState().objectives[0].failed === true, 10)).toBe(true)
+    let s = useMissionStore.getState()
+    expect(s.result).toBe('none')
+    expect(s.objectives[1]).toMatchObject({ id: 'clear', active: true, done: false, failed: false })
+    expect(logHas('THE WINDOW CLOSED')).toBe(false)
+
+    // The required step still completes, and the mission is a Win.
+    holdout.stance = 'dead'
+    w.tick(STEP)
+    s = useMissionStore.getState()
+    expect(s.objectives[1].done).toBe(true)
+    expect(s.result).toBe('won')
+    warm(w, 3)
+    expect(useAppStore.getState().outcome?.won).toBe(true)
+  })
+})

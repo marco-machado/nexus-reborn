@@ -36,7 +36,7 @@ import { createWorld } from '../game/world'
 import { useMissionStore } from './missionStore'
 import { abortMission, composeMission, teardownMission } from './missionLifecycle'
 import { useSettingsStore } from './settingsStore'
-import { loadRecords } from './telemetry'
+import { TELEMETRY_KEY, loadRecords } from './telemetry'
 import { getWorld, setWorld } from '../game/runtime'
 import { visibleContracts } from '../game/contracts'
 
@@ -3400,5 +3400,156 @@ describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
       stop()
       vi.useRealTimers()
     }
+  })
+})
+
+// TM-013 (Sprint 8, story 013; TR-tactical-010, ADR-0002, ADR-0015, ADR-0021):
+// a confirmed Abort opens no debrief, Tactical emits no outcome DTO, Credits /
+// roster / sectors / labs stay put, and the result is not a Loss. Telemetry on
+// appends at most one thin row that is not a campaign write; off, none.
+describe('Abort emits no outcome DTO and is not a Loss (TM-013, AC 18)', () => {
+  const MISSION_ID = MISSIONS[0].id
+  // Empty objectives: ticking never ends the mission, so it stays in progress.
+  const BARE = { ...MISSIONS[0], objectives: [] }
+
+  const mem = new Map<string, string>()
+  const storage = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => void mem.set(k, v),
+    removeItem: (k: string) => void mem.delete(k),
+  }
+
+  // Credits, roster, sectors and labs: everything AC 18 says Abort leaves alone.
+  function campaign() {
+    const c = useCampaignStore.getState()
+    const w = useWorldStore.getState()
+    const r = useResearchStore.getState()
+    return structuredClone({
+      credits: useAppStore.getState().credits,
+      operatives: c.operatives,
+      roster: c.roster,
+      sectors: w.sectors,
+      owner: w.owner,
+      contracts: w.contracts,
+      labs: r.labs,
+      done: r.done,
+    })
+  }
+
+  // Team Deploy, the real composer, then `seconds` of a mission in progress.
+  function deployAndRun(seconds: number): void {
+    useAppStore.setState({ phase: 'team', missionId: MISSION_ID, squad: [...DEFAULT_SQUAD] })
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+    const { world } = composeMission(BARE, useAppStore.getState().squad)
+    while (world.time < seconds) world.tick(0.05)
+    expect(useMissionStore.getState().result).toBe('none')
+  }
+
+  // Counts every outcome hand-off to the app store across `fn`.
+  function countOutcomes(fn: () => void): number {
+    const real = useAppStore.getState().setOutcome
+    let calls = 0
+    useAppStore.setState({ setOutcome: (o) => (calls++, real(o)) })
+    try {
+      fn()
+    } finally {
+      useAppStore.setState({ setOutcome: real })
+    }
+    return calls
+  }
+
+  // The real Hud onAbort (after the pause-menu confirm), then the real
+  // MissionScreen cleanup.
+  function confirmAbort(): void {
+    abortMission(MISSION_ID)
+    teardownMission()
+  }
+
+  beforeEach(() => {
+    mem.clear()
+    vi.stubGlobal('window', { localStorage: storage })
+    useWorldStore.setState({
+      ...structuredClone(worldBoot),
+      nextTaxT: 1e12,
+      nextEventT: 1e12,
+      nextContractT: Number.MAX_SAFE_INTEGER,
+    })
+    useCampaignStore.setState(initialCampaignData())
+    useResearchStore.setState({
+      done: ['b-propellants'],
+      labs: { ballistics: null, cybernetics: null, control: null },
+    })
+    useAppStore.setState({ credits: START_CREDITS, outcome: null, deploySerial: 0, lastAppliedKey: 0 })
+    setWorld(null)
+    useMissionStore.getState().reset()
+  })
+
+  afterEach(() => {
+    setWorld(null)
+    useMissionStore.getState().reset()
+    useSettingsStore.setState({ telemetry: false })
+    vi.unstubAllGlobals()
+  })
+
+  it('Abort mid-mission: no debrief, no outcome DTO emitted, Credits / roster / sectors / labs unchanged, not a Loss', () => {
+    useSettingsStore.setState({ telemetry: false })
+    const before = campaign()
+    const calls = countOutcomes(() => {
+      deployAndRun(60)
+      confirmAbort()
+    })
+
+    const app = useAppStore.getState()
+    expect(calls).toBe(0)
+    expect(app.phase).toBe('world')
+    expect(app.phase).not.toBe('debrief')
+    expect(app.outcome).toBeNull()
+    expect(app.lastAppliedKey).toBe(0)
+    expect(getWorld()).toBeNull()
+    expect(campaign()).toEqual(before)
+    // Not a Loss: the mission result never became 'lost'.
+    expect(useMissionStore.getState().result).toBe('none')
+    // Nothing to apply afterwards either.
+    applyDebrief(MISSION_ID)
+    expect(campaign()).toEqual(before)
+  })
+
+  it('telemetry on: at most one thin aborted row, not a Loss row and not a campaign write', () => {
+    useSettingsStore.setState({ telemetry: true })
+    // The Brief selection is not part of the abort; arrange it before the snapshot.
+    useAppStore.setState({ phase: 'world', missionId: MISSION_ID })
+    const before = campaign()
+    const save = captureSave()
+    const calls = countOutcomes(() => {
+      deployAndRun(30)
+      confirmAbort()
+    })
+
+    expect(calls).toBe(0)
+    const rows = loadRecords(storage)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].outcome).toBe('aborted')
+    expect(rows.some((r) => r.outcome === 'lost')).toBe(false)
+    // Thin: no combat invoice on the row.
+    for (const key of ['kills', 'kia', 'reward', 'bonus', 'fine', 'payout', 'civiliansHit']) {
+      expect(rows[0]).not.toHaveProperty(key)
+    }
+    // Only the telemetry key was written; the campaign save is untouched.
+    expect([...mem.keys()]).toEqual([TELEMETRY_KEY])
+    expect(mem.has(SAVE_KEY)).toBe(false)
+    expect(captureSave()).toEqual(save)
+    expect(campaign()).toEqual(before)
+  })
+
+  it('telemetry off: no telemetry record and no storage write at all', () => {
+    useSettingsStore.setState({ telemetry: false })
+    const before = campaign()
+    deployAndRun(30)
+    confirmAbort()
+    expect(loadRecords(storage)).toEqual([])
+    expect(mem.size).toBe(0)
+    expect(useAppStore.getState().outcome).toBeNull()
+    expect(campaign()).toEqual(before)
   })
 })

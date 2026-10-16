@@ -129,11 +129,11 @@ stories:
     name: "Loss conditions; abort emits no outcome DTO"
     file: "production/epics/tactical-mission/story-013-loss-conditions-and-abort-emits-no-outcome.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-014"
     name: "Quiet replay outcome and the deploy freeze"
     file: "production/epics/tactical-mission/story-014-quiet-replay-and-the-deploy-freeze.md"
