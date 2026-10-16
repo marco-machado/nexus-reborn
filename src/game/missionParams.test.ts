@@ -13,6 +13,7 @@ import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
 import { useAppStore } from '../state/appStore'
 import { mulberry32 } from './rng'
+import { missionRisk } from './forecast'
 import { appliedNodeIds, nodeById, wornAugs } from './research'
 import type { BayPins } from './research'
 import {
@@ -37,6 +38,7 @@ import {
   rollWeatherFront,
   weatherAt,
   weatherBriefLabel,
+  weatherMul,
   weatherNote,
 } from './missionParams'
 
@@ -469,5 +471,98 @@ describe('brief and deploy agree (TM-007, AC 8 / R5-b / R5-c)', () => {
     expect(hardD.civilians - stdD.civilians).toBe(fx.extraCivilians)
     expect(hardD.force).toBe(hardB.force)
     expect(hardD.civilians).toBe(hardB.civilians)
+  })
+})
+
+// TM-009 (Sprint 8, story 009; TR-tactical-004, ADR-0007, AC 10 / 26): the
+// Brief risk readout is built from the deployment counts, toughness and the
+// clearer scripted weather. Opening hour is none of those, and is itself not
+// derived from strategic time or from the weather script.
+describe('Opening hour changes no risk and is independent (TM-009, AC 10 / 26)', () => {
+  const DUSK = 18 * 3600 + 30 * 60
+  const NIGHT = 23 * 3600 + 5 * 60
+
+  // Mirrors the Brief (ui/index.tsx): counts from buildTacticalMap, mods from
+  // the sector, v from riskWeather. Chance is computed beside it at any intel.
+  function readout(m: MissionDef) {
+    const sectors = useWorldStore.getState().sectors
+    const mods = missionMods(m, sectors[m.sector], 'standard')
+    const tac = buildTacticalMap(m, missionVariant(m, false), {
+      enemyExtra: mods.enemyExtra,
+      civilianCount: mods.civilianCount,
+      officerCount: mods.officerCount,
+      heavyCount: mods.heavyCount,
+    })
+    return {
+      counts: tac.counts,
+      risk: missionRisk(tac.counts, {
+        enemyHpMul: mods.enemyHpMul,
+        visionMul: weatherMul(riskWeather(m)).visionMul,
+      }),
+      chance: missionChance(m, mods, 0),
+    }
+  }
+
+  beforeEach(() => {
+    useResearchStore.setState({ done: [] })
+  })
+
+  it('dusk and night deployments under one weather script read the same counts, risk and chance', () => {
+    expect(missionPeriod(DUSK)).toBe('dusk')
+    expect(missionPeriod(NIGHT)).toBe('night')
+    for (const base of MISSIONS) {
+      const script = { weather: 'light' as const, weatherFront: { to: 'heavy' as const, atSec: 150 } }
+      const dusk = readout({ ...base, ...script, openingHour: DUSK })
+      const night = readout({ ...base, ...script, openingHour: NIGHT })
+      expect(night, base.id).toEqual(dusk)
+      expect(Number.isFinite(dusk.risk.index)).toBe(true)
+      expect(dusk.chance).toBeGreaterThanOrEqual(35)
+    }
+  })
+
+  function contract(seed: number): GeneratedContract {
+    return {
+      id: 'gc-tm009-' + seed,
+      createdT: 0,
+      expiresAtT: 86400,
+      sector: 'eu',
+      cityId: 'ln',
+      district: 3,
+      type: 'SEIZURE',
+      client: 'omni',
+      threat: 'HIGH',
+      reward: 50000,
+      seed,
+      priority: false,
+      expedited: false,
+    }
+  }
+
+  it('a contract Opening hour does not follow strategic time', () => {
+    const t0 = useWorldStore.getState().t
+    try {
+      for (const seed of [7, 311, 90210]) {
+        useWorldStore.setState({ t: 0 })
+        const early = contractMission(contract(seed)).openingHour
+        // Twelve strategic hours later the same record opens at the same hour.
+        useWorldStore.setState({ t: 12 * 3600 })
+        expect(contractMission(contract(seed)).openingHour).toBe(early)
+      }
+    } finally {
+      useWorldStore.setState({ t: t0 })
+    }
+  })
+
+  it('a contract Opening hour does not follow the weather script', () => {
+    // Every opening weather, with and without a front, sees both dusk and night.
+    const seen = new Map<string, Set<string>>()
+    for (let seed = 1; seed <= 600; seed++) {
+      const m = contractMission(contract(seed))
+      const key = m.weather + (m.weatherFront ? '>' + m.weatherFront.to : '')
+      if (!seen.has(key)) seen.set(key, new Set())
+      seen.get(key)!.add(missionPeriod(m.openingHour))
+    }
+    expect(seen.size).toBeGreaterThanOrEqual(4)
+    for (const [key, periods] of seen) expect([...periods].sort(), key).toEqual(['dusk', 'night'])
   })
 })

@@ -1,12 +1,12 @@
 # Story 009: Opening hour changes no sight, noise, or risk; risk index formula
 
 > **Epic**: Tactical mission
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Feature
 > **Type**: Logic
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-16
 
 ## Context
 
@@ -33,8 +33,8 @@
 
 *From GDD `design/gdd/tactical-mission.md`, scoped to this story:*
 
-- [ ] **10.** **GIVEN** two deployments that differ only by Opening hour (dusk vs night) with the same weather script, **WHEN** CorpSec sight, weapon noise, and `risk_index` are computed, **THEN** sight, noise, and risk are unchanged; lighting is frozen from Opening hour (HUD clock still ticks; sky does not). Opening hour is independent of strategic time and of the weather script.
-- [ ] **26.** **GIVEN** `risk_index = round(((4p + 5g) × h + 0.5c) × (0.7 + 0.3v))` with `p = 8`, `g = 7`, `c = 22`, `h = 1.2`, `v = 0.9`, **WHEN** `missionRisk` is evaluated, **THEN** index is 89 and band is Severe (≥ 75). Intel < 2 Chance readout vs intel 2+ Risk index is Interface/Brief presentation — Tactical still computes both `missionChance` and `missionRisk` regardless of intel.
+- [x] **10.** **GIVEN** two deployments that differ only by Opening hour (dusk vs night) with the same weather script, **WHEN** CorpSec sight, weapon noise, and `risk_index` are computed, **THEN** sight, noise, and risk are unchanged; lighting is frozen from Opening hour (HUD clock still ticks; sky does not). Opening hour is independent of strategic time and of the weather script.
+- [x] **26.** **GIVEN** `risk_index = round(((4p + 5g) × h + 0.5c) × (0.7 + 0.3v))` with `p = 8`, `g = 7`, `c = 22`, `h = 1.2`, `v = 0.9`, **WHEN** `missionRisk` is evaluated, **THEN** index is 89 and band is Severe (≥ 75). Intel < 2 Chance readout vs intel 2+ Risk index is Interface/Brief presentation — Tactical still computes both `missionChance` and `missionRisk` regardless of intel.
 
 ---
 
@@ -76,9 +76,9 @@
 **Verification method**: Manual step-through in the in-app browser at 1280x720
 **Who must sign off**: qa-lead
 **Evidence to capture**: two screenshots of one mission 30+ s of tactical time apart, saved to `production/qa/evidence/tm-009/`
-- [ ] HUD clock differs between the two screenshots
-- [ ] Sky colour and light direction are the same in both
-- [ ] A dusk mission and a night mission show different lighting at open
+- [x] HUD clock differs between the two screenshots
+- [x] Sky colour and light direction are the same in both
+- [x] A dusk mission and a night mission show different lighting at open
 
 ---
 
@@ -88,7 +88,7 @@
 **Required evidence**:
 - Logic: test file beside the module — `src/game/missionParams.test.ts`, `src/game/world.test.ts`. — must exist and pass.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `src/game/forecast.test.ts` (AC 26: formula, band edges, no cap, clearer scripted weather), `src/game/missionParams.test.ts` (AC 10 / 26: dusk vs night risk, chance and counts equal; Opening hour independent of strategic time and weather script), `src/game/world.test.ts` (AC 10: sight, noise and a full fight equal at dusk and night; HUD clock differs)
 
 ---
 
@@ -96,3 +96,18 @@
 
 - Depends on: Story 007
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-16
+**Criteria**: 2/2 passing (AC 10, AC 26). AC 10 lighting half: screenshots at `production/qa/evidence/tm-009/` (README, 01-03); qa-lead sign-off named in the QA plan is not yet recorded.
+**Deviations**: None. Test files touched (`src/game/forecast.test.ts`, `src/game/missionParams.test.ts`, `src/game/world.test.ts`) match the Test Evidence section; `forecast.test.ts` is named by the QA plan, not the story's Required evidence line (dev-story open question, recorded).
+**Test Evidence**: Logic: `src/game/forecast.test.ts`, `src/game/missionParams.test.ts`, `src/game/world.test.ts` (11/11 TM-009 tests pass, `npx vitest run ... -t TM-009`, 2026-10-16); manual half: `production/qa/evidence/tm-009/README.md`
+**Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer. Advisory findings (not applied; follow-up):
+- `src/game/missionParams.test.ts:486-505` — `readout()` copies the Brief's risk wiring (`weatherMul(riskWeather(m)).visionMul`, duplicate of `src/ui/index.tsx:553-556`) instead of calling it; a change in index.tsx to live weather would fail no TM-009 test. Suggested fix: extract a pure `src/game` helper used by the Brief and the test.
+- `src/game/missionParams.test.ts:519` — `expect(dusk.chance).toBeGreaterThanOrEqual(35)` cannot fail (missionChance clamps to 35..95, `src/game/missionParams.ts:300`). Drop it or pin a value.
+- `src/game/missionParams.test.ts:486/502` — comment says "at any intel", but the third argument of `missionChance(m, mods, 0)` is researchedCount; neither function takes intel. Fix the comment or state that intel is not an input.
+- `src/game/world.test.ts:3383` — dusk-vs-night noise sweep runs `at(hour, false)` (no weather front); noise after the front is covered only through the full-fight test.
+- `src/game/forecast.test.ts:184` — `missionRisk(counts, { enemyHpMul: 1.2, visionMul: 0.8 }).index < 89` uses a hand-picked v and only shows monotonicity; the clearer-weather rule is tested by the riskWeather checks at line 179. Drop it or pin the heavy-weather literal.
+**Mutation Check**: Mutation check: FAILED AS EXPECTED — src/game/missionParams.ts:170 riskWeather returns live front weather (m.weatherFront.to) instead of clearerWeather(...) → 'v reads the clearer weather on the script, not the live weather after a front' failed; restored (cmp match, test file green)

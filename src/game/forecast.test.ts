@@ -137,3 +137,50 @@ describe('mission risk ignores the completed program (RS-020)', () => {
     useResearchStore.setState({ done: [] })
   })
 })
+
+// TM-009 (Sprint 8, story 009; TR-tactical-004, GDD tactical-mission AC 26):
+// risk_index = round(((4p + 5g) × h + 0.5c) × (0.7 + 0.3v)); bands at 30 /
+// 50 / 75. Literals are pinned from the GDD, not read from the module.
+describe('risk index formula (TM-009, AC 26)', () => {
+  const FLAT = { enemyHpMul: 1, visionMul: 1 }
+
+  it('p=8, g=7, c=22, h=1.2, v=0.9 gives index 89, band Severe', () => {
+    const risk = missionRisk({ patrols: 8, garrison: 7, civilians: 22 }, { enemyHpMul: 1.2, visionMul: 0.9 })
+    expect(risk).toEqual({ index: 89, band: 'SEVERE' })
+  })
+
+  it('band edges sit at 29/30, 49/50 and 74/75', () => {
+    // With h = v = 1 the index is round(0.5c), so c = 2 × index.
+    const at = (index: number) => missionRisk({ patrols: 0, garrison: 0, civilians: index * 2 }, FLAT)
+    expect(at(29)).toEqual({ index: 29, band: 'LOW' })
+    expect(at(30)).toEqual({ index: 30, band: 'GUARDED' })
+    expect(at(49)).toEqual({ index: 49, band: 'GUARDED' })
+    expect(at(50)).toEqual({ index: 50, band: 'HIGH' })
+    expect(at(74)).toEqual({ index: 74, band: 'HIGH' })
+    expect(at(75)).toEqual({ index: 75, band: 'SEVERE' })
+  })
+
+  it('the index is not capped at 100', () => {
+    // (4·20 + 5·20) × 1 + 0.5·40 = 200.
+    expect(missionRisk({ patrols: 20, garrison: 20, civilians: 40 }, FLAT)).toEqual({
+      index: 200,
+      band: 'SEVERE',
+    })
+  })
+
+  it('v reads the clearer weather on the script, not the live weather after a front', () => {
+    const counts = { patrols: 8, garrison: 7, civilians: 22 }
+    const base = MISSIONS[0]
+    // Light rain (v = 0.9) into heavy (v = 0.8): the clearer is light.
+    const worsening = { ...base, weather: 'light' as const, weatherFront: { to: 'heavy' as const, atSec: 120 } }
+    // Heavy into light: the clearer is still light.
+    const lifting = { ...base, weather: 'heavy' as const, weatherFront: { to: 'light' as const, atSec: 120 } }
+    for (const m of [worsening, lifting]) {
+      expect(riskWeather(m)).toBe('light')
+      const risk = missionRisk(counts, { enemyHpMul: 1.2, visionMul: weatherMul(riskWeather(m)).visionMul })
+      expect(risk).toEqual({ index: 89, band: 'SEVERE' })
+    }
+    // Live heavy weather after the worsening front would have read lower.
+    expect(missionRisk(counts, { enemyHpMul: 1.2, visionMul: 0.8 }).index).toBeLessThan(89)
+  })
+})

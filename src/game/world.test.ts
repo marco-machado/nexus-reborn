@@ -13,7 +13,7 @@ import { DEFAULT_SQUAD, MISSIONS, OFFICER_RADIO_DELAY, ROSTER, WEAPONS, operativ
 import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
 import { contractMission } from './contracts'
 import type { ContractType, GeneratedContract } from './contracts'
-import { DIFFICULTY_FX, missionMods, weatherMul } from './missionParams'
+import { DIFFICULTY_FX, missionMods, missionPeriod, weatherMul } from './missionParams'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
 import { netPayout, settleOutcome, useAppStore } from '../state/appStore'
@@ -3305,5 +3305,128 @@ describe('Weather retunes CorpSec sight and weapon noise only (TM-008, AC 9a / 9
     expect(w.vision).toBeCloseTo(SIGHT.light, 10)
     expect(useMissionStore.getState().log.some((e) => e.msg.includes('RAIN LIFTS'))).toBe(true)
     expect(earshot(m, FRONT_AT + 0.1)).toBeGreaterThan(earshot(m))
+  })
+})
+
+// TM-009 (Sprint 8, story 009; TR-tactical-004, ADR-0007): Opening hour is
+// presentation only. Two deployments that differ only by Opening hour (dusk
+// vs night) under one weather script see, hear and fight the same; only the
+// HUD clock reads a different hour.
+describe('Opening hour changes no sight or noise (TM-009, AC 10)', () => {
+  const DUSK = 18 * 3600 + 30 * 60
+  const NIGHT = 23 * 3600 + 5 * 60
+  // Scripted front: light rain until 4 s, heavy after.
+  const FRONT_AT = 4
+
+  function at(hour: number, front = true): MissionDef {
+    return {
+      ...MISSION,
+      openingHour: hour,
+      weather: 'light',
+      weatherFront: front ? { to: 'heavy', atSec: FRONT_AT } : undefined,
+    }
+  }
+
+  it('the two test hours are one dusk and one night opening', () => {
+    expect(missionPeriod(DUSK)).toBe('dusk')
+    expect(missionPeriod(NIGHT)).toBe('night')
+  })
+
+  it('CorpSec sight range is equal at dusk and night, before and after the scripted front', () => {
+    const dusk = spawn(at(DUSK), ops(['op1']), { mods: missionMods(at(DUSK)) })
+    const night = spawn(at(NIGHT), ops(['op1']), { mods: missionMods(at(NIGHT)) })
+    // Pinned GDD literals: light 12.6 m, heavy 11.2 m.
+    expect(dusk.vision).toBeCloseTo(12.6, 10)
+    expect(night.vision).toBe(dusk.vision)
+    deployReset()
+    warm(dusk, FRONT_AT + 0.2)
+    warm(night, FRONT_AT + 0.2)
+    expect(dusk.weather).toBe('heavy')
+    expect(night.weather).toBe('heavy')
+    expect(dusk.vision).toBeCloseTo(11.2, 10)
+    expect(night.vision).toBe(dusk.vision)
+  })
+
+  // Does a trooper `d` metres from a1 hear a1's rifle? Same probe shape as
+  // TM-008: muzzled target 2 m away, listener past any sight range.
+  function hears(m: MissionDef, d: number): boolean {
+    const w = spawn(m, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const guards = w.units
+      .filter((u) => u.kind === 'enemy' && (u.archetype ?? 'trooper') === 'trooper')
+      .slice(0, 2)
+    for (const u of w.units) if (u.kind === 'enemy' && !guards.includes(u)) u.stance = 'dead'
+    for (const g of guards) {
+      g.path.length = 0
+      g.patrol!.length = 0
+      g.holdGround = true
+    }
+    const [target, listener] = guards
+    const inward = a1.pos.x < w.city.size / 2 ? 1 : -1
+    target.pos.x = a1.pos.x
+    target.pos.z = a1.pos.z - 2
+    target.reloading = 999
+    listener.pos.x = a1.pos.x + inward * d
+    listener.pos.z = a1.pos.z
+    w.orderAttack(['a1'], target.id)
+    expect(runUntil(w, () => w.tracers.length > 0, 3)).toBe(true)
+    warm(w, 0.4)
+    return listener.aiState !== 'patrol'
+  }
+
+  it('weapon noise carries the same distance at dusk and night', () => {
+    const heard: boolean[] = []
+    for (let d = 15; d <= 30; d += 1) {
+      const dusk = hears(at(DUSK, false), d)
+      expect(hears(at(NIGHT, false), d), d + ' m').toBe(dusk)
+      heard.push(dusk)
+    }
+    // The sweep crosses the earshot edge, so it can tell two radii apart.
+    expect(heard).toContain(true)
+    expect(heard).toContain(false)
+  })
+
+  // Every unit's state after a scripted 20 s fight through the front.
+  function fight(hour: number) {
+    const m = at(hour)
+    const w = spawn(m, ops(['op1', 'op2', 'op3']), { mods: missionMods(m) })
+    deployReset()
+    w.tick(STEP)
+    const centre = { x: w.city.size / 2, z: w.city.size / 2 }
+    w.orderMove(['a1', 'a2', 'a3'], centre)
+    warm(w, 20)
+    const store = useMissionStore.getState()
+    return {
+      units: w.units.map((u) => ({
+        id: u.id,
+        x: u.pos.x,
+        z: u.pos.z,
+        hp: u.hp,
+        stance: u.stance,
+        aiState: u.aiState,
+        alerted: u.alerted,
+      })),
+      vision: w.vision,
+      weather: w.weather,
+      alert: store.alert,
+      log: store.log.map((e) => e.who + '|' + e.msg),
+      clock: store.clock,
+    }
+  }
+
+  it('a dusk and a night deployment play out identically; only the HUD clock differs', () => {
+    const dusk = fight(DUSK)
+    const night = fight(NIGHT)
+    const { clock: duskClock, ...duskRest } = dusk
+    const { clock: nightClock, ...nightRest } = night
+    expect(nightRest).toEqual(duskRest)
+    // The run is a real contact through the front, not an empty walk.
+    expect(dusk.log.some((l) => l.includes('WEATHER FRONT'))).toBe(true)
+    expect(dusk.log.some((l) => l.includes('Hostile neutralized'))).toBe(true)
+    // The clock ticks from each Opening hour; ~20 s have passed.
+    expect(duskClock.startsWith('18:30:2')).toBe(true)
+    expect(nightClock.startsWith('23:05:2')).toBe(true)
   })
 })
