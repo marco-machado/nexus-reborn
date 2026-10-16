@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-006 — Hold Ground pins and parks the path; Stop clears pathing and keeps stance bits (Logic)
+**Test file**: `src/game/world.test.ts`
+**What to test**:
+- AC 4: walking operative set to Hold Ground → position stays on the current tile across ticks, path parked and restored on release, and a squadmate pressing into the tile does not shove them (separation)
+- AC 6: path + Explicit + Hold Ground + Hold Fire, then Stop → path empty (including the parked path), `targetId` null, and both `holdGround` and `holdFire` still true
+**Edge cases**: release Hold Ground after Stop → no parked path is restored
+**Mutation check**: make Stop clear `holdGround` → AC 6 fails
+**Estimated test count**: ~4
 
 ---
 

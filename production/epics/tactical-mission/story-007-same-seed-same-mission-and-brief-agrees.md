@@ -58,7 +58,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-007 — Same seed builds the same mission; brief and deploy agree (Integration)
+**Test file**: `src/world/citygen.test.ts` (or `src/game/world.test.ts`) and `src/game/missionParams.test.ts`
+**What to test**:
+- AC 7: two builds from one seed produce equal district (walk grid, road rects, spawns), weather script and Opening hour
+- AC 8: brief params vs the created world agree on insertion, objective sequence, extraction, force/civilian counts, Opening hour and weather-front time
+**Proposed extra criteria (R-5)**: a different seed changes the district (the test can fail); unrest > 20 extras (+6 civilians, +1 street patrol) appear in both brief and deploy; Hardened extras appear in both
+**Mutation check**: seed `generateCity` from `Math.random` once → AC 7 fails
+**Estimated test count**: ~4
 
 ---
 

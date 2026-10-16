@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-004 — Idle auto-acquire and Attack under Hold Ground and Hold Fire (Logic)
+**Test file**: `src/game/world.test.ts`
+**What to test**:
+- AC 2d: idle operative, Hold Fire off, weapons free, visible in-range CorpSec → acquires and fires with no order; repeat for Hold Ground on and for Stopped
+- AC 3: Hold Fire and Hold Ground on, Attack an out-of-range hostile → `targetId` set, `holdFire` still true, position unchanged (no chase), and the shot fires once the hostile walks into range and LOS
+**Edge cases**: target dies before entering range; hostile out of LOS but in range (no shot)
+**Mutation check**: make Hold Ground chase anyway → AC 3 position assertion fails
+**Estimated test count**: ~5
 
 ---
 

@@ -57,7 +57,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-010 — civiliansHit counts unique squad-caused civilian first-hits (Logic)
+**Test file**: `src/game/world.test.ts`
+**What to test**:
+- AC 11: squad miss into a civilian before cover → `civiliansHit` +1 (hit, not death)
+- AC 12: same civilian hit again by the squad → no increase
+- AC 13: CorpSec-only civilian harm → `civiliansHit` 0
+**Edge cases**: two different civilians → 2; squad grenade on two civilians → +2, once each (GDD Edge Case); Loss still emits `N`
+**Mutation check**: drop the "already counted" set → AC 12 fails
+**Estimated test count**: ~5
 
 ---
 

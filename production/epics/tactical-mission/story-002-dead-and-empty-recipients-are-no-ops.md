@@ -58,7 +58,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-002 — Dead ids, empty selection, and Attack on a Device are no-ops (Logic)
+**Test file**: `src/game/world.test.ts` (`orders`)
+**What to test**:
+- AC 1c: an order naming a **dead** operative id (killed in the fixture, not an unknown id) changes nothing on that unit
+- AC 1e: empty selection: `orderMove([])`, `orderAttack([])` and the Q ability with `[]` leave every unit's path, target and cooldowns unchanged
+- AC 5d: `orderAttack(ids, deviceId)` leaves `targetId` null (no Explicit). Do not assert Device HP or a damage channel (OQ3)
+**Edge cases**: mixed list of one dead and one living id (only the living one moves); grenade confirm with empty selection (GDD Edge Case)
+**Source change**: finding 2. Check the Rust Haven destroy test (L1388) after the change.
+**Mutation check**: let `ordered()` keep dead units → AC 1c fails
+**Estimated test count**: ~5
 
 ---
 

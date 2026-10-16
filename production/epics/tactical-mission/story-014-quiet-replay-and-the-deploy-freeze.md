@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-014 — Quiet replay outcome and the deploy freeze (Logic)
+**Test file**: `src/game/world.test.ts` (`deploy freeze`)
+**What to test**:
+- AC 19: quiet replay to a finish emits one outcome DTO with `quietReplay: true` and the app enters Debrief
+- AC 20a: after create, a Research completion or pin change leaves weapons, HP, speed and the Research slice equal to the sampled values
+- AC 20b: a weather front retunes sight/noise and does not re-sample Research
+**Edge cases**: existing L2159 already stamps `quietReplay` from the slice; extend to the finished mission rather than duplicate it
+**Mutation check**: read live `researchStore` on front → AC 20b fails
+**Estimated test count**: ~4
 
 ---
 

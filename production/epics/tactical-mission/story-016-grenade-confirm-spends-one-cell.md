@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-016 — Grenade confirm spends one power cell; refusal spends nothing (Logic)
+**Test file**: `src/game/world.test.ts`
+**What to test**:
+- AC 23: valid throw (≤ 18 m, pavement snap ≤ 2.5 m) → cells −1; blast damage 70 at centre, 35 at 3.5 m, 0 beyond or without LOS
+- AC 24: zero cells, or squad cooldown running → throw refused, cells and cooldown unchanged
+**Edge cases**: land > 18 m refused; a body behind a wall in radius takes 0
+**Mutation check**: spend two cells → AC 23 fails
+**Estimated test count**: ~5
 
 ---
 

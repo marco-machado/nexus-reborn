@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-008 — Weather retunes CorpSec sight and weapon noise only (Logic)
+**Test file**: `src/game/world.test.ts` (`weather front`)
+**What to test**:
+- AC 9a: Standard cone range 14 / 12.6 / 11.2 m for none / light / heavy (literals)
+- AC 9b: accuracy and movement equal clear-weather values; omni notice 4.5 m
+- AC 9c: at the scripted front time: sight retunes, weapon-noise radius strictly decreases as rain increases (compare radii, do not paste `noiseMul`), a comm-log line appears, accuracy / movement / 4.5 m unchanged
+**Edge cases**: Hardened light rain 13.6 m (+1 m after weather); front from heavy to light (sight rises)
+**Mutation check**: apply the rain multiplier to accuracy → AC 9b fails
+**Estimated test count**: ~5
 
 ---
 

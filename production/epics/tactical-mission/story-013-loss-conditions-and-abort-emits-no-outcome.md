@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-013 — Loss conditions; abort emits no outcome DTO (Integration)
+**Test file**: `src/game/world.test.ts`, `src/state/appStore.test.ts`
+**What to test**:
+- AC 17: Loss on (a) wipe, (b) required VIP death, (c) required timer expiry — one test each, reading `won === false`
+- AC 18: Abort → no outcome DTO, no Debrief phase, Credits / roster / sectors / labs unchanged, not a Loss; telemetry on → at most one thin record, not a campaign write; telemetry off → none
+**Proposed extra criteria (R-5)**: same-step wipe and required completion → Win (GDD tiebreak); Loss still emits `civiliansHit` and completed optional ids; optional timer expiry fails only that optional
+**Mutation check**: let abort call the outcome emitter → AC 18 fails
+**Estimated test count**: ~6
 
 ---
 

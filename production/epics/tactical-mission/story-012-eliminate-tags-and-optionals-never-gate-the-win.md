@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-012 — Eliminate counts tagged Units only; optionals never gate the win (Logic)
+**Test file**: `src/game/world.test.ts`
+**What to test**:
+- AC 15: garrison-tagged eliminate completes when every garrison Unit is dead and an untagged street patrol lives; the required sequence completes
+- AC 16: all required done, every optional failed or ignored → result Win
+**Edge cases**: a tagged Unit still alive → objective not complete
+**Mutation check**: count every enemy for eliminate → AC 15 fails
+**Estimated test count**: ~3
 
 ---
 

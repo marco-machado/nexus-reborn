@@ -56,7 +56,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-011 — Cover interrupts the fire lane; hit chance formula (Logic)
+**Test file**: `src/game/world.test.ts` (+ helper test if extracted)
+**What to test**:
+- AC 14: cover on the lane before a body → that body is not hit (existing L1084 may cover it; assert the Unit's HP unchanged)
+- AC 25: d/r = 0.5, u = 0.5 → 0.64 for a = 1.0; 0.288 for a = 0.45; 0.3168 for a = 0.495 (Hardened)
+**Edge cases**: clamp floor 0.05 at d = r with low `a`; clamp ceiling 0.95; Deadeye bypasses the roll, not the chance
+**Source change**: finding 3; re-run the determinism tests (L433, L460)
+**Mutation check**: change 0.28 to 0.25 → AC 25 fails
+**Estimated test count**: ~6
 
 ---
 

@@ -57,7 +57,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-005 — Hold Fire clears automatic targets but keeps a standing Explicit (Logic)
+**Test file**: `src/game/world.test.ts` (rewrite L671)
+**What to test**:
+- AC 5: an auto-acquired (non-Explicit) target is cleared by Hold Fire and the operative does not re-acquire over several acquire intervals
+- AC 5b: with Hold Fire on, a later Attack fires through and `holdFire` stays true
+- AC 5c: an Explicit target set before Hold Fire survives Hold Fire (`targetId` unchanged)
+**Edge cases**: Hold Fire off again → auto-acquire resumes; squad card still shows Hold Fire
+**Source change**: finding 1. Keep the squad-card read (`missionStore` `holdFire`) from the old test.
+**Mutation check**: restore the `u.targetId = null` line for Explicit targets → AC 5c fails
+**Estimated test count**: ~4
 
 ---
 

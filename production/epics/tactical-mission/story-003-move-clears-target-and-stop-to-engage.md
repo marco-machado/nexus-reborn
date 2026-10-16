@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-003 — Move clears target and Hold Ground; stop-to-engage on the path (Logic)
+**Test file**: `src/game/world.test.ts`
+**What to test**:
+- AC 2: an operative with an Explicit target and Hold Ground on gets Move → `targetId` null and `holdGround` false
+- AC 2b: a path past a visible in-range CorpSec, Hold Fire off, weapons free → operative stops, fires, then the path resumes (position progresses toward the destination after the engagement)
+- AC 2c: same fixture with Hold Fire on → no stop, no shot, path continues
+**Edge cases**: weapons not free (reloading, magazine 0, drawing) → no stop-to-engage; Move to a non-walkable tile
+**Mutation check**: skip the Hold Ground release in `orderMove` → AC 2 fails
+**Estimated test count**: ~5
 
 ---
 

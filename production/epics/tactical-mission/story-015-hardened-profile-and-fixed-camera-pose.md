@@ -57,7 +57,27 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-015 — Hardened profile keeps minimap data; camera pose is fixed (Integration)
+**Test file**: `src/game/missionParams.test.ts`, `src/game/world.test.ts`, a new `src/scene/cameraPose.test.ts` (constants only; no WebGPU in Node)
+**What to test**:
+- AC 21: Hardened vs Standard on one contract: +2 street patrols, +6 civilians, sight-confirm ×1.15, CorpSec accuracy ×1.1, +1 m vision after weather, optional time limit ×0.85 (Hollow Crown 90 s → 76.5 s); Standard equals the authored baseline; minimap cones and patrols still emitted
+- AC 22: camera yaw 45° and elevation 55° are constants; minimap yaw equals camera yaw
+**Proposed extra criteria (R-5)**: Control does not add CorpSec HP on Hardened; Hardened accuracy `a` = 0.495 feeds the hit chance (TM-011)
+**Manual**: camera does not move after input (screenshot pair)
+**Mutation check**: change the Hardened optional mul to 0.9 → AC 21 fails
+**Estimated test count**: ~6
+
+**Manual half:**
+
+#### TM-015 — Fixed camera (visual half of AC 22)
+**Verification method**: Manual step-through in the in-app browser at 1280x720
+**Who must sign off**: qa-lead
+**Evidence to capture**: screenshots before and after mouse drag, wheel and arrow keys, saved to `production/qa/evidence/tm-015/`
+- [ ] Camera angle unchanged after drag, wheel and arrow input
+- [ ] Minimap "up" points the same way as screen up
+- [ ] On Hardened, the minimap still shows patrol cones
 
 ---
 

@@ -57,7 +57,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-001 — Opening selection and Select-all are the living set (Logic)
+**Test file**: `src/state/missionStore.test.ts` (selection), plus the HUD key handler if it holds the 1–4 / 0 / backtick logic
+**What to test**:
+- AC 1a: a mission opened with a dead operative (e.g. a roster with one KIA slot represented as a dead row) opens with `selected` equal to exactly the living ids
+- AC 1b: Select-all (0 and backtick) sets `selected` to exactly the living ids
+- AC 1d: key on a dead slot leaves selection unchanged; key on a living slot selects that slot
+**Edge cases**: all four living; only one living; Select-all after a death mid-mission; clicking a hostile does not clear selection (GDD Edge Case)
+**Mutation check**: make Select-all include dead rows → AC 1b fails
+**Estimated test count**: ~5
 
 ---
 

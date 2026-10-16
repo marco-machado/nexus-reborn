@@ -57,7 +57,27 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-008-2026-10-16.md` (2026-10-16).*
+
+#### TM-009 — Opening hour changes no sight, noise, or risk; risk index formula (Logic)
+**Test file**: `src/game/forecast.test.ts`, `src/game/world.test.ts`
+**What to test**:
+- AC 26: `missionRisk` with p=8, g=7, c=22, h=1.2, v=0.9 → 89, band Severe
+- AC 10: dusk vs night deployments, same weather script → equal sight, noise and `risk_index`
+**Edge cases**: band edges 29/30, 49/50, 74/75; `v` uses the clearer scripted weather, not live weather after a front; index not capped at 100
+**Manual**: sky frozen while the HUD clock ticks (screenshot pair)
+**Mutation check**: feed live weather into `v` → front edge case fails
+**Estimated test count**: ~6
+
+**Manual half:**
+
+#### TM-009 — Opening hour lighting (presentation half of AC 10)
+**Verification method**: Manual step-through in the in-app browser at 1280x720
+**Who must sign off**: qa-lead
+**Evidence to capture**: two screenshots of one mission 30+ s of tactical time apart, saved to `production/qa/evidence/tm-009/`
+- [ ] HUD clock differs between the two screenshots
+- [ ] Sky colour and light direction are the same in both
+- [ ] A dusk mission and a night mission show different lighting at open
 
 ---
 
