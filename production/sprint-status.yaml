@@ -48,11 +48,11 @@ stories:
     name: "Idle auto-acquire and Attack under Hold Ground and Hold Fire"
     file: "production/epics/tactical-mission/story-004-idle-auto-acquire-and-attack-under-hold-ground.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-16"
   - id: "TM-005"
     name: "Hold Fire clears automatic targets but keeps a standing Explicit"
     file: "production/epics/tactical-mission/story-005-hold-fire-keeps-a-standing-explicit-target.md"

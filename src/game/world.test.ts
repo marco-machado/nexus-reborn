@@ -14,7 +14,7 @@ import { MEDIC_REGEN_CAP, ROLE_ABILITIES } from './abilities'
 import { contractMission } from './contracts'
 import type { ContractType, GeneratedContract } from './contracts'
 import { DIFFICULTY_FX, missionMods, weatherMul } from './missionParams'
-import { findPath, nearestWalkable } from './pathfind'
+import { findPath, hasLos, nearestWalkable } from './pathfind'
 import { useMissionStore } from '../state/missionStore'
 import { netPayout, settleOutcome, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -2725,5 +2725,147 @@ describe('Move clears target and Hold Ground; stop-to-engage (TM-003, AC 2 / 2b 
       expect(everAttacking, spoil).toBe(false)
       expect(dist(a1.pos, dest), spoil).toBeLessThan(1)
     }
+  })
+})
+
+// TM-004 (Sprint 8, story 004): an idle operative acquires on its own when
+// Hold Fire is off, and Attack under Hold Ground and Hold Fire keeps the
+// Explicit target without chasing it.
+describe('Idle auto-acquire and Attack under Hold Ground and Hold Fire (TM-004, AC 2d / 3)', () => {
+  // Pinned literal: op1's opening weapon range in the authored weapon table
+  // (src/game/data.ts, GDD §10). Stages below are placed against this number.
+  const RANGE = 16
+  // One standing operative and one muzzled hostile pinned to a post the
+  // test can move. Its post starts north on the open road.
+  function stage(dz: number) {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const enemy = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')!
+    const start = { x: a1.pos.x, z: a1.pos.z }
+    const post = { x: start.x, z: start.z - dz }
+    const dealt = { hp: 0 }
+    const pin = () => {
+      if (enemy.stance === 'dead') return
+      dealt.hp = enemy.maxHp - enemy.hp
+      enemy.pos.x = post.x
+      enemy.pos.z = post.z
+      enemy.path.length = 0
+      enemy.reloading = 999
+    }
+    pin()
+    const run = (seconds: number, each?: () => void) => {
+      const until = w.time + seconds
+      while (w.time < until) {
+        pin()
+        w.tick(STEP)
+        each?.()
+      }
+    }
+    return { w, a1, enemy, start, post, pin, dealt, run }
+  }
+
+  it('the staged weapon range matches the spec literal', () => {
+    const { a1 } = stage(10)
+    expect(a1.weapon?.range).toBe(RANGE)
+  })
+
+  it('an idle operative acquires and fires with no order: idle, Hold Ground, Stopped (AC 2d)', () => {
+    for (const mode of ['idle', 'holdGround', 'stopped'] as const) {
+      const { w, a1, enemy, start, dealt, run } = stage(10)
+      if (mode === 'holdGround') w.orderHold(['a1'], true)
+      if (mode === 'stopped') w.orderStop(['a1'])
+      expect(a1.path.length, mode).toBe(0)
+      expect(a1.holdFire, mode).toBe(false)
+      const magazine0 = a1.magazine
+      let acquired = false
+      run(3, () => {
+        if (a1.targetId === enemy.id) acquired = true
+      })
+      expect(acquired, mode).toBe(true)
+      expect(a1.magazine, mode).toBeLessThan(magazine0)
+      expect(dealt.hp, mode).toBeGreaterThan(0)
+      // Auto-acquire never walks the operative anywhere.
+      expect(dist(a1.pos, start), mode).toBeLessThan(0.5)
+    }
+  })
+
+  it('Attack out of range under Hold Fire and Hold Ground keeps the target, no chase, fires once in range (AC 3)', () => {
+    const { w, a1, enemy, start, post, dealt, run } = stage(RANGE + 8)
+    w.orderHoldFire(['a1'], true)
+    w.orderHold(['a1'], true)
+    w.orderAttack(['a1'], enemy.id)
+    expect(a1.targetId).toBe(enemy.id)
+    expect(a1.holdFire).toBe(true)
+
+    const magazine0 = a1.magazine
+    run(4)
+    // Out of range: the target is kept, Hold Fire stays on, no chase, no shot.
+    expect(a1.targetId).toBe(enemy.id)
+    expect(a1.holdFire).toBe(true)
+    expect(a1.holdGround).toBe(true)
+    expect(a1.path.length).toBe(0)
+    expect(dist(a1.pos, start)).toBeLessThan(0.5)
+    expect(a1.magazine).toBe(magazine0)
+    expect(dealt.hp).toBe(0)
+
+    // The hostile walks into range and LOS: the explicit shot fires.
+    post.z = start.z - 10
+    run(3)
+    expect(a1.magazine).toBeLessThan(magazine0)
+    expect(dealt.hp).toBeGreaterThan(0)
+    expect(a1.holdFire).toBe(true)
+    expect(dist(a1.pos, start)).toBeLessThan(0.5)
+  })
+
+  it('the Explicit target dies before it enters range: no shot, no chase, Hold Fire stays on (EC-1)', () => {
+    const { w, a1, enemy, start, run } = stage(RANGE + 8)
+    w.orderHoldFire(['a1'], true)
+    w.orderHold(['a1'], true)
+    w.orderAttack(['a1'], enemy.id)
+    run(1)
+    enemy.hp = 0
+    enemy.stance = 'dead'
+    const magazine0 = a1.magazine
+    let everAttacking = false
+    run(3, () => {
+      if (a1.stance === 'attacking') everAttacking = true
+    })
+    expect(everAttacking).toBe(false)
+    expect(a1.magazine).toBe(magazine0)
+    expect(a1.targetId).toBeNull()
+    expect(a1.holdFire).toBe(true)
+    expect(a1.path.length).toBe(0)
+    expect(dist(a1.pos, start)).toBeLessThan(0.5)
+  })
+
+  it('the Explicit target is in range but out of LOS: no shot, no chase, Hold Fire stays on (EC-1)', () => {
+    const { w, a1, enemy, start, post, run } = stage(10)
+    // A walkable cell inside weapon range that a wall hides from the operative.
+    let hidden: Vec2 | null = null
+    for (let dx = -12; dx <= 12 && !hidden; dx++)
+      for (let dz = -12; dz <= 12 && !hidden; dz++) {
+        const p = { x: start.x + dx, z: start.z + dz }
+        if (Math.hypot(dx, dz) < RANGE - 2 && isWalkable(w.city, p.x, p.z) && !hasLos(w.city, start, p))
+          hidden = p
+      }
+    expect(hidden).not.toBeNull()
+    post.x = hidden!.x
+    post.z = hidden!.z
+    w.orderHoldFire(['a1'], true)
+    w.orderHold(['a1'], true)
+    w.orderAttack(['a1'], enemy.id)
+    const magazine0 = a1.magazine
+    let everAttacking = false
+    run(4, () => {
+      if (a1.stance === 'attacking') everAttacking = true
+    })
+    expect(everAttacking).toBe(false)
+    expect(a1.magazine).toBe(magazine0)
+    expect(a1.targetId).toBe(enemy.id)
+    expect(a1.holdFire).toBe(true)
+    expect(a1.path.length).toBe(0)
+    expect(dist(a1.pos, start)).toBeLessThan(0.5)
   })
 })
