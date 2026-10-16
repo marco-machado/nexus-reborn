@@ -48,11 +48,11 @@ stories:
     name: "Mass tier heavy band and the 400 kg limit"
     file: "production/epics/roster-and-assembly/story-005-mass-tier-heavy-band-and-400-kg-limit.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-15"
   - id: "RA-007"
     name: "canDeploy refusals: no contract, none assigned, not Ready"
     file: "production/epics/roster-and-assembly/story-007-candeploy-refusals.md"

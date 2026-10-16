@@ -289,3 +289,54 @@ describe('mass tier light and standard bands (TR-roster-002)', () => {
     expect(massTier(340 + Number.EPSILON * 340)).toBe('standard')
   })
 })
+
+// Story RA-005: Mass tier heavy band and the 400 kg limit (GDD AC 51, 52, 55, 56).
+describe('mass tier heavy band and the 400 kg limit (TR-roster-001)', () => {
+  const deployAt = (massKg: number, assignedIds: readonly string[] = ['op1']) =>
+    canDeploy({
+      missionSelected: true,
+      assignedIds,
+      statusById: Object.fromEntries(assignedIds.map((id) => [id, 'READY' as const])),
+      massKg,
+    })
+  const delta = (kg: number) => tierSpeedDelta(massTier(kg))
+
+  it('gives 0 m/s at exactly 380 kg, not heavy, and allows Deploy (AC 55)', () => {
+    expect(massTier(380)).toBe('standard')
+    expect(delta(380)).toBe(0)
+    expect(deployAt(380).ok).toBe(true)
+  })
+
+  it('gives -0.15 m/s at 380.1 kg and allows Deploy (AC 56)', () => {
+    expect(massTier(380.1)).toBe('heavy')
+    expect(delta(380.1)).toBe(-0.15)
+    expect(deployAt(380.1).ok).toBe(true)
+  })
+
+  it.each([1, 2, 3, 4])(
+    'allows Deploy at exactly 400 kg with %i distinct Ready operatives, delta -0.15 (AC 51)',
+    (n) => {
+      const ids = ['op1', 'op2', 'op3', 'op4'].slice(0, n)
+      expect(deployAt(MASS_LIMIT_KG, ids)).toEqual({ ok: true, reason: null, overKg: 0 })
+      expect(delta(MASS_LIMIT_KG)).toBe(-0.15)
+    },
+  )
+
+  it('refuses Deploy at 400.1 kg as over-mass and names a 0.1 kg overage (AC 52)', () => {
+    const g = deployAt(400.1)
+    expect(g.ok).toBe(false)
+    expect(g.reason).toBe('over-mass')
+    expect(g.overKg).toBeCloseTo(0.1, 10)
+    // The Team screen's refusal copy formats overKg to one decimal.
+    expect(g.overKg.toFixed(1)).toBe('0.1')
+  })
+
+  it('refuses one Ready body over 400 kg alone as over-mass, not as an empty Squad', () => {
+    const kg = operativeMassKg(OP1, 1400)
+    expect(kg).toBeGreaterThan(MASS_LIMIT_KG)
+    const g = deployAt(kg)
+    expect(g.ok).toBe(false)
+    expect(g.reason).toBe('over-mass')
+    expect(g.overKg).toBeCloseTo(kg - MASS_LIMIT_KG, 10)
+  })
+})
