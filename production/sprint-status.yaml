@@ -75,11 +75,11 @@ stories:
     name: "Minimap, weather chip, and tutorial toasts in the mission HUD"
     file: "production/epics/interface/story-007-minimap-weather-chip-and-tutorial-toasts-in-the-mission.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-010"
     name: "Debrief filing status and write-failure indicators"
     file: "production/epics/interface/story-010-debrief-filing-status-and-write-failure-indicators.md"

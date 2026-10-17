@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { TUTORIAL_IDS, WORLD_ONBOARD_ID } from '../game/tutorial'
+import { useMissionStore } from './missionStore'
 import { fireTutorialHint, noteTutorial, useTutorialStore } from './tutorialStore'
 
 beforeEach(() => {
@@ -35,6 +36,20 @@ describe('tutorial step advance', () => {
     // Actions after the skip are inert.
     noteTutorial('select')
     expect(useTutorialStore.getState().seen).toEqual(seen)
+  })
+})
+
+describe('toasts never pause the sim (IF-007 AC13)', () => {
+  it('leaves the mission pause flag alone through every toast action', () => {
+    useMissionStore.getState().setPaused(false)
+    const before = Object.keys(useMissionStore.getState())
+    noteTutorial('select')
+    useTutorialStore.getState().dismissStep('tut-move')
+    fireTutorialHint('hint-alert')
+    useTutorialStore.getState().dismissHint('hint-alert')
+    useTutorialStore.getState().skipTutorial()
+    expect(useMissionStore.getState().paused).toBe(false)
+    expect(Object.keys(useMissionStore.getState())).toEqual(before)
   })
 })
 

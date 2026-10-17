@@ -1,6 +1,7 @@
 // First-mission tutorial steps and one-shot contextual hints, rendered as
-// small dismissible toasts over the HUD. The stack takes no pointer events
-// except on its own buttons, never pauses the sim, and every printed key
+// small dismissible toasts over the HUD. The stack and the cards take no
+// pointer events (ui.css: only .hud-toast-btn is auto), so a world click under
+// a card reaches the canvas; the sim never pauses, and every printed key
 // comes from the live binding table, so remaps rename the prompts.
 import { HINTS, TUTORIAL_STEPS, bindingKeys, currentStep } from '../game/tutorial'
 import { useTutorialStore } from '../state/tutorialStore'

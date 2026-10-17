@@ -3805,7 +3805,6 @@ button.hud-slot:focus-visible {
 }
 
 .hud-toast {
-  pointer-events: auto;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   padding: 7px 10px 8px;
@@ -3848,6 +3847,9 @@ button.hud-slot:focus-visible {
   border: 1px solid var(--line);
   padding: 2px 7px;
   cursor: pointer;
+  /* only the buttons catch the pointer: the card itself lets world clicks
+     through to the canvas (AC13, toasts never block input) */
+  pointer-events: auto;
 }
 
 .hud-toast-btn:hover,
