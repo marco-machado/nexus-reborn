@@ -84,11 +84,11 @@ stories:
     name: "Debrief filing status and write-failure indicators"
     file: "production/epics/interface/story-010-debrief-filing-status-and-write-failure-indicators.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-012"
     name: "Assembly hire refusals and heavy-tier hint"
     file: "production/epics/interface/story-012-assembly-hire-refusals-and-heavy-tier-hint.md"
