@@ -37,6 +37,10 @@
 - [ ] GIVEN running/unlocked audio and an identifiable source on each bus, WHEN master and each channel control are exercised independently in Settings, THEN master scales all four buses, each channel control changes only its own bus control factor without changing other stored levels, mute silences all buses while preserving the chosen values, and unmuting restores those values. Deliberately silencing combat while retaining UI is valid; authored hierarchy is not enforced over player overrides.
 - [ ] GIVEN recorded nondefault master, four channel levels, and mute in writable Settings storage, WHEN the session reloads, THEN all recorded audio settings match. WHEN New Operation is confirmed and the session reloads again, THEN all those settings still match (Persistence settings slot, not campaign).
 
+*(Added at Sprint 9 planning, task R-2, from the GDD sections named.)*
+
+- [ ] (Formulas, `staged_gain`; `design/gdd/audio.md`) GIVEN master 0.5, combat 0.8 and mute off, WHEN the combat bus's combined player-control factor is read, THEN it is 0.4; with mute on it is 0 while the stored master and combat stay 0.5 and 0.8. Master and mute apply once at the master stage, not again at each channel node.
+
 ---
 
 ## Implementation Notes
@@ -58,7 +62,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-001 — Mixer: master, channels, mute, and settings persistence (Integration)
+**Automated**:
+- `src/game/audio.test.ts`, `src/state/settingsStore.test.ts`: `staged_gain = 0 if muted else master × channel` with literals: master 0.5 × combat 0.8 → 0.4; mute → 0; unmute restores 0.4
+- Each channel control changes only its own bus factor and no other stored level; master scales all four buses once
+- Reload round trip: nondefault master, four channels and mute match; after New Operation and a second reload they still match (settings slot, not campaign)
+- Exactly four buses (ui, combat, music, ambience); no fifth
+**Edge cases**: Silencing combat while keeping UI is valid; the authored hierarchy is not enforced over player overrides; Master/mute applied once at the master stage, not copied to every channel node
+**Mutation check**: apply master twice → the 0.4 case fails (0.2)
+**Manual**: Listening pass in Settings with a source on each bus (the user listens; `docs/click-through.md` Audio changes step 1)
 
 ---
 

@@ -56,7 +56,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-007 — No celebration sting, spoken VO, or spatial shooter mix (Visual/Feel)
+**Automated (where a seam exists)**:
+- Mocked-context test (advisory, if a seam exists): entering Debrief, including quiet replay, requests no sting; arming Abort requests no mission-end sting
+- Smoke grep (not a suite test): no `PannerNode`, `StereoPannerNode`, `THREE.Audio`, `PositionalAudio` or `AudioListener` under `src/` (control manifest Never list)
+**Verification**: evidence in `production/qa/evidence/au-007/`; sign-off: audio-director (lead sign-off)
+**Checklist**:
+- [ ] Listening-evidence note in `production/qa/evidence/au-007/`: Debrief (win, loss, quiet replay) and Abort-armed pause; listen for any VO or panned shooter mix (the user listens)
+**Edge cases**: Quiet replay Debrief stays paperwork-quiet; Abort confirm stops the mission bed as on any leave; Spoken VO or spatial audio is out of scope unless §18 reopens
 
 ---
 

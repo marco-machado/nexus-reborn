@@ -62,7 +62,19 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-005 — Research Authorize, keyboard activation, and focus return (UI)
+**Automated (where a seam exists)**:
+- Separate fixtures, each its own test or scripted case: Credits below cost → Authorize disabled with the unaffordable reason; affordable twin → activation starts the project and shows Active
+- Node activation by pointer, Enter and Space selects and shows details without starting research or changing Credits or lab occupancy
+- Authorize by pointer, Enter and Space each start the project
+- Timeline: Left/Right step Review back/forward, Home = oldest, End = Live; Review does not mutate live state
+- Pause and Settings trap Tab/Shift+Tab and return focus on close; nested Settings return focuses the pause modal (AC18)
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-005/`; sign-off: qa-lead
+**Checklist**:
+- [ ] Screenshots: disabled Authorize with reason, Active state, focused node ring, pause with focus. Unverified: whether the suite has a DOM test environment — if not, run the cases as a headless Playwright script and keep its transcript as evidence
+**Edge cases**: Not a requirement for full keyboard travel across every panel; Debit/start correctness stays Economy/Research
 
 ---
 

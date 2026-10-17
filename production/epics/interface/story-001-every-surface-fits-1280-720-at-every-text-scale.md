@@ -59,7 +59,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-001 — Every surface fits 1280×720 at every text scale (UI)
+**Automated (where a seam exists)**:
+- `src/state/settingsStore.test.ts`: the text-scale step set is exactly {0.90, 1.00, 1.10, 1.25} (literals, not the module constant)
+- A scripted sweep (kept with the evidence, `production/qa/evidence/if-001/sweep.mjs`): for each of 9 surfaces × 4 scales, assert no element's `scrollWidth > clientWidth` clip and no bounding-box intersection outside the declared overlays (Settings, Balance, pause, toasts); print the failures per surface
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-001/`; sign-off: qa-lead
+**Checklist**:
+- [ ] 36 retained screenshots (Menu, World Network, Research, Brief, Assembly, Mission HUD, pause, Debrief, Settings × 90/100/110/125%)
+- [ ] One sub-minimum capture (1100×650) of one surface showing scroll, not compression
+- [ ] Click-through record per `docs/click-through.md`, 1280×720, naming every unexercised screen or interaction (AC20); Mission HUD, pause and Debrief may use labelled fixtures from `docs/mission-playbook.md`
+**Edge cases**: Viewport below 1280×720 (e.g. 1100×650): layout scrolls, panels are not compressed; 125% scale on the densest surface (Assembly, Debrief): overflow reachable by scroll; Overlay on overlay (pause + Settings, toasts + pause): the only allowed intersections
 
 ---
 

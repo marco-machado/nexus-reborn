@@ -38,6 +38,10 @@
 - [ ] (AC11) GIVEN a live mission with no result yet, WHEN Space or Escape is pressed, THEN a modal pause freezes sim and camera, prints remappable bindings from the live table, traps focus, offers Resume, keeps Settings inside the freeze, and Abort is not a single click.
 - [ ] (AC12) GIVEN a paused mission with Abort idle, WHEN it is activated once, THEN confirmation arms without discarding. A second activation before expiry confirms immediately, with no Debrief/invoice or campaign write. In a separate fixture, letting the three-real-second timeout execute without confirmation disarms and leaves the mission paused; the next activation only re-arms. Observe the Abort boundary before any later Screen tick/autosave; the landing choice is OQ8, not this criterion.
 
+*(Added at Sprint 9 planning, task R-2, from the GDD sections named.)*
+
+- [ ] (EC-remap; `design/gdd/interface.md` Edge Cases) GIVEN pause open, WHEN Settings is opened from it and a remappable bind is changed, THEN the pause bindings list shows the new bind on return, and Pause, operative slots 1–4 and mouse are not offered for remap.
+
 ---
 
 ## Implementation Notes
@@ -60,7 +64,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-008 — Pause modal and two-step Abort (Integration)
+**Automated**:
+- `src/ui/abortArm.test.ts` (new) with fake timers: first activation arms and discards nothing; second before expiry confirms immediately with no Debrief/invoice/outcome and no campaign write
+- 3 real seconds without confirmation disarms and the mission stays paused; the next activation only re-arms; the window runs on real time while the Tactical clock is frozen
+- Space/Escape opens pause on a live mission with no result; sim and camera freeze; Resume works; Pause bind is not remappable (`BINDINGS` remappable predicate); bindings print from the live table
+**Edge cases**: Settings opened from pause stays inside the freeze; nested Settings return focuses pause; Pause does not mute or swap beds (ADR-0017); Result pending during pause: delay follows Tactical elapsed time (owner follow-up, do not change the sim); Landing after Abort confirm is OQ8, not asserted
+**Mutation check**: shorten the arming window to 1 s → the timeout test fails
+**Manual**: Screenshots: pause open, Abort armed, Abort after timeout (still paused)
 
 ---
 

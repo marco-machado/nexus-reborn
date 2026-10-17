@@ -59,7 +59,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-004 — Rain follows live weather; Alert tension drone (Visual/Feel)
+**Automated (where a seam exists)**:
+- `src/game/audio.beds.test.ts` (advisory, mocked graph): weather none → no rain source; light and heavy → the matching recording; adjacent change crossfades; leaving while rain loads does not restart it
+- Alert 0 → drone silent; rises to 1–3 → drone ramps on the combat bus; mission end → released; a rise during the release tail does not stack a second layer
+**Verification**: evidence in `production/qa/evidence/au-004/`; sign-off: audio-director (lead sign-off)
+**Checklist**:
+- [ ] Listening-evidence note in `production/qa/evidence/au-004/`: a full rain loop for each of none, light, heavy; a scripted front (Glass Veil 22:16:38) for clicks or gaps; Alert 0 → 3 → end (the user listens; Claude records settings and scenarios)
+**Edge cases**: Dry mission mounts no rain hiss; Audio follows live weather, not the Brief's; Reduced motion drops visual rain only, not audio; Drone follows HUD Alert (living CorpSec in Combat), not Threat
 
 ---
 

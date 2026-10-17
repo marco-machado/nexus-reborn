@@ -60,7 +60,16 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-004 — Chance vs Risk bands and World Network owner readouts (UI)
+**Automated (where a seam exists)**:
+- Chrome helper test (new if the band logic is inline): intel 1 vs 2 on one contract → World Network prints Chance both times; Brief prints Chance at intel < 2 and Risk index bands (no percent, no cap label) at intel ≥ 2
+- Owner reasons surface as reported: unaffordable, cooldown, no target, locked sector; no Influence action for Antarctica
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-004/`; sign-off: qa-lead
+**Checklist**:
+- [ ] Screenshots: Brief at intel 1 and 2; sector readout Europe and North America; Timeline Live and Review; each unavailable-action reason; Antarctica; first-visit overlay (Pause/Clock speed = strategic time, Influence unaffordable not broken, Nexus-held Tax eligibility)
+**Edge cases**: Opening Europe pays no Tax; opening North America shows 4,080 CR / 24h (click-through literal); Live vs Review distinguishable while Scan numbers stay live; Interface must not recompute board rules
 
 ---
 

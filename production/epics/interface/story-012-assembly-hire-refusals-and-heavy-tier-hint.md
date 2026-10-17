@@ -59,7 +59,18 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-012 — Assembly hire refusals and heavy-tier hint (UI)
+**Automated (where a seam exists)**:
+- `src/ui/assemblyRows.test.ts`, `src/ui/armHints.test.ts`: unaffordable fixture → cost vs Credits visible, hire disabled with the matching reason; full-roster fixture likewise
+- Valid heavy-tier deployment with the advisory unseen → speed-penalty hint once; a later valid deployment in the same campaign does not repeat it
+- Over-limit (> 400 kg) is refused with its reason, never enters Mission, and is not the hint trigger
+- Overdraft and Deploy refusals keep disabled controls plus visible reasons; no refusal sound is requested
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-012/`; sign-off: qa-lead
+**Checklist**:
+- [ ] Screenshots: unaffordable hire, full roster, over-limit refusal, heavy-tier hint in Mission
+**Edge cases**: Mass limit 400 kg literal; Deploy refused with zero assigned or any Injured assigned
 
 ---
 

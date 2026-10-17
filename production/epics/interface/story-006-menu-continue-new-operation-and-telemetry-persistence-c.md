@@ -61,7 +61,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-006 — Menu Continue, New Operation, and telemetry persistence chrome (UI)
+**Automated (where a seam exists)**:
+- Three Menu fixtures: never-started → Continue absent; invalid/unreadable → Continue absent with a visible reason distinct from never-started; valid → Continue present (Interface does not validate the blob)
+- New Operation two-step: first activation arms, campaign unchanged; confirm erases; Settings (Difficulty, Quality, one remap, text scale, telemetry toggle) survive; Credits, Intel, contractsWon, laboratories, tutorial-seen match Persistence's canonical fresh-operation fixture (read the fixture, do not copy its numbers)
+- Telemetry: off → a finished or aborted mission adds no record; earlier records remain; Clear empties the log; New Operation keeps it; Balance reachable while recording is off and the log is nonempty
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-006/`; sign-off: qa-lead
+**Checklist**:
+- [ ] Screenshots: Menu in the three states, armed New Operation, Balance with recording off
+**Edge cases**: Failed durable erase is not reported as success (AC23, owned by IF-010); 3 real-second arming window (expiry disarms)
 
 ---
 

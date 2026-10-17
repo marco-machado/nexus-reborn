@@ -58,7 +58,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-010 — Debrief filing status and write-failure indicators (UI)
+**Automated (where a seam exists)**:
+- `src/ui/filingStatus.test.ts`: applied in-memory Debrief reads unfiled before any Screen return
+- After a successful next-Screen autosave, tested through World Network return and Brief Replay separately, status no longer reads unfiled; the signal comes from Persistence, not navigation
+- Failed first Screen write (both exits) keeps the invoice unfiled and shows failure; failed New Operation durable write shows failure, not erased
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-010/`; sign-off: qa-lead
+**Checklist**:
+- [ ] Screenshots: invoice unfiled, filed, write failure on each exit, New Operation failure
+**Edge cases**: Interface does not retry by saving on Debrief; Exact copy is UX; storage correctness is Persistence
 
 ---
 

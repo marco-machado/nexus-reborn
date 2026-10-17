@@ -35,6 +35,11 @@
 
 - [ ] GIVEN identical initial mission state and seed, deployment/research snapshots, modifiers/difficulty, district variant, loadout, commands and their timing, and simulation timestep schedule, WHEN those inputs are replayed while only presentation-only mission-bed selection and gunshot playback-rate jitter are varied in a controlled fixture, THEN hit/outcome state, weather script, and Opening hour match at equivalent simulation points. Presentation choices may differ; two uncontrolled random draws are not required to differ, and two independently played deploys are not equivalent fixtures.
 
+*(Added at Sprint 9 planning, task R-2, from the GDD sections named.)*
+
+- [ ] (Formulas, `mission_bed_pick`: unseeded; `design/gdd/audio.md`) GIVEN the controlled fixture above, WHEN the mission bed is picked and gunshots play with rate jitter, THEN the seeded simulation RNG's draw count at each equivalent simulation point equals the count with no audio running; neither presentation choice draws from the simulation stream.
+- [ ] (Edge Cases, gunshot playback rate; `design/gdd/audio.md`) GIVEN a squad gunshot and a CorpSec gunshot played with rate jitter, WHEN the shot is resolved, THEN its hit chance and the shooter's fire interval equal the values with jitter off.
+
 ---
 
 ## Implementation Notes
@@ -55,7 +60,14 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-006 — Presentation-only randomness does not change outcomes (Logic)
+**Automated**:
+- `src/game/audio.beds.test.ts` or `src/game/world.test.ts`: two controlled runs with identical seed, snapshots, difficulty, variant, loadout, commands, command timing and timestep schedule, varying only the mission-bed pick and gunshot rate jitter → hit/outcome state, weather script and Opening hour match at equal simulation steps
+- The sim's `rng()` draw count is unchanged by a bed pick or by jitter (neither consumes the sim stream)
+**Edge cases**: Two independently played deploys are not equivalent fixtures; Jitter keeps weapon identity and cadence; Two uncontrolled random draws are not required to differ
+**Mutation check**: make the bed pick draw from the sim RNG → the equal-outcome test fails
 
 ---
 

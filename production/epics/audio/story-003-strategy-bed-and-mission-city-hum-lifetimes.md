@@ -36,6 +36,10 @@
 - [ ] GIVEN navigation World Network → Research → Brief → Assembly, WHEN the strategy bed is heard, THEN the same source keeps playing and it is the industrial loop on music. WHEN the director enters Menu, Mission, or Debrief, THEN that bed stops.
 - [ ] GIVEN a mission start, WHEN the mission bed starts, THEN it is one of the three city-hum clips, not keyed to contract, district, Opening hour, weather, or Threat, and it stops on leave.
 
+*(Added at Sprint 9 planning, task R-2, from the GDD sections named.)*
+
+- [ ] (Edge Cases; `design/gdd/audio.md`) GIVEN the director leaves the mission (Abort, result → Debrief, or unmount) while the mission bed is still loading, WHEN that load completes after departure, THEN the bed does not start, and the in-flight decode is discarded.
+
 ---
 
 ## Implementation Notes
@@ -58,7 +62,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-003 — Strategy bed and mission city-hum lifetimes (Integration)
+**Automated**:
+- `src/ui/strategyAudio.test.ts`, `src/game/audio.beds.test.ts`: World Network → Research → Brief → Assembly keeps the same strategy source (no restart); entering Menu, Mission or Debrief stops it and discards an in-flight decode
+- Mission bed start picks exactly one of the 3 committed city-hum clips; `pickMissionBedUrl` takes no arguments (not keyed to contract, district, hour, weather or Threat); it stops on leave
+- Leaving the mission (Abort, result → Debrief, unmount) while the bed is loading: the late load never starts it
+- Pause, Settings and Balance overlays neither mute nor swap beds, and do not change `Phase`
+**Edge cases**: Two deploys of one contract may pick different clips; Overlays are not Phase changes
+**Mutation check**: restart the bed on each Screen change → the same-source test fails
+**Manual**: Listening check of bed continuity across the four Screens (user)
 
 ---
 

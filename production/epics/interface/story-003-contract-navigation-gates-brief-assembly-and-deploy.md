@@ -62,7 +62,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### IF-003 — Contract navigation gates Brief, Assembly, and Deploy (UI)
+**Automated (where a seam exists)**:
+- `src/ui/deployRefusal.test.ts` (+ `src/state/appStore.test.ts`): no selected contract → Brief nav locked, Assembly reachable, Deploy refused with the missing-contract reason and no mission started
+- After Debrief → World Network: selected contract cleared, Brief locked; authored contract on a non-failed campaign → Replay returns without reselecting; generated contract → no Replay control
+- Brief vs deployed mission for one recorded contract: insertion, objectives, extraction, force and civilian counts, Opening hour, weather-front timing equal (compare, do not recompute — owner is Tactical)
+**Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-003/`; sign-off: qa-lead
+**Checklist**:
+- [ ] Screenshots: nav with no contract (Brief locked), nav with contract (Brief open), Deploy refusal text, Brief vs deployed-mission field table
+**Edge cases**: Failed campaign Debrief is AC30, not this story; Accept Contract goes straight to Assembly, free, no second confirm
 
 ---
 

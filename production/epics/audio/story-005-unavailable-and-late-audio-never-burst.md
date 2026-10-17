@@ -36,6 +36,10 @@
 - [ ] GIVEN audio unavailable, WHEN the game is played, THEN play is not blocked.
 - [ ] GIVEN a running context, audible test settings and deliberately deferred UI/combat clip decoding, WHEN completion is held beyond the runtime-owned freshness window documented in the audio README, THEN observing source-start calls shows no playback for those stale events, even a single stale cue. A fresh event after successful decoding and after the existing rate gate clears remains playable. Repeat with decoding rejected: no source starts and play remains usable. Separately defer UI module loading so an originating click is already stale when the module becomes usable; it must not be replayed as a fresh click. Record module-load and clip-decode evidence separately. Retain cold-cache play as smoke coverage and console inspection as diagnostics, not as proof of cue admission/drop. No timeout integers are duplicated here; these are verification requirements, not a claim that the current lazy bridge passes them.
 
+*(Added at Sprint 9 planning, task R-2, from the GDD sections named.)*
+
+- [ ] (Edge Cases; `design/gdd/audio.md`) GIVEN audio unavailable or the context not running, WHEN one-shots are requested and the context later becomes available, THEN those one-shots are dropped, not queued, and none plays after it becomes available. GIVEN an overlap cap or rate limit is hit, WHEN a new one-shot is requested, THEN the new one-shot is dropped.
+
 ---
 
 ## Implementation Notes
@@ -57,7 +61,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-005 — Unavailable and late audio never block play or burst (Integration)
+**Automated**:
+- `src/game/audio.test.ts`: audio unavailable or context not running → one-shots dropped, not queued, play not blocked, nothing plays later as a burst
+- Deferred UI or combat clip decode completing after the freshness window (read the value from the audio README; do not copy the integer) → no source start, even for a single stale cue; observe source-start calls
+- A fresh event after successful decode and after the rate gate clears still plays; decode rejected → no source start and play stays usable
+- UI module load deferred so the originating click is stale on arrival → not replayed as a fresh click; record module-load and decode evidence separately
+**Edge cases**: Overlap cap or rate limit hit → drop the new one-shot (gunfire leaves room for impacts and warnings); The AC says it is a verification requirement, not a claim the current lazy bridge passes: expect a possible source change; `sound.ts` must not typecheck-import `game/audio.ts`
+**Mutation check**: drop the freshness check → the stale-cue test fails
+**Manual**: Smoke: cold-cache play with the console open; console inspection is diagnostics, not proof of cue admission
 
 ---
 

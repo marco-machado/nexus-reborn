@@ -59,7 +59,17 @@
 
 ## QA Test Cases
 
-*N/A — no qa-lead specs at this tier (lean review mode); implement against the Acceptance Criteria above.*
+*From `production/qa/qa-plan-sprint-009-2026-10-17.md` (2026-10-17).*
+
+#### AU-002 — Voices, buses, and the reference mix (Visual/Feel)
+**Automated (where a seam exists)**:
+- `src/game/audio.test.ts` (advisory, if a seam exists): 20 one-shots exist; finished one-shot sources disconnect; stacking stays bounded under a burst of gunshots
+- Warning-sting requests: first combat contact, an answered officer call and a defend wave each request a sting; ordinary suspicion requests none and does not raise the drone
+**Verification**: evidence in `production/qa/evidence/au-002/`; sign-off: audio-director (lead sign-off)
+**Checklist**:
+- [ ] Listening-evidence note in `production/qa/evidence/au-002/`: record the settings, then play each of the 20 cues individually and a recorded overlapping-fire scenario (the user listens; Claude records settings, scenarios and the automated results)
+- [ ] Name the screens exercised (`docs/click-through.md`, Audio changes step 2)
+**Edge cases**: CorpSec variants of matching firearms quieter and narrower than squad; Interface cues stay below weapon reports; Weapon identities distinct
 
 ---
 
