@@ -6,7 +6,7 @@ export const meta = {
     { title: 'Plan', detail: 'clean-tree check; open stories from sprint-status.yaml in order' },
     { title: 'Readiness', detail: '/story-readiness' },
     { title: 'Implement', detail: '/dev-story' },
-    { title: 'Review', detail: 'specialist agents, then /code-review; one fix pass and a re-review on blocking findings' },
+    { title: 'Review', detail: 'specialist agents, then /code-review; up to fixRounds fix passes, each re-reviewed, on blocking findings' },
     { title: 'Done', detail: '/story-done' },
     { title: 'Commit', detail: 'one commit per completed story' },
     { title: 'Finish', detail: 'confirm no dev server is left on port 4200' },
@@ -19,6 +19,9 @@ export const meta = {
 //   limit:   number    stop after this many stories.
 //   commit:  boolean   commit each completed story to the current branch
 //                      before starting the next one. Default: true.
+//   fixRounds: number  fix passes (each followed by a re-review) allowed
+//                      before a story with blocking findings stops the run.
+//                      Default: 3.
 //   allowDirty: boolean start even when the working tree is dirty. The
 //                      paths dirty at start are left alone: never staged,
 //                      and not counted as leftovers after a commit.
@@ -149,6 +152,7 @@ function specialistsFor(files) {
 const opts = args ?? {}
 const commit = opts.commit ?? true
 const allowDirty = opts.allowDirty ?? false
+const fixRounds = opts.fixRounds ?? 3
 let preDirty = []
 
 // Marks the story stopped and says why, so the reason is visible without
@@ -266,25 +270,32 @@ Do not edit files. Classify each finding as blocking (bug, broken acceptance cri
   // story-done treats a review without its specialists as NOT ASSESSED and
   // will not close the story; stop before the fix pass.
   if (review.missing.length) { stopAt(record, 'review', { summary: review.verdict }, [`specialists did not return: ${review.missing.join(', ')}`]); break }
-  if (review.blocking.length) {
+  // Up to fixRounds fix passes, each followed by a full re-review: a re-review
+  // regularly finds a new blocker the first review missed.
+  let round = 0
+  let halted = false
+  while (review.blocking.length) {
+    if (round === fixRounds) {
+      stopAt(record, 're-review', { summary: `still blocking after ${fixRounds} fix passes: ${review.verdict}` }, review.blocking)
+      halted = true
+      break
+    }
+    round++
     const fixed = await agent(
       `Fix these blocking review findings for ${story}:\n- ${review.blocking.join('\n- ')}\n${HEADLESS}
 Then ${VERIFY}; ok=true only if every finding is fixed and all three pass. In files, list every file you changed. Do not commit.`,
-      { phase: 'Review', schema: BUILD, label: `fix:${name}` },
+      { phase: 'Review', schema: BUILD, label: `fix${round}:${name}` },
     )
     record.steps.fix = fixed
-    if (!fixed?.ok) { stopAt(record, 'review fix', fixed); break }
+    if (!fixed?.ok) { stopAt(record, 'review fix', fixed); halted = true; break }
     files = [...new Set([...files, ...fixed.files])]
 
-    review = await reviewStory('re-review')
+    review = await reviewStory(`re-review${round}`)
     record.steps.rereview = review
-    if (!review) { stopAt(record, 're-review', null); break }
-    if (review.missing.length) { stopAt(record, 're-review', { summary: review.verdict }, [`specialists did not return: ${review.missing.join(', ')}`]); break }
-    if (review.blocking.length) {
-      stopAt(record, 're-review', { summary: `still blocking after one fix pass: ${review.verdict}` }, review.blocking)
-      break
-    }
+    if (!review) { stopAt(record, 're-review', null); halted = true; break }
+    if (review.missing.length) { stopAt(record, 're-review', { summary: review.verdict }, [`specialists did not return: ${review.missing.join(', ')}`]); halted = true; break }
   }
+  if (halted) break
   const reviewNote = `${record.steps.fix ? 'blocking findings were fixed and the re-review' : '/code-review'} returned "${review.verdict}" with specialists ${review.specialists.join(', ')}. Advisory findings: ${review.advisory.length ? `\n- ${review.advisory.join('\n- ')}` : 'none'}`
 
   const done = await agent(
