@@ -96,6 +96,8 @@ function inspect() {
   const ov = (s, ax) => (ax === 'x' ? s.overflowX : s.overflowY)
   const scrollsAx = (s, ax) => /auto|scroll/.test(ov(s, ax))
   const clipsAx = (s, ax) => /hidden|clip/.test(ov(s, ax))
+  // A clip-path (the chevron CTAs) clips its own box on both axes.
+  const clipPathed = (s) => !!s.clipPath && s.clipPath !== 'none'
   const bordered = (s, side) => parseFloat(s['border' + side + 'Width']) > 0 && s['border' + side + 'Style'] !== 'none'
   // Box of the rendered glyphs (a block's own box can be wider than its text,
   // and nowrap text can run past it).
@@ -163,6 +165,13 @@ function inspect() {
       const s = getComputedStyle(el)
       if (s.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) { clips.add('ELLIPSIS ' + label(el)); continue }
       const settled = { x: false, y: false }
+      if (clipPathed(s)) {
+        const er = el.getBoundingClientRect()
+        if (r.right > er.right + 1 || r.left < er.left - 1 || r.bottom > er.bottom + 1 || r.top < er.top - 1) {
+          clips.add('CLIPPED ' + label(el) + ' by its own clip-path')
+          continue
+        }
+      }
       walk: for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
         const as = getComputedStyle(a)
         const ar = a.getBoundingClientRect()
@@ -175,7 +184,7 @@ function inspect() {
           const out = sides[ax].filter(([o]) => o)
           if (scrollsAx(as, ax)) { settled[ax] = true; continue }
           if (!out.length) continue
-          if (clipsAx(as, ax)) { clips.add('CLIPPED ' + label(el) + ' in ' + label(a).split(' ')[0]); break walk }
+          if (clipsAx(as, ax) || clipPathed(as)) { clips.add('CLIPPED ' + label(el) + ' in ' + label(a).split(' ')[0]); break walk }
           if (out.some(([, side]) => bordered(as, side))) { clips.add('SPILL ' + label(el) + ' past ' + label(a).split(' ')[0]); break walk }
         }
         if (settled.x && settled.y) break

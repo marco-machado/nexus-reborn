@@ -19,6 +19,7 @@ import { applyDebrief } from '../state/debrief'
 import { debriefFlags } from './debriefFlags'
 import { debriefFilingLine } from './filingStatus'
 import { useSaveStatusStore } from '../state/saveStatusStore'
+import { continueOffered, menuSaveLine } from './menuSaveLine'
 import { NEW_OPERATION_ARM_MS, newOperationArmHint, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
 import { deployRefusalCopy } from './deployRefusal'
@@ -150,7 +151,7 @@ function augLine(node: ResearchNode): string {
 export function MainMenu() {
   const clock = useUtcClock()
   const [saveStatus] = useState(() => menuSaveStatus())
-  const canContinue = saveStatus === 'valid'
+  const canContinue = continueOffered(saveStatus)
   const [newOperationArmed, setNewOperationArmed] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   useEffect(() => {
@@ -194,6 +195,12 @@ export function MainMenu() {
         </h1>
         <div className="menu-tagline">CORPORATE GEOSTRATEGIC COMMAND INTERFACE</div>
         <div className="menu-rule" aria-hidden="true" />
+        <div
+          className="menu-save-line"
+          data-invalid={saveStatus === 'invalid' ? '' : undefined}
+        >
+          {menuSaveLine(saveStatus)}
+        </div>
         <div className="menu-actions">
           {canContinue && (
             <button

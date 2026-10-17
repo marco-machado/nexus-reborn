@@ -660,6 +660,27 @@
   background: rgba(224, 75, 60, 0.09);
 }
 
+/* the menu column is narrower than a CTA face at large text scales: tighter
+   tracking and padding keep the chevrons inside the clip-path, and the label
+   wraps rather than clips */
+.menu-actions .cta-inner {
+  padding-inline: 18px;
+  letter-spacing: 0.24em;
+  white-space: normal;
+  text-align: center;
+}
+
+/* Z3 save-status line above the Menu actions (main-menu.md). */
+.menu-save-line {
+  margin-bottom: 12px;
+  text-align: center;
+  line-height: 1.4;
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.24em;
+  color: var(--ink-dim);
+}
+.menu-save-line[data-invalid] { color: var(--red-hot); }
+
 /* Z5 P-01 armed-hint slot under the Menu actions; two lines reserved so
    arming (or a 40% copy expansion) never shifts the layout (main-menu.md). */
 .menu-arm-hint {
