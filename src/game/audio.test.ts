@@ -17,6 +17,7 @@ import {
   unlockAudio,
 } from './audio'
 import { CLIPS } from './sfxClips'
+import type { MissionDef } from './types'
 
 const WEAPONS = ['assault', 'smg', 'pistol', 'longrifle', 'shotgun'] as const
 
@@ -1009,5 +1010,226 @@ describe('module-load freshness evidence (AU-005)', () => {
       sound.startStrategyBed()
     }).not.toThrow()
     await settle()
+  })
+})
+
+// AU-006 (Sprint 9; TR-audio-003, ADR-0017 / ADR-0016): the mission-bed pick
+// and gunshot playback-rate jitter are presentation-only, unseeded draws. A
+// controlled fixture replays one mission (same seed, deploy freeze, weather
+// script, Opening hour, commands, command timing and timestep schedule) and
+// varies only those two draws: the outcome, the weather script, the clock and
+// the seeded sim stream's draw count must match step for step. Two
+// independently played deploys are not this fixture, and two uncontrolled
+// draws are not required to differ, so Math.random is pinned per run.
+describe('presentation-only randomness does not change outcomes (AU-006)', () => {
+  afterEach(() => {
+    vi.doUnmock('./rng')
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  const STEP = 0.05
+  const FRONT_AT = 3
+  const OPENING_HOUR = 22 * 3600 + 40 * 60
+  const STEPS = 200
+  const GUN_URLS = new Set(WEAPONS.flatMap((id) => [gunClipUrl(id, 'squad'), gunClipUrl(id, 'corpsec')]))
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  interface Run {
+    trace: unknown[]
+    shots: { id: string; t: number; to: [number, number] }[]
+    fetched: string[]
+    gunRates: { url: string; rate: number }[]
+  }
+
+  // `audioOn` false is the jitter-off / no-audio baseline. `draw` is the value
+  // every presentation Math.random() call returns in this run.
+  async function play(audioOn: boolean, draw: number): Promise<Run> {
+    vi.resetModules()
+    // Count draws on the world's own seeded stream: the first mulberry32 made
+    // once `armed` is set is the one createWorld builds from mission.seed.
+    const sim = { armed: false, draws: 0 }
+    vi.doMock('./rng', async (importOriginal) => {
+      const real = await importOriginal<typeof import('./rng')>()
+      return {
+        ...real,
+        mulberry32(seed: number) {
+          const next = real.mulberry32(seed)
+          if (!sim.armed) return next
+          sim.armed = false
+          return () => {
+            sim.draws += 1
+            return next()
+          }
+        },
+      }
+    })
+    vi.spyOn(Math, 'random').mockReturnValue(draw)
+
+    let mock: ReturnType<typeof installMockAudio> | null = null
+    if (audioOn) mock = installMockAudio()
+    else {
+      vi.stubGlobal('AudioContext', undefined)
+      vi.stubGlobal('webkitAudioContext', undefined)
+    }
+
+    const audio = await import('./audio')
+    const { createWorld } = await import('./world')
+    const { headlessDeploy } = await import('./deploy')
+    const { MISSIONS, operativeById } = await import('./data')
+    const { useMissionStore } = await import('../state/missionStore')
+    // Let the mission bridge's lazy import of ./audio land before play.
+    await settle()
+
+    audio.unlockAudio()
+
+    const mission: MissionDef = {
+      ...MISSIONS[0],
+      objectives: [],
+      weather: 'light',
+      weatherFront: { to: 'heavy', atSec: FRONT_AT },
+      openingHour: OPENING_HOUR,
+    }
+    const squad = [operativeById('op1')]
+    sim.armed = true
+    const w = createWorld(mission, squad, headlessDeploy(mission, squad))
+    expect(sim.armed).toBe(false)
+    // Shipped order (MissionScreen): composeMission builds the world, then the
+    // bed is picked. Picking after createWorld lets a bed pick that drew from
+    // the world's seeded stream show up in the sim draw count and the trace.
+    audio.startMissionBed()
+    await settle()
+    const ms = useMissionStore.getState()
+    ms.reset()
+    ms.setLive(true)
+
+    const shots: Run['shots'] = []
+    const trace: unknown[] = []
+    // decayFx compacts w.tracers from the front inside each tick, so an index
+    // cursor would skip new rounds. Track the tracer objects themselves: every
+    // push is a fresh object and lives at least through the tick it was fired in.
+    const seen = new WeakSet<object>()
+    const step = async (): Promise<void> => {
+      w.tick(STEP)
+      // Gun voices decode and take their jitter after the tick, as in play.
+      if (mock) {
+        await settle()
+        mock.context.currentTime = w.time
+      }
+      for (const tr of w.tracers) {
+        if (seen.has(tr)) continue
+        seen.add(tr)
+        const by = w.units.find((u) => u.lastFireT === tr.t && u.pos.x === tr.from.x && u.pos.z === tr.from.z)
+        shots.push({ id: by?.id ?? '?', t: tr.t, to: [tr.to.x, tr.to.z] })
+      }
+      const store = useMissionStore.getState()
+      trace.push({
+        t: w.time,
+        simDraws: sim.draws,
+        weather: w.weather,
+        vision: w.vision,
+        clock: store.clock,
+        result: store.result,
+        civiliansHit: store.civiliansHit,
+        units: w.units.map((u) => ({
+          id: u.id,
+          x: u.pos.x,
+          z: u.pos.z,
+          hp: u.hp,
+          stance: u.stance,
+          cooldown: u.cooldown,
+          magazine: u.magazine,
+          reloading: u.reloading,
+          lastFireT: u.lastFireT,
+        })),
+      })
+    }
+
+    for (let i = 0; i < 24; i++) await step()
+    // Commands at a fixed step: one trooper 4 m from a1, both sides tough
+    // enough to trade fire for the whole window; the rest of the garrison out.
+    const a1 = w.unit('a1')!
+    const enemy = w.units.find((u) => u.kind === 'enemy' && (u.archetype ?? 'trooper') === 'trooper')!
+    for (const u of w.units) if (u.kind === 'enemy' && u !== enemy) u.stance = 'dead'
+    enemy.pos.x = a1.pos.x
+    enemy.pos.z = a1.pos.z - 4
+    enemy.path.length = 0
+    enemy.patrol!.length = 0
+    enemy.holdGround = true
+    for (const u of [a1, enemy]) {
+      u.hp = 100000
+      u.maxHp = 100000
+    }
+    w.orderAttack(['a1'], enemy.id)
+    for (let i = 24; i < STEPS; i++) await step()
+
+    const fetched = mock ? [...mock.fetched] : []
+    const gunRates = mock
+      ? mock.sources
+          .filter((s) => s.buffer && GUN_URLS.has(s.buffer.url))
+          .map((s) => ({ url: s.buffer!.url, rate: s.playbackRate.value }))
+      : []
+    return { trace, shots, fetched, gunRates }
+  }
+
+  it('fixture sanity: both sides fire, and the two presentation draws really differ between the jitter runs', async () => {
+    const low = await play(true, 0)
+    const high = await play(true, 0.9999)
+    const { MISSION_BED_URLS: beds } = await import('./audio')
+    // Bed pick: index 0 vs index 2 of the three clips.
+    expect(low.fetched).toContain(beds[0])
+    expect(low.fetched).not.toContain(beds[2])
+    expect(high.fetched).toContain(beds[2])
+    expect(high.fetched).not.toContain(beds[0])
+    // Squad and CorpSec rounds both went off and were voiced with jitter.
+    expect(low.shots.some((s) => s.id === 'a1')).toBe(true)
+    expect(low.shots.some((s) => s.id !== 'a1' && s.id !== '?')).toBe(true)
+    expect(low.gunRates.some((g) => g.url.includes('-corpsec'))).toBe(true)
+    expect(low.gunRates.some((g) => !g.url.includes('-corpsec'))).toBe(true)
+    // Rate jitter spans 0.97–1.03: pinned at its two ends by the draw.
+    for (const g of low.gunRates) expect(g.rate).toBeCloseTo(0.97, 10)
+    for (const g of high.gunRates) expect(g.rate).toBeCloseTo(0.97 + 0.9999 * 0.06, 10)
+    // The weather script ran and the Opening hour shows on the clock.
+    const last = low.trace.at(-1) as { weather: string; clock: string }
+    expect(last.weather).toBe('heavy')
+    expect(last.clock.startsWith('22:40')).toBe(true)
+  })
+
+  it('varying only the bed pick and gun-rate jitter leaves hits, outcome, weather and Opening hour equal at every step (AC 1)', async () => {
+    const low = await play(true, 0)
+    const high = await play(true, 0.9999)
+    expect(high.trace).toHaveLength(STEPS)
+    expect(high.trace).toEqual(low.trace)
+    expect(high.shots).toEqual(low.shots)
+  })
+
+  it('the sim rng draw count at each step equals the count with no audio running (AC 2)', async () => {
+    const silent = await play(false, 0.5)
+    const voiced = await play(true, 0.9999)
+    const draws = (r: Run) => r.trace.map((s) => (s as { simDraws: number }).simDraws)
+    expect(draws(silent).at(-1)).toBeGreaterThan(0)
+    expect(draws(voiced)).toEqual(draws(silent))
+    expect(voiced.trace).toEqual(silent.trace)
+  })
+
+  it('each squad and CorpSec shot resolves and paces the same with jitter on as with it off (AC 3)', async () => {
+    const off = await play(false, 0.5)
+    const on = await play(true, 0)
+    // Same rounds at the same times to the same points: same chance, same roll.
+    expect(on.shots).toEqual(off.shots)
+    const intervals = (r: Run, id: string) => {
+      const ts = r.shots.filter((s) => s.id === id).map((s) => s.t)
+      return ts.slice(1).map((t, i) => t - ts[i])
+    }
+    const shooters = [...new Set(off.shots.map((s) => s.id))]
+    expect(shooters.length).toBeGreaterThanOrEqual(2)
+    for (const id of shooters) {
+      expect(intervals(on, id).length).toBeGreaterThan(0)
+      expect(intervals(on, id)).toEqual(intervals(off, id))
+    }
   })
 })

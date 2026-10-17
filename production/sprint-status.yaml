@@ -147,11 +147,11 @@ stories:
     name: "Presentation-only randomness does not change outcomes"
     file: "production/epics/audio/story-006-presentation-jitter-does-not-change-outcomes.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "AU-002"
     name: "Voices, buses, and the reference mix"
     file: "production/epics/audio/story-002-voices-buses-and-reference-mix.md"
