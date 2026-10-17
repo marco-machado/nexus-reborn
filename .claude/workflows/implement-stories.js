@@ -22,6 +22,9 @@ export const meta = {
 //   fixRounds: number  fix passes (each followed by a re-review) allowed
 //                      before a story with blocking findings stops the run.
 //                      Default: 3.
+// A story whose only gap is a person's sign-off (listening pass, art or
+// audio director approval) is committed In Review and the run moves on.
+//
 //   allowDirty: boolean start even when the working tree is dirty. The
 //                      paths dirty at start are left alone: never staged,
 //                      and not counted as leftovers after a commit.
@@ -259,7 +262,8 @@ This is a retry: the first attempt ran out of turns. Read only: do not write, ru
 Phase 7 specialists already ran in this workflow as their own agents; do not try to spawn them. Use their findings below as the Phase 7 results, and verify each one as the skill requires (VERIFIED or UNVERIFIED).
 ${ran.length ? ran.map((r) => `### ${r.specialist}: ${r.summary}\n${r.findings.map((f) => `- ${f.file}:${f.line} [${f.severity}] ${f.claim} — evidence: ${f.evidence}`).join('\n') || '- no findings'}`).join('\n\n') : '(none ran)'}
 ${missing.length ? `These specialists did not return, so the verdict is NOT ASSESSED; name them: ${missing.join(', ')}.` : ''}
-Do not edit files. Classify each finding as blocking (bug, broken acceptance criterion, CLAUDE.md guardrail breach) or advisory.`,
+Do not edit files. Classify each finding as blocking (bug, broken acceptance criterion, CLAUDE.md guardrail breach) or advisory.
+A sign-off only a person can give (a listening pass, an art-director or audio-director approval) is not a blocking finding: no fix pass can supply it. List it as advisory, prefixed "SIGN-OFF PENDING:".`,
       { phase: 'Review', schema: REVIEW, label: `${label}:${name}` },
     ).then((r) => r && { ...r, specialists: ran.map((s) => s.specialist), missing })
   }
@@ -304,7 +308,8 @@ Code review already ran in this workflow on ${files.join(', ')}: ${reviewNote}
 Where the skill asks whether /code-review ran, answer that it did with the result above, naming the specialists. Record the advisory findings in the story's Completion Notes.
 Mutation check from dev-story: ${built.mutation}
 Record it in the Completion Notes "Mutation Check" line verbatim.
-ok=true only if the story is marked Complete in its file and in production/sprint-status.yaml. Do not commit.`,
+ok=true only if the story is marked Complete in its file and in production/sprint-status.yaml.
+Exception: if the only thing that keeps the story from closing is a sign-off or listening pass only a person can give (no failing criterion, no code or evidence gap you could fix), do not fake it and do not close the story. Instead set the story's Status to "In Review" and its production/sprint-status.yaml entry to status: review with blocker naming the pending sign-off; add an "## Open for Sign-off" section to the story with the review verdict and specialists, the mutation check line, what the person must do, and the advisory findings; then return ok=true with a summary that starts "AWAITING SIGN-OFF:". Do not commit.`,
     { phase: 'Done', schema: STEP, label: `done:${name}` },
   )
   record.steps.done = done
@@ -315,6 +320,7 @@ ok=true only if the story is marked Complete in its file and in production/sprin
       `Commit the changes for ${story} to the current branch. ${HEADLESS}
 Stage explicitly: ${files.join(' ')} ${story} production/sprint-status.yaml, plus any QA evidence under production/qa/evidence/ for this story and any other file the summaries below say the skills wrote for it. production/session-state/ is gitignored; never force-add it. Stage nothing else.${preDirty.length ? `\nThese paths were dirty before the run started and are not this story's; never stage them, and do not count them as leftovers:\n${preDirty.join('\n')}` : ''}
 Follow the Commit Style section of CLAUDE.md: imperative subject, then a body that says what changed by file, why, and what was verified (lint, test, build, review). Use the summaries below for the body.
+If the Done summary starts "AWAITING SIGN-OFF:", say in the body that the story is In Review and name the pending sign-off.
 Do not push, amend, or skip hooks; if a hook fails, fix the cause and commit again.
 ok=true only if the commit exists and git status --porcelain is empty afterwards${preDirty.length ? ' apart from the pre-run dirty paths listed above' : ''}; if leftover changes remain, list them in blockers instead of committing them. Return the commit's short sha.
 
