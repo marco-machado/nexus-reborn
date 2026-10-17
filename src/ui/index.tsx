@@ -23,7 +23,7 @@ import { continueOffered, menuSaveLine } from './menuSaveLine'
 import { NEW_OPERATION_ARM_MS, newOperationArmHint, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
 import { deployRefusalCopy } from './deployRefusal'
-import { assemblyRowHandlers } from './assemblyRows'
+import { assemblyRowHandlers, hireView } from './assemblyRows'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
 import { ROSTER_CAP } from '../game/recruits'
@@ -928,8 +928,8 @@ function RecruitPanel(props: { onClose: () => void }) {
   const nextCandidateT = useCampaignStore((s) => s.nextCandidateT)
   const credits = useAppStore((s) => s.credits)
   const hire = useAppStore((s) => s.hireOperative)
+  const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const worldT = useWorldStore((s) => s.t)
-  const full = operatives.length >= ROSTER_CAP
   const hoursToNext = Math.max(1, Math.ceil((nextCandidateT - worldT) / 3600))
   return (
     <div className="ts-recruit-overlay">
@@ -950,8 +950,13 @@ function RecruitPanel(props: { onClose: () => void }) {
         </header>
         <div className="ts-rec-cards">
           {candidates.map((c) => {
-            const short = credits < c.cost
-            const blocked = full || short
+            const view = hireView({
+              cost: c.cost,
+              credits,
+              rosterSize: operatives.length,
+              rosterCap: ROSTER_CAP,
+              campaignFailed,
+            })
             return (
               <div key={c.id} className="ts-rec-card corners">
                 <div className="ts-rec-id">
@@ -975,22 +980,32 @@ function RecruitPanel(props: { onClose: () => void }) {
                   </span>
                 </div>
                 <div className="ts-rec-weapon dim">{WEAPONS[c.weapon].name}</div>
+                <div className="ts-rec-ledger">{view.ledger}</div>
                 <button
                   type="button"
                   className="btn amber ts-rec-hire"
-                  disabled={blocked}
-                  aria-label={'HIRE ' + c.codename + ' // ' + fmt(c.cost) + ' CR'}
-                  title={
-                    full
-                      ? 'ROSTER AT CAPACITY'
-                      : short
-                        ? 'INSUFFICIENT CREDITS'
-                        : 'SIGN ' + c.codename + ' TO THE ROSTER'
+                  disabled={!view.can}
+                  aria-label={
+                    'HIRE ' +
+                    c.codename +
+                    ' // ' +
+                    fmt(c.cost) +
+                    ' CR' +
+                    (view.can ? '' : ' // ' + view.reason)
                   }
+                  aria-describedby={view.can ? undefined : 'ts-rec-why-' + c.id}
+                  title={view.can ? 'SIGN ' + c.codename + ' TO THE ROSTER' : view.reason}
                   onClick={act(() => hire(c.id))}
                 >
                   HIRE // {fmt(c.cost)} CR
                 </button>
+                <div
+                  id={'ts-rec-why-' + c.id}
+                  className={'ts-rec-why' + (view.can ? '' : ' red')}
+                  role={view.can ? undefined : 'status'}
+                >
+                  {view.can ? '\u00a0' : view.reason}
+                </div>
               </div>
             )
           })}

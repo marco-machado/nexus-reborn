@@ -1,12 +1,12 @@
 # Story 012: Assembly hire refusals and heavy-tier hint
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-17
 
 ## Context
 
@@ -80,7 +80,7 @@
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/if-012/` (5 captures at 1280x720, `capture.mjs`, `capture-output.txt`, click-through record `README.md`); tests in `src/ui/assemblyRows.test.ts` (hireView) and `src/ui/armHints.test.ts` (heavy-tier advisory, over-limit refusal)
 
 ---
 
@@ -88,3 +88,28 @@
 
 - Depends on: Story 001
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-17
+**Criteria**: 2/2 passing (AC26, AC28). Nothing deferred.
+**Deviations**: None blocking. Advisory: the story's Control Manifest guardrail "Interface does not compute affordability or capacity" is not in `docs/architecture/control-manifest.md`. ADR-0013 ("Presentation vs ledger") lets the Interface disable hire when Credits are short, but `hireView` (src/ui/assemblyRows.ts:64-67) repeats the owner's capacity and Credits checks. That is a risk that the two copies drift apart. See the code-review findings below.
+**Test Evidence**: UI. Retained screenshots in `production/qa/evidence/if-012/` (01 unaffordable hire, 02 full roster, 03 hire-allowed control, 04 over-limit Deploy refused, 05 heavy-tier advisory in Mission, all 1280x720), plus `capture.mjs`, `capture-output.txt` (ALL PASS) and the click-through record `README.md`. Tests: `src/ui/assemblyRows.test.ts`, `src/ui/armHints.test.ts`.
+**Code Review**: APPROVED WITH SUGGESTIONS. Specialists: lead-programmer, qa-tester, ui-programmer. No blocking findings. ADR Compliance COMPLIANT (ADR-0013, ADR-0017, ADR-0019), Standards 6/6, Architecture CLEAN. The workflow ran unattended, so autonomous mode took the default Phase 9 option [A] as a note only, and no files were edited after the review.
+**Mutation Check**: Mutation check: skipped — UI story (the skill runs it for Logic and Integration only)
+**Story-done decisions (autonomous)**: Phase 7 took the default "Close the story (Recommended)". QL-TEST-COVERAGE and LP-CODE-REVIEW were skipped in Lean mode. The specialist /code-review above satisfies the review requirement.
+
+**Advisory code-review findings (follow-up candidates)**:
+- src/ui/assemblyRows.ts:64-67: `hireView` checks roster capacity and Credits again, when appStore.hireOperative and campaignStore.acceptHire already check them. ADR-0013 sanctions this, so it is a drift risk, not a breach. The lasting fix is an owner-side `hireRefusal()` that both the action and the view read. That changes a store, so it needs a follow-up story with lead-programmer sign-off.
+- src/ui/assemblyRows.ts:52: `hireView` has no branch for an invalid cost. With cost 0 or NaN it returns can:true, but hireOperative refuses, so HIRE is enabled, does nothing and shows no reason. Seeded data never reaches this, so severity is low.
+- src/ui/assemblyRows.ts:61: the view and the owner check refusals in a different order. The view goes campaign-failed, then roster-full, then credits. The owner goes credits first. A full roster with too few Credits shows ROSTER AT CAPACITY, while the owner refuses on Credits. No test pins which reason wins when two conditions hold at once.
+- src/ui/assemblyRows.test.ts:91: the "agrees with the owner" test hard-codes `campaignFailed: false`. The campaign-failed refusal is not checked end to end through hireOperative/acceptHire.
+- src/ui/index.tsx (HIRE button, ~l.994-1005): screen readers hear the refusal reason more than once, through the aria-label suffix and aria-describedby, and `title` repeats it a third time. `role="status"` is added in the same render as the text, so the live region may not announce at all. Suggested fix: keep the label the same in both states, describe the reason only through aria-describedby, and keep the role fixed.
+- src/ui/ui.css:2601 `.ts-rec-why { min-height: 1.3em }`: "SHORT" wraps onto a second line on every card (screenshot 01), so card height changes between the allowed and refused states. Nothing is clipped. Fixing it needs an art/UX decision (shorter copy or a two-line slot). capture.mjs `clipped()` checks only horizontal overflow.
+- src/ui/armHints.test.ts:106-112: the over-limit reason assertion calls canDeploy on inputs the test built itself. The visible "OFFLOAD 30.1 KG" reason is checked only in capture-output.txt.
+- src/ui/armHints.test.ts:59-63,78: the AC26 positive path calls createWorld + tick directly. The startMission → mission → advisory chain is covered only by the headless capture.
+- src/ui/armHints.test.ts:46: the IF-012 integration block sits in the P-01 armed-hint helper test file. This is a placement note; the QA plan names this file.
+- QA plan item "no refusal sound is requested": no automated test covers it. Only the README reasons it out. The AC says refusal audio is not required, so this is a coverage gap.
+- production/qa/evidence/if-012/capture.mjs:14: the script only runs on this machine (hard-coded Chrome path and a global @playwright/cli). The README's revision ("f490d39 plus working-tree changes") cannot be checked out. Record the commit hash once this is committed.
+- production/qa/evidence/if-012/capture.mjs:148: `dismissHint('hint-overweight')` runs before the second deploy, so `toasts === 0` does not by itself prove the advisory was not repeated. That rests on `hints.length === 0` and on the unit test's `seen` length of 1. No screenshot shows it.

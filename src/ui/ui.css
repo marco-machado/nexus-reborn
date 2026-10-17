@@ -2596,6 +2596,9 @@
 .ts-rec-stats .kv b { font-size: calc(11px * var(--text-scale)); }
 .ts-rec-weapon { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.12em; }
 .ts-rec-hire { width: 100%; letter-spacing: 0.14em; }
+.ts-rec-ledger { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.12em; color: var(--amber); }
+/* reserved reason slot under HIRE: the refusal reads as words, not only red */
+.ts-rec-why { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.12em; min-height: 1.3em; }
 .ts-rec-none { grid-column: 1 / -1; text-align: center; padding: 22px 0; letter-spacing: 0.2em; }
 .ts-recruit-foot { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.16em; }
 

@@ -93,11 +93,11 @@ stories:
     name: "Assembly hire refusals and heavy-tier hint"
     file: "production/epics/interface/story-012-assembly-hire-refusals-and-heavy-tier-hint.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-002"
     name: "Critical state has non-colour cues; one OS styling"
     file: "production/epics/interface/story-002-critical-state-has-non-color-cues-one-os-styling.md"
