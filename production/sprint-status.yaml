@@ -165,8 +165,8 @@ stories:
     name: "No celebration sting, spoken VO, or spatial shooter mix"
     file: "production/epics/audio/story-007-no-celebration-sting-vo-or-spatial-mix.md"
     priority: nice-to-have
-    status: backlog
+    status: review
     owner: ""
     estimate_days: 0.3
-    blocker: ""
+    blocker: "listening pass and audio-director sign-off (user)"
     completed: ""

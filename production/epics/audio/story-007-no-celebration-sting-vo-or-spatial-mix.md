@@ -1,12 +1,12 @@
 # Story 007: No celebration sting, spoken VO, or spatial shooter mix
 
 > **Epic**: Audio
-> **Status**: Ready
+> **Status**: In Review
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-17
 
 ## Context
 
@@ -75,7 +75,7 @@
 **Required evidence**:
 - Visual/Feel: a listening-evidence note with the recorded settings and scenarios in `production/qa/evidence/`, plus a lead sign-off. Name the screens exercised (docs/click-through.md, Audio changes).
 
-**Status**: [ ] Not yet created
+**Status**: [x] Advisory automated test `src/game/audio.noCelebration.test.ts` (6 tests); listening-evidence note prepared at `production/qa/evidence/au-007/README.md` — listening and audio-director sign-off pending
 
 ---
 
@@ -83,3 +83,28 @@
 
 - Depends on: Story 002
 - Unlocks: None
+
+---
+
+## Open for Sign-off
+**State (2026-10-17)**: advisory automated test, smoke grep, browser probe, listening-evidence note and code review are done; closure waits only on the listening pass and the audio-director sign-off, which only a person can give. `/story-done` verdict: NOT ASSESSED (AC-1 and AC-2 are "when the mix is heard" and nobody has listened; Visual/Feel sign-off pending). No failing criterion. No code change was needed: the shipping code has no celebration sting, no mission-end sting on Abort, no VO and no panner.
+- **Review**: `/code-review` APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer. Engine specialist findings ISSUES FOUND (advisory only); Testability N/A for a Visual/Feel story (manual steps checked and doable); ADR Compliance COMPLIANT (ADR-0017); Standards 6/6 apply to a test file; Architecture CLEAN; SOLID COMPLIANT. `npx vitest run src/game/audio.noCelebration.test.ts`: 6 passed (re-run by `/story-done` 2026-10-17, 6 passed).
+- **Mutation Check**: Mutation check: skipped — Visual/Feel story
+- **Needs the user**: fill the Settings table (revision, browser/OS, output device) in `production/qa/evidence/au-007/README.md`, run scenarios 1-6 at the reference mix (headphones for scenario 6), fill the Observed and Status columns, and record the audio-director sign-off; then `/story-done` this story.
+- **Criteria**:
+  - AC-1 (no celebration sting on Debrief incl. quiet replay; no mission-end sting on Abort arm): automated parts in `src/game/audio.noCelebration.test.ts` (advisory, with the gaps below); listening scenarios 1-5 pending.
+  - AC-2 (no spoken VO, no spatial-panned shooter mix): smoke grep for panner/speech APIs under `src/` returned no matches (re-run 2026-10-17); cue-set pin test; browser probe counted 0 panners and 0 utterances; listening scenario 6 pending.
+- **Evidence note**: no screenshot retained; this is a listening story, so the listening-evidence note plus sign-off is the evidence its Test Evidence section names.
+- **Manifest**: story v2026-10-08 matches current control manifest v2026-10-08. TR-audio-004 registry text ("No spoken VO, no spatial shooter mix, and no payout celebration sting") matches the story.
+- **Evidence corrections made by `/story-done`**: `production/qa/evidence/au-007/README.md` Status lines reworded so they claim only what the tests check (outcome tests vs `threatLevel(0)`/`phase` asserts, Abort-arm test checks a pure controller, `abortMission` vs the MissionScreen cleanup, scenario 5 as the only evidence for the bed stop on Abort confirm), the revision line marked for replacement with the commit that adds the test, and the browser probe labelled a one-off observation.
+- **Advisory findings (from `/code-review`)**:
+  - SIGN-OFF PENDING: all six scenarios in `production/qa/evidence/au-007/README.md` are "not run", the audio-director sign-off is "(pending)", and the Settings rows (Revision, Browser/OS, Output device) are "(fill in)". Only a person can do this.
+  - `src/game/audio.noCelebration.test.ts:161-172`: the Abort-arm test cannot fail; `src/ui/abortArm.ts` has no imports, so `allCalls()===0` holds by construction. The audio played on Abort is in `src/ui/PauseMenu.tsx:137-138` and is not run. Label it as a purity check of the arm controller, or test the click handler's audio.
+  - `src/game/audio.noCelebration.test.ts:128,142,156,182`: the `applyDebrief` and `abortMission` checks cannot catch a regression where one would be added; `src/state/debrief.ts` and `src/state/missionLifecycle.ts` import no audio. The real end-of-mission audio paths (Debrief `useLayoutEffect` at `src/ui/index.tsx:1580-1582`, MissionScreen unmount cleanup at `src/ui/MissionScreen.tsx:29-33`) are never mounted.
+  - `src/game/audio.noCelebration.test.ts:113,122-123`: "nothing after the result" only checks alertSting and threatLevel and does not clear spies at the result; adding `sfx.objectiveChime()` or `sfx.confirmBlip()` to setResultNow (`src/game/world.ts:1789-1794`) would pass, and `.every(...)` is true on an empty list. Fix: record counts at the result, then assert only `toHaveBeenCalledWith(0)` follows.
+  - `src/game/audio.noCelebration.test.ts:131-157`: the quiet-replay and loss tests have no threatLevel(0)-only check; the loss test never asserts `phase === 'debrief'` though its name says Debrief is reached.
+  - `src/game/audio.noCelebration.test.ts:187-190`: the cue-set pin covers only `missionSfx` method names, not the `src/ui/sound.ts:56-106` exports, and cannot catch a celebration clip played through an existing cue name. Pin the ui/sound export keys too.
+  - `production/qa/evidence/au-007/README.md:10-11` claimed more than the tests check (reworded by `/story-done`, see above).
+  - QA edge case "Abort confirm stops the mission bed as on any leave" has no automated coverage; README scenario 5 is the only evidence (README now says so).
+  - `production/qa/evidence/au-007/README.md:8` pins `5594e65` + uncommitted test, stale once committed (now marked for replacement); the browser probe counts have no script or log in the evidence folder (now labelled a one-off observation).
+- **Autonomous decisions logged**: specialist review answered from the workflow's `/code-review` record; Phase 7 close not taken (NOT ASSESSED cannot be closed without the owner, `scope_changes` always-ask); story set to In Review per the workflow's sign-off exception; nothing committed.
