@@ -129,11 +129,11 @@ stories:
     name: "Unavailable and late audio never block play or burst"
     file: "production/epics/audio/story-005-unavailable-and-late-audio-never-burst.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "AU-004"
     name: "Rain follows live weather; Alert tension drone"
     file: "production/epics/audio/story-004-rain-follows-live-weather-and-alert-tension-drone.md"

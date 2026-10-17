@@ -2,6 +2,13 @@
 // produced by a parallel build, so the UI resolves it lazily at runtime and
 // never depends on it at typecheck time. Every entry point is failure proof:
 // a missing module or missing export is silently ignored.
+//
+// A click raised while the module is still loading is replayed only if the
+// module arrives within the runtime-owned freshness window; a later arrival
+// drops it, so slow loading never turns earlier clicks into a delayed burst.
+// The window comes from `audioFreshness.ts`, a dependency-free module, so this
+// file still never typecheck-imports `game/audio.ts`.
+import { isCueFresh } from '../game/audioFreshness'
 
 interface SfxLike {
   uiClick?: () => void
@@ -38,6 +45,11 @@ function load(): Promise<AudioModuleLike | null> {
   return modPromise
 }
 
+// Wall clock in seconds: no AudioContext exists before the module loads.
+function nowSeconds(): number {
+  return performance.now() / 1000
+}
+
 // Kick off resolution at module load so the first click is not silent.
 void load()
 
@@ -47,7 +59,11 @@ export function uiClick(): void {
       mod.sfx?.uiClick?.()
       return
     }
-    void load().then((m) => m?.sfx?.uiClick?.())
+    const requestedAt = nowSeconds()
+    void load().then((m) => {
+      if (!isCueFresh(requestedAt, nowSeconds())) return
+      m?.sfx?.uiClick?.()
+    })
   } catch {
     // audio unavailable
   }

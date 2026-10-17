@@ -10,13 +10,14 @@ import {
   rainClipUrl,
   type GunSide,
 } from './sfxClips'
+import { CUE_FRESHNESS_WINDOW_S, isCueFresh } from './audioFreshness'
 import strategyBedUrl from '../../inspiration/audio/strategy-bed.mp3?url'
 import missionBedUrl from '../../inspiration/audio/mission-bed.mp3?url'
 import missionBedInhabitedUrl from '../../inspiration/audio/mission-bed-inhabited.mp3?url'
 import missionBedSealedUrl from '../../inspiration/audio/mission-bed-sealed.mp3?url'
 
 export type { GunSide }
-export { gunClipUrl }
+export { gunClipUrl, CUE_FRESHNESS_WINDOW_S }
 
 export const STRATEGY_BED_URL: string = strategyBedUrl
 export const MISSION_BED_URLS: readonly string[] = [
@@ -64,7 +65,6 @@ const activeOneShots = new Set<{ src: AudioBufferSourceNode; dest: AudioNode }>(
 const MAX_COMBAT_VOICES = 8
 const MAX_GUN_VOICES = 6 // Leave two combat voices available for impacts / warnings.
 const MAX_UI_VOICES = 3
-const MAX_CUE_DELAY = 0.12
 
 // Alert tension drone: two detuned saws through a lowpass, held while the
 // mission alert level is up. Built lazily on the first nonzero level and kept
@@ -230,7 +230,7 @@ function playOneShot(live: Live, dest: AudioNode, url: string, gun = false): voi
   void decodeClip(live.c, url).then((buf) => {
     if (!buf || ctx !== live.c || live.c.state !== 'running') return
     // Loading must not turn earlier input / combat into a delayed burst.
-    if (live.c.currentTime - requestedAt > MAX_CUE_DELAY) return
+    if (!isCueFresh(requestedAt, live.c.currentTime)) return
     const limit = dest === live.ui ? MAX_UI_VOICES : gun ? MAX_GUN_VOICES : MAX_COMBAT_VOICES
     let count = 0
     for (const voice of activeOneShots) if (voice.dest === dest) count++

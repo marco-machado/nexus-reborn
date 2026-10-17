@@ -62,8 +62,14 @@ than six combat one-shots are active, leaving room for impacts and warnings.
 Loops and the drone do not consume these one-shot slots.
 
 Per-event rate limits further reduce stacking. Each gunshot varies its playback
-rate by up to ±3%. One-shots require a running AudioContext and are dropped if
-decoding delays them by more than 120 ms. Finished sources disconnect and leave
+rate by up to ±3%. One-shots require a running AudioContext; a request made
+while audio is unavailable or the context is not running is dropped, not queued.
+The freshness window is 120 ms (`CUE_FRESHNESS_WINDOW_S` in
+[`src/game/audioFreshness.ts`](../../../src/game/audioFreshness.ts), the one
+runtime value tests read): a one-shot whose clip decode completes later than
+that after its event is dropped, and a menu click made while `sound.ts` is still
+loading the audio module is dropped if the module arrives later than that.
+Finished sources disconnect and leave
 the active-voice set. Bed stop operations invalidate pending decodes so a late
 load cannot restart a departed screen's loop. Rain crossfades with weather and
 fades out in dry conditions.

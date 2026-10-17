@@ -500,3 +500,303 @@ describe('bed lifetimes (AU-003)', () => {
     expect(started).toHaveLength(0)
   })
 })
+
+// AU-005 / TR-audio-003: unavailable or late audio never blocks play and never
+// dumps as a delayed burst. The freshness window is read from the runtime
+// constant (audio README, "Runtime integration"), never restated here.
+// Clip-decode evidence and module-load evidence are recorded in separate
+// blocks below.
+describe('unavailable audio and dropped one-shots (AU-005)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  function fireEveryOneShot(audio: typeof import('./audio')): void {
+    audio.sfx.uiClick()
+    audio.sfx.confirmBlip()
+    audio.sfx.objectiveChime()
+    audio.sfx.interactTick()
+    audio.sfx.gunshot('assault')
+    audio.sfx.gunshot('pistol', 'corpsec')
+    audio.sfx.reload()
+    audio.sfx.alertSting()
+    audio.sfx.deathThud()
+    audio.sfx.blast()
+    audio.sfx.abilityCue()
+    audio.sfx.agentHit()
+  }
+
+  it('with no Web Audio at all, every entry point returns and play is not blocked', async () => {
+    vi.resetModules()
+    vi.stubGlobal('AudioContext', undefined)
+    vi.stubGlobal('webkitAudioContext', undefined)
+    const audio = await import('./audio')
+    expect(() => {
+      audio.unlockAudio()
+      fireEveryOneShot(audio)
+      audio.sfx.threatLevel(3)
+      audio.startStrategyBed()
+      audio.startMissionBed()
+      audio.setMissionBedWeather('heavy')
+      audio.stopMissionBed()
+      audio.stopStrategyBed()
+    }).not.toThrow()
+  })
+
+  it('a context that throws on construction leaves play usable and never starts a source', async () => {
+    vi.resetModules()
+    const { sources } = installMockAudio()
+    vi.stubGlobal('AudioContext', class { constructor() { throw new Error('blocked') } })
+    const audio = await import('./audio')
+    expect(() => {
+      audio.unlockAudio()
+      fireEveryOneShot(audio)
+    }).not.toThrow()
+    await settle()
+    expect(sources).toHaveLength(0)
+  })
+
+  it('one-shots requested while the context is not running are dropped, not queued', async () => {
+    vi.resetModules()
+    const { sources, context } = installMockAudio()
+    context.state = 'suspended'
+    const audio = await import('./audio')
+    fireEveryOneShot(audio)
+    await settle()
+    expect(sources).toHaveLength(0)
+    // The context becomes available later: nothing requested earlier plays.
+    context.state = 'running'
+    audio.unlockAudio()
+    await settle()
+    expect(sources).toHaveLength(0)
+    // A new event after the rate gate clears is a fresh cue and plays alone.
+    context.currentTime = 1
+    audio.sfx.uiClick()
+    await vi.waitFor(() => expect(sources).toHaveLength(1))
+    await settle()
+    expect(sources).toHaveLength(1)
+  })
+
+  it('a context that stops running while a clip decodes drops the cue', async () => {
+    vi.resetModules()
+    const { sources, context, release } = installMockAudio((u) => u === CLIPS.blast)
+    const audio = await import('./audio')
+    audio.sfx.blast()
+    await settle()
+    context.state = 'suspended'
+    release(CLIPS.blast)
+    await settle()
+    context.state = 'running'
+    await settle()
+    expect(sources).toHaveLength(0)
+  })
+
+  it('a rate-limited repeat is dropped, not deferred', async () => {
+    vi.resetModules()
+    const { sources } = installMockAudio()
+    const audio = await import('./audio')
+    audio.sfx.uiClick()
+    audio.sfx.uiClick()
+    audio.sfx.uiClick()
+    await settle()
+    expect(sources).toHaveLength(1)
+  })
+
+  it('the UI overlap cap drops a new one-shot instead of stealing or queueing', async () => {
+    vi.resetModules()
+    const { sources, context } = installMockAudio()
+    const audio = await import('./audio')
+    // Distinct UI cues, so only the overlap cap (not a rate gate) can refuse one.
+    audio.sfx.uiClick()
+    audio.sfx.confirmBlip()
+    audio.sfx.objectiveChime()
+    await settle()
+    expect(sources).toHaveLength(3)
+    audio.sfx.interactTick()
+    await settle()
+    expect(sources).toHaveLength(3)
+    expect(sources.every((s) => s.stop.mock.calls.length === 0)).toBe(true)
+    // A voice ending frees a slot: the next fresh cue is admitted.
+    sources[0].onended?.()
+    context.currentTime = 1
+    audio.sfx.interactTick()
+    await vi.waitFor(() => expect(sources).toHaveLength(4))
+  })
+})
+
+describe('clip-decode freshness evidence (AU-005)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  const cases = [
+    { label: 'UI', url: () => CLIPS.uiClick, fire: (a: typeof import('./audio')) => a.sfx.uiClick() },
+    {
+      label: 'combat',
+      url: () => gunClipUrl('assault', 'squad'),
+      fire: (a: typeof import('./audio')) => a.sfx.gunshot('assault', 'squad'),
+    },
+  ]
+
+  for (const c of cases) {
+    it(`a single ${c.label} cue whose decode completes after the freshness window never starts a source`, async () => {
+      vi.resetModules()
+      const { sources, context, release } = installMockAudio((u) => u === c.url())
+      const audio = await import('./audio')
+      const createSource = vi.spyOn(context, 'createBufferSource')
+      c.fire(audio)
+      await settle()
+      context.currentTime = audio.CUE_FRESHNESS_WINDOW_S + 0.01
+      release(c.url())
+      await settle()
+      expect(createSource).not.toHaveBeenCalled()
+      expect(sources).toHaveLength(0)
+
+      // The clip is now decoded and the rate gate has cleared: a fresh event plays.
+      c.fire(audio)
+      await vi.waitFor(() => expect(sources).toHaveLength(1))
+      await settle()
+      expect(sources).toHaveLength(1)
+    })
+
+    it(`a ${c.label} cue whose decode completes inside the freshness window still plays`, async () => {
+      vi.resetModules()
+      const { sources, context, release } = installMockAudio((u) => u === c.url())
+      const audio = await import('./audio')
+      c.fire(audio)
+      await settle()
+      context.currentTime = audio.CUE_FRESHNESS_WINDOW_S / 2
+      release(c.url())
+      await vi.waitFor(() => expect(sources).toHaveLength(1))
+    })
+  }
+
+  it('a burst of held cues all arriving late starts no source at all', async () => {
+    vi.resetModules()
+    const url = gunClipUrl('smg', 'corpsec')
+    const { sources, context, release } = installMockAudio((u) => u === url)
+    const audio = await import('./audio')
+    for (let i = 0; i < 10; i++) {
+      context.currentTime = i * 0.03
+      audio.sfx.gunshot('smg', 'corpsec')
+    }
+    await settle()
+    context.currentTime += audio.CUE_FRESHNESS_WINDOW_S + 0.01
+    release(url)
+    await settle()
+    expect(sources).toHaveLength(0)
+  })
+
+  it('rejected decoding starts no source and leaves play usable', async () => {
+    vi.resetModules()
+    const { sources, context } = installMockAudio()
+    const decode = context.decodeAudioData.bind(context)
+    context.decodeAudioData = () => Promise.reject(new Error('corrupt clip'))
+    const audio = await import('./audio')
+    expect(() => {
+      audio.sfx.uiClick()
+      audio.sfx.gunshot('assault')
+      audio.sfx.alertSting()
+      audio.startStrategyBed()
+      audio.startMissionBed()
+    }).not.toThrow()
+    await settle()
+    expect(sources).toHaveLength(0)
+    // Nothing is stuck: once decoding succeeds, a fresh event plays normally.
+    context.decodeAudioData = decode
+    context.currentTime = 1
+    audio.sfx.uiClick()
+    await vi.waitFor(() => expect(sources).toHaveLength(1))
+  })
+})
+
+describe('module-load freshness evidence (AU-005)', () => {
+  afterEach(() => {
+    vi.doUnmock('./audio')
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  // Defers resolution of the lazily imported audio module until `release()`.
+  function deferAudioModule() {
+    const uiClick = vi.fn()
+    let release: () => void = () => undefined
+    const ready = new Promise<void>((r) => {
+      release = r
+    })
+    vi.doMock('./audio', async () => {
+      await ready
+      return { sfx: { uiClick, gunshot: uiClick } }
+    })
+    return { uiClick, release }
+  }
+
+  it('a UI click made while the module loads is not replayed once the module arrives stale', async () => {
+    vi.resetModules()
+    const { CUE_FRESHNESS_WINDOW_S } = await import('./audioFreshness')
+    const { uiClick, release } = deferAudioModule()
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1000)
+    const sound = await import('../ui/sound')
+    sound.uiClick()
+    now.mockReturnValue(1000 + (CUE_FRESHNESS_WINDOW_S + 0.01) * 1000)
+    release()
+    await settle()
+    expect(uiClick).not.toHaveBeenCalled()
+    // Once usable, a new click plays exactly once.
+    sound.uiClick()
+    expect(uiClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('a UI click whose module arrives inside the freshness window is played once', async () => {
+    vi.resetModules()
+    const { CUE_FRESHNESS_WINDOW_S } = await import('./audioFreshness')
+    const { uiClick, release } = deferAudioModule()
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1000)
+    const sound = await import('../ui/sound')
+    sound.uiClick()
+    now.mockReturnValue(1000 + (CUE_FRESHNESS_WINDOW_S / 2) * 1000)
+    release()
+    await vi.waitFor(() => expect(uiClick).toHaveBeenCalledTimes(1))
+  })
+
+  it('mission one-shots requested while the module loads are dropped, not replayed on arrival', async () => {
+    vi.resetModules()
+    const { uiClick: gunshot, release } = deferAudioModule()
+    const { missionSfx } = await import('./audioBridge')
+    expect(() => missionSfx.gunshot('assault')).not.toThrow()
+    release()
+    await settle()
+    expect(gunshot).not.toHaveBeenCalled()
+  })
+
+  it('a failed module load leaves the UI bridge usable and silent', async () => {
+    vi.resetModules()
+    vi.doMock('./audio', () => {
+      throw new Error('chunk failed')
+    })
+    const sound = await import('../ui/sound')
+    expect(() => {
+      sound.uiClick()
+      sound.unlockAudio()
+      sound.startStrategyBed()
+    }).not.toThrow()
+    await settle()
+  })
+})
