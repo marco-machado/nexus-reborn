@@ -21,11 +21,11 @@ stories:
     name: "Every surface fits 1280×720 at every text scale"
     file: "production/epics/interface/story-001-every-surface-fits-1280-720-at-every-text-scale.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-003"
     name: "Contract navigation gates Brief, Assembly, and Deploy"
     file: "production/epics/interface/story-003-contract-navigation-gates-brief-assembly-and-deploy.md"

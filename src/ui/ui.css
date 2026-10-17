@@ -2499,6 +2499,15 @@
 
 .ts-deploy { display: flex; flex-direction: column; gap: 5px; justify-content: center; }
 .ts-deploy .cta { width: 100%; }
+/* the deploy column is narrower than a .cta.big face: tighter tracking and
+   padding keep "DEPLOY TEAM >>" inside it, and it wraps rather than clips */
+.ts-deploy .cta-inner {
+  font-size: clamp(16px, 1.5vw, 21px);
+  letter-spacing: 0.22em;
+  padding-inline: 18px;
+  white-space: normal;
+  text-align: center;
+}
 .ts-deploy-sub { text-align: center; letter-spacing: 0.2em; }
 
 /* recruitment market: roster-panel entry button plus a modal overlay of
@@ -2912,16 +2921,27 @@
 
 .hud-agent-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 
+/* Codename and name wrap onto a second line when the text scale outgrows the
+   card, rather than ellipsizing the name (IF-001: no truncation at 1280x720). */
 .hud-agent-name {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 1px;
   align-items: baseline;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
-.hud-agent-name b { font-size: calc(11px * var(--text-scale)); letter-spacing: 0.14em; }
-.hud-agent-name i { font-size: calc(8.5px * var(--text-scale)); overflow: hidden; text-overflow: ellipsis; }
+.hud-agent-name b { font-size: calc(11px * var(--text-scale)); letter-spacing: 0.14em; white-space: nowrap; }
+.hud-agent-name i { font-size: calc(8.5px * var(--text-scale)); }
+
+/* The ACTIVE corner tag sits over the name row's right end; keep the name
+   clear of it (the tag's own width at every text scale). 7.2 is the measured
+   width of the six-letter "ACTIVE" at 7px with the tag's 0.2em tracking, in
+   multiples of its font size; +6px is the tag's 4px side padding plus a gap.
+   Re-measure if the tag's label, size, tracking or padding changes. */
+.hud-agent:has(> .hud-agent-active) .hud-agent-name {
+  padding-right: calc(7px * var(--text-scale) * 7.2 + 6px);
+}
 
 .hud-hp {
   position: relative;
@@ -3065,23 +3085,14 @@
   gap: 8px;
 }
 
+/* Long weapon names wrap instead of ellipsizing, on both panels and at every
+   text scale (IF-001: no truncation at 1280x720). */
 .hud-wpn-name {
   font-size: calc(9.5px * var(--text-scale));
   letter-spacing: 0.1em;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* long sidearm names wrap to two lines instead of ellipsizing */
-.hud-wpn.secondary .hud-wpn-name {
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
   line-height: 1.3;
+  color: var(--ink);
+  min-width: 0;
 }
 
 .hud-ammo { white-space: nowrap; }
@@ -3419,6 +3430,19 @@ button.hud-slot:focus-visible {
 .hud-menu-actions .hud-btn:focus-visible {
   outline: 1px solid var(--teal);
   outline-offset: 2px;
+}
+
+/* weapon headers: "PRIMARY // <codename>" wraps inside the fixed-width
+   panel at large text scales instead of running past its border */
+.hud-wpn .hud-panel-head {
+  white-space: normal;
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.hud-wpn .hud-panel-head > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* narrow-width safety tweaks */

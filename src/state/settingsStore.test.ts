@@ -3,6 +3,7 @@ import { applyOverrides, bindingFor } from '../game/bindings'
 import {
   SETTINGS_KEY,
   SETTINGS_VERSION,
+  TEXT_SCALES,
   defaultSettings,
   initSettings,
   loadSettings,
@@ -10,7 +11,7 @@ import {
   useSettingsStore,
 } from './settingsStore'
 import { startNewOperation } from './save'
-import type { SettingsStorage } from './settingsStore'
+import type { SettingsStorage, TextScale } from './settingsStore'
 
 class MemoryStorage implements SettingsStorage {
   data = new Map<string, string>()
@@ -260,5 +261,32 @@ describe('settings envelope survives New Operation and reload', () => {
     expect(useSettingsStore.getState().difficulty).toBe('standard')
     initSettings(storage)
     expectDQTAR()
+  })
+})
+
+// IF-001 / interface GDD Rule 14: the text-scale step set is exactly
+// 90 / 100 / 110 / 125%. Pinned with literals, not TEXT_SCALES, so a change to
+// the module constant fails here.
+describe('text scale step set', () => {
+  it('offers exactly 90, 100, 110 and 125 percent', () => {
+    expect([...TEXT_SCALES]).toEqual([90, 100, 110, 125])
+  })
+
+  it('accepts each step and persists it', () => {
+    for (const scale of [90, 100, 110, 125] as const) {
+      useSettingsStore.getState().setTextScale(scale)
+      expect(useSettingsStore.getState().textScale).toBe(scale)
+      expect(stored().textScale).toBe(scale)
+    }
+  })
+
+  it('rejects any value off the step set, in memory and on load', () => {
+    useSettingsStore.getState().setTextScale(110)
+    for (const bad of [80, 95, 105, 120, 150, 0.9, 1.25]) {
+      useSettingsStore.getState().setTextScale(bad as TextScale)
+      expect(useSettingsStore.getState().textScale).toBe(110)
+      storage.setItem(SETTINGS_KEY, JSON.stringify({ version: SETTINGS_VERSION, textScale: bad }))
+      expect(loadSettings(storage).textScale).toBe(100)
+    }
   })
 })
