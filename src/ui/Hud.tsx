@@ -18,6 +18,7 @@ import type { BindingId } from '../game/bindings'
 import { getMarquee, onMarquee } from '../scene/marquee'
 import Minimap, { MM_ZOOM_MAX } from './Minimap'
 import PauseMenu from './PauseMenu'
+import { pauseMenuShown } from './pauseMenuModel'
 import TutorialToasts from './TutorialToasts'
 import { Portrait } from './portrait'
 import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox } from './bits'
@@ -588,7 +589,7 @@ export default function Hud() {
           </div>
         </div>
       )}
-      {paused && result === 'none' && (
+      {pauseMenuShown({ paused, result }) && (
         <PauseMenu
           returnRef={pauseBtnRef}
           onResume={() => setPaused(false)}

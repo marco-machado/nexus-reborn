@@ -57,11 +57,11 @@ stories:
     name: "Pause modal and two-step Abort"
     file: "production/epics/interface/story-008-pause-modal-and-two-step-abort.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-004"
     name: "Chance vs Risk bands and World Network owner readouts"
     file: "production/epics/interface/story-004-chance-vs-risk-bands-and-world-network-owner-readouts.md"

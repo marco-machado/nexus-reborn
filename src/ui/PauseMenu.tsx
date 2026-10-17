@@ -5,10 +5,10 @@
 // The backdrop takes pointer events, which is what keeps a click meant for the
 // menu from reaching the canvas and ordering the squad across the map.
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { BINDINGS, BINDING_GROUPS } from '../game/bindings'
-import { ABORT_ARM_MS, abortArmHint } from './abortArm'
+import { abortArmHint, createAbortArm } from './abortArm'
 import { Chip, Panel } from './bits'
 import SettingsPanel from './Settings'
+import { pauseBindingGroups } from './pauseMenuModel'
 import { uiClick } from './sound'
 
 export default function PauseMenu({
@@ -24,16 +24,16 @@ export default function PauseMenu({
   const panelRef = useRef<HTMLDivElement | null>(null)
   const resumeRef = useRef<HTMLButtonElement | null>(null)
   const [abortArmed, setAbortArmed] = useState(false)
+  // Two step abort (P-01): the first press arms, a second within three real
+  // seconds confirms, and a lapse disarms with the mission still paused. The
+  // controller owns the window; this state only paints it.
+  const [abortArm] = useState(() => createAbortArm(setAbortArmed))
   // Settings swaps the panel content; the sim stays frozen (paused untouched)
   // and closing lands back on this menu.
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  // Two step abort: first click arms, second confirms, auto resets after 3s.
-  useEffect(() => {
-    if (!abortArmed) return
-    const id = window.setTimeout(() => setAbortArmed(false), ABORT_ARM_MS)
-    return () => window.clearTimeout(id)
-  }, [abortArmed])
+  // Closing the menu drops a pending arm, so no lapse timer outlives it.
+  useEffect(() => () => abortArm.disarm(), [abortArm])
 
   useEffect(() => {
     if (!settingsOpen) resumeRef.current?.focus()
@@ -86,29 +86,25 @@ export default function PauseMenu({
       <div className="hud-menu-panel" ref={panelRef}>
         <Panel title="MISSION PAUSED" right={<span className="dim">SIM HALTED</span>}>
           <div className="hud-menu-grid">
-            {BINDING_GROUPS.map((g) => {
-              const rows = BINDINGS.filter((b) => b.group === g.group)
-              if (rows.length === 0) return null
-              return (
-                <div className="hud-menu-group" key={g.group}>
-                  <div className="hud-menu-group-head">{g.title}</div>
-                  <dl className="hud-menu-rows">
-                    {rows.map((b) => (
-                      <div className="hud-menu-row" key={b.id}>
-                        <dt>
-                          {b.keys.map((k) => (
-                            <Chip key={k} tone="dim">
-                              {k}
-                            </Chip>
-                          ))}
-                        </dt>
-                        <dd>{b.label}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              )
-            })}
+            {pauseBindingGroups().map((g) => (
+              <div className="hud-menu-group" key={g.group}>
+                <div className="hud-menu-group-head">{g.title}</div>
+                <dl className="hud-menu-rows">
+                  {g.rows.map((b) => (
+                    <div className="hud-menu-row" key={b.id}>
+                      <dt>
+                        {b.keys.map((k) => (
+                          <Chip key={k} tone="dim">
+                            {k}
+                          </Chip>
+                        ))}
+                      </dt>
+                      <dd>{b.label}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
           </div>
           <div className="hud-menu-actions">
             <button
@@ -139,8 +135,7 @@ export default function PauseMenu({
               aria-label={abortArmed ? 'Confirm abort mission' : 'Abort mission'}
               onClick={() => {
                 uiClick()
-                if (abortArmed) onAbort()
-                else setAbortArmed(true)
+                if (abortArm.press() === 'confirm') onAbort()
               }}
             >
               {abortArmed ? 'CONFIRM?' : 'ABORT'}
