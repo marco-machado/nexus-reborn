@@ -1,0 +1,32 @@
+phase=world missionId=null
+nav, no contract: [{"label":"WORLD NETWORK","locked":false,"ariaDisabled":null,"aria":"WORLD NETWORK"},{"label":"RESEARCH","locked":false,"ariaDisabled":null,"aria":"RESEARCH"},{"label":"BRIEF","locked":true,"ariaDisabled":"true","aria":"BRIEF // LOCKED // NO CONTRACT SELECTED"},{"label":"ASSEMBLY","locked":false,"ariaDisabled":null,"aria":"ASSEMBLY"}]
+click locked BRIEF -> phase=world
+click ASSEMBLY -> phase=team
+deploy button aria-label: DEPLOY TEAM // NO CONTRACT SELECTED
+deploy button text: DEPLOY TEAM >>
+click DEPLOY (no contract) -> phase=team
+select Glass Veil -> phase=brief missionId=m01
+nav, with contract: [{"label":"WORLD NETWORK","locked":false,"ariaDisabled":null,"aria":"WORLD NETWORK"},{"label":"RESEARCH","locked":false,"ariaDisabled":null,"aria":"RESEARCH"},{"label":"BRIEF","locked":false,"ariaDisabled":null,"aria":"BRIEF"},{"label":"ASSEMBLY","locked":false,"ariaDisabled":null,"aria":"ASSEMBLY"}]
+brief stats: {"CITY BLOCKS":"29","STREETS":"07","CIVILIANS":"22","PATROL CONTACTS":"08","GARRISON":"07","ROUTE ALPHA":"75 M","ROUTE OMEGA":"74 M","WEATHER":"HEAVY RAIN → LIGHT RAIN 22:16:38","PROJECTED SUCCESS":"36%"}
+Accept Contract -> phase=team
+Deploy -> phase=mission
+| Field | Brief | Deployed mission |
+| --- | --- | --- |
+| Seed (contract) | 20870514 | 20870514 |
+| Difficulty | standard | standard |
+| Insertion | {"x":46.5,"z":88.5} | {"x":46.5,"z":88.5} |
+| Extraction | {"x":48,"z":88} | {"x":48,"z":88} |
+| Objectives | ob1,ob2,ob3 | ob1,ob2,ob3 |
+| Garrison (Brief stat GARRISON) | 07 / tac 07 | 07 |
+| Civilians (Brief stat CIVILIANS) | 22 / tac 22 | 22 |
+| Opening hour | 80048 | 80048 |
+| Weather / front (Brief stat WEATHER) | HEAVY RAIN → LIGHT RAIN 22:16:38 | HEAVY RAIN → LIGHT RAIN 22:16:38 |
+Debrief (authored, assist outcome) -> phase=debrief
+REPLAY button count: 1
+Replay -> phase=brief missionId=m01
+Return -> phase=world missionId=null
+nav after return: [{"label":"WORLD NETWORK","locked":false,"ariaDisabled":null,"aria":"WORLD NETWORK"},{"label":"RESEARCH","locked":false,"ariaDisabled":null,"aria":"RESEARCH"},{"label":"BRIEF","locked":true,"ariaDisabled":"true","aria":"BRIEF // LOCKED // NO CONTRACT SELECTED"},{"label":"ASSEMBLY","locked":false,"ariaDisabled":null,"aria":"ASSEMBLY"}]
+generated offer on the board: gc95de7d1d
+generated Debrief REPLAY button count: 0
+errors: []
+renderer: ["[scene] renderer backend: WebGPU, quality tier: HIGH"]

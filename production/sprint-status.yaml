@@ -14,7 +14,7 @@ goal: "Land the Interface rules the director reads and acts through: every surfa
 start: "2026-10-17"
 end: "2026-10-28"
 generated: "2026-10-17"
-updated: "2026-10-17"
+updated: 2026-10-17
 
 stories:
   - id: "IF-001"
@@ -30,11 +30,11 @@ stories:
     name: "Contract navigation gates Brief, Assembly, and Deploy"
     file: "production/epics/interface/story-003-contract-navigation-gates-brief-assembly-and-deploy.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-005"
     name: "Research Authorize, keyboard activation, and focus return"
     file: "production/epics/interface/story-005-research-authorize-keyboard-activation-and-focus-return.md"
