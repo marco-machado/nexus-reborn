@@ -19,12 +19,23 @@ export const meta = {
 //   limit:   number    stop after this many stories.
 //   commit:  boolean   commit each completed story to the current branch
 //                      before starting the next one. Default: true.
+//   allowDirty: boolean start even when the working tree is dirty. The
+//                      paths dirty at start are left alone: never staged,
+//                      and not counted as leftovers after a commit.
+//                      Default: false.
 //
 // Stories run strictly one after another: they share modules and depend on
 // each other, so a failure stops the run rather than skipping ahead. Each
 // story is committed before the next starts, so review sees only that story's
 // diff and a stopped run leaves earlier stories safely committed. With commit
-// on, the run refuses to start on a dirty working tree.
+// on, the run refuses to start on a dirty working tree unless allowDirty is set.
+//
+// Resume (resumeFromRunId) replays cached results only for the unchanged
+// prefix of agent calls. A call that failed or returned nothing was not
+// cached, so a resume re-runs it and every step after it, including the
+// story-done and commit of a story that already closed. After an uncached
+// failure, start a fresh run with an explicit `stories` list of the stories
+// still open instead of resuming.
 
 const HEADLESS = `You run unattended inside a workflow; nobody can answer questions.
 Where the skill would ask the user, take its recommended/default option and note it.
@@ -137,6 +148,8 @@ function specialistsFor(files) {
 
 const opts = args ?? {}
 const commit = opts.commit ?? true
+const allowDirty = opts.allowDirty ?? false
+let preDirty = []
 
 // Marks the story stopped and says why, so the reason is visible without
 // opening the return value.
@@ -158,8 +171,11 @@ if (commit) {
     log('✗ Could not check the working tree; nothing was started.')
     return { completed: [], stopped: { step: 'preflight' }, notAttempted: opts.stories ?? [] }
   }
-  if (tree.dirty.length) {
-    log(`✗ Working tree on ${tree.branch} is dirty (${tree.dirty.length} paths); commit or stash first, or pass commit: false. Nothing was started.`)
+  if (tree.dirty.length && allowDirty) {
+    preDirty = tree.dirty
+    log(`⚠ Working tree on ${tree.branch} is dirty (${tree.dirty.length} paths); allowDirty set, so those paths are left out of every commit.`)
+  } else if (tree.dirty.length) {
+    log(`✗ Working tree on ${tree.branch} is dirty (${tree.dirty.length} paths); commit or stash first, or pass allowDirty: true or commit: false. Nothing was started.`)
     return { completed: [], stopped: { step: 'preflight', dirty: tree.dirty }, notAttempted: opts.stories ?? [] }
   }
   log(`Committing each story to ${tree.branch}`)
@@ -221,6 +237,17 @@ ${type === 'qa-tester'
 Do not edit any file. Every finding must give file, line and evidence (quoted code, or the concrete input that triggers it). Report nothing you cannot point to.`,
       { phase: 'Review', schema: SPECIALIST, agentType: type, label: `${label}:${type}:${name}` },
     ).then((r) => r && { ...r, specialist: type })))
+    // qa-tester tends to run out of turns writing its own probe tests and
+    // return nothing. Retry it once, read-only, before calling it missing.
+    if (team.includes('qa-tester') && !found.some((r) => r?.specialist === 'qa-tester')) {
+      log(`↻ qa-tester returned nothing for ${name}; retrying once read-only`)
+      const retry = await agent(
+        `You are the qa-tester specialist for the /code-review of ${story}. Review these files: ${files.join(' ')}.
+This is a retry: the first attempt ran out of turns. Read only: do not write, run or edit any test or file, and do not run the suite. Read the story's ## Acceptance Criteria and ## QA Test Cases and the test files, then check: every AC maps to a test that can fail when the code is wrong (no tautologies: asserting a constant against itself, recomputing the formula in the test, asserting only what the test set up); test hooks are exposed; no AC is untestable as implemented; new edge cases the QA cases miss. Every finding must give file, line and evidence. Report nothing you cannot point to.`,
+        { phase: 'Review', schema: SPECIALIST, agentType: 'qa-tester', label: `${label}:qa-tester-retry:${name}` },
+      )
+      if (retry) found.push({ ...retry, specialist: 'qa-tester' })
+    }
     const ran = found.filter(Boolean)
     const missing = team.filter((t) => !ran.some((r) => r.specialist === t))
     return agent(
@@ -275,10 +302,10 @@ ok=true only if the story is marked Complete in its file and in production/sprin
   if (commit) {
     const committed = await agent(
       `Commit the changes for ${story} to the current branch. ${HEADLESS}
-Stage explicitly: ${files.join(' ')} ${story} production/sprint-status.yaml, plus any QA evidence under production/qa/evidence/ for this story and any other file the summaries below say the skills wrote for it. production/session-state/ is gitignored; never force-add it. Stage nothing else.
+Stage explicitly: ${files.join(' ')} ${story} production/sprint-status.yaml, plus any QA evidence under production/qa/evidence/ for this story and any other file the summaries below say the skills wrote for it. production/session-state/ is gitignored; never force-add it. Stage nothing else.${preDirty.length ? `\nThese paths were dirty before the run started and are not this story's; never stage them, and do not count them as leftovers:\n${preDirty.join('\n')}` : ''}
 Follow the Commit Style section of CLAUDE.md: imperative subject, then a body that says what changed by file, why, and what was verified (lint, test, build, review). Use the summaries below for the body.
 Do not push, amend, or skip hooks; if a hook fails, fix the cause and commit again.
-ok=true only if the commit exists and git status --porcelain is empty afterwards; if leftover changes remain, list them in blockers instead of committing them. Return the commit's short sha.
+ok=true only if the commit exists and git status --porcelain is empty afterwards${preDirty.length ? ' apart from the pre-run dirty paths listed above' : ''}; if leftover changes remain, list them in blockers instead of committing them. Return the commit's short sha.
 
 Readiness: ${ready.summary}
 Implement: ${built.summary}
