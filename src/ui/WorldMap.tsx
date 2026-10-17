@@ -7,18 +7,19 @@ import {
   DAY,
   SPEEDS,
   hhmm,
+  influenceRefusal,
   sectorReadout,
+  taxEligible,
   stamp,
   useWorldStore,
 } from '../state/worldStore'
 import type { WorldEvent } from '../state/worldStore'
 import { MISSIONS } from '../game/data'
-import { contractMission, expediteTarget, visibleContracts } from '../game/contracts'
+import { contractMission, visibleContracts } from '../game/contracts'
 import type { GeneratedContract } from '../game/contracts'
 import {
   EXPEDITE_EXTENSION_SEC,
   INFLUENCE_ACTIONS,
-  INFLUENCE_ACTION_ORDER,
   cooldownKey,
   PRESSURE_UNREST_MIN,
 } from '../game/influence'
@@ -64,6 +65,12 @@ import type { GlobeOperation } from './WorldGlobe'
 import { unprojectScan } from '../game/geography'
 import { campaignBanner } from './campaignBanner'
 import { reviewKey } from './timelineKeys'
+import {
+  influenceActionsFor,
+  influenceStatus,
+  taxEligibilityLine,
+  worldChance,
+} from './worldChrome'
 
 const WorldGlobe = lazy(() => import('./WorldGlobe'))
 
@@ -151,7 +158,6 @@ function actionEffect(id: InfluenceActionId): string {
 
 function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId }) {
   const def = INFLUENCE_ACTIONS[props.action]
-  const points = useWorldStore((s) => s.influence)
   const spend = useWorldStore((s) => s.spendInfluence)
   // Hour-resolution selectors, so the rows never re-render at clock rate.
   const coolHours = useWorldStore((s) =>
@@ -160,20 +166,11 @@ function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId })
   const active = useWorldStore((s) =>
     s.spends.some((p) => p.sector === props.sector && p.action === props.action),
   )
-  const hasTarget = useWorldStore(
-    (s) => props.action !== 'expedite' || expediteTarget(s.contracts, props.sector) !== null,
-  )
-  const short = points < def.cost
-  const blocked = short || coolHours > 0 || !hasTarget
-  const status = active
-    ? 'ACTIVE'
-    : coolHours > 0
-      ? 'CD ' + coolHours + 'H'
-      : !hasTarget
-        ? 'NO TARGET'
-        : short
-          ? 'LOW PTS'
-          : 'CLEAR'
+  // The owner's own refusal (worldStore.influenceRefusal, the rule
+  // spendInfluence refuses on); Interface only words it.
+  const refusal = useWorldStore((s) => influenceRefusal(s, props.sector, props.action))
+  const blocked = refusal !== null
+  const status = influenceStatus(refusal, active, coolHours)
   return (
     <button
       type="button"
@@ -648,16 +645,31 @@ function WorldOnboard() {
             <div className="wm-onboard-row lead">
               <b>THE JOB</b>
               <span>
-                You run the network from this desk. Keep sectors Nexus-held: Tax yield pays only
-                from sectors Nexus holds. Influence opens at 0; field wins earn it, and Stabilize,
-                Lobby and Expedite spend it.
+                You run the network from this desk. Every sector prints a Tax yield, but only a
+                Nexus-held sector pays it: North America pays from the start, Europe does not.
+                Keep sectors Nexus-held.
               </span>
             </div>
             <div className="wm-onboard-row lead">
               <b>START HERE</b>
               <span>
-                Focus a few sectors and read Control, Unrest, Tax yield and Garrison. Pause while you
-                read. When a sector needs hands on the ground, take its contract.
+                Focus a few sectors and read Control, Unrest, Tax yield and Garrison. When a sector
+                needs hands on the ground, take its contract.
+              </span>
+            </div>
+            <div className="wm-onboard-row lead">
+              <b>STRATEGIC TIME</b>
+              <span>
+                Pause and Clock speed control strategic time: Pause stops it while you read, 1x to
+                8x runs it faster. Labs, healing and Tax all run on it.
+              </span>
+            </div>
+            <div className="wm-onboard-row lead">
+              <b>INFLUENCE</b>
+              <span>
+                Influence opens at 0 points, so Stabilize and Lobby read UNAFFORDABLE at first, and
+                Expedite reads NO TARGET until the sector lists a GENERATED contract to rush: they
+                are not broken. Field wins earn the points to spend.
               </span>
             </div>
             <div className="wm-onboard-row">
@@ -683,9 +695,8 @@ function WorldOnboard() {
             <div className="wm-onboard-row">
               <b>TIME AND EVENTS</b>
               <span>
-                The bottom strip runs Strategic time, reviews the last 24 hours, and carries the
-                Feed and your resource pool. Time is a resource: it finishes labs, heals the
-                roster and pays Tax. Pausing spends it too.
+                The bottom strip runs Strategic time, reviews the last 24 hours (REVIEW pins the
+                Feed; the sector numbers stay live), and carries the Feed and your resource pool.
               </span>
             </div>
             <div className="wm-onboard-row">
@@ -736,6 +747,8 @@ export function WorldMap() {
 
   const def = sectorDef(selected)
   const read = sectorReadout(selected, sectors[selected])
+  const owner = useWorldStore((s) => s.owner)
+  const taxLine = taxEligibilityLine(taxEligible(selected, owner))
   const ops = useMemo(
     () => opsFor(selected, contracts, intelLevel),
     [selected, contracts, intelLevel],
@@ -887,6 +900,10 @@ export function WorldMap() {
               <span>TAX YIELD</span>
               <b>{fmt(read.taxYield)} CR / 24h</b>
             </div>
+            <div className="kv wm-tax-pay">
+              <span>TAX PAID</span>
+              <b className={taxLine.tone}>{taxLine.text}</b>
+            </div>
             <div className="kv">
               <span>GARRISON CONDITION</span>
               <b className={read.garrison === 'SECURE' ? 'teal' : read.garrison === 'STRAINED' ? 'amber' : 'red'}>
@@ -894,7 +911,7 @@ export function WorldMap() {
               </b>
             </div>
             <div className="wm-actions">
-              {INFLUENCE_ACTION_ORDER.map((action) => (
+              {influenceActionsFor(selected).map((action) => (
                 <InfluenceAction key={action} sector={selected} action={action} />
               ))}
             </div>
@@ -956,7 +973,7 @@ export function WorldMap() {
                           </span>
                         )}
                         <span className="chip dim">
-                          CHANCE {chanceFor(m, sectors, researched.length, difficulty)}%
+                          {worldChance(chanceFor(m, sectors, researched.length, difficulty))}
                         </span>
                         <span className="chip dim">ETA {m.etaDays}D</span>
                         {gen && (

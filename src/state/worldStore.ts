@@ -578,9 +578,16 @@ function applyPressure(f: WorldFlow, t: number): void {
   }
 }
 
+// Tax payment eligibility, the one rule applyTax pays by: an open sector the
+// Nexus holds pays its printed Tax yield; any other sector's figure is printed
+// but pays nothing (opening Europe is not Nexus-held, North America is).
+export function taxEligible(sector: SectorId, owner: Record<string, CorpId>): boolean {
+  return !sectorDef(sector).locked && sectorCorp(sector, owner) === 'nexus'
+}
+
 function applyTax(f: WorldFlow): void {
   for (const id of OPEN_SECTORS) {
-    if (sectorCorp(id, f.owner) !== 'nexus') continue
+    if (!taxEligible(id, f.owner)) continue
     f.taxPaid += sectorReadout(id, f.sectors[id]).taxYield
   }
   f.nextTaxT += TAX_INTERVAL_SEC
@@ -916,10 +923,9 @@ export const useWorldStore = create<WorldStoreState>((set, get) => ({
 
   spendInfluence: (sector, action) =>
     set((s) => {
+      if (influenceRefusal(s, sector, action) !== null) return s
       const def = INFLUENCE_ACTIONS[action]
-      if (s.influence < def.cost) return s
       const key = cooldownKey(sector, action)
-      if ((s.cooldowns[key] ?? -Infinity) > s.t) return s
       const f = flowOf(s)
       if (action === 'expedite') {
         const target = expediteTarget(s.contracts, sector)
@@ -978,6 +984,24 @@ export function resolveMission(id: string): MissionDef | null {
 }
 
 /* -------------------------------- selectors ------------------------------- */
+
+// Why an Influence action cannot be spent right now, in the order the World
+// Network reports it, or null when the spend is legal. spendInfluence refuses
+// on exactly this, so Interface prints the owner's reason instead of
+// recomputing the board rules (Interface AC27, World Network UI Requirements).
+export type InfluenceRefusal = 'locked-sector' | 'cooldown' | 'no-target' | 'unaffordable'
+
+export function influenceRefusal(
+  s: Pick<WorldStoreState, 'influence' | 'cooldowns' | 'contracts' | 't'>,
+  sector: SectorId,
+  action: InfluenceActionId,
+): InfluenceRefusal | null {
+  if (sectorDef(sector).locked) return 'locked-sector'
+  if ((s.cooldowns[cooldownKey(sector, action)] ?? -Infinity) > s.t) return 'cooldown'
+  if (action === 'expedite' && expediteTarget(s.contracts, sector) === null) return 'no-target'
+  if (s.influence < INFLUENCE_ACTIONS[action].cost) return 'unaffordable'
+  return null
+}
 
 export interface SectorReadout {
   control: number

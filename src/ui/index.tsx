@@ -48,6 +48,7 @@ import {
   missionPeriod,
 } from '../game/missionParams'
 import { missionRisk } from '../game/forecast'
+import { briefOdds } from './worldChrome'
 import {
   appliedNodeIds,
   benefitOf,
@@ -555,23 +556,17 @@ export function MissionBrief() {
                   from the same deployment build as the counts above; it
                   replaces the legacy chance estimate. Risk uses the clearer
                   weather on the script. */}
-              {intelLevel >= 2 ? (
-                (() => {
-                  const risk = missionRisk(tac.counts, {
+              {(() => {
+                const odds = briefOdds(
+                  intelLevel,
+                  chance,
+                  missionRisk(tac.counts, {
                     enemyHpMul: mods.enemyHpMul,
                     visionMul: weatherMul(riskWeather(m)).visionMul,
-                  })
-                  return (
-                    <TacStat
-                      label="RISK INDEX"
-                      value={risk.index + ' // ' + risk.band}
-                      tone={risk.band === 'HIGH' || risk.band === 'SEVERE' ? 'red' : 'teal'}
-                    />
-                  )
-                })()
-              ) : (
-                <TacStat label="PROJECTED SUCCESS" value={chance + '%'} tone="teal" />
-              )}
+                  }),
+                )
+                return <TacStat label={odds.label} value={odds.value} tone={odds.tone} />
+              })()}
             </ScrollBox>
             <div className="mb-tac-plate">
               <svg
