@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  BUSES,
   getAudioLevels,
+  playerFactor,
   gunClipUrl,
   MISSION_BED_URLS,
   missionRainGain,
@@ -315,5 +317,85 @@ describe('clip playback', () => {
     await vi.waitFor(() => {
       expect(started.some((s) => s.url === liveClips.rainHeavy && s.loop)).toBe(true)
     })
+  })
+})
+
+// AU-001 / audio GDD Formulas `staged_gain`: master and mute apply once, at
+// the master stage; each channel stage carries only its own factor. Literals
+// pinned from the GDD, not from the module's constants.
+describe('mixer buses and staged gain (AU-001)', () => {
+  afterEach(() => {
+    setAudioLevels({ master: 1, ui: 1, combat: 1, music: 1, ambience: 1 })
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  it('has exactly four buses: ui, combat, music, ambience', () => {
+    expect([...BUSES]).toEqual(['ui', 'combat', 'music', 'ambience'])
+  })
+
+  it('master 0.5 × combat 0.8 reads 0.4; mute (master 0) reads 0; restoring master reads 0.4', () => {
+    setAudioLevels({ master: 0.5, ui: 1, combat: 0.8, music: 1, ambience: 1 })
+    expect(playerFactor('combat')).toBeCloseTo(0.4, 10)
+    expect(playerFactor('ui')).toBeCloseTo(0.5, 10)
+    setAudioLevels({ master: 0 })
+    expect(playerFactor('combat')).toBe(0)
+    expect(getAudioLevels().combat).toBeCloseTo(0.8, 10)
+    setAudioLevels({ master: 0.5 })
+    expect(playerFactor('combat')).toBeCloseTo(0.4, 10)
+  })
+
+  it('wires four bus gains into master, then a compressor, then the destination', async () => {
+    vi.resetModules()
+    const { context } = installMockAudio()
+    const gains: { gain: { value: number }; dest: unknown }[] = []
+    const comps: unknown[] = []
+    const createGain = context.createGain.bind(context)
+    const createComp = context.createDynamicsCompressor.bind(context)
+    context.createGain = () => {
+      const g = createGain()
+      gains.push(g)
+      return g
+    }
+    context.createDynamicsCompressor = () => {
+      const c = createComp()
+      comps.push(c)
+      return c
+    }
+    const audio = await import('./audio')
+    audio.unlockAudio()
+    // Graph build: one master, four buses, one compressor — no fifth bus.
+    expect(gains).toHaveLength(5)
+    expect(comps).toHaveLength(1)
+    const [masterNode, ui, combat, music, ambience] = gains
+    expect(masterNode.dest).toBe(comps[0])
+    expect((comps[0] as { dest: unknown }).dest).toBe(context.destination)
+    for (const bus of [ui, combat, music, ambience]) expect(bus.dest).toBe(masterNode)
+
+    audio.setAudioLevels({ master: 0.5, ui: 0.3, combat: 0.8, music: 0.6, ambience: 0.7 })
+    // Master lands once, on the master node (authored base 0.25)...
+    expect(masterNode.gain.value).toBeCloseTo(0.25 * 0.5, 10)
+    // ...and each bus node carries only its own factor (authored dB bases).
+    // Distinct factors per bus, so a dropped or swapped channel fails.
+    const busValues = (): number[] => [ui, combat, music, ambience].map((n) => n.gain.value)
+    const expectedBuses = [10 ** (-3 / 20) * 0.3, 10 ** (-1.5 / 20) * 0.8, 0.6, 0.7]
+    busValues().forEach((v, i) => expect(v).toBeCloseTo(expectedBuses[i], 10))
+
+    // Each channel control changes only its own bus node.
+    audio.setAudioLevels({ music: 0.2 })
+    expect(music.gain.value).toBeCloseTo(0.2, 10)
+    expect(ambience.gain.value).toBeCloseTo(0.7, 10)
+    expect(ui.gain.value).toBeCloseTo(10 ** (-3 / 20) * 0.3, 10)
+    expect(combat.gain.value).toBeCloseTo(10 ** (-1.5 / 20) * 0.8, 10)
+    expect(masterNode.gain.value).toBeCloseTo(0.25 * 0.5, 10)
+    audio.setAudioLevels({ music: 0.6 })
+
+    // Mute (master 0) zeroes the master node only; the buses keep their values.
+    audio.setAudioLevels({ master: 0 })
+    expect(masterNode.gain.value).toBe(0)
+    busValues().forEach((v, i) => expect(v).toBeCloseTo(expectedBuses[i], 10))
+    audio.setAudioLevels({ master: 0.5 })
+    expect(masterNode.gain.value).toBeCloseTo(0.25 * 0.5, 10)
   })
 })

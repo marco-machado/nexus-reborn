@@ -10,7 +10,7 @@ import {
   stagedGain,
   useSettingsStore,
 } from './settingsStore'
-import { startNewOperation } from './save'
+import { SAVE_KEY, startNewOperation, validateSave, writeSave } from './save'
 import type { SettingsStorage, TextScale } from './settingsStore'
 
 class MemoryStorage implements SettingsStorage {
@@ -288,5 +288,161 @@ describe('text scale step set', () => {
       storage.setItem(SETTINGS_KEY, JSON.stringify({ version: SETTINGS_VERSION, textScale: bad }))
       expect(loadSettings(storage).textScale).toBe(100)
     }
+  })
+})
+
+// AU-001 / audio GDD `staged_gain` and TR-audio-001: master, four channels and
+// mute live in the settings slot. Literals pinned from the GDD.
+describe('mixer through the settings store (AU-001)', () => {
+  const CHANNELS = ['ui', 'combat', 'music', 'ambience'] as const
+  const VOL_KEY = {
+    master: 'masterVol',
+    ui: 'uiVol',
+    combat: 'combatVol',
+    music: 'musicVol',
+    ambience: 'ambienceVol',
+  } as const
+
+  async function flushAudio() {
+    for (let i = 0; i < 5; i++) await Promise.resolve()
+    return import('../game/audio')
+  }
+
+  it('staged_gain: master 0.5 × combat 0.8 is 0.4, 0 when muted', () => {
+    expect(stagedGain(50, 80, false)).toBeCloseTo(0.4, 10)
+    expect(stagedGain(50, 80, true)).toBe(0)
+  })
+
+  it('combat factor reads 0.4; mute zeroes it and keeps stored 0.5 / 0.8; unmute restores 0.4', async () => {
+    const s = useSettingsStore.getState()
+    s.setVolume('master', 50)
+    s.setVolume('combat', 80)
+    let audio = await flushAudio()
+    // Master and mute apply once, at the master stage.
+    expect(audio.playerFactor('combat')).toBeCloseTo(0.4, 10)
+    expect(audio.getAudioLevels().combat).toBeCloseTo(0.8, 10)
+
+    s.setMuted(true)
+    audio = await flushAudio()
+    expect(audio.playerFactor('combat')).toBe(0)
+    for (const bus of CHANNELS) expect(audio.playerFactor(bus)).toBe(0)
+    // Mute zeroes only the master node; channel nodes keep their own levels.
+    const muted = audio.getAudioLevels()
+    expect(muted.master).toBe(0)
+    expect(muted.ui).toBeCloseTo(1, 10)
+    expect(muted.combat).toBeCloseTo(0.8, 10)
+    expect(muted.music).toBeCloseTo(1, 10)
+    expect(muted.ambience).toBeCloseTo(1, 10)
+    expect(useSettingsStore.getState().masterVol).toBe(50)
+    expect(useSettingsStore.getState().combatVol).toBe(80)
+    expect(stored()).toMatchObject({ masterVol: 50, combatVol: 80, muted: true })
+
+    s.setMuted(false)
+    audio = await flushAudio()
+    expect(audio.playerFactor('combat')).toBeCloseTo(0.4, 10)
+  })
+
+  it('each channel control changes only its own bus and no other stored level', async () => {
+    const s = useSettingsStore.getState()
+    s.setVolume('master', 60)
+    for (const ch of CHANNELS) s.setVolume(ch, 70)
+    for (const ch of CHANNELS) {
+      const before = { ...useSettingsStore.getState() }
+      const audioBefore = (await flushAudio()).getAudioLevels()
+      useSettingsStore.getState().setVolume(ch, 20)
+      const after = useSettingsStore.getState()
+      const audioAfter = (await flushAudio()).getAudioLevels()
+      expect(after[VOL_KEY[ch]]).toBe(20)
+      expect(audioAfter[ch]).toBeCloseTo(0.2, 10)
+      for (const other of ['master', ...CHANNELS] as const) {
+        if (other === ch) continue
+        expect(after[VOL_KEY[other]]).toBe(before[VOL_KEY[other]])
+        expect(audioAfter[other]).toBeCloseTo(audioBefore[other], 10)
+      }
+      useSettingsStore.getState().setVolume(ch, 70)
+    }
+  })
+
+  it('master scales all four buses once', async () => {
+    const s = useSettingsStore.getState()
+    s.setVolume('ui', 100)
+    s.setVolume('combat', 80)
+    s.setVolume('music', 50)
+    s.setVolume('ambience', 0)
+    s.setVolume('master', 50)
+    const audio = await flushAudio()
+    expect(audio.playerFactor('ui')).toBeCloseTo(0.5, 10)
+    expect(audio.playerFactor('combat')).toBeCloseTo(0.4, 10)
+    expect(audio.playerFactor('music')).toBeCloseTo(0.25, 10)
+    expect(audio.playerFactor('ambience')).toBe(0)
+  })
+
+  it('silencing combat while keeping UI is valid', async () => {
+    const s = useSettingsStore.getState()
+    s.setVolume('combat', 0)
+    s.setVolume('ui', 100)
+    const audio = await flushAudio()
+    expect(audio.playerFactor('combat')).toBe(0)
+    expect(audio.playerFactor('ui')).toBe(1)
+    expect(useSettingsStore.getState().combatVol).toBe(0)
+  })
+
+  it('master, four channels and mute survive reload, New Operation, and a second reload', () => {
+    const s = useSettingsStore.getState()
+    s.setVolume('master', 45)
+    s.setVolume('ui', 15)
+    s.setVolume('combat', 25)
+    s.setVolume('music', 35)
+    s.setVolume('ambience', 55)
+    s.setMuted(true)
+    const expected = { masterVol: 45, uiVol: 15, combatVol: 25, musicVol: 35, ambienceVol: 55, muted: true }
+
+    const reload = (): void => {
+      useSettingsStore.setState(defaultSettings())
+      initSettings(storage)
+    }
+    reload()
+    expect(useSettingsStore.getState()).toMatchObject(expected)
+
+    // New Operation erases the campaign slot only, in the same storage.
+    const shared = Object.assign(storage, { removeItem: (k: string) => void storage.data.delete(k) })
+    storage.setItem(SAVE_KEY, '{"version":10,"campaign":"seeded"}')
+    expect(storage.getItem(SAVE_KEY)).not.toBeNull()
+    startNewOperation(shared)
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    expect(storage.getItem(SETTINGS_KEY)).not.toBeNull()
+    expect(stored()).toMatchObject(expected)
+    reload()
+    expect(useSettingsStore.getState()).toMatchObject(expected)
+  })
+
+  it('never writes mixer values into the campaign blob', () => {
+    const shared = Object.assign(storage, { removeItem: (k: string) => void storage.data.delete(k) })
+    const s = useSettingsStore.getState()
+    s.setVolume('master', 45)
+    s.setVolume('ui', 15)
+    s.setVolume('combat', 25)
+    s.setVolume('music', 35)
+    s.setVolume('ambience', 55)
+    s.setMuted(true)
+    const mixer = /masterVol|combatVol|uiVol|musicVol|ambienceVol|"muted"/
+    const checkBlob = (): void => {
+      const raw = storage.getItem(SAVE_KEY)
+      expect(raw).not.toBeNull()
+      expect(validateSave(JSON.parse(raw as string))).toBe(true)
+      expect(raw).not.toMatch(mixer)
+      // The settings blob, by contrast, does hold the mixer.
+      expect(storage.getItem(SETTINGS_KEY)).toMatch(mixer)
+    }
+
+    // A real campaign blob written through save.ts while the mixer is set.
+    expect(writeSave(shared)).toBe(true)
+    checkBlob()
+
+    // And again after New Operation resets the campaign and it is re-filed.
+    startNewOperation(shared)
+    expect(storage.getItem(SAVE_KEY)).toBeNull()
+    expect(writeSave(shared)).toBe(true)
+    checkBlob()
   })
 })

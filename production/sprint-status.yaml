@@ -111,11 +111,11 @@ stories:
     name: "Mixer: master, channels, mute, and settings persistence"
     file: "production/epics/audio/story-001-mixer-master-channels-mute-and-settings-persistence.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.4
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "AU-003"
     name: "Strategy bed and mission city-hum lifetimes"
     file: "production/epics/audio/story-003-strategy-bed-and-mission-city-hum-lifetimes.md"

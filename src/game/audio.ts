@@ -128,6 +128,19 @@ export function getAudioLevels(): {
   return { ...levels }
 }
 
+/** The four mixer buses, in graph order. Each feeds `master`; there is no fifth. */
+export const BUSES = ['ui', 'combat', 'music', 'ambience'] as const
+export type Bus = (typeof BUSES)[number]
+
+/**
+ * The combined player-control factor a voice on `bus` is scaled by: the master
+ * stage (with mute folded in) times that bus's own stage, before the authored
+ * base levels. Master applies once, at the master node only.
+ */
+export function playerFactor(bus: Bus): number {
+  return levels.master * levels[bus]
+}
+
 function ensure(): Live | null {
   if (failed) return null
   if (ctx && uiGain && combatGain && musicGain && ambienceGain) {
