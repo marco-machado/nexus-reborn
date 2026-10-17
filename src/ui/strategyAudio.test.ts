@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '../state/appStore'
+import { useSettingsStore } from '../state/settingsStore'
 import { bindStrategyBed } from './strategyAudio'
 import { startStrategyBed, stopStrategyBed } from './sound'
 
@@ -36,6 +37,16 @@ describe('strategy music across screen transitions', () => {
     expect(stopStrategyBed).toHaveBeenCalledTimes(1)
     useAppStore.setState({ phase: 'world' })
     expect(startStrategyBed).toHaveBeenCalledTimes(2)
+  })
+
+  it('settings changes (overlay sliders, mute) neither stop nor restart the bed', () => {
+    useAppStore.setState({ phase: 'research' })
+    dispose = bindStrategyBed()
+    useSettingsStore.getState().setMuted(true)
+    useSettingsStore.getState().setMuted(false)
+    expect(useAppStore.getState().phase).toBe('research')
+    expect(startStrategyBed).toHaveBeenCalledTimes(1)
+    expect(stopStrategyBed).not.toHaveBeenCalled()
   })
 
   it('stops on menu and detaches when the app unmounts', () => {

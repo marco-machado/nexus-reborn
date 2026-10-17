@@ -97,7 +97,9 @@ describe('radio acknowledgements and side voices', () => {
 
 type Started = { url: string; loop: boolean; dest: unknown }
 
-function installMockAudio() {
+// `hold` keeps a matching fetch in flight until `release(url)` is called, so a
+// test can stop a bed while its clip is still loading.
+function installMockAudio(hold: (url: string) => boolean = () => false) {
   const started: Started[] = []
   const sources: unknown[] = []
   const pendingUrls: string[] = []
@@ -190,17 +192,24 @@ function installMockAudio() {
 
   const context = new FakeCtx()
   vi.stubGlobal('AudioContext', class { constructor() { return context } })
+  const held = new Map<string, () => void>()
   vi.stubGlobal('fetch', (url: string | URL) => {
     const href = String(url)
     fetched.push(href)
-    pendingUrls.push(href)
-    return Promise.resolve({
-      ok: true,
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-    })
+    const response = () => {
+      pendingUrls.push(href)
+      return { ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) }
+    }
+    if (!hold(href)) return Promise.resolve(response())
+    return new Promise((resolve) => held.set(href, () => resolve(response())))
   })
+  const release = (url: string) => {
+    const go = held.get(url)
+    held.delete(url)
+    go?.()
+  }
 
-  return { started, sources: sources as FakeSource[], fetched, context }
+  return { started, sources: sources as FakeSource[], fetched, context, release }
 }
 
 describe('clip playback', () => {
@@ -397,5 +406,97 @@ describe('mixer buses and staged gain (AU-001)', () => {
     busValues().forEach((v, i) => expect(v).toBeCloseTo(expectedBuses[i], 10))
     audio.setAudioLevels({ master: 0.5 })
     expect(masterNode.gain.value).toBeCloseTo(0.25 * 0.5, 10)
+  })
+})
+
+// AU-003 / audio GDD: the strategy bed is one music-stage source for the four
+// Screens; the mission bed is one of three city-hum clips, picked unseeded,
+// and neither bed may start after its owner has left, even when the clip
+// finishes loading late.
+describe('bed lifetimes (AU-003)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  it('keeps one strategy source playing through repeated starts and stops it on leave', async () => {
+    vi.resetModules()
+    const { started, sources } = installMockAudio()
+    const audio = await import('./audio')
+    audio.startStrategyBed()
+    await settle()
+    // A second start (another Screen) must not restart or add a source.
+    audio.startStrategyBed()
+    audio.startStrategyBed()
+    await settle()
+    expect(started).toHaveLength(1)
+    expect(started[0]).toMatchObject({ url: audio.STRATEGY_BED_URL, loop: true })
+    expect(audio.MISSION_BED_URLS).not.toContain(started[0].url)
+    expect(sources[0].stop).not.toHaveBeenCalled()
+    audio.stopStrategyBed()
+    expect(sources[0].stop).toHaveBeenCalledTimes(1)
+  })
+
+  it('discards an in-flight strategy decode when the director leaves the Screens', async () => {
+    vi.resetModules()
+    const { started, release, fetched } = installMockAudio(() => true)
+    const audio = await import('./audio')
+    audio.startStrategyBed()
+    await settle()
+    expect(fetched).toContain(audio.STRATEGY_BED_URL)
+    audio.stopStrategyBed()
+    release(audio.STRATEGY_BED_URL)
+    await settle()
+    expect(started).toHaveLength(0)
+  })
+
+  it('starts one looping city-hum clip for a mission and stops it on leave', async () => {
+    vi.resetModules()
+    const { started, sources } = installMockAudio()
+    const audio = await import('./audio')
+    audio.startMissionBed()
+    audio.startMissionBed()
+    await settle()
+    expect(started).toHaveLength(1)
+    expect(started[0].loop).toBe(true)
+    expect(audio.MISSION_BED_URLS).toContain(started[0].url)
+    expect(started[0].url).not.toBe(audio.STRATEGY_BED_URL)
+    audio.stopMissionBed()
+    expect(sources[0].stop).toHaveBeenCalledTimes(1)
+  })
+
+  it('picks each of the three clips from the unseeded roll alone; two deploys may differ', async () => {
+    vi.resetModules()
+    installMockAudio()
+    const audio = await import('./audio')
+    const random = vi.spyOn(Math, 'random')
+    const picks = [0, 0.4, 0.99].map((r) => {
+      random.mockReturnValueOnce(r)
+      return audio.pickMissionBedUrl()
+    })
+    expect(new Set(picks).size).toBe(3)
+    expect([...picks].sort()).toEqual([...audio.MISSION_BED_URLS].sort())
+    // The pick reads no contract, district, hour, weather or Threat argument.
+    expect(audio.pickMissionBedUrl.length).toBe(0)
+  })
+
+  it('a mission bed whose clip loads after departure never starts', async () => {
+    vi.resetModules()
+    const { started, release, fetched } = installMockAudio((url) => url.includes('mission-bed'))
+    const audio = await import('./audio')
+    audio.startMissionBed()
+    await settle()
+    const url = fetched.find((u) => audio.MISSION_BED_URLS.includes(u))
+    expect(url).toBeDefined()
+    // Abort, result -> Debrief and unmount all leave through stopMissionBed.
+    audio.stopMissionBed()
+    release(url!)
+    await settle()
+    expect(started).toHaveLength(0)
   })
 })
