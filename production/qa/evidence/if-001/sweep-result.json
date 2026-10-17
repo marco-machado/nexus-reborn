@@ -92,8 +92,8 @@
       "90": {
         "clips": [],
         "overlaps": [],
-        "candidates": 157,
-        "checked": 157,
+        "candidates": 161,
+        "checked": 161,
         "unchecked": [],
         "positions": 2,
         "scrolled": [
@@ -103,8 +103,8 @@
       "100": {
         "clips": [],
         "overlaps": [],
-        "candidates": 157,
-        "checked": 157,
+        "candidates": 161,
+        "checked": 161,
         "unchecked": [],
         "positions": 2,
         "scrolled": [
@@ -114,8 +114,8 @@
       "110": {
         "clips": [],
         "overlaps": [],
-        "candidates": 157,
-        "checked": 157,
+        "candidates": 161,
+        "checked": 161,
         "unchecked": [],
         "positions": 2,
         "scrolled": [
@@ -125,12 +125,13 @@
       "125": {
         "clips": [],
         "overlaps": [],
-        "candidates": 157,
-        "checked": 157,
+        "candidates": 161,
+        "checked": 161,
         "unchecked": [],
-        "positions": 2,
+        "positions": 3,
         "scrolled": [
-          ".scroll.wm-sector-list (122px y, 1 stops)"
+          ".scroll.wm-sector-list (122px y, 1 stops)",
+          ".scroll.wm-ops-list (3px y, 1 stops)"
         ]
       }
     },
@@ -138,8 +139,8 @@
       "90": {
         "clips": [],
         "overlaps": [],
-        "candidates": 70,
-        "checked": 70,
+        "candidates": 72,
+        "checked": 72,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -147,8 +148,8 @@
       "100": {
         "clips": [],
         "overlaps": [],
-        "candidates": 70,
-        "checked": 70,
+        "candidates": 72,
+        "checked": 72,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -156,8 +157,8 @@
       "110": {
         "clips": [],
         "overlaps": [],
-        "candidates": 70,
-        "checked": 70,
+        "candidates": 72,
+        "checked": 72,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -165,8 +166,8 @@
       "125": {
         "clips": [],
         "overlaps": [],
-        "candidates": 70,
-        "checked": 70,
+        "candidates": 72,
+        "checked": 72,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -274,8 +275,8 @@
       "90": {
         "clips": [],
         "overlaps": [],
-        "candidates": 85,
-        "checked": 85,
+        "candidates": 86,
+        "checked": 86,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -283,8 +284,8 @@
       "100": {
         "clips": [],
         "overlaps": [],
-        "candidates": 85,
-        "checked": 85,
+        "candidates": 86,
+        "checked": 86,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -292,8 +293,8 @@
       "110": {
         "clips": [],
         "overlaps": [],
-        "candidates": 85,
-        "checked": 85,
+        "candidates": 86,
+        "checked": 86,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -301,8 +302,8 @@
       "125": {
         "clips": [],
         "overlaps": [],
-        "candidates": 85,
-        "checked": 85,
+        "candidates": 86,
+        "checked": 86,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -312,8 +313,8 @@
       "90": {
         "clips": [],
         "overlaps": [],
-        "candidates": 158,
-        "checked": 158,
+        "candidates": 159,
+        "checked": 159,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -321,8 +322,8 @@
       "100": {
         "clips": [],
         "overlaps": [],
-        "candidates": 158,
-        "checked": 158,
+        "candidates": 159,
+        "checked": 159,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -330,8 +331,8 @@
       "110": {
         "clips": [],
         "overlaps": [],
-        "candidates": 158,
-        "checked": 158,
+        "candidates": 159,
+        "checked": 159,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -339,8 +340,8 @@
       "125": {
         "clips": [],
         "overlaps": [],
-        "candidates": 158,
-        "checked": 158,
+        "candidates": 159,
+        "checked": 159,
         "unchecked": [],
         "positions": 1,
         "scrolled": []
@@ -350,8 +351,8 @@
       "90": {
         "clips": [],
         "overlaps": [],
-        "candidates": 228,
-        "checked": 228,
+        "candidates": 229,
+        "checked": 229,
         "unchecked": [],
         "positions": 3,
         "scrolled": [
@@ -362,8 +363,8 @@
       "100": {
         "clips": [],
         "overlaps": [],
-        "candidates": 228,
-        "checked": 228,
+        "candidates": 229,
+        "checked": 229,
         "unchecked": [],
         "positions": 3,
         "scrolled": [
@@ -374,8 +375,8 @@
       "110": {
         "clips": [],
         "overlaps": [],
-        "candidates": 228,
-        "checked": 228,
+        "candidates": 229,
+        "checked": 229,
         "unchecked": [],
         "positions": 3,
         "scrolled": [
@@ -386,8 +387,8 @@
       "125": {
         "clips": [],
         "overlaps": [],
-        "candidates": 228,
-        "checked": 228,
+        "candidates": 229,
+        "checked": 229,
         "unchecked": [],
         "positions": 4,
         "scrolled": [
@@ -467,8 +468,8 @@
     "1": {
       "clips": [],
       "overlaps": [],
-      "candidates": 85,
-      "checked": 85,
+      "candidates": 86,
+      "checked": 86,
       "unchecked": [],
       "positions": 1,
       "scrolled": [],
@@ -477,8 +478,8 @@
     "2": {
       "clips": [],
       "overlaps": [],
-      "candidates": 85,
-      "checked": 85,
+      "candidates": 86,
+      "checked": 86,
       "unchecked": [],
       "positions": 1,
       "scrolled": [],
@@ -487,8 +488,8 @@
     "3": {
       "clips": [],
       "overlaps": [],
-      "candidates": 85,
-      "checked": 85,
+      "candidates": 86,
+      "checked": 86,
       "unchecked": [],
       "positions": 1,
       "scrolled": [],
@@ -497,8 +498,8 @@
     "4": {
       "clips": [],
       "overlaps": [],
-      "candidates": 85,
-      "checked": 85,
+      "candidates": 86,
+      "checked": 86,
       "unchecked": [],
       "positions": 1,
       "scrolled": [],

@@ -23,6 +23,9 @@
   --red: #e04b3c;
   --red-hot: #ff6b55;
   --green: #7de08a;
+  /* VIP Ice: the active objective (living §12) and the VIP/DEVICE mission
+     markers. Mirrors VIP in src/ui/tokens.ts. */
+  --vip: #9be8ff;
   --skin: #b78369;
   --skin-shadow: #654438;
   --line: rgba(126, 240, 212, 0.22);
@@ -53,6 +56,13 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* Keyboard focus is a frame, never a hue alone and never Ledger Amber (living
+   §12, IF-002). Zero specificity: a component's own focus rule wins. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
 }
 
 html,

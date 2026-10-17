@@ -6,11 +6,11 @@ import type { Phase } from '../state/appStore'
 import { stamp, useWorldStore } from '../state/worldStore'
 import { useCampaignStore } from '../state/campaignStore'
 import { ROSTER_CAP } from '../game/recruits'
-import { Chip, NavGlyph } from './bits'
+import { Chip, LockGlyph, NavGlyph } from './bits'
 import type { NavKind } from './bits'
 import { useWorldClock } from './clock'
 import { act, fmt } from './util'
-import { BRIEF_LOCK_REASON, briefReachable, navTabGate } from './navGates'
+import { briefReachable, navTabGate } from './navGates'
 
 const TABS: Array<{ key: NavKind; label: string; phase: Phase }> = [
   { key: 'world', label: 'WORLD NETWORK', phase: 'world' },
@@ -63,19 +63,36 @@ export function NavTabs(props: { current: NavKind }) {
         const { open, locked, reason } = navTabGate(tab.key, props.current, briefOpen)
         const cls = 'navtab' + (here ? ' active' : locked ? ' locked' : '')
         return (
-          <span key={tab.key} className="navtab-wrap" title={reason}>
+          <span key={tab.key} className="navtab-wrap">
             <button
               type="button"
               className={cls}
               aria-current={here ? 'page' : undefined}
               aria-disabled={locked ? true : undefined}
-              aria-label={locked ? tab.label + ' // LOCKED // ' + BRIEF_LOCK_REASON : tab.label}
+              aria-label={locked ? tab.label + ' // LOCKED // ' + reason : tab.label}
               onClick={open && !here ? act(() => goto(tab.phase)) : undefined}
             >
-              <NavGlyph kind={tab.key} size={here ? 15 : 13} />
-              <span className="navtab-label">{tab.label}</span>
+              {locked ? (
+                // P-06: the lock glyph, the word LOCKED and the condition are
+                // printed on the tab, not left to a hover tip (IF-002).
+                <>
+                  <span className="navtab-locked-row">
+                    <NavGlyph kind={tab.key} size={13} />
+                    <span className="navtab-label">{tab.label}</span>
+                    <span className="navtab-lock">
+                      <LockGlyph size={9} />
+                      LOCKED
+                    </span>
+                  </span>
+                  <span className="navtab-cond">{reason}</span>
+                </>
+              ) : (
+                <>
+                  <NavGlyph kind={tab.key} size={here ? 15 : 13} />
+                  <span className="navtab-label">{tab.label}</span>
+                </>
+              )}
             </button>
-            {locked && <span className="tip nav">{BRIEF_LOCK_REASON}</span>}
           </span>
         )
       })}

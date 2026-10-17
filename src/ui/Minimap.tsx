@@ -148,6 +148,8 @@ const COLOR = {
   device: DEVICE,
   deviceDead: DEVICE_A25,
   vip: VIP,
+  // Active objective: VIP Ice, never Ledger Amber (living §12).
+  objective: VIP,
   viewport: INK_A5,
   viewportFill: INK_A045,
   text: INK_DIM_A8,
@@ -255,7 +257,7 @@ export default function Minimap({
       ctx.fill()
       ctx.restore()
 
-      // active objective: expanding amber pulse on its world zone. A defend
+      // active objective: expanding VIP Ice pulse on its world zone. A defend
       // objective adds a countdown ring that empties as the timer burns.
       const activeObj = useMissionStore
         .getState()
@@ -275,7 +277,7 @@ export default function Minimap({
         const phase = reduced ? 0 : (Date.now() % 1400) / 1400
         ctx.save()
         ctx.globalAlpha = reduced ? 0.7 : 0.85 * (1 - phase)
-        ctx.strokeStyle = COLOR.checkpoint
+        ctx.strokeStyle = COLOR.objective
         ctx.lineWidth = 1.2
         ctx.beginPath()
         ctx.arc(
@@ -289,7 +291,7 @@ export default function Minimap({
         ctx.restore()
         if (def.kind === 'defend' && activeObj?.progress !== undefined) {
           ctx.save()
-          ctx.strokeStyle = COLOR.checkpoint
+          ctx.strokeStyle = COLOR.objective
           ctx.lineWidth = 1.6
           ctx.beginPath()
           ctx.arc(

@@ -1,0 +1,52 @@
+{
+  "states": {
+    "focus": {
+      "ok": true,
+      "cue": "frame: rgb(126, 240, 212) 0px 0px 0px 2px inset, rgb(4, 7, 10) 0px 0px 0px 4px inset on \"BEGIN NEW OPERATION\""
+    },
+    "lock": {
+      "ok": true,
+      "cue": "locked tab prints \"BRIEF LOCKED NO CONTRACT SELECTED\" + lock glyph; selected tab \"WORLD NETWORK\" framed 2px solid (rgb(126, 240, 212))"
+    },
+    "selection": {
+      "ok": true,
+      "cue": "2 cards: closed double ring (outline double 3px rgb(126, 240, 212)) + bracketed slot \"[\"1]"
+    },
+    "objective": {
+      "ok": true,
+      "cue": "\"REACH THE CHECKPOINT GATE\" prints token \"ACTIVE\" + triangle mark (#9be8ff); row colour rgb(155, 232, 255)"
+    },
+    "injury-kia": {
+      "ok": true,
+      "cue": "injured card: pips at 20% (dashed frame) + \"22/110\" + \"+ INJURED\"; KIA card: skull glyph + \"FLATLINED\" + struck-through name"
+    },
+    "alert": {
+      "ok": true,
+      "cue": "prints \"||| ALERT: 2 |||\" with blinking bars (hot)"
+    },
+    "result-won": {
+      "ok": true,
+      "cue": "banner prints \"CONTRACT FULFILLED EXTRACTION CONFIRMED\""
+    },
+    "result-lost": {
+      "ok": true,
+      "cue": "banner prints \"SQUAD ELIMINATED CONTRACT TERMINATED\""
+    }
+  },
+  "styles": {
+    "menu": {
+      "ground": "rgb(4, 7, 10)",
+      "font": "\"SF Mono\", ui-monospace, SFMono-Regular, Menlo, \"Cascadia Mono\", \"Roboto Mono\", monospace",
+      "labelsChecked": 2,
+      "labelsNotUppercase": []
+    },
+    "mission-hud": {
+      "ground": "rgb(4, 7, 10)",
+      "font": "\"SF Mono\", ui-monospace, SFMono-Regular, Menlo, \"Cascadia Mono\", \"Roboto Mono\", monospace",
+      "labelsChecked": 24,
+      "labelsNotUppercase": []
+    }
+  },
+  "greenInHud": [],
+  "errors": []
+}

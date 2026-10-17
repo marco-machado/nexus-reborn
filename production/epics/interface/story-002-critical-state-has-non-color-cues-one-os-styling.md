@@ -1,12 +1,12 @@
 # Story 002: Critical state has non-color cues; one OS styling
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: In Review
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-17
 
 ## Context
 
@@ -77,7 +77,7 @@
 **Required evidence**:
 - Visual/Feel: a retained screenshot in `production/qa/evidence/` + sign-off in `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md`. Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/if-002/` (9 colour + 9 greyscale captures, `capture.mjs`, `capture-output.txt` ALL PASS, `capture-result.json`) and `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md` (art-director sign-off pending); unit test `src/ui/criticalCues.test.ts`
 
 ---
 
@@ -85,3 +85,14 @@
 
 - Depends on: Story 001
 - Unlocks: None
+
+---
+
+## Open for Sign-off
+**State (2026-10-17)**: code, evidence and review done; closure waits only on the art-director lead sign-off in `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md`.
+- **Review**: APPROVED WITH SUGGESTIONS (no code changes required) — specialists: lead-programmer, ui-programmer, qa-tester. Applied after review: merged the duplicate World Network marker focus rule, dropped the dead `injured` class on `.hud-agent`, removed a tautological token test, documented `healthCue`.
+- **Mutation check**: skipped — Visual/Feel story.
+- **Needs the owner**: art-director sign-off; then `/story-done` this story.
+- **Design calls recorded, not changed**: `design/ux/hud.md` E4 says the Collateral chip is ink with count only and no CR, but the shipped chip is amber and prints CR. Ledger Amber is still used outside price on non-critical elements (CTAs, reload/stance chips, ability armed/cooldown, minimap checkpoint/suspicion, DEVICE marker, World Network sector focus).
+- **Advisories kept**: new teal/red rgba literals in `src/ui/ui.css` (.hud-agent.sel, .navtab.active, .hud-hp.low) extend an existing pattern but drift from ADR-0017's tokens-only rule and do not follow high-contrast mode; a unit with maxHp 0 now reads ok rather than low.
+- **Also fixed while re-running the IF-001 sweep**: World Network influence buttons spilled "10P UNAFFORDABLE" past their frame at 125% (from IF-004); `.wm-act-sub` now wraps. Sweep ALL SURFACES CLEAN.

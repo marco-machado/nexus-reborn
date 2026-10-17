@@ -1,0 +1,11 @@
+PASS 02 focus: non-colour cue -- frame: rgb(126, 240, 212) 0px 0px 0px 2px inset, rgb(4, 7, 10) 0px 0px 0px 4px inset on "BEGIN NEW OPERATION"
+PASS 03 lock: non-colour cue -- locked tab prints "BRIEF LOCKED NO CONTRACT SELECTED" + lock glyph; selected tab "WORLD NETWORK" framed 2px solid (rgb(126, 240, 212))
+PASS 04 selection: non-colour cue -- 2 cards: closed double ring (outline double 3px rgb(126, 240, 212)) + bracketed slot "["1]
+PASS 05 objective: non-colour cue -- "REACH THE CHECKPOINT GATE" prints token "ACTIVE" + triangle mark (#9be8ff); row colour rgb(155, 232, 255)
+PASS 06 injury-kia: non-colour cue -- injured card: pips at 20% (dashed frame) + "22/110" + "+ INJURED"; KIA card: skull glyph + "FLATLINED" + struck-through name
+PASS 07 alert: non-colour cue -- prints "||| ALERT: 2 |||" with blinking bars (hot)
+PASS Mission HUD: no Nominal Green cue -- none painted
+PASS 08 result-won: non-colour cue -- banner prints "CONTRACT FULFILLED EXTRACTION CONFIRMED"
+PASS 09 result-lost: non-colour cue -- banner prints "SQUAD ELIMINATED CONTRACT TERMINATED"
+PASS no page errors
+ALL PASS

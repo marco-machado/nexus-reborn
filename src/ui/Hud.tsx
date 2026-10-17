@@ -21,8 +21,10 @@ import PauseMenu from './PauseMenu'
 import { pauseMenuShown } from './pauseMenuModel'
 import TutorialToasts from './TutorialToasts'
 import { Portrait } from './portrait'
-import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox } from './bits'
-import { AMBER, INK_DIM_A7, TEAL, TEAL_A12 } from './tokens'
+import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox, SkullGlyph } from './bits'
+import { INK_DIM_A7, RED_HOT, TEAL, TEAL_A12, VIP } from './tokens'
+import { ACTIVE_OBJECTIVE_TOKEN, healthCue, objectiveCue } from './criticalCues'
+import type { ObjectiveCue } from './criticalCues'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
 
@@ -37,14 +39,18 @@ function weaponIdByName(name: string): WeaponId {
 // shows up here too. Panels print the first key per action to keep labels short.
 const firstKey = (id: BindingId): string => BINDINGS.find((b) => b.id === id)?.keys[0] ?? ''
 
-function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
+// Objective mark: the shape carries the state (IF-002) and hue only
+// reinforces it. Active is a VIP Ice triangle, done a teal check, failed a
+// red cross, pending an empty box.
+function ObjMark(props: { state: ObjectiveCue }) {
   if (props.state === 'active') {
     return (
       <svg viewBox="0 0 12 12" className="hud-obj-mark" aria-hidden="true">
-        <polygon points="3,1.5 10,6 3,10.5" fill={AMBER} />
+        <polygon points="3,1.5 10,6 3,10.5" fill={VIP} />
       </svg>
     )
   }
+  const stroke = props.state === 'done' ? TEAL : props.state === 'failed' ? RED_HOT : INK_DIM_A7
   return (
     <svg viewBox="0 0 12 12" className="hud-obj-mark" aria-hidden="true">
       <rect
@@ -53,11 +59,14 @@ function ObjMark(props: { state: 'done' | 'active' | 'pending' }) {
         width="9"
         height="9"
         fill={props.state === 'done' ? TEAL_A12 : 'none'}
-        stroke={props.state === 'done' ? TEAL : INK_DIM_A7}
+        stroke={stroke}
         strokeWidth="1.2"
       />
       {props.state === 'done' && (
         <path d="M3 6.2 5.2 8.6 9 3.4" fill="none" stroke={TEAL} strokeWidth="1.5" />
+      )}
+      {props.state === 'failed' && (
+        <path d="M3.6 3.6 8.4 8.4M8.4 3.6 3.6 8.4" fill="none" stroke={RED_HOT} strokeWidth="1.5" />
       )}
     </svg>
   )
@@ -259,10 +268,15 @@ export default function Hud() {
             const hpPct = r.maxHp > 0 ? (r.hp / r.maxHp) * 100 : 0
             const isSel = selected.includes(r.unitId)
             const isActive = active !== null && r.unitId === active.unitId
+            const health = healthCue(r.hp, r.maxHp, r.dead)
             return (
               <div
                 key={r.unitId}
-                className={'hud-agent' + (isSel ? ' sel' : '') + (r.dead ? ' dead' : '')}
+                className={
+                  'hud-agent' +
+                  (isSel ? ' sel' : '') +
+                  (health === 'kia' ? ' dead' : '')
+                }
                 title={r.dead ? undefined : 'Double click to center the camera'}
                 onClick={(e) => {
                   if (r.dead) return
@@ -292,7 +306,7 @@ export default function Hud() {
                     <b>{r.codename}</b>
                     <i className="dim">{r.name}</i>
                   </span>
-                  <span className={'hud-hp' + (hpPct < 30 ? ' low' : '')}>
+                  <span className={'hud-hp' + (health === 'injured' ? ' low' : '')}>
                     <i style={{ width: hpPct + '%' }} />
                   </span>
                   <span className="hud-agent-sub">
@@ -302,14 +316,21 @@ export default function Hud() {
                     <span className="dim">
                       {r.magazine}/{r.magazineSize} {r.activeSlot === 'primary' ? 'PRI' : 'SEC'}
                     </span>
-                    {r.dead ? (
-                      <span className="red hud-flatline">FLATLINED</span>
-                    ) : r.reloading ? (
+                    {r.dead ? null : r.reloading ? (
                       <span className="amber blink">RELOADING</span>
                     ) : r.swapping ? (
                       <span className="amber blink">DRAWING</span>
                     ) : null}
                   </span>
+                  {r.dead && (
+                    // KIA: skull glyph plus the word on its own line (P-09).
+                    <span className="hud-agent-orders">
+                      <span className="red hud-flatline">
+                        <SkullGlyph size={10} />
+                        FLATLINED
+                      </span>
+                    </span>
+                  )}
                   {!r.dead && (
                     <span className="hud-agent-orders">
                       <Chip tone={r.holdGround ? 'amber' : 'dim'}>
@@ -318,6 +339,11 @@ export default function Hud() {
                       <Chip tone={r.holdFire ? 'red' : 'dim'}>
                         {r.holdFire ? 'TIGHT' : 'FREE'}
                       </Chip>
+                      {health === 'injured' && (
+                        <Chip tone="red" className="hud-injured">
+                          + INJURED
+                        </Chip>
+                      )}
                     </span>
                   )}
                 </span>
@@ -333,30 +359,30 @@ export default function Hud() {
           <span>MISSION DIRECTIVES // {mission ? mission.type : 'TASKING'}</span>
         </div>
         <div className="hud-objectives-body">
-          {objectives.map((o) => (
-            <div
-              key={o.id}
-              className={
-                'hud-obj' +
-                (o.done ? ' done' : o.failed ? ' failed' : o.active ? ' active' : '') +
-                (o.optional ? ' optional' : '')
-              }
-            >
-              <ObjMark state={o.done ? 'done' : o.active && !o.failed ? 'active' : 'pending'} />
-              <span className="hud-obj-main">
-                <span className="hud-obj-label">
-                  <span className="hud-obj-text">{o.label}</span>
-                  {o.optional && <i className="hud-obj-opt">OPTIONAL</i>}
-                  {o.timer !== undefined && <b className="hud-obj-timer">{o.timer}</b>}
-                </span>
-                {o.progress !== undefined && (
-                  <span className="hud-obj-bar">
-                    <i style={{ width: Math.round(o.progress * 100) + '%' }} />
+          {objectives.map((o) => {
+            const cue = objectiveCue(o)
+            return (
+              <div
+                key={o.id}
+                className={'hud-obj' + (cue === 'pending' ? '' : ' ' + cue) + (o.optional ? ' optional' : '')}
+              >
+                <ObjMark state={cue} />
+                <span className="hud-obj-main">
+                  <span className="hud-obj-label">
+                    <span className="hud-obj-text">{o.label}</span>
+                    {cue === 'active' && <i className="hud-obj-tok">{ACTIVE_OBJECTIVE_TOKEN}</i>}
+                    {o.optional && <i className="hud-obj-opt">OPTIONAL</i>}
+                    {o.timer !== undefined && <b className="hud-obj-timer">{o.timer}</b>}
                   </span>
-                )}
-              </span>
-            </div>
-          ))}
+                  {o.progress !== undefined && (
+                    <span className="hud-obj-bar">
+                      <i style={{ width: Math.round(o.progress * 100) + '%' }} />
+                    </span>
+                  )}
+                </span>
+              </div>
+            )
+          })}
           {objectives.length === 0 && (
             <div className="hud-obj">
               <span className="dim">AWAITING TASKING...</span>
