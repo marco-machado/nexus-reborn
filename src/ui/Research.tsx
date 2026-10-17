@@ -7,7 +7,6 @@ import { useAppStore } from '../state/appStore'
 import { useWorldStore } from '../state/worldStore'
 import {
   committedFunds,
-  eligibilityText,
   labsRunning,
   nodeState,
   runProgress,
@@ -29,6 +28,7 @@ import { Chip, LockGlyph, Panel, ScrollBox, SegBar } from './bits'
 import { researchShape, type ResearchGlyphId } from './researchGlyphs'
 import { ScreenChrome } from './Nav'
 import { RemainingLabel } from './RemainingLabel'
+import { authorizeView } from './researchAuth'
 import { act, fmt } from './util'
 /* ------------------------------- geometry --------------------------------- */
 // One branch column is drawn as a single scaled SVG, so the hexes and the
@@ -272,18 +272,10 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
   const [refusal, setRefusal] = useState<{ id: string; labs: Labs; done: string[]; text: string } | null>(null)
   const n = props.node
   const branch = branchDef(n.branch)
-  const state = nodeState(n, props.done, props.labs)
   const run = props.labs[n.branch]
-  const labBusy = run !== null && run.id !== n.id
-  const short = credits < n.cost
-  const can = state === 'available' && !labBusy && !short
-  let sub = 'COMMITS ' + fmt(n.cost) + ' CR // ' + n.hours + 'H IN ' + branch.lab
-  // Inspect text: the state explanation for a project that cannot start now
-  // (unmet prerequisites named, lab not idle, already researched).
-  const cause = eligibilityText(n, props.done, props.labs)
-  if (state === 'active') sub = 'RUNNING IN ' + branch.lab
-  else if (cause !== null) sub = cause.toUpperCase()
-  else if (short) sub = 'INSUFFICIENT CREDITS // ' + fmt(n.cost - credits) + ' CR SHORT'
+  const view = authorizeView(n, props.done, props.labs, credits, branch.lab)
+  const { state, can } = view
+  let sub = view.sub
   if (
     refusal &&
     refusal.id === n.id &&

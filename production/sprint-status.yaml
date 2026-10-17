@@ -39,11 +39,11 @@ stories:
     name: "Research Authorize, keyboard activation, and focus return"
     file: "production/epics/interface/story-005-research-authorize-keyboard-activation-and-focus-return.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-17"
   - id: "IF-006"
     name: "Menu Continue, New Operation, and telemetry persistence chrome"
     file: "production/epics/interface/story-006-menu-continue-new-operation-and-telemetry-persistence-c.md"

@@ -63,6 +63,7 @@ import { uiClick } from './sound'
 import type { GlobeOperation } from './WorldGlobe'
 import { unprojectScan } from '../game/geography'
 import { campaignBanner } from './campaignBanner'
+import { reviewKey } from './timelineKeys'
 
 const WorldGlobe = lazy(() => import('./WorldGlobe'))
 
@@ -458,12 +459,6 @@ function Timeline() {
     [setReview],
   )
 
-  const nudge = (hours: number) => {
-    const now = useWorldStore.getState().t
-    const next = at + hours * 3600
-    setReview(next >= now ? null : Math.max(now - DAY, next))
-  }
-
   return (
     <div className="wm-tl">
       <div
@@ -484,11 +479,9 @@ function Timeline() {
           if (e.currentTarget.hasPointerCapture(e.pointerId)) seek(e.clientX)
         }}
         onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft') nudge(-1)
-          else if (e.key === 'ArrowRight') nudge(1)
-          else if (e.key === 'Home') setReview(t - DAY)
-          else if (e.key === 'End') setReview(null)
-          else return
+          const next = reviewKey(e.key, useWorldStore.getState().t, review)
+          if (next === undefined) return
+          setReview(next)
           e.preventDefault()
         }}
       >

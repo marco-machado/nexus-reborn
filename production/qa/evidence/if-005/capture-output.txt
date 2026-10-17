@@ -1,0 +1,33 @@
+fixture node b-propellants cost 16000
+PASS AC8 Authorize disabled when Credits below cost
+PASS AC8 unaffordable reason visible // INSUFFICIENT CREDITS // 1 CR SHORT
+PASS AC19 node pointer: selects and shows details
+PASS AC19 node pointer: Credits and lab occupancy unchanged
+PASS AC19 node Enter: selects and shows details
+PASS AC19 node Enter: Credits and lab occupancy unchanged
+PASS AC19 node Space: selects and shows details
+PASS AC19 node Space: Credits and lab occupancy unchanged
+PASS AC19 Authorize pointer: control enabled
+PASS AC19 Authorize pointer: starts the project (lab occupied, debited) // {"credits":0,"labs":"{\"ballistics\":{\"id\":\"b-propellants\",\"startedT\":517.02,\"endT\":7717.02},\"cybernetics\":null,\"control\":null}","done":0}
+PASS AC19 Authorize pointer: Active state shown // ADVANCED PROPELLANTS // BALLISTICS // IN PROGRESS | IN PROGRESS
+PASS AC19 Authorize Enter: control enabled
+PASS AC19 Authorize Enter: starts the project (lab occupied, debited) // {"credits":0,"labs":"{\"ballistics\":{\"id\":\"b-propellants\",\"startedT\":611.0160000000002,\"endT\":7811.0160000000005},\"cybernetics\":null,\"control\":null}","done":0}
+PASS AC19 Authorize Enter: Active state shown // ADVANCED PROPELLANTS // BALLISTICS // IN PROGRESS | IN PROGRESS
+PASS AC19 Authorize Space: control enabled
+PASS AC19 Authorize Space: starts the project (lab occupied, debited) // {"credits":0,"labs":"{\"ballistics\":{\"id\":\"b-propellants\",\"startedT\":699.0120000000002,\"endT\":7899.012000000001},\"cybernetics\":null,\"control\":null}","done":0}
+PASS AC19 Authorize Space: Active state shown // ADVANCED PROPELLANTS // BALLISTICS // IN PROGRESS | IN PROGRESS
+PASS AC19 Left moves Review backward // review=255600 t=259200
+PASS AC19 Right moves Review forward (back to Live within a step)
+PASS AC19 Home selects the oldest point // t-review=86400
+PASS AC19 End returns Live
+PASS AC19 Review keys do not mutate Credits
+PASS AC19 Review keys do not rewind the live clock
+PASS AC18 pause modal open, focus inside // hud-btn pause
+PASS AC19 Pause: Tab stays trapped over 8 presses
+PASS AC19 Pause: Shift+Tab stays trapped over 8 presses
+PASS Settings open over pause
+PASS AC19 Settings: Tab/Shift+Tab stay trapped
+PASS AC18 nested Settings close: focus restored to the pause modal // hud-btn pause
+PASS AC19 Pause close: focus returns to the opening control // Pause and open the menu
+PASS no page or console errors
+ALL PASS
