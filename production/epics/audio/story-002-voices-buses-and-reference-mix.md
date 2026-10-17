@@ -1,12 +1,12 @@
 # Story 002: Voices, buses, and the reference mix
 
 > **Epic**: Audio
-> **Status**: Ready
+> **Status**: In Review
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-17
 
 ## Context
 
@@ -79,7 +79,7 @@
 **Required evidence**:
 - Visual/Feel: a listening-evidence note with the recorded settings and scenarios in `production/qa/evidence/`, plus a lead sign-off. Name the screens exercised (docs/click-through.md, Audio changes).
 
-**Status**: [ ] Not yet created
+**Status**: [x] Automated tests present (`src/game/audio.test.ts` AU-002 block, `src/game/audio.stings.test.ts`); listening-evidence note prepared at `production/qa/evidence/au-002/README.md` — listening and audio-director sign-off pending
 
 ---
 
@@ -87,3 +87,29 @@
 
 - Depends on: Story 001
 - Unlocks: Story 007
+
+---
+
+## Open for Sign-off
+**State (2026-10-17)**: automated tests, browser probe, listening-evidence note and code review are done; closure waits only on the listening pass and the audio-director sign-off, which only a person can give. `/story-done` verdict: NOT ASSESSED (AC-1 listening comparisons not yet evaluated; Visual/Feel sign-off row pending). No failing criterion.
+- **Review**: `/code-review` APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer. Engine specialist findings CLEAN; Testability GAPS (all advisory); ADR Compliance COMPLIANT with ADR-0017 (four buses, no fifth bus, threatLevel = HUD Alert on the combat bus); Architecture and SOLID CLEAN. The working-tree diff touches only tests and docs.
+- **Mutation Check**: Mutation check: skipped — Visual/Feel story
+- **Needs the user**: fill the Settings table (revision, browser/OS, output device), run scenarios 1-25 in `production/qa/evidence/au-002/README.md` at the reference mix, fill the Observed column, and record the audio-director sign-off; then `/story-done` this story.
+- **Criteria**:
+  - AC-1 automated parts covered: 20 voices exist and route to their buses, UI bus gain below combat bus gain (`src/game/audio.test.ts` AU-002 block); first contact, answered officer call and defend wave each request a sting, ordinary suspicion requests none and does not raise the drone (`src/game/audio.stings.test.ts`). Listening parts (weapon identities distinct, CorpSec quieter/narrower, interface below weapon reports at clip level, impacts/warnings readable) pending the listening pass.
+  - AC-2 covered: bounded stacking and finished one-shots disconnect (`src/game/audio.test.ts` 40-shot burst; browser probe peaked at 6 concurrent gun sources, all 18 started sources ended).
+- **Evidence note**: no screenshot retained; this is a listening story, so the listening-evidence note plus sign-off is the evidence the story's Test Evidence section names.
+- **Manifest**: story v2026-10-08 matches current control manifest v2026-10-08.
+- **Advisory findings (from `/code-review`)**:
+  - `src/game/audio.test.ts:1344`: `expect(guns.length).toBeLessThan(40)` is loose on its own; the cap is caught only indirectly through the agentHit/alertSting slot checks (MAX_COMBAT_VOICES=8). Export MAX_GUN_VOICES (or a getter) and assert `guns.length <= MAX_GUN_VOICES`.
+  - `src/game/audio.test.ts:1333`: the burst comment claims the per-weapon rate gate is exercised; it never fires (same key repeats every 0.3 s against a 0.025 s gap). Only the voice cap is exercised; reword the comment.
+  - `src/game/audio.test.ts:1324-1329`: the "interface below combat" check compares bus gains only (UI -3 dB vs combat -1.5 dB); clip-level ordering rests on listening rows 1-4 and 21.
+  - `src/game/audio.test.ts:1287`: the "selection / confirmation" cue fires confirmBlip, but `src/scene/Input.tsx` plays no cue on operative selection. Whether scene selection should click (GDD audio.md:20) is a design question for the Interface owner, not a confirmed defect.
+  - `src/game/audio.test.ts:1277`: "CorpSec quieter/narrower" is checked only by URL inequality; level/bandwidth rests on listening rows 16-20.
+  - `src/game/audio.stings.test.ts:78/102`: `droneRaised` only checks some level above 0; also assert `toHaveBeenLastCalledWith(useMissionStore.getState().alert)` to tie the drone to HUD Alert.
+  - `src/game/audio.stings.test.ts:22`: audioBridge is fully mocked, so the forwarding in `src/game/audioBridge.ts:40-42` and `:61-63` and the `gate('alert', 0.25)` admission (`src/game/audio.ts:310`) are not tested end to end (correct today by reading).
+  - `src/game/sfxClips.ts:63`: `WEAPONS` is a hand-kept copy beside the Record-typed GUN map (third copy at `src/game/audio.test.ts:22`); derive it from `Object.keys(GUN)`. The per-weapon toContain checks at `src/game/audio.test.ts:1278-1279` are near-tautological.
+  - `src/game/audio.ts:234-237`: the gun cap counts all combat-bus voices, so six or more active non-gun combat one-shots drop new gunfire; the reverse case has no test or comment.
+  - `production/qa/evidence/au-002/README.md:12`: browser-probe results are prose only; commit the probe snippet or a log, and record the real commit hash once the tests are committed (`src/game/audio.stings.test.ts` is untracked).
+  - `src/game/audio.stings.test.ts:126` duplicates the staging `put(w, a1, { x: 46.5, z: 85.5 })` from `src/game/world.test.ts:1614`; a shared helper would remove the duplication.
+- **Autonomous decisions logged**: specialist review answered from the workflow's `/code-review` record; Phase 7 close not taken (NOT ASSESSED cannot be closed without the owner, `scope_changes` always-ask).

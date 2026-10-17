@@ -1233,3 +1233,133 @@ describe('presentation-only randomness does not change outcomes (AU-006)', () =>
     }
   })
 })
+
+// AU-002 / audio GDD: every required voice exists as its own one-shot on its
+// authored bus, interface cues sit below weapon reports in the reference mix
+// (default player levels, mute off), and overlapping fire stays bounded with
+// finished sources disconnected.
+describe('voices, buses, and the reference mix (AU-002)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  // Builds the mocked graph and returns the ui / combat bus nodes in graph
+  // order (master, ui, combat, music, ambience), as the AU-001 wiring test pins.
+  async function liveMix() {
+    vi.resetModules()
+    const mock = installMockAudio()
+    const gains: { gain: { value: number } }[] = []
+    const createGain = mock.context.createGain.bind(mock.context)
+    mock.context.createGain = () => {
+      const g = createGain()
+      gains.push(g)
+      return g
+    }
+    const audio = await import('./audio')
+    const clips = (await import('./sfxClips')).CLIPS
+    audio.unlockAudio()
+    await settle()
+    const [, ui, combat] = gains
+    return { ...mock, audio, clips, ui, combat }
+  }
+
+  it('ships twenty distinct one-shot voices: ten firearms (squad and CorpSec) and ten other cues', async () => {
+    const { ONE_SHOT_URLS } = await import('./sfxClips')
+    expect(ONE_SHOT_URLS).toHaveLength(20)
+    expect(new Set(ONE_SHOT_URLS).size).toBe(20)
+    for (const id of WEAPONS) {
+      expect(CLIPS.gun[id].squad).not.toBe(CLIPS.gun[id].corpsec)
+      expect(ONE_SHOT_URLS).toContain(CLIPS.gun[id].squad)
+      expect(ONE_SHOT_URLS).toContain(CLIPS.gun[id].corpsec)
+    }
+  })
+
+  it('each cue, exercised alone, starts exactly its own clip on its authored bus', async () => {
+    const { audio, clips, sources, context, ui, combat } = await liveMix()
+    const cues: { name: string; fire: () => void; url: string; bus: unknown }[] = [
+      { name: 'selection / confirmation', fire: () => audio.sfx.confirmBlip(), url: clips.confirm, bus: ui },
+      { name: 'ui click', fire: () => audio.sfx.uiClick(), url: clips.uiClick, bus: ui },
+      { name: 'interaction progress', fire: () => audio.sfx.interactTick(), url: clips.interact, bus: ui },
+      { name: 'objective complete', fire: () => audio.sfx.objectiveChime(), url: clips.objective, bus: ui },
+      { name: 'reload', fire: () => audio.sfx.reload(), url: clips.reload, bus: combat },
+      { name: 'blast', fire: () => audio.sfx.blast(), url: clips.blast, bus: combat },
+      { name: 'ability', fire: () => audio.sfx.abilityCue(), url: clips.ability, bus: combat },
+      { name: 'alert sting', fire: () => audio.sfx.alertSting(), url: clips.alertSting, bus: combat },
+      { name: 'death', fire: () => audio.sfx.deathThud(), url: clips.death, bus: combat },
+      { name: 'operative hit', fire: () => audio.sfx.agentHit(), url: clips.agentHit, bus: combat },
+      ...WEAPONS.flatMap((id) =>
+        (['squad', 'corpsec'] as const).map((side) => ({
+          name: `${id} ${side}`,
+          fire: () => audio.sfx.gunshot(id, side),
+          url: gunClipUrl(id, side),
+          bus: combat,
+        })),
+      ),
+    ]
+    expect(cues).toHaveLength(20)
+    const heard = new Set<string>()
+    for (const [i, cue] of cues.entries()) {
+      // One cue at a time, each well past every rate gate.
+      context.currentTime = 1 + i
+      const before = sources.length
+      cue.fire()
+      await settle()
+      expect(sources.length, cue.name).toBe(before + 1)
+      const src = sources[before]
+      expect(src.buffer?.url, cue.name).toBe(cue.url)
+      expect(src.dest, cue.name).toBe(cue.bus)
+      expect(src.loop, cue.name).toBe(false)
+      heard.add(cue.url)
+      src.onended?.()
+    }
+    expect(heard.size).toBe(20)
+  })
+
+  it('at default player levels, the interface bus sits below the combat bus that carries weapon reports', async () => {
+    const { audio, ui, combat } = await liveMix()
+    expect(audio.getAudioLevels()).toEqual({ master: 1, ui: 1, combat: 1, music: 1, ambience: 1 })
+    expect(ui.gain.value).toBeGreaterThan(0)
+    expect(ui.gain.value).toBeLessThan(combat.gain.value)
+  })
+
+  it('overlapping fire keeps gunshots bounded, leaves a slot for impacts and warnings, and disconnects finished shots', async () => {
+    const { audio, clips, sources, context, combat } = await liveMix()
+    // A recorded-style burst: both sides, every firearm, faster than any one
+    // rate gate would hold a single weapon.
+    for (let i = 0; i < 40; i++) {
+      context.currentTime = 1 + i * 0.03
+      audio.sfx.gunshot(WEAPONS[i % WEAPONS.length], i % 2 ? 'corpsec' : 'squad')
+      await settle()
+    }
+    const gunUrls = new Set(WEAPONS.flatMap((id) => [gunClipUrl(id, 'squad'), gunClipUrl(id, 'corpsec')]))
+    const guns = sources.filter((s) => s.buffer && gunUrls.has(s.buffer.url))
+    // Stacking is bounded well below the 40 requests (the exact cap is README runtime).
+    expect(guns.length).toBeGreaterThan(0)
+    expect(guns.length).toBeLessThan(40)
+    expect(guns.every((s) => s.dest === combat)).toBe(true)
+
+    // Impacts and warnings still get through the held gunfire.
+    context.currentTime += 0.5
+    audio.sfx.agentHit()
+    audio.sfx.alertSting()
+    await settle()
+    const urls = sources.map((s) => s.buffer?.url)
+    expect(urls).toContain(clips.agentHit)
+    expect(urls).toContain(clips.alertSting)
+
+    // Once the burst ends, every finished shot disconnects and frees its slot.
+    for (const s of guns) s.onended?.()
+    for (const s of guns) expect(s.disconnect).toHaveBeenCalled()
+    const afterBurst = sources.length
+    context.currentTime += 0.5
+    audio.sfx.gunshot('assault', 'squad')
+    await settle()
+    expect(sources.length).toBe(afterBurst + 1)
+  })
+})

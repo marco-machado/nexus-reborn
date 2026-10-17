@@ -156,10 +156,10 @@ stories:
     name: "Voices, buses, and the reference mix"
     file: "production/epics/audio/story-002-voices-buses-and-reference-mix.md"
     priority: nice-to-have
-    status: backlog
+    status: review
     owner: ""
     estimate_days: 0.4
-    blocker: ""
+    blocker: "listening pass and audio-director sign-off (user)"
     completed: ""
   - id: "AU-007"
     name: "No celebration sting, spoken VO, or spatial shooter mix"
