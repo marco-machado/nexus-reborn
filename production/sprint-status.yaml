@@ -138,10 +138,10 @@ stories:
     name: "Rain follows live weather; Alert tension drone"
     file: "production/epics/audio/story-004-rain-follows-live-weather-and-alert-tension-drone.md"
     priority: should-have
-    status: backlog
+    status: review
     owner: ""
     estimate_days: 0.4
-    blocker: ""
+    blocker: "listening pass and audio-director sign-off (user)"
     completed: ""
   - id: "AU-006"
     name: "Presentation-only randomness does not change outcomes"

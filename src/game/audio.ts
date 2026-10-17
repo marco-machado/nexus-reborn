@@ -490,9 +490,14 @@ export function stopStrategyBed(): void {
 function startRainVoice(live: Live, bed: Bed, kind: 'light' | 'heavy'): void {
   const gen = missionGen
   void decodeClip(live.c, rainClipUrl(kind)).then((buf) => {
-    if (!buf || ctx !== live.c || gen !== missionGen || missionBed !== bed) return
+    if (ctx !== live.c || gen !== missionGen || missionBed !== bed) return
     if (bed.rainWant !== kind) return
     if (bed.rains.some((v) => v.kind === kind)) return
+    // Missing clip: drop the stale voice so the old intensity does not linger.
+    if (!buf) {
+      fadeOutRain(bed, kind)
+      return
+    }
     try {
       const gain = live.c.createGain()
       gain.gain.value = 0.0001
@@ -500,10 +505,13 @@ function startRainVoice(live: Live, bed: Bed, kind: 'light' | 'heavy'): void {
       const now = live.c.currentTime
       const src = loopedSource(live, buf, gain, now)
       gain.gain.exponentialRampToValueAtTime(missionRainGain(kind), now + RAIN_FADE)
+      // Crossfade only once the new loop is playing: the old voice keeps
+      // hissing through the fetch + decode, so a front never leaves a gap.
+      fadeOutRain(bed, kind)
       bed.rains.push({ kind, src, gain })
       bed.srcs.push(src)
     } catch {
-      // fail silent
+      fadeOutRain(bed, kind)
     }
   })
 }
@@ -533,10 +541,13 @@ function applyMissionWeather(weather: Weather): void {
   const want: 'light' | 'heavy' | null = weather === 'none' ? null : weather
   const bed = missionBed
   bed.rainWant = want
-  fadeOutRain(bed, want)
-  if (!want) return
+  if (!want) {
+    fadeOutRain(bed, null)
+    return
+  }
   const current = bed.rains.find((v) => v.kind === want)
   if (current) {
+    fadeOutRain(bed, want)
     const now = live.c.currentTime
     const g = current.gain.gain
     g.cancelScheduledValues(now)

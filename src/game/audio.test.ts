@@ -501,6 +501,217 @@ describe('bed lifetimes (AU-003)', () => {
   })
 })
 
+// AU-004 / TR-audio-002 / audio GDD `rain_voice` and `alert_tension`: rain
+// follows live weather (none silent, light/heavy the matching recording,
+// adjacent change crossfades, stops with the mission bed and never restarts
+// after departure); the synthesized drone is silent at Alert 0, ramps with
+// Alert 1–3 on the combat bus, releases on mission end, and a rise inside the
+// release tail reuses the one layer instead of stacking a second.
+describe('rain voice and alert-tension drone (AU-004)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 40; i++) await Promise.resolve()
+  }
+
+  const SILENT = 0.001
+
+  type Voice = { buffer: { url: string } | null; dest: unknown; stop: ReturnType<typeof vi.fn> }
+  const voiceFor = (sources: Voice[], url: string): Voice | undefined =>
+    sources.find((s) => s.buffer?.url === url)
+  const gainOf = (v: Voice): number => (v.dest as { gain: { value: number } }).gain.value
+
+  it('crossfades light → heavy at a front and fades rain out when weather turns none', async () => {
+    vi.resetModules()
+    const { started, sources } = installMockAudio()
+    const audio = await import('./audio')
+    const { CLIPS: clips } = await import('./sfxClips')
+    audio.startMissionBed()
+    audio.setMissionBedWeather('light')
+    await vi.waitFor(() => {
+      expect(started.some((s) => s.url === clips.rainLight && s.loop)).toBe(true)
+    })
+    const light = voiceFor(sources, clips.rainLight)!
+    expect(gainOf(light)).toBeGreaterThan(SILENT)
+
+    audio.setMissionBedWeather('heavy')
+    await vi.waitFor(() => {
+      expect(started.some((s) => s.url === clips.rainHeavy && s.loop)).toBe(true)
+    })
+    const heavy = voiceFor(sources, clips.rainHeavy)!
+    // Crossfade: the light loop ramps to silence and stops on its fade tail
+    // (a scheduled time after now), not an instant cut; heavy ramps in.
+    expect(gainOf(light)).toBeLessThan(SILENT)
+    expect(light.stop).toHaveBeenCalledTimes(1)
+    expect(light.stop.mock.calls[0][0]).toBeGreaterThan(0)
+    expect(gainOf(heavy)).toBeGreaterThan(SILENT)
+    expect(heavy.stop).not.toHaveBeenCalled()
+
+    audio.setMissionBedWeather('none')
+    expect(gainOf(heavy)).toBeLessThan(SILENT)
+    expect(heavy.stop).toHaveBeenCalledTimes(1)
+    await settle()
+    // None is silence, not a third loop: exactly the two rain voices ever ran.
+    expect(started.filter((s) => s.url.includes('rain-'))).toHaveLength(2)
+  })
+
+  it('keeps heavy rain playing until a slow-loading light clip starts (no gap at a front)', async () => {
+    vi.resetModules()
+    const { CLIPS: clips } = await import('./sfxClips')
+    const { started, sources, release, fetched } = installMockAudio((u) => u === clips.rainLight)
+    const audio = await import('./audio')
+    audio.startMissionBed()
+    audio.setMissionBedWeather('heavy')
+    await vi.waitFor(() => {
+      expect(started.some((s) => s.url === clips.rainHeavy && s.loop)).toBe(true)
+    })
+    const heavy = voiceFor(sources, clips.rainHeavy)!
+    const heavyGain = gainOf(heavy)
+    expect(heavyGain).toBeGreaterThan(SILENT)
+
+    // Glass Veil's front: heavy -> light while rain-light is still loading.
+    audio.setMissionBedWeather('light')
+    await vi.waitFor(() => {
+      expect(fetched).toContain(clips.rainLight)
+    })
+    await settle()
+    expect(started.some((s) => s.url === clips.rainLight)).toBe(false)
+    expect(heavy.stop).not.toHaveBeenCalled()
+    expect(gainOf(heavy)).toBe(heavyGain)
+
+    release(clips.rainLight)
+    await vi.waitFor(() => {
+      expect(started.some((s) => s.url === clips.rainLight && s.loop)).toBe(true)
+    })
+    const light = voiceFor(sources, clips.rainLight)!
+    expect(gainOf(light)).toBeGreaterThan(SILENT)
+    // Heavy fades on a scheduled tail only once light is playing.
+    expect(gainOf(heavy)).toBeLessThan(SILENT)
+    expect(heavy.stop).toHaveBeenCalledTimes(1)
+    expect(heavy.stop.mock.calls[0][0]).toBeGreaterThan(0)
+  })
+
+  it('applies live weather that changed while the mission bed was still loading', async () => {
+    vi.resetModules()
+    const { started, release, fetched } = installMockAudio((url) => url.includes('mission-bed'))
+    const audio = await import('./audio')
+    const { CLIPS: clips } = await import('./sfxClips')
+    audio.startMissionBed()
+    await settle()
+    audio.setMissionBedWeather('heavy')
+    const bedUrl = fetched.find((u) => audio.MISSION_BED_URLS.includes(u))!
+    release(bedUrl)
+    await vi.waitFor(() => {
+      expect(started.some((s) => s.url === clips.rainHeavy && s.loop)).toBe(true)
+    })
+    expect(started.some((s) => s.url === clips.rainLight)).toBe(false)
+  })
+
+  it('leaving the mission while rain is loading never starts the late rain loop', async () => {
+    vi.resetModules()
+    const { started, release, fetched } = installMockAudio((url) => url.includes('rain-'))
+    const audio = await import('./audio')
+    const { CLIPS: clips } = await import('./sfxClips')
+    audio.startMissionBed()
+    audio.setMissionBedWeather('heavy')
+    await vi.waitFor(() => {
+      expect(fetched).toContain(clips.rainHeavy)
+    })
+    audio.stopMissionBed()
+    release(clips.rainHeavy)
+    await settle()
+    expect(started.some((s) => s.url.includes('rain-'))).toBe(false)
+  })
+
+  it('leaving while rain plays stops it, and a later weather change does not restart it', async () => {
+    vi.resetModules()
+    const { started, sources } = installMockAudio()
+    const audio = await import('./audio')
+    const { CLIPS: clips } = await import('./sfxClips')
+    audio.startMissionBed()
+    audio.setMissionBedWeather('light')
+    await vi.waitFor(() => {
+      expect(started.some((s) => s.url === clips.rainLight && s.loop)).toBe(true)
+    })
+    audio.stopMissionBed()
+    expect(voiceFor(sources, clips.rainLight)!.stop).toHaveBeenCalled()
+    audio.setMissionBedWeather('heavy')
+    await settle()
+    expect(started.filter((s) => s.url.includes('rain-'))).toHaveLength(1)
+    expect(started.some((s) => s.url === clips.rainHeavy)).toBe(false)
+  })
+
+  function trackDrone(context: ReturnType<typeof installMockAudio>['context']) {
+    const gains: { gain: { value: number }; dest: unknown }[] = []
+    let oscillators = 0
+    const createGain = context.createGain.bind(context)
+    const createOsc = context.createOscillator.bind(context)
+    context.createGain = () => {
+      const g = createGain()
+      gains.push(g)
+      return g
+    }
+    context.createOscillator = () => {
+      oscillators += 1
+      return createOsc()
+    }
+    return { gains, oscillators: () => oscillators }
+  }
+
+  it('Alert 0 builds no drone; Alert 1–3 ramps one drone layer on the combat bus', async () => {
+    vi.resetModules()
+    const { context } = installMockAudio()
+    const track = trackDrone(context)
+    const audio = await import('./audio')
+    audio.unlockAudio()
+    // Graph build order: master, ui, combat, music, ambience.
+    const combat = track.gains[2]
+    audio.sfx.threatLevel(0)
+    expect(track.oscillators()).toBe(0)
+    expect(track.gains).toHaveLength(5)
+
+    audio.sfx.threatLevel(1)
+    expect(track.oscillators()).toBe(2)
+    expect(track.gains).toHaveLength(6)
+    const drone = track.gains[5]
+    // gain -> combat bus; never the ambience or music bus.
+    expect(drone.dest).toBe(combat)
+    const at1 = drone.gain.value
+    expect(at1).toBeGreaterThan(SILENT)
+    audio.sfx.threatLevel(2)
+    const at2 = drone.gain.value
+    audio.sfx.threatLevel(3)
+    const at3 = drone.gain.value
+    expect(at2).toBeGreaterThan(at1)
+    expect(at3).toBeGreaterThan(at2)
+    // Ramping re-targets the one layer: no new oscillators or gains.
+    expect(track.oscillators()).toBe(2)
+    expect(track.gains).toHaveLength(6)
+  })
+
+  it('mission end releases the drone, and a rise in the release tail does not stack a layer', async () => {
+    vi.resetModules()
+    const { context } = installMockAudio()
+    const track = trackDrone(context)
+    const audio = await import('./audio')
+    audio.unlockAudio()
+    audio.sfx.threatLevel(3)
+    const drone = track.gains[5]
+    expect(drone.gain.value).toBeGreaterThan(SILENT)
+    // Result banner / Debrief / Abort all release through threatLevel(0).
+    audio.sfx.threatLevel(0)
+    expect(drone.gain.value).toBeLessThan(SILENT)
+    audio.sfx.threatLevel(2)
+    expect(drone.gain.value).toBeGreaterThan(SILENT)
+    expect(track.oscillators()).toBe(2)
+    expect(track.gains).toHaveLength(6)
+  })
+})
+
 // AU-005 / TR-audio-003: unavailable or late audio never blocks play and never
 // dumps as a delayed burst. The freshness window is read from the runtime
 // constant (audio README, "Runtime integration"), never restated here.

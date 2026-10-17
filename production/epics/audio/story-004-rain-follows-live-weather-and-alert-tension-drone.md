@@ -1,12 +1,12 @@
 # Story 004: Rain follows live weather; Alert tension drone
 
 > **Epic**: Audio
-> **Status**: Ready
+> **Status**: In Review
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: —
+> **Last Updated**: 2026-10-17
 
 ## Context
 
@@ -63,7 +63,7 @@
 
 #### AU-004 — Rain follows live weather; Alert tension drone (Visual/Feel)
 **Automated (where a seam exists)**:
-- `src/game/audio.beds.test.ts` (advisory, mocked graph): weather none → no rain source; light and heavy → the matching recording; adjacent change crossfades; leaving while rain loads does not restart it
+- `src/game/audio.test.ts` (advisory, mocked graph; planned as `audio.beds.test.ts`, placed beside the richer `installMockAudio` helper): weather none → no rain source; light and heavy → the matching recording; adjacent change crossfades; leaving while rain loads does not restart it
 - Alert 0 → drone silent; rises to 1–3 → drone ramps on the combat bus; mission end → released; a rise during the release tail does not stack a second layer
 **Verification**: evidence in `production/qa/evidence/au-004/`; sign-off: audio-director (lead sign-off)
 **Checklist**:
@@ -78,7 +78,7 @@
 **Required evidence**:
 - Visual/Feel: a listening-evidence note with the recorded settings and scenarios in `production/qa/evidence/`, plus a lead sign-off. Name the screens exercised (docs/click-through.md, Audio changes).
 
-**Status**: [ ] Not yet created
+**Status**: [ ] Listening pass pending — template at `production/qa/evidence/au-004/README.md` (scenarios 1-8 and 4b not run; audio-director sign-off pending). Automated: `src/game/audio.test.ts` AU-004 block, 7 tests.
 
 ---
 
@@ -86,3 +86,13 @@
 
 - Depends on: Story 003
 - Unlocks: None
+
+---
+
+## Open for Sign-off
+**State (2026-10-17)**: code, tests and review done; closure waits only on the listening pass.
+- **Review**: CHANGES REQUIRED (listening scenario 4 named the wrong front) then, after fixes including a no-gap rain crossfade at fronts (`src/game/audio.ts`: the old voice keeps playing until the new clip has started), APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer.
+- **Mutation check**: FAILED AS EXPECTED — `src/game/audio.ts:389` drone routed to `live.ambience` instead of `live.combat` → "Alert 0 builds no drone; Alert 1–3 ramps one drone layer on the combat bus" failed; restored. Second check: restoring the early `fadeOutRain` makes the no-gap test fail.
+- **Needs the user**: run scenarios 1-8 and 4b in `production/qa/evidence/au-004/README.md`, fill the Observed column, and record the audio-director sign-off; then `/story-done` this story.
+- **Decision taken for the owner to confirm**: when a rain clip fails to load or its voice cannot be built, the previous rain recording fades out rather than holding its old intensity for the rest of the mission (the GDD only says unavailable audio must not block play). Reverse it in `src/game/audio.ts` `startRainVoice` if the old recording should hold.
+- **Advisories kept**: the two failure branches (`!buf`, `catch`) and a reversed front during a load have no test; stop-time assertions check `> 0` rather than `>= RAIN_FADE`; a throwing `loopedSource` leaves a connected gain behind.
