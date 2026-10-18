@@ -34,8 +34,8 @@
 
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
-- [ ] (AC2) GIVEN critical states selection, focus, injury/KIA, lock, objective, Alert, and result, WHEN each is shown, THEN each has a readable non-color cue. Hue, where used, follows living §12: teal for selection and live state, Ledger Amber for price and spend authorization only, red for danger, VIP Ice for the active objective. Nominal Green is not a tactical-feed cue.
-- [ ] (AC3) GIVEN Menu and Mission HUD captures, WHEN their styling is checked against living §12/§14, THEN both use the shared near-black ground, the reconciled semantic roles (teal selection, Ledger Amber price and spend authorization, red danger, VIP Ice active objective), monospace uppercase labels, primary values larger than labels, and technical borders. Record the observed elements and deviations; overall visual coherence is a recorded visual-review judgment, not an unnamed numeric gate.
+- [ ] (AC2) GIVEN critical states selection, focus, injury/KIA, lock, objective, Alert, and result, WHEN each is shown, THEN each has a readable non-color cue. Hue, where used, follows living §12: teal for selection and live state, Ledger Amber for money only (prices, credit balances and spend authorization), red for danger, VIP Ice for the active objective. Nominal Green is not a tactical-feed cue.
+- [ ] (AC3) GIVEN Menu and Mission HUD captures, WHEN their styling is checked against living §12/§14, THEN both use the shared near-black ground, the reconciled semantic roles (teal selection, Ledger Amber money: price, balance and spend authorization, red danger, VIP Ice active objective), monospace uppercase labels, primary values larger than labels, and technical borders. Record the observed elements and deviations; overall visual coherence is a recorded visual-review judgment, not an unnamed numeric gate.
 
 ---
 
@@ -65,7 +65,7 @@
 **Verification**: evidence in `production/qa/evidence/if-002/`; sign-off: art-director (lead sign-off)
 **Checklist**:
 - [ ] Per state: a screenshot pair (colour + greyscale) and one line naming the non-colour cue (label, pip, frame or copy)
-- [ ] Hue roles recorded against living §12: teal selection/live, Ledger Amber price and spend authorization only, red danger, VIP Ice active objective
+- [ ] Hue roles recorded against living §12: teal selection/live, Ledger Amber money only (price, balance and spend authorization), red danger, VIP Ice active objective
 - [ ] Menu and Mission HUD captures checked against §12/§14: shared near-black ground, monospace uppercase labels, primary values larger than labels, technical borders; list observed elements and deviations (coherence is a recorded judgment, not a numeric gate)
 **Edge cases**: Each of the 7 states (selection, focus, injury/KIA, lock, objective, Alert, result) shown once in colour and once with a greyscale filter (`filter: grayscale(1)`) — the cue must survive; Nominal Green must not appear as a tactical-feed cue
 
@@ -94,5 +94,6 @@
 - **Mutation check**: skipped — Visual/Feel story.
 - **Needs the owner**: art-director sign-off; then `/story-done` this story.
 - **Advisory review (2026-10-18)**: art-director agent, APPROVED WITH CONDITIONS (advisory, non-blocking). All six conditions addressed the same day: focus is the P-04 corner-bracket set; the injured bar has a 2px Red Hot dashed outline; Alert adds a bold framed word and a screen-edge glow; the lost banner title prints in Print White; Ledger Amber is off the seven recorded elements; Collateral follows hud.md E4 (ink, count only) and Credits print Ledger Amber with `CR`. Re-captured ALL PASS, including focus sweeps, the minimap palette and high contrast. Remaining amber outside price on other surfaces is listed in the evidence file.
-- **Advisories kept**: teal/red rgba literals in `src/ui/ui.css` extend an existing pattern but drift from ADR-0017's tokens-only rule and do not follow high-contrast mode (the 2026-10-18 fixes add more of the same); a unit with maxHp 0 now reads ok rather than low.
+- **Advisory review 2 (2026-10-18)**: art-director agent, APPROVED WITH CONDITIONS (advisory, non-blocking). All seven conditions addressed the same day: the edge glow pulses at about 2 Hz and is softer; the lost banner carries the failed-objective cross; main-menu.md records the Signal Cyan primary CTA; §12, §14 and interface Rule 4 now allow credit balances in Ledger Amber; new colour literals use palette tokens; the minimap check isolates the objective pulse (and showed the earlier check was a false positive). Re-captured ALL PASS.
+- **Advisories kept**: a unit with maxHp 0 now reads ok rather than low. (Resolved 2026-10-18: the teal/red rgba literals this story added are now `color-mix()` of the palette tokens and follow high-contrast mode.)
 - **Also fixed while re-running the IF-001 sweep**: World Network influence buttons spilled "10P UNAFFORDABLE" past their frame at 125% (from IF-004); `.wm-act-sub` now wraps. Sweep ALL SURFACES CLEAN.

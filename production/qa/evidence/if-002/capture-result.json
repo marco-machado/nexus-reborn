@@ -39,7 +39,7 @@
     },
     "result-lost": {
       "ok": true,
-      "cue": "banner prints \"SQUAD ELIMINATED CONTRACT TERMINATED\"; title contrast 17.7:1",
+      "cue": "banner prints \"SQUAD ELIMINATED CONTRACT TERMINATED\" + failed cross mark; title contrast 17.7:1",
       "ratio": 17.719952075745358
     }
   },
@@ -75,7 +75,9 @@
   },
   "minimap": {
     "ok": true,
-    "vipPixels": 1000,
-    "amberPixels": 0
+    "pulsePixels": 24,
+    "steadyVipPixels": 0,
+    "amberPixels": 0,
+    "frames": 14
   }
 }

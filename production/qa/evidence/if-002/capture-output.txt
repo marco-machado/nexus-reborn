@@ -7,11 +7,11 @@ PASS 05 objective: non-colour cue -- "REACH THE CHECKPOINT GATE" prints token "A
 PASS 06 injury-kia: non-colour cue -- injured card: pips at 20% + health bar framed 2px dashed + "22/110" + "+ INJURED"; KIA card: skull glyph + "FLATLINED" + struck-through name
 PASS 07 alert: non-colour cue -- prints "||| ALERT: 2 |||" bold (700) in a 2px frame, blinking bars, edge glow on
 PASS 10 collateral-credits: non-colour cue -- chip "COLLATERAL 2" in rgb(184, 216, 207) (ink #b8d8cf); credits "128,450 CR" in rgb(255, 208, 117)
-PASS minimap: VIP Ice objective pulse drawn, no amber -- {"ok":true,"vipPixels":1000,"amberPixels":0}
+PASS minimap: VIP Ice objective pulse animates, no amber -- {"ok":true,"pulsePixels":24,"steadyVipPixels":0,"amberPixels":0,"frames":14}
 PASS 11 high-contrast: non-colour cue -- high contrast on: Alert frame 2px, injured bar dashed, selection double
 PASS focus sweep mission-hud: brackets on every stop -- 29 stops
 PASS Mission HUD: no Nominal Green cue -- none painted
 PASS 08 result-won: non-colour cue -- banner prints "CONTRACT FULFILLED EXTRACTION CONFIRMED"; title contrast 14.5:1
-PASS 09 result-lost: non-colour cue -- banner prints "SQUAD ELIMINATED CONTRACT TERMINATED"; title contrast 17.7:1
+PASS 09 result-lost: non-colour cue -- banner prints "SQUAD ELIMINATED CONTRACT TERMINATED" + failed cross mark; title contrast 17.7:1
 PASS no page errors
 ALL PASS

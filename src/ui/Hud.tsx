@@ -41,18 +41,20 @@ const firstKey = (id: BindingId): string => BINDINGS.find((b) => b.id === id)?.k
 
 // Objective mark: the shape carries the state (IF-002) and hue only
 // reinforces it. Active is a VIP Ice triangle, done a teal check, failed a
-// red cross, pending an empty box.
-function ObjMark(props: { state: ObjectiveCue }) {
+// red cross, pending an empty box. The lost result banner reuses the failed
+// mark at banner scale (className).
+function ObjMark(props: { state: ObjectiveCue; className?: string }) {
+  const cls = props.className ?? 'hud-obj-mark'
   if (props.state === 'active') {
     return (
-      <svg viewBox="0 0 12 12" className="hud-obj-mark" aria-hidden="true">
+      <svg viewBox="0 0 12 12" className={cls} aria-hidden="true">
         <polygon points="3,1.5 10,6 3,10.5" fill={VIP} />
       </svg>
     )
   }
   const stroke = props.state === 'done' ? TEAL : props.state === 'failed' ? RED_HOT : INK_DIM_A7
   return (
-    <svg viewBox="0 0 12 12" className="hud-obj-mark" aria-hidden="true">
+    <svg viewBox="0 0 12 12" className={cls} aria-hidden="true">
       <rect
         x="1.5"
         y="1.5"
@@ -603,6 +605,9 @@ export default function Hud() {
         <div className="hud-banner-wrap" aria-live="polite">
           <div className={'hud-banner ' + result}>
             <div className="hud-banner-title">
+              {/* Lost carries the failed-objective cross, so failure differs
+                  from won by shape as well as words (IF-002). */}
+              {result === 'lost' && <ObjMark state="failed" className="hud-banner-mark" />}
               {result === 'won' ? 'CONTRACT FULFILLED' : 'SQUAD ELIMINATED'}
             </div>
             <div className="hud-banner-sub">

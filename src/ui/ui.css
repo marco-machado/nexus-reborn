@@ -253,11 +253,11 @@
 .btn.teal:hover:not(:disabled) {
   color: var(--print-white);
   border-color: var(--teal);
-  box-shadow: 0 0 12px rgba(126, 240, 212, 0.2);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--teal) 20%, transparent);
 }
 
 /* An armed destructive button (Balance CLEAR): red plus the CONFIRM words. */
-.btn.armed { color: var(--red-hot); border-color: var(--red-hot); background: rgba(224, 75, 60, 0.12); }
+.btn.armed { color: var(--red-hot); border-color: var(--red-hot); background: color-mix(in srgb, var(--red) 12%, transparent); }
 
 .btn.wide { width: 100%; text-align: center; padding: 8px; flex: none; }
 
@@ -270,10 +270,10 @@
   border: 0;
   padding: 0;
   font: inherit;
-  background: linear-gradient(180deg, var(--teal), rgba(126, 240, 212, 0.3));
+  background: linear-gradient(180deg, var(--teal), color-mix(in srgb, var(--teal) 30%, transparent));
   clip-path: var(--cut);
   cursor: pointer;
-  filter: drop-shadow(0 0 16px rgba(126, 240, 212, 0.22));
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--teal) 22%, transparent));
   transition: filter 0.15s;
 }
 
@@ -283,7 +283,7 @@
   margin: 1px;
   clip-path: var(--cut);
   background:
-    linear-gradient(180deg, rgba(126, 240, 212, 0.2), rgba(126, 240, 212, 0.04) 55%, rgba(126, 240, 212, 0.11)),
+    linear-gradient(180deg, color-mix(in srgb, var(--teal) 20%, transparent), color-mix(in srgb, var(--teal) 4%, transparent) 55%, color-mix(in srgb, var(--teal) 11%, transparent)),
     var(--bg-panel-solid);
   color: var(--teal);
   letter-spacing: 0.3em;
@@ -294,28 +294,28 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.cta:hover:not(:disabled) { filter: drop-shadow(0 0 24px rgba(126, 240, 212, 0.4)); }
+.cta:hover:not(:disabled) { filter: drop-shadow(0 0 24px color-mix(in srgb, var(--teal) 40%, transparent)); }
 
 .cta:hover:not(:disabled) .cta-inner {
   color: var(--print-white);
   background:
-    linear-gradient(180deg, rgba(126, 240, 212, 0.34), rgba(126, 240, 212, 0.1) 55%, rgba(126, 240, 212, 0.18)),
+    linear-gradient(180deg, color-mix(in srgb, var(--teal) 34%, transparent), color-mix(in srgb, var(--teal) 10%, transparent) 55%, color-mix(in srgb, var(--teal) 18%, transparent)),
     var(--bg-panel-solid);
 }
 
 .cta.spend {
   background: linear-gradient(180deg, var(--amber-hot), #7a5514);
-  filter: drop-shadow(0 0 16px rgba(240, 180, 69, 0.28));
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--amber) 28%, transparent));
 }
 
 .cta.spend .cta-inner {
   background:
-    linear-gradient(180deg, rgba(240, 180, 69, 0.26), rgba(240, 180, 69, 0.05) 55%, rgba(240, 180, 69, 0.14)),
+    linear-gradient(180deg, color-mix(in srgb, var(--amber) 26%, transparent), color-mix(in srgb, var(--amber) 5%, transparent) 55%, color-mix(in srgb, var(--amber) 14%, transparent)),
     #141005;
   color: var(--amber-hot);
 }
 
-.cta.spend:hover:not(:disabled) { filter: drop-shadow(0 0 24px rgba(240, 180, 69, 0.5)); }
+.cta.spend:hover:not(:disabled) { filter: drop-shadow(0 0 24px color-mix(in srgb, var(--amber) 50%, transparent)); }
 
 .cta.spend:hover:not(:disabled) .cta-inner {
   color: #ffe9bd;
@@ -436,7 +436,7 @@
   color: var(--teal);
   border: 2px solid var(--teal);
   padding: 8px 7px;
-  background: linear-gradient(180deg, rgba(126, 240, 212, 0.12), rgba(126, 240, 212, 0.02));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--teal) 12%, transparent), color-mix(in srgb, var(--teal) 2%, transparent));
   cursor: default;
 }
 
@@ -937,8 +937,8 @@
 .wm-sector.sel {
   border-color: var(--line-strong);
   border-left: 2px solid var(--teal);
-  background: rgba(126, 240, 212, 0.08);
-  box-shadow: inset 0 0 16px rgba(126, 240, 212, 0.06);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--teal) 6%, transparent);
 }
 
 .wm-sector.locked { opacity: 0.5; cursor: default; }
@@ -955,7 +955,7 @@
 
 .wm-sector-glyph svg { width: 26px; height: 18px; display: block; }
 .wm-sector-glyph polygon { fill: rgba(126, 240, 212, 0.35); }
-.wm-sector.sel .wm-sector-glyph polygon { fill: rgba(126, 240, 212, 0.75); }
+.wm-sector.sel .wm-sector-glyph polygon { fill: color-mix(in srgb, var(--teal) 75%, transparent); }
 .wm-sector.locked .wm-sector-glyph polygon { fill: rgba(93, 125, 117, 0.4); }
 
 .wm-sector-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -1352,7 +1352,7 @@
   transition: border-color 0.12s, background 0.12s;
 }
 
-.wm-inset-chev:hover { border-color: var(--line-strong); background: rgba(126, 240, 212, 0.14); }
+.wm-inset-chev:hover { border-color: var(--line-strong); background: color-mix(in srgb, var(--teal) 14%, transparent); }
 .wm-inset-chev.l { left: 4px; }
 .wm-inset-chev.r { right: 4px; }
 
@@ -1408,7 +1408,7 @@
    teal. A running action gets a double frame plus the ACTIVE word. */
 .wm-act:hover:not(:disabled) {
   border-color: var(--line-strong);
-  background: rgba(126, 240, 212, 0.08);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
 }
 
 .wm-act:disabled { opacity: 0.55; cursor: default; }
@@ -1619,7 +1619,7 @@
   width: 2px;
   margin-left: -1px;
   background: var(--teal);
-  box-shadow: 0 0 8px rgba(126, 240, 212, 0.75);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--teal) 75%, transparent);
 }
 
 .wm-tl-handle::after {
@@ -1678,7 +1678,7 @@
 .wm-tbtn.on {
   color: var(--teal);
   border-color: var(--teal);
-  background: rgba(126, 240, 212, 0.14);
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
 }
 
 .wm-speed { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.14em; color: var(--ink-dim); }
@@ -1797,20 +1797,20 @@
 
 /* The target building is objective geometry: VIP Ice, not Ledger Amber (living
    §12, art bible §5.2). The heavier stroke, pulse and callout carry it. */
-.mb-target .face { fill: rgba(155, 232, 255, 0.1); stroke: var(--vip); stroke-width: 1.4; }
-.mb-target .side { fill: rgba(155, 232, 255, 0.05); stroke: rgba(155, 232, 255, 0.72); stroke-width: 1.2; }
-.mb-target .roof { fill: rgba(155, 232, 255, 0.22); stroke: var(--vip); stroke-width: 1.4; }
-.mb-target .floor { stroke: rgba(155, 232, 255, 0.4); stroke-width: 0.8; }
-.mb-target-win { fill: rgba(214, 245, 255, 0.82); }
+.mb-target .face { fill: color-mix(in srgb, var(--vip) 10%, transparent); stroke: var(--vip); stroke-width: 1.4; }
+.mb-target .side { fill: color-mix(in srgb, var(--vip) 5%, transparent); stroke: color-mix(in srgb, var(--vip) 72%, transparent); stroke-width: 1.2; }
+.mb-target .roof { fill: color-mix(in srgb, var(--vip) 22%, transparent); stroke: var(--vip); stroke-width: 1.4; }
+.mb-target .floor { stroke: color-mix(in srgb, var(--vip) 40%, transparent); stroke-width: 0.8; }
+.mb-target-win { fill: color-mix(in srgb, var(--vip) 82%, transparent); }
 
 .mb-target {
-  filter: drop-shadow(0 0 9px rgba(155, 232, 255, 0.5));
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--vip) 50%, transparent));
   animation: target-pulse 2.4s ease-in-out infinite;
 }
 
-.mb-callout { fill: none; stroke: rgba(155, 232, 255, 0.7); stroke-width: 1; }
+.mb-callout { fill: none; stroke: color-mix(in srgb, var(--vip) 70%, transparent); stroke-width: 1; }
 .mb-callout-dot { fill: none; stroke: var(--vip); stroke-width: 1.2; }
-.mb-callout-box rect { fill: rgba(4, 10, 9, 0.92); stroke: rgba(155, 232, 255, 0.55); }
+.mb-callout-box rect { fill: var(--bg-inset); stroke: color-mix(in srgb, var(--vip) 55%, transparent); }
 .mb-callout-box text { font-family: inherit; }
 .mb-callout-box text.label { fill: var(--ink-dim); font-size: 8px; letter-spacing: 0.9px; }
 .mb-callout-box text.name { fill: var(--vip); font-size: 10.5px; letter-spacing: 1px; }
@@ -1905,10 +1905,10 @@
    §5.2). Shape tells them apart: hatched square + ring + TARGET ZONE label,
    solid square, open circle. */
 .mb-tac-target { stroke: var(--vip); stroke-width: 0.6; }
-.mb-tac-device { fill: rgba(155, 232, 255, 0.85); stroke: rgba(155, 232, 255, 0.4); stroke-width: 0.3; }
+.mb-tac-device { fill: color-mix(in srgb, var(--vip) 85%, transparent); stroke: color-mix(in srgb, var(--vip) 40%, transparent); stroke-width: 0.3; }
 .mb-tac-vip { fill: none; stroke: var(--vip); stroke-width: 0.45; }
 .mb-tac-ring { fill: none; stroke-width: 0.45; stroke-dasharray: 1.4 1.2; }
-.mb-tac-ring.vip { stroke: rgba(155, 232, 255, 0.75); }
+.mb-tac-ring.vip { stroke: color-mix(in srgb, var(--vip) 75%, transparent); }
 .mb-tac-ring.teal { stroke: rgba(126, 240, 212, 0.6); }
 
 .mb-tac-svg .mb-route {
@@ -2225,8 +2225,8 @@
    and the − key carry it in greyscale. */
 .ts-row.sel {
   border-color: var(--teal);
-  background: rgba(126, 240, 212, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(126, 240, 212, 0.45);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teal) 45%, transparent);
 }
 
 /* row body inspects, the trailing key assigns */
@@ -2266,7 +2266,7 @@
 .ts-row-assign:hover:not(:disabled) { background: rgba(126, 240, 212, 0.16); color: #e8fbf2; }
 .ts-row-assign:disabled { color: var(--ink-faint); cursor: default; }
 .ts-row.sel .ts-row-assign { border-left-color: var(--line-strong); color: var(--teal); }
-.ts-row.sel .ts-row-assign:hover:not(:disabled) { background: rgba(126, 240, 212, 0.2); color: var(--print-white); }
+.ts-row.sel .ts-row-assign:hover:not(:disabled) { background: color-mix(in srgb, var(--teal) 20%, transparent); color: var(--print-white); }
 
 .ts-row-idx {
   grid-row: 1 / 3;
@@ -2342,7 +2342,7 @@
 .ts-bay.focus {
   --corner-c: var(--print-white);
   border-color: var(--teal);
-  box-shadow: inset 0 0 22px rgba(126, 240, 212, 0.07), 0 0 14px rgba(126, 240, 212, 0.12);
+  box-shadow: inset 0 0 22px color-mix(in srgb, var(--teal) 7%, transparent), 0 0 14px color-mix(in srgb, var(--teal) 12%, transparent);
 }
 
 .ts-bay.empty {
@@ -2935,8 +2935,8 @@
   color: var(--red-hot);
   font-weight: 700;
   border-color: var(--red-hot);
-  background: rgba(224, 75, 60, 0.18);
-  text-shadow: 0 0 10px rgba(224, 75, 60, 0.5);
+  background: color-mix(in srgb, var(--red) 18%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--red) 50%, transparent);
 }
 .hud-alert.hot .hud-alert-num { color: var(--print-white); }
 
@@ -2944,13 +2944,16 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  box-shadow: inset 0 0 0 3px var(--red-hot), inset 0 0 90px 18px rgba(224, 75, 60, 0.42);
-  animation: hud-edge-glow 1.6s ease-in-out infinite;
+  box-shadow: inset 0 0 0 3px var(--red-hot), inset 0 0 48px 8px color-mix(in srgb, var(--red) 30%, transparent);
+  animation: hud-edge-glow 0.25s ease-in-out infinite alternate;
 }
 
+/* Alarm pulses fast, about 2 Hz (art bible §4.5, §7.4); selection breathes
+   slow. The 3px rim holds steady so the cue never drops out; only the inner
+   glow pulses. Reduced motion freezes it at the full state. */
 @keyframes hud-edge-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  from { box-shadow: inset 0 0 0 3px var(--red-hot), inset 0 0 48px 8px color-mix(in srgb, var(--red) 30%, transparent); }
+  to { box-shadow: inset 0 0 0 3px var(--red-hot), inset 0 0 48px 8px color-mix(in srgb, var(--red) 12%, transparent); }
 }
 .hud-alert.hot .hud-alert-bars {
   color: var(--red);
@@ -2972,8 +2975,8 @@
 
 @keyframes hud-collateral-pulse {
   0% {
-    background: rgba(184, 216, 207, 0.26);
-    box-shadow: 0 0 10px rgba(184, 216, 207, 0.4);
+    background: color-mix(in srgb, var(--ink) 26%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--ink) 40%, transparent);
   }
   100% {
     background: var(--bg-inset);
@@ -3000,8 +3003,8 @@
    does not mark the clock. */
 .hud-btn.pause.on {
   color: var(--red-hot);
-  border-color: rgba(224, 75, 60, 0.5);
-  background: rgba(224, 75, 60, 0.1);
+  border-color: color-mix(in srgb, var(--red) 50%, transparent);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
 }
 
 .hud-btn.abort { color: var(--red-hot); border-color: rgba(224, 75, 60, 0.5); }
@@ -3046,7 +3049,7 @@
   /* Selection is a closed double ring (P-04, IF-002); teal reinforces it. */
   border-color: var(--teal);
   border-left-color: var(--teal);
-  background: rgba(126, 240, 212, 0.08);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
   outline: 3px double var(--teal);
   outline-offset: 1px;
 }
@@ -3138,7 +3141,7 @@
 .hud-agent-orders .chip.hud-injured { letter-spacing: 0.12em; }
 /* The 6px bar has no room for a heavy border, so the injured frame is a 2px
    dashed outline outside it, at Red Hot for the 3:1 stroke floor (§7.5). */
-.hud-hp.low { border-color: rgba(224, 75, 60, 0.6); outline: 2px dashed var(--red-hot); outline-offset: 1px; }
+.hud-hp.low { border-color: color-mix(in srgb, var(--red) 60%, transparent); outline: 2px dashed var(--red-hot); outline-offset: 1px; }
 
 /* stance line: hold ground on the left, fire discipline on the right */
 .hud-agent-orders { display: flex; gap: 4px; }
@@ -3317,14 +3320,14 @@ button.hud-slot {
 .hud-slot.ability.armed {
   color: var(--print-white);
   border-color: var(--teal);
-  background: rgba(126, 240, 212, 0.22);
-  box-shadow: inset 0 0 0 1px var(--teal), 0 0 12px rgba(126, 240, 212, 0.28);
+  background: color-mix(in srgb, var(--teal) 22%, transparent);
+  box-shadow: inset 0 0 0 1px var(--teal), 0 0 12px color-mix(in srgb, var(--teal) 28%, transparent);
 }
 
 .hud-slot.ability.cooldown {
   color: var(--ink-dim);
   border-color: var(--line);
-  background: linear-gradient(0deg, rgba(126, 240, 212, 0.05), rgba(4, 10, 9, 0.9));
+  background: linear-gradient(0deg, color-mix(in srgb, var(--teal) 5%, transparent), var(--bg-inset));
 }
 
 .hud-slot.ability.out-of-stock {
@@ -3500,6 +3503,7 @@ button.hud-slot {
 .hud-banner.lost .hud-banner-sub { color: var(--red-hot); }
 
 .hud-banner-title { font-size: clamp(28px, 3.4vw, 44px); letter-spacing: 0.3em; }
+.hud-banner-mark { width: 0.9em; height: 0.9em; margin-right: 0.45em; vertical-align: -0.08em; }
 .hud-banner-sub { font-size: calc(11px * var(--text-scale)); letter-spacing: 0.4em; margin-top: 8px; color: var(--ink); }
 
 /* pause menu: centered over the frozen scene. The backdrop takes pointer
@@ -3681,7 +3685,7 @@ button.hud-slot {
 
 /* A running project is live state: teal, not Ledger Amber (living §12). */
 .rs-lab.live { cursor: pointer; border-left-color: var(--teal); }
-.rs-lab.live:hover { background: rgba(126, 240, 212, 0.08); border-color: var(--line-strong); }
+.rs-lab.live:hover { background: color-mix(in srgb, var(--teal) 8%, transparent); border-color: var(--line-strong); }
 .rs-lab-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .rs-lab-top b { font-size: calc(9.5px * var(--text-scale)); letter-spacing: 0.14em; color: var(--cyan); }
 .rs-lab-top i { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.14em; }
@@ -3749,7 +3753,7 @@ button.hud-slot {
 
 .rs-node-glyph { color: var(--ink-dim); }
 .rs-node-lock { color: var(--ink-faint); }
-.rs-hex-fill { fill: rgba(126, 240, 212, 0.26); }
+.rs-hex-fill { fill: color-mix(in srgb, var(--teal) 26%, transparent); }
 .rs-hex-ring { fill: none; stroke: var(--cyan); stroke-width: 1; stroke-dasharray: 5 4; }
 
 .rs-node-label {
@@ -3776,7 +3780,7 @@ button.hud-slot {
 .rs-node.active .rs-hex {
   stroke: var(--teal);
   stroke-width: 2;
-  fill: rgba(9, 34, 30, 0.92);
+  fill: color-mix(in srgb, var(--teal) 12%, var(--bg-panel-solid));
   animation: rs-node-pulse 1.9s ease-in-out infinite;
 }
 
@@ -3814,7 +3818,7 @@ button.hud-slot {
 .rs-legend-item.researched { color: var(--green); }
 .rs-legend-item.researched i { background: rgba(125, 224, 138, 0.45); }
 .rs-legend-item.active { color: var(--print-white); }
-.rs-legend-item.active i { border: 2px solid var(--teal); background: rgba(126, 240, 212, 0.26); }
+.rs-legend-item.active i { border: 2px solid var(--teal); background: color-mix(in srgb, var(--teal) 26%, transparent); }
 .rs-legend-item.available { color: var(--teal); }
 .rs-legend-item.locked { color: var(--ink-faint); }
 .rs-legend-note { margin-left: auto; }

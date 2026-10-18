@@ -426,11 +426,11 @@ export function Research() {
             </div>
             <div className="kv">
               <span>COMMITTED CREDITS</span>
-              <b>{fmt(committed)} CR</b>
+              <b className="amber">{fmt(committed)} CR</b>
             </div>
             <div className="kv">
               <span>AVAILABLE CREDITS</span>
-              <b className="teal">{fmt(credits)} CR</b>
+              <b className="amber">{fmt(credits)} CR</b>
             </div>
           </Panel>
           <Panel title="LABORATORY STATUS" className="rs-labs" bodyClassName="rs-labs-body">

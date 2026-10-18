@@ -8,7 +8,7 @@ No sprint or epic files yet. Those are outputs of this phase, not inputs. Blocke
 
 ## Order
 
-1. Ledger Amber ruling — done in the design docs on 2026-10-05. Interface amber is price and spend authorization only.
+1. Ledger Amber ruling — done in the design docs on 2026-10-05. Interface amber is money only: price, credit balances and spend authorization (credit balances added 2026-10-18, IF-002).
 2. Traceability matrix — `docs/architecture/requirements-traceability.md` matches registry v6.
 3. CI — `.github/workflows/tests.yml` runs lint, test, and build. Tests stay colocated under `src/`; `tests/unit/` and `tests/integration/` hold example tests.
 4. Vertical slice — after the amber ruling, not before.

@@ -4,7 +4,7 @@
 > **Story Type**: Visual/Feel
 > **Date**: 2026-10-17; re-captured 2026-10-18 after the advisory-review fixes
 > **Tester**: Claude (headless Chrome for Testing, /dev-story, unattended workflow run)
-> **Build / Commit**: 7a38fcd + uncommitted advisory-review fixes
+> **Build / Commit**: cd98566 (IF-002 work and the Ledger Amber cleanup, committed together) + uncommitted fixes from advisory review 2: the 2 Hz edge glow, the lost-banner cross, colour literals moved onto palette tokens, credit balances in Ledger Amber, and the doc wording. The final re-capture (2026-10-18) is from that tree.
 > **Captures**: `production/qa/evidence/if-002/` (script `capture.mjs`, transcript `capture-output.txt`, facts `capture-result.json`)
 
 ---
@@ -34,18 +34,18 @@ Re-captured 2026-10-18 after the advisory-review fixes. All captures in `product
 | 04 | Selection | `04-selection-colour.png` / `04-selection-grey.png` | Closed double ring (`outline: 3px double`) plus a bracketed slot `[1]`. Two cards are shown, for multi-select. The `ACTIVE` corner tag is a word. | Teal. |
 | 05 | Objective | `05-objective-colour.png` / `05-objective-grey.png` | The active row has a triangle mark and the printed token `ACTIVE`. Done rows have a check, failed rows a cross plus struck-through text, pending rows an empty box. | VIP Ice `#9be8ff` on the row, the mark, the token, the progress bar, and the minimap pulse and defend ring. |
 | 06 | Injury / KIA | `06-injury-kia-colour.png` / `06-injury-kia-grey.png` | Injured (under 30% HP): health pips drop, the numeral prints (`22/110`), a `+ INJURED` chip shows, and the health bar gets a **2px dashed outline in Red Hot** outside the bar (was a 1px dashed border at 60% red, barely visible). KIA: skull glyph, `FLATLINED`, struck-through name and a faded card (P-09). | Red reinforces. |
-| 07 | Alert | `07-alert-colour.png` / `07-alert-grey.png` | Edge glow plus printed word (art bible §4.5, §7.5 #7). Hot, `ALERT: 2` prints bold in Print White inside a 2px Red Hot frame, the bars blink, and the screen edge carries a 3px red rim with a red inner glow (`.hud-edge-glow`, static under reduced motion). | Red. |
-| 08/09 | Result | `08-result-won-*.png`, `09-result-lost-*.png` | Banner words `CONTRACT FULFILLED // EXTRACTION CONFIRMED` and `SQUAD ELIMINATED // CONTRACT TERMINATED`. The lost title now prints in Print White (17.7:1 against the banner ground; the won title is 14.5:1); red carries failure on a 2px frame and the sub-line. | Teal for won; red frame and sub-line for lost. |
+| 07 | Alert | `07-alert-colour.png` / `07-alert-grey.png` | Edge glow plus printed word (art bible §4.5, §7.5 #7). Hot, `ALERT: 2` prints bold in Print White inside a 2px Red Hot frame, the bars blink, and the screen edge carries a steady 3px red rim with a red inner glow that pulses at about 2 Hz, the alarm cadence (art bible §7.4); 0.3 alpha, 48px blur (`.hud-edge-glow`, static at full strength under reduced motion). | Red. |
+| 08/09 | Result | `08-result-won-*.png`, `09-result-lost-*.png` | Banner words `CONTRACT FULFILLED // EXTRACTION CONFIRMED` and `SQUAD ELIMINATED // CONTRACT TERMINATED`. The lost title now prints in Print White (17.7:1 against the banner ground; the won title is 14.5:1); red carries failure on a 2px frame and the sub-line. The lost title opens with the failed-objective mark (a crossed box), so lost differs from won by shape as well as words. | Teal for won; red frame, sub-line and cross for lost. |
 | 10 | Collateral / Credits | `10-collateral-credits-*.png` | Collateral is the hud.md E4 chip: `COLLATERAL 2`, a count with no CR, in Telemetry Ink; the word carries it. Credits print `128,450 CR` (hud.md E5). | Collateral ink (not Ledger Amber). Credits Ledger Amber (art bible §4.1: money). |
 | 11 | High contrast | `11-high-contrast-*.png` | The same HUD under `:root.s-high-contrast`: the Alert frame, the injured dashed outline and the selection double ring all hold. | Unchanged. |
 
 **Focus sweep**: the script Tabs through the Menu (5 stops), the World Network (39) and the Mission HUD (29). Every stop draws the bracket set, or a 2px frame for a canvas / form field, or the dashed stroke for an SVG node, and no bracket set is cut off by its own element's overflow (`capture-result.json` → `focusSweep`).
 
-**Minimap**: sampled over 14 frames, the canvas has VIP Ice pixels and no Ledger Amber or old `DEVICE` amber pixels (`capture-result.json` → `minimap`). The VIP Ice count includes the objective pulse but does not isolate it from the VIP and DEVICE marks.
+**Minimap**: the check zooms the minimap fully out (it opens at its closest zoom, which leaves the objective zone off the canvas), samples 14 frames with the sim frozen, then restores the zoom. VIP Ice pixels that come and go between frames are the objective pulse; VIP Ice pixels in every frame would be static VIP / DEVICE marks. Result: 24 pulse pixels, 0 steady VIP Ice pixels (this mission shows no VIP or DEVICE mark), 0 amber pixels (`capture-result.json` → `minimap`). Correction: the earlier version of this check reported 1000 "VIP Ice" pixels, but its colour test also matched teal, so those were teal operatives, not the pulse.
 
 **Nominal Green**: none painted under `.hud-root` (`greenInHud: []`).
 
-I opened and viewed `02-focus-grey`, `03-lock-colour`, `07-alert-grey` and `09-result-lost-grey` from the 2026-10-18 runs and `06-injury-kia-grey` from the final run. The retained files are from the final run on the same code.
+I opened and viewed `02-focus-grey`, `06-injury-kia-grey`, `07-alert-grey` and `09-result-lost-grey` in earlier 2026-10-18 runs, the softer 2 Hz glow in `07-alert-colour` / `07-alert-grey` from a scratch run, and `09-result-lost-grey` and `03-lock-colour` from the final run. The retained files are from the final run.
 
 ---
 
@@ -59,7 +59,7 @@ I opened and viewed `02-focus-grey`, `03-lock-colour`, `07-alert-grey` and `09-r
 | Primary values larger than labels | Title over subtitle and status line | Credits value over its dim `CREDITS` label and `CR` suffix; ammo numerals over the weapon name; codename over name |
 | Technical borders | Hairline rules with tick marks; 1px Settings frame; chevron CTA | 1px panel frames with `corners`; double ring on selection |
 | Teal selection / live | Focus brackets teal; `NEW OPERATION` CTA Signal Cyan | Selection, ACTIVE tag, clock, live log lines, RELOADING / DRAWING, HOLD, DRAWN, TARGETING, running ability teal |
-| Ledger Amber for price and spend authorization only | No amber on the Menu | Credits only |
+| Ledger Amber for money only (price, balance and spend authorization) | No amber on the Menu | Credits only. Every credit balance on the Screens is now Ledger Amber too: the header chip, World Network Resource Pool, and Research available and committed credits (they were teal or ink). |
 | Red danger | n/a | Alert, edge glow, injury, KIA, lost frame, fire-discipline TIGHT, PAUSED |
 | VIP Ice active objective | n/a | Objective row and minimap pulse; DEVICE and VIP marks |
 
@@ -75,9 +75,9 @@ I opened and viewed `02-focus-grey`, `03-lock-colour`, `07-alert-grey` and `09-r
 6. World Network focused sector card (left list and right panel `FOCUS` chip, CONTROL reading), `.wm-land.focus`, and the clock-speed buttons and readout are teal. Research in-progress node, links, legend, lab card and progress readouts are teal.
 7. Collateral follows hud.md E4 (the 2026-09-29 decision recorded in hud.md: the spec follows the GDDs). Credits follow art bible §4.1 and hud.md E5.
 
-### Still Ledger Amber outside price (out of this story's list)
+### Still Ledger Amber outside money (out of this story's list)
 
-Found while making the changes above; not changed:
+Found while making the changes above and not changed in IF-002. A separate cleanup session has since changed these in the same working tree (uncommitted; it reports lint, test, build and the IF-001 sweep passing). That work is not part of this story's evidence, but the final captures include it (for example, Influence and the timeline in `03-lock-colour` are no longer amber).
 - Assembly: selected roster row (`.ts-row.sel`) and focused bay (`.ts-bay.focus`) are amber selection and focus; augment pin `ON`; role glyph; mass bar.
 - Brief: tactical target outline and callout, `PATROL CONTACTS`, and the map `DEVICE` square (`.mb-tac-device`, `#ffb300`).
 - World Network: Influence chip and points, `NO // NOT NEXUS-HELD`, unrest pressure, timeline handle / `NOW` / review date, feed amber lines, sector inset target and influence action cards.
@@ -111,7 +111,7 @@ This is an agent's review, not the lead sign-off. The lead row below stays pendi
 
 **Conditions (all non-blocking; all addressed 2026-10-18, see AC2, AC3 and the resolved list above)**:
 1. Replace the focus frame with the P-04 corner-bracket set. Art bible §4.5 and §7.5 make brackets binding.
-2. Palette follow-up: move Ledger Amber off the 7 recorded non-price elements. Start with the Menu CTA and the minimap `DEVICE` mark, which goes against art bible §5.2.
+2. Palette follow-up: move Ledger Amber off the 7 recorded non-money elements. Start with the Menu CTA and the minimap `DEVICE` mark, which goes against art bible §5.2.
 3. Design call on the Collateral chip (`hud.md` E4 says ink, count only, no CR). The chip is not in any capture, so the agent could not check it.
 4. Add the Alert edge glow, or brighten the Alert word, so it reads more strongly in greyscale.
 5. The HUD credits value is white, but art bible §4.1 assigns credits to Ledger Amber. Reconcile this together with condition 2.
@@ -132,14 +132,14 @@ This is an agent's review, not the lead sign-off. The lead row below stays pendi
 2. Amber off the seven elements: resolved where captured. `PAUSED` in red was not captured.
 3. Collateral: resolved (ink, count only, no CR).
 4. Alert: resolved. The framed bold word and the edge rim both read in greyscale.
-5. Credits: resolved against art bible §4.1. The §12 wording "price and spend authorization only" still conflicts with it.
+5. Credits: resolved against art bible §4.1. The §12 wording "price and spend authorization only" still conflicts with it. Resolved 2026-10-18: §12, §14 and interface.md Rule 4, the summary and AC2/AC3 now read "money: prices, credit balances and spend authorization".
 6. Partly resolved. High contrast holds. The minimap check does not isolate the objective pulse from the VIP and DEVICE marks.
 
 **AC2**: all states read in greyscale, hue roles match §12, and there is no green on the HUD. Won and lost differ in greyscale only by their words.
 
 **AC3**: Menu and Mission HUD read as one terminal. The teal Menu CTA keeps clear hierarchy over the hueless Settings button.
 
-**New conditions (all non-blocking)**:
+**New conditions (all non-blocking; 1, 2 and 5 addressed 2026-10-18, see AC2 rows 07 and 08/09; 3 addressed in main-menu.md and 4 in the GDD wording; 6: the 62 rgba literals added since 7a38fcd, and the 3 from 06420c7, are now `color-mix()` of the palette tokens, so they follow high-contrast remaps; 7: the minimap check now isolates the pulse; all 2026-10-18)**:
 1. The edge glow breathes on a 1.6 s cycle, which is selection's cadence. The art bible says alarm pulses fast (~2 Hz). Speed it up, or make it static and let the blinking bars carry the motion.
 2. The edge glow is loud (`inset 0 0 90px 18px`, 0.42 alpha) and tints the left void and the squad-panel edge. Consider about 0.3 alpha and a shorter blur.
 3. main-menu.md says New Operation has "no hue assigned". Reconcile it with the teal primary `<< NEW OPERATION >>`, or record a decision.

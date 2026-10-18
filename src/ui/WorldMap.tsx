@@ -1007,7 +1007,7 @@ export function WorldMap() {
         <Panel title="RESOURCE POOL" className="wm-pool">
           <div className="kv">
             <span>CREDITS</span>
-            <b className="teal">{fmt(credits)} CR</b>
+            <b className="amber">{fmt(credits)} CR</b>
           </div>
           <div className="kv">
             <span>INFLUENCE</span>

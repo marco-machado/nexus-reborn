@@ -291,27 +291,52 @@ await shoot('10', 'collateral-credits', () => {
   }
 })
 
-// Minimap: sample the canvas for VIP Ice (the active-objective pulse) and for
-// any Ledger Amber / old DEVICE amber pixel.
+// Minimap: the sim is frozen, so every unit and mark holds still and the only
+// thing that changes between frames is the expanding objective pulse. Pixels
+// that are VIP Ice in some frames and not in others are the pulse; VIP Ice
+// pixels present in every frame are the static VIP / DEVICE marks. Also check
+// no Ledger Amber or old DEVICE amber pixel appears in any frame.
+// The minimap opens at its closest zoom, which can leave the objective zone
+// off the canvas; zoom fully out to sample, then restore the zoom.
+const mmOut = page.locator('[aria-label="Zoom minimap out"]')
+while (await mmOut.isEnabled()) {
+  await mmOut.click()
+  await wait(150)
+}
 report.minimap = await page.evaluate(async () => {
   const c = document.querySelector('.minimap-canvas')
   if (!c) return { ok: false }
   const g = c.getContext('2d')
-  let vip = 0
+  const isVip = (r, gg, b) => b > 150 && gg > 150 && r < gg - 40 && b > r + 40 && b >= gg - 10
+  const n = c.width * c.height
+  const seen = new Uint8Array(n)
+  let frames = 0
   let amber = 0
   for (let k = 0; k < 14; k++) {
     const d = g.getImageData(0, 0, c.width, c.height).data
-    for (let i = 0; i < d.length; i += 4) {
+    for (let i = 0, px = 0; i < d.length; i += 4, px++) {
       const [r, gg, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]]
       if (a < 40) continue
-      if (b > 150 && gg > 150 && r < gg - 40 && b > r + 40) vip++
+      if (isVip(r, gg, b)) seen[px]++
       if (r > 180 && gg > 120 && gg < 215 && b < 110 && r > b + 90) amber++
     }
+    frames++
     await new Promise((res) => setTimeout(res, 100))
   }
-  return { ok: vip > 0 && amber === 0, vipPixels: vip, amberPixels: amber }
+  let pulse = 0
+  let steady = 0
+  for (let px = 0; px < n; px++) {
+    if (seen[px] === frames) steady++
+    else if (seen[px] > 0) pulse++
+  }
+  return { ok: pulse > 0 && amber === 0, pulsePixels: pulse, steadyVipPixels: steady, amberPixels: amber, frames }
 })
-check('minimap: VIP Ice objective pulse drawn, no amber', report.minimap.ok, JSON.stringify(report.minimap))
+check('minimap: VIP Ice objective pulse animates, no amber', report.minimap.ok, JSON.stringify(report.minimap))
+const mmIn = page.locator('[aria-label="Zoom minimap in"]')
+while (await mmIn.isEnabled()) {
+  await mmIn.click()
+  await wait(150)
+}
 
 // High contrast: the same HUD (injured, KIA, Alert, Collateral) under
 // :root.s-high-contrast, in colour and greyscale.
@@ -364,7 +389,10 @@ for (const [n, r] of [['08', 'won'], ['09', 'lost']]) {
     }
     const title = b?.querySelector('.hud-banner-title')
     const ratio = title ? (lum(getComputedStyle(title).color) + 0.05) / (lum('rgb(4, 10, 9)') + 0.05) : 0
-    return { ok: /CONTRACT FULFILLED|SQUAD ELIMINATED/.test(t) && ratio >= 12, cue: `banner prints "${t}"; title contrast ${ratio.toFixed(1)}:1`, ratio }
+    // Lost also carries the failed-objective cross, so it differs from won by shape.
+    const mark = !!b?.querySelector('.hud-banner-mark')
+    const markOk = b?.classList.contains('lost') ? mark : !mark
+    return { ok: /CONTRACT FULFILLED|SQUAD ELIMINATED/.test(t) && ratio >= 12 && markOk, cue: `banner prints "${t}"${mark ? ' + failed cross mark' : ''}; title contrast ${ratio.toFixed(1)}:1`, ratio }
   })
 }
 

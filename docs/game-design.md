@@ -776,7 +776,7 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 - DOM around and over the 3D scene.
 - Near-black ground for contrast.
-- Teal for selection and live state. Ledger Amber for price and spend authorization only — not focus, not the active objective, not Settings ON, not a running clock. Red for danger, locks, damage, and failure. The active objective is VIP Ice plus a printed token. Nominal Green confirms the machine in terminal chrome only, not on the tactical feed.
+- Teal for selection and live state. Ledger Amber for money only — prices, credit balances and spend authorization (art bible §4.1) — not focus, not the active objective, not Settings ON, not a running clock. Red for danger, locks, damage, and failure. The active objective is VIP Ice plus a printed token. Nominal Green confirms the machine in terminal chrome only, not on the tactical feed.
 - Small monospace uppercase labels. Primary values larger than their labels.
 - Every screen is a module of the same terminal.
 - Critical state is never color alone.
@@ -889,7 +889,7 @@ Defaults below. Every keyboard action except pause and the operative slots can b
 
 Late-1980s / 1990s cyberpunk strategy vocabulary, rebuilt as a crisp modern terminal.
 
-Near-black and dark blue-green ground. Teal operational graphics. Ledger Amber for price and spend authorization, not for focus. Red hostility and failure. The active objective is VIP Ice plus a printed token. Thin technical borders. Monospace uppercase type. Scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes.
+Near-black and dark blue-green ground. Teal operational graphics. Ledger Amber for money — prices, credit balances and spend authorization — not for focus. Red hostility and failure. The active objective is VIP Ice plus a printed token. Thin technical borders. Monospace uppercase type. Scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes.
 
 The tactical scene is this city at dusk or night, dry or wet: asphalt that reads wet when it is raining, cool window light, warm street lamps, procedural neon, dense towers and industrial slabs, instanced street dressing. Neon stays readable in both looks. Bloom is emissive only, and a quality setting may drop it. Building ghosting exists so the player can still read the fight.
 

@@ -106,8 +106,8 @@ Decisions: New Operation is always two-step, including when no blob remains. The
 | Z1 | UTC clock | Text | `HH:MM:SS UTC`, 1 Hz | No | none |
 | Z2 | Wordmark, tagline | Heading, text | NEXUS / REBORN; `CORPORATE GEOSTRATEGIC COMMAND INTERFACE` | No | none |
 | Z3 | Save status line | Status text | `CAMPAIGN ON FILE` / `NO CAMPAIGN ON FILE` / `SAVE UNREADABLE // DROPPED` | No | P-19 (copy is this spec; not a P-14 readout) |
-| Z4 | Continue | Primary button | `<< CONTINUE >>`; present only with a valid save | Yes | P-04 (focus). Continue is absent, not a P-03 disabled control. |
-| Z4 | New Operation | Armable button | Always two-step. Primary idle: `<< NEW OPERATION >>`. Secondary idle: `NEW OPERATION`. Armed, valid blob: `CONFIRM // ERASE SAVE?`. Armed, no blob: `CONFIRM // NEW OPERATION?`. 3 s window either way. No hue assigned | Yes | P-01 |
+| Z4 | Continue | Primary button | `<< CONTINUE >>`; present only with a valid save. Signal Cyan chevron CTA | Yes | P-04 (focus). Continue is absent, not a P-03 disabled control. |
+| Z4 | New Operation | Armable button | Always two-step. Primary idle: `<< NEW OPERATION >>`. Secondary idle: `NEW OPERATION`. Armed, valid blob: `CONFIRM // ERASE SAVE?`. Armed, no blob: `CONFIRM // NEW OPERATION?`. 3 s window either way. Primary idle is the Signal Cyan chevron CTA, the instruction colour (art bible §4.1); secondary idle has no hue. Never Ledger Amber (decided 2026-10-18, IF-002) | Yes | P-01 |
 | Z4 | Settings | Secondary button | `SETTINGS` | Yes | P-04 (focus) |
 | Z5 | Message slot | Live region | Armed hint only: `PRESS AGAIN WITHIN 3 S TO ERASE` or `PRESS AGAIN WITHIN 3 S TO START` | No | P-01 extension (not P-11) |
 | Overlay | Settings panel | Modal | Audio, remaps, accessibility, Quality, Difficulty, telemetry toggle | Yes | P-05, P-13 |

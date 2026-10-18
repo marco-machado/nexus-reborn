@@ -67,7 +67,7 @@ Project convention puts tests beside their module (`*.test.ts`, vitest), not und
 **Verification**: evidence in `production/qa/evidence/if-002/`; sign-off: art-director (lead sign-off)
 **Checklist**:
 - [ ] Per state: a screenshot pair (colour + greyscale) and one line naming the non-colour cue (label, pip, frame or copy)
-- [ ] Hue roles recorded against living §12: teal selection/live, Ledger Amber price and spend authorization only, red danger, VIP Ice active objective
+- [ ] Hue roles recorded against living §12: teal selection/live, Ledger Amber money only (price, balance and spend authorization), red danger, VIP Ice active objective
 - [ ] Menu and Mission HUD captures checked against §12/§14: shared near-black ground, monospace uppercase labels, primary values larger than labels, technical borders; list observed elements and deviations (coherence is a recorded judgment, not a numeric gate)
 **Edge cases**: Each of the 7 states (selection, focus, injury/KIA, lock, objective, Alert, result) shown once in colour and once with a greyscale filter (`filter: grayscale(1)`) — the cue must survive; Nominal Green must not appear as a tactical-feed cue
 
