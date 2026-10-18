@@ -174,7 +174,7 @@ Tier: Standard (`design/accessibility-requirements.md`). Every Committed row tha
 
 ## Open Questions
 
-1. The code prints Collateral as a running CR figure (`src/ui/Hud.tsx`, `COLLATERAL n · −x CR` / `NOT BILLED`). The Tactical, Economy and Interface GDDs say the HUD shows a **count** only and CR is priced at Debrief. Decided 2026-09-29: the spec follows the GDDs; the code diverges and needs a story.
+1. The code prints Collateral as a running CR figure (`src/ui/Hud.tsx`, `COLLATERAL n · −x CR` / `NOT BILLED`). The Tactical, Economy and Interface GDDs say the HUD shows a **count** only and CR is priced at Debrief. Decided 2026-09-29: the spec follows the GDDs. Resolved 2026-10-18 (IF-002 advisory fixes): the chip prints `COLLATERAL n` in Telemetry Ink, count only.
 2. The fixed `13.7C` and `1.2M/S` chips in the top bar have no GDD source. Excluded from the inventory; decide whether they are removed, kept as non-semantic flavor, or given a source.
 3. Z9 (alert toast under Z3) was decided 2026-09-29 to honor the art bible's top-right toast position; the code has no separate alert toast today. A story is needed.
 4. Whether four squad cards fit between Z1 and Z4 at 125% text scale at 1280x720 without internal scroll is unverified; the rule is that Z2 scrolls internally if not.

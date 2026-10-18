@@ -6,7 +6,7 @@
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: 2026-10-17
+> **Last Updated**: 2026-10-18
 
 ## Context
 
@@ -93,6 +93,6 @@
 - **Review**: APPROVED WITH SUGGESTIONS (no code changes required) — specialists: lead-programmer, ui-programmer, qa-tester. Applied after review: merged the duplicate World Network marker focus rule, dropped the dead `injured` class on `.hud-agent`, removed a tautological token test, documented `healthCue`.
 - **Mutation check**: skipped — Visual/Feel story.
 - **Needs the owner**: art-director sign-off; then `/story-done` this story.
-- **Design calls recorded, not changed**: `design/ux/hud.md` E4 says the Collateral chip is ink with count only and no CR, but the shipped chip is amber and prints CR. Ledger Amber is still used outside price on non-critical elements (CTAs, reload/stance chips, ability armed/cooldown, minimap checkpoint/suspicion, DEVICE marker, World Network sector focus).
-- **Advisories kept**: new teal/red rgba literals in `src/ui/ui.css` (.hud-agent.sel, .navtab.active, .hud-hp.low) extend an existing pattern but drift from ADR-0017's tokens-only rule and do not follow high-contrast mode; a unit with maxHp 0 now reads ok rather than low.
+- **Advisory review (2026-10-18)**: art-director agent, APPROVED WITH CONDITIONS (advisory, non-blocking). All six conditions addressed the same day: focus is the P-04 corner-bracket set; the injured bar has a 2px Red Hot dashed outline; Alert adds a bold framed word and a screen-edge glow; the lost banner title prints in Print White; Ledger Amber is off the seven recorded elements; Collateral follows hud.md E4 (ink, count only) and Credits print Ledger Amber with `CR`. Re-captured ALL PASS, including focus sweeps, the minimap palette and high contrast. Remaining amber outside price on other surfaces is listed in the evidence file.
+- **Advisories kept**: teal/red rgba literals in `src/ui/ui.css` extend an existing pattern but drift from ADR-0017's tokens-only rule and do not follow high-contrast mode (the 2026-10-18 fixes add more of the same); a unit with maxHp 0 now reads ok rather than low.
 - **Also fixed while re-running the IF-001 sweep**: World Network influence buttons spilled "10P UNAFFORDABLE" past their frame at 125% (from IF-004); `.wm-act-sub` now wraps. Sweep ALL SURFACES CLEAN.

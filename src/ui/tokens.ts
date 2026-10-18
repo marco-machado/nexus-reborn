@@ -126,8 +126,9 @@ export const GUN_IRON = '#82a396'
 
 /* ------------------------- mission marker colours ----------------------- */
 
-// Mission markers. VIP is VIP Ice, also the active-objective hue (living
-// §12); mirrored by --vip in src/index.css. DEVICE has no CSS token.
-export const DEVICE = '#ffb300'
-export const DEVICE_A25 = 'rgba(255, 179, 0, 0.25)'
+// Mission markers. DEVICE and VIP both use VIP Ice, also the active-objective
+// hue (living §12, art bible §5.2); mirrored by --vip in src/index.css.
 export const VIP = '#9be8ff'
+export const VIP_A1 = 'rgba(155, 232, 255, 0.1)'
+export const VIP_A25 = 'rgba(155, 232, 255, 0.25)'
+export const VIP_A6 = 'rgba(155, 232, 255, 0.6)'

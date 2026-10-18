@@ -5,7 +5,7 @@ import * as THREE from 'three/webgpu'
 import type { Unit } from '../game/types'
 import { makeAlertTexture, makeGlowTexture, makeSlotTexture } from './textures'
 import { addAgentModel, createAgentResources, type AgentResources } from './agentModel'
-import { TEAL } from '../ui/tokens'
+import { TEAL, VIP } from '../ui/tokens'
 
 interface Shared {
   legGeom: THREE.BoxGeometry
@@ -15,6 +15,8 @@ interface Shared {
   visorGeom: THREE.BoxGeometry
   stripeGeom: THREE.BoxGeometry
   chestGeom: THREE.BoxGeometry
+  radioGeom: THREE.BoxGeometry
+  antennaGeom: THREE.BoxGeometry
   gunGeom: THREE.BoxGeometry
   ringGeom: THREE.RingGeometry
   factionRingGeom: THREE.RingGeometry
@@ -29,7 +31,6 @@ interface Shared {
   enemyHead: THREE.MeshStandardMaterial
   enemyVisor: THREE.MeshStandardMaterial
   garrisonChest: THREE.MeshStandardMaterial
-  officerChest: THREE.MeshStandardMaterial
   gunMat: THREE.MeshStandardMaterial
   ringMat: THREE.MeshBasicMaterial
   glowMat: THREE.MeshBasicMaterial
@@ -73,6 +74,8 @@ export function getShared(): Shared {
     visorGeom: new THREE.BoxGeometry(0.05, 0.06, 0.2),
     stripeGeom: new THREE.BoxGeometry(0.12, 0.045, 0.46),
     chestGeom: new THREE.BoxGeometry(0.05, 0.12, 0.12),
+    radioGeom: new THREE.BoxGeometry(0.12, 0.26, 0.2),
+    antennaGeom: new THREE.BoxGeometry(0.025, 0.34, 0.025),
     gunGeom: new THREE.BoxGeometry(0.6, 0.07, 0.07),
     ringGeom: new THREE.RingGeometry(0.55, 0.76, 28).rotateX(-Math.PI / 2) as THREE.RingGeometry,
     factionRingGeom: new THREE.RingGeometry(0.4, 0.5, 24).rotateX(-Math.PI / 2) as THREE.RingGeometry,
@@ -93,12 +96,6 @@ export function getShared(): Shared {
     garrisonChest: new THREE.MeshStandardMaterial({
       color: '#000000',
       emissive: new THREE.Color('#ff5c4a'),
-      emissiveIntensity: 3,
-    }),
-    // Officers read apart from the garrison at a glance: amber chest lamp.
-    officerChest: new THREE.MeshStandardMaterial({
-      color: '#000000',
-      emissive: new THREE.Color('#ffb300'),
       emissiveIntensity: 3,
     }),
     gunMat: new THREE.MeshStandardMaterial({ color: '#0c0e11', roughness: 0.55, metalness: 0.35 }),
@@ -173,14 +170,15 @@ export function getShared(): Shared {
     deviceGeom: new THREE.BoxGeometry(0.9, 1.0, 0.9),
     deviceCoreGeom: new THREE.BoxGeometry(0.55, 0.22, 0.55),
     deviceBody: std('#1c2427', 0.9),
-    // Emissive so the target reads under the bloom pass.
+    // Emissive so the target reads under the bloom pass. VIP Ice, the
+    // mission-marker hue (art bible §5.2); the box shape tells it from a VIP.
     deviceCore: new THREE.MeshStandardMaterial({
       color: '#000000',
-      emissive: new THREE.Color('#ffb300'),
+      emissive: new THREE.Color(VIP),
       emissiveIntensity: 2.8,
     }),
     deviceRingMat: new THREE.MeshBasicMaterial({
-      color: '#ffb300',
+      color: VIP,
       transparent: true,
       opacity: 0.4,
       side: THREE.DoubleSide,
@@ -326,12 +324,18 @@ export function buildView(u: UnitAppearance, s: Shared): View {
     visor.position.set(0.12, 1.44, 0)
     rig.add(visor)
     if (u.tag === 'garrison') {
-      const chest = new THREE.Mesh(
-        s.chestGeom,
-        u.archetype === 'officer' ? s.officerChest : s.garrisonChest,
-      )
+      const chest = new THREE.Mesh(s.chestGeom, s.garrisonChest)
       chest.position.set(0.2, 1.05, 0)
       rig.add(chest)
+    }
+    // Officers are the base slab plus a closed radio pack on the back: shape,
+    // not hue. Ledger Amber is not a rank mark (art bible §5.2).
+    if (u.archetype === 'officer') {
+      const pack = new THREE.Mesh(s.radioGeom, s.enemyCoat)
+      pack.position.set(-0.19, 1.08, 0)
+      const antenna = new THREE.Mesh(s.antennaGeom, s.enemyCoat)
+      antenna.position.set(-0.2, 1.36, 0.06)
+      rig.add(pack, antenna)
     }
   }
 

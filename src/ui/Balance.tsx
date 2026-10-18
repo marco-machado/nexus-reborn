@@ -128,7 +128,7 @@ export default function BalancePanel(props: { onClose: () => void }) {
           </button>
           <button
             type="button"
-            className={'btn' + (clearArmed ? ' amber' : '')}
+            className={'btn' + (clearArmed ? ' armed' : '')}
             disabled={records.length === 0}
             aria-label={clearArmed ? 'CONFIRM // ERASE RECORDS? Erases every record' : 'CLEAR the telemetry records'}
             onClick={onClear}

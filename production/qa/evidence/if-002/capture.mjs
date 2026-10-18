@@ -87,6 +87,41 @@ async function styles(surface) {
   })
 }
 
+// Focus sweep: Tab through a surface and check every stop draws the P-04
+// bracket set (or, for a canvas / form field / SVG node, a 2px frame or its
+// own dashed stroke), and that brackets drawn outside the box are not cut
+// off by the element's own overflow.
+async function focusSweep(surface, tabs) {
+  const seen = []
+  for (let i = 0; i < tabs; i++) {
+    await page.keyboard.press('Tab')
+    await wait(60)
+    seen.push(
+      await page.evaluate(() => {
+        const el = document.activeElement
+        if (!el || el === document.body) return null
+        const name = (el.getAttribute('aria-label') || el.textContent || el.className.baseVal || el.className).toString().trim().slice(0, 28)
+        const own = getComputedStyle(el)
+        if (el instanceof SVGElement || /^(INPUT|SELECT|TEXTAREA|CANVAS)$/.test(el.tagName)) {
+          const ok = el instanceof SVGElement || (own.outlineStyle !== 'none' && parseFloat(own.outlineWidth) >= 2)
+          return { name, kind: 'frame', ok }
+        }
+        const face = el.querySelector(':scope > .cta-inner')
+        const a = getComputedStyle(face || el, '::after')
+        const strokes = (a.backgroundImage.match(/linear-gradient/g) || []).length
+        const outside = parseFloat(a.top) < 0
+        const clipped = outside && (own.overflow !== 'visible' || own.clipPath !== 'none')
+        return { name, kind: 'brackets', ok: a.content !== 'none' && strokes === 8 && !clipped, clipped }
+      }),
+    )
+  }
+  const stops = seen.filter(Boolean)
+  const bad = stops.filter((x) => !x.ok)
+  report.focusSweep = report.focusSweep || {}
+  report.focusSweep[surface] = { stops: stops.length, bad }
+  check(`focus sweep ${surface}: brackets on every stop`, stops.length > 0 && bad.length === 0, `${stops.length} stops` + (bad.length ? '; bad: ' + bad.map((b) => b.name + (b.clipped ? ' (clipped)' : '')).join(', ') : ''))
+}
+
 // ---------------------------------------------------------------- Menu
 await page.goto(URL)
 await page.evaluate(() => localStorage.clear())
@@ -103,16 +138,19 @@ await page.keyboard.press('Tab')
 await wait(200)
 await shoot('02', 'focus', () => {
   const el = document.activeElement
-  // A clip-path CTA draws the frame inset on its face; anything else outlines.
+  // P-04 bracket set: eight 2px strokes on ::after. A clip-path CTA draws
+  // them on its face (.cta-inner::after) so the chevron cut does not clip them.
   const face = el.querySelector('.cta-inner')
-  const s = getComputedStyle(face || el)
-  const frame = face ? s.boxShadow : `outline ${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor} offset ${s.outlineOffset}`
-  const ok = face ? /inset/.test(s.boxShadow) && s.boxShadow.includes('126, 240, 212') : s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) >= 2
+  const s = getComputedStyle(face || el, '::after')
+  const strokes = (s.backgroundImage.match(/linear-gradient/g) || []).length
+  const ok = s.content !== 'none' && strokes === 8 && /2px/.test(s.backgroundSize)
   return {
     ok: el !== document.body && el.matches(':focus-visible') && ok,
-    cue: `frame: ${frame} on "${(el.getAttribute('aria-label') || el.textContent).trim().slice(0, 30)}"`,
+    cue: `bracket set: ${strokes} strokes, sizes ${s.backgroundSize.split(',').slice(0, 2).join(',')} on "${(el.getAttribute('aria-label') || el.textContent).trim().slice(0, 30)}"`,
   }
 })
+
+await focusSweep('menu', 6)
 
 // ---------------------------------------------------------------- Lock
 await page.getByText('NEW OPERATION').first().click()
@@ -132,6 +170,9 @@ await shoot('03', 'lock', () => {
     cue: `locked tab prints "${t}" + lock glyph; selected tab "${sel?.innerText.trim()}" framed ${ss?.borderTopWidth} ${ss?.borderTopStyle} (${ss?.color})`,
   }
 })
+
+await focusSweep('world-network', 40)
+await page.mouse.click(5, 5)
 
 // ---------------------------------------------------------------- Mission
 await page.locator('[aria-label^="OPEN CONTRACT GLASS VEIL"]').first().click()
@@ -208,8 +249,10 @@ await shoot('06', 'injury-kia', () => {
     ok:
       /INJURED/.test(injText) && !!inj.querySelector('.hud-hp.low') &&
       /FLATLINED/.test(kiaText) && !!kia.querySelector('.hud-flatline svg') &&
-      getComputedStyle(kia.querySelector('.hud-agent-name')).textDecorationLine.includes('line-through'),
-    cue: `injured card: pips at ${inj?.querySelector('.hud-hp i')?.style.width} (dashed frame) + "${injText.match(/\d+\/\d+/)?.[0]}" + "+ INJURED"; KIA card: skull glyph + "FLATLINED" + struck-through name`,
+      getComputedStyle(kia.querySelector('.hud-agent-name')).textDecorationLine.includes('line-through') &&
+      getComputedStyle(inj.querySelector('.hud-hp')).outlineStyle === 'dashed' &&
+      parseFloat(getComputedStyle(inj.querySelector('.hud-hp')).outlineWidth) >= 2,
+    cue: `injured card: pips at ${inj?.querySelector('.hud-hp i')?.style.width} + health bar framed ${getComputedStyle(inj.querySelector('.hud-hp')).outlineWidth} ${getComputedStyle(inj.querySelector('.hud-hp')).outlineStyle} + "${injText.match(/\d+\/\d+/)?.[0]}" + "+ INJURED"; KIA card: skull glyph + "FLATLINED" + struck-through name`,
   }
 })
 
@@ -221,11 +264,74 @@ await page.evaluate(async () => {
 await wait(300)
 await shoot('07', 'alert', () => {
   const a = document.querySelector('.hud-alert')
+  const s = getComputedStyle(a)
+  const glow = document.querySelector('.hud-edge-glow')
   return {
-    ok: a.classList.contains('hot') && /ALERT: 2/.test(a.innerText),
-    cue: `prints "${a.innerText.replace(/\s+/g, ' ').trim()}" with blinking bars (hot)`,
+    ok: a.classList.contains('hot') && /ALERT: 2/.test(a.innerText) && parseFloat(s.borderTopWidth) >= 2 && s.fontWeight === '700' && !!glow,
+    cue: `prints "${a.innerText.replace(/\s+/g, ' ').trim()}" bold (${s.fontWeight}) in a ${s.borderTopWidth} frame, blinking bars, edge glow ${glow ? 'on' : 'MISSING'}`,
   }
 })
+
+// Collateral and Credits (hud.md E4 / E5): the chip is a Telemetry Ink count
+// with no CR; Credits print in Ledger Amber with the CR suffix.
+await page.evaluate(async () => {
+  const M = (await import('/src/state/missionStore.ts')).useMissionStore
+  M.getState().setCiviliansHit(2)
+})
+await wait(700)
+await shoot('10', 'collateral-credits', () => {
+  const chip = document.querySelector('.hud-collateral')
+  const cr = document.querySelector('.hud-credits')
+  const cs = chip ? getComputedStyle(chip) : null
+  const ink = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim()
+  const crText = cr ? cr.innerText.replace(/\s+/g, ' ').trim() : ''
+  return {
+    ok: !!chip && /^COLLATERAL 2$/.test(chip.innerText.trim()) && !/CR/.test(chip.innerText) && cs.color === 'rgb(184, 216, 207)' && /CR$/.test(crText) && getComputedStyle(cr).color === 'rgb(255, 208, 117)',
+    cue: `chip "${chip?.innerText.trim()}" in ${cs?.color} (ink ${ink}); credits "${crText}" in ${cr ? getComputedStyle(cr).color : '-'}`,
+  }
+})
+
+// Minimap: sample the canvas for VIP Ice (the active-objective pulse) and for
+// any Ledger Amber / old DEVICE amber pixel.
+report.minimap = await page.evaluate(async () => {
+  const c = document.querySelector('.minimap-canvas')
+  if (!c) return { ok: false }
+  const g = c.getContext('2d')
+  let vip = 0
+  let amber = 0
+  for (let k = 0; k < 14; k++) {
+    const d = g.getImageData(0, 0, c.width, c.height).data
+    for (let i = 0; i < d.length; i += 4) {
+      const [r, gg, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]]
+      if (a < 40) continue
+      if (b > 150 && gg > 150 && r < gg - 40 && b > r + 40) vip++
+      if (r > 180 && gg > 120 && gg < 215 && b < 110 && r > b + 90) amber++
+    }
+    await new Promise((res) => setTimeout(res, 100))
+  }
+  return { ok: vip > 0 && amber === 0, vipPixels: vip, amberPixels: amber }
+})
+check('minimap: VIP Ice objective pulse drawn, no amber', report.minimap.ok, JSON.stringify(report.minimap))
+
+// High contrast: the same HUD (injured, KIA, Alert, Collateral) under
+// :root.s-high-contrast, in colour and greyscale.
+await page.evaluate(() => document.documentElement.classList.add('s-high-contrast'))
+await wait(200)
+await shoot('11', 'high-contrast', () => {
+  const hc = document.documentElement.classList.contains('s-high-contrast')
+  const a = document.querySelector('.hud-alert.hot')
+  const inj = document.querySelector('.hud-hp.low')
+  const sel = document.querySelector('.hud-agent.sel')
+  return {
+    ok: hc && !!a && !!inj && getComputedStyle(inj).outlineStyle === 'dashed' && !!sel && getComputedStyle(sel).outlineStyle === 'double',
+    cue: `high contrast on: Alert frame ${a ? getComputedStyle(a).borderTopWidth : '-'}, injured bar ${inj ? getComputedStyle(inj).outlineStyle : '-'}, selection ${sel ? getComputedStyle(sel).outlineStyle : '-'}`,
+  }
+})
+await page.evaluate(() => document.documentElement.classList.remove('s-high-contrast'))
+
+await page.mouse.click(640, 400)
+await focusSweep('mission-hud', 30)
+await page.evaluate(() => document.activeElement?.blur())
 
 // Green scan over the HUD (tactical feed), before the result banner.
 report.greenInHud = await page.evaluate(() => {
@@ -248,7 +354,17 @@ for (const [n, r] of [['08', 'won'], ['09', 'lost']]) {
   await shoot(n, 'result-' + r, () => {
     const b = document.querySelector('.hud-banner')
     const t = b ? b.innerText.replace(/\s+/g, ' ').trim() : ''
-    return { ok: /CONTRACT FULFILLED|SQUAD ELIMINATED/.test(t), cue: `banner prints "${t}"` }
+    // Greyscale contrast of the title against the banner ground (#040a09).
+    const lum = (rgb) => {
+      const [r, g, bl] = rgb.match(/\d+/g).slice(0, 3).map((v) => {
+        const c = Number(v) / 255
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * r + 0.7152 * g + 0.0722 * bl
+    }
+    const title = b?.querySelector('.hud-banner-title')
+    const ratio = title ? (lum(getComputedStyle(title).color) + 0.05) / (lum('rgb(4, 10, 9)') + 0.05) : 0
+    return { ok: /CONTRACT FULFILLED|SQUAD ELIMINATED/.test(t) && ratio >= 12, cue: `banner prints "${t}"; title contrast ${ratio.toFixed(1)}:1`, ratio }
   })
 }
 

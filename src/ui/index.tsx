@@ -97,8 +97,6 @@ import { ScreenChrome } from './Nav'
 import { unlockAudio } from './sound'
 import {
   AMBER,
-  AMBER_A1,
-  AMBER_A6,
   ART_BG_DEEP,
   ART_BG_INSET,
   ART_BG_PANEL,
@@ -115,6 +113,9 @@ import {
   TEAL,
   TEAL_A07,
   TEAL_A34,
+  VIP,
+  VIP_A1,
+  VIP_A6,
 } from './tokens'
 export { WorldMap } from './WorldMap'
 export { Research } from './Research'
@@ -216,7 +217,7 @@ export function MainMenu() {
           <button
             type="button"
             className={
-              (canContinue ? 'btn amber menu-new' : 'cta menu-cta') +
+              (canContinue ? 'btn menu-new' : 'cta menu-cta') +
               (newOperationArmed ? ' armed' : '')
             }
             aria-label={
@@ -401,8 +402,8 @@ export function MissionBrief() {
                   <stop offset="100%" stopColor={ART_BG_DEEP} stopOpacity="0" />
                 </linearGradient>
                 <radialGradient id="mb-target-glow">
-                  <stop offset="0%" stopColor={AMBER} stopOpacity="0.26" />
-                  <stop offset="100%" stopColor={AMBER} stopOpacity="0" />
+                  <stop offset="0%" stopColor={VIP} stopOpacity="0.26" />
+                  <stop offset="100%" stopColor={VIP} stopOpacity="0" />
                 </radialGradient>
               </defs>
               <rect x="0" y="0" width={RECON_W} height={RECON_H} fill={ART_BG_PANEL} />
@@ -547,7 +548,7 @@ export function MissionBrief() {
               <TacStat label="CITY BLOCKS" value={tac.counts.blocks} />
               <TacStat label="STREETS" value={pad2(tac.counts.streets)} />
               <TacStat label="CIVILIANS" value={pad2(tac.counts.civilians)} />
-              <TacStat label="PATROL CONTACTS" value={pad2(tac.counts.patrols)} tone="amber" />
+              <TacStat label="PATROL CONTACTS" value={pad2(tac.counts.patrols)} />
               <TacStat label="GARRISON" value={pad2(tac.counts.garrison)} tone="red" />
               <TacStat label="ROUTE ALPHA" value={tac.counts.alphaMetres + ' M'} tone="teal" />
               <TacStat label="ROUTE OMEGA" value={tac.counts.omegaMetres + ' M'} tone="red" />
@@ -597,8 +598,8 @@ export function MissionBrief() {
                     patternTransform="rotate(45)"
                     patternUnits="userSpaceOnUse"
                   >
-                    <rect width="2.4" height="2.4" fill={AMBER_A1} />
-                    <rect width="0.7" height="2.4" fill={AMBER_A6} />
+                    <rect width="2.4" height="2.4" fill={VIP_A1} />
+                    <rect width="0.7" height="2.4" fill={VIP_A6} />
                   </pattern>
                 </defs>
                 <rect x="0" y="0" width={tac.size} height={tac.size} fill={ART_BG_TILE} />
@@ -649,13 +650,13 @@ export function MissionBrief() {
                   fill="url(#mb-hatch-a)"
                 />
                 <circle
-                  className="mb-tac-ring amber"
+                  className="mb-tac-ring vip"
                   cx={tac.target.x}
                   cy={tac.target.z}
                   r={tac.target.r}
                 />
                 <text
-                  className="mb-tac-label amber"
+                  className="mb-tac-label vip"
                   x={tac.target.x}
                   y={tac.target.z + tac.target.r + 3.5}
                   textAnchor="middle"
@@ -717,7 +718,7 @@ export function MissionBrief() {
                 <polygon points="4,2 16,2 10,10" fill="none" stroke={RED_HOT} strokeWidth="1.2" />
               </LegendRow>
               <LegendRow label="TARGET ZONE">
-                <rect x="5" y="1.5" width="9" height="9" fill="none" stroke={AMBER} strokeWidth="1.2" />
+                <rect x="5" y="1.5" width="9" height="9" fill="none" stroke={VIP} strokeWidth="1.2" />
               </LegendRow>
               <LegendRow label="ROUTE ALPHA">
                 <line x1="2" y1="6" x2="18" y2="6" stroke={TEAL} strokeWidth="1.4" strokeDasharray="3 2" />
@@ -1211,7 +1212,7 @@ export function TeamSelect() {
               })}
               <button
                 type="button"
-                className="btn amber ts-recruit-btn"
+                className="btn teal ts-recruit-btn"
                 aria-label={
                   'OPEN THE RECRUITMENT MARKET // ROSTER ' +
                   operatives.length +
@@ -1513,7 +1514,7 @@ export function TeamSelect() {
             <span className="ts-mass-unit">KG</span>
           </div>
           <div className="ts-mass-limit dim">/ {MASS_LIMIT_KG.toFixed(1)} KG LIMIT</div>
-          <SegBar value={(mass / MASS_LIMIT_KG) * 100} tone={overKg > 0 ? 'red' : 'amber'} />
+          <SegBar value={(mass / MASS_LIMIT_KG) * 100} tone={overKg > 0 ? 'red' : undefined} />
           <div className={'ts-mass-tier ' + tier}>
             {tier === 'light'
               ? 'LIGHT LOAD // +' + TIER_SPEED_DELTA.toFixed(2) + ' M/S'
@@ -1675,7 +1676,7 @@ export function Debrief() {
           {/* A generated contract is spent by its debrief; only authored
               contracts offer a replay. */}
           {flags.replay && (
-            <button type="button" className="btn amber" onClick={act(() => goto('brief'))}>
+            <button type="button" className="btn teal" onClick={act(() => goto('brief'))}>
               REPLAY MISSION
             </button>
           )}

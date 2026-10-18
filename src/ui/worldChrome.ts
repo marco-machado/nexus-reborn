@@ -4,7 +4,7 @@
 // this module only decides which one a surface prints and in what words. It
 // recomputes no board rule.
 import type { RiskBand } from '../game/forecast'
-import type { InfluenceRefusal } from '../state/worldStore'
+import type { EventTone, InfluenceRefusal } from '../state/worldStore'
 import type { SectorId } from '../game/types'
 import { INFLUENCE_ACTION_ORDER } from '../game/influence'
 import type { InfluenceActionId } from '../game/influence'
@@ -68,14 +68,23 @@ export function influenceActionsFor(sector: SectorId): readonly InfluenceActionI
 
 export interface TaxEligibilityReadout {
   text: string
-  tone: 'teal' | 'amber'
+  tone: 'teal' | 'dim'
 }
 
 // The printed Tax yield is a figure; whether it pays is the owner's
 // eligibility (Nexus-held). The line names the cause in words, so the two are
-// never told apart by colour alone.
+// never told apart by colour alone. Not paying is not a price and not an
+// alarm (art bible §4.3), so it prints dim, not Ledger Amber.
 export function taxEligibilityLine(eligible: boolean): TaxEligibilityReadout {
   return eligible
     ? { text: 'YES // NEXUS-HELD', tone: 'teal' }
-    : { text: 'NO // NOT NEXUS-HELD', tone: 'amber' }
+    : { text: 'NO // NOT NEXUS-HELD', tone: 'dim' }
+}
+
+// The class a feed line and its timeline tick print in. The saved event tone
+// 'amber' (raids, priority contracts, Influence spends) is neither price nor
+// alarm, so it prints as a Print White notice: Ledger Amber is price only
+// (living §12). The line's own words carry what happened.
+export function eventToneClass(tone: EventTone): string {
+  return tone === 'amber' ? 'notice' : tone
 }

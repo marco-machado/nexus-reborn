@@ -73,9 +73,9 @@ const STATE_LABEL: Record<NodeState, string> = {
   available: 'AVAILABLE',
   locked: 'LOCKED',
 }
-const STATE_TONE: Record<NodeState, 'green' | 'amber' | 'teal' | 'dim'> = {
+const STATE_TONE: Record<NodeState, 'green' | 'teal' | 'dim'> = {
   researched: 'green',
-  active: 'amber',
+  active: 'teal',
   available: 'teal',
   locked: 'dim',
 }
@@ -224,10 +224,10 @@ function LabRow(props: { branch: Branch; run: LabRun | null; onSelect: (id: stri
     >
       <span className="rs-lab-top">
         <b>{props.branch.lab}</b>
-        <i className="amber">{Math.round(p * 100)}%</i>
+        <i className="teal">{Math.round(p * 100)}%</i>
       </span>
       <span className="rs-lab-name">{nodeTitle(node)}</span>
-      <SegBar value={p * 100} tone="amber" mini />
+      <SegBar value={p * 100} mini />
       <RemainingLabel run={run} t={t} lastSyncT={lastSyncT} className="dim mini" />
     </button>
   )
@@ -243,7 +243,7 @@ function ProgressBlock(props: { run: LabRun }) {
         <b className="rs-prog-pct">{Math.round(p * 100)}%</b>
         <RemainingLabel run={props.run} t={t} lastSyncT={lastSyncT} className="dim" />
       </div>
-      <SegBar value={p * 100} tone="amber" />
+      <SegBar value={p * 100} />
     </div>
   )
 }
@@ -364,7 +364,7 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
       </ScrollBox>
       <button
         type="button"
-        className="cta rs-auth"
+        className="cta spend rs-auth"
         disabled={!can}
         aria-label={'AUTHORIZE ' + nodeTitle(n) + ' // ' + sub}
         onClick={act(() => {

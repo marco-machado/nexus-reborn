@@ -69,6 +69,7 @@ import {
   influenceActionsFor,
   influenceStatus,
   taxEligibilityLine,
+  eventToneClass,
   worldChance,
 } from './worldChrome'
 
@@ -191,7 +192,7 @@ function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId })
         <i
           className={
             'wm-act-status ' +
-            (status === 'CLEAR' ? 'teal' : status === 'ACTIVE' ? 'amber' : 'dim')
+            (status === 'ACTIVE' ? 'teal' : status === 'CLEAR' ? '' : 'dim')
           }
         >
           {status}
@@ -486,7 +487,7 @@ function Timeline() {
         {ticks.map((e) => (
           <i
             key={e.id}
-            className={'wm-tl-ev ' + e.tone}
+            className={'wm-tl-ev ' + eventToneClass(e.tone)}
             style={{ left: clamp01((e.t - (t - DAY)) / DAY) * 100 + '%' }}
           />
         ))}
@@ -545,7 +546,7 @@ function TimeControl() {
         ))}
       </div>
       <div className="wm-speed">
-        CLOCK SPEED: <b className={paused ? 'red' : 'amber'}>{paused ? 'PAUSED' : speed + 'X'}</b>
+        CLOCK SPEED: <b className={paused ? 'red' : 'teal'}>{paused ? 'PAUSED' : speed + 'X'}</b>
       </div>
     </div>
   )
@@ -560,7 +561,7 @@ function FeedRow(props: { event: WorldEvent }) {
   return (
     <button
       type="button"
-      className={'wm-feed-line ' + e.tone}
+      className={'wm-feed-line ' + eventToneClass(e.tone)}
       aria-label={hhmm(e.t) + ' ' + e.text + ' // FOCUS ' + sectorDef(e.sector).name}
       onClick={act(() => {
         markRead()
@@ -787,10 +788,10 @@ export function WorldMap() {
       <div className="wm-main">
         {/* left: influence + sectors */}
         <aside className="wm-left">
-          <Panel title="INFLUENCE" right={<b className="amber">{points} PTS</b>}>
+          <Panel title="INFLUENCE" right={<b>{points} PTS</b>}>
             <div className="kv">
               <span>POINTS</span>
-              <b className="amber">{points} PTS</b>
+              <b>{points} PTS</b>
             </div>
           </Panel>
           <Panel
@@ -847,8 +848,8 @@ export function WorldMap() {
                       {sec.locked ? <span className="wm-sector-sub dim">NO SURVEY DATA</span> : (
                         <>
                           <span className="wm-sector-reading"><span>CONTROL</span><b>{Math.round(st.control)}%</b></span>
-                          <span className="wm-sector-reading"><span>UNREST</span><b className={inCrisis ? 'red' : pressure ? 'amber' : undefined}>{Math.round(st.unrest)}%</b></span>
-                          {pressure || inCrisis ? <span className={'wm-sector-warning ' + (inCrisis ? 'red' : 'amber')}><WarningGlyph />{inCrisis ? 'CRISIS' : 'UNREST PRESSURE'}</span> : <SegBar value={st.control} mini className="wm-sector-bar" />}
+                          <span className="wm-sector-reading"><span>UNREST</span><b className={inCrisis ? 'red' : pressure ? 'notice' : undefined}>{Math.round(st.unrest)}%</b></span>
+                          {pressure || inCrisis ? <span className={'wm-sector-warning ' + (inCrisis ? 'red' : 'notice')}><WarningGlyph />{inCrisis ? 'CRISIS' : 'UNREST PRESSURE'}</span> : <SegBar value={st.control} mini className="wm-sector-bar" />}
                         </>
                       )}
                     </span>
@@ -874,7 +875,7 @@ export function WorldMap() {
               crisis.includes(selected) ? (
                 <Chip tone="red">CRISIS</Chip>
               ) : (
-                <Chip tone="amber">FOCUS</Chip>
+                <Chip tone="teal">FOCUS</Chip>
               )
             }
             bodyClassName="wm-sector-panel-body"
@@ -887,8 +888,8 @@ export function WorldMap() {
             <div className="wm-cu">
               <div>
                 <label>CONTROL</label>
-                <b className="amber">{Math.round(read.control)}%</b>
-                <SegBar value={read.control} tone="amber" mini />
+                <b className="teal">{Math.round(read.control)}%</b>
+                <SegBar value={read.control} mini />
               </div>
               <div>
                 <label>UNREST</label>
@@ -1010,7 +1011,7 @@ export function WorldMap() {
           </div>
           <div className="kv">
             <span>INFLUENCE</span>
-            <b className="amber">{points}</b>
+            <b>{points}</b>
           </div>
           <div className="kv">
             <span>ROSTER</span>

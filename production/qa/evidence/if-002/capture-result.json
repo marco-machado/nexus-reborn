@@ -2,7 +2,7 @@
   "states": {
     "focus": {
       "ok": true,
-      "cue": "frame: rgb(126, 240, 212) 0px 0px 0px 2px inset, rgb(4, 7, 10) 0px 0px 0px 4px inset on \"BEGIN NEW OPERATION\""
+      "cue": "bracket set: 8 strokes, sizes 10px 2px, 2px 10px on \"BEGIN NEW OPERATION\""
     },
     "lock": {
       "ok": true,
@@ -18,19 +18,29 @@
     },
     "injury-kia": {
       "ok": true,
-      "cue": "injured card: pips at 20% (dashed frame) + \"22/110\" + \"+ INJURED\"; KIA card: skull glyph + \"FLATLINED\" + struck-through name"
+      "cue": "injured card: pips at 20% + health bar framed 2px dashed + \"22/110\" + \"+ INJURED\"; KIA card: skull glyph + \"FLATLINED\" + struck-through name"
     },
     "alert": {
       "ok": true,
-      "cue": "prints \"||| ALERT: 2 |||\" with blinking bars (hot)"
+      "cue": "prints \"||| ALERT: 2 |||\" bold (700) in a 2px frame, blinking bars, edge glow on"
+    },
+    "collateral-credits": {
+      "ok": true,
+      "cue": "chip \"COLLATERAL 2\" in rgb(184, 216, 207) (ink #b8d8cf); credits \"128,450 CR\" in rgb(255, 208, 117)"
+    },
+    "high-contrast": {
+      "ok": true,
+      "cue": "high contrast on: Alert frame 2px, injured bar dashed, selection double"
     },
     "result-won": {
       "ok": true,
-      "cue": "banner prints \"CONTRACT FULFILLED EXTRACTION CONFIRMED\""
+      "cue": "banner prints \"CONTRACT FULFILLED EXTRACTION CONFIRMED\"; title contrast 14.5:1",
+      "ratio": 14.538252249653453
     },
     "result-lost": {
       "ok": true,
-      "cue": "banner prints \"SQUAD ELIMINATED CONTRACT TERMINATED\""
+      "cue": "banner prints \"SQUAD ELIMINATED CONTRACT TERMINATED\"; title contrast 17.7:1",
+      "ratio": 17.719952075745358
     }
   },
   "styles": {
@@ -48,5 +58,24 @@
     }
   },
   "greenInHud": [],
-  "errors": []
+  "errors": [],
+  "focusSweep": {
+    "menu": {
+      "stops": 5,
+      "bad": []
+    },
+    "world-network": {
+      "stops": 39,
+      "bad": []
+    },
+    "mission-hud": {
+      "stops": 29,
+      "bad": []
+    }
+  },
+  "minimap": {
+    "ok": true,
+    "vipPixels": 1000,
+    "amberPixels": 0
+  }
 }

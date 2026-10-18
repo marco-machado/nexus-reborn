@@ -26,6 +26,8 @@
   /* VIP Ice: the active objective (living §12) and the VIP/DEVICE mission
      markers. Mirrors VIP in src/ui/tokens.ts. */
   --vip: #9be8ff;
+  /* Print White: the settled record. Mirrors PRINT_WHITE in src/ui/tokens.ts. */
+  --print-white: #e2f6ee;
   --skin: #b78369;
   --skin-shadow: #654438;
   --line: rgba(126, 240, 212, 0.22);
@@ -58,9 +60,38 @@
   box-sizing: border-box;
 }
 
-/* Keyboard focus is a frame, never a hue alone and never Ledger Amber (living
-   §12, IF-002). Zero specificity: a component's own focus rule wins. */
-:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+/* Keyboard focus is the P-04 corner-bracket set: four 2px teal corners on a
+   ::after layer, never a hue alone and never Ledger Amber (living §12, art
+   bible §4.5, IF-002). Zero specificity: a component's own position or focus
+   rule wins. A component that clips its own box (overflow, clip-path) or
+   already owns ::after draws the brackets itself in ui.css. Form fields have
+   no ::after, so they keep a 2px frame. */
+:where(button, a, [tabindex]):focus-visible {
+  outline: none;
+  position: relative;
+}
+
+:where(button, a, [tabindex]):focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: var(--focus-inset, -4px);
+  pointer-events: none;
+  z-index: 3;
+  background-image:
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal));
+  background-position:
+    top left, top left, top right, top right,
+    bottom left, bottom left, bottom right, bottom right;
+  background-size:
+    10px 2px, 2px 10px, 10px 2px, 2px 10px,
+    10px 2px, 2px 10px, 10px 2px, 2px 10px;
+  background-repeat: no-repeat;
+}
+
+:where(input, select, textarea):focus-visible {
   outline: 2px solid var(--teal);
   outline-offset: 2px;
 }

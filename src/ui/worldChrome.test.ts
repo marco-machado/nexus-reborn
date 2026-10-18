@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   briefOdds,
+  eventToneClass,
   influenceActionsFor,
   influenceStatus,
   taxEligibilityLine,
@@ -74,6 +75,11 @@ describe('Tax printed vs paid (AC27)', () => {
     expect(sectorReadout('na', snapshot.sectors.na).taxYield).toBe(4080)
     expect(taxEligible('na', owner)).toBe(true)
     expect(taxEligibilityLine(true).text).toBe('YES // NEXUS-HELD')
+  })
+
+  it('not paying prints dim, never Ledger Amber (living §12)', () => {
+    expect(taxEligibilityLine(false).tone).toBe('dim')
+    expect(taxEligibilityLine(true).tone).toBe('teal')
   })
 
   it('Antarctica is never eligible', () => {
@@ -161,5 +167,17 @@ describe('Influence refusal reasons come from the owner (AC27)', () => {
     const broke = useWorldStore.getState()
     broke.spendInfluence('na', 'lobby')
     expect(useWorldStore.getState()).toBe(broke)
+  })
+})
+
+describe('Feed tone classes (Ledger Amber is price only, living §12)', () => {
+  it('prints a saved amber event as a notice, not amber', () => {
+    expect(eventToneClass('amber')).toBe('notice')
+  })
+
+  it('keeps red, green and dim', () => {
+    expect(eventToneClass('red')).toBe('red')
+    expect(eventToneClass('green')).toBe('green')
+    expect(eventToneClass('dim')).toBe('dim')
   })
 })

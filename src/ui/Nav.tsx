@@ -42,7 +42,7 @@ function ScreenStats(props: { world: boolean }) {
         {s.date} {s.clock}
       </Chip>
       <Chip tone="teal">CREDITS {fmt(credits)} CR</Chip>
-      <Chip tone="amber">INFLUENCE {influence}</Chip>
+      <Chip tone="dim">INFLUENCE {influence}</Chip>
       <Chip tone="dim">INTEL {intelLevel}</Chip>
       <Chip tone="dim">
         ROSTER {rosterN} / {ROSTER_CAP}

@@ -2,7 +2,7 @@
 // panels themselves are interactive so the 3D canvas keeps receiving clicks
 // everywhere else. No keyboard listeners live here (the scene layer owns keys).
 import { useEffect, useRef, useState } from 'react'
-import { COLLATERAL_FINE, isQuietReplay, useAppStore } from '../state/appStore'
+import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
 import { resolveMission } from '../state/worldStore'
@@ -119,10 +119,6 @@ export default function Hud() {
   const operatives = useCampaignStore((s) => s.operatives)
   const mission = missionId ? resolveMission(missionId) : null
   const district = mission ? mission.district : 'DISTRICT 07'
-  const quietReplay = isQuietReplay(missionId)
-  // Loss and quiet replay pay 0; the chip still shows the count.
-  const collateralBilled = civiliansHit > 0 && result !== 'lost' && !quietReplay
-  const collateralAmt = Math.min(mission?.reward ?? 0, civiliansHit * COLLATERAL_FINE)
 
   const logRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -215,23 +211,19 @@ export default function Hud() {
         </div>
         <div className="hud-top-right">
           {civiliansHit > 0 && (
+            // E4: a Telemetry Ink count, no CR. Economy prices it at Debrief.
             <span
-              className={
-                'chip amber hud-collateral' + (collateralPulse ? ' pulse' : '')
-              }
+              className={'chip hud-collateral' + (collateralPulse ? ' pulse' : '')}
               aria-live="polite"
-              aria-label={
-                collateralBilled
-                  ? 'Collateral ' + civiliansHit + ', minus ' + collateralAmt + ' credits'
-                  : 'Collateral ' + civiliansHit + ', not billed'
-              }
+              aria-label={'Collateral ' + civiliansHit}
             >
               COLLATERAL {civiliansHit}
-              {collateralBilled ? ' · −' + fmt(collateralAmt) + ' CR' : ' · NOT BILLED'}
             </span>
           )}
           <span className="dim">CREDITS</span>
-          <b className="hud-credits">{fmt(credits)}</b>
+          <b className="hud-credits">
+            {fmt(credits)} <i>CR</i>
+          </b>
           {/* The menu backdrop covers the top bar, so while the menu is up
               this reads out the state and is not a control. Disabled says so,
               rather than offering a click that cannot land. */}
@@ -317,9 +309,9 @@ export default function Hud() {
                       {r.magazine}/{r.magazineSize} {r.activeSlot === 'primary' ? 'PRI' : 'SEC'}
                     </span>
                     {r.dead ? null : r.reloading ? (
-                      <span className="amber blink">RELOADING</span>
+                      <span className="teal blink">RELOADING</span>
                     ) : r.swapping ? (
-                      <span className="amber blink">DRAWING</span>
+                      <span className="teal blink">DRAWING</span>
                     ) : null}
                   </span>
                   {r.dead && (
@@ -333,7 +325,7 @@ export default function Hud() {
                   )}
                   {!r.dead && (
                     <span className="hud-agent-orders">
-                      <Chip tone={r.holdGround ? 'amber' : 'dim'}>
+                      <Chip tone={r.holdGround ? 'teal' : 'dim'}>
                         {r.holdGround ? 'HOLD' : 'MOVE'}
                       </Chip>
                       <Chip tone={r.holdFire ? 'red' : 'dim'}>
@@ -413,7 +405,7 @@ export default function Hud() {
           <div className="hud-panel hud-wpn corners">
             <div className="hud-panel-head">
               <span>PRIMARY // {active.codename}</span>
-              {primaryDrawn && <span className="amber">DRAWN</span>}
+              {primaryDrawn && <span className="teal">DRAWN</span>}
             </div>
             <div className="hud-wpn-body">
               <GunSilhouette weapon={weaponIdByName(priName)} className="hud-gun" />
@@ -426,7 +418,7 @@ export default function Hud() {
                 {/* No DRAWING span: it squeezes the weapon name into an
                     ellipsis; the squad card carries the swap state. */}
                 {primaryDrawn && active.reloading && (
-                  <span className="amber blink mini">RELOADING</span>
+                  <span className="teal blink mini">RELOADING</span>
                 )}
               </div>
             </div>
@@ -434,7 +426,7 @@ export default function Hud() {
           <div className="hud-panel hud-wpn secondary corners">
             <div className="hud-panel-head">
               <span>SECONDARY</span>
-              {!primaryDrawn && <span className="amber">DRAWN</span>}
+              {!primaryDrawn && <span className="teal">DRAWN</span>}
             </div>
             <div className="hud-wpn-body">
               <GunSilhouette weapon={weaponIdByName(secName)} className="hud-gun sm" />
@@ -452,7 +444,7 @@ export default function Hud() {
           <div className="hud-panel hud-abilities corners">
             <div className="hud-panel-head">
               <span>ABILITIES</span>
-              <span className={grenadeTargeting ? 'amber' : 'dim'}>
+              <span className={grenadeTargeting ? 'teal' : 'dim'}>
                 {grenadeTargeting ? 'TARGETING' : firstKey('useAbility') + ' / ' + firstKey('grenade')}
               </span>
             </div>
@@ -478,8 +470,8 @@ export default function Hud() {
               </button>
               {/* One role-ability slot per squad member, keyed to the same
                   slot digits as selection. Q fires the selection's abilities;
-                  the button fires this member's alone. Teal ready, amber
-                  running, red cooling or offline. */}
+                  the button fires this member's alone. Teal ready, filled
+                  teal running, dim cooling, red offline. */}
               {squad.map((r) => {
                 const role = operatives.find((o) => o.codename === r.codename)?.role
                 const cd = r.abilityCooldownRemaining
@@ -601,6 +593,10 @@ export default function Hud() {
 
       {/* ----------------------- tutorial and hint toasts -------------------- */}
       {result === 'none' && <TutorialToasts />}
+
+      {/* Alert edge glow: the second channel beside the printed word (art bible
+          §4.5). Static under reduced motion. */}
+      {alert > 0 && result === 'none' && <div className="hud-edge-glow" aria-hidden="true" />}
 
       {/* --------------------------- center overlays ------------------------- */}
       {result !== 'none' && (

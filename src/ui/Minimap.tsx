@@ -20,12 +20,8 @@ import {
 import { ROLE_ABILITIES } from '../game/abilities'
 import { uiClick } from './sound'
 import {
-  AMBER,
-  AMBER_A11,
-  AMBER_A35,
   ART_BG,
-  DEVICE,
-  DEVICE_A25,
+  INK,
   INK_A045,
   INK_A26,
   INK_A5,
@@ -34,6 +30,7 @@ import {
   RED_A13,
   RED_A45,
   RED_A8,
+  RED,
   RED_HOT,
   TEAL,
   TEAL_A025,
@@ -43,6 +40,7 @@ import {
   TEAL_A14,
   TEAL_A8,
   VIP,
+  VIP_A25,
 } from './tokens'
 
 const ZOOM = [1, 1.7, 2.8]
@@ -134,19 +132,25 @@ const COLOR = {
   building: TEAL_A14,
   extraction: TEAL_A8,
   extractionFill: TEAL_A06,
-  checkpoint: AMBER,
-  checkpointDim: AMBER_A35,
+  // Checkpoint: an ink diamond. A gate is structure, not a price, so not
+  // Ledger Amber (living §12); the diamond shape carries it.
+  checkpoint: INK,
+  checkpointDim: INK_A5,
   agent: TEAL,
   enemyHot: RED_HOT,
-  enemySuspect: AMBER,
+  // Suspicious: red, told apart from combat by the open ring around the dot
+  // (shape, not hue; P-10).
+  enemySuspect: RED,
   enemyCalm: RED_A45,
   enemyRevealed: RED_A8,
   coneHot: RED_A13,
-  coneSuspect: AMBER_A11,
+  coneSuspect: RED_A08,
   coneCalm: RED_A08,
   civilian: INK_A26,
-  device: DEVICE,
-  deviceDead: DEVICE_A25,
+  // DEVICE and VIP share VIP Ice; the square vs open ring tells them apart
+  // (art bible §5.2).
+  device: VIP,
+  deviceDead: VIP_A25,
   vip: VIP,
   // Active objective: VIP Ice, never Ledger Amber (living §12).
   objective: VIP,
@@ -233,7 +237,7 @@ export default function Minimap({
       ctx.stroke()
       ctx.setLineDash([])
 
-      // checkpoint: amber diamond + dim ring
+      // checkpoint: ink diamond + dim ring
       const cp = city.checkpoint
       const px = cp.x * s
       const pz = cp.z * s
@@ -402,6 +406,13 @@ export default function Minimap({
         ctx.beginPath()
         ctx.arc(u.pos.x * s, u.pos.z * s, hot ? 2.2 : 1.8, 0, Math.PI * 2)
         ctx.fill()
+        if (u.aiState === 'suspicious') {
+          ctx.strokeStyle = COLOR.enemySuspect
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.arc(u.pos.x * s, u.pos.z * s, 3.6, 0, Math.PI * 2)
+          ctx.stroke()
+        }
       }
       for (const u of units) {
         if (u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) continue
