@@ -60,12 +60,32 @@
   box-sizing: border-box;
 }
 
-/* Keyboard focus is the P-04 corner-bracket set: four 2px teal corners on a
-   ::after layer, never a hue alone and never Ledger Amber (living §12, art
-   bible §4.5, IF-002). Zero specificity: a component's own position or focus
-   rule wins. A component that clips its own box (overflow, clip-path) or
-   already owns ::after draws the brackets itself in ui.css. Form fields have
-   no ::after, so they keep a 2px frame. */
+/* Keyboard focus is the P-04 corner-bracket set: four 2px teal corners, never
+   a hue alone and never Ledger Amber (living §12, art bible §4.5, IF-002).
+   The set is three custom properties so a component that already owns ::after
+   (or must paint the set elsewhere) reuses it instead of copying it. */
+:root {
+  --focus-brackets:
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
+    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal));
+  --focus-brackets-pos:
+    top left, top left, top right, top right,
+    bottom left, bottom left, bottom right, bottom right;
+  --focus-brackets-size:
+    10px 2px, 2px 10px, 10px 2px, 2px 10px,
+    10px 2px, 2px 10px, 10px 2px, 2px 10px;
+}
+
+/* Drawn on ::after, 4px outside the control by default. The selector's
+   specificity is (0,1,1) — :focus-visible sits outside the :where() — so a
+   component rule of one class on ::after ties and, loading later in ui.css,
+   wins. A component that owns ::after therefore restates the set (see
+   .ts-bay). A control inside a box that clips (a scroll list, an overflow
+   panel) sets --focus-inset: 0 so the set stays inside its own edge. A
+   component's own `position` of one class ties with the relative set here and
+   wins by load order. Form fields have no ::after, so they keep a 2px frame. */
 :where(button, a, [tabindex]):focus-visible {
   outline: none;
   position: relative;
@@ -77,17 +97,9 @@
   inset: var(--focus-inset, -4px);
   pointer-events: none;
   z-index: 3;
-  background-image:
-    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
-    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
-    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal)),
-    linear-gradient(var(--teal), var(--teal)), linear-gradient(var(--teal), var(--teal));
-  background-position:
-    top left, top left, top right, top right,
-    bottom left, bottom left, bottom right, bottom right;
-  background-size:
-    10px 2px, 2px 10px, 10px 2px, 2px 10px,
-    10px 2px, 2px 10px, 10px 2px, 2px 10px;
+  background-image: var(--focus-brackets);
+  background-position: var(--focus-brackets-pos);
+  background-size: var(--focus-brackets-size);
   background-repeat: no-repeat;
 }
 

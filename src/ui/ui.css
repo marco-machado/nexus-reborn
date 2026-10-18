@@ -502,6 +502,14 @@
   min-width: 0;
 }
 
+/* A scrolling list clips anything drawn outside it, so a control inside one
+   keeps its P-04 bracket set on its own edge (the custom property inherits;
+   see the focus rule in src/index.css). */
+.scroll,
+.set-bind-list {
+  --focus-inset: 0px;
+}
+
 .scroll {
   flex: 1;
   min-height: 0;
@@ -2335,6 +2343,21 @@
   background: linear-gradient(115deg, rgba(255, 255, 255, 0.03) 0 16%, transparent 16.5%);
 }
 
+/* The bay owns ::after for its glass sheen, which ties with the global focus
+   rule and wins, so keyboard focus restates the P-04 bracket set here, on top
+   of the sheen (IF-002). */
+.ts-bay:focus-visible::after {
+  inset: var(--focus-inset, -4px);
+  z-index: 3;
+  background:
+    var(--focus-brackets),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.03) 0 16%, transparent 16.5%);
+  /* The sheen keeps the bay's own box, however far the layer is widened. */
+  background-position: var(--focus-brackets-pos), calc(-1 * var(--focus-inset, -4px)) calc(-1 * var(--focus-inset, -4px));
+  background-size: var(--focus-brackets-size), calc(100% + 2 * var(--focus-inset, -4px)) calc(100% + 2 * var(--focus-inset, -4px));
+  background-repeat: no-repeat;
+}
+
 .ts-bay:hover { border-color: var(--line-strong); }
 
 /* The inspected bay is focus: the P-04 bracket set in Print White on a teal
@@ -2764,6 +2787,19 @@
 .db-title.lost { color: var(--red-hot); text-shadow: 0 0 24px rgba(224, 75, 60, 0.4); }
 
 .db-subtitle { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.3em; color: var(--ink-dim); }
+
+/* The invoice is a focusable scroller: a ::after layer would scroll away with
+   the rows and be cut by the box's own overflow. So focus paints the bracket
+   set as the box's own background, which stays fixed to the box
+   (background-attachment: scroll is relative to the element, not its rows). */
+.db-rows:focus-visible::after { content: none; }
+.db-rows:focus-visible {
+  background-image: var(--focus-brackets);
+  background-position: var(--focus-brackets-pos);
+  background-size: var(--focus-brackets-size);
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
 
 .db-rows {
   display: flex;

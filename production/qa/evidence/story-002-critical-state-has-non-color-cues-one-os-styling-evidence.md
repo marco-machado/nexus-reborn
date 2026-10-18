@@ -4,7 +4,7 @@
 > **Story Type**: Visual/Feel
 > **Date**: 2026-10-17; re-captured 2026-10-18 after the advisory-review fixes
 > **Tester**: Claude (headless Chrome for Testing, /dev-story, unattended workflow run)
-> **Build / Commit**: cd98566 (IF-002 work and the Ledger Amber cleanup, committed together) + uncommitted fixes from advisory review 2: the 2 Hz edge glow, the lost-banner cross, colour literals moved onto palette tokens, credit balances in Ledger Amber, and the doc wording. The final re-capture (2026-10-18) is from that tree.
+> **Build / Commit**: 0548369 + uncommitted code-review fixes (Assembly bay focus, brackets inside scrolling lists, Debrief scroller). Earlier: cd98566 (IF-002 work and the Ledger Amber cleanup, committed together), then 0548369 with the fixes from advisory review 2: the 2 Hz edge glow, the lost-banner cross, colour literals moved onto palette tokens, credit balances in Ledger Amber, and the doc wording. The final re-capture (2026-10-18) is from that tree.
 > **Captures**: `production/qa/evidence/if-002/` (script `capture.mjs`, transcript `capture-output.txt`, facts `capture-result.json`)
 
 ---
@@ -38,14 +38,16 @@ Re-captured 2026-10-18 after the advisory-review fixes. All captures in `product
 | 08/09 | Result | `08-result-won-*.png`, `09-result-lost-*.png` | Banner words `CONTRACT FULFILLED // EXTRACTION CONFIRMED` and `SQUAD ELIMINATED // CONTRACT TERMINATED`. The lost title now prints in Print White (17.7:1 against the banner ground; the won title is 14.5:1); red carries failure on a 2px frame and the sub-line. The lost title opens with the failed-objective mark (a crossed box), so lost differs from won by shape as well as words. | Teal for won; red frame, sub-line and cross for lost. |
 | 10 | Collateral / Credits | `10-collateral-credits-*.png` | Collateral is the hud.md E4 chip: `COLLATERAL 2`, a count with no CR, in Telemetry Ink; the word carries it. Credits print `128,450 CR` (hud.md E5). | Collateral ink (not Ledger Amber). Credits Ledger Amber (art bible §4.1: money). |
 | 11 | High contrast | `11-high-contrast-*.png` | The same HUD under `:root.s-high-contrast`: the Alert frame, the injured dashed outline and the selection double ring all hold. | Unchanged. |
+| 12 | Focus on an Assembly bay | `12-assembly-bay-focus-*.png` | The bay owns `::after` for its glass sheen, which used to replace the bracket set (no focus cue at all; found by code review 2026-10-18). `.ts-bay:focus-visible::after` now paints the eight bracket strokes over the sheen. | Teal. |
+| 13 | Focus inside a scrolling list | `13-sector-focus-*.png` | A sector card in the scrolling sector list draws its bracket set on its own edge (`--focus-inset: 0` on `.scroll` and `.set-bind-list`), so the list no longer clips it. | Teal. |
 
-**Focus sweep**: the script Tabs through the Menu (5 stops), the World Network (39) and the Mission HUD (29). Every stop draws the bracket set, or a 2px frame for a canvas / form field, or the dashed stroke for an SVG node, and no bracket set is cut off by its own element's overflow (`capture-result.json` → `focusSweep`).
+**Focus sweep**: the script Tabs through the Menu (5 stops), Settings (40), the World Network (39), Research (40), Assembly (39) and the Mission HUD (29). Every stop draws the bracket set, or a 2px frame for a canvas / form field, or the dashed stroke for an SVG node. Clipping is checked against the element's own box, every ancestor whose overflow is not visible or that has a clip-path, and the viewport (`capture-result.json` → `focusSweep`, with the stops each sweep reached). Correction: before 2026-10-18 the sweep checked only the element's own overflow and covered only Menu, World Network and HUD, so this line overstated it. Code review found the gaps: the World Network sector and contract cards, the Assembly roster rows and a Settings rebind row were clipped by their scrolling lists, and Assembly bays showed no focus cue. All are fixed and now pass. The Assembly sweep's 40 Tabs stop in the roster and do not reach the bays; capture 12 covers a focused bay. The Debrief invoice (`.db-rows`), the one focusable scroller, paints the set as its own fixed background; it is checked on a stand-in with the same class (harness assist; the Debrief itself is not reached in this run).
 
 **Minimap**: the check zooms the minimap fully out (it opens at its closest zoom, which leaves the objective zone off the canvas), samples 14 frames with the sim frozen, then restores the zoom. VIP Ice pixels that come and go between frames are the objective pulse; VIP Ice pixels in every frame would be static VIP / DEVICE marks. Result: 24 pulse pixels, 0 steady VIP Ice pixels (this mission shows no VIP or DEVICE mark), 0 amber pixels (`capture-result.json` → `minimap`). Correction: the earlier version of this check reported 1000 "VIP Ice" pixels, but its colour test also matched teal, so those were teal operatives, not the pulse.
 
 **Nominal Green**: none painted under `.hud-root` (`greenInHud: []`).
 
-I opened and viewed `02-focus-grey`, `06-injury-kia-grey`, `07-alert-grey` and `09-result-lost-grey` in earlier 2026-10-18 runs, the softer 2 Hz glow in `07-alert-colour` / `07-alert-grey` from a scratch run, and `09-result-lost-grey` and `03-lock-colour` from the final run. The retained files are from the final run.
+I opened and viewed `02-focus-grey`, `06-injury-kia-grey`, `07-alert-grey` and `09-result-lost-grey` in earlier 2026-10-18 runs, the softer 2 Hz glow in `07-alert-colour` / `07-alert-grey` from a scratch run, and `09-result-lost-grey` and `03-lock-colour` from the final run. The retained files are from the final run. From the 2026-10-18 code-review fix run I viewed `12-assembly-bay-focus-colour` and `13-sector-focus-grey`: the bracket corners show on the bay and inside the sector card.
 
 ---
 
@@ -158,4 +160,4 @@ This is an agent's review, not the lead sign-off. The lead row below stays pendi
 | Advisory (art-director agent) | Claude (art-director agent) | APPROVED WITH CONDITIONS (advisory; conditions non-blocking, see above) | 2026-10-18 |
 | Implementer (advisory fixes) | Claude | Conditions 1–6 addressed; re-captured ALL PASS; captures viewed | 2026-10-18 |
 | Advisory 2 (art-director agent) | Claude (art-director agent) | APPROVED WITH CONDITIONS (advisory; 7 new conditions, all non-blocking, see above) | 2026-10-18 |
-| Lead (art-director) | **pending** | Required by the QA plan (IF-002 lead sign-off) before `/story-done` | — |
+| Lead (art-director) | Marco Machado | PASS | 2026-10-18 |

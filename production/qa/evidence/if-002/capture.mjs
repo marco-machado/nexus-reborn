@@ -107,19 +107,46 @@ async function focusSweep(surface, tabs) {
           return { name, kind: 'frame', ok }
         }
         const face = el.querySelector(':scope > .cta-inner')
-        const a = getComputedStyle(face || el, '::after')
+        const host = face || el
+        const a = getComputedStyle(host, '::after')
+        // Eight 2px strokes; a component may add its own layer under them.
         const strokes = (a.backgroundImage.match(/linear-gradient/g) || []).length
-        const outside = parseFloat(a.top) < 0
-        const clipped = outside && (own.overflow !== 'visible' || own.clipPath !== 'none')
-        return { name, kind: 'brackets', ok: a.content !== 'none' && strokes === 8 && !clipped, clipped }
+        // Where the bracket layer sits on screen: the host's padding box
+        // widened by the ::after insets (negative = outside the box).
+        const r = host.getBoundingClientRect()
+        const hs = getComputedStyle(host)
+        const px = (v) => parseFloat(v) || 0
+        const box = {
+          l: r.left + px(hs.borderLeftWidth) + px(a.left),
+          t: r.top + px(hs.borderTopWidth) + px(a.top),
+          r: r.right - px(hs.borderRightWidth) - px(a.right),
+          b: r.bottom - px(hs.borderBottomWidth) - px(a.bottom),
+        }
+        // Every box that clips it: the host itself when the set sits outside
+        // it, each ancestor whose overflow is not visible or that has a
+        // clip-path, and the viewport. A corner cut by more than half a pixel
+        // loses its stroke.
+        const clips = []
+        const clipOf = (n) => {
+          const nr = n.getBoundingClientRect()
+          return { l: nr.left + n.clientLeft, t: nr.top + n.clientTop, r: nr.left + n.clientLeft + n.clientWidth, b: nr.top + n.clientTop + n.clientHeight, who: (n.className && n.className.toString().split(' ')[0]) || n.tagName }
+        }
+        const clipsBox = (st) => st.overflowX !== 'visible' || st.overflowY !== 'visible' || st.clipPath !== 'none'
+        if (px(a.top) < 0 && clipsBox(hs)) clips.push(clipOf(host))
+        for (let n = host.parentElement; n && n !== document.documentElement; n = n.parentElement) {
+          if (clipsBox(getComputedStyle(n))) clips.push(clipOf(n))
+        }
+        clips.push({ l: 0, t: 0, r: innerWidth, b: innerHeight, who: 'viewport' })
+        const cut = clips.find((c) => box.l < c.l - 0.5 || box.t < c.t - 0.5 || box.r > c.r + 0.5 || box.b > c.b + 0.5)
+        return { name, kind: 'brackets', ok: a.content !== 'none' && strokes >= 8 && !cut, clipped: cut ? cut.who : null }
       }),
     )
   }
   const stops = seen.filter(Boolean)
   const bad = stops.filter((x) => !x.ok)
   report.focusSweep = report.focusSweep || {}
-  report.focusSweep[surface] = { stops: stops.length, bad }
-  check(`focus sweep ${surface}: brackets on every stop`, stops.length > 0 && bad.length === 0, `${stops.length} stops` + (bad.length ? '; bad: ' + bad.map((b) => b.name + (b.clipped ? ' (clipped)' : '')).join(', ') : ''))
+  report.focusSweep[surface] = { stops: stops.length, names: [...new Set(stops.map((x) => x.name))], bad }
+  check(`focus sweep ${surface}: brackets on every stop`, stops.length > 0 && bad.length === 0, `${stops.length} stops` + (bad.length ? '; bad: ' + bad.map((b) => b.name + (b.clipped ? ' (clipped by ' + b.clipped + ')' : '')).join(', ') : ''))
 }
 
 // ---------------------------------------------------------------- Menu
@@ -151,6 +178,42 @@ await shoot('02', 'focus', () => {
 })
 
 await focusSweep('menu', 6)
+await page.mouse.click(5, 5)
+
+// The Debrief invoice (.db-rows) is the one focusable scroller. Harness
+// assist: a stand-in with the same class and tabindex, taller content than its
+// box, focused right after a Tab so :focus-visible applies; the real Debrief
+// is not reached in this run.
+await page.keyboard.press('Tab')
+report.dbRows = await page.evaluate(() => {
+  const el = document.createElement('div')
+  el.className = 'db-rows'
+  el.tabIndex = 0
+  el.style.cssText = 'position:fixed;left:40px;top:40px;width:300px;height:120px'
+  el.innerHTML = '<div style="height:400px"></div>'
+  document.body.appendChild(el)
+  el.focus()
+  el.scrollTop = 200
+  const s = getComputedStyle(el)
+  const a = getComputedStyle(el, '::after')
+  const out = {
+    focusVisible: el.matches(':focus-visible'),
+    afterContent: a.content,
+    strokes: (s.backgroundImage.match(/linear-gradient/g) || []).length,
+    attachment: s.backgroundAttachment.split(',')[0].trim(),
+  }
+  el.remove()
+  return out
+})
+check('Debrief invoice scroller: bracket set fixed to the box', report.dbRows.focusVisible && report.dbRows.afterContent === 'none' && report.dbRows.strokes === 8 && report.dbRows.attachment === 'scroll', JSON.stringify(report.dbRows))
+await page.mouse.click(5, 5)
+
+// Settings over the Menu.
+await page.locator('[aria-label^="OPEN SETTINGS"]').first().click()
+await wait(500)
+await focusSweep('settings', 40)
+await page.keyboard.press('Escape')
+await wait(400)
 
 // ---------------------------------------------------------------- Lock
 await page.getByText('NEW OPERATION').first().click()
@@ -172,7 +235,25 @@ await shoot('03', 'lock', () => {
 })
 
 await focusSweep('world-network', 40)
+// A focused sector card inside the scrolling sector list.
+await page.keyboard.press('Tab')
+await page.locator('.wm-sector').first().focus()
+await wait(150)
+await shoot('13', 'sector-focus', () => {
+  const el = document.activeElement
+  const a = getComputedStyle(el, '::after')
+  return { ok: el.classList.contains('wm-sector') && el.matches(':focus-visible') && a.top === '0px', cue: `sector card "${(el.getAttribute('aria-label') || '').slice(0, 24)}" brackets inset ${a.top} inside the scroll list` }
+})
 await page.mouse.click(5, 5)
+
+// Research, then back to the World Network.
+await page.locator('.navtab', { hasText: 'RESEARCH' }).first().click()
+await wait(700)
+await page.mouse.click(5, 5)
+await focusSweep('research', 40)
+await page.mouse.click(5, 5)
+await page.locator('.navtab', { hasText: 'WORLD NETWORK' }).first().click()
+await wait(700)
 
 // ---------------------------------------------------------------- Mission
 await page.locator('[aria-label^="OPEN CONTRACT GLASS VEIL"]').first().click()
@@ -185,6 +266,20 @@ for (let i = 0; i < 8; i++) {
   await assign.first().click()
   await wait(150)
 }
+// Assembly, with the squad assigned.
+await page.mouse.click(5, 5)
+await focusSweep('assembly', 40)
+// A focused bay (it owns ::after for its sheen) and its bracket set.
+await page.keyboard.press('Tab')
+await page.locator('.ts-bay').first().focus()
+await wait(150)
+await shoot('12', 'assembly-bay-focus', () => {
+  const el = document.activeElement
+  const a = getComputedStyle(el, '::after')
+  const strokes = (a.backgroundImage.match(/linear-gradient/g) || []).length
+  return { ok: el.classList.contains('ts-bay') && el.matches(':focus-visible') && strokes >= 8, cue: `bay "${(el.getAttribute('aria-label') || '').slice(0, 30)}" bracket layer: ${strokes} gradients (8 strokes + sheen)` }
+})
+await page.evaluate(() => document.activeElement?.blur())
 await page.locator('[aria-label^="DEPLOY STRIKE TEAM"]').click()
 await until(async () => !!(await import('/src/game/runtime.ts')).getWorld(), 60000)
 await wait(3000)
