@@ -1,7 +1,7 @@
 # Story 002: Critical state has non-color cues; one OS styling
 
 > **Epic**: Interface
-> **Status**: In Review
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
@@ -34,8 +34,8 @@
 
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
-- [ ] (AC2) GIVEN critical states selection, focus, injury/KIA, lock, objective, Alert, and result, WHEN each is shown, THEN each has a readable non-color cue. Hue, where used, follows living §12: teal for selection and live state, Ledger Amber for money only (prices, credit balances and spend authorization), red for danger, VIP Ice for the active objective. Nominal Green is not a tactical-feed cue.
-- [ ] (AC3) GIVEN Menu and Mission HUD captures, WHEN their styling is checked against living §12/§14, THEN both use the shared near-black ground, the reconciled semantic roles (teal selection, Ledger Amber money: price, balance and spend authorization, red danger, VIP Ice active objective), monospace uppercase labels, primary values larger than labels, and technical borders. Record the observed elements and deviations; overall visual coherence is a recorded visual-review judgment, not an unnamed numeric gate.
+- [x] (AC2) GIVEN critical states selection, focus, injury/KIA, lock, objective, Alert, and result, WHEN each is shown, THEN each has a readable non-color cue. Hue, where used, follows living §12: teal for selection and live state, Ledger Amber for money only (prices, credit balances and spend authorization), red for danger, VIP Ice for the active objective. Nominal Green is not a tactical-feed cue.
+- [x] (AC3) GIVEN Menu and Mission HUD captures, WHEN their styling is checked against living §12/§14, THEN both use the shared near-black ground, the reconciled semantic roles (teal selection, Ledger Amber money: price, balance and spend authorization, red danger, VIP Ice active objective), monospace uppercase labels, primary values larger than labels, and technical borders. Record the observed elements and deviations; overall visual coherence is a recorded visual-review judgment, not an unnamed numeric gate.
 
 ---
 
@@ -77,7 +77,7 @@
 **Required evidence**:
 - Visual/Feel: a retained screenshot in `production/qa/evidence/` + sign-off in `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md`. Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [x] Created — `production/qa/evidence/if-002/` (9 colour + 9 greyscale captures, `capture.mjs`, `capture-output.txt` ALL PASS, `capture-result.json`) and `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md` (art-director sign-off pending); unit test `src/ui/criticalCues.test.ts`
+**Status**: [x] Created — `production/qa/evidence/if-002/` (9 colour + 9 greyscale captures, `capture.mjs`, `capture-output.txt` ALL PASS, `capture-result.json`) and `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md` (lead art-director sign-off: Marco Machado, PASS, 2026-10-18); 13 capture pairs as of 2026-10-18; unit test `src/ui/criticalCues.test.ts`
 
 ---
 
@@ -97,3 +97,16 @@
 - **Advisory review 2 (2026-10-18)**: art-director agent, APPROVED WITH CONDITIONS (advisory, non-blocking). All seven conditions addressed the same day: the edge glow pulses at about 2 Hz and is softer; the lost banner carries the failed-objective cross; main-menu.md records the Signal Cyan primary CTA; §12, §14 and interface Rule 4 now allow credit balances in Ledger Amber; new colour literals use palette tokens; the minimap check isolates the objective pulse (and showed the earlier check was a false positive). Re-captured ALL PASS.
 - **Advisories kept**: a unit with maxHp 0 now reads ok rather than low. (Resolved 2026-10-18: the teal/red rgba literals this story added are now `color-mix()` of the palette tokens and follow high-contrast mode.)
 - **Also fixed while re-running the IF-001 sweep**: World Network influence buttons spilled "10P UNAFFORDABLE" past their frame at 125% (from IF-004); `.wm-act-sub` now wraps. Sweep ALL SURFACES CLEAN.
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-18
+**Criteria**: 2/2 passing (AC2, AC3), none deferred. Covered by retained captures `production/qa/evidence/if-002/01`–`13` (colour and greyscale; capture ALL PASS) and `src/ui/criticalCues.test.ts`.
+**Deviations** (advisory):
+- The minimap canvas keeps a 2px focus frame and Research nodes a dashed hex stroke, not the P-04 brackets: a canvas and SVG nodes have no `::after`.
+- `.cta.spend` keeps non-token colour literals (`#7a5514`, `#141005`, `#ffe9bd`, `#1a1407`, amber rgba on hover) carried from the old amber CTA (ADR-0017).
+- Scope reached past the story's files: World Network, Research, Assembly, Brief, minimap, 3D scene and design docs, for the Ledger Amber cleanup and the review follow-ups the owner approved.
+**Test Evidence**: Visual/Feel: `production/qa/evidence/story-002-critical-state-has-non-color-cues-one-os-styling-evidence.md`, lead art-director sign-off Marco Machado, PASS, 2026-10-18; two advisory art-director agent reviews recorded.
+**Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, ui-programmer, qa-tester, technical-artist (changes since 06420c7; first pass CHANGES REQUIRED on Assembly bay focus and brackets clipped in scroll lists, fixed in 9272df9 and re-reviewed). Suggestions kept: `.btn.teal` hover glow; state blinks not frozen under reduced motion; edge glow animates a full-viewport box-shadow; Collateral live region mounts on first hit; officer radio pack may not read at 24px; capture checks still compare some hard-coded colours; `.db-failed` (tabIndex -1) matches the bracket rule; no automated guard against amber or hex regressions.
+**Mutation Check**: skipped — Visual/Feel story

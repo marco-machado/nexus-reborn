@@ -102,11 +102,11 @@ stories:
     name: "Critical state has non-colour cues; one OS styling"
     file: "production/epics/interface/story-002-critical-state-has-non-color-cues-one-os-styling.md"
     priority: nice-to-have
-    status: review
+    status: done
     owner: ""
     estimate_days: 0.4
-    blocker: "art-director sign-off (user)"
-    completed: ""
+    blocker: ""
+    completed: "2026-10-18"
   - id: "AU-001"
     name: "Mixer: master, channels, mute, and settings persistence"
     file: "production/epics/audio/story-001-mixer-master-channels-mute-and-settings-persistence.md"
