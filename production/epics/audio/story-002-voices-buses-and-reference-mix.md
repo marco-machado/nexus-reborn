@@ -1,12 +1,12 @@
 # Story 002: Voices, buses, and the reference mix
 
 > **Epic**: Audio
-> **Status**: In Review
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: 2026-10-17
+> **Last Updated**: 2026-10-18
 
 ## Context
 
@@ -33,8 +33,8 @@
 
 *From GDD `design/gdd/audio.md`, scoped to this story:*
 
-- [ ] GIVEN decoded clips, a running context, mute off, and the existing default player levels over the authored mix (record the settings with the evidence), WHEN selection, UI click, confirmation, interaction progress, objective-complete, reload, blast, ability, alert sting, death, operative hit, and each weapon gunshot (squad and CorpSec) are exercised individually and in a recorded overlapping-fire scenario, THEN each required voice exists, weapon identities remain distinct, CorpSec versions of matching firearms are quieter/narrower, interface cues stay below weapon reports, and impacts/warnings remain readable. These listening comparisons apply to that reference mix, not deliberate player overrides. Independently exercise first combat contact, an answered officer call, and a defend wave: each requests its warning sting through existing admission rules. Ordinary suspicion without a separate warning event requests no sting and does not independently raise the drone; the drone follows HUD Alert rather than generic suspicion.
-- [ ] GIVEN overlapping gunfire, WHEN the mix is inspected, THEN stacking remains bounded and finished one-shot sources disconnect. Exact cap integers are README runtime, not this AC’s pass numbers.
+- [x] GIVEN decoded clips, a running context, mute off, and the existing default player levels over the authored mix (record the settings with the evidence), WHEN selection, UI click, confirmation, interaction progress, objective-complete, reload, blast, ability, alert sting, death, operative hit, and each weapon gunshot (squad and CorpSec) are exercised individually and in a recorded overlapping-fire scenario, THEN each required voice exists, weapon identities remain distinct, CorpSec versions of matching firearms are quieter/narrower, interface cues stay below weapon reports, and impacts/warnings remain readable. These listening comparisons apply to that reference mix, not deliberate player overrides. Independently exercise first combat contact, an answered officer call, and a defend wave: each requests its warning sting through existing admission rules. Ordinary suspicion without a separate warning event requests no sting and does not independently raise the drone; the drone follows HUD Alert rather than generic suspicion.
+- [x] GIVEN overlapping gunfire, WHEN the mix is inspected, THEN stacking remains bounded and finished one-shot sources disconnect. Exact cap integers are README runtime, not this AC’s pass numbers.
 
 ---
 
@@ -79,7 +79,7 @@
 **Required evidence**:
 - Visual/Feel: a listening-evidence note with the recorded settings and scenarios in `production/qa/evidence/`, plus a lead sign-off. Name the screens exercised (docs/click-through.md, Audio changes).
 
-**Status**: [x] Automated tests present (`src/game/audio.test.ts` AU-002 block, `src/game/audio.stings.test.ts`); listening-evidence note prepared at `production/qa/evidence/au-002/README.md` — listening and audio-director sign-off pending
+**Status**: [x] Automated tests present (`src/game/audio.test.ts` AU-002 block, `src/game/audio.stings.test.ts`); listening-evidence note at `production/qa/evidence/au-002/README.md` — listening pass run 2026-10-18 (25/25 pass), audio-director sign-off recorded, screenshots retained for rows 23–25
 
 ---
 
@@ -113,3 +113,13 @@
   - `production/qa/evidence/au-002/README.md:12`: browser-probe results are prose only; commit the probe snippet or a log, and record the real commit hash once the tests are committed (`src/game/audio.stings.test.ts` is untracked).
   - `src/game/audio.stings.test.ts:126` duplicates the staging `put(w, a1, { x: 46.5, z: 85.5 })` from `src/game/world.test.ts:1614`; a shared helper would remove the duplication.
 - **Autonomous decisions logged**: specialist review answered from the workflow's `/code-review` record; Phase 7 close not taken (NOT ASSESSED cannot be closed without the owner, `scope_changes` always-ask).
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-18
+**Criteria**: 2/2 passing (AC-1 listening comparisons: user listening pass 2026-10-18, rows 1–25 pass; AC-2: 40-shot burst test and browser probe)
+**Deviations**: None blocking. Advisory: `TR-audio-004` registry text ("No spoken VO, no spatial shooter mix, and no payout celebration sting") does not describe this story's criteria — the first two hold here, the third is AU-007's; the TR mapping looks wrong. The `/code-review` advisory findings listed under "Open for Sign-off" stand.
+**Test Evidence**: Visual/Feel: listening-evidence note with settings, scenarios and audio-director sign-off (Marco Machado, 2026-10-18 — approved) at `production/qa/evidence/au-002/README.md`; retained screenshots `production/qa/evidence/au-002/23-officer-call-sting.jpg`, `24-defend-wave-sting.jpg`, `25-suspicion-no-sting.jpg`; automated tests `src/game/audio.test.ts` (AU-002 block) and `src/game/audio.stings.test.ts` (file presence checked; not re-run at close).
+**Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer
+**Mutation Check**: skipped — Visual/Feel story
