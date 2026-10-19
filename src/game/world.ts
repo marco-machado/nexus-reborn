@@ -2357,14 +2357,6 @@ export function createWorld(
     syncSquad()
   }
 
-  function canUseAbility(agentId: string): SimUnit | null {
-    const ms = useMissionStore.getState()
-    if (!ms.live || ms.paused || ms.result !== 'none' || result !== 'none') return null
-    const u = byId.get(agentId)
-    if (!u || u.kind !== 'agent' || u.stance === 'dead' || u.hp <= 0) return null
-    return u
-  }
-
   function itemsUsable(): boolean {
     const ms = useMissionStore.getState()
     return ms.live && !ms.paused && ms.result === 'none' && result === 'none'
@@ -2420,16 +2412,32 @@ export function createWorld(
     return true
   }
 
-  function orderGrenade(agentId: string, target: Vec2): boolean {
-    const u = canUseAbility(agentId)
-    if (!u || inventory.cell <= 0 || world.time < grenadeReadyAt) return false
-    if (!Number.isFinite(target.x) || !Number.isFinite(target.z)) return false
-    if (target.x < 0 || target.z < 0 || target.x >= city.size || target.z >= city.size) return false
-    const resolved = isWalkable(city, target.x, target.z)
-      ? { x: target.x, z: target.z }
-      : nearestWalkable(city, target)
-    if (!resolved || dist(target, resolved) > GRENADE_TARGET_SNAP) return false
-    if (dist(u.pos, resolved) > GRENADE_RANGE) return false
+  // The first selected operative in range throws (Core Rule 6: Q fires the
+  // current selection). A throw nobody can make reports why and spends nothing.
+  function orderGrenade(agentIds: string[], target: Vec2): boolean {
+    if (!itemsUsable() || inventory.cell <= 0 || world.time < grenadeReadyAt) return false
+    const crew = ordered(agentIds).filter((a) => a.hp > 0)
+    if (crew.length === 0) {
+      pushLog('SYS', 'GRENADE: NO LIVING OPERATIVE SELECTED.', 'alert')
+      return false
+    }
+    const onMap =
+      Number.isFinite(target.x) && Number.isFinite(target.z) &&
+      target.x >= 0 && target.z >= 0 && target.x < city.size && target.z < city.size
+    const resolved = !onMap
+      ? null
+      : isWalkable(city, target.x, target.z)
+        ? { x: target.x, z: target.z }
+        : nearestWalkable(city, target)
+    if (!resolved || dist(target, resolved) > GRENADE_TARGET_SNAP) {
+      pushLog('SYS', 'GRENADE: NO OPEN GROUND AT THE TARGET.', 'alert')
+      return false
+    }
+    const u = crew.find((a) => dist(a.pos, resolved) <= GRENADE_RANGE)
+    if (!u) {
+      pushLog('SYS', 'GRENADE: TARGET OUT OF RANGE OF THE SELECTION.', 'alert')
+      return false
+    }
 
     inventory.cell -= 1
     cellUsed += 1

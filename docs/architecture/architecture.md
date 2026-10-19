@@ -248,7 +248,7 @@ interface WorldApi {
   orderAbility(ids: string[]): void
   orderUseMed(ids: string[]): boolean
   orderUseCell(ids: string[]): boolean
-  orderGrenade(agentId: string, target: Vec2): boolean
+  orderGrenade(agentIds: string[], target: Vec2): boolean
   unit(id: string): Unit | undefined
 }
 getWorld(): WorldApi | null   // runtime.ts; scene reads imperatively

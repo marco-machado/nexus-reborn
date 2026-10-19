@@ -345,7 +345,10 @@ export interface WorldApi {
   // role-ability cooldown. No running cooldown pushes a comm fail line and
   // spends nothing.
   orderUseCell(agentIds: string[]): boolean
-  orderGrenade(agentId: string, target: Vec2): boolean
+  // The first selected operative within range throws. No living thrower, no
+  // open ground at the target, or nobody in range pushes a comm fail line and
+  // spends nothing.
+  orderGrenade(agentIds: string[], target: Vec2): boolean
   unit(id: string): Unit | undefined
 }
 

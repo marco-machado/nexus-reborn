@@ -164,7 +164,7 @@ describe('warning-sting requests (AU-002)', () => {
     // (noise radius 24) but sees nobody, so it investigates without contact.
     put(w, guard, { x: a1.pos.x, z: a1.pos.z - 26 })
     const bang = nearestWalkable(w.city, { x: a1.pos.x, z: a1.pos.z - 16 })!
-    expect(w.orderGrenade('a1', bang)).toBe(true)
+    expect(w.orderGrenade(['a1'], bang)).toBe(true)
     const suspicious = runUntil(w, () => guard.aiState === 'suspicious', 2)
     expect(suspicious).toBe(true)
     warm(w, 0.5)

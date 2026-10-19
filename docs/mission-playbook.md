@@ -31,7 +31,7 @@ Step the fight: unpause for 0.5–1 s, pause, read `w.units`, issue orders, repe
 | `w.orderHold(ids, true)` | H |
 | `w.orderUseMed([id])` | medkit item |
 | `w.orderAbility(ids)` | Q |
-| `w.orderGrenade(id, {x, z})` | grenade targeting; returns false when unavailable |
+| `w.orderGrenade(ids, {x, z})` | grenade targeting; first selected operative in range throws; returns false when unavailable (comm line on no thrower / bad target / out of range) |
 
 Use `hasLos(w.city, a, b)` from `/src/game/pathfind.ts` to test sight lines. It takes the city, not `city.walk`.
 

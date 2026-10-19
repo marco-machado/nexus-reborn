@@ -558,19 +558,19 @@ describe('orders', () => {
 
     // Not live: no ability fires.
     useMissionStore.getState().setLive(false)
-    expect(w.orderGrenade('a1', here)).toBe(false)
+    expect(w.orderGrenade(['a1'], here)).toBe(false)
     useMissionStore.getState().setLive(true)
 
     // Beyond GRENADE_RANGE: rejected without spending the cell.
-    expect(w.orderGrenade('a1', { x: here.x, z: here.z - 30 })).toBe(false)
+    expect(w.orderGrenade(['a1'], { x: here.x, z: here.z - 30 })).toBe(false)
     expect(a1.hp).toBe(a1.maxHp)
 
     // On target: spends the cell and hurts whoever stands at the blast centre.
-    expect(w.orderGrenade('a1', here)).toBe(true)
+    expect(w.orderGrenade(['a1'], here)).toBe(true)
     expect(a1.hp).toBeCloseTo(a1.maxHp - 70, 10)
 
     // Stock is gone (and the cooldown running): the next throw is refused.
-    expect(w.orderGrenade('a1', here)).toBe(false)
+    expect(w.orderGrenade(['a1'], here)).toBe(false)
 
     warm(w, 0.25)
     expect(useMissionStore.getState().inventory.cell).toBe(0)
@@ -755,10 +755,53 @@ describe('orders', () => {
     const a2 = w.unit('a2')!
     const at = { x: a2.pos.x, z: a2.pos.z }
 
-    expect(w.orderGrenade('', at)).toBe(false)
-    expect(w.orderGrenade('a1', at)).toBe(false)
+    expect(w.orderGrenade([''], at)).toBe(false)
+    expect(w.orderGrenade(['a1'], at)).toBe(false)
     // The cell is still there: a living thrower can spend it.
-    expect(w.orderGrenade('a2', at)).toBe(true)
+    expect(w.orderGrenade(['a2'], at)).toBe(true)
+  })
+
+  it('a grenade throws from the first selected operative in range, not only the first id (BUG-0005)', () => {
+    const w = spawn(BARE_MISSION, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const a2 = w.unit('a2')!
+    const at = { x: a2.pos.x, z: a2.pos.z }
+    // Park a1 out of grenade range of a2's spot.
+    let far: { x: number; z: number } | null = null
+    for (let d = 25; d < 60 && !far; d += 1) {
+      for (const [sx, sz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const p = { x: at.x + sx * d, z: at.z + sz * d }
+        if (isWalkable(w.city, p.x, p.z)) { far = p; break }
+      }
+    }
+    expect(far).not.toBeNull()
+    a1.pos.x = far!.x
+    a1.pos.z = far!.z
+
+    expect(w.orderGrenade(['a1', 'a2'], at)).toBe(true)
+    warm(w, 0.25)
+    expect(useMissionStore.getState().inventory.cell).toBe(0)
+  })
+
+  it('a grenade nobody selected can make reports on the Comm log and spends nothing (BUG-0005)', () => {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')!
+    const logs = () => useMissionStore.getState().log.map((e) => e.msg)
+
+    expect(w.orderGrenade(['a1'], { x: a1.pos.x, z: a1.pos.z - 30 })).toBe(false)
+    expect(logs()).toContain('GRENADE: TARGET OUT OF RANGE OF THE SELECTION.')
+    expect(w.orderGrenade(['a1'], { x: -5, z: a1.pos.z })).toBe(false)
+    expect(logs()).toContain('GRENADE: NO OPEN GROUND AT THE TARGET.')
+    expect(w.orderGrenade(['nobody'], { x: a1.pos.x, z: a1.pos.z })).toBe(false)
+    expect(logs()).toContain('GRENADE: NO LIVING OPERATIVE SELECTED.')
+
+    warm(w, 0.25)
+    expect(useMissionStore.getState().inventory.cell).toBe(1)
+    expect(a1.hp).toBe(a1.maxHp)
   })
 
   it('Attack on a Device sets no Explicit target (AC 5d)', () => {
@@ -1289,7 +1332,7 @@ describe('role abilities', () => {
     mara.path.length = 0
     // One grenade at both their feet: same 70-damage center hit, and only the
     // demolitions frame takes 15% less.
-    expect(w.orderGrenade('a1', { x: torq.pos.x, z: torq.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: torq.pos.x, z: torq.pos.z })).toBe(true)
     expect(torq.hp).toBeCloseTo(torq.maxHp - 70 * 0.85, 5)
     expect(mara.hp).toBeCloseTo(mara.maxHp - 70, 5)
   })
@@ -1488,7 +1531,7 @@ describe('milestone 2 missions', () => {
     if (!vip || !a1) return
     // A grenade on the cell block: 70 damage at the centre beats 60 vip hp.
     put(a1, { x: vip.pos.x + 5, z: vip.pos.z })
-    expect(w.orderGrenade('a1', { x: vip.pos.x, z: vip.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: vip.pos.x, z: vip.pos.z })).toBe(true)
     expect(vip.stance).toBe('dead')
     expect(useMissionStore.getState().result).toBe('lost')
   })
@@ -2096,7 +2139,7 @@ describe('scripted playthrough', () => {
     civ.pos.x = a1.pos.x
     civ.pos.z = a1.pos.z - 2
     civ.path.length = 0
-    expect(w.orderGrenade('a1', { x: civ.pos.x, z: civ.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: civ.pos.x, z: civ.pos.z })).toBe(true)
 
     // Teleport-complete the mission so the counters reach the outcome.
     a1.pos.x = w.city.checkpoint.x
@@ -2307,7 +2350,7 @@ describe('objectives and outcome', () => {
     victim.pos.z = thrower.pos.z
     victim.path.length = 0
     victim.hp = 10
-    expect(w.orderGrenade('a1', { x: victim.pos.x, z: victim.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: victim.pos.x, z: victim.pos.z })).toBe(true)
     expect(victim.stance).toBe('dead')
 
     // Objectives: gate, garrison (already down), then extract every living agent.
@@ -3745,7 +3788,7 @@ describe('civiliansHit counts unique squad-caused civilian first-hits (TM-010, A
     const at = { x: a1.pos.x, z: a1.pos.z - 3 }
     const [c1, c2] = bystanders(w, [at, { x: at.x, z: at.z - 0.5 }])
 
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     expect(c1.hp).toBeLessThan(TOUGH)
     expect(c2.hp).toBeLessThan(TOUGH)
     expect(useMissionStore.getState().civiliansHit).toBe(2)
@@ -3754,7 +3797,7 @@ describe('civiliansHit counts unique squad-caused civilian first-hits (TM-010, A
     const hp1 = c1.hp
     const hp2 = c2.hp
     warm(w, 5)
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     expect(c1.hp).toBeLessThan(hp1)
     expect(c2.hp).toBeLessThan(hp2)
     expect(useMissionStore.getState().civiliansHit).toBe(2)
@@ -3771,7 +3814,7 @@ describe('civiliansHit counts unique squad-caused civilian first-hits (TM-010, A
     // the bystander beside them in the same blast.
     bystanders(w, [{ x: a1.pos.x, z: a1.pos.z - 1 }])
     a1.hp = 1
-    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: a1.pos.x, z: a1.pos.z })).toBe(true)
     expect(a1.stance).toBe('dead')
     w.tick(STEP)
     expect(useMissionStore.getState().result).toBe('lost')
@@ -4117,7 +4160,7 @@ describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-
     const vip = w.units.find((u) => u.kind === 'vip')!
     const a1 = w.unit('a1')!
     put(a1, { x: vip.pos.x + 5, z: vip.pos.z })
-    expect(w.orderGrenade('a1', { x: vip.pos.x, z: vip.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: vip.pos.x, z: vip.pos.z })).toBe(true)
     expect(vip.stance).toBe('dead')
     expect(w.units.some((u) => u.kind === 'agent' && u.stance !== 'dead')).toBe(true)
     expect(useMissionStore.getState().result).toBe('lost')
@@ -4157,7 +4200,7 @@ describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-
     put(holdout, a1.pos)
     pin(holdout, 1)
     a1.hp = 1
-    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: a1.pos.x, z: a1.pos.z })).toBe(true)
     expect(a1.stance).toBe('dead')
     expect(holdout.stance).toBe('dead')
     expect(useMissionStore.getState().result).toBe('none')
@@ -4183,7 +4226,7 @@ describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-
     put(holdout, a1.pos)
     pin(holdout, TOUGH)
     a1.hp = 1
-    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: a1.pos.x, z: a1.pos.z })).toBe(true)
     expect(a1.stance).toBe('dead')
     expect(holdout.stance).not.toBe('dead')
     w.tick(STEP)
@@ -4207,7 +4250,7 @@ describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-
     put(vip, a1.pos)
     vip.hp = 1
     a1.hp = 1
-    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: a1.pos.x, z: a1.pos.z })).toBe(true)
     expect([a1.stance, holdout.stance, vip.stance]).toEqual(['dead', 'dead', 'dead'])
     // The VIP death decides the step: the Loss lands before the eliminate
     // completion can be counted.
@@ -4275,7 +4318,7 @@ describe('loss conditions and the same-step tiebreak (TM-013, AC 17 / R5-a / R5-
     civs[0].hp = TOUGH
     civs[0].maxHp = TOUGH
     a1.hp = 1
-    expect(w.orderGrenade('a1', { x: a1.pos.x, z: a1.pos.z })).toBe(true)
+    expect(w.orderGrenade(['a1'], { x: a1.pos.x, z: a1.pos.z })).toBe(true)
     w.tick(STEP)
     expect(useMissionStore.getState().result).toBe('lost')
 
@@ -4522,7 +4565,7 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
     const c = probe(w, at)
     expect(hasLos(w.city, at, c.pos)).toBe(true)
 
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     expect(c.hp).toBeCloseTo(TOUGH - 70, 5)
     expect(cooldown(w)).toBeGreaterThan(0)
     expect(cells()).toBe(1)
@@ -4533,13 +4576,13 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
     const at = { x: a1.pos.x, z: a1.pos.z - 3 }
     const edge = probe(w, { x: at.x, z: at.z - 3.49 })
     expect(hasLos(w.city, at, edge.pos)).toBe(true)
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     expect(edge.hp).toBeCloseTo(TOUGH - 35.1, 1)
 
     warm(w, 5)
     edge.hp = TOUGH
     edge.pos.z = at.z - 3.6
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     expect(edge.hp).toBe(TOUGH)
   })
 
@@ -4547,7 +4590,7 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
     const { w, a1 } = setup(['op1'])
     const { blast, hidden } = wallPair(w, a1)
     const c = probe(w, hidden)
-    expect(w.orderGrenade('a1', blast)).toBe(true)
+    expect(w.orderGrenade(['a1'], blast)).toBe(true)
     expect(c.hp).toBe(TOUGH)
     warm(w, 0.25)
     expect(cells()).toBe(0)
@@ -4556,13 +4599,13 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
   it('AC 24: with zero cells the throw is refused and the cooldown stays idle', () => {
     const { w, a1 } = setup(['op1'])
     const at = { x: a1.pos.x, z: a1.pos.z - 3 }
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     warm(w, 5)
     expect(cells()).toBe(0)
     expect(cooldown(w)).toBe(0)
 
     const c = probe(w, at)
-    expect(w.orderGrenade('a1', at)).toBe(false)
+    expect(w.orderGrenade(['a1'], at)).toBe(false)
     expect(cells()).toBe(0)
     expect(cooldown(w)).toBe(0)
     expect(c.hp).toBe(TOUGH)
@@ -4571,13 +4614,13 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
   it('AC 24: a running cooldown refuses the throw and leaves the cells and cooldown unchanged', () => {
     const { w, a1 } = setup(['op1', 'op6'])
     const at = { x: a1.pos.x, z: a1.pos.z - 3 }
-    expect(w.orderGrenade('a1', at)).toBe(true)
+    expect(w.orderGrenade(['a1'], at)).toBe(true)
     const before = cooldown(w)
     expect(before).toBeGreaterThan(0)
     expect(cells()).toBe(1)
 
     const c = probe(w, at)
-    expect(w.orderGrenade('a1', at)).toBe(false)
+    expect(w.orderGrenade(['a1'], at)).toBe(false)
     expect(c.hp).toBe(TOUGH)
     // The refusal changed nothing: the cooldown kept running down (a re-armed
     // one would read near 4 s again), and the cell count is still one.
@@ -4599,7 +4642,7 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
     }
     expect(far).not.toBeNull()
     expect(dist(a1.pos, far!)).toBeGreaterThan(18)
-    expect(w.orderGrenade('a1', far!)).toBe(false)
+    expect(w.orderGrenade(['a1'], far!)).toBe(false)
     expect(cooldown(w)).toBe(0)
     expect(cells()).toBe(1)
   })

@@ -342,7 +342,7 @@ export default function Input() {
     const ids = selectedAgents(w)
     if (ids.length === 0) return
     abilityClick.current = true
-    if (w.orderGrenade(ids[0], { x: point.x, z: point.z })) {
+    if (w.orderGrenade(ids, { x: point.x, z: point.z })) {
       useMissionStore.getState().setGrenadeTargeting(false)
       pushClickMarker(point.x, point.z)
     }
