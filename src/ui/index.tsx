@@ -156,6 +156,15 @@ export function MainMenu() {
   const canContinue = continueOffered(saveStatus)
   const [newOperationArmed, setNewOperationArmed] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // Closing Settings returns focus to the SETTINGS button that opened it
+  // (IF-005 AC19). Only on an open -> closed edge, so the first mount leaves
+  // focus alone.
+  const settingsBtnRef = useRef<HTMLButtonElement | null>(null)
+  const settingsWasOpen = useRef(false)
+  useEffect(() => {
+    if (settingsWasOpen.current && !settingsOpen) settingsBtnRef.current?.focus()
+    settingsWasOpen.current = settingsOpen
+  }, [settingsOpen])
   useEffect(() => {
     const unlock = () => unlockAudio()
     document.addEventListener('click', unlock, { once: true })
@@ -236,6 +245,7 @@ export function MainMenu() {
           <button
             type="button"
             className="btn menu-settings-btn"
+            ref={settingsBtnRef}
             aria-label="OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"
             onClick={act(() => setSettingsOpen(true))}
           >
