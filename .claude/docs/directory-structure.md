@@ -14,6 +14,7 @@
 ├── tools/                       # Build and pipeline tools (ci, build, asset-pipeline)
 ├── prototypes/                  # Throwaway prototypes (outside the code root)
 ├── production/                  # Production management (sprints, milestones, releases)
+│   ├── qa/evidence/             # QA evidence — path rule below
 │   ├── session-state/           # Ephemeral session state (active.md — gitignored)
 │   └── session-logs/            # Session audit trail (gitignored)
 └── CCGS Skill Testing Framework/ # QA for the skills/agents themselves — /skill-test, /skill-improve
@@ -44,3 +45,21 @@ substitute the row above. `src/` is the table's Godot row, not a universal path.
 | **Unreal** | `Source/<Module>/Private/Tests/` | not built: "No automation tests matched" |
 
 Read `tests/unit/[system]/` (or `integration/`) anywhere as the test root plus `[System]/`.
+
+## QA evidence paths
+
+One rule for every story, so `/story-done`, `/story-readiness`,
+`/test-evidence-review` and `/gate-check` find the same files:
+
+- Screenshots and captures: `production/qa/evidence/[story-slug]/[NN]-[what-it-shows].png`
+  (the scripts that made them sit beside them).
+- The story's evidence doc, with its sign-off table:
+  `production/qa/evidence/[story-slug]-evidence.md`.
+- A run that spans stories (a `/team-qa` cycle, a bug fix's verification) gets
+  its own folder, `production/qa/evidence/[run-name]-[date]/`, and never writes
+  into a story's folder or another run's.
+
+`[story-slug]` is the story's epic prefix and number in lower case (`if-005`,
+`ra-013`). Visual/Feel captures are 1280x720, taken headless (Playwright), not
+from the in-app browser pane.
+

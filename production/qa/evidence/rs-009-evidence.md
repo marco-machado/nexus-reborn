@@ -20,7 +20,8 @@ DOM query just after authorizing: two `[data-testid=rs-remaining]` nodes, text `
 
 - No label at t = 7199 before sync, label reads 1 after `sync(7199)`, and `lastSyncT === 7199`. See `src/ui/remainingLabel.test.ts`, which renders the label to static markup and queries the test selector. A live clock syncs every 50 ms batch, so the pre-sync frame cannot be held on screen.
 
-## Open
+## Resolved 2026-10-19
 
-- Paint format `H:MM:SS` is a default pending the Research screen spec (P-22). It needs owner confirmation.
-- Lead-programmer sign-off still needed (QA plan manual line).
+- Paint format `H:MM:SS` confirmed by the owner (P-22), recorded in `design/gdd/interface.md` (Research row).
+- Lead-programmer sign-off: Marco Machado, 2026-10-19, [x] Approved.
+- The two nodes sharing `data-testid="rs-remaining"` are intended (one `RemainingLabel` component in two places); recorded in story RS-009 Completion Notes.

@@ -33,6 +33,8 @@ import { useSettingsStore } from '../state/settingsStore'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
 import { useTutorialStore } from '../state/tutorialStore'
+import { useSaveStatusStore } from '../state/saveStatusStore'
+import { screenWriteFailureLine } from './filingStatus'
 import { WORLD_ONBOARD_ID } from '../game/tutorial'
 import type { MissionDef, SectorId } from '../game/types'
 import type { SectorState } from '../state/worldStore'
@@ -632,6 +634,10 @@ function UnreadBadge() {
 function WorldOnboard() {
   const seen = useTutorialStore((s) => s.seen)
   const markSeen = useTutorialStore((s) => s.markSeen)
+  // A failed write shows inside the card while it is up, so the fixed notice
+  // never lies over its text (BUG-0003). The fixed region stays the live
+  // region screen readers announce; this copy is visual only.
+  const failLine = screenWriteFailureLine(useSaveStatusStore((s) => s.status))
   if (seen.includes(WORLD_ONBOARD_ID)) return null
   return (
     <div
@@ -642,6 +648,11 @@ function WorldOnboard() {
     >
       <div className="hud-menu-panel wm-onboard">
         <Panel title="WORLD NETWORK // ORIENTATION" right={<span className="dim">FIRST UPLINK</span>}>
+          {failLine && (
+            <div className="write-fail-notice wm-onboard-fail corners" aria-hidden="true">
+              {failLine}
+            </div>
+          )}
           <div className="wm-onboard-rows">
             <div className="wm-onboard-row lead">
               <b>THE JOB</b>

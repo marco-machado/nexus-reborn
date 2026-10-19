@@ -44,5 +44,7 @@ The Debrief's Injured line and the Assembly presentation of an injured operative
 
 | Role | Name | Date | Signature |
 |---|---|---|---|
-| QA tester | | | [ ] |
-| Story owner (ui-programmer, lean mode) | | | [ ] |
+| QA tester | Marco Machado | 2026-10-19 | [x] Approved |
+| Story owner (ui-programmer, lean mode) | Marco Machado | 2026-10-19 | [x] Approved |
+
+Signed with the Assembly injury presentation accepted on its labelled fixture (Sprint 7 C-8, owner ruling 2026-10-19: no natural path reaches it after a win).

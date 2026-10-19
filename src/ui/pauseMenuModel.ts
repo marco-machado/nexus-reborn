@@ -35,6 +35,8 @@ export interface FocusedControl {
   tag: string
   /** Inside a `[role="dialog"]`. */
   inDialog: boolean
+  /** Inside a tutorial or advisory toast (`.hud-toast`). */
+  inToast?: boolean
 }
 
 const SPACE_OWNING_TAGS: ReadonlySet<string> = new Set(['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'])
@@ -43,10 +45,14 @@ const SPACE_OWNING_TAGS: ReadonlySet<string> = new Set(['BUTTON', 'INPUT', 'SELE
  * A focused form control inside a dialog owns Space: a button fires, a slider
  * or checkbox keeps it, and the pause toggle stays out of it. Toggling pause
  * there would unpause the mission behind Settings and unmount it (BUG-0001).
- * Escape is never owned, so it still closes the menu from anywhere.
+ * A focused toast button owns Space too, so it dismisses the toast instead of
+ * pausing (design ruling 2026-10-19). Escape is never owned, so it still
+ * closes the menu from anywhere.
  */
 export function dialogControlOwnsKey(code: string, focus: FocusedControl | null): boolean {
-  return code === 'Space' && focus !== null && focus.inDialog && SPACE_OWNING_TAGS.has(focus.tag)
+  if (code !== 'Space' || focus === null) return false
+  if (focus.inToast && focus.tag === 'BUTTON') return true
+  return focus.inDialog && SPACE_OWNING_TAGS.has(focus.tag)
 }
 
 /** One heading and its rows, as the pause menu prints them. */

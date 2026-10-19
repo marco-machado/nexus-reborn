@@ -55,3 +55,12 @@ No open S1/S2 bug and no FAIL, so NOT APPROVED does not apply. All 20 stories ha
 ### Next Step
 
 Resolve conditions 1 and 2 before advancing; condition 3 is due 2026-10-21. Add an on-screen Chance check (RS-020) to the next smoke scope. Then run `/retrospective` and `/sprint-plan new`.
+
+### Conditions update — 2026-10-19 (Sprint 9 retro task R-5)
+
+1. **Closed.** Lead-programmer sign-off on `production/qa/evidence/rs-009-evidence.md` (Marco Machado, 2026-10-19). `H:MM:SS` confirmed by the owner (P-22) and recorded in `design/gdd/interface.md`.
+2. **Closed — duplication intended.** Both `rs-remaining` nodes are the one `RemainingLabel` component; recorded in the RS-009 story Completion Notes.
+3. **Closed.** The World Network frame spike (R-3) was closed in `production/qa/smoke-2026-10-19-sprint-009.md` § R-3 closure; no bug filed.
+
+R-5's other two items: the Definition of Done section was dropped from `.claude/docs/templates/sprint-plan.md` and `/sprint-plan` (owner decision 2026-10-19); the evidence path rule is written in `.claude/docs/directory-structure.md` § QA evidence paths.
+

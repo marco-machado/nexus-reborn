@@ -32,9 +32,9 @@
 
 *From GDD `design/gdd/tactical-mission.md`, scoped to this story:*
 
-- [ ] **1c.** **GIVEN** a dead id, **WHEN** an order names that id, **THEN** it is a no-op (dead never a valid recipient).
-- [ ] **1e.** **GIVEN** empty selection, **WHEN** Move, Attack, or Q is issued, **THEN** the order is a no-op.
-- [ ] **5d.** **GIVEN** a selected living operative, **WHEN** Attack is issued on a Device, **THEN** no Explicit target is set (no-op). Do not assert Device HP or a fire-lane-vs-charge channel (OQ3).
+- [x] **1c.** **GIVEN** a dead id, **WHEN** an order names that id, **THEN** it is a no-op (dead never a valid recipient).
+- [x] **1e.** **GIVEN** empty selection, **WHEN** Move, Attack, or Q is issued, **THEN** the order is a no-op.
+- [x] **5d.** **GIVEN** a selected living operative, **WHEN** Attack is issued on a Device, **THEN** no Explicit target is set (no-op). Do not assert Device HP or a fire-lane-vs-charge channel (OQ3).
 
 ---
 
@@ -107,3 +107,4 @@
 - `docs/architecture/adr-0016-tactical-sim-contract.md:77` defect note is now stale — ADR owner to update.
 - The story's QA Test Cases cite the Rust Haven destroy test at L1388; it is now at `world.test.ts:1485` and still passes.
 - The test 'a grenade with no living thrower spends no cell' never reads the cell count directly.
+- 2026-10-19 (Sprint 9 R-7, retro 8 action 5): boxes 1c, 1e and 5d ticked. Re-run: `npx vitest run src/game/world.test.ts -t "orders"` 13 passed; the cases are `world.test.ts:702`, `:721` (1c), `:735` (1e), `:764` (5d). Tactical OQ3 is now decided (Devices are fire-lane Units); 5d still asserts only that Attack sets no Explicit target.

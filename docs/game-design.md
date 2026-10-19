@@ -700,7 +700,7 @@ Seven kinds. An objective names a zone or resolves one from the district’s lan
 | Destroy | No device with the tag remains |
 | Defend | The hold timer at the zone reaches zero |
 
-Interact and defend advance only while a living operative stands in the zone. An empty zone pauses; it does not reset. A dead VIP voids every unfinished escort. An optional destroy whose device dies to non-squad fire fails rather than completing.
+Interact and defend advance only while a living operative stands in the zone. An empty zone pauses; it does not reset. A dead VIP voids every unfinished escort. An optional destroy whose device dies to non-squad fire fails rather than completing. A device is a fire-lane Unit: gunfire, grenades and charges all reduce it, and there is no Attack or Demolish verb on a device (decided 2026-10-19, Tactical Open Question 3).
 
 Defend carries a wave: unit count, weapons, and named entry landmarks. The wave appears when the objective activates.
 

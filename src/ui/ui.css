@@ -4262,6 +4262,21 @@ button.hud-slot {
   background: var(--bg-panel-solid);
 }
 
+/* BUG-0003: while the orientation card is up the failure line sits in the
+   card's flow; the fixed region stays mounted for screen readers but draws
+   nothing on screen. */
+.wm-onboard-fail {
+  margin-bottom: 10px;
+}
+
+body:has(.wm-onboard-wrap) .write-fail-region {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .wm-onboard-rows {
   display: flex;
   flex-direction: column;

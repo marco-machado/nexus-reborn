@@ -36,7 +36,7 @@
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
 - [x] (AC10) GIVEN a live mission on Standard and the same contract on Hardened, WHEN minimap contents are compared, THEN Hardened does not strip cones, patrols, civilians, or the objective pulse. Three zoom levels exist. Click/drag steers the camera. Minimap up = screen up.
-- [x] (AC13) GIVEN the first mission with tutorial unseen, WHEN toasts for Select, Move, Attack, stances, role ability, items, weapon swap, and Extraction are shown, THEN they name current bindings, never block input, never pause the sim, and Skip Tutorial marks all steps seen.
+- [x] (AC13) GIVEN the first mission with tutorial unseen, WHEN toasts for Select, Move, Attack, stances, role ability, items, weapon swap, Directives, and Extraction are shown, THEN they name current bindings, never block input, never pause the sim, and Skip Tutorial marks all steps seen.
 - [x] (AC14) GIVEN a weather front at its scripted tactical time, WHEN the front hits, THEN the Comm log prints a line and the HUD Weather chip matches live weather.
 
 ---

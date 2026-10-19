@@ -68,3 +68,13 @@ Resolve the conditions before advancing. S3/S4 bugs may be deferred to polish (n
 - Labelled constructed fixtures were used for RA-009, INJ-03b and the Assembly half of smoke item 4. The Debrief injury line came from a sim win.
 - PERF-01 was observed only: p95 ≤ 9 ms and 0 frames over 50 ms. No budget was asserted.
 - No human has played this build. Missions were driven through sim order calls.
+
+### Conditions update — 2026-10-19 (Sprint 9 retro task R-4)
+
+1. **Closed.** `production/qa/evidence/ra-013-evidence.md` sign-off rows signed by Marco Machado, 2026-10-19.
+2. **C-4 closed.** `/code-review` run on `src/state/save.test.ts` (RA-025): ADR-0011 compliant; three test gaps confirmed by mutation and fixed (loadout restore not wipe-proof, pin bay check untested, AC3 without a control). Detail and open suggestions in the RA-025 story Completion Notes.
+3. **C-6 closed.** Assessed by `production/qa/tautological-tests-2026-10-16.md`: the Sprint 7 test diff was read line by line and every test file scanned; 24 tautological tests fixed or deleted, each shown to fail under a named mutation. PASS on Sprint 7 Logic/Integration rows now means the test can fail.
+4. **C-5 closed.** RA-025 re-mapped from `TR-roster-006` to `TR-persistence-005` (with `-006` and `-007` for its tamper and RNG ACs); no new registry entry.
+5. **C-3 closed.** Research Stories 013–015 cover RA-021: AC 35 by RS-015 AC1 and RS-013 AC1; AC 36 by RS-014 AC1–2 and RS-013 AC2; AC 37 by RS-015 AC3 and RS-014 AC4. Re-run 2026-10-19: `research.test.ts` 17 passed, `appStore.test.ts` RS-015 3 passed.
+6. **C-8 closed.** Owner accepted the labelled-fixture evidence, 2026-10-19 (no natural path: a win's ETA heals the injury before Assembly).
+

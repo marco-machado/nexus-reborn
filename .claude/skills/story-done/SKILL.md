@@ -114,6 +114,9 @@ For each acceptance criterion in the story:
    - **Manual confirmation**: if the criterion was verified via `AskUserQuestion` above with a "Yes — passes" answer, count that as a manual test
    - **Retained screenshot**: if the criterion names something on screen and a retained image under `production/qa/evidence/[story-slug]/` shows it (the `Run result: OBSERVED` from `/dev-story` Phase 6 step 4), count that as covered — put the image path in the Test column. A visual criterion verified by looking is not UNTESTED; without this row every UI story reads as >50% untested and false-escalates. "Shows it" means you opened the image with `Read` and saw it; a checkpoint's `Run result: OBSERVED — <text>` is `/dev-story`'s description, to quote as such, not yours. **Never describe an image you have not opened.**
 
+   - **Every route the criterion names**: a criterion that names more than one entry point, origin or step ("Pause **or** Settings", "from the Menu and from pause", a click-through's steps 1–6) is COVERED only when the evidence exercises each one. List the routes, and give each its test or image. A route with no evidence makes the row `PARTIAL — [route] not exercised`, which counts as UNTESTED below. Sprint 9 ticked IF-005 AC19 on evidence that opened Settings only from pause; QA then failed it from the Menu (BUG-0002).
+   - **A review advisory that predicts the criterion fails**: if a code review, specialist or advisory note for this story says a path breaks the criterion, run that path (test, probe or play) before the row can be COVERED. A finding that was traced but never run makes the row `NOT ASSESSED — advisory [ref] not run`, and the story cannot be COMPLETE on that criterion. Sprint 9 closed IF-008 with AC11 ticked while its own advisory 4 predicted BUG-0001.
+
 2. Produce a traceability table:
 
 ```

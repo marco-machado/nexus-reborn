@@ -34,7 +34,7 @@
 
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
-- [x] (AC1) GIVEN every listed surface (Menu, World Network, Research, Brief, Assembly, Mission HUD, pause, Debrief, Settings) at 1280×720 and each text scale 90 / 100 / 110 / 125%, WHEN the surface is shown, THEN no element's text is cut off by its container, no element's bounding box intersects another's except declared overlays (Settings, Balance, pause, toasts), and scrolled overflow remains reachable. Smaller-than-minimum windows scroll and do not compress panels.
+- [x] (AC1) GIVEN every listed surface (Menu, World Network, Research, Brief, Assembly, Mission HUD, pause, Debrief, Settings) at 1280×720 and each text scale 90 / 100 / 110 / 125%, WHEN the surface is shown, THEN no element's text is cut off by its container, no element's bounding box intersects another's except declared overlays (Settings, Balance, pause, toasts, the first-visit World Network orientation card, the Recruitment Market), and scrolled overflow remains reachable. Smaller-than-minimum windows scroll and do not compress panels.
 - [x] (AC20) GIVEN a click-through at 1280×720 following `docs/click-through.md`, WHEN the run is recorded, THEN the record names every unexercised screen or interaction. A partial run is not a pass of the unexercised set.
 
 ---

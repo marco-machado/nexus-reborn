@@ -1,0 +1,24 @@
+PASS Screen visit autosaved and filed
+PASS Debrief reads unfiled before any Screen return // {"phase":"debrief","status":"unfiled","reason":null,"filing":"INVOICE UNFILED // COMMITS ON NEXT SCREEN","notice":null,"filingClipped":false,"noticeClipped":false}
+PASS unfiled line not clipped at 1280x720
+PASS World Network reached; still unfiled until the write (navigation is not the signal) // {"phase":"world","status":"unfiled","reason":null,"filing":null,"notice":null,"filingClipped":false,"noticeClipped":false}
+PASS World Network return: filed after autosave, no failure notice // {"phase":"world","status":"filed","reason":null,"filing":null,"notice":null,"filingClipped":false,"noticeClipped":false}
+PASS Screen visit autosaved and filed
+PASS second Debrief unfiled
+PASS Brief Replay: filed after autosave, no failure notice // {"phase":"brief","status":"filed","reason":null,"filing":null,"notice":null,"filingClipped":false,"noticeClipped":false}
+PASS Screen visit autosaved and filed
+PASS World Network return write failure: notice shown, not filed // {"phase":"world","status":"write-failed","reason":"quota","filing":null,"notice":"SAVE FAILED // CAMPAIGN NOT FILED","filingClipped":false,"noticeClipped":false}
+PASS failure notice not clipped (world)
+PASS failure notice persists after the orientation is dismissed
+PASS Screen visit autosaved and filed
+PASS Brief Replay write failure: notice shown, not filed // {"phase":"brief","status":"write-failed","reason":"quota","filing":null,"notice":"SAVE FAILED // CAMPAIGN NOT FILED","filingClipped":false,"noticeClipped":false}
+PASS failure notice not clipped (brief)
+PASS New Operation erase failure: World Network shows failure, not erased/filed // {"phase":"world","status":"write-failed","reason":"quota","filing":null,"notice":"SAVE FAILED // CAMPAIGN NOT FILED","filingClipped":false,"noticeClipped":false}
+PASS failure notice not clipped (new operation)
+BUG-0003 overlap: {"inCard":true,"rect":[311,120,658,29],"regionWH":[1,1],"hits":[]}
+PASS BUG-0003: notice shown inside the orientation card
+PASS BUG-0003: visible notice overlaps no other text // []
+PASS BUG-0003: fixed region draws nothing while the card is up // [1,1]
+PASS failure notice persists after the orientation is dismissed (new operation)
+PASS no console or page errors
+ALL PASS

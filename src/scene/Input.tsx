@@ -121,11 +121,14 @@ export default function Input() {
       if (!w) return
       const ms = useMissionStore.getState()
       if (!missionKeyAnswers(b.id, ms)) return
-      // A focused dialog control owns Space: cancelling the press here would
-      // stop a button activating, and toggling pause from a Settings slider
-      // would unpause behind it and close it. Escape still closes the menu.
+      // A focused dialog or toast control owns Space: cancelling the press
+      // here would stop a button activating, and toggling pause from a
+      // Settings slider would unpause behind it and close it. Escape still
+      // closes the menu.
       const focused = document.activeElement
-      const focus = focused ? { tag: focused.tagName, inDialog: focused.closest('[role="dialog"]') !== null } : null
+      const focus = focused
+        ? { tag: focused.tagName, inDialog: focused.closest('[role="dialog"]') !== null, inToast: focused.closest('.hud-toast') !== null }
+        : null
       if (dialogControlOwnsKey(code, focus)) return
       e.preventDefault()
       switch (b.id) {

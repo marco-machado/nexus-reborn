@@ -2989,6 +2989,10 @@ describe('roster save and reload (RA-025)', () => {
     expect(useCampaignStore.getState().campaignFailed).toBe(true)
     expect(useCampaignStore.getState().campaignWon).toBe(false)
     expect(captureSave().campaign).toEqual(expected.campaign)
+    // The wipe reset these, so only the blob can bring them back.
+    expect(useCampaignStore.getState().contractsWon).toEqual(['m01'])
+    expect(useAppStore.getState().squad).toEqual(['op2', 'op3'])
+    expect(useAppStore.getState().loadout).toEqual({ op2: ['med', 'cell'], op3: ['med', null] })
   })
 
   it('AC2: an Injured operative keeps its remaining downtime across reload + Continue with no Screen tick', () => {
@@ -3017,12 +3021,14 @@ describe('roster save and reload (RA-025)', () => {
     expect(after).toEqual(before)
   })
 
-  it('AC3: a tampered roster (unknown squad id, Item slots with m + c > 2, unknown pin, INJURED without recoverAtT, negative XP) drops the whole blob', () => {
+  it('AC3: a tampered roster (unknown squad id, 3 Item slots, unknown pin, pin in the wrong bay, INJURED without recoverAtT, negative XP) drops the whole blob', () => {
     startNewOperation(new MemoryStorage())
     const fixture = captureSave()
     startNewOperation(storage)
     livedInRoster()
     const save = captureSave()
+    // Control: the untampered blob is valid, so each drop below is the tamper's.
+    expect(validateSave(save)).toBe(true)
 
     const unknownSquad = structuredClone(save)
     unknownSquad.app.squad = ['op2', 'op99']
@@ -3031,26 +3037,30 @@ describe('roster save and reload (RA-025)', () => {
 
     const unknownPin = structuredClone(save)
     unknownPin.campaign.roster.op2.pins = { CHEST: 'no-such-node' }
+    const wrongBayPin = structuredClone(save)
+    // k-sensor is a NEURAL project, pinned here under CHEST.
+    wrongBayPin.campaign.roster.op2.pins = { CHEST: 'k-sensor' }
     const injuredNoRecovery = structuredClone(save)
     expect(injuredNoRecovery.campaign.roster.op1.status).toBe('INJURED')
     injuredNoRecovery.campaign.roster.op1.recoverAtT = null
     const negativeXp = structuredClone(save)
     negativeXp.campaign.roster.op1.xp = -1
 
-    for (const bad of [
-      unknownSquad,
-      slotOverflow,
-      unknownPin,
-      injuredNoRecovery,
-      negativeXp,
-    ]) {
-      expect(validateSave(bad)).toBe(false)
+    for (const [name, bad] of [
+      ['unknown squad id', unknownSquad],
+      ['3 Item slots', slotOverflow],
+      ['unknown pin', unknownPin],
+      ['pin in the wrong bay', wrongBayPin],
+      ['INJURED without recoverAtT', injuredNoRecovery],
+      ['negative XP', negativeXp],
+    ] as const) {
+      expect(validateSave(bad), name).toBe(false)
       storage.setItem(SAVE_KEY, JSON.stringify(bad))
       // Origin reload: memory starts at the New Operation desk on the Menu.
       startNewOperation(null)
       useAppStore.setState({ phase: 'menu' })
-      expect(loadCampaignAtBoot(storage)).toBe('invalid')
-      expect(storage.getItem(SAVE_KEY)).toBeNull()
+      expect(loadCampaignAtBoot(storage), name).toBe('invalid')
+      expect(storage.getItem(SAVE_KEY), name).toBeNull()
       expect(useAppStore.getState().phase).toBe('menu')
       // Nothing half-loaded: every section is still the New Operation desk.
       const now = captureSave()

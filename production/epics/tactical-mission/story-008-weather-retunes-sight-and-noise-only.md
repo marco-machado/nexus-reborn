@@ -33,9 +33,9 @@
 
 *From GDD `design/gdd/tactical-mission.md`, scoped to this story:*
 
-- [ ] **9a.** **GIVEN** Standard difficulty and live weather none vs light vs heavy, **WHEN** CorpSec cone range is read, **THEN** it is 14 / 12.6 / 11.2 m respectively.
-- [ ] **9b.** **GIVEN** the same Standard deployments, **WHEN** accuracy, movement, and omni notice are read, **THEN** accuracy and movement equal the clear-weather values and omni notice is 4.5 m.
-- [ ] **9c.** **GIVEN** a scripted front at its fixed tactical time, **WHEN** the front hits, **THEN** live sight retunes, weapon-noise radius strictly decreases as rain intensity increases (do not paste `noiseMul`), a comm-log line is written, and accuracy / movement / 4.5 m notice do not change.
+- [x] **9a.** **GIVEN** Standard difficulty and live weather none vs light vs heavy, **WHEN** CorpSec cone range is read, **THEN** it is 14 / 12.6 / 11.2 m respectively.
+- [x] **9b.** **GIVEN** the same Standard deployments, **WHEN** accuracy, movement, and omni notice are read, **THEN** accuracy and movement equal the clear-weather values and omni notice is 4.5 m.
+- [x] **9c.** **GIVEN** a scripted front at its fixed tactical time, **WHEN** the front hits, **THEN** live sight retunes, weapon-noise radius strictly decreases as rain intensity increases (do not paste `noiseMul`), a comm-log line is written, and accuracy / movement / 4.5 m notice do not change.
 
 ---
 
@@ -109,3 +109,4 @@
 - The review did not itself run the QA plan's mutation check (read-only); it was run in /dev-story — see Mutation Check above.
 
 **Autonomous decisions (logged):** Phase 5 specialist-review answer taken from the workflow's code-review record; Phase 7 took the recommended "Close the story" option (verdict COMPLETE WITH NOTES); tech-debt register not updated.
+- 2026-10-19 (Sprint 9 R-7, retro 8 action 5): boxes 9a, 9b and 9c ticked. Re-run: `npx vitest run src/game/world.test.ts -t "TM-008"` 7 passed. The owner question on whether 9b's "movement" covers CorpSec movement (note above) is unchanged.

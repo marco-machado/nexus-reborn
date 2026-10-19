@@ -126,6 +126,21 @@ describe('AC11: Space or Escape opens a modal pause that freezes the mission', (
     expect(dialogControlOwnsKey('Space', null)).toBe(false)
   })
 
+  it('Space on a focused toast button dismisses the toast and does not pause', () => {
+    const world = deployLive()
+    const t = world.time
+    const dismiss = { tag: 'BUTTON', inDialog: false, inToast: true }
+    expect(dialogControlOwnsKey('Space', dismiss)).toBe(true)
+    // The gate Input.tsx runs: an owned press never reaches the pause toggle.
+    if (!dialogControlOwnsKey('Space', dismiss)) pressPauseKey('Space')
+    expect(useMissionStore.getState().paused).toBe(false)
+    tickIfLive(world, useMissionStore.getState(), 0.05)
+    expect(world.time).toBeGreaterThan(t)
+    // Only a button in the toast owns it; Escape is never owned.
+    expect(dialogControlOwnsKey('Space', { tag: 'DIV', inDialog: false, inToast: true })).toBe(false)
+    expect(dialogControlOwnsKey('Escape', dismiss)).toBe(false)
+  })
+
   it('the menu does not show once a result is in, so Abort is never offered after a win or loss', () => {
     expect(pauseMenuShown({ paused: true, result: 'won' })).toBe(false)
     expect(pauseMenuShown({ paused: true, result: 'lost' })).toBe(false)

@@ -11,7 +11,7 @@
 ## Context
 
 **GDD**: `design/gdd/roster-and-assembly.md`
-**Requirement**: `TR-roster-006`
+**Requirement**: `TR-persistence-005` (also `TR-persistence-006` for the tampered-blob AC and `TR-persistence-007` for the candidate RNG AC). Re-mapped 2026-10-19 from `TR-roster-006`, whose text (Abort writes no roster; debrief applies roster once) does not describe save/reload (Sprint 7 QA condition C-5).
 *(Requirement text lives in `docs/architecture/tr-registry.yaml` — read fresh at review time)*
 
 **ADR Governing Implementation**: ADR-0011: Campaign persistence envelope  
@@ -98,7 +98,7 @@
 | AC-4: candidate market continues from the saved RNG cursor | `src/state/save.test.ts` › roster save and reload (RA-025) › AC4 | COVERED |
 
 **Deviations** (advisory):
-- TR-ID mismatch: `TR-roster-006` registry text is "Abort writes no roster; debrief applies roster once", which does not describe this story's save/reload scope (GDD AC 41). Re-map the TR-ID (or add a registry entry for roster persistence) in a follow-up.
+- TR-ID mismatch: `TR-roster-006` registry text is "Abort writes no roster; debrief applies roster once", which does not describe this story's save/reload scope (GDD AC 41). Re-map the TR-ID (or add a registry entry for roster persistence) in a follow-up. **Done 2026-10-19**: re-mapped to the existing persistence entries above; no new registry entry minted.
 - QA plan said to extend the L654 "lived-in roster" test; the new tests are a separate describe block with their own `livedInRoster` helper (repeats part of the L654 setup). Plan deviation, not a defect.
 
 **Scope**: Only `src/state/save.test.ts` (tests), this story file and `production/sprint-status.yaml` changed. No production code changed.
@@ -113,3 +113,5 @@
 - AC1: the field-by-field checks (roster, pins, xp, candidates, campaignWon/Failed, contractsWon) are subsumed by `expect(restored.campaign).toEqual(expected.campaign)`; keep as documentation or cut.
 - AC3: `slotOverflow` uses a 3-element Item-slot array; `validLoadout` (`src/state/save.ts:320-329`) rejects on `items.length === LOADOUT_SLOTS`, not an m + c count. Equivalent while `LOADOUT_SLOTS = 2`, but the test pins the length check rather than the GDD's m + c <= 2 formula.
 - AC4: the final "not the opening pool" check compares against a fresh campaign's first refresh at t = `CANDIDATE_REFRESH_SEC`, while the saved due time is 3 days in — weaker than comparing at the same cursor position. The cursor + `recordedNext` equality is the stronger proof and is present.
+- 2026-10-19 `/code-review` (Sprint 7 QA condition C-4): lead-programmer and qa-tester reviewed `src/state/save.test.ts` "roster save and reload (RA-025)"; ADR-0011 compliant. Three gaps confirmed by mutation of `src/state/save.ts` (each restored) and fixed in the tests: (1) deleting the `loadout` restore in `hydrateSave` passed, because the first AC1 test hydrates without a wipe; the wipe variant now asserts `contractsWon`, `squad` and `loadout` against literals. (2) Removing the pin bay check in `validPins` passed the whole save suite; AC3 now has a real node in the wrong bay (`{ CHEST: 'k-sensor' }`). (3) AC3 had no control; it now asserts the untampered blob is valid and names each tamper. All three mutations now fail; suite 109/109. Suggestions left open: the AC2 48 h wall-clock jump is decorative (nothing in hydrate reads `Date`); AC4 pins `CANDIDATE_REFRESH_SEC` and reads `due` from the store; `:2963-2971` are subsumed by the whole-campaign `toEqual`; the GDD's "m + c > 2" rule is not expressible at 2 slots and only the length check is tested.
+
