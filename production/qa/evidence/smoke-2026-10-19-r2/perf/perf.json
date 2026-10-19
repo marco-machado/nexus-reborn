@@ -1,0 +1,196 @@
+{
+ "play": {
+  "result": "won",
+  "simTime": 33,
+  "log": [
+   [
+    0,
+    "none",
+    null
+   ],
+   [
+    0,
+    "ob1",
+    "reach-zone"
+   ],
+   [
+    12,
+    "ob2",
+    "eliminate-tag"
+   ],
+   [
+    19,
+    "ob3",
+    "extract"
+   ]
+  ]
+ },
+ "eta": {
+  "days": 2
+ },
+ "perPhase": {
+  "world": {
+   "n": 6254,
+   "p50": 8.3,
+   "p95": 9.2,
+   "p99": 9.4,
+   "max": 250.1,
+   "over50ms": 2,
+   "over100ms": 1
+  },
+  "brief": {
+   "n": 87,
+   "p50": 8.3,
+   "p95": 9.3,
+   "p99": 24.7,
+   "max": 24.7,
+   "over50ms": 0,
+   "over100ms": 0
+  },
+  "team": {
+   "n": 101,
+   "p50": 8.3,
+   "p95": 9.4,
+   "p99": 10.5,
+   "max": 24.1,
+   "over50ms": 0,
+   "over100ms": 0
+  },
+  "mission": {
+   "n": 4268,
+   "p50": 8.3,
+   "p95": 9.2,
+   "p99": 9.4,
+   "max": 375.4,
+   "over50ms": 1,
+   "over100ms": 1
+  },
+  "debrief": {
+   "n": 464,
+   "p50": 8.3,
+   "p95": 9.3,
+   "p99": 9.4,
+   "max": 9.4,
+   "over50ms": 0,
+   "over100ms": 0
+  }
+ },
+ "missionLive": {
+  "n": 4080,
+  "p50": 8.3,
+  "p95": 9.2,
+  "max": 16.7,
+  "over50ms": 0
+ },
+ "spikes": [
+  {
+   "phase": "?",
+   "msIntoPhase": 450,
+   "frameInPhase": 17,
+   "ms": 308.3
+  },
+  {
+   "phase": "?",
+   "msIntoPhase": 1358,
+   "frameInPhase": 95,
+   "ms": 217.6
+  },
+  {
+   "phase": "mission",
+   "msIntoPhase": 701,
+   "frameInPhase": 40,
+   "ms": 375.4
+  },
+  {
+   "phase": "world",
+   "msIntoPhase": 53733,
+   "frameInPhase": 1431,
+   "ms": 250.1
+  },
+  {
+   "phase": "world",
+   "msIntoPhase": 93299,
+   "frameInPhase": 6156,
+   "ms": 50.5
+  }
+ ],
+ "longTasksTimed": [
+  {
+   "phase": "?",
+   "msIntoPhase": 148,
+   "ms": 305
+  },
+  {
+   "phase": "?",
+   "msIntoPhase": 1146,
+   "ms": 212
+  },
+  {
+   "phase": "mission",
+   "msIntoPhase": 363,
+   "ms": 341
+  },
+  {
+   "phase": "world",
+   "msIntoPhase": 53504,
+   "ms": 232
+  }
+ ],
+ "debriefEntryFrames": [
+  [
+   "mission",
+   7.4
+  ],
+  [
+   "mission",
+   8.6
+  ],
+  [
+   "mission",
+   9
+  ],
+  [
+   "debrief",
+   7.9
+  ],
+  [
+   "debrief",
+   8.8
+  ],
+  [
+   "debrief",
+   8.2
+  ],
+  [
+   "debrief",
+   8.4
+  ],
+  [
+   "debrief",
+   8.3
+  ],
+  [
+   "debrief",
+   8.3
+  ]
+ ],
+ "longTasks": [
+  [
+   "?",
+   305
+  ],
+  [
+   "?",
+   212
+  ],
+  [
+   "mission",
+   341
+  ],
+  [
+   "world",
+   232
+  ]
+ ],
+ "errs": []
+}
