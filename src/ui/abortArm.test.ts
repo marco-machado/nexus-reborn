@@ -4,7 +4,7 @@
 // frame gate, so the boundary checked here is the one the game crosses.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ABORT_ARM_HINT, ABORT_ARM_MS, abortArmHint, createAbortArm, pressAbort } from './abortArm'
-import { missionKeyAnswers, pauseBindingGroups, pauseMenuShown } from './pauseMenuModel'
+import { dialogControlOwnsKey, missionKeyAnswers, pauseBindingGroups, pauseMenuShown } from './pauseMenuModel'
 import { BINDINGS, applyOverrides, bindingFor, remappable } from '../game/bindings'
 import type { BindingId } from '../game/bindings'
 import { DEFAULT_SQUAD, MISSIONS } from '../game/data'
@@ -104,6 +104,26 @@ describe('AC11: Space or Escape opens a modal pause that freezes the mission', (
     }
     const live = { paused: false, result: 'none' as const }
     for (const b of BINDINGS) expect(missionKeyAnswers(b.id, live)).toBe(true)
+  })
+
+  it('BUG-0001: Space on a focused Settings slider, opened from pause, keeps the freeze', () => {
+    const world = deployLive()
+    pressPauseKey('Space')
+    const t = world.time
+    const slider = { tag: 'INPUT', inDialog: true }
+    expect(dialogControlOwnsKey('Space', slider)).toBe(true)
+    // The gate Input.tsx runs: an owned press never reaches the pause toggle.
+    if (!dialogControlOwnsKey('Space', slider)) pressPauseKey('Space')
+    expect(useMissionStore.getState().paused).toBe(true)
+    for (let i = 0; i < 20; i++) tickIfLive(world, useMissionStore.getState(), 0.05)
+    expect(world.time).toBe(t)
+    // A dialog button still owns Space, Escape is never owned, and Space with
+    // no dialog control focused still toggles pause.
+    expect(dialogControlOwnsKey('Space', { tag: 'BUTTON', inDialog: true })).toBe(true)
+    expect(dialogControlOwnsKey('Escape', slider)).toBe(false)
+    expect(dialogControlOwnsKey('Space', { tag: 'DIV', inDialog: true })).toBe(false)
+    expect(dialogControlOwnsKey('Space', { tag: 'BUTTON', inDialog: false })).toBe(false)
+    expect(dialogControlOwnsKey('Space', null)).toBe(false)
   })
 
   it('the menu does not show once a result is in, so Abort is never offered after a win or loss', () => {

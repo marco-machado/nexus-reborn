@@ -1,0 +1,47 @@
+PASS fixture: live mission, no result // {"phase":"mission","outcome":null,"paused":false,"result":"none","time":4.1,"focus":[48,84.5],"footprint":[[7.94,91.94],[55.44,44.44],[77.3,79.06],[42.56,113.8]],"dialogs":[],"abort":null,"focused":"DISTRICT 0722:14:1213.7CHEAVY RAIN1.2M/S","focusedType":"BODY","focusedValue":null,"focusInPause":false,"focusInSettings":false}
+PASS TC-01 Space opens pause // {"paused":true,"dialogs":["Mission paused"]}
+PASS TC-01 sim time frozen while paused // t 4.334 -> 4.334
+PASS TC-01 camera focus frozen while paused // [48,84.5] -> [48,84.5]
+PASS TC-01 camera footprint frozen while paused
+PASS TC-01 still paused after pan keys and drag
+PASS TC-01 Resume unpauses and the sim advances // paused false, t 4.334 -> 5.35
+PASS TC-01 control: pan key moves the camera when live // [48,84.5] -> [33.057,69.557]
+PASS TC-04 first press arms // {"abort":"CONFIRM?","phase":"mission"}
+PASS TC-04 lapse disarms, still paused // {"abort":"ABORT","paused":true}
+PASS TC-04 next press after the lapse only re-arms // {"at0":["CONFIRM?","mission",null],"at500":["CONFIRM?","mission",null]}
+PASS TC-05 Settings open inside the freeze // {"paused":true,"dialogs":["Settings"],"t":[6.15,6.15]}
+PASS TC-05 close returns to pause with focus inside it // {"dialogs":["Mission paused"],"focused":"RESUME","focusInPause":true}
+TC-06 MASTER volume before Space: {"paused":true,"dialogs":["Settings"],"t":6.15,"value":"100"}
+TC-06 MASTER volume after Space:  {"paused":true,"dialogs":["Settings"],"t":6.15,"focused":"MASTER volume","value":"100"}
+PASS TC-06 MASTER volume: still paused
+PASS TC-06 MASTER volume: Settings still mounted // ["Settings"]
+PASS TC-06 MASTER volume: sim time unchanged // t 6.15 -> 6.15
+PASS TC-06 MASTER volume: focus unchanged // MASTER volume
+TC-06 UI CUES volume before Space: {"paused":true,"dialogs":["Settings"],"t":6.15,"value":"100"}
+TC-06 UI CUES volume after Space:  {"paused":true,"dialogs":["Settings"],"t":6.15,"focused":"UI CUES volume","value":"100"}
+PASS TC-06 UI CUES volume: still paused
+PASS TC-06 UI CUES volume: Settings still mounted // ["Settings"]
+PASS TC-06 UI CUES volume: sim time unchanged // t 6.15 -> 6.15
+PASS TC-06 UI CUES volume: focus unchanged // UI CUES volume
+TC-06 COMBAT volume before Space: {"paused":true,"dialogs":["Settings"],"t":6.15,"value":"100"}
+TC-06 COMBAT volume after Space:  {"paused":true,"dialogs":["Settings"],"t":6.15,"focused":"COMBAT volume","value":"100"}
+PASS TC-06 COMBAT volume: still paused
+PASS TC-06 COMBAT volume: Settings still mounted // ["Settings"]
+PASS TC-06 COMBAT volume: sim time unchanged // t 6.15 -> 6.15
+PASS TC-06 COMBAT volume: focus unchanged // COMBAT volume
+TC-06 MUSIC volume before Space: {"paused":true,"dialogs":["Settings"],"t":6.15,"value":"100"}
+TC-06 MUSIC volume after Space:  {"paused":true,"dialogs":["Settings"],"t":6.15,"focused":"MUSIC volume","value":"100"}
+PASS TC-06 MUSIC volume: still paused
+PASS TC-06 MUSIC volume: Settings still mounted // ["Settings"]
+PASS TC-06 MUSIC volume: sim time unchanged // t 6.15 -> 6.15
+PASS TC-06 MUSIC volume: focus unchanged // MUSIC volume
+TC-06 AMBIENCE volume before Space: {"paused":true,"dialogs":["Settings"],"t":6.15,"value":"100"}
+TC-06 AMBIENCE volume after Space:  {"paused":true,"dialogs":["Settings"],"t":6.15,"focused":"AMBIENCE volume","value":"100"}
+PASS TC-06 AMBIENCE volume: still paused
+PASS TC-06 AMBIENCE volume: Settings still mounted // ["Settings"]
+PASS TC-06 AMBIENCE volume: sim time unchanged // t 6.15 -> 6.15
+PASS TC-06 AMBIENCE volume: focus unchanged // AMBIENCE volume
+PASS TC-06 every volume slider reached by Tab // 5 of 5: ["MASTER volume","UI CUES volume","COMBAT volume","MUSIC volume","AMBIENCE volume"]
+PASS TC-06 regression: Space on the live mission still pauses // {"paused":true,"dialogs":["Mission paused"]}
+errors: []
+ALL PASS

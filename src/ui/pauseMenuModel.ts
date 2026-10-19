@@ -29,6 +29,26 @@ export function missionKeyAnswers(id: BindingId, ms: PauseGateState): boolean {
   return !ms.paused && ms.result === 'none'
 }
 
+/** What scene/Input.tsx reads off `document.activeElement` for the Space gate. */
+export interface FocusedControl {
+  /** Upper-case tag name, as `Element.tagName` reports it. */
+  tag: string
+  /** Inside a `[role="dialog"]`. */
+  inDialog: boolean
+}
+
+const SPACE_OWNING_TAGS: ReadonlySet<string> = new Set(['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'])
+
+/**
+ * A focused form control inside a dialog owns Space: a button fires, a slider
+ * or checkbox keeps it, and the pause toggle stays out of it. Toggling pause
+ * there would unpause the mission behind Settings and unmount it (BUG-0001).
+ * Escape is never owned, so it still closes the menu from anywhere.
+ */
+export function dialogControlOwnsKey(code: string, focus: FocusedControl | null): boolean {
+  return code === 'Space' && focus !== null && focus.inDialog && SPACE_OWNING_TAGS.has(focus.tag)
+}
+
 /** One heading and its rows, as the pause menu prints them. */
 export interface PauseBindingGroup {
   group: Binding['group']

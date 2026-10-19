@@ -22,7 +22,7 @@ import { useMissionStore } from '../state/missionStore'
 import type { WorldApi } from '../game/types'
 import { pushClickMarker } from './clickMarkers'
 import { setMarquee } from './marquee'
-import { missionKeyAnswers } from '../ui/pauseMenuModel'
+import { dialogControlOwnsKey, missionKeyAnswers } from '../ui/pauseMenuModel'
 
 const pickGeom = new THREE.CylinderGeometry(0.55, 0.55, 1.9, 8)
 const invisibleMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
@@ -121,11 +121,12 @@ export default function Input() {
       if (!w) return
       const ms = useMissionStore.getState()
       if (!missionKeyAnswers(b.id, ms)) return
-      // A focused dialog button owns Space: cancelling the press here would
-      // stop it activating, so the menu would close instead of the button
-      // under focus firing. Escape still closes the menu from anywhere.
+      // A focused dialog control owns Space: cancelling the press here would
+      // stop a button activating, and toggling pause from a Settings slider
+      // would unpause behind it and close it. Escape still closes the menu.
       const focused = document.activeElement
-      if (code === 'Space' && focused instanceof HTMLButtonElement && focused.closest('[role="dialog"]')) return
+      const focus = focused ? { tag: focused.tagName, inDialog: focused.closest('[role="dialog"]') !== null } : null
+      if (dialogControlOwnsKey(code, focus)) return
       e.preventDefault()
       switch (b.id) {
         case 'selectSlot': {
