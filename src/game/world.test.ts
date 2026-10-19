@@ -1444,6 +1444,39 @@ describe('milestone 2 missions', () => {
     expect(app.credits).toBe(128450)
   })
 
+  it('BUG-0004: the Hollow Crown vip stays captive until the cell-lock override completes', () => {
+    const w = spawn(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
+    deployReset()
+    w.tick(STEP)
+    const vip = w.units.find((u) => u.kind === 'vip')!
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')!
+
+    // An operative at the vip's side before the gate or the override.
+    put(a1, { x: vip.pos.x + 1, z: vip.pos.z })
+    warm(w, 1)
+    expect(vip.alerted).toBe(false)
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('ASSET SECURED'))).toBe(false)
+
+    // Gate done, override still active: still captive.
+    put(a1, w.city.landmarks.gate)
+    w.tick(STEP)
+    expect(row('hc2').active).toBe(true)
+    put(a1, { x: vip.pos.x + 1, z: vip.pos.z })
+    warm(w, 1)
+    expect(vip.alerted).toBe(false)
+
+    // Override done: the escort is live and the vip is picked up.
+    put(a1, w.city.landmarks.console)
+    warm(w, 5.5)
+    expect(row('hc2').done).toBe(true)
+    expect(row('hc3').active).toBe(true)
+    put(a1, { x: vip.pos.x + 1, z: vip.pos.z })
+    w.tick(STEP)
+    expect(vip.alerted).toBe(true)
+    expect(useMissionStore.getState().log.some((e) => e.msg.includes('ASSET SECURED'))).toBe(true)
+  })
+
   it('loses Hollow Crown on the spot when the vip dies', () => {
     const w = spawn(HOLLOW_CROWN, ops(DEFAULT_SQUAD))
     deployReset()

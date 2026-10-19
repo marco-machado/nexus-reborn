@@ -1361,6 +1361,10 @@ export function createWorld(
     }
   }
 
+  function escortLive(): boolean {
+    return objectives.some((d, i) => d.kind === 'escort' && objState[i] !== 'pending')
+  }
+
   // Idle vips wait for the squad; a following vip trails the nearest living
   // agent on a repath cadence and stops short of stepping on its heels.
   function updateVips(dt: number): void {
@@ -1377,6 +1381,9 @@ export function createWorld(
         }
       }
       if (!v.alerted) {
+        // Captive until an escort is live: the required chain before it
+        // (Hollow Crown's cell-lock override) must finish first.
+        if (!escortLive()) continue
         if (!nearest || nd > VIP_ACQUIRE_R) continue
         v.alerted = true
         pushLog('SYS', 'ASSET SECURED. Keep the escort alive.', 'ok')
