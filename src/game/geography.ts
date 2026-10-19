@@ -31,8 +31,6 @@ export function globeLocation(x: number, y: number, z: number): GeoPoint {
   return { lat: Math.asin(y / radius) * 180 / Math.PI, lon: Math.atan2(-z, x) * 180 / Math.PI }
 }
 
-export const GLOBE_HOME: GeoPoint = { lat: 18, lon: -65 }
-
 export const SECTOR_FOCUS: Record<SectorId, GeoPoint> = {
   na: { lat: 36, lon: -102 },
   sa: { lat: -18, lon: -60 },

@@ -10,7 +10,7 @@ import {
 } from 'three'
 import { CITIES, CORPS, SECTORS, sectorAtGeo, sectorCorp } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
-import { GLOBE_HOME, globeLocation, globePosition, SECTOR_FOCUS, unprojectScan } from '../game/geography'
+import { globeLocation, globePosition, SECTOR_FOCUS, unprojectScan } from '../game/geography'
 import type { GeoPoint } from '../game/geography'
 import { SECTOR_OUTLINES } from '../game/sectorOutlines'
 import { mulberry32 } from '../game/rng'
@@ -54,7 +54,6 @@ interface ViewCommand {
 const HOME_DISTANCE = 4.25
 const MIN_DISTANCE = 2.05
 const MAX_DISTANCE = 6.2
-const HOME_POSITION = globePosition(GLOBE_HOME, HOME_DISTANCE)
 const ZERO = new Vector3()
 
 function coordinates({ lat, lon }: GeoPoint): string {
@@ -349,9 +348,11 @@ function GlobeView({ operations, onOpen }: WorldGlobeProps) {
   const select = useWorldStore((s) => s.select)
   const reducedMotion = useSettingsStore((s) => s.reducedMotion)
   const textScale = useSettingsStore((s) => s.textScale)
-  const [command, setCommand] = useState<ViewCommand>({ serial: 0, target: GLOBE_HOME })
+  // The globe opens on the Focus sector (Europe on a new campaign); HOME returns there.
+  const [opening] = useState(() => SECTOR_FOCUS[selected])
+  const [command, setCommand] = useState<ViewCommand>({ serial: 0, target: opening })
   const [showLabels, setShowLabels] = useState(true)
-  const [focused, setFocused] = useState<SectorId | null>(null)
+  const [focused, setFocused] = useState<SectorId | null>(selected)
   const [status, setStatus] = useState<'loading' | 'ready' | 'recovering'>('loading')
   const previousSector = useRef(selected)
   const layer = useRef<HTMLDivElement>(null)
@@ -393,14 +394,14 @@ function GlobeView({ operations, onOpen }: WorldGlobeProps) {
     const actions: Record<string, Omit<ViewCommand, 'serial'>> = {
       ArrowLeft: { deltaLon: -15 }, ArrowRight: { deltaLon: 15 },
       ArrowUp: { deltaLat: 12 }, ArrowDown: { deltaLat: -12 },
-      '+': { zoom: 0.84 }, '=': { zoom: 0.84 }, '-': { zoom: 1.19 }, Home: { target: GLOBE_HOME },
+      '+': { zoom: 0.84 }, '=': { zoom: 0.84 }, '-': { zoom: 1.19 }, Home: { target: SECTOR_FOCUS[selected] },
     }
     if (actions[event.key]) { event.preventDefault(); request(actions[event.key]) }
   }
 
   return <div className="globe-view" tabIndex={0} onKeyDown={keyDown}
     aria-label="Interactive Earth globe. Drag to rotate, scroll to zoom. Arrow keys rotate; plus and minus zoom; Home resets the view.">
-      <Canvas frameloop="demand" dpr={[1, 2]} camera={{ position: HOME_POSITION, fov: 32, near: 0.05, far: 100 }}
+      <Canvas frameloop="demand" dpr={[1, 2]} camera={{ position: globePosition(opening, HOME_DISTANCE), fov: 32, near: 0.05, far: 100 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}>
         <color attach="background" args={[GLOBE_SPACE]} />
         <GlobeCamera command={command} reducedMotion={reducedMotion} onNavigate={() => setFocused(null)} />
@@ -439,7 +440,7 @@ function GlobeView({ operations, onOpen }: WorldGlobeProps) {
       </button>)}
     </div>
 
-    <output className="globe-coordinates" ref={readout} aria-label="Globe view center" aria-live="off">{coordinates(GLOBE_HOME)}</output>
+    <output className="globe-coordinates" ref={readout} aria-label="Globe view center" aria-live="off">{coordinates(opening)}</output>
     {status !== 'ready' && <div className="globe-status" role="status"><b>{status === 'loading' ? 'ACQUIRING EARTH IMAGERY' : 'RESTORING ORBITAL VIEW'}</b></div>}
     {focused === 'an' && <div className="globe-polar-caption">ANTARCTICA <span>UNSURVEYED SECTOR</span></div>}
     <div className="globe-hint">DRAG TO ROTATE <span>·</span> SCROLL TO ZOOM</div>
@@ -447,7 +448,7 @@ function GlobeView({ operations, onOpen }: WorldGlobeProps) {
       <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => request({ zoom: 1.19 })}>−</button>
       <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => request({ zoom: 0.84 })}>+</button>
       <span />
-      <button type="button" onClick={() => { request({ target: GLOBE_HOME }); setFocused(null) }}>HOME</button>
+      <button type="button" onClick={() => { request({ target: SECTOR_FOCUS[selected] }); setFocused(null) }}>HOME</button>
       <button type="button" onClick={() => focus(selected)}>FOCUS SECTOR</button>
       <button type="button" onClick={() => focus('an')}>SOUTH POLE</button>
       <span />
