@@ -37,9 +37,10 @@ naming:
   scenes: "N/A — r3f component trees, not engine scenes"
 
 performance:
-  target_framerate: null
-  frame_budget_ms: null
-  draw_call_limit: null
+  # Owner-set 2026-10-19 (/perf-profile); fixture in docs/technical-preferences.md § Performance Budgets.
+  target_framerate: 60
+  frame_budget_ms: 16.7
+  draw_call_limit: 300
   memory_ceiling_mb: null
 
 platform:

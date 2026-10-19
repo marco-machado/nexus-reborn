@@ -33,12 +33,17 @@
 
 ## Performance Budgets
 
-Set 2026-10-05 from ratified constraints. No product FPS number is approved. `docs/game-design.md` §20 remains the acceptance procedure: an unapproved figure is not a release gate. Art bible §8.3/§8.4 triangle and 300-draw-call figures stay provisional and are not these budgets.
+Set 2026-10-19 by the owner at `/perf-profile` (report: `production/polish/full-report-2026-10-19.md`), superseding the 2026-10-05 "no product number" entry. Mirrors `performance.*` in `project.yaml`.
 
-- **Target Framerate**: No product FPS. Do not treat 60 as a gate.
-- **Frame Budget**: City-architecture pass only — ≤10% frame-time growth versus that pass's baseline (`docs/city-architecture.md`). Not a whole-game gate.
-- **Draw Calls**: No product ceiling. The city-architecture high sample measured 164 (`docs/qa/city-architecture/README.md`). The art bible §8.4 ceiling of 300 is provisional and is not ratified.
-- **Memory Ceiling**: No product number until a §20 fixture is approved.
+**Reference fixture (living spec §20):** Apple M5 Pro, 24 GB, macOS 26.5.2; headed Chrome for Testing (Playwright chromium-1247); 1280×720 viewport; default settings (backend and quality tier not logged by the run); one full loop on a fresh campaign — World Network at 8X → Glass Veil Brief → Assembly → mission (sim order API, labelled god assist) → Debrief with the 2-day ETA catch-up → World Network at 8X; warm dev-server cache (`npm run dev`). Script: `production/polish/perf-2026-10-19/perf.mjs`. The rAF clock on this display caps at 120 Hz (p50 8.3 ms), so numbers below that floor are not measurable here.
+
+- **Target Framerate**: 60 fps.
+- **Frame Budget**: 16.7 ms at p95 per phase on the fixture. Measured 2026-10-19 at 2a24060: 9.2 ms p95 in every phase.
+- **Hitches**: in live play no frame over 50 ms. Load moments are excluded: app start, the first second of mission entry, and the Debrief → World Network catch-up frame (R-3, accepted). Measured: live mission max 33.3 ms, 0 over 50 ms.
+- **Draw Calls**: 300 (art bible §8.4 ceiling, ratified). City-architecture high sample measured 164; not re-measured at HEAD.
+- **Memory Ceiling**: none set; not measured.
+- Art bible §8.3 triangle figures stay provisional; they are not budgets.
+- City-architecture pass: ≤10% frame-time growth versus that pass's baseline (`docs/city-architecture.md`) still applies to that pass.
 - **Ratified caps**: 1280×720 minimum, no clip. ≤200 props per district. ≤70 sodium lamps per district and ≤120 district-wide. Instanced shared materials. Per-frame unit poses stay out of React state. Quality must not drop building ghosting or minimap information.
 
 ## Testing
