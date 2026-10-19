@@ -26,6 +26,7 @@ import {
   CONTRACT_SPAN_SEC,
   CONTRACT_TARGET,
   INITIAL_CONTRACT_RNG,
+  contractIntelReq,
   contractMission,
   contractMissionById,
   isGeneratedMissionId,
@@ -132,6 +133,33 @@ export interface WorldEvent {
   kind: EventKind
   tone: EventTone
   text: string
+  // A Feed line that names a generated contract: which record, the codename
+  // in the text, and the intel gate the record had when the line posted.
+  // The Feed redacts the codename while intel hides the offer.
+  contract?: EventContractRef
+}
+
+export interface EventContractRef {
+  id: string
+  codename: string
+  intelReq: number
+}
+
+// The Feed text for an event as the director may read it. A line naming a
+// generated contract that intel hides (visibleContracts) shows the gate in
+// place of the codename. An open record is judged by its live gate (Expedite
+// lowers it); a closed one by the gate stored when the line posted.
+export function feedText(
+  event: WorldEvent,
+  contracts: GeneratedContract[],
+  intelLevel: number,
+): string {
+  const ref = event.contract
+  if (!ref) return event.text
+  const open = contracts.find((c) => c.id === ref.id)
+  const req = open ? contractIntelReq(open) : ref.intelReq
+  if (req <= intelLevel) return event.text
+  return event.text.replace(ref.codename, '[REQUIRES INTEL LVL ' + req + ']')
 }
 
 export interface SectorState {
@@ -387,14 +415,25 @@ function appendEvent(f: WorldFlow, event: WorldEvent): void {
   f.unread = Math.min(MAX_EVENTS, f.unread + 1)
 }
 
+// Every contract line names its record, so the Feed can redact the codename
+// while intel hides the offer (feedText).
 function postContractEvent(
   f: WorldFlow,
   t: number,
-  sector: SectorId,
+  contract: GeneratedContract,
   tone: EventTone,
-  text: string,
+  text: (codename: string) => string,
 ): void {
-  appendEvent(f, { id: nextEventId(f), t, sector, kind: 'contract', tone, text })
+  const codename = contractMission(contract).codename
+  appendEvent(f, {
+    id: nextEventId(f),
+    t,
+    sector: contract.sector,
+    kind: 'contract',
+    tone,
+    text: text(codename),
+    contract: { id: contract.id, codename, intelReq: contractIntelReq(contract) },
+  })
 }
 
 // Snapshot of every open sector as contract-generation input: the readout the
@@ -449,12 +488,9 @@ function applyContractHooks(f: WorldFlow, event: WorldEvent, flipped: boolean): 
       postContractEvent(
         f,
         event.t,
-        event.sector,
+        contract,
         'amber',
-        'PRIORITY CONTRACT ' +
-          contractMission(contract).codename +
-          ' POSTED IN ' +
-          cityById(contract.cityId).name,
+        (codename) => 'PRIORITY CONTRACT ' + codename + ' POSTED IN ' + cityById(contract.cityId).name,
       )
     }
   } else if (event.kind === 'raid') {
@@ -467,9 +503,9 @@ function applyContractHooks(f: WorldFlow, event: WorldEvent, flipped: boolean): 
       postContractEvent(
         f,
         event.t,
-        event.sector,
+        victim,
         'amber',
-        'CORPSEC RAID WITHDRAWS CONTRACT ' + contractMission(victim).codename,
+        (codename) => 'CORPSEC RAID WITHDRAWS CONTRACT ' + codename,
       )
     }
     f.contractRngState = rng.state
@@ -484,12 +520,9 @@ function applyContractHooks(f: WorldFlow, event: WorldEvent, flipped: boolean): 
         postContractEvent(
           f,
           event.t,
-          event.sector,
+          contract,
           'dim',
-          'CONTRACT ' +
-            contractMission(contract).codename +
-            ' RE-CLIENTED TO ' +
-            CORPS[rolled.contract.client].name,
+          (codename) => 'CONTRACT ' + codename + ' RE-CLIENTED TO ' + CORPS[rolled.contract.client].name,
         )
       }
       return rolled.contract
@@ -643,9 +676,9 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
         postContractEvent(
           f,
           c.expiresAtT,
-          c.sector,
+          c,
           'dim',
-          'CONTRACT ' + contractMission(c).codename + ' EXPIRED // OFFER RESCINDED',
+          (codename) => 'CONTRACT ' + codename + ' EXPIRED // OFFER RESCINDED',
         )
       }
     } else if (f.nextEventT === stepT) {
@@ -673,12 +706,9 @@ function advanceFlow(f: WorldFlow, t: number): boolean {
         postContractEvent(
           f,
           f.nextContractT,
-          contract.sector,
+          contract,
           'green',
-          'OPEN CONTRACT ' +
-            contractMission(contract).codename +
-            ' POSTED IN ' +
-            cityById(contract.cityId).name,
+          (codename) => 'OPEN CONTRACT ' + codename + ' POSTED IN ' + cityById(contract.cityId).name,
         )
         rng.state = f.contractRngState
       }

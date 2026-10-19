@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DAY,
   MAX_DT,
+  feedText,
   TIME_SCALE,
   hhmm,
   initialOwner,
@@ -424,6 +425,46 @@ describe('generated contracts', () => {
     expect(s.contracts).toHaveLength(0)
     expect(s.events.at(-1)).toMatchObject({ kind: 'contract', sector: c.sector, tone: 'dim' })
     expect(s.events.at(-1)?.text).toContain('EXPIRED')
+  })
+
+  it('the Feed redacts a posted codename while intel hides the offer (BUG-0007)', () => {
+    const sectors: Record<string, SectorState> = {}
+    for (const id of OPEN_SECTORS) sectors[id] = { control: 20, unrest: 10 }
+    useWorldStore.setState({ sectors, nextEventT: 1e12, nextTaxT: 1e12 })
+    forceGeneration()
+    const s = useWorldStore.getState()
+    const c = s.contracts[0]
+    const line = s.events.at(-1)
+    if (!line) throw new Error('no posted line')
+    const codename = contractMission(c).codename
+    const req = CONTRACT_INTEL_REQ[c.threat]
+    expect(req).toBeGreaterThan(1)
+    expect(line.contract).toEqual({ id: c.id, codename, intelReq: req })
+    expect(visibleContracts(s.contracts, req - 1)).toHaveLength(0)
+    const hidden = feedText(line, s.contracts, req - 1)
+    expect(hidden).not.toContain(codename)
+    expect(hidden).toBe(line.text.replace(codename, '[REQUIRES INTEL LVL ' + req + ']'))
+    expect(feedText(line, s.contracts, req)).toBe(line.text)
+    // Expedite waives the gate on the live record, so the name shows at intel 1.
+    const expedited = s.contracts.map((x) => ({ ...x, expedited: true }))
+    expect(feedText(line, expedited, 1)).toBe(line.text)
+    // Once the record is gone, the gate stored on the line still applies.
+    expect(feedText(line, [], req - 1)).not.toContain(codename)
+  })
+
+  it('an expiry line for a hidden offer keeps its codename redacted (BUG-0007)', () => {
+    const sectors: Record<string, SectorState> = {}
+    for (const id of OPEN_SECTORS) sectors[id] = { control: 20, unrest: 10 }
+    useWorldStore.setState({ sectors, nextEventT: 1e12, nextTaxT: 1e12 })
+    forceGeneration()
+    const c = useWorldStore.getState().contracts[0]
+    useWorldStore.setState({ t: c.expiresAtT - 1, nextContractT: 1e12 })
+    useWorldStore.getState().tick(1)
+    const s = useWorldStore.getState()
+    const line = s.events.at(-1)
+    if (!line) throw new Error('no expiry line')
+    expect(line.text).toContain('EXPIRED')
+    expect(feedText(line, s.contracts, 1)).not.toContain(contractMission(c).codename)
   })
 
   it('a riot can spawn a linked priority suppression contract in its sector', () => {

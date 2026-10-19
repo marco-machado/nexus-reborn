@@ -7,6 +7,7 @@ import {
   DAY,
   SPEEDS,
   hhmm,
+  feedText,
   influenceRefusal,
   sectorReadout,
   taxEligible,
@@ -559,19 +560,22 @@ function TimeControl() {
 function FeedRow(props: { event: WorldEvent }) {
   const select = useWorldStore((s) => s.select)
   const markRead = useWorldStore((s) => s.markRead)
+  const contracts = useWorldStore((s) => s.contracts)
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
   const e = props.event
+  const text = feedText(e, contracts, intelLevel)
   return (
     <button
       type="button"
       className={'wm-feed-line ' + eventToneClass(e.tone)}
-      aria-label={hhmm(e.t) + ' ' + e.text + ' // FOCUS ' + sectorDef(e.sector).name}
+      aria-label={hhmm(e.t) + ' ' + text + ' // FOCUS ' + sectorDef(e.sector).name}
       onClick={act(() => {
         markRead()
         select(e.sector)
       })}
     >
       <span className="wm-feed-t">{hhmm(e.t)}</span>
-      <span className="wm-feed-x">{e.text}</span>
+      <span className="wm-feed-x">{text}</span>
       <span className="wm-feed-chev" aria-hidden="true">
         &gt;
       </span>

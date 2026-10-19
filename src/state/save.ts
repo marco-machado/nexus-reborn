@@ -253,7 +253,23 @@ function validEvent(value: unknown): value is WorldEvent {
     typeof value.tone === 'string' &&
     EVENT_TONES.has(value.tone as EventTone) &&
     typeof value.text === 'string' &&
-    value.text.length > 0
+    value.text.length > 0 &&
+    (value.contract === undefined || validEventContract(value.contract, value.text))
+  )
+}
+
+// A contract line's ref (worldStore EventContractRef). Older v10 saves
+// carry none and stay valid.
+function validEventContract(value: unknown, text: string): boolean {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['id', 'codename', 'intelReq']) &&
+    typeof value.id === 'string' &&
+    value.id.startsWith('gc') &&
+    typeof value.codename === 'string' &&
+    value.codename.length > 0 &&
+    text.includes(value.codename) &&
+    integer(value.intelReq)
   )
 }
 
