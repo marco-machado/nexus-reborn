@@ -82,7 +82,7 @@
 **Required evidence**:
 - Integration: test file beside the module — `src/game/audio.test.ts`. — must exist and pass; plus a click-through note (docs/click-through.md, Audio changes) naming the screens exercised.
 
-**Status**: [x] Tests present — `src/game/audio.test.ts` (`bed lifetimes (AU-003)`, 5 tests), `src/ui/strategyAudio.test.ts` (+1 settings test); listening check pending (user)
+**Status**: [x] Tests present — `src/game/audio.test.ts` (`bed lifetimes (AU-003)`, 5 tests), `src/ui/strategyAudio.test.ts` (+1 settings test); listening check run 2026-10-19, user reported "pass" (bed continues across the four Screens), recorded in `production/qa/smoke-2026-10-19-sprint-009.md` item 7
 
 **Click-through (2026-10-17, dev server, in-app browser, partial — docs/click-through.md Audio changes step 3)**: Menu → New Operation → World Network → Research → World Network → Brief (Glass Veil) → Assembly → Deploy → Pause → Abort → World Network. Looping-source `start`/`stop` calls were logged by patching `AudioBufferSourceNode.prototype`. Across World Network, Research, Brief and Assembly there was no start or stop (`strategy-bed.mp3` fetched once). On Deploy the strategy loop stopped, `mission-bed.mp3` was fetched and one city-hum loop started (plus a rain loop, Story 004). Opening Pause neither stopped nor started a bed. Abort stopped the city-hum and rain loops and restarted the strategy loop from cache. The leave-while-loading case was not reproduced in the browser (clips were cached). The automated test covers it. Not listened to: the in-app pane has no audio output to Claude.
 

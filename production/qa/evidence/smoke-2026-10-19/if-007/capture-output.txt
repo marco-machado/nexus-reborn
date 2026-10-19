@@ -1,0 +1,31 @@
+PASS standard mission live // {"d":"standard","t":4.16}
+standard minimap contents {"civilians":22,"enemies":15,"patrolling":15}
+PASS weather chip matches live weather before front // heavy -> chips ["13.7C","HEAVY RAIN","1.2M/S"]
+PASS zoom starts at max (in disabled)
+PASS zoom bottoms out after two steps (out disabled)
+PASS minimap click moves camera focus // {"x":48,"z":84.5} -> {"x":14.68,"z":81.62}
+PASS minimap drag moves camera focus // {"x":14.68,"z":81.62} -> {"x":65.28,"z":11.87}
+PASS sim runs while a toast is up // t 6.96 -> 8.18, toast TUTORIAL 1/9 // SELECTION
+PASS keyboard select lands under the toast // ["a1"]
+PASS world click under a toast reaches the canvas // elementFromPoint CANVAS, canvas pointerdowns 1, toast TUTORIAL 2/9 // MOVEMENT
+PASS toast 1 SELECTION // TUTORIAL 1/9 // SELECTION // Click an operative or drag a box to select. 1-4 picks a slot; 0 / ` takes the living squad.
+PASS toast 2 MOVEMENT // TUTORIAL 2/9 // MOVEMENT // Right click on open ground moves the selection there.
+PASS toast 3 ENGAGEMENT // TUTORIAL 3/9 // ENGAGEMENT // Right click on a hostile orders the selection to engage it.
+PASS toast 4 STANCES // TUTORIAL 4/9 // STANCES // H holds position. C holds fire until ordered.
+PASS stances toast names the remapped key // J holds position. C holds fire until ordered.
+PASS toast 5 ROLE ABILITY // TUTORIAL 5/9 // ROLE ABILITY // Q triggers the selected operatives' role abilities.
+PASS toast 6 ITEMS // TUTORIAL 6/9 // ITEMS // E / M spends a med kit; R spends a power cell.
+PASS toast 7 WEAPON SWAP // TUTORIAL 7/9 // WEAPON SWAP // V swaps between primary and sidearm.
+PASS toast 8 DIRECTIVES // TUTORIAL 8/9 // DIRECTIVES // Work the active directive from the MISSION DIRECTIVES panel; the minimap marks its zone.
+PASS toast 9 EXTRACTION // TUTORIAL 9/9 // EXTRACTION // After the final directive, return to the insertion zone to extract.
+PASS no tutorial toast after the ninth
+PASS SKIP TUTORIAL marks every step seen and clears the toast
+PASS front hit: weather changed // heavy -> light
+PASS weather chip matches live weather after front // light -> chips ["13.7C","LIGHT RAIN","1.2M/S"]
+PASS comm log prints the front line // ["22:16:38 WEATHER FRONT. RAIN LIFTS. GUARD SIGHT INCREASED."]
+PASS hardened mission live
+hardened minimap contents {"civilians":28,"enemies":17,"patrolling":17}
+PASS hardened keeps civilians and patrols on the same contract
+PASS minimap draw code never reads difficulty
+errors: []
+ALL PASS

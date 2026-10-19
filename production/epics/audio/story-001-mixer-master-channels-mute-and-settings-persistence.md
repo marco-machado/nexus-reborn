@@ -82,7 +82,7 @@
 **Required evidence**:
 - Integration: test file beside the module — `src/game/audio.test.ts`, `src/state/settingsStore.test.ts`. — must exist and pass; plus a click-through note (docs/click-through.md, Audio changes) naming the screens exercised.
 
-**Status**: [x] Test files present (`src/game/audio.test.ts`, `src/state/settingsStore.test.ts`); click-through listening note pending (deferred, see Completion Notes)
+**Status**: [x] Test files present (`src/game/audio.test.ts`, `src/state/settingsStore.test.ts`); listening check run 2026-10-19, user reported "pass" (mute/unmute restores levels), recorded in `production/qa/smoke-2026-10-19-sprint-009.md` item 7
 
 ---
 
