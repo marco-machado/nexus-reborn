@@ -35,8 +35,8 @@
 
 *From GDD `design/gdd/interface.md`, scoped to this story:*
 
-- [ ] (AC26) GIVEN an unseen heavy-tier advisory and an otherwise-valid heavy-tier deployment, WHEN the mission starts, THEN the existing speed-penalty hint appears once. A later valid deployment in the same campaign does not repeat it. An over-limit Assembly attempt is refused with its reason and never enters Mission; it is not the heavy-tier mission-hint trigger.
-- [ ] (AC28) GIVEN candidate offers with owner-reported costs, Credits and roster capacity, WHEN Assembly is shown in unaffordable and full-roster fixtures separately, THEN hire cost versus Credits is visible and hire is disabled with the matching reason. Overdraft and Deploy refusal retain disabled controls plus visible reasons; no refusal audio is required for either.
+- [x] (AC26) GIVEN an unseen heavy-tier advisory and an otherwise-valid heavy-tier deployment, WHEN the mission starts, THEN the existing speed-penalty hint appears once. A later valid deployment in the same campaign does not repeat it. An over-limit Assembly attempt is refused with its reason and never enters Mission; it is not the heavy-tier mission-hint trigger.
+- [x] (AC28) GIVEN candidate offers with owner-reported costs, Credits and roster capacity, WHEN Assembly is shown in unaffordable and full-roster fixtures separately, THEN hire cost versus Credits is visible and hire is disabled with the matching reason. Overdraft and Deploy refusal retain disabled controls plus visible reasons; no refusal audio is required for either.
 
 ---
 

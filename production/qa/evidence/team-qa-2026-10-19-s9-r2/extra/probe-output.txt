@@ -1,0 +1,21 @@
+R5 Tab order from page start: ["BEGIN NEW OPERATION","OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"]
+PASS R5 Menu SETTINGS reachable by Tab from page start // ["BEGIN NEW OPERATION","OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"]
+PASS R5 more than one Menu control reachable // 2
+PASS R5 after close focus is on SETTINGS // OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY
+R5 Tab order after close: ["BEGIN NEW OPERATION","OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"]
+PASS R5 Tab after close cycles back through Menu controls // ["BEGIN NEW OPERATION","OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"]
+R9 set: {"music0":"100","musicSet":"40","mute0":"MUTE // OFF","muteSet":"MUTE // ON"}
+PASS R9 close returns focus to SETTINGS // OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY
+PASS R9 MUSIC value persists across reload // {"music0":"100","musicSet":"40","musicAfter":"40"}
+PASS R9 MUTE ON persists across reload // MUTE // ON
+PASS R2-a Space on focused MUTE toggles MUTE // MUTE // OFF -> MUTE // ON
+PASS R2-a Space on focused MUTE leaves the mission paused with Settings open // {"paused":true,"dialogs":["Settings"],"t":[4.336,4.336]}
+PASS R2-c Escape from focused slider returns to the pause modal, still paused // {"paused":true,"dialogs":["Mission paused"],"focused":"RESUME"}
+R2-d state: {"armed":"CONFIRM?","after":{"phase":"mission","outcome":null,"paused":true,"time":4.336,"dialogs":["Settings"],"abort":null,"isBody":false,"focused":"MASTER volume","focusInSettings":true}}
+PASS R2-d Space on a slider with Abort armed does not abort // {"armed":"CONFIRM?","phase":"mission","outcome":null,"paused":true}
+PASS R2-a Space on focused RESUME resumes and does not re-pause // {"paused":false,"dialogs":[],"t":[4.336,5.352]}
+PASS R2-b Space with nothing focused on a live mission pauses // {"paused":true,"dialogs":["Mission paused"]}
+R2-b paused, nothing focused, after Space (observation): {"paused":false,"dialogs":[],"focused":"Pause and open the menu"}
+PASS R2-b Space with nothing focused while paused resumes // {"paused":false,"dialogs":[]}
+errors: []
+ALL PASS

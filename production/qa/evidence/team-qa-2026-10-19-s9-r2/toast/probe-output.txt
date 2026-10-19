@@ -1,0 +1,8 @@
+PASS R4-d pointer-open, Escape close: focus on SETTINGS // OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY
+R8-c step 1: {"toast":["Dismiss tutorial step SELECTION"],"paused":false,"t":4.366,"focused":"DISTRICT 0722:14:1213.7CHEAVY RAIN1.2M/S"}
+PASS R8-c precondition: a tutorial toast is shown, not paused // ["Dismiss tutorial step SELECTION"]
+PASS R8-c step 2: Space pauses, toast step unchanged // {"paused":true,"toast":["Dismiss tutorial step SELECTION"]}
+PASS R8-c step 3: Space resumes, time advances, same toast step // {"paused":false,"t":[4.366,5.366],"toast":["Dismiss tutorial step SELECTION"]}
+R8-c step 4 (observation): {"reachedDismissByTab":true,"before":{"focused":"Dismiss tutorial step SELECTION","paused":false,"toast":["Dismiss tutorial step SELECTION"]},"after":{"paused":true,"dialogs":["Mission paused"],"focused":"RESUME","toast":["Dismiss tutorial step SELECTION"]}}
+errors: []
+ALL PASS

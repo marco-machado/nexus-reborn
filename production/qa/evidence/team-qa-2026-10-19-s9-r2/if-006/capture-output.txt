@@ -1,0 +1,13 @@
+PASS never-started: Continue absent
+PASS never-started: line // NO CAMPAIGN ON FILE
+PASS unreadable: Continue absent
+PASS unreadable: visible reason distinct // SAVE UNREADABLE // DROPPED
+PASS valid: Continue present
+PASS valid: line // CAMPAIGN ON FILE
+PASS armed: first press arms, blob unchanged // CONFIRM // ERASE SAVE?
+PASS armed: button says confirm
+PASS armed: window expiry disarms
+PASS Balance entry reachable while recording off
+PASS recording is off in Balance view
+PASS no page or console errors
+ALL PASS

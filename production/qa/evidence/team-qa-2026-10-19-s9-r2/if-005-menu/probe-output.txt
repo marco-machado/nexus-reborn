@@ -1,0 +1,10 @@
+PASS Menu Settings (Escape): opens with focus inside // {"tag":"BUTTON","isBody":false,"label":"CLOSE","inSettings":true,"open":true}
+PASS Menu Settings (Escape): Tab stays trapped over 30 presses
+PASS Menu Settings (Escape): Shift+Tab stays trapped over 30 presses
+PASS Menu Settings (Escape): closes and focus returns to the opening control // {"tag":"BUTTON","isBody":false,"label":"OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY","inSettings":false,"open":false}
+PASS Menu Settings (CLOSE (Enter)): opens with focus inside // {"tag":"BUTTON","isBody":false,"label":"CLOSE","inSettings":true,"open":true}
+PASS Menu Settings (CLOSE (Enter)): Tab stays trapped over 30 presses
+PASS Menu Settings (CLOSE (Enter)): Shift+Tab stays trapped over 30 presses
+PASS Menu Settings (CLOSE (Enter)): closes and focus returns to the opening control // {"tag":"BUTTON","isBody":false,"label":"OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY","inSettings":false,"open":false}
+errors: []
+ALL PASS
