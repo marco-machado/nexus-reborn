@@ -1,12 +1,12 @@
 # Story 007: No celebration sting, spoken VO, or spatial shooter mix
 
 > **Epic**: Audio
-> **Status**: In Review
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Visual/Feel
 > **Estimate**: 1.0 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: 2026-10-17
+> **Last Updated**: 2026-10-19
 
 ## Context
 
@@ -33,8 +33,8 @@
 
 *From GDD `design/gdd/audio.md`, scoped to this story:*
 
-- [ ] GIVEN Debrief (including quiet replay) or Abort-armed pause, WHEN the mix is heard, THEN there is no celebration sting and no mission-end sting on Abort arm.
-- [ ] GIVEN the shipping mix, WHEN spoken VO or a spatial-panned shooter model is listened for, THEN neither is present.
+- [x] GIVEN Debrief (including quiet replay) or Abort-armed pause, WHEN the mix is heard, THEN there is no celebration sting and no mission-end sting on Abort arm.
+- [x] GIVEN the shipping mix, WHEN spoken VO or a spatial-panned shooter model is listened for, THEN neither is present.
 
 ---
 
@@ -75,7 +75,7 @@
 **Required evidence**:
 - Visual/Feel: a listening-evidence note with the recorded settings and scenarios in `production/qa/evidence/`, plus a lead sign-off. Name the screens exercised (docs/click-through.md, Audio changes).
 
-**Status**: [x] Advisory automated test `src/game/audio.noCelebration.test.ts` (6 tests); listening-evidence note prepared at `production/qa/evidence/au-007/README.md` — listening and audio-director sign-off pending
+**Status**: [x] Listening pass run 2026-10-19 (rows 1–6 pass; row 6 on headphones), audio-director sign-off recorded, screenshots retained for the three Debriefs and both Abort states — `production/qa/evidence/au-007/`. Advisory automated test `src/game/audio.noCelebration.test.ts` (6 tests, `7a38fcd`).
 
 ---
 
@@ -108,3 +108,11 @@
   - QA edge case "Abort confirm stops the mission bed as on any leave" has no automated coverage; README scenario 5 is the only evidence (README now says so).
   - `production/qa/evidence/au-007/README.md:8` pins `5594e65` + uncommitted test, stale once committed (now marked for replacement); the browser probe counts have no script or log in the evidence folder (now labelled a one-off observation).
 - **Autonomous decisions logged**: specialist review answered from the workflow's `/code-review` record; Phase 7 close not taken (NOT ASSESSED cannot be closed without the owner, `scope_changes` always-ask); story set to In Review per the workflow's sign-off exception; nothing committed.
+
+## Completion Notes
+**Completed**: 2026-10-19
+**Criteria**: 2/2 passing (AC-1 no sting on Debrief incl. quiet replay or on Abort arm: listening rows 1–5; AC-2 no VO, no spatial shooter mix: row 6 on headphones, plus 0 panner and 0 speech calls logged over the whole pass — user listening pass 2026-10-19). Staging shortcuts: row 2's squad was marked dead without the damage path (no death thuds, no KIA); rows 1 and 3 removed every guard silently. Row 6 logged a second alert sting mid-fight (cause not recorded); it is in-mission, outside this story.
+**Deviations**: None. No code change; smoke grep for panner/speech APIs under `src/` re-run 2026-10-19, no matches. The `/code-review` advisories under "Open for Sign-off" stand (Abort-arm and `applyDebrief`/`abortMission` checks cannot fail; "nothing after the result" checks only two cues; quiet-replay and loss tests lack the `threatLevel(0)`-only and `phase` asserts; cue-set pin skips `ui/sound` exports).
+**Test Evidence**: Visual/Feel: listening-evidence note with settings, scenarios, staging and audio-director sign-off (Marco Machado, 2026-10-19 — approved) at `production/qa/evidence/au-007/README.md`; retained screenshots `01-debrief-paid-win.jpg`, `02-debrief-loss.jpg`, `03-debrief-quiet-replay.jpg`, `04-abort-armed.jpg`, `05-abort-confirm-world-network.jpg` in the same folder; automated test `src/game/audio.noCelebration.test.ts` (file presence checked; not re-run at close).
+**Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, gameplay-programmer
+**Mutation Check**: skipped — Visual/Feel story

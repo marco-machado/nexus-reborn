@@ -14,7 +14,7 @@ goal: "Land the Interface rules the director reads and acts through: every surfa
 start: "2026-10-17"
 end: "2026-10-28"
 generated: "2026-10-17"
-updated: "2026-10-18"
+updated: "2026-10-19"
 
 stories:
   - id: "IF-001"
@@ -165,8 +165,8 @@ stories:
     name: "No celebration sting, spoken VO, or spatial shooter mix"
     file: "production/epics/audio/story-007-no-celebration-sting-vo-or-spatial-mix.md"
     priority: nice-to-have
-    status: review
+    status: done
     owner: ""
     estimate_days: 0.3
-    blocker: "listening pass and audio-director sign-off (user)"
-    completed: ""
+    blocker: ""
+    completed: "2026-10-19"
