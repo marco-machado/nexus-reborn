@@ -1,0 +1,24 @@
+PASS TC-01 standard mission live // {"difficulty":"standard","reducedMotion":false,"time":4.22,"civilians":22,"enemies":15,"patrolling":15,"activeObjective":"ob1","toast":false}
+PASS TC-01 standard: no tutorial toast (like-for-like)
+TC-01 standard at sim t 4.22, focus {"x":48,"z":84.5}: {"civilians":22,"enemies":15,"patrolling":15,"activeObjective":"ob1"}
+PASS TC-01 standard: zoom starts at max (in disabled)
+PASS TC-01 standard: zoom bottoms out after two steps (out disabled)
+PASS TC-01 standard: objective pulse stroked at every zoom // objective ob1, per zoom [{"zoom":3,"n":6,"rMin":13.22,"rMax":19.89,"alphas":[0.71,0.65,0.59,0.53,0.47,0.41],"centre":{"x":148.5,"y":43.3,"w":210,"h":150},"vipPixels":0},{"zoom":2,"n":6,"rMin":6.69,"rMax":17.15,"alphas":[0.08,0.02,0.81,0.75,0.69,0.63],"centre":{"x":90.2,"y":26.3,"w":210,"h":150},"vipPixels":0},{"zoom":1,"n":6,"rMin":3.69,"rMax":9.85,"alphas":[0.3,0.24,0.18,0.12,0.05,0.84],"centre":{"x":53,"y":15.5,"w":210,"h":150},"vipPixels":0}]
+PASS TC-01 hardened mission live // {"difficulty":"hardened","reducedMotion":false,"time":4.24,"civilians":28,"enemies":17,"patrolling":17,"activeObjective":"ob1","toast":false}
+PASS TC-01 hardened: no tutorial toast (like-for-like)
+TC-01 hardened at sim t 4.24, focus {"x":48,"z":84.5}: {"civilians":28,"enemies":17,"patrolling":17,"activeObjective":"ob1"}
+PASS TC-01 hardened: zoom starts at max (in disabled)
+PASS TC-01 hardened: zoom bottoms out after two steps (out disabled)
+PASS TC-01 hardened: objective pulse stroked at every zoom // objective ob1, per zoom [{"zoom":3,"n":6,"rMin":10.28,"rMax":27.51,"alphas":[0.06,0.85,0.79,0.73,0.66,0.6],"centre":{"x":148.5,"y":43.3,"w":210,"h":150},"vipPixels":0},{"zoom":2,"n":6,"rMin":6.29,"rMax":16.74,"alphas":[0.24,0.18,0.11,0.05,0.84,0.78],"centre":{"x":90.2,"y":26.3,"w":210,"h":150},"vipPixels":0},{"zoom":1,"n":6,"rMin":6.7,"rMax":9.05,"alphas":[0.46,0.4,0.34,0.28,0.22,0.16],"centre":{"x":53,"y":15.5,"w":210,"h":150},"vipPixels":0}]
+PASS TC-01 hardened keeps civilians, enemies and patrols // {"civilians":22,"enemies":15,"patrolling":15,"activeObjective":"ob1","pulse":[{"zoom":3,"n":6,"rMin":13.22,"rMax":19.89,"alphas":[0.71,0.65,0.59,0.53,0.47,0.41],"centre":{"x":148.5,"y":43.3,"w":210,"h":150},"vipPixels":0},{"zoom":2,"n":6,"rMin":6.69,"rMax":17.15,"alphas":[0.08,0.02,0.81,0.75,0.69,0.63],"centre":{"x":90.2,"y":26.3,"w":210,"h":150},"vipPixels":0},{"zoom":1,"n":6,"rMin":3.69,"rMax":9.85,"alphas":[0.3,0.24,0.18,0.12,0.05,0.84],"centre":{"x":53,"y":15.5,"w":210,"h":150},"vipPixels":0}]} vs {"civilians":28,"enemies":17,"patrolling":17,"activeObjective":"ob1","pulse":[{"zoom":3,"n":6,"rMin":10.28,"rMax":27.51,"alphas":[0.06,0.85,0.79,0.73,0.66,0.6],"centre":{"x":148.5,"y":43.3,"w":210,"h":150},"vipPixels":0},{"zoom":2,"n":6,"rMin":6.29,"rMax":16.74,"alphas":[0.24,0.18,0.11,0.05,0.84,0.78],"centre":{"x":90.2,"y":26.3,"w":210,"h":150},"vipPixels":0},{"zoom":1,"n":6,"rMin":6.7,"rMax":9.05,"alphas":[0.46,0.4,0.34,0.28,0.22,0.16],"centre":{"x":53,"y":15.5,"w":210,"h":150},"vipPixels":0}]}
+PASS TC-01 same active objective on both difficulties
+TC-01 zoom 3: ring centre standard {"x":148.5,"y":43.3,"w":210,"h":150} vs hardened {"x":148.5,"y":43.3,"w":210,"h":150}
+TC-01 zoom 2: ring centre standard {"x":90.2,"y":26.3,"w":210,"h":150} vs hardened {"x":90.2,"y":26.3,"w":210,"h":150}
+TC-01 zoom 1: ring centre standard {"x":53,"y":15.5,"w":210,"h":150} vs hardened {"x":53,"y":15.5,"w":210,"h":150}
+PASS TC-03 dragging the view up on the minimap moves the camera toward screen-up // focus {"x":48,"z":84.5} -> {"x":38.12413540964868,"z":74.62413540964873}, screen-up {"x":-28.23784730515518,"z":-28.23784730515517}, cos 1.000
+TC-08 method: Settings control "REDUCED MOTION // OFF" -> "REDUCED MOTION // ON"; sim running true, reducedMotion true
+TC-08 objective ring over 500 ms: reduced motion off {"n":5,"rMin":15.63,"rMax":20.96,"alphas":[0.6,0.54,0.47,0.42,0.36]}; on {"n":5,"rMin":18.56,"rMax":18.56,"alphas":[0.7]}
+PASS TC-08 control: the pulse radius moves with reduced motion off // {"n":5,"rMin":15.63,"rMax":20.96,"alphas":[0.6,0.54,0.47,0.42,0.36]}
+PASS TC-08 reduced motion on: one steady ring (constant radius, alpha 0.7) // {"n":5,"rMin":18.56,"rMax":18.56,"alphas":[0.7]}
+errors: []
+ALL PASS

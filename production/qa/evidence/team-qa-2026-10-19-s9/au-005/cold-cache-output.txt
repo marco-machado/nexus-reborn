@@ -1,0 +1,39 @@
+
+--- TC-01 cold cache, L1 sfx latency 1500 ms
+clicks 10 (138..437 ms); decodes 20 (0 failed), first resolve 3270, T_dec 3275; starts so far []
+idle-interval one-shot starts: 0; any >=2 starts within 50 ms of a decode resolve: false; control-click starts: 1
+PASS TC-01 no burst: 0 idle starts, no decode-time cluster, control click >= 1 // idle 0, cluster false, control 1
+
+--- TC-03 (TC-01 context): UI path to Glass Veil, HUD clicks, fire
+fire method: w.orderAttack {"agent":"a1","target":"e11","dist":24.2}; starts after firing: 3; loops started overall: 3
+PASS TC-03 mission reached and runs // {"s0":{"phase":"mission","t":0.16799999999999998},"s1":{"phase":"mission","t":4.434800000011917}}
+PASS TC-03 0 one-shot starts in the idle interval after the HUD clicks // []
+TC-03 diagnostic: >= 1 start after firing: true
+PASS cold cache: every sfx response is 200, none 304 // 43 responses, statuses [200]
+PASS TC-01/TC-03 0 console errors and 0 page errors // warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | warning Calling [RenderPassEncoder (unlabeled)].Draw with a vertex count of 0 is unusual.
+warnings: warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | warning Calling [RenderPassEncoder (unlabeled)].Draw with a vertex count of 0 is unusual.
+responses: [{"url":"/src/ui/sound.ts","status":200,"t":55},{"url":"/src/game/audioFreshness.ts","status":200,"t":55},{"url":"/src/game/audio.ts","status":200,"t":95}]; sfx 43, first 1624 ms, last 40571 ms
+
+--- TC-02 module load, L2 latency 1500 ms on /src/game/audio.ts
+click 138 ms; T_mod 1597 ms; starts []
+PASS TC-02 0 starts in the 2,000 ms after the audio module loads // []
+PASS TC-02 0 console errors and 0 page errors
+
+--- TC-04 audio unavailable (AudioContext undefined)
+PASS TC-04 AudioContext unavailable in the page
+slider moved to 95 and back
+fire method: w.orderAttack {"agent":"a1","target":"e11","dist":28.4}
+PASS TC-04 mission reached and runs without audio // {"s0":{"phase":"mission","t":0.1948999999761581},"s1":{"phase":"mission","t":2.429499999999999}}
+PASS TC-04 0 starts // []
+PASS TC-04 0 console errors and 0 page errors // warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | warning Calling [RenderPassEncoder (unlabeled)].Draw with a vertex count of 0 is unusual.
+TC-04 warnings verbatim: ["warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.","warning THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.","warning Calling [RenderPassEncoder (unlabeled)].Draw with a vertex count of 0 is unusual."]
+
+--- TC-05 F5 instrumented fixture: context suspended until __allowResume()
+context state(s) after 3 open/close while held: ["suspended"]
+states after resume: ["running"]; one-shot starts after resume: []
+PASS TC-05 context was not running during the clicks // ["suspended"]
+PASS TC-05 0 starts in the 2,000 ms after resume (dropped, not queued) // []
+TC-05 control: starts after a fresh click post-resume: 1
+PASS TC-05 0 console errors and 0 page errors
+
+ALL PASS (advisory)

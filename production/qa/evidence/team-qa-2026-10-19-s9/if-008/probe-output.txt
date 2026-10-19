@@ -1,0 +1,22 @@
+PASS fixture: live mission, no result // {"phase":"mission","outcome":null,"paused":false,"result":"none","time":4.196,"focus":[48,84.5],"footprint":[[7.94,91.94],[55.44,44.44],[77.3,79.06],[42.56,113.8]],"dialogs":[],"abort":null,"focused":"DISTRICT 0722:14:1213.7CHEAVY RAIN1.2M/S","focusedType":"BODY","focusedValue":null,"focusInPause":false,"focusInSettings":false}
+PASS TC-01 Space opens pause // {"paused":true,"dialogs":["Mission paused"]}
+PASS TC-01 sim time frozen while paused // t 4.43 -> 4.43
+PASS TC-01 camera focus frozen while paused // [48,84.5] -> [48,84.5]
+PASS TC-01 camera footprint frozen while paused
+PASS TC-01 still paused after pan keys and drag
+PASS TC-01 Resume unpauses and the sim advances // paused false, t 4.43 -> 5.446
+PASS TC-01 control: pan key moves the camera when live // [48,84.5] -> [32.579,69.079]
+PASS TC-04 first press arms // {"abort":"CONFIRM?","phase":"mission"}
+PASS TC-04 lapse disarms, still paused // {"abort":"ABORT","paused":true}
+PASS TC-04 next press after the lapse only re-arms // {"at0":["CONFIRM?","mission",null],"at500":["CONFIRM?","mission",null]}
+PASS TC-05 Settings open inside the freeze // {"paused":true,"dialogs":["Settings"],"t":[6.261,6.261]}
+PASS TC-05 close returns to pause with focus inside it // {"dialogs":["Mission paused"],"focused":"RESUME","focusInPause":true}
+PASS TC-06 a volume slider reached by Tab // MASTER volume = 100
+TC-06 before Space: {"paused":true,"dialogs":["Settings"],"t":6.261,"focused":"MASTER volume","value":"100"}
+TC-06 after Space:  {"paused":false,"dialogs":[],"t":7.279,"focused":"Pause and open the menu","value":null}
+FAIL TC-06 still paused after Space on the slider
+FAIL TC-06 Settings still mounted // []
+FAIL TC-06 sim time unchanged // t 6.261 -> 7.279
+FAIL TC-06 focus still in Settings // Pause and open the menu
+errors: []
+FAILS: 4, errors 0

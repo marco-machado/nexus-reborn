@@ -1,0 +1,8 @@
+PASS Menu Settings (Escape): opens with focus inside // {"tag":"BUTTON","isBody":false,"label":"CLOSE","inSettings":true,"open":true}
+PASS Menu Settings (Escape): Tab stays trapped over 30 presses
+FAIL Menu Settings (Escape): closes and focus returns to the opening control // {"tag":"BODY","isBody":true,"label":"SYS:GN-7A // BOOT SEQUENCE COMPLETEPRT:O","inSettings":false,"open":false}
+PASS Menu Settings (CLOSE (Enter)): opens with focus inside // {"tag":"BUTTON","isBody":false,"label":"CLOSE","inSettings":true,"open":true}
+PASS Menu Settings (CLOSE (Enter)): Tab stays trapped over 30 presses
+FAIL Menu Settings (CLOSE (Enter)): closes and focus returns to the opening control // {"tag":"BODY","isBody":true,"label":"SYS:GN-7A // BOOT SEQUENCE COMPLETEPRT:O","inSettings":false,"open":false}
+errors: []
+FAILS: 2

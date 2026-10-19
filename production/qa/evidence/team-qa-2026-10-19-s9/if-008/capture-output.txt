@@ -1,0 +1,14 @@
+PASS live mission, no result // {"phase":"mission","outcome":null,"paused":false,"result":"none","time":4.1933999999761555,"dialog":null,"abort":null,"hint":null,"saveKeys":[]}
+PASS Escape opens pause modal // {"phase":"mission","outcome":null,"paused":true,"result":"none","time":4.408599999964235,"dialog":"Mission paused","abort":"ABORT","hint":"","saveKeys":[]}
+PASS sim frozen while paused // t=4.408599999964235 -> 4.408599999964235
+PASS pause stays in mission phase
+PASS bindings table printed // rows=27
+PASS first Abort press arms, nothing discarded // {"phase":"mission","outcome":null,"paused":true,"result":"none","time":4.408599999964235,"dialog":"Mission paused","abort":"CONFIRM?","hint":"PRESS AGAIN WITHIN 3 S TO ABORT MISSION","saveKeys":[]}
+PASS lapse disarms, still paused // {"phase":"mission","outcome":null,"paused":true,"result":"none","time":4.408599999964235,"dialog":"Mission paused","abort":"ABORT","hint":"","saveKeys":[]}
+PASS Settings opens inside the freeze // {"phase":"mission","outcome":null,"paused":true,"result":"none","time":4.408599999964235,"dialog":"Settings","abort":null,"hint":null,"saveKeys":[]}
+PASS Pause / slots shown FIXED in Settings
+PASS Settings returns to pause menu // {"phase":"mission","outcome":null,"paused":true,"result":"none","time":4.408599999964235,"dialog":"Mission paused","abort":"ABORT","hint":"","saveKeys":["nexus-settings-v1"]}
+PASS remap shows on return // rebound=true keys=Z
+PASS confirm aborts to World Network, no outcome, no save write // {"phase":"world","outcome":null,"paused":false,"result":"none","time":null,"dialog":"World Network orientation","abort":null,"hint":null,"saveKeys":["nexus-settings-v1"]}
+PASS no console errors
+ALL PASS

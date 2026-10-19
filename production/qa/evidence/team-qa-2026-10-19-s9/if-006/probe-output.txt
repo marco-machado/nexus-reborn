@@ -1,0 +1,40 @@
+defaults (settingsStore): {"difficulty":"standard","quality":"auto","holdGround":null,"textScale":100,"telemetry":false}
+PASS on Menu after reload // menu
+PASS TC-06 precondition: seeded campaign on file (Menu reads CAMPAIGN ON FILE) // CAMPAIGN ON FILE
+SEEDED: settings {"difficulty":"hardened","quality":"low","holdGround":["KeyJ"],"textScale":125,"telemetry":true}
+SEEDED: campaign {"credits":4321,"intelLevel":3,"contractsWon":["m01","m02"],"labs":{"ballistics":{"id":"b-propellants","startedT":0,"endT":99999},"cybernetics":null,"control":null},"tutorialSeen":"9 ids"}
+PASS TC-06 precondition: seeded settings differ from defaults on all 5 // {"s0":{"difficulty":"hardened","quality":"low","holdGround":["KeyJ"],"textScale":125,"telemetry":true},"defaults":{"difficulty":"standard","quality":"auto","holdGround":null,"textScale":100,"telemetry":false}}
+canonical fixture (read at run time): {"credits":128450,"intelLevel":1,"contractsWon":[],"labs":{"ballistics":null,"cybernetics":null,"control":null},"tutorialSeen":[]}
+PASS TC-06 precondition: seeded campaign differs from the fixture on all 5
+PASS TC-06 New Operation was two-step (armed, then confirmed)
+after New Operation: settings {"difficulty":"hardened","quality":"low","holdGround":["KeyJ"],"textScale":125,"telemetry":true} campaign {"credits":128450,"intelLevel":1,"contractsWon":[],"labs":{"ballistics":null,"cybernetics":null,"control":null},"tutorialSeen":[]}
+PASS TC-06 setting kept: difficulty // "hardened" -> "hardened"
+PASS TC-06 setting kept: quality // "low" -> "low"
+PASS TC-06 setting kept: holdGround // ["KeyJ"] -> ["KeyJ"]
+PASS TC-06 setting kept: textScale // 125 -> 125
+PASS TC-06 setting kept: telemetry // true -> true
+PASS TC-06 campaign field = fixture: credits // 128450 vs 128450
+PASS TC-06 campaign field = fixture: intelLevel // 1 vs 1
+PASS TC-06 campaign field = fixture: contractsWon // [] vs []
+PASS TC-06 campaign field = fixture: labs // {"ballistics":null,"cybernetics":null,"control":null} vs {"ballistics":null,"cybernetics":null,"control":null}
+PASS TC-06 campaign field = fixture: tutorialSeen // [] vs []
+SEEDED: 2 telemetry records, at=[1,2]
+PASS TC-07 control: Abort with recording on adds exactly 1 record // 2 -> 3, phase world
+TC-07 N=3 ids=[1,2,1792386752028]
+in-mission Settings: TELEMETRY: LOCAL ONLY // OFF
+PASS TC-07 disabled interval: Abort with recording off adds none // [1,2,1792386752028] -> [1,2,1792386752028], phase world
+PASS on Menu after reload // menu
+TC-07 toggle back on: TELEMETRY: LOCAL ONLY // ON
+PASS TC-07 Balance shows N records with the same ids // entry 1, balance 3, ids [1,2,1792386752028]
+PASS on Menu after reload // menu
+PASS TC-08 New Operation keeps the log // [1,2,1792386752028]
+PASS on Menu after reload // menu
+PASS TC-08 Balance count after New Operation = N // 3
+PASS TC-08 Clear empties the log // []
+TC-08 Balance count after Clear: 0
+SEEDED: 1 telemetry record, at=[3]
+PASS on Menu after reload // menu
+PASS TC-09 recording off and Balance entry present // TELEMETRY: LOCAL ONLY // OFF, entry 1
+PASS TC-09 Balance open with recording off
+errors: []
+ALL PASS

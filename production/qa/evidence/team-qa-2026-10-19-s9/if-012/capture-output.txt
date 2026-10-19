@@ -1,0 +1,19 @@
+PASS unaffordable: three candidates listed // [{"ledger":"COST 24,500 CR // CREDITS 9,000 CR","why":"INSUFFICIENT CREDITS // 15,500 CR SHORT","disabled":true,"clipped":false},{"ledger":"COST 28,000 CR // CREDITS 9,000 CR","why":"INSUFFICIENT CREDITS // 19,000 CR SHORT","disabled":true,"clipped":false},{"ledger":"COST 22,500 CR // CREDITS 9,000 CR","why":"INSUFFICIENT CREDITS // 13,500 CR SHORT","disabled":true,"clipped":false}]
+PASS unaffordable: cost versus Credits printed on each // ["COST 24,500 CR // CREDITS 9,000 CR","COST 28,000 CR // CREDITS 9,000 CR","COST 22,500 CR // CREDITS 9,000 CR"]
+PASS unaffordable: HIRE disabled with the shortfall reason // ["INSUFFICIENT CREDITS // 15,500 CR SHORT","INSUFFICIENT CREDITS // 19,000 CR SHORT","INSUFFICIENT CREDITS // 13,500 CR SHORT"]
+PASS unaffordable: nothing clipped at 1280x720
+PASS full roster: cost versus Credits printed on each // ["COST 24,500 CR // CREDITS 500,000 CR","COST 28,000 CR // CREDITS 500,000 CR","COST 22,500 CR // CREDITS 500,000 CR"]
+PASS full roster: HIRE disabled with the capacity reason // ["ROSTER AT CAPACITY // 8 / 8","ROSTER AT CAPACITY // 8 / 8","ROSTER AT CAPACITY // 8 / 8"]
+PASS full roster: nothing clipped at 1280x720
+PASS control: HIRE enabled with no reason text // [{"ledger":"COST 24,500 CR // CREDITS 500,000 CR","why":"","disabled":false,"clipped":false},{"ledger":"COST 28,000 CR // CREDITS 500,000 CR","why":"","disabled":false,"clipped":false},{"ledger":"COST 22,500 CR // CREDITS 500,000 CR","why":"","disabled":false,"clipped":false}]
+PASS over-limit: Deploy disabled
+PASS over-limit: visible reason names the overage // OFFLOAD 30.1 KG BEFORE DEPLOYMENT
+PASS over-limit: label names the limit // DEPLOY TEAM // 30.1 KG OVER THE MASS LIMIT
+PASS over-limit: never enters Mission and does not trigger the advisory // {"phase":"team","hints":[],"seen":false}
+PASS heavy tier shown in Assembly // HEAVY LOAD // -0.15 M/S
+PASS heavy legal squad: Deploy enabled
+PASS Mission: one HEAVY LOADOUT advisory // {"n":1,"text":"ADVISORY // HEAVY LOADOUTXThe squad deployed over the heavy mass line: every operative moves slower this mission.","clipped":false}
+PASS Mission: advisory not clipped
+PASS second heavy deployment: Mission entered, advisory not repeated // {"phase":"mission","hints":[],"toasts":0}
+PASS no console or page errors
+ALL PASS
