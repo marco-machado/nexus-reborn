@@ -1,7 +1,7 @@
 // Procedural operative portraits: angular bust silhouettes with a visor band
 // tinted by the operative accent. Geometry jitter is derived deterministically
 // from the operative id and codename so every dossier renders the same face.
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { blurFilterDef, polyPoints as p, scanlinePatternDef, visorGradientDef } from './glyph'
 import {
   FACE_BG,
@@ -196,7 +196,7 @@ function buildGeometry(op: PortraitOp): Geometry {
   }
 }
 
-export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
+function PortraitSvg({ op, size = 96 }: { op: PortraitOp; size?: number }) {
   const g = useMemo(() => buildGeometry(op), [op])
   const uid = g.uid
   return (
@@ -315,3 +315,15 @@ export function Portrait({ op, size = 96 }: { op: PortraitOp; size?: number }) {
     </svg>
   )
 }
+
+// The drawing depends only on these values. Callers often pass a fresh op
+// object with the same contents (the mission HUD builds one per push), so
+// compare by value and skip rebuilding the SVG.
+export const Portrait = memo(
+  PortraitSvg,
+  (a, b) =>
+    a.size === b.size &&
+    a.op.id === b.op.id &&
+    a.op.codename === b.op.codename &&
+    a.op.accent === b.op.accent,
+)

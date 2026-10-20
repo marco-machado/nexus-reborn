@@ -1,7 +1,7 @@
 // In-mission HUD overlay. The root swallows no pointer events; only the
 // panels themselves are interactive so the 3D canvas keeps receiving clicks
 // everywhere else. No keyboard listeners live here (the scene layer owns keys).
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import { useMissionStore } from '../state/missionStore'
 import type { SquadMemberUi } from '../state/missionStore'
@@ -21,6 +21,8 @@ import PauseMenu from './PauseMenu'
 import { pauseMenuShown } from './pauseMenuModel'
 import TutorialToasts from './TutorialToasts'
 import { Portrait } from './portrait'
+import { sameSquadRow } from './squadRows'
+import type { SquadRowProps } from './squadRows'
 import { AbilityGlyph, Chip, GunSilhouette, ItemGlyph, RoleGlyph, ScrollBox, SkullGlyph } from './bits'
 import { INK_DIM_A7, RED_HOT, TEAL, TEAL_A12, VIP } from './tokens'
 import { ACTIVE_OBJECTIVE_TOKEN, healthCue, objectiveCue } from './criticalCues'
@@ -73,6 +75,82 @@ function ObjMark(props: { state: ObjectiveCue; className?: string }) {
     </svg>
   )
 }
+
+// One squad card. Memoized on its own values (squadRows.ts), so the 5 Hz squad
+// push repaints only the cards that changed.
+const SquadRow = memo(function SquadRow({ r, op, isSel, isActive, selected, setSelected }: SquadRowProps) {
+  const hpPct = r.maxHp > 0 ? (r.hp / r.maxHp) * 100 : 0
+  const health = healthCue(r.hp, r.maxHp, r.dead)
+  return (
+    <div
+      className={'hud-agent' + (isSel ? ' sel' : '') + (health === 'kia' ? ' dead' : '')}
+      title={r.dead ? undefined : 'Double click to center the camera'}
+      onClick={(e) => {
+        if (r.dead) return
+        uiClick()
+        noteTutorial('select')
+        if (e.shiftKey) {
+          setSelected(isSel ? selected.filter((x) => x !== r.unitId) : [...selected, r.unitId])
+        } else {
+          setSelected([r.unitId])
+        }
+      }}
+      onDoubleClick={() => {
+        if (r.dead) return
+        const u = getWorld()?.unit(r.unitId)
+        if (u) panCameraTo(u.pos.x, u.pos.z)
+      }}
+    >
+      {isActive && <span className="hud-agent-active">ACTIVE</span>}
+      <span className="hud-agent-slot">{r.slot}</span>
+      <span className="hud-agent-portrait">
+        <Portrait op={op} size={38} />
+      </span>
+      <span className="hud-agent-main">
+        <span className="hud-agent-name">
+          <b>{r.codename}</b>
+          <i className="dim">{r.name}</i>
+        </span>
+        <span className={'hud-hp' + (health === 'injured' ? ' low' : '')}>
+          <i style={{ width: hpPct + '%' }} />
+        </span>
+        <span className="hud-agent-sub">
+          <span>
+            {Math.max(0, Math.ceil(r.hp))}/{r.maxHp}
+          </span>
+          <span className="dim">
+            {r.magazine}/{r.magazineSize} {r.activeSlot === 'primary' ? 'PRI' : 'SEC'}
+          </span>
+          {r.dead ? null : r.reloading ? (
+            <span className="teal blink">RELOADING</span>
+          ) : r.swapping ? (
+            <span className="teal blink">DRAWING</span>
+          ) : null}
+        </span>
+        {r.dead && (
+          // KIA: skull glyph plus the word on its own line (P-09).
+          <span className="hud-agent-orders">
+            <span className="red hud-flatline">
+              <SkullGlyph size={10} />
+              FLATLINED
+            </span>
+          </span>
+        )}
+        {!r.dead && (
+          <span className="hud-agent-orders">
+            <Chip tone={r.holdGround ? 'teal' : 'dim'}>{r.holdGround ? 'HOLD' : 'MOVE'}</Chip>
+            <Chip tone={r.holdFire ? 'red' : 'dim'}>{r.holdFire ? 'TIGHT' : 'FREE'}</Chip>
+            {health === 'injured' && (
+              <Chip tone="red" className="hud-injured">
+                + INJURED
+              </Chip>
+            )}
+          </span>
+        )}
+      </span>
+    </div>
+  )
+}, sameSquadRow)
 
 // Drag select box. The scene input surface owns the rectangle and this only
 // pushes it into styles, so dragging costs no render and no scene pass. First
@@ -252,98 +330,23 @@ export default function Hud() {
           <span className="dim">{online} ONLINE</span>
         </div>
         <div className="hud-squad-body">
-          {squad.map((r) => {
-            const op =
-              operatives.find((o) => o.codename === r.codename) ?? {
-                id: r.unitId,
-                codename: r.codename,
-                accent: r.accent,
-              }
-            const hpPct = r.maxHp > 0 ? (r.hp / r.maxHp) * 100 : 0
-            const isSel = selected.includes(r.unitId)
-            const isActive = active !== null && r.unitId === active.unitId
-            const health = healthCue(r.hp, r.maxHp, r.dead)
-            return (
-              <div
-                key={r.unitId}
-                className={
-                  'hud-agent' +
-                  (isSel ? ' sel' : '') +
-                  (health === 'kia' ? ' dead' : '')
+          {squad.map((r) => (
+            <SquadRow
+              key={r.unitId}
+              r={r}
+              op={
+                operatives.find((o) => o.codename === r.codename) ?? {
+                  id: r.unitId,
+                  codename: r.codename,
+                  accent: r.accent,
                 }
-                title={r.dead ? undefined : 'Double click to center the camera'}
-                onClick={(e) => {
-                  if (r.dead) return
-                  uiClick()
-                  noteTutorial('select')
-                  if (e.shiftKey) {
-                    setSelected(
-                      isSel ? selected.filter((x) => x !== r.unitId) : [...selected, r.unitId],
-                    )
-                  } else {
-                    setSelected([r.unitId])
-                  }
-                }}
-                onDoubleClick={() => {
-                  if (r.dead) return
-                  const u = getWorld()?.unit(r.unitId)
-                  if (u) panCameraTo(u.pos.x, u.pos.z)
-                }}
-              >
-                {isActive && <span className="hud-agent-active">ACTIVE</span>}
-                <span className="hud-agent-slot">{r.slot}</span>
-                <span className="hud-agent-portrait">
-                  <Portrait op={op} size={38} />
-                </span>
-                <span className="hud-agent-main">
-                  <span className="hud-agent-name">
-                    <b>{r.codename}</b>
-                    <i className="dim">{r.name}</i>
-                  </span>
-                  <span className={'hud-hp' + (health === 'injured' ? ' low' : '')}>
-                    <i style={{ width: hpPct + '%' }} />
-                  </span>
-                  <span className="hud-agent-sub">
-                    <span>
-                      {Math.max(0, Math.ceil(r.hp))}/{r.maxHp}
-                    </span>
-                    <span className="dim">
-                      {r.magazine}/{r.magazineSize} {r.activeSlot === 'primary' ? 'PRI' : 'SEC'}
-                    </span>
-                    {r.dead ? null : r.reloading ? (
-                      <span className="teal blink">RELOADING</span>
-                    ) : r.swapping ? (
-                      <span className="teal blink">DRAWING</span>
-                    ) : null}
-                  </span>
-                  {r.dead && (
-                    // KIA: skull glyph plus the word on its own line (P-09).
-                    <span className="hud-agent-orders">
-                      <span className="red hud-flatline">
-                        <SkullGlyph size={10} />
-                        FLATLINED
-                      </span>
-                    </span>
-                  )}
-                  {!r.dead && (
-                    <span className="hud-agent-orders">
-                      <Chip tone={r.holdGround ? 'teal' : 'dim'}>
-                        {r.holdGround ? 'HOLD' : 'MOVE'}
-                      </Chip>
-                      <Chip tone={r.holdFire ? 'red' : 'dim'}>
-                        {r.holdFire ? 'TIGHT' : 'FREE'}
-                      </Chip>
-                      {health === 'injured' && (
-                        <Chip tone="red" className="hud-injured">
-                          + INJURED
-                        </Chip>
-                      )}
-                    </span>
-                  )}
-                </span>
-              </div>
-            )
-          })}
+              }
+              isSel={selected.includes(r.unitId)}
+              isActive={active !== null && r.unitId === active.unitId}
+              selected={selected}
+              setSelected={setSelected}
+            />
+          ))}
         </div>
       </div>
 
