@@ -32,6 +32,7 @@ import {
   isGeneratedMissionId,
   reclientContract,
   rollContract,
+  rollOpeningContract,
   rollSuppressionContract,
   sectorClient,
 } from '../game/contracts'
@@ -784,21 +785,81 @@ export function initialOwner(): Record<string, CorpId> {
   return out
 }
 
+// The market and Feed a New Operation opens with.
+export interface InitialMarket {
+  contracts: GeneratedContract[]
+  contractRngState: number
+  nextContractT: number
+  events: WorldEvent[]
+  unread: number
+}
+
+/**
+ * The opening market: the authored Feed lines plus one Moderate generated
+ * offer in a Secure sector, posted at t = 0 with the usual "OPEN CONTRACT …
+ * POSTED" line (Economy Core Rule 11; World Network Core Rule 10; owner
+ * decision 2026-10-22 on the Feed line). The seed is drawn by stepping
+ * `contractRngState` from `INITIAL_CONTRACT_RNG` over the atlas defaults, so
+ * every New Operation opens the same offer; `nextContractT` stays at
+ * `INITIAL_NEXT_CONTRACT_T`, so the first timed checkpoint is unchanged and
+ * the seed is initial state, never a checkpoint inside `advanceFlow`
+ * (ADR-0018). Both New Operation sites (`useWorldStore` create and
+ * `startNewOperation`) call this; hydrate and the v3 → v4 upgrade never do.
+ */
+export function initialMarket(): InitialMarket {
+  const f: WorldFlow = {
+    sectors: initialSectors(),
+    owner: initialOwner(),
+    events: SEED_EVENTS.map((event) => ({ ...event })),
+    unread: SEED_EVENTS.length,
+    nextEventT: 0,
+    rngState: INITIAL_WORLD_RNG,
+    contracts: [],
+    contractRngState: INITIAL_CONTRACT_RNG,
+    nextContractT: INITIAL_NEXT_CONTRACT_T,
+    influence: 0,
+    nextTaxT: 0,
+    spends: [],
+    crisis: [],
+    pressure: {},
+    taxPaid: 0,
+  }
+  const inputs = contractInputs(f.sectors, f.owner)
+  const contract = freshContract(f, (state) => rollOpeningContract(inputs, 0, state))
+  f.contracts = [contract]
+  postContractEvent(
+    f,
+    0,
+    contract,
+    'green',
+    (codename) => 'OPEN CONTRACT ' + codename + ' POSTED IN ' + cityById(contract.cityId).name,
+  )
+  return {
+    contracts: f.contracts,
+    contractRngState: f.contractRngState,
+    nextContractT: f.nextContractT,
+    events: f.events,
+    unread: f.unread,
+  }
+}
+
+const OPENING_MARKET = initialMarket()
+
 export const useWorldStore = create<WorldStoreState>((set, get) => ({
   t: 0,
   speed: 2,
   paused: false,
   sectors: initialSectors(),
   owner: initialOwner(),
-  events: SEED_EVENTS,
-  unread: SEED_EVENTS.length,
+  events: OPENING_MARKET.events,
+  unread: OPENING_MARKET.unread,
   selected: 'eu',
   review: null,
   nextEventT: EVENT_MIN + EVENT_SPAN * 0.4,
   rngState: INITIAL_WORLD_RNG,
-  contracts: [],
-  contractRngState: INITIAL_CONTRACT_RNG,
-  nextContractT: INITIAL_NEXT_CONTRACT_T,
+  contracts: OPENING_MARKET.contracts,
+  contractRngState: OPENING_MARKET.contractRngState,
+  nextContractT: OPENING_MARKET.nextContractT,
   influence: 0,
   nextTaxT: TAX_INTERVAL_SEC,
   spends: [],

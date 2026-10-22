@@ -43,9 +43,9 @@ import { useTutorialStore } from './tutorialStore'
 import { useResearchStore } from './researchStore'
 import type { Labs } from './researchStore'
 import {
-  INITIAL_NEXT_CONTRACT_T,
   INITIAL_WORLD_RNG,
   SPEEDS,
+  initialMarket,
   initialOwner,
   initialSectors,
   useWorldStore,
@@ -58,10 +58,6 @@ export const SAVE_KEY = 'nexus-save-v1'
 const SAVE_VERSION = 10 as const
 const AUTOSAVE_DELAY = 500
 const INITIAL_NEXT_EVENT_T = 900 + 1800 * 0.4
-
-const INITIAL_EVENTS: WorldEvent[] = useWorldStore
-  .getState()
-  .events.map((event) => ({ ...event }))
 
 export interface SaveV10 {
   version: 10
@@ -964,21 +960,24 @@ export function startNewOperation(storage: SaveStorage | null = browserStorage()
   const campaign = initialCampaignData()
   useCampaignStore.setState(campaign)
   useTutorialStore.getState().resetAll()
+  // The seeded opening offer and its Feed line come from the one helper the
+  // store boots with, so the two New Operation sites cannot drift.
+  const market = initialMarket()
   useWorldStore.setState({
     t: 0,
     speed: 2,
     paused: false,
     sectors: initialSectors(),
     owner: initialOwner(),
-    events: INITIAL_EVENTS.map((event) => ({ ...event })),
-    unread: INITIAL_EVENTS.length,
+    events: market.events,
+    unread: market.unread,
     selected: 'eu',
     review: null,
     nextEventT: INITIAL_NEXT_EVENT_T,
     rngState: INITIAL_WORLD_RNG,
-    contracts: [],
-    contractRngState: INITIAL_CONTRACT_RNG,
-    nextContractT: INITIAL_NEXT_CONTRACT_T,
+    contracts: market.contracts,
+    contractRngState: market.contractRngState,
+    nextContractT: market.nextContractT,
     influence: 0,
     nextTaxT: TAX_INTERVAL_SEC,
     spends: [],

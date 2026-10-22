@@ -46,7 +46,14 @@ import {
 import { freezeDeploy } from './deployFreeze'
 import { useMissionStore } from './missionStore'
 import { TELEMETRY_KEY, aggregate, loadRecords, recordAbort } from './telemetry'
-import { INITIAL_WORLD_RNG, TIME_SCALE, resolveMission, useWorldStore } from './worldStore'
+import {
+  INITIAL_NEXT_CONTRACT_T,
+  INITIAL_WORLD_RNG,
+  TIME_SCALE,
+  initialMarket,
+  resolveMission,
+  useWorldStore,
+} from './worldStore'
 import type { WorldEvent } from './worldStore'
 
 class MemoryStorage implements SaveStorage {
@@ -764,11 +771,12 @@ describe('save round trip', () => {
     useWorldStore.setState({ t: mid.nextContractT - 1 })
     useWorldStore.getState().tick(1)
     const expected = captureSave()
-    expect(expected.world.contracts).toHaveLength(2)
+    // The seeded opening offer (story 023) plus the two timed rolls.
+    expect(expected.world.contracts).toHaveLength(3)
     expect(writeSave(storage)).toBe(true)
 
     startNewOperation()
-    expect(useWorldStore.getState().contracts).toEqual([])
+    expect(useWorldStore.getState().contracts).toEqual(initialMarket().contracts)
     const loaded = readSave(storage)
     expect(loaded).not.toBeNull()
     if (!loaded) return
@@ -810,6 +818,71 @@ describe('save round trip', () => {
     expect(useResearchStore.getState().done).toEqual([])
     // The prompts return with the fresh campaign.
     expect(useTutorialStore.getState().seen).toEqual([])
+  })
+})
+
+// Story 023 (TR-economy-006): New Operation seeds one Moderate offer through
+// the same helper the store boots with; hydrate and the upgrade chain never
+// seed, so an existing campaign keeps the market it saved.
+describe('opening market offer: New Operation seeds, hydrate never does (story 023)', () => {
+  it('startNewOperation opens the same seeded offer and Feed line as the store boot', () => {
+    const market = initialMarket()
+    const world = useWorldStore.getState()
+    expect(world.contracts).toHaveLength(1)
+    expect(world.contracts).toEqual(market.contracts)
+    expect(world.contractRngState).toBe(market.contractRngState)
+    expect(world.nextContractT).toBe(INITIAL_NEXT_CONTRACT_T)
+    expect(world.events).toEqual(market.events)
+    expect(world.unread).toBe(market.unread)
+    expect(world.contracts[0].threat).toBe('MODERATE')
+    expect(world.events.at(-1)?.contract?.id).toBe(world.contracts[0].id)
+    // A second New Operation lands on the identical offer.
+    startNewOperation(storage)
+    expect(useWorldStore.getState().contracts).toEqual(market.contracts)
+  })
+
+  it('a v10 blob with its own market hydrates with no offer added', () => {
+    // Take the market away from the opening state, save it, and reload.
+    useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
+    useWorldStore.getState().tick(1)
+    const own = captureSave()
+    expect(own.world.contracts).toHaveLength(2)
+    expect(writeSave(storage)).toBe(true)
+
+    // Reset in memory only (no storage: the blob stays), then reload it.
+    startNewOperation()
+    expect(useWorldStore.getState().contracts).toHaveLength(1)
+    const loaded = readSave(storage)
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    hydrateSave(loaded)
+    const world = useWorldStore.getState()
+    expect(world.contracts).toEqual(own.world.contracts)
+    expect(world.contractRngState).toBe(own.world.contractRngState)
+    expect(world.events).toEqual(own.world.events)
+
+    // An emptied market stays empty on reload: nothing re-seeds.
+    useWorldStore.setState({ contracts: [] })
+    const emptied = captureSave()
+    storage.setItem(SAVE_KEY, JSON.stringify(emptied))
+    startNewOperation()
+    expect(useWorldStore.getState().contracts).toHaveLength(1)
+    const reloaded = readSave(storage)
+    if (!reloaded) throw new Error('blob did not read back')
+    hydrateSave(reloaded)
+    expect(useWorldStore.getState().contracts).toEqual([])
+  })
+
+  it('a v3 blob upgrades to an empty market, unseeded', () => {
+    useWorldStore.setState({ t: 9000 })
+    const v3 = downgradeToV3(captureSave())
+    storage.setItem(SAVE_KEY, JSON.stringify(v3))
+    const loaded = readSave(storage)
+    expect(loaded?.world.contracts).toEqual([])
+    expect(loaded?.world.contractRngState).toBe(INITIAL_CONTRACT_RNG)
+    if (!loaded) return
+    hydrateSave(loaded)
+    expect(useWorldStore.getState().contracts).toEqual([])
   })
 })
 

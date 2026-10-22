@@ -20,13 +20,14 @@ import {
   isGeneratedMissionId,
   reclientContract,
   rollContract,
+  rollOpeningContract,
   rollSuppressionContract,
   sectorClient,
   sequenceVariant,
   visibleContracts,
 } from './contracts'
 import type { ContractSectorInput, ContractType, GeneratedContract } from './contracts'
-import { CITIES, CITIES_BY_SECTOR, HOLDERS, SCAN_H, SCAN_W, cityById } from './atlas'
+import { CITIES, CITIES_BY_SECTOR, HOLDERS, OPEN_SECTORS, SCAN_H, SCAN_W, cityById } from './atlas'
 import type { CorpId } from './atlas'
 import { MISSIONS, operativeById } from './data'
 import { missionPeriod, rollOpeningHour, rollWeatherFront } from './missionParams'
@@ -39,7 +40,7 @@ import { headlessDeploy } from './deploy'
 import { INITIAL_CREDITS, settleOutcome, useAppStore } from '../state/appStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { applyDebrief } from '../state/debrief'
-import { DAY, useWorldStore } from '../state/worldStore'
+import { DAY, initialSectors, sectorReadout, useWorldStore } from '../state/worldStore'
 
 const OWNERSHIP: Record<string, CorpId> = {}
 for (const city of CITIES) OWNERSHIP[city.id] = city.corp
@@ -986,7 +987,8 @@ describe('quiet-replay ETA contract stream (story 005)', () => {
       t: useWorldStore.getState().t,
     }
     expect(jumped.t).toBe(2 * DAY)
-    expect(jumped.contracts.length).toBeGreaterThan(0)
+    // The catch-up ran the market stream: the cursor moved off its start.
+    expect(jumped.contractRngState).not.toBe(atJump.contractRngState)
 
     useWorldStore.setState({ ...structuredClone(atJump), paused: false, speed: 2 })
     expect(useWorldStore.getState().speed).toBe(2)
@@ -995,6 +997,58 @@ describe('quiet-replay ETA contract stream (story 005)', () => {
     expect(useWorldStore.getState().contracts).toEqual(jumped.contracts)
     expect(useWorldStore.getState().contractRngState).toBe(jumped.contractRngState)
     expect(useWorldStore.getState().t).toBe(jumped.t)
+  })
+})
+
+// Story 023 (TR-economy-006): the opening offer narrows the input list to
+// Secure sectors before the ordinary weighting, so the seed is MODERATE at
+// intel 1 without a second weighting rule.
+describe('opening offer roll (story 023)', () => {
+  it('never picks a STRAINED or CRITICAL sector, whatever the cursor', () => {
+    let state = 0x9a1
+    for (let i = 0; i < 200; i++) {
+      const rolled = rollOpeningContract(INPUTS, 0, state)
+      expect(rolled.contract.sector).toBe('eu')
+      expect(rolled.contract.threat).toBe('MODERATE')
+      expect(CONTRACT_INTEL_REQ[rolled.contract.threat]).toBe(1)
+      expect(rolled.contract.priority).toBe(false)
+      expect(rolled.contract.createdT).toBe(0)
+      state = rolled.state
+    }
+  })
+
+  it('is the ordinary roll over the Secure inputs: same record, same stepped cursor', () => {
+    const secure = INPUTS.filter((i) => i.garrison === 'SECURE')
+    const opening = rollOpeningContract(INPUTS, 0, 0x2023)
+    const plain = rollContract(secure, 0, 0x2023)
+    expect(opening).toEqual(plain)
+    expect(Object.keys(opening.contract).sort()).toEqual([...CONTRACT_KEYS].sort())
+  })
+
+  it('weights among several Secure sectors by the same unrest/control pull', () => {
+    const twoSecure: ContractSectorInput[] = [
+      ...INPUTS,
+      { sector: 'na', control: 73, unrest: 8, garrison: 'SECURE', client: 'nexus', ownership: OWNERSHIP },
+    ]
+    const seen = new Set<string>()
+    let state = 0x77
+    for (let i = 0; i < 200; i++) {
+      const rolled = rollOpeningContract(twoSecure, 0, state)
+      seen.add(rolled.contract.sector)
+      state = rolled.state
+    }
+    expect([...seen].sort()).toEqual(['eu', 'na'])
+  })
+
+  it('throws instead of returning a broken record when no input is Secure', () => {
+    const none = INPUTS.filter((i) => i.garrison !== 'SECURE')
+    expect(() => rollOpeningContract(none, 0, 0x1)).toThrow(/SECURE/)
+  })
+
+  it('atlas defaults hold at least one SECURE open sector, so New Operation can seed', () => {
+    const sectors = initialSectors()
+    const secure = OPEN_SECTORS.filter((id) => sectorReadout(id, sectors[id]).garrison === 'SECURE')
+    expect(secure.length).toBeGreaterThan(0)
   })
 })
 

@@ -30,11 +30,11 @@ stories:
     name: "One Moderate market offer is seeded at New Operation"
     file: "production/epics/economy-and-contracts/story-023-opening-market-offer-seeded-at-new-operation.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-22"
   - id: "IF-013"
     name: "Four-row orientation card and the sector-panel Influence moment"
     file: "production/epics/interface/story-013-four-row-orientation-card-and-sector-panel-influence-moment.md"

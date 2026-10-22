@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DAY,
+  INITIAL_NEXT_CONTRACT_T,
   MAX_DT,
   feedText,
   TIME_SCALE,
   hhmm,
+  initialMarket,
   initialOwner,
+  initialSectors,
   resolveMission,
   sectorReadout,
   stamp,
@@ -16,17 +19,21 @@ import { INITIAL_CREDITS, settleOutcome, useAppStore } from './appStore'
 import {
   CONTRACT_EXPIRY_MIN_SEC,
   CONTRACT_INTEL_REQ,
+  CONTRACT_KEYS,
   CONTRACT_MIN_SEC,
   CONTRACT_SPAN_SEC,
   CONTRACT_TARGET,
+  INITIAL_CONTRACT_RNG,
   PRIORITY_EXPIRY_MIN_SEC,
   PRIORITY_EXPIRY_SPAN_SEC,
+  contractIntelReq,
   contractMission,
   generatedReward,
+  rollOpeningContract,
   sectorClient,
   visibleContracts,
 } from '../game/contracts'
-import type { ContractThreat, GeneratedContract } from '../game/contracts'
+import type { ContractSectorInput, ContractThreat, GeneratedContract } from '../game/contracts'
 import {
   EXPEDITE_EXTENSION_SEC,
   INFLUENCE_ACTIONS,
@@ -146,9 +153,11 @@ describe('initial state', () => {
     expect(snapshot.review).toBeNull()
   })
 
-  it('seeds three unread events and sector/city state from the atlas', () => {
-    expect(snapshot.events).toHaveLength(3)
-    expect(snapshot.unread).toBe(3)
+  it('seeds three authored events plus the opening-offer line, all unread, and sector/city state from the atlas', () => {
+    // Three authored Feed lines plus the seeded offer's "OPEN CONTRACT …
+    // POSTED" line (story 023).
+    expect(snapshot.events).toHaveLength(4)
+    expect(snapshot.unread).toBe(4)
     for (const s of SECTORS) {
       expect(snapshot.sectors[s.id]).toEqual({ control: s.control, unrest: s.unrest })
     }
@@ -181,7 +190,7 @@ describe('clock advance', () => {
     const s = useWorldStore.getState()
     expect(s.paused).toBe(true)
     expect(s.t).toBe(0)
-    expect(s.events).toHaveLength(3)
+    expect(s.events).toHaveLength(4)
   })
 
   it('1 accepted real second at 1x, delivered in 20Hz batches, advances t by 60', () => {
@@ -252,15 +261,16 @@ describe('events feed', () => {
     useWorldStore.setState({ t: eventT - 1 })
     useWorldStore.getState().tick(0.2)
     const s = useWorldStore.getState()
-    // A riot roll may append a linked contract line after the event itself.
-    expect(s.events.length).toBeGreaterThanOrEqual(4)
-    const ev = s.events[3]
-    expect(ev.id).toBe(4)
+    // Four opening lines (three authored, one seeded offer); a riot roll may
+    // append a linked contract line after the event itself.
+    expect(s.events.length).toBeGreaterThanOrEqual(5)
+    const ev = s.events[4]
+    expect(ev.id).toBe(5)
     expect(ev.t).toBe(eventT)
     expect(OPEN_SECTORS).toContain(ev.sector)
     expect(KINDS).toContain(ev.kind)
     expect(ev.text.length).toBeGreaterThan(0)
-    expect(s.unread).toBeGreaterThanOrEqual(4)
+    expect(s.unread).toBeGreaterThanOrEqual(5)
     expect(s.nextEventT).toBeGreaterThanOrEqual(eventT + EVENT_MIN)
     expect(s.nextEventT).toBeLessThan(eventT + EVENT_MIN + EVENT_SPAN)
   })
@@ -359,8 +369,10 @@ describe('generated contracts', () => {
     const checkT = useWorldStore.getState().nextContractT
     forceGeneration()
     const s = useWorldStore.getState()
-    expect(s.contracts).toHaveLength(1)
-    const c = s.contracts[0]
+    // The seeded opening offer (story 023) plus the one this checkpoint rolled.
+    expect(s.contracts).toHaveLength(2)
+    expect(s.contracts[0].createdT).toBe(0)
+    const c = s.contracts[1]
     expect(c.createdT).toBe(checkT)
     expect(OPEN_SECTORS).toContain(c.sector)
     expect(CITIES_BY_SECTOR[c.sector].some((city) => city.id === c.cityId)).toBe(true)
@@ -378,7 +390,7 @@ describe('generated contracts', () => {
     for (const id of OPEN_SECTORS) sectors[id] = { control: 20, unrest: 10 }
     useWorldStore.setState({ sectors, nextEventT: 1e12, nextTaxT: 1e12 })
     forceGeneration()
-    expect(useWorldStore.getState().contracts[0].threat).toBe('SEVERE')
+    expect(useWorldStore.getState().contracts.at(-1)?.threat).toBe('SEVERE')
   })
 
   it('reproduces the same contract from a restored rng cursor', () => {
@@ -414,7 +426,7 @@ describe('generated contracts', () => {
 
   it('expires an unaccepted offer and posts the rescission to the feed', () => {
     forceGeneration()
-    const c = useWorldStore.getState().contracts[0]
+    const c = useWorldStore.getState().contracts.at(-1)!
     useWorldStore.setState({
       t: c.expiresAtT - 1,
       nextEventT: 1e12,
@@ -422,7 +434,7 @@ describe('generated contracts', () => {
     })
     useWorldStore.getState().tick(1)
     const s = useWorldStore.getState()
-    expect(s.contracts).toHaveLength(0)
+    expect(s.contracts.map((x) => x.id)).not.toContain(c.id)
     expect(s.events.at(-1)).toMatchObject({ kind: 'contract', sector: c.sector, tone: 'dim' })
     expect(s.events.at(-1)?.text).toContain('EXPIRED')
   })
@@ -433,14 +445,14 @@ describe('generated contracts', () => {
     useWorldStore.setState({ sectors, nextEventT: 1e12, nextTaxT: 1e12 })
     forceGeneration()
     const s = useWorldStore.getState()
-    const c = s.contracts[0]
+    const c = s.contracts.at(-1)!
     const line = s.events.at(-1)
     if (!line) throw new Error('no posted line')
     const codename = contractMission(c).codename
     const req = CONTRACT_INTEL_REQ[c.threat]
     expect(req).toBeGreaterThan(1)
     expect(line.contract).toEqual({ id: c.id, codename, intelReq: req })
-    expect(visibleContracts(s.contracts, req - 1)).toHaveLength(0)
+    expect(visibleContracts(s.contracts, req - 1).map((x) => x.id)).not.toContain(c.id)
     const hidden = feedText(line, s.contracts, req - 1)
     expect(hidden).not.toContain(codename)
     expect(hidden).toBe(line.text.replace(codename, '[REQUIRES INTEL LVL ' + req + ']'))
@@ -457,7 +469,7 @@ describe('generated contracts', () => {
     for (const id of OPEN_SECTORS) sectors[id] = { control: 20, unrest: 10 }
     useWorldStore.setState({ sectors, nextEventT: 1e12, nextTaxT: 1e12 })
     forceGeneration()
-    const c = useWorldStore.getState().contracts[0]
+    const c = useWorldStore.getState().contracts.at(-1)!
     useWorldStore.setState({ t: c.expiresAtT - 1, nextContractT: 1e12 })
     useWorldStore.getState().tick(1)
     const s = useWorldStore.getState()
@@ -472,7 +484,7 @@ describe('generated contracts', () => {
     let c: GeneratedContract | null = null
     for (let i = 0; i < 400 && !c; i++) {
       forceEvent()
-      c = useWorldStore.getState().contracts[0] ?? null
+      c = useWorldStore.getState().contracts.find((x) => x.priority) ?? null
     }
     expect(c).not.toBeNull()
     if (!c) return
@@ -1580,6 +1592,9 @@ describe('catch-up collision order (ADR-0018)', () => {
     useWorldStore.setState({
       t: T - 1,
       contracts: full,
+      // The staged market replaces the seeded offer, so pin the cursor it
+      // was golden against (the seed steps it at New Operation, story 023).
+      contractRngState: INITIAL_CONTRACT_RNG,
       nextEventT: T,
       nextContractT: T,
     })
@@ -2399,6 +2414,9 @@ describe('generated instances leave the market or are held when hidden (story 02
     const staged = [craft('eu', 0x2052), craft('af', 0x2053), craft('as', 0x2054), craft('sa', 0x2055)]
     useWorldStore.setState({
       contracts: [expiring, ...staged],
+      // Staged market: pin the cursor this fixture was golden against (the
+      // seeded offer steps it at New Operation, story 023).
+      contractRngState: INITIAL_CONTRACT_RNG,
       nextContractT: 1e12,
       nextTaxT: 1e12,
     })
@@ -2417,5 +2435,128 @@ describe('generated instances leave the market or are held when hidden (story 02
     expect(left).not.toContain(expiring.id)
     for (const c of withdrawn) expect(left).not.toContain(c?.id)
     expectNoInvoice()
+  })
+})
+
+// Story 023 (TR-economy-006; Economy Core Rule 11, World Network Core Rule
+// 10): one Moderate generated offer is already open at New Operation, in a
+// Secure sector, drawn by stepping the market cursor from
+// INITIAL_CONTRACT_RNG so every New Operation opens the same offer. The first
+// timed checkpoint is unchanged and the cap counts the seed.
+describe('opening market offer seeded at New Operation (story 023)', () => {
+  // The same snapshot contractInputs builds, from the public readouts.
+  function openingInputs(): ContractSectorInput[] {
+    const sectors = initialSectors()
+    const owner = initialOwner()
+    return OPEN_SECTORS.map((id) => {
+      const read = sectorReadout(id, sectors[id])
+      return {
+        sector: id,
+        control: read.control,
+        unrest: read.unrest,
+        garrison: read.garrison,
+        client: sectorClient(id, owner),
+        ownership: owner,
+      }
+    })
+  }
+
+  // Crosses the pending generation checkpoint with events and tax pinned off.
+  function crossCheckpoint(): void {
+    const s = useWorldStore.getState()
+    useWorldStore.setState({ nextEventT: 1e12, nextTaxT: 1e12, t: s.nextContractT - 1 })
+    useWorldStore.getState().tick(0.01)
+  }
+
+  it('boots with exactly one open generated instance: SECURE sector, MODERATE, intel 1, ordinary keys', () => {
+    expect(snapshot.contracts).toHaveLength(1)
+    const c = snapshot.contracts[0]
+    expect(OPEN_SECTORS).toContain(c.sector)
+    expect(sectorReadout(c.sector, snapshot.sectors[c.sector]).garrison).toBe('SECURE')
+    expect(c.threat).toBe('MODERATE')
+    expect(contractIntelReq(c)).toBe(1)
+    expect(c.createdT).toBe(0)
+    expect(c.priority).toBe(false)
+    expect(c.expedited).toBe(false)
+    expect(Object.keys(c).sort()).toEqual([...CONTRACT_KEYS].sort())
+    expect(CITIES_BY_SECTOR[c.sector].some((city) => city.id === c.cityId)).toBe(true)
+    expect(c.client).toBe(sectorClient(c.sector, snapshot.owner))
+    expect(c.expiresAtT).toBeGreaterThanOrEqual(CONTRACT_EXPIRY_MIN_SEC)
+    expect(c.expiresAtT).toBeLessThanOrEqual(2 * CONTRACT_EXPIRY_MIN_SEC)
+  })
+
+  it('two New Operations open the identical offer, stepped from INITIAL_CONTRACT_RNG', () => {
+    const a = initialMarket()
+    const b = initialMarket()
+    expect(a.contracts).toEqual(b.contracts)
+    expect(a.contracts).toEqual(snapshot.contracts)
+    expect(a.contractRngState).toBe(b.contractRngState)
+    expect(a.contractRngState).toBe(snapshot.contractRngState)
+    const [c] = a.contracts
+    const [d] = b.contracts
+    expect([c.id, c.sector, c.client, c.reward, c.seed, c.expiresAtT]).toEqual([
+      d.id, d.sector, d.client, d.reward, d.seed, d.expiresAtT,
+    ])
+    // The seed is the opening roll over the atlas defaults from the market
+    // cursor's initial value; the stored cursor is the stepped one.
+    const rolled = rollOpeningContract(openingInputs(), 0, INITIAL_CONTRACT_RNG)
+    expect(c).toEqual(rolled.contract)
+    expect(a.contractRngState).toBe(rolled.state)
+    expect(a.contractRngState).not.toBe(INITIAL_CONTRACT_RNG)
+    expect(a.nextContractT).toBe(INITIAL_NEXT_CONTRACT_T)
+  })
+
+  it('posts the usual OPEN CONTRACT line at t = 0 and counts it unread', () => {
+    const lines = snapshot.events.filter((e) => e.kind === 'contract')
+    expect(lines).toHaveLength(1)
+    const line = lines[0]
+    const c = snapshot.contracts[0]
+    expect(line.t).toBe(0)
+    expect(line.tone).toBe('green')
+    expect(line.sector).toBe(c.sector)
+    expect(line.text).toMatch(/^OPEN CONTRACT .* POSTED IN /)
+    expect(line.text).toContain(contractMission(c).codename)
+    expect(line.contract).toEqual({ id: c.id, codename: contractMission(c).codename, intelReq: 1 })
+    expect(line).toBe(snapshot.events.at(-1))
+    expect(line.id).toBe(snapshot.events.length)
+    // The authored lines plus this one are all unread.
+    expect(snapshot.unread).toBe(snapshot.events.length)
+    expect(initialMarket().unread).toBe(initialMarket().events.length)
+  })
+
+  it('leaves the first timed checkpoint at INITIAL_NEXT_CONTRACT_T and rolls there', () => {
+    expect(snapshot.nextContractT).toBe(INITIAL_NEXT_CONTRACT_T)
+    expect(INITIAL_NEXT_CONTRACT_T).toBe(CONTRACT_MIN_SEC)
+    crossCheckpoint()
+    const s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(2)
+    expect(s.contracts[0]).toEqual(snapshot.contracts[0])
+    expect(s.contracts[1].createdT).toBe(CONTRACT_MIN_SEC)
+    expect(s.events.at(-1)?.text).toMatch(/^OPEN CONTRACT .* POSTED IN /)
+    expect(s.nextContractT).toBeGreaterThanOrEqual(2 * CONTRACT_MIN_SEC)
+    expect(s.nextContractT).toBeLessThan(2 * CONTRACT_MIN_SEC + CONTRACT_SPAN_SEC)
+  })
+
+  it('the cap of three counts the seeded offer', () => {
+    // Two checkpoints fill the market (seed + 2); the third finds it full
+    // and reschedules without rolling. Every step lands before any expiry.
+    crossCheckpoint()
+    crossCheckpoint()
+    let s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(CONTRACT_TARGET)
+    expect(s.contracts[0]).toEqual(snapshot.contracts[0])
+    const posted = s.events.filter((e) => /^OPEN CONTRACT/.test(e.text)).length
+    const earliestExpiry = Math.min(...s.contracts.map((c) => c.expiresAtT))
+    expect(s.nextContractT).toBeLessThan(earliestExpiry)
+    crossCheckpoint()
+    s = useWorldStore.getState()
+    expect(s.contracts).toHaveLength(CONTRACT_TARGET)
+    expect(s.events.filter((e) => /^OPEN CONTRACT/.test(e.text)).length).toBe(posted)
+  })
+
+  it('at least one open sector is SECURE at atlas defaults, so the opening roll has an input', () => {
+    const secure = openingInputs().filter((i) => i.garrison === 'SECURE')
+    expect(secure.length).toBeGreaterThan(0)
+    expect(secure.map((i) => i.sector)).toContain(snapshot.contracts[0].sector)
   })
 })

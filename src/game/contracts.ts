@@ -290,6 +290,28 @@ export function rollContract(
   return finishContract(input, t, false, rng)
 }
 
+/**
+ * The one Moderate offer seeded at New Operation (Economy Core Rule 11;
+ * World Network Core Rule 10). The Secure restriction narrows the input list
+ * before the ordinary `pickSector` weighting, so a Secure sector is chosen
+ * among Secure sectors by the same unrest/control pull every timed roll uses
+ * and `contractThreat` lands on MODERATE (intel gate 1) without a second
+ * weighting rule. Steps the cursor exactly like `rollContract`. Throws when
+ * no input is Secure: at atlas defaults several open sectors are, and
+ * `contracts.test.ts` guards that so a retune cannot leave the roll empty.
+ */
+export function rollOpeningContract(
+  inputs: ContractSectorInput[],
+  t: number,
+  state: number,
+): RolledContract {
+  const secure = inputs.filter((input) => input.garrison === 'SECURE')
+  if (secure.length === 0) {
+    throw new Error('rollOpeningContract: no SECURE sector to seed the opening offer from')
+  }
+  return rollContract(secure, t, state)
+}
+
 // The Intel level a generated contract needs. An EXPEDITE spend waives the
 // gate to the floor (level 1, which every director holds).
 export function contractIntelReq(c: GeneratedContract): number {

@@ -27,7 +27,7 @@ import type { GeneratedContract } from '../game/contracts'
 import { applyDebrief } from './debrief'
 import { SAVE_KEY, captureSave, readSave, startAutosave, validateSave } from './save'
 import type { SaveStorage } from './save'
-import { assignedMassKg } from '../game/deployGate'
+import { assignedMassKg, canDeploy } from '../game/deployGate'
 import { ARMOR_KG_PER_HP, MASS_LIMIT_KG } from '../game/mass'
 import { xpBonus } from '../game/experience'
 import { economySlice } from '../game/deploy'
@@ -2117,6 +2117,67 @@ describe('Accepting a contract is free; one pipeline for both kinds (EC-004)', (
 
   it('AC 2: an authored win visits Brief, Assembly, Mission, Debrief in order', () => {
     expect(playToWin('m01', 1)).toEqual(['brief', 'team', 'mission', 'debrief'])
+  })
+
+  it('the seeded opening offer selects, deploys and leaves the market on a fulfilled outcome (story 023)', () => {
+    // Opening state: intel 1, the seeded Moderate offer open, no stub on the
+    // World Network apply so the record really leaves the market.
+    useCampaignStore.setState(initialCampaignData())
+    useWorldStore.setState({ ...structuredClone(worldBoot), nextTaxT: 1e12, nextEventT: 1e12 })
+    const seeded = useWorldStore.getState().contracts
+    expect(seeded).toHaveLength(1)
+    const c = seeded[0]
+    expect(c.threat).toBe('MODERATE')
+    expect(visibleContracts(seeded, useCampaignStore.getState().intelLevel).map((x) => x.id)).toContain(c.id)
+
+    const app = useAppStore.getState()
+    app.selectMission(c.id)
+    expect(useAppStore.getState().missionId).toBe(c.id)
+    expect(useAppStore.getState().phase).toBe('brief')
+    useAppStore.getState().goto('team')
+    expect(useAppStore.getState().phase).toBe('team')
+    // The pure gate startMission consults (ADR-0019), fed as the store feeds it.
+    const { squad, loadout } = useAppStore.getState()
+    const { operatives, roster } = useCampaignStore.getState()
+    const ops = squad.flatMap((id) => operatives.filter((op) => op.id === id))
+    expect(
+      canDeploy({
+        missionSelected: !!resolveMission(c.id),
+        assignedIds: squad,
+        statusById: Object.fromEntries(squad.map((id) => [id, roster[id]?.status])),
+        massKg: assignedMassKg(ops, useResearchStore.getState().done, roster, loadout),
+      }).ok,
+    ).toBe(true)
+    useAppStore.getState().startMission()
+    expect(useAppStore.getState().phase).toBe('mission')
+
+    const mission = resolveMission(c.id)
+    if (!mission) throw new Error('seeded offer did not resolve')
+    expect(mission.id).toBe(c.id)
+    const applyKey = 1
+    const deploy = freezeDeploy(mission, DEFAULT_SQUAD.map(operativeById), applyKey)
+    const o = priceOutcome(
+      {
+        applyKey,
+        won: true,
+        kills: 4,
+        casualties: 0,
+        timeSec: 240,
+        civiliansHit: 0,
+        completedOptionalIds: [],
+        deadIds: [],
+        survivorHp: {},
+        quietReplay: deploy.economy.quietReplay,
+      },
+      deploy.economy,
+    )
+    useAppStore.getState().setOutcome(o)
+    expect(useAppStore.getState().phase).toBe('debrief')
+    applyDebrief(c.id)
+    expect(useWorldStore.getState().contracts.map((x) => x.id)).not.toContain(c.id)
+    // Still resolvable for the Debrief that is showing it.
+    expect(resolveMission(c.id)?.id).toBe(c.id)
+    expect(useAppStore.getState().credits).toBe(128450 + c.reward)
   })
 
   it('AC 2: a generated win visits the same four screens in the same order', () => {
