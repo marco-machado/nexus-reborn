@@ -304,7 +304,7 @@ The campaign opens at intel **1**, with 25/100 progress.
 - A contract win awards **+40**. A clean win (no civilian hit by the squad) awards **+15** more.
 - A quiet replay awards nothing. A loss awards nothing.
 - Each 100 progress becomes the next intel level.
-- Hollow Crown and Rust Haven require intel 2. Generated contracts gate by threat: moderate at 1, high at 2, severe at 3.
+- Rust Haven opens at intel 1. Glass Veil and Hollow Crown require intel 2 (difficulty curve, approved 2026-10-21: the first authored contract a new director can take is the Moderate one). Generated contracts gate by threat: moderate at 1, high at 2, severe at 3.
 - Expedite can waive a generated contract’s intel gate.
 
 At intel 2+ the brief replaces a raw success percentage with a computed **risk index** (Low / Guarded / High / Severe), derived from the actual deployment: street-patrol, garrison, and civilian counts, weighted by CorpSec toughness and the **clearer** weather on the weather script.
@@ -521,15 +521,15 @@ Opening-campaign figures, no research done, sectors at their starting values:
 
 | Codename | City | Type | Client | Threat | Reward | District | Opens at | ETA |
 |---|---|---|---|---|---:|---|---|---:|
-| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | Intel 1 | 2 days |
+| Glass Veil | New Carthage, District 07, Europe | Seizure | Sable Enterprises | Severe | 85,000 CR | Checkpoint | Intel 2 | 2 days |
 | Hollow Crown | Shingang, District 21, Asia | Extraction | Helix Corp | High | 62,000 CR | Compound | Intel 2 | 4 days |
-| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | Intel 2 | 3 days |
+| Rust Haven | Detroit Sprawl, District 03, North America | Sabotage | Stratos Industries | Moderate | 41,000 CR | Industrial | Intel 1 | 3 days |
 
 Authored contracts remain replayable after success or failure. After a win, the next deploy uses the other district layout. A replay of a contract already won is a **quiet replay**: 0 Credits from the fee, 0 Influence, 0 Intel, no control or unrest shove. It is still a real mission — KIA, injury, experience, and ETA apply. ETA still advances strategic time, so Tax yield still collects. The debrief banner reads `REPLAY // FEE ALREADY COLLECTED`. A loss retry (the contract is not yet won) still pays in full. See [ADR-0004](adr/0004-quiet-replay.md).
 
 ### Generated market
 
-Beside the authored three, the World Network keeps up to three generated contracts. A new one rolls every 2–6 strategic hours when below target, weighted toward high unrest or low control.
+Beside the authored three, the World Network keeps up to three generated contracts. One Moderate offer is seeded at New Operation in a Secure sector, deterministic from the market seed, so the Scan never opens with only the authored markers; after it, a new one rolls every 2–6 strategic hours when below target, weighted toward high unrest or low control (difficulty curve, approved 2026-10-21).
 
 - Threat comes from the sector’s garrison condition: Secure → Moderate, Strained → High, Critical → Severe.
 - Reward comes from Threat, random variation, and an initial priority premium, within 30,000–95,000 CR on a 500 CR grid. The same Threat uses the same Reward calculation in every sector; this does not mean every offer pays an identical amount.
@@ -545,7 +545,7 @@ For a newly rolled offer, `Reward = clamp(500 × round(B × (0.9 + 0.3u) × P / 
 
 ### The brief
 
-The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the Opening hour, the weather script (opening intensity and any coming change with its clock), the sequential objectives, collateral tolerance, a recon image, and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts.
+The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the Opening hour, the weather script (opening intensity and any coming change with its clock), the sequential objectives, collateral tolerance, a recon image, a **required-kit line** derived from the objective kinds (destroy: power cells arm grenades, the fast tool, gunfire works slowly; interact: an operative holds the console for its channel duration; escort: the asset must reach the pad alive; defend: hold the zone for its duration), and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts. The kit line comes from the objective data, never from hand-written notes, so generated contracts carry it too (difficulty curve, approved 2026-10-21).
 
 If the brief’s geometry does not match the deployed district, the brief is wrong. If the brief’s weather or Opening hour does not match the deployed mission, the brief is wrong.
 
@@ -787,7 +787,7 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 **Menu.** Establishes the secure-system fiction, unlocks audio on the first gesture, offers Continue and New Operation, and opens Settings.
 
-**World Network.** The job between missions: sectors, ownership, contracts, the clock, the 24-hour review timeline, the feed, credits, influence, roster count, intel. Campaign-complete and campaign-failed banners live here. First visit, a one-shot overlay names the panel groups and the Research tab. The four Screens share a header (title, subtitle, Credits, Influence, Intel, Roster, strategic clock) and a nav: World Network, Research, Brief, Assembly.
+**World Network.** The job between missions: sectors, ownership, contracts, the clock, the 24-hour review timeline, the feed, credits, influence, roster count, intel. Campaign-complete and campaign-failed banners live here. First visit, a one-shot overlay of four rows: the job (Tax pays only if Nexus-held), where to start (Focus, the four numbers, the open contract with the highest Chance), strategic time, and the four numbers themselves. Influence is introduced on the sector panel the first time an action is affordable; Research by a prompt on the first Debrief (difficulty curve, approved 2026-10-21). The four Screens share a header (title, subtitle, Credits, Influence, Intel, Roster, strategic clock) and a nav: World Network, Research, Brief, Assembly.
 
 **Research.** Three branches. Project states: researched, active, available, locked. Authorization is a spend, not a browse.
 
@@ -811,7 +811,7 @@ Difficulty must not strip this information.
 
 Space or Escape opens a modal pause: the sim and the camera freeze, every remappable binding prints from the same table the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a two-step confirm with a three-second arming window — first activation arms, a second while armed confirms, timeout disarms — that discards the mission without a debrief. New Operation and telemetry Clear use the same window.
 
-The first mission teaches with dismissible HUD toasts — Select, Move, Attack, stances, role ability, items, weapon swap, extraction — that name the current bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. One-shot advisories fire at most once per campaign: an operative under 35% with med kits in stock, the first combat Alert, a role ability left ready for a minute, a deployment over the mass gate.
+The first mission teaches with dismissible HUD toasts — Select, Move, Attack, stances, role ability, items, weapon swap, extraction — that name the current bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. One-shot advisories fire at most once per campaign: an operative under 35% with med kits in stock, the first combat Alert, a role ability left ready for a minute, a deployment over the mass gate. The first Debrief carries a one-shot prompt that names the Research tab and the cheapest available project; it is the only place Research is taught (difficulty curve, approved 2026-10-21).
 
 ### Accessibility
 
