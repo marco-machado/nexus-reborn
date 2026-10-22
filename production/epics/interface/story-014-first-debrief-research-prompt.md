@@ -41,7 +41,7 @@
 - [ ] GIVEN the prompt's "go to Research" control, WHEN activated, THEN the session leaves Debrief through `returnFromDebrief` (selected contract cleared, Brief locked) and then shows the Research Screen; `Phase` is `research`, not a new value.
 - [ ] GIVEN a Debrief on a failed campaign (pyrrhic win or roster-emptying loss), WHEN shown, THEN the CAMPAIGN FAILED banner stays first and dominant; the prompt, if shown at all, sits below the invoice.
 - [ ] GIVEN reload while still on the first Debrief, WHEN the campaign hydrates, THEN the prompt is unfired again (the mark was in memory only), matching the invoice's own unfiled status.
-- [ ] GIVEN the "cheapest available project", WHEN it is chosen, THEN it is the lowest-cost node for which `eligibilityText(node, done, labs)` returns null; the story records whether "available" also means affordable against post-payout Credits.
+- [ ] GIVEN the "cheapest available project", WHEN it is chosen, THEN it is the lowest-cost node for which `eligibilityText(node, done, labs)` returns null AND `cost <= Credits` after the payout applies (decided 2026-10-22: "available" means affordable); if no node qualifies, the prompt is not shown and stays unfired.
 
 ---
 
@@ -51,7 +51,7 @@
 
 - New standalone seen id appended to `SEEN_IDS` in `src/game/tutorial.ts` (the `WORLD_ONBOARD_ID` pattern), not a `HintId` — `HINTS` is toast copy fired by the sim and input layer (note A). Mark with `useTutorialStore.markSeen` from an effect, guarded by `!seen.includes(id)` (note G).
 - `scheduleAutosave` refuses in `mission` and `debrief` (`src/state/save.ts`), so the mark becomes durable on the next Screen autosave; reload on Debrief loses it with the invoice. That is the accepted ADR-0011 behaviour.
-- Project pick: reuse `eligibilityText` from `src/state/researchStore.ts`, the function `authorizeResearch` calls. The prompt reads in-memory post-apply state on Debrief. Decide in this story whether to filter by `credits >= cost` too; record the decision in Completion Notes and in `design/difficulty-curve.md` if it changes the teaching beat.
+- Project pick: reuse `eligibilityText` from `src/state/researchStore.ts`, the function `authorizeResearch` calls. The prompt reads in-memory post-apply state on Debrief. Decided 2026-10-22 (owner): also filter by `credits >= cost` against post-payout Credits; record it in Completion Notes and in `design/difficulty-curve.md`.
 - Routing: `returnFromDebrief` then `goto('research')` (or a variant that also clears `missionId`). Phase routing in `App.tsx` is unchanged (ADR-0017).
 - Not a filing indicator: the prompt must not read as, or sit inside, the unfiled / filed status chrome (ADR-0022, story 010).
 
@@ -69,7 +69,7 @@
 
 ## QA Test Cases
 
-QA plan: none yet. Provisional, Integration:
+QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, Integration:
 
 - `src/ui/*.test.ts` seam: prompt shown iff first Debrief and id unseen; cheapest project equals the `eligibilityText`-null node with the lowest cost; `markSeen` called once.
 - `src/state/appStore.test.ts`: the Research control leaves `missionId === null` and `phase === 'research'`.

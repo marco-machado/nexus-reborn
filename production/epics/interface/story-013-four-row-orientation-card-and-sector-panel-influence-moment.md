@@ -67,7 +67,7 @@
 
 ## QA Test Cases
 
-QA plan: none yet. Provisional, UI:
+QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, UI:
 
 - Headless capture at 1280×720 × 4 text scales: card (four rows), sector panel at Influence 0, teaching panel at Influence 8 after a clean win fixture, Antarctica focused (no panel).
 - Unit seam (`src/ui/*.test.ts`): the START HERE selector returns the highest-Chance unlocked offer; the teaching trigger is `influenceRefusal === null`, not a Credits/Influence compare; `markSeen` is called at most once per id.

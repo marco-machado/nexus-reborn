@@ -65,7 +65,7 @@
 
 ## QA Test Cases
 
-QA plan: none yet for this story (`/qa-plan` runs at the next sprint plan). Provisional, Logic:
+QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, Logic:
 
 - `src/game/data.test.ts`: intelReq table pinned to 1 / 2 / 2 for m03 / m01 / m02.
 - `src/state/campaignStore.test.ts`: `missionLocked` at intel 1 → m03 false, m01 and m02 true; at intel 2 → all false.

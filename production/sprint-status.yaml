@@ -9,164 +9,56 @@
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
 
-sprint: 9
-goal: "Land the Interface rules the director reads and acts through: every surface fits 1280×720 at every text scale, critical state is never colour alone, navigation gates stop a bad Brief/Assembly/Deploy, and the Menu, Research, mission HUD, pause/Abort, Debrief filing and Assembly refusals behave as the GDD says; and the audio mixer, buses, beds, weather and alert layers, and failure handling land without ever changing an outcome. Final sprint: holds every open story."
-start: "2026-10-17"
+sprint: 10
+goal: "Land the five difficulty-curve stories approved 2026-10-21 so Production → Polish gate blocker 3 closes: Rust Haven opens at intel 1 and the other two authored contracts at 2, one Moderate market offer is seeded at New Operation, the orientation card drops to four rows with a sector-panel Influence moment, the first Debrief prompts Research, and the Brief shows a KIT line from objective kinds."
+start: "2026-10-22"
 end: "2026-10-28"
-generated: "2026-10-17"
-updated: "2026-10-19"
+generated: "2026-10-22"
+updated: "2026-10-22"
 
 stories:
-  - id: "IF-001"
-    name: "Every surface fits 1280×720 at every text scale"
-    file: "production/epics/interface/story-001-every-surface-fits-1280-720-at-every-text-scale.md"
+  - id: "WN-020"
+    name: "Rust Haven opens at intel 1; Glass Veil and Hollow Crown at 2"
+    file: "production/epics/world-network/story-020-rust-haven-opens-at-intel-1-glass-veil-at-2.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: ""
+  - id: "EC-023"
+    name: "One Moderate market offer is seeded at New Operation"
+    file: "production/epics/economy-and-contracts/story-023-opening-market-offer-seeded-at-new-operation.md"
+    priority: must-have
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-003"
-    name: "Contract navigation gates Brief, Assembly, and Deploy"
-    file: "production/epics/interface/story-003-contract-navigation-gates-brief-assembly-and-deploy.md"
+    completed: ""
+  - id: "IF-013"
+    name: "Four-row orientation card and the sector-panel Influence moment"
+    file: "production/epics/interface/story-013-four-row-orientation-card-and-sector-panel-influence-moment.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
-    estimate_days: 0.3
+    estimate_days: 0.5
     blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-005"
-    name: "Research Authorize, keyboard activation, and focus return"
-    file: "production/epics/interface/story-005-research-authorize-keyboard-activation-and-focus-return.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-006"
-    name: "Menu Continue, New Operation, and telemetry persistence chrome"
-    file: "production/epics/interface/story-006-menu-continue-new-operation-and-telemetry-persistence-c.md"
-    priority: must-have
-    status: done
+    completed: ""
+  - id: "IF-014"
+    name: "First-Debrief Research prompt"
+    file: "production/epics/interface/story-014-first-debrief-research-prompt.md"
+    priority: should-have
+    status: backlog
     owner: ""
     estimate_days: 0.4
     blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-008"
-    name: "Pause modal and two-step Abort"
-    file: "production/epics/interface/story-008-pause-modal-and-two-step-abort.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-004"
-    name: "Chance vs Risk bands and World Network owner readouts"
-    file: "production/epics/interface/story-004-chance-vs-risk-bands-and-world-network-owner-readouts.md"
+    completed: ""
+  - id: "IF-015"
+    name: "Brief KIT line from objective kinds"
+    file: "production/epics/interface/story-015-brief-kit-line-from-objective-kinds.md"
     priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-007"
-    name: "Minimap, weather chip, and tutorial toasts in the mission HUD"
-    file: "production/epics/interface/story-007-minimap-weather-chip-and-tutorial-toasts-in-the-mission.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-010"
-    name: "Debrief filing status and write-failure indicators"
-    file: "production/epics/interface/story-010-debrief-filing-status-and-write-failure-indicators.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-012"
-    name: "Assembly hire refusals and heavy-tier hint"
-    file: "production/epics/interface/story-012-assembly-hire-refusals-and-heavy-tier-hint.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "IF-002"
-    name: "Critical state has non-colour cues; one OS styling"
-    file: "production/epics/interface/story-002-critical-state-has-non-color-cues-one-os-styling.md"
-    priority: nice-to-have
-    status: done
+    status: backlog
     owner: ""
     estimate_days: 0.4
     blocker: ""
-    completed: "2026-10-18"
-  - id: "AU-001"
-    name: "Mixer: master, channels, mute, and settings persistence"
-    file: "production/epics/audio/story-001-mixer-master-channels-mute-and-settings-persistence.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.4
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "AU-003"
-    name: "Strategy bed and mission city-hum lifetimes"
-    file: "production/epics/audio/story-003-strategy-bed-and-mission-city-hum-lifetimes.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "AU-005"
-    name: "Unavailable and late audio never block play or burst"
-    file: "production/epics/audio/story-005-unavailable-and-late-audio-never-burst.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "AU-004"
-    name: "Rain follows live weather; Alert tension drone"
-    file: "production/epics/audio/story-004-rain-follows-live-weather-and-alert-tension-drone.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.4
-    blocker: ""
-    completed: "2026-10-18"
-  - id: "AU-006"
-    name: "Presentation-only randomness does not change outcomes"
-    file: "production/epics/audio/story-006-presentation-jitter-does-not-change-outcomes.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.2
-    blocker: ""
-    completed: "2026-10-17"
-  - id: "AU-002"
-    name: "Voices, buses, and the reference mix"
-    file: "production/epics/audio/story-002-voices-buses-and-reference-mix.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 0.4
-    blocker: ""
-    completed: "2026-10-18"
-  - id: "AU-007"
-    name: "No celebration sting, spoken VO, or spatial shooter mix"
-    file: "production/epics/audio/story-007-no-celebration-sting-vo-or-spatial-mix.md"
-    priority: nice-to-have
-    status: done
-    owner: ""
-    estimate_days: 0.3
-    blocker: ""
-    completed: "2026-10-19"
+    completed: ""

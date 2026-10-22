@@ -66,7 +66,7 @@
 
 ## QA Test Cases
 
-QA plan: none yet. Provisional, UI with a unit seam:
+QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, UI with a unit seam:
 
 - `src/ui/kitLine.test.ts`: the four strings for the four kinds with `durationSec` 5 and 45; null for the other three kinds; identical output across the authored missions and `objectivesFor` for every generated type × 3 variants.
 - Headless capture at 1280×720 × 4 text scales: Brief for the three authored contracts and one generated contract per type; evidence in `production/qa/evidence/if-015/` with a click-through note.

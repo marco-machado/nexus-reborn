@@ -53,7 +53,7 @@
 - One shared helper, for example `initialMarket(): { contracts, contractRngState, nextContractT }`, called from both literal sites: `useWorldStore` create (`src/state/worldStore.ts` around the `contracts: []` literal) and `startNewOperation` in `src/state/save.ts`. Without it the two drift (TD-CHANGE-IMPACT note D).
 - The v3 → v4 upgrade in `save.ts` keeps writing `contracts: []` / `INITIAL_CONTRACT_RNG`; hydrate never seeds.
 - Purity: either a pure `rollOpeningContract(inputs, state)` in `contracts.ts` that filters `garrison === 'SECURE'` before the existing `pickSector`, or filter in `worldStore` before calling `rollContract`. `pickSector` weights are untouched. SECURE → MODERATE (`contractThreat`) → intel gate 1 (`CONTRACT_INTEL_REQ`).
-- Decide and record: does the seed append the usual "OPEN CONTRACT … POSTED" Feed line at t = 0? It changes `events` and `unread` at New Operation. World Network owner's call; it must not happen by accident.
+- Decided 2026-10-22 (owner): yes — the seed appends the usual "OPEN CONTRACT … POSTED" Feed line at t = 0, so `events` holds one entry and `unread` is 1 at New Operation. Test it explicitly; it must not happen by accident elsewhere.
 - Fixtures shift: seeding steps `contractRngState` before the first checkpoint, so every later market roll in a new campaign changes. Golden values in `save.test.ts`, `worldStore.test.ts` and `contracts.test.ts` move. Determinism is preserved; say so in the commit body (note E).
 
 ---
@@ -70,7 +70,7 @@
 
 ## QA Test Cases
 
-QA plan: none yet for this story. Provisional, Logic:
+QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, Logic:
 
 - `src/state/worldStore.test.ts`: initial state holds one SECURE / MODERATE offer; two fresh stores agree on it; `nextContractT === INITIAL_NEXT_CONTRACT_T`; the first timed checkpoint still rolls at `CONTRACT_MIN_SEC` and the cap holds at 3.
 - `src/state/save.test.ts`: `startNewOperation` produces the same offer as module init; a v10 fixture hydrates without an added offer; the v3 upgrade fixture stays empty.
