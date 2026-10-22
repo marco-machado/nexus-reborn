@@ -1,0 +1,61 @@
+PASS m01: Brief open (phase brief, mission m01) // {"phase":"brief","id":"m01"}
+PASS m01: one row per objective (3 of 3)
+PASS m01: KIT lines read as specified from kinds [reach-zone,eliminate-tag,extract] // []
+PASS m01 scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS m01 scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS m01 scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS m01 scale 125: nothing clips, rows inside the viewport //  scale 1.25
+PASS m02: Brief open (phase brief, mission m02) // {"phase":"brief","id":"m02"}
+PASS m02: one row per objective (5 of 5)
+PASS m02: KIT lines read as specified from kinds [reach-zone,interact:4,interact:5,escort,extract] // ["KIT: an operative holds the console for 4 s","KIT: an operative holds the console for 5 s","KIT: the asset must reach the pad alive"]
+PASS m02 scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS m02 scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS m02 scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS m02 scale 125: nothing clips, rows inside the viewport //  scale 1.25
+PASS m03: Brief open (phase brief, mission m03) // {"phase":"brief","id":"m03"}
+PASS m03: one row per objective (5 of 5)
+PASS m03: KIT lines read as specified from kinds [reach-zone,destroy,destroy,defend:45,extract] // ["KIT: power cells arm grenades, the fast tool; gunfire works, slowly","KIT: power cells arm grenades, the fast tool; gunfire works, slowly","KIT: hold the zone for 45 s"]
+PASS m03 scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS m03 scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS m03 scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS m03 scale 125: nothing clips, rows inside the viewport //  scale 1.25
+authored: {"m01":"GLASS VEIL","m02":"HOLLOW CROWN","m03":"RUST HAVEN"}
+PASS SEIZURE: Brief open (phase brief, mission gc-if015-seizure) // {"phase":"brief","id":"gc-if015-seizure"}
+PASS SEIZURE: one row per objective (3 of 3)
+PASS SEIZURE: KIT lines read as specified from kinds [reach-zone,interact:4,extract] // ["KIT: an operative holds the console for 4 s"]
+PASS SEIZURE scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS SEIZURE scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS SEIZURE scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS SEIZURE scale 125: nothing clips, rows inside the viewport //  scale 1.25
+PASS SEIZURE: the resolved mission is the generated SEIZURE // SEIZURE
+PASS EXTRACTION: Brief open (phase brief, mission gc-if015-extraction) // {"phase":"brief","id":"gc-if015-extraction"}
+PASS EXTRACTION: one row per objective (4 of 4)
+PASS EXTRACTION: KIT lines read as specified from kinds [reach-zone,interact:5,escort,extract] // ["KIT: an operative holds the console for 5 s","KIT: the asset must reach the pad alive"]
+PASS EXTRACTION scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS EXTRACTION scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS EXTRACTION scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS EXTRACTION scale 125: nothing clips, rows inside the viewport //  scale 1.25
+PASS EXTRACTION: the resolved mission is the generated EXTRACTION // EXTRACTION
+PASS SABOTAGE: Brief open (phase brief, mission gc-if015-sabotage) // {"phase":"brief","id":"gc-if015-sabotage"}
+PASS SABOTAGE: one row per objective (4 of 4)
+PASS SABOTAGE: KIT lines read as specified from kinds [reach-zone,destroy,defend:45,extract] // ["KIT: power cells arm grenades, the fast tool; gunfire works, slowly","KIT: hold the zone for 45 s"]
+PASS SABOTAGE scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS SABOTAGE scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS SABOTAGE scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS SABOTAGE scale 125: nothing clips, rows inside the viewport //  scale 1.25
+PASS SABOTAGE: the resolved mission is the generated SABOTAGE // SABOTAGE
+PASS SUPPRESSION: Brief open (phase brief, mission gc-if015-suppression) // {"phase":"brief","id":"gc-if015-suppression"}
+PASS SUPPRESSION: one row per objective (3 of 3)
+PASS SUPPRESSION: KIT lines read as specified from kinds [reach-zone,interact:4,extract] // ["KIT: an operative holds the console for 4 s"]
+PASS SUPPRESSION scale 90: nothing clips, rows inside the viewport //  scale 0.9
+PASS SUPPRESSION scale 100: nothing clips, rows inside the viewport //  scale 1
+PASS SUPPRESSION scale 110: nothing clips, rows inside the viewport //  scale 1.1
+PASS SUPPRESSION scale 125: nothing clips, rows inside the viewport //  scale 1.25
+PASS SUPPRESSION: the resolved mission is the generated SUPPRESSION // SUPPRESSION
+generated: {"SEIZURE":{"kinds":["reach-zone","interact:4","extract"],"labels":["REACH THE CHECKPOINT GATE","OVERRIDE THE CHECKPOINT LOCKS","EXTRACT THE SQUAD"],"kits":["an operative holds the console for 4 s"]},"EXTRACTION":{"kinds":["reach-zone","interact:5","escort","extract"],"labels":["REACH THE COMPOUND GATE","OVERRIDE THE CELL BLOCK LOCKS","EXTRACT THE ASSET","EXTRACT THE SQUAD"],"kits":["an operative holds the console for 5 s","the asset must reach the pad alive"]},"SABOTAGE":{"kinds":["reach-zone","destroy","defend:45","extract"],"labels":["REACH THE RELAY YARD","DESTROY THE THREE FUEL RELAYS","HOLD THE YARD FOR THE BURN","EXTRACT THE SQUAD"],"kits":["power cells arm grenades, the fast tool; gunfire works, slowly","hold the zone for 45 s"]},"SUPPRESSION":{"kinds":["reach-zone","interact:4","extract"],"labels":["REACH THE CHECKPOINT GATE","SEIZE THE PLAZA CONTROL","EXTRACT THE SQUAD"],"kits":["an operative holds the console for 4 s"]}}
+PASS deploy: mission phase on the generated SABOTAGE contract // {"phase":"mission","id":"gc-if015-sabotage"}
+PASS deploy: the mission the sim was built from lists the same kinds the Brief printed from // {"brief":["reach-zone","destroy","defend:45","extract"],"deployed":["reach-zone","destroy","defend:45","extract"]}
+PASS deploy: the HUD objective panel (mission store rows) lists the Brief objectives in order // {"brief":["REACH THE RELAY YARD","DESTROY THE THREE FUEL RELAYS","HOLD THE YARD FOR THE BURN","EXTRACT THE SQUAD"],"store":["REACH THE RELAY YARD","DESTROY THE THREE FUEL RELAYS","HOLD THE YARD FOR THE BURN","EXTRACT THE SQUAD"]}
+PASS deploy: the HUD DOM prints those same labels // ["REACH THE RELAY YARD","DESTROY THE THREE FUEL RELAYS","HOLD THE YARD FOR THE BURN","EXTRACT THE SQUAD"]
+PASS no console or page errors
+ALL PASS

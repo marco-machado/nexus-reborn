@@ -57,8 +57,8 @@ stories:
     name: "Brief KIT line from objective kinds"
     file: "production/epics/interface/story-015-brief-kit-line-from-objective-kinds.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.4
     blocker: ""
-    completed: ""
+    completed: "2026-10-22"

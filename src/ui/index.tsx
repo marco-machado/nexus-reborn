@@ -30,6 +30,7 @@ import {
 import { DEBRIEF_RESEARCH_ID } from '../game/tutorial'
 import { useTutorialStore } from '../state/tutorialStore'
 import { deployRefusalCopy } from './deployRefusal'
+import { kitLine } from './kitLine'
 import { assemblyRowHandlers, hireView } from './assemblyRows'
 import { WEAPONS } from '../game/data'
 import { ROLE_ABILITIES } from '../game/abilities'
@@ -859,22 +860,32 @@ export function MissionBrief() {
                   <label>OBJECTIVES:</label>
                   {(() => {
                     let tier = 0
-                    return m.objectives.map((o) => (
-                      <div key={o.id} className="mb-obj">
-                        <span className="mb-obj-glyph" />
-                        <span>
-                          <b>
-                            {o.optional
-                              ? 'OPTIONAL:'
-                              : OBJECTIVE_TIER[Math.min(tier++, 2)] + ':'}
-                          </b>{' '}
-                          {o.label}
-                          {o.optional && o.bonusReward ? (
-                            <i className="dim"> (+{fmt(o.bonusReward)} CR)</i>
-                          ) : null}
-                        </span>
-                      </div>
-                    ))
+                    return m.objectives.map((o) => {
+                      // IF-015: the KIT line prints from the same objective
+                      // list the sim runs, by kind (AC31). Not from notes.
+                      const kit = kitLine(o)
+                      return (
+                        <div key={o.id} className={'mb-obj' + (kit ? ' has-kit' : '')}>
+                          <span className="mb-obj-glyph" />
+                          <span>
+                            <b>
+                              {o.optional
+                                ? 'OPTIONAL:'
+                                : OBJECTIVE_TIER[Math.min(tier++, 2)] + ':'}
+                            </b>{' '}
+                            {o.label}
+                            {o.optional && o.bonusReward ? (
+                              <i className="dim"> (+{fmt(o.bonusReward)} CR)</i>
+                            ) : null}
+                            {kit ? (
+                              <span className="mb-obj-kit">
+                                <b>KIT:</b> {kit}
+                              </span>
+                            ) : null}
+                          </span>
+                        </div>
+                      )
+                    })
                   })()}
                 </div>
                 <div className="mb-box">

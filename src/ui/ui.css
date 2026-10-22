@@ -2088,6 +2088,19 @@
 
 .mb-obj { display: flex; gap: 8px; align-items: center; font-size: calc(10.5px * var(--text-scale)); letter-spacing: 0.06em; }
 .mb-obj b { color: var(--cyan); }
+/* IF-015: a two-line row keeps its glyph on the objective line, not centred on the pair. */
+.mb-obj.has-kit { align-items: flex-start; }
+.mb-obj.has-kit > .mb-obj-glyph { margin-top: calc(4px * var(--text-scale)); }
+.mb-obj-kit {
+  display: block;
+  margin-top: 2px;
+  font-size: calc(9px * var(--text-scale));
+  letter-spacing: 0.04em;
+  line-height: 1.32;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
+.mb-obj-kit b { color: var(--amber); }
 
 .mb-obj-glyph {
   width: 8px;
