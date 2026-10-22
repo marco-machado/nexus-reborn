@@ -73,6 +73,7 @@ This epic is complete when:
 | 020 | Generated instances leave the market, or are held when hidden | Logic | Ready | ADR-0003 |
 | 021 | Campaign-complete from the three authored wins | Logic | Ready | ADR-0003 |
 | 022 | Invoice prints all five money lines, zeros included | UI | Ready | ADR-0021 |
+| 023 | [One Moderate market offer is seeded at New Operation](story-023-opening-market-offer-seeded-at-new-operation.md) | Logic | Ready | ADR-0012 |
 
 ## Next Step
 

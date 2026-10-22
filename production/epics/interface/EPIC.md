@@ -56,27 +56,13 @@ This epic is complete when:
 | 010 | [Debrief filing status and write-failure indicators](story-010-debrief-filing-status-and-write-failure-indicators.md) | UI | Ready | ADR-0002 |
 | 011 | [Pyrrhic win banner and failed-campaign Debrief actions](story-011-pyrrhic-win-banner-and-failed-campaign-debrief-actions.md) | UI | Ready | ADR-0020 |
 | 012 | [Assembly hire refusals and heavy-tier hint](story-012-assembly-hire-refusals-and-heavy-tier-hint.md) | UI | Ready | ADR-0017 |
+| 013 | [Four-row orientation card and the sector-panel Influence moment](story-013-four-row-orientation-card-and-sector-panel-influence-moment.md) | UI | Ready | ADR-0017 |
+| 014 | [First-Debrief Research prompt](story-014-first-debrief-research-prompt.md) | Integration | Ready | ADR-0017 |
+| 015 | [Brief KIT line from objective kinds](story-015-brief-kit-line-from-objective-kinds.md) | UI | Ready | ADR-0017 |
 
 GDD AC24 (invoice money lines) is covered by economy-and-contracts story 022; the Research remaining label by research story 009.
 
-## Stories
-
-| # | Story | Type | Status | ADR |
-|---|-------|------|--------|-----|
-| 001 | [Every surface fits 1280×720 at every text scale](story-001-every-surface-fits-1280-720-at-every-text-scale.md) | UI | Ready | ADR-0017 |
-| 002 | [Critical state has non-color cues; one OS styling](story-002-critical-state-has-non-color-cues-one-os-styling.md) | Visual/Feel | Ready | ADR-0017 |
-| 003 | [Contract navigation gates Brief, Assembly, and Deploy](story-003-contract-navigation-gates-brief-assembly-and-deploy.md) | UI | Ready | ADR-0017 |
-| 004 | [Chance vs Risk bands and World Network owner readouts](story-004-chance-vs-risk-bands-and-world-network-owner-readouts.md) | UI | Ready | ADR-0017 |
-| 005 | [Research Authorize, keyboard activation, and focus return](story-005-research-authorize-keyboard-activation-and-focus-return.md) | UI | Ready | ADR-0017 |
-| 006 | [Menu Continue, New Operation, and telemetry persistence chrome](story-006-menu-continue-new-operation-and-telemetry-persistence-c.md) | UI | Ready | ADR-0017 |
-| 007 | [Minimap, weather chip, and tutorial toasts in the mission HUD](story-007-minimap-weather-chip-and-tutorial-toasts-in-the-mission.md) | UI | Ready | ADR-0010 |
-| 008 | [Pause modal and two-step Abort](story-008-pause-modal-and-two-step-abort.md) | Integration | Ready | ADR-0002 |
-| 009 | [Result display, Debrief entry delay, and quiet replay banner](story-009-result-display-debrief-entry-delay-and-quiet-replay-ban.md) | Integration | Ready | ADR-0002 |
-| 010 | [Debrief filing status and write-failure indicators](story-010-debrief-filing-status-and-write-failure-indicators.md) | UI | Ready | ADR-0002 |
-| 011 | [Pyrrhic win banner and failed-campaign Debrief actions](story-011-pyrrhic-win-banner-and-failed-campaign-debrief-actions.md) | UI | Ready | ADR-0020 |
-| 012 | [Assembly hire refusals and heavy-tier hint](story-012-assembly-hire-refusals-and-heavy-tier-hint.md) | UI | Ready | ADR-0017 |
-
-GDD AC24 (invoice money lines) is covered by economy-and-contracts story 022; the Research remaining label by research story 009.
+Stories 013–015 (2026-10-22) implement the approved `design/difficulty-curve.md` changes; see `docs/architecture/change-impact-2026-10-21-interface.md` for the story notes.
 
 ## Next Step
 

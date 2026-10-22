@@ -73,6 +73,7 @@ This epic is complete when:
 | 017 | Opening desk and post-win Scan | Integration | Ready | ADR-0001 |
 | 018 | Campaign complete and failed banners, incl. pyrrhic win | Integration | Ready | ADR-0020 |
 | 019 | Campaign flag edge cases | Logic | Ready | ADR-0020 |
+| 020 | [Rust Haven opens at intel 1; Glass Veil and Hollow Crown at 2](story-020-rust-haven-opens-at-intel-1-glass-veil-at-2.md) | Logic | Ready | ADR-0012 |
 
 ## Next Step
 
