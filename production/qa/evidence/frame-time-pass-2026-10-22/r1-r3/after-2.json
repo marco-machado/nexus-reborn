@@ -1,0 +1,160 @@
+{
+ "play": {
+  "result": "won",
+  "simTime": 73,
+  "log": [
+   [
+    0,
+    "none",
+    null
+   ],
+   [
+    0,
+    "rh1",
+    "reach-zone"
+   ],
+   [
+    8,
+    "rh2",
+    "destroy"
+   ],
+   [
+    11,
+    "hand-kill",
+    "relay"
+   ],
+   [
+    12,
+    "hand-kill",
+    "relay"
+   ],
+   [
+    15,
+    "hand-kill",
+    "relay"
+   ],
+   [
+    15,
+    "rh3",
+    "defend"
+   ],
+   [
+    60,
+    "rh4",
+    "extract"
+   ]
+  ]
+ },
+ "eta": {
+  "days": 3
+ },
+ "perPhase": {
+  "world": {
+   "n": 6291,
+   "p50": 8.3,
+   "p95": 9.8,
+   "p99": 10.3,
+   "max": 149.8,
+   "over50ms": 1,
+   "over100ms": 1,
+   "dropped": 18
+  },
+  "brief": {
+   "n": 87,
+   "p50": 8.3,
+   "p95": 9.1,
+   "p99": 33.3,
+   "max": 33.3,
+   "over50ms": 0,
+   "over100ms": 0,
+   "dropped": 2
+  },
+  "team": {
+   "n": 101,
+   "p50": 8.3,
+   "p95": 9.3,
+   "p99": 10.6,
+   "max": 25.2,
+   "over50ms": 0,
+   "over100ms": 0,
+   "dropped": 1
+  },
+  "mission": {
+   "n": 9074,
+   "p50": 8.3,
+   "p95": 9.6,
+   "p99": 10.2,
+   "max": 291.7,
+   "over50ms": 1,
+   "over100ms": 1,
+   "dropped": 5
+  },
+  "debrief": {
+   "n": 463,
+   "p50": 8.3,
+   "p95": 9.8,
+   "p99": 10.3,
+   "max": 10.4,
+   "over50ms": 0,
+   "over100ms": 0,
+   "dropped": 0
+  }
+ },
+ "debriefEntryFrames": [
+  [
+   "mission",
+   8.3
+  ],
+  [
+   "mission",
+   7.3
+  ],
+  [
+   "mission",
+   9.7
+  ],
+  [
+   "debrief",
+   8
+  ],
+  [
+   "debrief",
+   7
+  ],
+  [
+   "debrief",
+   10.1
+  ],
+  [
+   "debrief",
+   7.9
+  ],
+  [
+   "debrief",
+   8.4
+  ],
+  [
+   "debrief",
+   8.2
+  ]
+ ],
+ "longTasks": [
+  [
+   "?",
+   248
+  ],
+  [
+   "?",
+   142
+  ],
+  [
+   "mission",
+   266
+  ],
+  [
+   "world",
+   143
+  ]
+ ],
+ "errs": []
+}

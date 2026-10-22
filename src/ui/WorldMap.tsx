@@ -28,11 +28,12 @@ import type { InfluenceActionId } from '../game/influence'
 import { eventForecast } from '../game/forecast'
 import type { ForecastKind } from '../game/forecast'
 import { ROSTER_CAP } from '../game/recruits'
-import { missionChance, missionMods } from '../game/missionParams'
+import { missionChance, missionMods, missionVariant } from '../game/missionParams'
 import type { Difficulty } from '../game/missionParams'
 import { useSettingsStore } from '../state/settingsStore'
 import { missionLocked, useCampaignStore } from '../state/campaignStore'
 import { useResearchStore } from '../state/researchStore'
+import { warmTacticalMaps } from './briefMap'
 import { useTutorialStore } from '../state/tutorialStore'
 import { useSaveStatusStore } from '../state/saveStatusStore'
 import { screenWriteFailureLine } from './filingStatus'
@@ -328,7 +329,7 @@ function WorldScan() {
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
   const marks = useMemo(() => opsFor(null, contracts, intelLevel), [contracts, intelLevel])
-  const operations = useMemo<GlobeOperation[]>(() => marks
+  const fresh = useMemo<GlobeOperation[]>(() => marks
     .filter(({ m, gen }) => gen === null || (!campaignFailed && !missionLocked(m, intelLevel)))
     .map(({ m }) => ({
       id: m.id, name: m.codename, city: m.city, sector: m.sector,
@@ -337,6 +338,32 @@ function WorldScan() {
       requirement: campaignFailed ? 'CAMPAIGN LOST' : intelGate(m.intelReq),
       type: m.type, chance: chanceFor(m, sectors, researched.length, difficulty), etaDays: m.etaDays,
     })), [marks, campaignFailed, intelLevel, sectors, researched.length, difficulty])
+  // sectors changes on every strategic tick (20 Hz) but the rounded chance a
+  // marker shows rarely does. Keep the previous list while every shown field
+  // is equal, so the memoised globe and its canvas skip the tick.
+  const shown = fresh.map((o) => [o.id, o.name, o.city, o.sector, o.locked, o.requirement, o.type, o.chance, o.etaDays].join('|')).join('/')
+  const kept = useRef<{ shown: string; ops: GlobeOperation[] } | null>(null)
+  if (!kept.current || kept.current.shown !== shown) kept.current = { shown, ops: fresh }
+  const operations = kept.current.ops
+  const openOperation = useCallback((id: string) => { uiClick(); selectMission(id) }, [selectMission])
+  // Warm the Brief's tactical maps for the openable contracts in idle time,
+  // with the inputs the Brief will use (ui/index.tsx BriefScreen), so the
+  // click that opens one does not build the city.
+  useEffect(() => {
+    const won = useCampaignStore.getState().contractsWon
+    const live = useWorldStore.getState().sectors
+    const jobs = marks
+      .filter(({ m }) => !campaignFailed && !missionLocked(m, intelLevel))
+      .map(({ m }) => {
+        const mods = missionMods(m, live[m.sector], difficulty)
+        return {
+          mission: m,
+          spec: missionVariant(m, won.includes(m.id)),
+          gen: { enemyExtra: mods.enemyExtra, civilianCount: mods.civilianCount, officerCount: mods.officerCount, heavyCount: mods.heavyCount },
+        }
+      })
+    return warmTacticalMaps(jobs)
+  }, [marks, campaignFailed, intelLevel, difficulty, shown])
 
   const corps = useMemo(() => {
     const out: Record<string, CorpId> = {}
@@ -353,7 +380,7 @@ function WorldScan() {
   return (
     <>
       <Suspense fallback={<div className="globe-status" role="status">ACQUIRING ORBITAL VIEW</div>}>
-        <WorldGlobe operations={operations} onOpen={(id) => { uiClick(); selectMission(id) }} />
+        <WorldGlobe operations={operations} onOpen={openOperation} />
       </Suspense>
 
       <div className="wm-ov tl">

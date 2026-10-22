@@ -88,7 +88,7 @@ import {
   RECON_TARGET,
   RECON_W,
   buildReconBlocks,
-  buildTacticalMap,
+  tacticalMapFor,
   pointsAttr,
   roofPoints,
   sidePoints,
@@ -363,7 +363,7 @@ export function MissionBrief() {
   const tac = useMemo(
     () =>
       m && spec && mods
-        ? buildTacticalMap(m, spec, {
+        ? tacticalMapFor(m, spec, {
             enemyExtra: mods.enemyExtra,
             civilianCount: mods.civilianCount,
             officerCount: mods.officerCount,

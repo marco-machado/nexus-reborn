@@ -1,4 +1,4 @@
-import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Component, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode, RefObject } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
@@ -6,7 +6,7 @@ import { OrbitControls } from '@react-three/drei/core/OrbitControls'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import {
   AdditiveBlending, BackSide, BufferGeometry, Color, DirectionalLight,
-  Float32BufferAttribute, Quaternion, SRGBColorSpace, TextureLoader, Vector3,
+  Float32BufferAttribute, ImageBitmapLoader, Quaternion, SRGBColorSpace, Texture, Vector3,
 } from 'three'
 import { CITIES, CORPS, SECTORS, sectorAtGeo, sectorCorp } from '../game/atlas'
 import type { CorpId } from '../game/atlas'
@@ -60,6 +60,15 @@ function coordinates({ lat, lon }: GeoPoint): string {
   return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'} / ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`
 }
 
+// The Earth image is 5400x2700. Loaded as an ImageBitmap it is decoded once,
+// off the main thread, and the r3f loader cache keeps the decoded bitmap for
+// every later World Network visit; an <img> was decoded again on the main
+// thread at each upload (frame-time pass 2026-10-22, R1).
+const EARTH_URL = '/textures/earth/blue-marble.jpg'
+function earthBitmapOptions(loader: ImageBitmapLoader) {
+  loader.setOptions({ imageOrientation: 'flipY', premultiplyAlpha: 'none' })
+}
+
 class GlobeBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
@@ -68,7 +77,7 @@ class GlobeBoundary extends Component<{ children: ReactNode }, { failed: boolean
       <div className="globe-status" role="alert">
         <b>GLOBE UNAVAILABLE</b><span>The Earth view could not be loaded.</span>
         <button className="btn" onClick={() => {
-          useLoader.clear(TextureLoader, '/textures/earth/blue-marble.jpg')
+          useLoader.clear(ImageBitmapLoader, EARTH_URL)
           this.setState({ failed: false })
         }}>RETRY</button>
       </div>
@@ -241,7 +250,14 @@ function SectorOutline({ sector, color }: { sector: SectorId; color: string }) {
 }
 
 function Earth({ onReady, onSelect }: { onReady: () => void; onSelect: (sector: SectorId) => void }) {
-  const texture = useLoader(TextureLoader, '/textures/earth/blue-marble.jpg')
+  const bitmap = useLoader(ImageBitmapLoader, EARTH_URL, earthBitmapOptions)
+  const texture = useMemo(() => {
+    const t = new Texture(bitmap)
+    // The bitmap is decoded already flipped (earthBitmapOptions); flipY is
+    // ignored for bitmaps on WebGL and would flip twice on WebGPU.
+    t.flipY = false
+    return t
+  }, [bitmap])
   const { gl, invalidate } = useThree()
   useLayoutEffect(() => {
     texture.colorSpace = SRGBColorSpace
@@ -458,6 +474,8 @@ function GlobeView({ operations, onOpen }: WorldGlobeProps) {
   </div>
 }
 
-export default function WorldGlobe(props: WorldGlobeProps) {
+// Memoised: WorldScan re-renders on every strategic tick, and the globe only
+// needs to when its operations list or handler changes.
+export default memo(function WorldGlobe(props: WorldGlobeProps) {
   return <GlobeBoundary><GlobeView {...props} /></GlobeBoundary>
-}
+})

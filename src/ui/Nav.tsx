@@ -19,13 +19,24 @@ const TABS: Array<{ key: NavKind; label: string; phase: Phase }> = [
   { key: 'assembly', label: 'ASSEMBLY', phase: 'team' },
 ]
 
-function ScreenStats(props: { world: boolean }) {
+// The clock chip subscribes on its own, so a strategic tick (20 Hz) re-renders
+// one chip instead of the whole header, and nothing on World Network, whose
+// header shows no clock.
+function ClockChip() {
   const t = useWorldStore((s) => s.t)
+  const s = stamp(t)
+  return (
+    <Chip tone="dim">
+      {s.date} {s.clock}
+    </Chip>
+  )
+}
+
+function ScreenStats(props: { world: boolean }) {
   const credits = useAppStore((s) => s.credits)
   const influence = useWorldStore((s) => s.influence)
   const intelLevel = useCampaignStore((s) => s.intelLevel)
   const rosterN = useCampaignStore((s) => s.operatives.length)
-  const s = stamp(t)
   if (props.world) {
     return (
       <div className="wm-resources" aria-label="CAMPAIGN RESOURCES">
@@ -38,9 +49,7 @@ function ScreenStats(props: { world: boolean }) {
   }
   return (
     <div className="screen-head-right">
-      <Chip tone="dim">
-        {s.date} {s.clock}
-      </Chip>
+      <ClockChip />
       <Chip tone="amber">CREDITS {fmt(credits)} CR</Chip>
       <Chip tone="dim">INFLUENCE {influence}</Chip>
       <Chip tone="dim">INTEL {intelLevel}</Chip>

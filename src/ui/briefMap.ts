@@ -184,6 +184,60 @@ export function buildTacticalMap(
   }
 }
 
+// The build is pure in its inputs (seeded city, A* over its grid), so the
+// Brief reads it through a small cache and World Network warms that cache in
+// idle time. Opening a contract then skips the city build and the two A*
+// legs inside the click. Callers must not mutate the returned map.
+const TAC_CACHE_SIZE = 16
+const tacCache = new Map<string, TacticalMap>()
+
+function tacKey(mission: MissionDef, spec: DistrictSpec | undefined, gen: Partial<GenParams> | undefined): string {
+  return [
+    mission.id, mission.seed, mission.type,
+    spec?.archetype, spec?.seed,
+    gen?.enemyExtra, gen?.civilianCount, gen?.officerCount, gen?.heavyCount,
+  ].join('|')
+}
+
+export function tacticalMapFor(
+  mission: MissionDef,
+  spec?: DistrictSpec,
+  gen?: Partial<GenParams>,
+): TacticalMap {
+  const key = tacKey(mission, spec, gen)
+  const hit = tacCache.get(key)
+  if (hit) return hit
+  const map = buildTacticalMap(mission, spec, gen)
+  tacCache.set(key, map)
+  if (tacCache.size > TAC_CACHE_SIZE) tacCache.delete(tacCache.keys().next().value as string)
+  return map
+}
+
+// Builds and caches one map per call, each in its own idle slot, so warming
+// never adds a long frame. Returns a cancel for effect cleanup.
+export function warmTacticalMaps(
+  jobs: { mission: MissionDef; spec: DistrictSpec; gen: Partial<GenParams> }[],
+): () => void {
+  let i = 0
+  let handle = 0
+  const idle = typeof requestIdleCallback === 'function'
+  const next = () => {
+    handle = idle ? requestIdleCallback(step) : window.setTimeout(step, 50)
+  }
+  const step = () => {
+    if (i >= jobs.length) return
+    const j = jobs[i++]
+    tacticalMapFor(j.mission, j.spec, j.gen)
+    next()
+  }
+  next()
+  return () => {
+    i = jobs.length
+    if (idle) cancelIdleCallback(handle)
+    else window.clearTimeout(handle)
+  }
+}
+
 export function pointsAttr(points: Vec2[]): string {
   return points.map((p) => p.x.toFixed(1) + ',' + p.z.toFixed(1)).join(' ')
 }
