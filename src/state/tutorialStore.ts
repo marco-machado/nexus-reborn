@@ -23,7 +23,9 @@ export interface TutorialState {
   // Fires a one-shot hint. A hint already seen this campaign never fires.
   fireHint: (id: HintId) => void
   dismissHint: (id: HintId) => void
-  // Generic seen marker for non-toast prompts (the world-map overlay).
+  // Generic seen marker for non-toast prompts (the world-map overlay, the
+  // sector-panel Influence moment). A repeat call for an id already seen
+  // changes nothing and notifies no subscriber.
   markSeen: (id: string) => void
   hydrate: (seen: string[]) => void
   resetAll: () => void
@@ -54,7 +56,13 @@ export const useTutorialStore = create<TutorialState>((set, get) => ({
     set((s) => ({ seen: withSeen(s.seen, id), hints: [...s.hints, id] }))
   },
   dismissHint: (id) => set((s) => ({ hints: s.hints.filter((h) => h !== id) })),
-  markSeen: (id) => set((s) => ({ seen: withSeen(s.seen, id) })),
+  // Early return before `set`: an unconditional `set` publishes a fresh
+  // partial even when `seen` is unchanged, and scheduleAutosave subscribes to
+  // this store, so a caller on a 20 Hz surface would spam the autosave.
+  markSeen: (id) => {
+    if (get().seen.includes(id)) return
+    set((s) => ({ seen: withSeen(s.seen, id) }))
+  },
   hydrate: (seen) => set({ seen: [...seen], hints: [] }),
   resetAll: () => set({ seen: [], hints: [] }),
 }))

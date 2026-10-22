@@ -148,5 +148,16 @@ export const HINT_IDS = Object.keys(HINTS) as HintId[]
 // panel, so it carries an id here and no toast copy.
 export const WORLD_ONBOARD_ID = 'hint-worldmap'
 
+// The sector-panel Influence moment (World Network Core Rule 13): Influence
+// is taught the first time an action is affordable, once per campaign. Same
+// pattern as the orientation card: a standalone seen id, the panel is drawn
+// by Interface.
+export const INFLUENCE_MOMENT_ID = 'hint-influence'
+
 // Every id the seen set may hold; the save validator checks against this.
-export const SEEN_IDS: readonly string[] = [...TUTORIAL_IDS, ...HINT_IDS, WORLD_ONBOARD_ID]
+export const SEEN_IDS: readonly string[] = [
+  ...TUTORIAL_IDS,
+  ...HINT_IDS,
+  WORLD_ONBOARD_ID,
+  INFLUENCE_MOMENT_ID,
+]

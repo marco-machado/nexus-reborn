@@ -1,7 +1,7 @@
 # Story 013: Four-row orientation card and the sector-panel Influence moment
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 0.5 d
@@ -36,12 +36,12 @@
 
 *From GDD `design/gdd/interface.md` and `design/gdd/world-network.md`, scoped to this story:*
 
-- [ ] (AC27) GIVEN the first-visit orientation card, WHEN it is read, THEN it holds four rows — THE JOB, START HERE, STRATEGIC TIME, the four numbers — and no Influence or Research row; START HERE names the open contract with the highest Chance; Pause/Clock speed are identified as control over strategic time; Nexus-held Tax eligibility is stated.
-- [ ] (WN Opening desk) GIVEN New Operation, WHEN the card is dismissed with UNDERSTOOD, THEN `hint-worldmap` is marked seen once and the card does not return in that campaign.
-- [ ] GIVEN Influence 0 at opening, WHEN the sector panel is read, THEN Stabilize and Lobby show the owner's unaffordable reason and Expedite its no-target reason, and no teaching panel is shown.
-- [ ] GIVEN a clean first win (+8 Influence) and the Influence moment unseen, WHEN World Network is shown and `influenceRefusal(state, focusedSector, action) === null` for any of the three actions, THEN one teaching panel on the sector panel names the affordable action, its cost and effect; dismiss marks it seen; it never returns in that campaign, including after Influence is spent and recovers.
-- [ ] GIVEN Antarctica focused, WHEN the moment would otherwise fire, THEN it does not (`locked-sector` refusal).
-- [ ] (TR-interface-002) GIVEN the card and the teaching panel at 1280×720 and text scales 90 / 100 / 110 / 125, WHEN captured, THEN nothing clips or truncates.
+- [x] (AC27) GIVEN the first-visit orientation card, WHEN it is read, THEN it holds four rows — THE JOB, START HERE, STRATEGIC TIME, the four numbers — and no Influence or Research row; START HERE names the open contract with the highest Chance; Pause/Clock speed are identified as control over strategic time; Nexus-held Tax eligibility is stated.
+- [x] (WN Opening desk) GIVEN New Operation, WHEN the card is dismissed with UNDERSTOOD, THEN `hint-worldmap` is marked seen once and the card does not return in that campaign.
+- [x] GIVEN Influence 0 at opening, WHEN the sector panel is read, THEN Stabilize and Lobby show the owner's unaffordable reason and Expedite its no-target reason, and no teaching panel is shown.
+- [x] GIVEN a clean first win (+8 Influence) and the Influence moment unseen, WHEN World Network is shown and `influenceRefusal(state, focusedSector, action) === null` for any of the three actions, THEN one teaching panel on the sector panel names the affordable action, its cost and effect; dismiss marks it seen; it never returns in that campaign, including after Influence is spent and recovers.
+- [x] GIVEN Antarctica focused, WHEN the moment would otherwise fire, THEN it does not (`locked-sector` refusal).
+- [x] (TR-interface-002) GIVEN the card and the teaching panel at 1280×720 and text scales 90 / 100 / 110 / 125, WHEN captured, THEN nothing clips or truncates.
 
 ---
 
@@ -81,7 +81,7 @@ QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, UI:
 **Required evidence**:
 - UI: a retained screenshot of each screen touched, in `production/qa/evidence/if-013/`, plus a click-through note naming the screens exercised (docs/click-through.md). Screens must work at 1280×720 without clipping or truncation.
 
-**Status**: [ ] Not created
+**Status**: [x] Created — `production/qa/evidence/if-013/` (17 PNGs at 1280×720 × text scale 90/100/110/125, `README.md` click-through note, `capture.mjs`, `capture-output.txt` ALL PASS)
 
 ---
 
@@ -93,4 +93,36 @@ QA plan: `production/qa/qa-plan-sprint-010-2026-10-22.md`. Provisional, UI:
 ---
 
 ## Completion Notes
-_(filled by `/story-done`)_
+**Completed**: 2026-10-22
+**Verdict**: COMPLETE WITH NOTES
+**Criteria**: 6/6 passing (none deferred)
+**Deviations**: None blocking. Advisory:
+- AC4 wording vs implementation: the AC reads "dismiss marks it seen"; the story's Implementation Notes and change-impact note H prescribe marking from the effect, so `hint-influence` is marked seen on firing (`src/ui/WorldMap.tsx` `useInfluenceMoment`) and again (a no-op) on dismiss. Observable outcome holds (seen after dismiss, never returns); the drift is that leaving World Network with the note up also consumes the lesson. Owner wording ruling needed: keep on-fire marking (as implemented) or move the mark to dismiss.
+- AC3 "Expedite its no-target reason" is unreachable on the default focus (Europe) because EC-023 seeds a Europe offer and `influenceRefusal` reports no-target before unaffordable; Europe prints UNAFFORDABLE (`02-sector-panel-influence-0-*.png`), North America prints NO TARGET (`02b-sector-panel-influence-0-no-target-na-100.png`). Both are owner-reported (AC27). The AC text should name a sector without an offer.
+- Player-facing copy in `src/ui/worldOnboard.ts` is string literals; the repo has no localization layer (`src/i18n` / `src/locales` absent). Pre-existing project-wide gap, not a regression.
+- Scope: `src/ui/worldOnboard.ts` (new, pure copy/selector module), `src/ui/ui.css` (note styles) and the two test files are outside the three files the Implementation Notes name; all are Presentation-layer and story-required. Valid, not creep.
+**Test Evidence**: UI: retained screenshots at `production/qa/evidence/if-013/` — `01-card-{90,100,110,125}.png`, `02-sector-panel-influence-0-{90,100,110,125}.png`, `02b-sector-panel-influence-0-no-target-na-100.png`, `03-influence-moment-{90,100,110,125}.png`, `04-antarctica-focused-{90,100,110,125}.png`; click-through note `README.md`; `capture-output.txt` ALL PASS, no console or page errors. Unit seams: `src/ui/worldOnboard.test.ts`, `src/state/tutorialStore.test.ts`. Run result: OBSERVED (dev-story checkpoint; images opened at /story-done: 01-card-100/125, 02-…-100, 02b, 03-…-100/125, 04-…-100).
+**Code Review**: APPROVED WITH SUGGESTIONS — specialists: lead-programmer, qa-tester, ui-programmer, gameplay-programmer (`/code-review` run by the implement-stories workflow; vitest 62 files / 1596 tests pass, `tsc -b` exit 0, eslint clean on the six TS/TSX files). QL-TEST-COVERAGE and LP-CODE-REVIEW were not spawned (no Agent tool in the workflow session); the named /code-review record stands in for both, and its qa-tester coverage findings are carried below.
+**Mutation Check**: Mutation check: FAILED AS EXPECTED — src/ui/worldOnboard.ts:116 `=== null` → `!== null` → "fires on a clean first win (+8): Stabilize is the affordable action" failed; restored (cmp match, test file green)
+**Manifest**: story 2026-10-08 = current 2026-10-08.
+
+### Test-Criterion Traceability
+| Criterion | Test | Status |
+|-----------|------|--------|
+| AC-1 (AC27) four-row card, START HERE highest Chance, Pause/Clock, Nexus-held Tax | `01-card-{90,100,110,125}.png`; `worldOnboard.test.ts` (START HERE selector vs independent `Math.max`); `capture-output.txt` card@* | COVERED |
+| AC-2 (WN Opening desk) UNDERSTOOD marks `hint-worldmap` once; card never returns | `capture-output.txt` "UNDERSTOOD marks hint-worldmap seen exactly once", "card does not return after leaving and re-entering"; `tutorialStore.test.ts` | COVERED |
+| AC-3 Influence 0: owner reasons, no teaching panel | `02-sector-panel-influence-0-*.png` (Europe: all UNAFFORDABLE); `02b-…-na-100.png` (North America: Expedite NO TARGET) | COVERED (wording note above) |
+| AC-4 clean win +8: one panel names action/cost/effect; seen; never returns | `03-influence-moment-*.png`; `capture-output.txt` dismiss / spent-and-recovers / re-enter lines; `worldOnboard.test.ts` "fires on a clean first win" | COVERED (marking-on-fire note above) |
+| AC-5 Antarctica focused: no fire (`locked-sector`) | `04-antarctica-focused-*.png`; `capture-output.txt` antarctica@* + "refocusing Europe fires once" | COVERED |
+| AC-6 (TR-interface-002) 1280×720 × 90/100/110/125, nothing clips | all 17 PNGs; `capture-output.txt` "nothing clipped" per scale | COVERED |
+
+### Advisory findings from /code-review (for follow-up)
+1. `src/ui/WorldMap.tsx:227-232` — the note's `shown` state is not reset when the focused sector changes; after firing on Europe the player can focus Antarctica (or a cooling sector) before UNDERSTOOD and still read "on the focused sector" with no action listed and the inset hidden. Spec silent on refocus; no test or capture covers fire-then-refocus. Suggested: clear `shown` when `sector` changes (id is already seen so it will not refire) or name the sector in the copy.
+2. `src/ui/WorldMap.tsx:228-232` — `hint-influence` marked on firing while AC4 reads "dismiss marks it seen" (see Deviations; owner wording ruling).
+3. Story line 41 — "Expedite its no-target reason" unreachable on default focus with EC-023's seeded Europe offer (see Deviations; evidence README flags it).
+4. `src/ui/WorldMap.tsx:696-723` — `WorldOnboard` keeps running its START HERE `useMemo` after dismissal (hooks precede the seen early-return). Event-rate, not 20 Hz; optional: move the body into a child rendered only while unseen.
+5. `production/qa/evidence/if-013/capture.mjs:133` — headless START HERE check is a sentence-shape regex; the NEON GARDEN 87% claim is by inspection. Unit test covers pick logic; live WorldMap wiring not asserted end-to-end.
+6. `capture.mjs:241-247` — "never returns in that campaign" verified in-memory only (goto research → goto world); no `page.reload()` or save round-trip test for `hint-influence` (`save.test.ts:744-759` round-trips `hint-worldmap` only). Persistence rests on the generic `SEEN_ID_SET` path (`save.ts:429/452`) plus `worldOnboard.test.ts:193`. Suggest a reload step or a captureSave/validateSave/hydrate test.
+7. `src/ui/WorldMap.tsx:927` — while the note is up the SectorInset (and its FOCUS PREVIOUS / NEXT chevrons) is removed; the left sector list still focuses, so no function is lost. Layout trade-off commented at lines 241-243; worth ux-designer confirmation.
+8. `src/ui/worldOnboard.ts:49-137` — user-facing copy is string literals; no localization layer exists in the repo (pre-existing gap). Gamepad line of `ui-code.md` does not apply (ADR-0017 forbids gamepad).
+9. Standards: `WorldOnboard` (~77 lines, mostly JSX) and the pre-existing `WorldMap` component exceed the 40-line guideline; shape predates this story.

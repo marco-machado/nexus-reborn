@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { TUTORIAL_IDS, WORLD_ONBOARD_ID } from '../game/tutorial'
+import { INFLUENCE_MOMENT_ID, TUTORIAL_IDS, WORLD_ONBOARD_ID } from '../game/tutorial'
 import { useMissionStore } from './missionStore'
 import { fireTutorialHint, noteTutorial, useTutorialStore } from './tutorialStore'
 
@@ -78,6 +78,19 @@ describe('contextual hints', () => {
     expect(useTutorialStore.getState().seen).toEqual([WORLD_ONBOARD_ID])
     useTutorialStore.getState().markSeen(WORLD_ONBOARD_ID)
     expect(useTutorialStore.getState().seen).toEqual([WORLD_ONBOARD_ID])
+  })
+
+  it('IF-013: a repeat markSeen does not publish (autosave subscribers stay quiet)', () => {
+    let calls = 0
+    const unsub = useTutorialStore.subscribe(() => {
+      calls++
+    })
+    useTutorialStore.getState().markSeen(INFLUENCE_MOMENT_ID)
+    useTutorialStore.getState().markSeen(INFLUENCE_MOMENT_ID)
+    useTutorialStore.getState().markSeen(INFLUENCE_MOMENT_ID)
+    unsub()
+    expect(calls).toBe(1)
+    expect(useTutorialStore.getState().seen).toEqual([INFLUENCE_MOMENT_ID])
   })
 })
 

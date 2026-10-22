@@ -1,7 +1,7 @@
 // World Network screen. The sector list, the Scan, the sector readout and the
 // open-contract list all read the same world state, and the transport under
 // the Scan is what moves Strategic time.
-import { lazy, Suspense, useCallback, useMemo, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '../state/appStore'
 import {
   DAY,
@@ -36,7 +36,7 @@ import { useResearchStore } from '../state/researchStore'
 import { useTutorialStore } from '../state/tutorialStore'
 import { useSaveStatusStore } from '../state/saveStatusStore'
 import { screenWriteFailureLine } from './filingStatus'
-import { WORLD_ONBOARD_ID } from '../game/tutorial'
+import { INFLUENCE_MOMENT_ID, WORLD_ONBOARD_ID } from '../game/tutorial'
 import type { MissionDef, SectorId } from '../game/types'
 import type { SectorState } from '../state/worldStore'
 import {
@@ -75,6 +75,7 @@ import {
   eventToneClass,
   worldChance,
 } from './worldChrome'
+import { influenceMoment, influenceMomentCopy, orientationRows, startHere } from './worldOnboard'
 
 const WorldGlobe = lazy(() => import('./WorldGlobe'))
 
@@ -202,6 +203,61 @@ function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId })
         </i>
       </span>
     </button>
+  )
+}
+
+// The Influence moment (World Network Core Rule 13): one teaching note on
+// the sector panel the first time any numbered action is affordable on the
+// focused sector, once per campaign. The trigger is the owner's refusal
+// (influenceRefusal === null), so Antarctica, cooldowns, a target-less
+// Expedite and the opening 0 points never fire it. The mark is made from an
+// effect on the first firing, guarded by the seen set, and the note stays up
+// until dismissed; marked on a Screen, it is durable on the next autosave.
+function useInfluenceMoment(sector: SectorId): {
+  shown: InfluenceActionId | null
+  dismiss: () => void
+} {
+  const seen = useTutorialStore((s) => s.seen.includes(INFLUENCE_MOMENT_ID))
+  const markSeen = useTutorialStore((s) => s.markSeen)
+  // Primitive selector: the first affordable action, or null. Re-renders
+  // only when that answer changes, never at clock rate.
+  const affordable = useWorldStore((s) =>
+    influenceMoment((action) => influenceRefusal(s, sector, action)),
+  )
+  const [shown, setShown] = useState<InfluenceActionId | null>(null)
+  useEffect(() => {
+    if (seen || shown !== null || affordable === null) return
+    setShown(affordable)
+    markSeen(INFLUENCE_MOMENT_ID)
+  }, [seen, shown, affordable, markSeen])
+  const dismiss = useCallback(() => {
+    uiClick()
+    markSeen(INFLUENCE_MOMENT_ID)
+    setShown(null)
+  }, [markSeen])
+  return { shown, dismiss }
+}
+
+// The note itself. The right column has no slack at 1280x720, so while the
+// note is up it takes the sector inset's slot (decorative art; the sector
+// list duplicates its stepper) rather than crushing OPEN CONTRACTS.
+function InfluenceMomentNote(props: { action: InfluenceActionId; onDismiss: () => void }) {
+  const copy = influenceMomentCopy(props.action, actionEffect(props.action))
+  return (
+    <div className="wm-moment corners" role="note" aria-label={copy.title}>
+      <span className="wm-moment-head">
+        <b className="wm-moment-title">{copy.title}</b>
+        <button
+          type="button"
+          className="hud-btn wm-moment-btn"
+          aria-label="Dismiss the Influence note"
+          onClick={props.onDismiss}
+        >
+          UNDERSTOOD
+        </button>
+      </span>
+      <span className="wm-moment-body">{copy.body}</span>
+    </div>
   )
 }
 
@@ -631,13 +687,35 @@ function UnreadBadge() {
 
 /* -------------------------------- the screen ------------------------------ */
 
-// First-visit orientation: states the desk job and a first minute, then names
-// the screen's panel groups and the way to Research (GDD Core Rule 13: teach
-// the job, not "click the marker"). Shows once per campaign; the dismissal persists with the save
+// First-visit orientation: four rows (THE JOB, START HERE, STRATEGIC TIME,
+// the four numbers) and nothing else (GDD Core Rule 13: teach the job, not
+// "click the marker"; the nine-row card read as too dense). Influence is
+// taught on the sector panel when first affordable, Research on the first
+// Debrief. Shows once per campaign; the dismissal persists with the save
 // through the tutorial seen set.
 function WorldOnboard() {
   const seen = useTutorialStore((s) => s.seen)
   const markSeen = useTutorialStore((s) => s.markSeen)
+  const contracts = useWorldStore((s) => s.contracts)
+  const sectors = useWorldStore((s) => s.sectors)
+  const intelLevel = useCampaignStore((s) => s.intelLevel)
+  const campaignFailed = useCampaignStore((s) => s.campaignFailed)
+  const researchedCount = useResearchStore((s) => s.done.length)
+  const difficulty = useSettingsStore((s) => s.difficulty)
+  // START HERE reads the same list the Scan prints, every sector, with the
+  // Chance the owner derives; it picks, it does not compute.
+  const target = useMemo(
+    () =>
+      startHere(
+        opsFor(null, contracts, intelLevel).map(({ m }) => ({
+          codename: m.codename,
+          city: m.city,
+          chance: chanceFor(m, sectors, researchedCount, difficulty),
+          locked: campaignFailed || missionLocked(m, intelLevel),
+        })),
+      ),
+    [contracts, intelLevel, sectors, researchedCount, difficulty, campaignFailed],
+  )
   // A failed write shows inside the card while it is up, so the fixed notice
   // never lies over its text (BUG-0003). The fixed region stays the live
   // region screen readers announce; this copy is visual only.
@@ -658,70 +736,20 @@ function WorldOnboard() {
             </div>
           )}
           <div className="wm-onboard-rows">
-            <div className="wm-onboard-row lead">
-              <b>THE JOB</b>
-              <span>
-                You run the network from this desk. Every sector prints a Tax yield, but only a
-                Nexus-held sector pays it: North America pays from the start, Europe does not.
-                Keep sectors Nexus-held.
-              </span>
-            </div>
-            <div className="wm-onboard-row lead">
-              <b>START HERE</b>
-              <span>
-                Focus a few sectors and read Control, Unrest, Tax yield and Garrison. When a sector
-                needs hands on the ground, take its contract.
-              </span>
-            </div>
-            <div className="wm-onboard-row lead">
-              <b>STRATEGIC TIME</b>
-              <span>
-                Pause and Clock speed control strategic time: Pause stops it while you read, 1x to
-                8x runs it faster. Labs, healing and Tax all run on it.
-              </span>
-            </div>
-            <div className="wm-onboard-row lead">
-              <b>INFLUENCE</b>
-              <span>
-                Influence opens at 0 points, so Stabilize and Lobby read UNAFFORDABLE at first, and
-                Expedite reads NO TARGET until the sector lists a GENERATED contract to rush: they
-                are not broken. Field wins earn the points to spend.
-              </span>
-            </div>
-            <div className="wm-onboard-row">
-              <b>SECTORS</b>
-              <span>
-                The left column lists every sector; pick one to focus it on the scan. Crisis
-                states flag themselves in red.
-              </span>
-            </div>
-            <div className="wm-onboard-row">
-              <b>SECTOR COMMAND</b>
-              <span>
-                The right panel reads the focused sector: control, unrest, tax yield, garrison,
-                the numbered influence actions, and the event forecast.
-              </span>
-            </div>
-            <div className="wm-onboard-row">
-              <b>OPEN CONTRACTS</b>
-              <span>
-                Below it, the open contracts for that sector. Opening one moves to the Brief.
-              </span>
-            </div>
-            <div className="wm-onboard-row">
-              <b>TIME AND EVENTS</b>
-              <span>
-                The bottom strip runs Strategic time, reviews the last 24 hours (REVIEW pins the
-                Feed; the sector numbers stay live), and carries the Feed and your resource pool.
-              </span>
-            </div>
-            <div className="wm-onboard-row">
-              <b>RESEARCH</b>
-              <span>
-                The RESEARCH tab on the bottom navigation opens the lab programs; labs run on
-                Strategic time.
-              </span>
-            </div>
+            {orientationRows(target).map((row) => (
+              <div key={row.id} className="wm-onboard-row lead" data-row={row.id}>
+                <b>{row.title}</b>
+                {row.lines.length === 1 ? (
+                  <span>{row.lines[0]}</span>
+                ) : (
+                  <span className="wm-onboard-lines">
+                    {row.lines.map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
           <div className="hud-menu-actions">
             <button
@@ -771,6 +799,7 @@ export function WorldMap() {
   )
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
   const banner = campaignBanner(campaignWon, campaignFailed)
+  const moment = useInfluenceMoment(selected)
 
   return (
     <ScreenChrome
@@ -895,7 +924,7 @@ export function WorldMap() {
             }
             bodyClassName="wm-sector-panel-body"
           >
-            <SectorInset id={selected} />
+            {moment.shown === null && <SectorInset id={selected} />}
             <div className="kv">
               <span>COORD</span>
               <b>{SECTOR_COORD[selected]}</b>
@@ -931,6 +960,9 @@ export function WorldMap() {
                 <InfluenceAction key={action} sector={selected} action={action} />
               ))}
             </div>
+            {moment.shown !== null && (
+              <InfluenceMomentNote action={moment.shown} onDismiss={moment.dismiss} />
+            )}
             <SectorForecast id={selected} />
           </Panel>
           <Panel

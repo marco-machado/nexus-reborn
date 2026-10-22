@@ -4536,3 +4536,50 @@ body:has(.wm-onboard-wrap) .write-fail-region {
   animation: none;
   opacity: 1;
 }
+
+/* IF-013: the four-numbers row lists one line per number inside its cell */
+.wm-onboard-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* IF-013: the sector-panel Influence moment. One compact note in the sector
+   inset's slot; the panel is an instruction, so teal like the actions, and it
+   names its cause in words, never by colour alone. */
+.wm-moment {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 8px;
+  border: 1px solid var(--teal);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
+}
+
+.wm-moment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.wm-moment-title {
+  font-size: calc(8.5px * var(--text-scale));
+  letter-spacing: 0.1em;
+  color: var(--teal);
+  font-weight: 500;
+}
+
+.wm-moment-body {
+  font-size: calc(9px * var(--text-scale));
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-transform: none;
+}
+
+.wm-moment-btn {
+  flex: none;
+  padding: 2px 8px;
+  font-size: calc(7.5px * var(--text-scale));
+}
