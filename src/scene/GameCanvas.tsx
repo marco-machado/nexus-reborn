@@ -29,6 +29,7 @@ import Atmosphere from './Atmosphere'
 import CameraRig from './CameraRig'
 import CityView from './CityView'
 import Effects from './Effects'
+import { sceneWarm } from './sceneWarm'
 import Fx from './Fx'
 import Input from './Input'
 import Rain from './Rain'
@@ -95,9 +96,11 @@ function FrameGovernor() {
 
 // Advances the simulation before the priority-1 render pass in Effects.
 // Passes the raw frame delta; the world substeps internally so mission time
-// keeps tracking wall time across long frame gaps.
+// keeps tracking wall time across long frame gaps. Holds while Effects is
+// still precompiling the scene pass, so no mission time passes undrawn.
 function WorldTicker() {
   useFrame((_, dt) => {
+    if (!sceneWarm()) return
     tickIfLive(getWorld(), useMissionStore.getState(), dt)
   }, 0)
   return null
