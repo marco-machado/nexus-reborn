@@ -6,7 +6,7 @@ Revision: `1bd7bbf` plus the IF-015 working-tree changes (`src/ui/kitLine.ts`,
 Run: dev server on :4215 (`npm run dev -- --strictPort --port 4215`), then
 `SWEEP_URL=http://localhost:4215/ node production/qa/evidence/if-015/capture.mjs`.
 Headless Chrome for Testing, 1280x720, text scales 90 / 100 / 110 / 125
-through the settings store. Result: `capture-output.txt` (ALL PASS, 70 probes,
+through the settings store. Result: `capture-output.txt` (ALL PASS, 58 checks,
 no console or page errors). The dev server was stopped after the run; no
 listener remained on 4215 or 4200.
 
