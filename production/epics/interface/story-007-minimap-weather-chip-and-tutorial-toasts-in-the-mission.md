@@ -69,7 +69,7 @@
 - Weather chip text equals live weather after a front (Glass Veil front at 22:16:38 per click-through); Comm log prints the line
 **Verification**: Headless capture at 1280×720; evidence in `production/qa/evidence/if-007/`; sign-off: qa-lead
 **Checklist**:
-- [ ] Screenshots: minimap Standard vs Hardened on one contract, all three zoom levels, each of 8 toasts (Select, Move, Attack, stances, role ability, items, weapon swap, Extraction), weather chip before and after the front
+- [ ] Screenshots: minimap Standard vs Hardened on one contract, all three zoom levels, each of 9 toasts (Select, Move, Attack, stances, role ability, items, weapon swap, Directives, Extraction; owner ruling 2026-10-22: the spec is 9), weather chip before and after the front
 **Edge cases**: Hardened vs Standard minimap: cones, patrols, civilians and objective pulse all remain (data owner is Tactical, TM-015); Three zoom levels; click/drag steers the camera; minimap up = screen up; Toasts name current bindings after a remap; Reduced motion freezes pulses
 
 ---

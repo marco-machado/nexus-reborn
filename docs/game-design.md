@@ -811,7 +811,7 @@ Difficulty must not strip this information.
 
 Space or Escape opens a modal pause: the sim and the camera freeze, every remappable binding prints from the same table the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a two-step confirm with a three-second arming window — first activation arms, a second while armed confirms, timeout disarms — that discards the mission without a debrief. New Operation and telemetry Clear use the same window.
 
-The first mission teaches with dismissible HUD toasts — Select, Move, Attack, stances, role ability, items, weapon swap, extraction — that name the current bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. One-shot advisories fire at most once per campaign: an operative under 35% with med kits in stock, the first combat Alert, a role ability left ready for a minute, a deployment over the mass gate. The first Debrief carries a one-shot prompt that names the Research tab and the cheapest available project; it is the only place Research is taught (difficulty curve, approved 2026-10-21).
+The first mission teaches with nine dismissible HUD toasts — Select, Move, Attack, stances, role ability, items, weapon swap, Directives, extraction — that name the current bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. One-shot advisories fire at most once per campaign: an operative under 35% with med kits in stock, the first combat Alert, a role ability left ready for a minute, a deployment over the mass gate. The first Debrief carries a one-shot prompt that names the Research tab and the cheapest available project; it is the only place Research is taught (difficulty curve, approved 2026-10-21).
 
 ### Accessibility
 
