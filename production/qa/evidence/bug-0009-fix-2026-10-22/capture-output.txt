@@ -1,0 +1,14 @@
+PASS m03 MODERATE scale 90: threat value, label and side column do not overlap or spill // {"threat":"MODERATE","wrapped":false,"problems":[],"scale":"0.9"}
+PASS m03 MODERATE scale 100: threat value, label and side column do not overlap or spill // {"threat":"MODERATE","wrapped":false,"problems":[],"scale":"1"}
+PASS m03 MODERATE scale 110: threat value, label and side column do not overlap or spill // {"threat":"MODERATE","wrapped":true,"problems":[],"scale":"1.1"}
+PASS m03 MODERATE scale 125: threat value, label and side column do not overlap or spill // {"threat":"MODERATE","wrapped":true,"problems":[],"scale":"1.25"}
+PASS gc-bug0009-high HIGH scale 90: threat value, label and side column do not overlap or spill // {"threat":"HIGH","wrapped":false,"problems":[],"scale":"0.9"}
+PASS gc-bug0009-high HIGH scale 100: threat value, label and side column do not overlap or spill // {"threat":"HIGH","wrapped":false,"problems":[],"scale":"1"}
+PASS gc-bug0009-high HIGH scale 110: threat value, label and side column do not overlap or spill // {"threat":"HIGH","wrapped":false,"problems":[],"scale":"1.1"}
+PASS gc-bug0009-high HIGH scale 125: threat value, label and side column do not overlap or spill // {"threat":"HIGH","wrapped":true,"problems":[],"scale":"1.25"}
+PASS gc-bug0009-severe SEVERE scale 90: threat value, label and side column do not overlap or spill // {"threat":"SEVERE","wrapped":false,"problems":[],"scale":"0.9"}
+PASS gc-bug0009-severe SEVERE scale 100: threat value, label and side column do not overlap or spill // {"threat":"SEVERE","wrapped":false,"problems":[],"scale":"1"}
+PASS gc-bug0009-severe SEVERE scale 110: threat value, label and side column do not overlap or spill // {"threat":"SEVERE","wrapped":false,"problems":[],"scale":"1.1"}
+PASS gc-bug0009-severe SEVERE scale 125: threat value, label and side column do not overlap or spill // {"threat":"SEVERE","wrapped":true,"problems":[],"scale":"1.25"}
+PASS no console or page errors
+ALL PASS

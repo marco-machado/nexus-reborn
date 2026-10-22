@@ -2034,10 +2034,12 @@
 
 .mb-threat {
   --corner-c: rgba(224, 75, 60, 0.65);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Wraps rather than overlapping: at large text scales the side column
+     drops below the threat value (BUG-0009). */
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 9px;
+  gap: 3px 9px;
   border: 1px solid rgba(224, 75, 60, 0.55);
   background: rgba(224, 75, 60, 0.06);
   padding: 5px 9px;
@@ -2048,7 +2050,8 @@
 .mb-threat-main label { display: block; font-size: calc(8.5px * var(--text-scale)); letter-spacing: 0.22em; color: rgba(255, 107, 85, 0.8); }
 .mb-threat-main b { font-size: clamp(17px, 1.6vw, 24px); color: var(--red-hot); letter-spacing: 0.14em; }
 
-.mb-threat-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.mb-threat-main { flex: 1 0 auto; }
+.mb-threat-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; margin-left: auto; }
 .mb-threat-blocks { display: flex; gap: 3px; }
 .mb-threat-blocks i {
   width: 8px;
