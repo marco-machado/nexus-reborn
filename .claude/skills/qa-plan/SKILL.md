@@ -243,6 +243,12 @@ Checklist:
 *If any criterion uses subjective language ("feels", "looks", "seems"), it must
 be supplemented with a specific benchmark or a playtest protocol note.*
 
+*A UI story's clip or overlap probe covers the parent box the new element sits
+in — every box in that column or panel, and their text runs against each
+other — not only the new element. Name the parent selector in the checklist
+item. Sprint 10's IF-015 probe checked only the objective rows and passed while
+the threat box next to them overlapped at text scale 125 (BUG-0009).*
+
 ---
 
 ## Smoke Test Scope

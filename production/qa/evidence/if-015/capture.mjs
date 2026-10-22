@@ -27,7 +27,9 @@ const CHROME =
   process.env.HOME +
     '/Library/Caches/ms-playwright/chromium-1247/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
 const URL = process.env.SWEEP_URL || 'http://localhost:4215/'
-const OUT = new globalThis.URL('.', import.meta.url).pathname
+// SWEEP_OUT writes a re-run to its own folder so the story's retained
+// captures stay as they were (absolute path, trailing slash).
+const OUT = process.env.SWEEP_OUT || new globalThis.URL('.', import.meta.url).pathname
 const SCALES = [90, 100, 110, 125]
 
 // Spec literals (AC31), pinned here and not read from the module.
@@ -137,6 +139,73 @@ const briefFacts = () =>
     })
     const box = rows[0] ? rows[0].parentElement : null
     if (box) probe(box, 'objectives-box')
+
+    // Parent-box probe (BUG-0009, retro 10 action 1): every box in the
+    // dossier column and every stat in the tactical rail, not only the KIT
+    // rows. Text runs must stay inside their box and must not run into each
+    // other; the threat value ran under the ETA line while the rows passed.
+    const boxClips = []
+    const textRuns = (root) => {
+      const runs = []
+      const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+      let node = 0
+      for (let n = walk.nextNode(); n; n = walk.nextNode(), node++) {
+        if (!n.textContent.trim()) continue
+        const range = document.createRange()
+        range.selectNodeContents(n)
+        for (const r of range.getClientRects()) {
+          if (r.width > 0 && r.height > 0) runs.push({ node, text: n.textContent.trim().slice(0, 24), r })
+        }
+      }
+      return runs
+    }
+    const boxProbe = (el, label) => {
+      el.scrollIntoView({ block: 'nearest' })
+      const b = el.getBoundingClientRect()
+      const runs = textRuns(el)
+      for (const x of runs) {
+        if (x.r.left < b.left - 1 || x.r.right > b.right + 1 || x.r.top < b.top - 1 || x.r.bottom > b.bottom + 1) {
+          boxClips.push(`${label} "${x.text}" leaves the box`)
+        }
+      }
+      for (let i = 0; i < runs.length; i++) {
+        for (let j = i + 1; j < runs.length; j++) {
+          if (runs[i].node === runs[j].node) continue
+          const p = runs[i].r
+          const q = runs[j].r
+          const w = Math.min(p.right, q.right) - Math.max(p.left, q.left)
+          const h = Math.min(p.bottom, q.bottom) - Math.max(p.top, q.top)
+          if (w > 2 && h > 2) boxClips.push(`${label} "${runs[i].text}" runs into "${runs[j].text}"`)
+        }
+      }
+    }
+    const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const dossier = document.querySelector('.mb-dossier-scroll')
+    const dossierBoxes = dossier ? [...dossier.children] : []
+    const dossierTop = dossier ? dossier.scrollTop : 0
+    dossierBoxes.forEach((el, i) => boxProbe(el, 'dossier box' + i + '.' + (el.className.split(' ')[0] || 'div')))
+    if (dossier) dossier.scrollTop = dossierTop
+    // The stats rail scrolls under a fade (ScrollBox): each stat must come
+    // fully into the rail when scrolled to, and the fade must be off at the
+    // bottom so the last row reads.
+    const rail = document.querySelector('.mb-tac-rail')
+    const stats = rail ? [...rail.querySelectorAll('.mb-tac-stat')] : []
+    for (const [i, s] of stats.entries()) {
+      boxProbe(s, 'rail stat' + i)
+      const rr = rail.getBoundingClientRect()
+      const sr = s.getBoundingClientRect()
+      if (sr.top < rr.top - 0.5 || sr.bottom > rr.bottom + 0.5) boxClips.push(`rail stat${i} not fully inside the rail when scrolled to`)
+    }
+    if (rail) {
+      rail.scrollTop = rail.scrollHeight
+      rail.dispatchEvent(new Event('scroll'))
+      await frames()
+      const fade = rail.parentElement.querySelector('.scroll-fade')
+      if (fade && fade.classList.contains('on')) boxClips.push('rail fade still on at the bottom')
+      rail.scrollTop = 0
+      rail.dispatchEvent(new Event('scroll'))
+      await frames()
+    }
     return {
       phase: a.phase,
       missionId: a.missionId,
@@ -147,6 +216,9 @@ const briefFacts = () =>
       rowCount: rows.length,
       kits,
       clips,
+      boxClips,
+      boxCount: dossierBoxes.length,
+      statCount: stats.length,
       scale: getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim(),
     }
   })
@@ -167,6 +239,7 @@ async function briefFor(id, slug) {
     await wait(300)
     f = await briefFacts()
     check(`${slug} scale ${scale}: nothing clips, rows inside the viewport`, f.clips.length === 0 && f.scale === String(scale / 100), f.clips.join(' | ') + ' scale ' + f.scale)
+    check(`${slug} scale ${scale}: parent boxes clean (${f.boxCount} dossier boxes, ${f.statCount} rail stats)`, f.boxCount > 0 && f.statCount > 0 && f.boxClips.length === 0, f.boxClips.join(' | '))
     await shot(`${slug.toLowerCase()}-brief-${scale}`)
   }
   await setScale(100)

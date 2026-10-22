@@ -40,11 +40,12 @@ No bugs were filed in Phase 5, and no S1/S2 bug is open. BUG-0008 (S3-Medium, Au
 4. **Carry the IF-015 coverage gaps into the next QA plan.**
    - The bottom row of the tactical-map stats rail sits under the fade and becomes readable when scrolled. Only m03 at 125 was checked.
    - Not walked by hand: reclient/Expedite between Brief and deploy (unit test only), MODERATE generated contracts, and other resolutions.
-5. **Smoke warnings 2–4 stand.**
-   - Mission play stays sim-assisted.
-   - The World Network p95 relies on the earlier user ruling.
-   - Audio listening is still owed and belongs with BUG-0008.
-   - Whether a new player can win the EC-023 offer is a playtest question for a later sprint.
+5. **Smoke warnings 2–4 stand.** Owner (Marco Machado) dated or ruled on each on 2026-10-22 (retro 10 action 3):
+   - Mission play stays sim-assisted. **Ruling:** the hand-played mission is the EC-023 winnability playtest (retro 10 action 2). One session covers both, **by 2026-10-28**.
+   - The World Network p95 relies on the earlier user ruling. **Date:** re-profile World Network **by 2026-10-28** and decide the number then. Until that run, 9.2 ms passes only on the 10-19 ruling, against the 9.0 / 25.0 ms line from `qa-plan-sprint-009-2026-10-17.md:233`. The `project.yaml` budget is 16.7 ms p95 with no live frame over 50 ms.
+   - Audio listening is still owed. **Date:** listening pass on the current build **by 2026-10-24**.
+   - BUG-0008. **Ruling:** stays Open at S3/P3, deferred to Polish, with no date in this window. It is no longer tied to the listening pass.
+   - Whether a new player can win the EC-023 offer is a playtest question for a later sprint (by 2026-10-28, with the hand-played mission above).
 
 ### Next Step
 Resolve the conditions before advancing. S3/S4 bugs may be deferred to polish. Under the project rule, the sprint closes with this sign-off, then `/retrospective`, then `/sprint-plan new`. This is not a stage change, so do not run `/gate-check`.
