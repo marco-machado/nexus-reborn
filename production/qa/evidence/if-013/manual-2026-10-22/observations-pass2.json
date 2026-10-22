@@ -1,0 +1,162 @@
+{
+  "IF013-02": {
+    "assists": [
+      "text scale 100 via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "intel": 1,
+    "selectedAtStart": "eu",
+    "card": true,
+    "startHere": "Focus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).",
+    "euOpsBehindCard": [
+      {
+        "codename": "GLASS VEIL",
+        "sub": "REQUIRES INTEL LVL 2",
+        "lockedClass": true,
+        "ariaDisabled": "true",
+        "ariaLabel": "GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2",
+        "lockGlyph": true,
+        "chips": [
+          "CHANCE 36%",
+          "ETA 2D"
+        ]
+      },
+      {
+        "codename": "NEON GARDEN",
+        "sub": "SABOTAGE // OSLO",
+        "lockedClass": false,
+        "ariaDisabled": null,
+        "ariaLabel": "OPEN CONTRACT NEON GARDEN // SABOTAGE // OSLO // GENERATED CONTRACT",
+        "lockGlyph": false,
+        "chips": [
+          "GENERATED",
+          "CHANCE 87%",
+          "ETA 2D",
+          "EXPIRY 35H"
+        ]
+      }
+    ],
+    "shots": [
+      "IF013-02-100-card.png",
+      "IF013-02-100-scan-eu.png"
+    ],
+    "worldT": {
+      "beforeScan": 191.004,
+      "afterScan": 530.9879999999999
+    },
+    "scan": {
+      "EUROPE": {
+        "selected": "eu",
+        "ops": [
+          {
+            "codename": "GLASS VEIL",
+            "sub": "REQUIRES INTEL LVL 2",
+            "lockedClass": true,
+            "ariaDisabled": "true",
+            "ariaLabel": "GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2",
+            "lockGlyph": true,
+            "chips": [
+              "CHANCE 36%",
+              "ETA 2D"
+            ]
+          },
+          {
+            "codename": "NEON GARDEN",
+            "sub": "SABOTAGE // OSLO",
+            "lockedClass": false,
+            "ariaDisabled": null,
+            "ariaLabel": "OPEN CONTRACT NEON GARDEN // SABOTAGE // OSLO // GENERATED CONTRACT",
+            "lockGlyph": false,
+            "chips": [
+              "GENERATED",
+              "CHANCE 87%",
+              "ETA 2D",
+              "EXPIRY 35H"
+            ]
+          }
+        ]
+      },
+      "NORTH AMERICA": {
+        "selected": "na",
+        "ops": [
+          {
+            "codename": "RUST HAVEN",
+            "sub": "SABOTAGE // DETROIT SPRAWL",
+            "lockedClass": false,
+            "ariaDisabled": null,
+            "ariaLabel": "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+            "lockGlyph": false,
+            "chips": [
+              "CHANCE 82%",
+              "ETA 3D"
+            ]
+          }
+        ]
+      },
+      "SOUTH AMERICA": {
+        "selected": "sa",
+        "ops": []
+      },
+      "AFRICA": {
+        "selected": "af",
+        "ops": []
+      },
+      "ASIA": {
+        "selected": "as",
+        "ops": [
+          {
+            "codename": "HOLLOW CROWN",
+            "sub": "REQUIRES INTEL LVL 2",
+            "lockedClass": true,
+            "ariaDisabled": "true",
+            "ariaLabel": "HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2",
+            "lockGlyph": true,
+            "chips": [
+              "CHANCE 55%",
+              "ETA 4D"
+            ]
+          }
+        ]
+      },
+      "OCEANIA": {
+        "selected": "oc",
+        "ops": []
+      }
+    }
+  },
+  "IF013-20": {
+    "assists": [],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "pre": {
+      "intel": 1,
+      "missionId": null,
+      "phase": "world"
+    },
+    "afterGlassVeil": {
+      "missionId": null,
+      "phase": "world"
+    },
+    "afterHollowCrown": {
+      "missionId": null,
+      "phase": "world"
+    },
+    "shots": [
+      "IF013-20-100-after-locked-clicks.png",
+      "IF013-20-100-after-rust-haven-click.png"
+    ],
+    "afterRustHaven": {
+      "missionId": "m03",
+      "phase": "brief"
+    }
+  }
+}

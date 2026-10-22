@@ -1,0 +1,25 @@
+PASS applied before the prompt read (lastAppliedKey = applyKey) // {"k":1,"a":1}
+PASS first Debrief shows one prompt naming the RESEARCH tab and the cheapest affordable project // RESEARCH // BARREL WEAR COATINGOPEN RESEARCHUNDERSTOODThe BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.
+PASS post-payout Credits cover the named project // 229225
+PASS fired: seen holds the id exactly once (memory only on Debrief) // ["hint-debrief-research"]
+PASS no banner on a healthy campaign
+PASS prompt sits below the invoice and its filing line, above the actions, not inside the filing chrome // {"rows":498,"filing":525,"prompt":538,"actions":621}
+PASS still unfiled on Debrief: the mark is not in the blob // {"status":"unfiled","blob":[]}
+PASS scale 90: nothing clips at 1280x720, card inside the viewport //  cardBottom 696
+PASS scale 100: nothing clips at 1280x720, card inside the viewport //  cardBottom 705
+PASS scale 110: nothing clips at 1280x720, card inside the viewport //  cardBottom 705
+PASS scale 125: nothing clips at 1280x720, card inside the viewport //  cardBottom 705
+PASS after reload + Continue the prompt is unfired again (seen lacks the id), like the unfiled invoice // {"seen":[],"phase":"world"}
+PASS the next Debrief after that reload fires the prompt again // RESEARCH // BARREL WEAR COATINGOPEN RESEARCHUNDERSTOODThe BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.
+PASS OPEN RESEARCH: phase research, missionId null (Brief locked), seen holds the id once // {"phase":"research","missionId":null,"seen":["hint-debrief-research"]}
+PASS the Screen autosave makes the mark durable: blob seen holds the id, status filed // {"status":"filed","blob":["hint-debrief-research"]}
+PASS second Debrief shows no prompt and seen still holds the id once // {"prompt":null,"seen":["hint-debrief-research"]}
+PASS fresh campaign: first Debrief fires again
+PASS UNDERSTOOD: note closed, still on Debrief, seen holds the id once // {"prompt":null,"phase":"debrief","seen":["hint-debrief-research"]}
+PASS pyrrhic Debrief: campaignFailed, banner is the first child of the card // {"failed":true,"first":true}
+PASS pyrrhic Debrief: the prompt, shown, sits below the invoice, under the banner // {"banner":38,"rows":498,"prompt":538}
+PASS pyrrhic scale 100: banner and prompt inside the viewport, nothing clips //  cardBottom 705
+PASS pyrrhic scale 125: banner and prompt inside the viewport, nothing clips //  cardBottom 705
+PASS unaffordable first Debrief (1,000 CR, loss pays 0): no prompt, id unfired // {"prompt":null,"seen":[],"credits":1000}
+PASS no console or page errors
+ALL PASS

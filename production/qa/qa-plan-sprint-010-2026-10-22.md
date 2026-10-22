@@ -143,3 +143,32 @@ Playtests 2–3 are gate blockers outside this sprint; notes go under `productio
 - [ ] No regressions introduced
 - [ ] Code reviewed
 - [ ] Story file `Status: Complete` via `/story-done`
+
+---
+
+## /team-qa addendum (2026-10-22)
+
+Added by `/team-qa sprint` (autonomous). Classification and manual sessions come from `production/qa/qa-strategy-sprint-010-2026-10-22.md`. The EC-023 automated evidence also covers `src/game/contracts.test.ts` and `production/qa/evidence/ec-023/`.
+
+**Scope**: Sprint 10, 5 stories (WN-020, EC-023, IF-013, IF-014, IF-015), 2026-10-22 to 2026-10-28. BUG-0009 verification (fix `ea1960f`) is folded into the IF-015 session.
+
+**Manual QA sessions** (headless `npx playwright-cli`, 1280×720):
+1. IF-013 click-through: card, UNDERSTOOD once-only, Influence moment, Antarctica. Includes the optional WN-020 Scan look at intel 1 vs 2.
+2. IF-014 click-through: first Debrief, go-to-Research, reload re-fire, second Debrief silent, failed/pyrrhic banner first, no affordable project means no prompt.
+3. IF-015 Brief at 110 and 125 for Rust Haven, Hollow Crown and one generated contract per kind, plus BUG-0009 verification.
+4. Smoke-warning follow-up: retarget `if-001/sweep.mjs` and `perf.mjs` from Glass Veil to Rust Haven, then rerun the Debrief-and-later clip sweep and the in-mission frame check.
+
+**Out of Scope**
+- BUG-0008 (Audio, S3): its system is outside Sprint 10 and no trigger is known. It is carried and stays Open.
+- Audio listening, which needs a person.
+- Playtests 2–3 (new-player winnability of the seeded offer). These are gate blockers outside this sprint.
+- Resolutions other than 1280×720.
+
+**Entry Criteria**
+1. A smoke report rated PASS or PASS WITH WARNINGS exists: `production/qa/smoke-2026-10-22-sprint-010.md`, PASS WITH WARNINGS.
+2. The build is stable and launches to the Menu with 0 console errors (smoke item 1).
+3. All Must Have stories (WN-020, EC-023, IF-013) are `done` in `production/sprint-status.yaml`.
+4. Sprint-specific: HEAD includes `ea1960f` (BUG-0009 fix) and `e88a030` (audio flake fix).
+
+**Exit Criteria**
+Each story ends PASS or FAIL, and every FAIL has a bug filed. UI stories need retained 1280×720 screenshots under `production/qa/evidence/`. BUG-0009 is verified or reopened. Sessions 1–4 are recorded.

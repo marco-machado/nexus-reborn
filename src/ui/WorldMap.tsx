@@ -75,7 +75,7 @@ import {
   eventToneClass,
   worldChance,
 } from './worldChrome'
-import { influenceMoment, influenceMomentCopy, orientationRows, startHere } from './worldOnboard'
+import { influenceMoment, influenceMomentCopy, influenceMomentShown, orientationRows, startHere } from './worldOnboard'
 
 const WorldGlobe = lazy(() => import('./WorldGlobe'))
 
@@ -224,18 +224,23 @@ function useInfluenceMoment(sector: SectorId): {
   const affordable = useWorldStore((s) =>
     influenceMoment((action) => influenceRefusal(s, sector, action)),
   )
-  const [shown, setShown] = useState<InfluenceActionId | null>(null)
+  const [fired, setFired] = useState<{ action: InfluenceActionId; sector: SectorId } | null>(null)
   useEffect(() => {
-    if (seen || shown !== null || affordable === null) return
-    setShown(affordable)
+    if (seen || fired !== null || affordable === null) return
+    setFired({ action: affordable, sector })
     markSeen(INFLUENCE_MOMENT_ID)
-  }, [seen, shown, affordable, markSeen])
+  }, [seen, fired, affordable, sector, markSeen])
+  // A refocus hides the note at once (influenceMomentShown) and drops it, so
+  // focusing back does not bring it back.
+  useEffect(() => {
+    if (fired !== null && fired.sector !== sector) setFired(null)
+  }, [fired, sector])
   const dismiss = useCallback(() => {
     uiClick()
     markSeen(INFLUENCE_MOMENT_ID)
-    setShown(null)
+    setFired(null)
   }, [markSeen])
-  return { shown, dismiss }
+  return { shown: influenceMomentShown(fired, sector), dismiss }
 }
 
 // The note itself. The right column has no slack at 1280x720, so while the

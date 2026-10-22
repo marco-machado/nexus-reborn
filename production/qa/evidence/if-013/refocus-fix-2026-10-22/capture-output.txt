@@ -1,0 +1,13 @@
+viewport [ 1280, 720 ]
+assist: worldStore.setState({ influence: 8 })
+PASS A fires on Europe {"selected":"eu","moment":1,"inset":0,"seen":1}
+PASS A hidden on North America, inset back {"selected":"na","moment":0,"inset":1,"seen":1}
+PASS A does not return on Europe {"selected":"eu","moment":0,"inset":1,"seen":1}
+assist: worldStore.setState({ influence: 8 })
+PASS B fires on Europe {"selected":"eu","moment":1,"inset":0,"seen":1}
+assist: worldStore.select('an')
+PASS B hidden on Antarctica {"selected":"an","moment":0,"inset":1,"seen":1}
+assist: worldStore.setState({ influence: 8 })
+PASS C UNDERSTOOD dismisses {"selected":"eu","moment":0,"inset":1,"seen":1}
+PASS no console or page errors []
+ALL PASS

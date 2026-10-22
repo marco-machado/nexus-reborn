@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   influenceMoment,
   influenceMomentCopy,
+  influenceMomentShown,
   orientationRows,
   startHere,
   startHereLine,
@@ -184,6 +185,16 @@ describe('the Influence moment fires on influenceRefusal === null only', () => {
     expect(copy.title).toBe('INFLUENCE // 1 STABILIZE')
     expect(copy.body).toContain('Affordable now: 8 PTS')
     expect(copy.body).toContain('-12 UNREST OVER 6H')
+  })
+
+  // Owner ruling 2026-10-22 (IF013-18): the copy says "the focused sector", so
+  // the note shows only on the sector it fired on.
+  it('shows only on the sector it fired on', () => {
+    const fired = { action: 'stabilize' as const, sector: 'eu' as const }
+    expect(influenceMomentShown(fired, 'eu')).toBe('stabilize')
+    expect(influenceMomentShown(fired, 'an')).toBeNull()
+    expect(influenceMomentShown(fired, 'na')).toBeNull()
+    expect(influenceMomentShown(null, 'eu')).toBeNull()
   })
 })
 

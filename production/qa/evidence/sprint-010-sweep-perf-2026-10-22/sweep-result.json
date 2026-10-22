@@ -1,0 +1,523 @@
+{
+  "surfaces": {
+    "menu": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 14,
+        "checked": 14,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 15,
+        "checked": 15,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 15,
+        "checked": 15,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 14,
+        "checked": 14,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      }
+    },
+    "settings": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 158,
+        "checked": 158,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".set-grid (34px y, 1 stops)",
+          ".set-bind-list (93px y, 1 stops)"
+        ]
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 158,
+        "checked": 158,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".set-grid (81px y, 1 stops)",
+          ".set-bind-list (116px y, 1 stops)"
+        ]
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 157,
+        "checked": 157,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".set-grid (122px y, 1 stops)",
+          ".set-bind-list (139px y, 1 stops)"
+        ]
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 158,
+        "checked": 158,
+        "unchecked": [],
+        "positions": 5,
+        "scrolled": [
+          ".set-grid (294px y, 2 stops)",
+          ".set-bind-list (194px y, 2 stops)"
+        ]
+      }
+    },
+    "world-network": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 171,
+        "checked": 171,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".scroll.wm-sector-list (11px y, 1 stops)",
+          ".scroll.wm-ops-list (8px y, 1 stops)"
+        ]
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 171,
+        "checked": 171,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".scroll.wm-sector-list (40px y, 1 stops)",
+          ".scroll.wm-ops-list (24px y, 1 stops)"
+        ]
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 171,
+        "checked": 171,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".scroll.wm-sector-list (77px y, 1 stops)",
+          ".scroll.wm-ops-list (43px y, 1 stops)"
+        ]
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 171,
+        "checked": 171,
+        "unchecked": [],
+        "positions": 6,
+        "scrolled": [
+          ".scroll.wm-sector-list (122px y, 1 stops)",
+          ".scroll.wm-ops-list (94px y, 3 stops)",
+          ".scroll.wm-feed-list (5px y, 1 stops)"
+        ]
+      }
+    },
+    "research": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 72,
+        "checked": 72,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 72,
+        "checked": 72,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 72,
+        "checked": 72,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 72,
+        "checked": 72,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      }
+    },
+    "brief": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 104,
+        "checked": 104,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".scroll.mb-tac-rail (10px y, 1 stops)",
+          ".scroll.mb-dossier-scroll (128px y, 1 stops)"
+        ]
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 104,
+        "checked": 104,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".scroll.mb-tac-rail (21px y, 1 stops)",
+          ".scroll.mb-dossier-scroll (166px y, 1 stops)"
+        ]
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 104,
+        "checked": 104,
+        "unchecked": [],
+        "positions": 4,
+        "scrolled": [
+          ".scroll.mb-tac-rail (35px y, 1 stops)",
+          ".scroll.mb-dossier-scroll (280px y, 2 stops)"
+        ]
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 104,
+        "checked": 104,
+        "unchecked": [],
+        "positions": 5,
+        "scrolled": [
+          ".scroll.mb-tac-rail (89px y, 2 stops)",
+          ".scroll.mb-dossier-scroll (379px y, 2 stops)"
+        ]
+      }
+    },
+    "assembly": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 197,
+        "checked": 197,
+        "unchecked": [],
+        "positions": 2,
+        "scrolled": [
+          ".scroll.ts-detail-list (137px y, 1 stops)"
+        ]
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 197,
+        "checked": 197,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".scroll.ts-roster-list (17px y, 1 stops)",
+          ".scroll.ts-detail-list (173px y, 1 stops)"
+        ]
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 197,
+        "checked": 197,
+        "unchecked": [],
+        "positions": 4,
+        "scrolled": [
+          ".scroll.ts-roster-list (42px y, 1 stops)",
+          ".scroll.ts-detail-list (220px y, 2 stops)"
+        ]
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 197,
+        "checked": 197,
+        "unchecked": [],
+        "positions": 4,
+        "scrolled": [
+          ".scroll.ts-roster-list (129px y, 1 stops)",
+          ".scroll.ts-detail-list (304px y, 2 stops)"
+        ]
+      }
+    },
+    "mission-hud": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 90,
+        "checked": 90,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 90,
+        "checked": 90,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 90,
+        "checked": 90,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 90,
+        "checked": 90,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      }
+    },
+    "pause": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 163,
+        "checked": 163,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 163,
+        "checked": 163,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 163,
+        "checked": 163,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 163,
+        "checked": 163,
+        "unchecked": [],
+        "positions": 1,
+        "scrolled": []
+      }
+    },
+    "pause-settings": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 233,
+        "checked": 233,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".set-grid (34px y, 1 stops)",
+          ".set-bind-list (93px y, 1 stops)"
+        ]
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 233,
+        "checked": 233,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".set-grid (71px y, 1 stops)",
+          ".set-bind-list (116px y, 1 stops)"
+        ]
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 233,
+        "checked": 233,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".set-grid (111px y, 1 stops)",
+          ".set-bind-list (139px y, 1 stops)"
+        ]
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 233,
+        "checked": 233,
+        "unchecked": [],
+        "positions": 4,
+        "scrolled": [
+          ".set-grid (268px y, 1 stops)",
+          ".set-bind-list (194px y, 2 stops)"
+        ]
+      }
+    },
+    "debrief": {
+      "90": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 40,
+        "checked": 40,
+        "unchecked": [],
+        "positions": 2,
+        "scrolled": [
+          ".db-rows (82px y, 1 stops)"
+        ]
+      },
+      "100": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 40,
+        "checked": 40,
+        "unchecked": [],
+        "positions": 2,
+        "scrolled": [
+          ".db-rows (119px y, 1 stops)"
+        ]
+      },
+      "110": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 40,
+        "checked": 40,
+        "unchecked": [],
+        "positions": 3,
+        "scrolled": [
+          ".db-rows (158px y, 2 stops)"
+        ]
+      },
+      "125": {
+        "clips": [],
+        "overlaps": [],
+        "candidates": 40,
+        "checked": 40,
+        "unchecked": [],
+        "positions": 4,
+        "scrolled": [
+          ".db-rows (247px y, 3 stops)"
+        ]
+      }
+    }
+  },
+  "subMinimum": {
+    "appRoot": [
+      1280,
+      720
+    ],
+    "viewport": [
+      1100,
+      650
+    ],
+    "scroll": [
+      1280,
+      720
+    ]
+  },
+  "renderer": [
+    "THREE.WebGLRenderer: Context Lost.",
+    "THREE.WebGLRenderer: Context Lost.",
+    "[scene] renderer backend: WebGPU, quality tier: HIGH"
+  ],
+  "errors": [],
+  "activeSlots": {
+    "1": {
+      "clips": [],
+      "overlaps": [],
+      "candidates": 90,
+      "checked": 90,
+      "unchecked": [],
+      "positions": 1,
+      "scrolled": [],
+      "active": "PRIMARY // MARA"
+    },
+    "2": {
+      "clips": [],
+      "overlaps": [],
+      "candidates": 90,
+      "checked": 90,
+      "unchecked": [],
+      "positions": 1,
+      "scrolled": [],
+      "active": "PRIMARY // GHOST"
+    },
+    "3": {
+      "clips": [],
+      "overlaps": [],
+      "candidates": 90,
+      "checked": 90,
+      "unchecked": [],
+      "positions": 1,
+      "scrolled": [],
+      "active": "PRIMARY // DART"
+    },
+    "4": {
+      "clips": [],
+      "overlaps": [],
+      "candidates": 90,
+      "checked": 90,
+      "unchecked": [],
+      "positions": 1,
+      "scrolled": [],
+      "active": "PRIMARY // KESTREL"
+    }
+  },
+  "missionResult": {
+    "result": "won",
+    "handKills": [
+      "relay",
+      "relay",
+      "relay"
+    ]
+  },
+  "failing": []
+}

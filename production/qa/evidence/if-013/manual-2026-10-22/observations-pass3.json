@@ -1,0 +1,30 @@
+{
+  "IF013-12": {
+    "assists": [
+      "clean-win fixture influence 8",
+      "text scale 125 via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "moments": 1,
+    "before": {
+      "cls": "scroll wm-ops-list",
+      "sh": 151,
+      "ch": 33,
+      "top": 0
+    },
+    "afterWheel": {
+      "cls": "scroll wm-ops-list",
+      "sh": 151,
+      "ch": 33,
+      "top": 118
+    },
+    "shots": [
+      "IF013-12-125-ops-scrolled.png"
+    ]
+  }
+}

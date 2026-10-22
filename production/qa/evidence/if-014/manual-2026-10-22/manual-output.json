@@ -1,0 +1,2294 @@
+{
+ "viewport": "1280x720",
+ "TC02": {
+  "assists": [
+   "localStorage.clear + save.startNewOperation (S-3 harness)",
+   "S-4 fixture (selectMission, goto team, setOutcome won reward 85,000)",
+   "text scale via settingsStore.setTextScale"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "f": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "scales": {
+   "90": {
+    "clips": [],
+    "cardBottom": 696,
+    "btnVisible": [
+     true,
+     true
+    ],
+    "promptCount": 1
+   },
+   "100": {
+    "clips": [],
+    "cardBottom": 705,
+    "btnVisible": [
+     true,
+     true
+    ],
+    "promptCount": 1
+   },
+   "110": {
+    "clips": [],
+    "cardBottom": 705,
+    "btnVisible": [
+     true,
+     true
+    ],
+    "promptCount": 1
+   },
+   "125": {
+    "clips": [],
+    "cardBottom": 705,
+    "btnVisible": [
+     true,
+     true
+    ],
+    "promptCount": 1
+   }
+  },
+  "shots": [
+   "manual-TC02-first-debrief-90.png",
+   "manual-TC02-first-debrief-100.png",
+   "manual-TC02-first-debrief-110.png",
+   "manual-TC02-first-debrief-125.png"
+  ],
+  "consoleErrors": []
+ },
+ "TC03": {
+  "assists": [
+   "state continues from TC02 (scale 100)"
+  ],
+  "before": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "at400": {
+   "phase": "research",
+   "missionId": null,
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "nav": [
+   {
+    "label": "WORLD NETWORK",
+    "current": null,
+    "cls": "navtab",
+    "text": "WORLD NETWORK"
+   },
+   {
+    "label": "RESEARCH",
+    "current": "page",
+    "cls": "navtab active",
+    "text": "RESEARCH"
+   },
+   {
+    "label": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+    "current": null,
+    "cls": "navtab locked",
+    "text": "BRIEF LOCKED NO CONTRACT SELECTED"
+   },
+   {
+    "label": "ASSEMBLY",
+    "current": null,
+    "cls": "navtab",
+    "text": "ASSEMBLY"
+   }
+  ],
+  "researchTreeNodes": 21,
+  "after": {
+   "phase": "research",
+   "missionId": null,
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-debrief-research"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC03-research-after-open-100.png",
+  "consoleErrors": []
+ },
+ "TC04": {
+  "assists": [
+   "S-4 fixture x2",
+   "reload (Playwright page.reload)"
+  ],
+  "pre": {
+   "pre": 229225,
+   "contract": "m03"
+  },
+  "step1": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 334466,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 334,466 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC04-second-debrief-100.png",
+  "filed": true,
+  "step2": {
+   "phase": "world",
+   "missionId": null,
+   "credits": 334466,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "menuBlobSeen": [
+   "hint-debrief-research",
+   "hint-influence"
+  ],
+  "step3": {
+   "phase": "world",
+   "missionId": null,
+   "credits": 334466,
+   "lastAppliedKey": 0,
+   "applyKey": null,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "pre3": {
+   "pre": 334466,
+   "contract": "m01"
+  },
+  "step4": {
+   "phase": "debrief",
+   "missionId": "m01",
+   "credits": 422810,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 07 // NEW CARTHAGE",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +2 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 422,810 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "consoleErrors": []
+ },
+ "TC14": {
+  "assists": [
+   "Menu reached by reload (no in-app path from a Screen to the Menu); state continues from TC04 step 4"
+  ],
+  "filed": true,
+  "menuButtons": [
+   "CONTINUE SAVED OPERATION // OPEN THE WORLD NETWORK",
+   "BEGIN NEW OPERATION",
+   "OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY"
+  ],
+  "confirmShown": true,
+  "step2": {
+   "phase": "world",
+   "missionId": null,
+   "credits": 128450,
+   "lastAppliedKey": 0,
+   "applyKey": null,
+   "seen": [],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "step3": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC14-new-operation-first-debrief-100.png",
+  "consoleErrors": []
+ },
+ "TC05": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture x2"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "before": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "after": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC05-after-understood-100.png",
+  "pre2": {
+   "pre": 229225,
+   "contract": "m03"
+  },
+  "step3": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 334466,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 334,466 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "consoleErrors": []
+ },
+ "TC06": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture x2"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "before": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "step1": {
+   "phase": "world",
+   "missionId": null,
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "pre2": {
+   "pre": 229225,
+   "contract": "m03"
+  },
+  "step2": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 334466,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 334,466 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC06-second-debrief-after-return-100.png",
+  "consoleErrors": []
+ },
+ "TC07": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture",
+   "S-4 setOutcome step only, same fields (quietReplay false as S-4 defines)"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "before": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "step1": {
+   "phase": "brief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-debrief-research"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "briefHasCodename": {
+   "codename": "RUST HAVEN",
+   "inBody": true,
+   "hasAccept": true
+  },
+  "shotBrief": "manual-TC07-replay-brief-100.png",
+  "pre2": {
+   "pre": 229225,
+   "contract": "m03"
+  },
+  "step2": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 334466,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 334,466 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC07-replay-debrief-100.png",
+  "consoleErrors": []
+ },
+ "TC07b": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture",
+   "supplementary: replay outcome with quietReplay true (what deployFreeze sets when contractsWon includes the contract)"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "contractsWon": [
+   "m03"
+  ],
+  "step1": {
+   "phase": "brief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-debrief-research"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "pre2": {
+   "pre": 229225,
+   "contract": "m03"
+  },
+  "step2": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 248386,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "REPLAY // FEE ALREADY COLLECTED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR — NOT APPLIED",
+    "> OPTIONAL BONUS 0 CR — NOT APPLIED",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT 0 CR",
+    "> ACCOUNT BALANCE 248,386 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC07b-quiet-replay-debrief-100.png",
+  "consoleErrors": []
+ },
+ "TC08": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture before='wipe' (roster trimmed to one operative who dies)",
+   "text scale via settingsStore"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "f": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": true,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-failed",
+   "failedText": "CAMPAIGN FAILED",
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 1",
+    "> KILLED IN ACTION MARA",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> NOTE PYRRHIC — SQUAD LOST // CAMPAIGN FAILED",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK"
+   ],
+   "bannerTop": 38,
+   "bannerBottom": 102,
+   "rowsTop": 268,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "DIV.db-failed"
+  },
+  "fonts": {
+   "failed": "42px",
+   "title": "42px"
+  },
+  "scales": {
+   "100": {
+    "clips": [],
+    "cardBottom": 705,
+    "bannerTop": 38,
+    "promptTop": 538
+   },
+   "125": {
+    "clips": [],
+    "cardBottom": 705,
+    "bannerTop": 38,
+    "promptTop": 483
+   }
+  },
+  "shots": [
+   "manual-TC08-pyrrhic-100.png",
+   "manual-TC08-pyrrhic-125.png"
+  ],
+  "consoleErrors": []
+ },
+ "TC09": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture before='wipe', fields { won: false, reward: 0 }"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "f": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 128450,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": true,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-failed",
+   "failedText": "CAMPAIGN FAILED",
+   "title": "CONTRACT TERMINATED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 1",
+    "> KILLED IN ACTION MARA",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 0 CR",
+    "> COLLATERAL PENALTY 0 CR — NOT APPLIED",
+    "> OPTIONAL BONUS 0 CR — NOT APPLIED",
+    "> PAYOUT 0 CR",
+    "> ACCOUNT BALANCE 128,450 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK"
+   ],
+   "bannerTop": 38,
+   "bannerBottom": 102,
+   "rowsTop": 268,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "DIV.db-failed"
+  },
+  "clips": [],
+  "shot": "manual-TC09-roster-loss-100.png",
+  "consoleErrors": []
+ },
+ "TC10": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture x2",
+   "reload (Playwright page.reload)"
+  ],
+  "pre": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "step1": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "step3": {
+   "phase": "menu",
+   "missionId": "m03",
+   "credits": 128450,
+   "lastAppliedKey": 0,
+   "applyKey": null,
+   "seen": [],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "step4": {
+   "phase": "world",
+   "missionId": "m03",
+   "credits": 128450,
+   "lastAppliedKey": 0,
+   "applyKey": null,
+   "seen": [],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "pre5": {
+   "pre": 128450,
+   "contract": "m03"
+  },
+  "step5": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 229225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 229,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC10-reload-then-debrief-100.png",
+  "consoleErrors": []
+ },
+ "TC11": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture before='broke' (Credits 1,000), fields { won: false, reward: 0 }"
+  ],
+  "pre": {
+   "pre": 1000,
+   "contract": "m03"
+  },
+  "f": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 1000,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT TERMINATED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 0 CR",
+    "> COLLATERAL PENALTY 0 CR — NOT APPLIED",
+    "> OPTIONAL BONUS 0 CR — NOT APPLIED",
+    "> PAYOUT 0 CR",
+    "> ACCOUNT BALANCE 1,000 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 240,
+   "rowsBottom": 531,
+   "filingTop": 544,
+   "filingBottom": 558,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 571,
+   "actionsBottom": 607,
+   "cardTop": 65,
+   "cardBottom": 655,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC11-unaffordable-100.png",
+  "filed": true,
+  "step2": {
+   "phase": "world",
+   "missionId": null,
+   "credits": 1000,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "consoleErrors": []
+ },
+ "TC12": {
+  "assists": [
+   "state continues from TC11",
+   "S-4 fixture x2 (defaults, no before)"
+  ],
+  "pre": {
+   "pre": 1000,
+   "contract": "m03"
+  },
+  "step1": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 103787,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 103,787 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC12-affordable-fires-100.png",
+  "pre2": {
+   "pre": 103787,
+   "contract": "m03"
+  },
+  "step2": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 201594,
+   "lastAppliedKey": 3,
+   "applyKey": 3,
+   "seen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-debrief-research",
+    "hint-influence"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 201,594 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 227,
+   "rowsBottom": 545,
+   "filingTop": 558,
+   "filingBottom": 572,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": 585,
+   "actionsBottom": 621,
+   "cardTop": 52,
+   "cardBottom": 668,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "consoleErrors": []
+ },
+ "TC13": {
+  "assists": [
+   "S-3 harness",
+   "S-4 fixture"
+  ],
+  "c0": 128450,
+  "authLabel": "AUTHORIZE BARREL WEAR COATING // COMMITS 14,000 CR // 2H IN BALLISTICS LAB",
+  "afterAuth": {
+   "phase": "research",
+   "missionId": null,
+   "credits": 114450,
+   "lastAppliedKey": 0,
+   "applyKey": null,
+   "seen": [
+    "hint-worldmap"
+   ],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [
+    "hint-worldmap"
+   ],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": {
+     "id": "b-coating",
+     "startedT": 216.215999997139,
+     "endT": 7416.215999997139
+    },
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "shotResearch": "manual-TC13-research-authorized-100.png",
+  "pre": {
+   "pre": 114450,
+   "contract": "m03"
+  },
+  "f": {
+   "phase": "debrief",
+   "missionId": "m03",
+   "credits": 215225,
+   "lastAppliedKey": 1,
+   "applyKey": 1,
+   "seen": [
+    "hint-worldmap",
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-worldmap"
+   ],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // NEURAL INTERFACE I",
+   "promptBody": "The CYBERNETICS LAB is idle. 15,000 CR starts NEURAL INTERFACE I in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 03 // DETROIT SPRAWL",
+    "> ELIMINATIONS 2",
+    "> SQUAD CASUALTIES 0",
+    "> COLLATERAL 0",
+    "> MISSION TIME 3:00",
+    "> CONTRACT VALUE 85,000 CR",
+    "> COLLATERAL PENALTY 0 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +3 DAYS ELAPSED",
+    "> PAYOUT +85,000 CR",
+    "> ACCOUNT BALANCE 215,225 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK",
+    "REPLAY MISSION"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [
+    "b-coating"
+   ],
+   "activeElement": "BODY"
+  },
+  "shot": "manual-TC13-busy-lab-debrief-100.png",
+  "consoleErrors": []
+ },
+ "TC01": {
+  "assists": [
+   "localStorage.clear before the real NEW OPERATION click",
+   "observation probe: appStore.addCredits wrapped to log deposits (original runs unchanged)",
+   "mission played through the sim API: orderMove for Reach/Extract, orderAttack on nearby alerted enemies, orderGrenade on relays, hand-kill (hp 0 / stance dead) of a relay once no Power Cell was left: [\"relay:d2\",\"relay:d3\"]; fast-forward: 6 extra w.tick(1/30) per 50 ms step"
+  ],
+  "headerStep1": "CREDITS\n128,450 CR\nINFLUENCE\n0 PTS\nINTEL\n1\nROSTER\n8 / 8",
+  "step1": {
+   "phase": "world",
+   "missionId": null,
+   "credits": 128450,
+   "lastAppliedKey": 0,
+   "applyKey": null,
+   "seen": [],
+   "campaignFailed": false,
+   "status": "filed",
+   "blobSeen": [],
+   "promptCount": 0,
+   "promptTitle": null,
+   "promptBody": null,
+   "promptBtns": [],
+   "promptInFiling": false,
+   "cardFirstClass": null,
+   "failedText": null,
+   "title": null,
+   "filing": null,
+   "rows": [],
+   "actions": [],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": null,
+   "rowsBottom": null,
+   "filingTop": null,
+   "filingBottom": null,
+   "promptTop": null,
+   "promptBottom": null,
+   "actionsTop": null,
+   "actionsBottom": null,
+   "cardTop": null,
+   "cardBottom": null,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BUTTON.hud-btn.pause"
+  },
+  "focusNextSectorClicks": 0,
+  "contractLabel": "OPEN CONTRACT NEON GARDEN // SABOTAGE // OSLO",
+  "briefPhase": "brief",
+  "assemblyText": "4 / 4 ASSIGNED",
+  "creditsAtDeploy": 128450,
+  "play": {
+   "result": "won",
+   "simTime": 44,
+   "objectives": [
+    "gc7518e2d3-o1",
+    "gc7518e2d3-opt(opt)",
+    "gc7518e2d3-o2",
+    "gc7518e2d3-o3"
+   ],
+   "log": [
+    [
+     2,
+     "gc7518e2d3-o1",
+     "reach-zone"
+    ],
+    [
+     13,
+     "gc7518e2d3-o2",
+     "destroy"
+    ],
+    [
+     27,
+     "gc7518e2d3-o3",
+     "extract"
+    ]
+   ],
+   "grenadesAccepted": 1,
+   "handKills": [
+    "relay:d2",
+    "relay:d3"
+   ],
+   "living": 4
+  },
+  "f": {
+   "phase": "debrief",
+   "missionId": "gc7518e2d3",
+   "credits": 164619,
+   "lastAppliedKey": 2,
+   "applyKey": 2,
+   "seen": [
+    "hint-worldmap",
+    "hint-alert",
+    "hint-debrief-research"
+   ],
+   "campaignFailed": false,
+   "status": "unfiled",
+   "blobSeen": [
+    "hint-worldmap"
+   ],
+   "promptCount": 1,
+   "promptTitle": "RESEARCH // BARREL WEAR COATING",
+   "promptBody": "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours. Open the RESEARCH tab and AUTHORIZE it before the next deploy.",
+   "promptBtns": [
+    "OPEN RESEARCH",
+    "UNDERSTOOD"
+   ],
+   "promptInFiling": false,
+   "cardFirstClass": "db-tag dim",
+   "failedText": null,
+   "title": "CONTRACT FULFILLED",
+   "filing": "INVOICE UNFILED // COMMITS ON NEXT SCREEN",
+   "rows": [
+    "> TARGET DISTRICT 25 // OSLO",
+    "> ELIMINATIONS 5",
+    "> SQUAD CASUALTIES 0",
+    "> EXPERIENCE // MARA +1 XP (1)",
+    "> EXPERIENCE // GHOST +1 XP (1)",
+    "> EXPERIENCE // DART +1 XP (1)",
+    "> EXPERIENCE // TORQ +1 XP (1)",
+    "> COLLATERAL 1",
+    "> MISSION TIME 0:46",
+    "> CONTRACT VALUE 37,000 CR",
+    "> COLLATERAL PENALTY -5,000 CR",
+    "> OPTIONAL BONUS 0 CR",
+    "> CONTRACT ETA +2 DAYS ELAPSED",
+    "> PAYOUT +32,000 CR",
+    "> ACCOUNT BALANCE 164,619 CR"
+   ],
+   "actions": [
+    "RETURN TO WORLD NETWORK"
+   ],
+   "bannerTop": null,
+   "bannerBottom": null,
+   "rowsTop": 190,
+   "rowsBottom": 498,
+   "filingTop": 511,
+   "filingBottom": 525,
+   "promptTop": 538,
+   "promptBottom": 608,
+   "actionsTop": 621,
+   "actionsBottom": 657,
+   "cardTop": 15,
+   "cardBottom": 705,
+   "labs": {
+    "ballistics": null,
+    "cybernetics": null,
+    "control": null
+   },
+   "done": [],
+   "activeElement": "BODY"
+  },
+  "deposits": [
+   [
+    "debrief",
+    417,
+    32000
+   ],
+   [
+    "debrief",
+    417,
+    4169
+   ]
+  ],
+  "shot": "manual-TC01-debrief-100.png",
+  "consoleErrors": []
+ }
+}

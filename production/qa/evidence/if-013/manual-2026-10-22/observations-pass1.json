@@ -1,0 +1,712 @@
+{
+  "IF013-01": {
+    "assists": [
+      "text scale 100 via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "phase": "world",
+    "card": true,
+    "titles": [
+      "THE JOB",
+      "START HERE",
+      "STRATEGIC TIME",
+      "THE FOUR NUMBERS"
+    ],
+    "cardText": "WORLD NETWORK // ORIENTATIONFIRST UPLINKTHE JOBYou run the network from this desk. Every sector prints a Tax yield, but only a Nexus-held sector pays it: North America pays from the start, Europe does not. Keep sectors Nexus-held.START HEREFocus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).STRATEGIC TIMEPause and Clock speed control strategic time: Pause stops it while you read, 1x to 8x runs it faster. The clock is a resource: labs, healing, Tax and contract expiry all run on it.THE FOUR NUMBERSCONTROL: how much of the sector Nexus holds; a win raises it.UNREST: pressure against that hold; past the pressure line a crisis can break out.TAX YIELD: Credits per 24 strategic hours, paid only while Nexus-held.GARRISON CONDITION: SECURE, STRAINED or CRITICAL, read from Control.UNDERSTOOD",
+    "shots": [
+      "IF013-01-100.png"
+    ]
+  },
+  "IF013-02": {
+    "assists": [],
+    "errors": [],
+    "intel": 1,
+    "selectedAtStart": "eu",
+    "startHere": "Focus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).",
+    "clickFail.EUROPE": "TimeoutError: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^EUROPE$/ }) })\n    - locator re",
+    "clickFail.NORTH AMERICA": "TimeoutError: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^NORTH AMERICA$/ }) })\n    - loc",
+    "clickFail.SOUTH AMERICA": "TimeoutError: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^SOUTH AMERICA$/ }) })\n    - loc",
+    "clickFail.AFRICA": "TimeoutError: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^AFRICA$/ }) })\n    - locator re",
+    "clickFail.ASIA": "TimeoutError: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^ASIA$/ }) })\n    - locator reso",
+    "clickFail.OCEANIA": "TimeoutError: locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^OCEANIA$/ }) })\n    - locator r",
+    "scan": {},
+    "EXCEPTION": "locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-sector').filter({ has: locator('.wm-sector-name').filter({ hasText: /^EUROPE$/ }) })\n    - locator resolved to <button type=\"button\" aria-pressed=\"true\" class=\"wm-sector sel\" aria-label=\"EUROPE // CONTROL 62% // UNREST 18%\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div role=\"dialog\" aria-modal=\"true\" class=\"hud-menu-wrap wm-onboard-wrap\" aria-label=\"World Network orientation\">…</div> intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div role=\"dialog\" aria-modal=\"true\" class=\"hud-menu-wrap wm-onboard-wrap\" aria-label=\"World Network orientation\">…</div> intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    5 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div role=\"dialog\" aria-modal=\"true\" class=\"hud-menu-wrap wm-onboard-wrap\" aria-label=\"World Network orientation\">…</div> intercepts pointer events\n    - retrying click action\n      - waiting 500ms\n\n    at clickSector (/Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:114:61)\n    at /Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:159:9\n    at async run (/Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:138:9)\n    at async file:///Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:150:1"
+  },
+  "IF013-03": {
+    "assists": [],
+    "errors": [],
+    "time": "Pause and Clock speed control strategic time: Pause stops it while you read, 1x to 8x runs it faster. The clock is a resource: labs, healing, Tax and contract expiry all run on it.",
+    "job": "You run the network from this desk. Every sector prints a Tax yield, but only a Nexus-held sector pays it: North America pays from the start, Europe does not. Keep sectors Nexus-held.",
+    "numbers": [
+      "CONTROL: how much of the sector Nexus holds; a win raises it.",
+      "UNREST: pressure against that hold; past the pressure line a crisis can break out.",
+      "TAX YIELD: Credits per 24 strategic hours, paid only while Nexus-held.",
+      "GARRISON CONDITION: SECURE, STRAINED or CRITICAL, read from Control."
+    ]
+  },
+  "IF013-04": {
+    "assists": [
+      "text scale via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "clip90": {
+      ".wm-onboard-row b": [],
+      ".wm-onboard-row > span": [],
+      ".wm-onboard-lines > span": [],
+      ".wm-onboard": [],
+      ".wm-onboard .hud-btn": []
+    },
+    "vp90": [
+      1280,
+      720
+    ],
+    "shots": [
+      "IF013-04-90.png",
+      "IF013-04-100.png",
+      "IF013-04-110.png",
+      "IF013-04-125.png"
+    ],
+    "clip100": {
+      ".wm-onboard-row b": [],
+      ".wm-onboard-row > span": [],
+      ".wm-onboard-lines > span": [],
+      ".wm-onboard": [],
+      ".wm-onboard .hud-btn": []
+    },
+    "vp100": [
+      1280,
+      720
+    ],
+    "clip110": {
+      ".wm-onboard-row b": [],
+      ".wm-onboard-row > span": [],
+      ".wm-onboard-lines > span": [],
+      ".wm-onboard": [],
+      ".wm-onboard .hud-btn": []
+    },
+    "vp110": [
+      1280,
+      720
+    ],
+    "clip125": {
+      ".wm-onboard-row b": [],
+      ".wm-onboard-row > span": [],
+      ".wm-onboard-lines > span": [],
+      ".wm-onboard": [],
+      ".wm-onboard .hud-btn": []
+    },
+    "vp125": [
+      1280,
+      720
+    ]
+  },
+  "IF013-05": {
+    "assists": [],
+    "errors": [],
+    "before": {
+      "count": 0,
+      "card": true
+    },
+    "after": {
+      "count": 1,
+      "card": false,
+      "phase": "world"
+    },
+    "shots": [
+      "IF013-05-100.png"
+    ]
+  },
+  "IF013-06": {
+    "assists": [],
+    "errors": [],
+    "phaseAfterResearch": "research",
+    "afterNav": {
+      "phase": "world",
+      "card": false
+    },
+    "blobHasHintWorldmap": true,
+    "vpAfterReload": [
+      1280,
+      720
+    ],
+    "afterReload": {
+      "phase": "world",
+      "card": false,
+      "count": 1
+    },
+    "shots": [
+      "IF013-06-100-after-reload.png"
+    ]
+  },
+  "IF013-07": {
+    "assists": [
+      "page reload to reach the Menu (no in-game route to Menu from World Network)"
+    ],
+    "errors": [],
+    "vp": [
+      1280,
+      720
+    ],
+    "confirmLabel": "CONFIRM // ERASE SAVE?",
+    "after": {
+      "phase": "world",
+      "card": true,
+      "count": 0,
+      "influenceSeen": 0
+    },
+    "shots": [
+      "IF013-07-100.png"
+    ]
+  },
+  "IF013-08": {
+    "assists": [],
+    "errors": [],
+    "state": {
+      "influence": 0,
+      "selected": "eu",
+      "seenInfluence": 0,
+      "acts": [
+        {
+          "name": "1 STABILIZE",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "-12 UNREST OVER 6H"
+        },
+        {
+          "name": "2 LOBBY",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "+8 CONTROL OVER 12H"
+        },
+        {
+          "name": "3 EXPEDITE",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "WAIVE INTEL GATE // +24H EXPIRY"
+        }
+      ],
+      "moments": 0,
+      "inset": true
+    },
+    "shots": [
+      "IF013-08-100.png"
+    ]
+  },
+  "IF013-09": {
+    "assists": [],
+    "errors": [],
+    "state": {
+      "selected": "na",
+      "acts": [
+        {
+          "name": "1 STABILIZE",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "-12 UNREST OVER 6H"
+        },
+        {
+          "name": "2 LOBBY",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "+8 CONTROL OVER 12H"
+        },
+        {
+          "name": "3 EXPEDITE",
+          "status": "NO TARGET",
+          "disabled": true,
+          "title": "WAIVE INTEL GATE // +24H EXPIRY"
+        }
+      ],
+      "moments": 0
+    },
+    "shots": [
+      "IF013-09-100.png"
+    ],
+    "restored": "eu"
+  },
+  "IF013-10": {
+    "assists": [
+      "text scale via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "s90": {
+      "clip": [],
+      "rightOver": 0,
+      "selected": "eu",
+      "influence": 0,
+      "moments": 0
+    },
+    "shots": [
+      "IF013-10-90.png",
+      "IF013-10-100.png",
+      "IF013-10-110.png",
+      "IF013-10-125.png"
+    ],
+    "s100": {
+      "clip": [],
+      "rightOver": 0,
+      "selected": "eu",
+      "influence": 0,
+      "moments": 0
+    },
+    "s110": {
+      "clip": [],
+      "rightOver": 0,
+      "selected": "eu",
+      "influence": 0,
+      "moments": 0
+    },
+    "s125": {
+      "clip": [],
+      "rightOver": 0,
+      "selected": "eu",
+      "influence": 0,
+      "moments": 0
+    }
+  },
+  "IF013-11": {
+    "assists": [
+      "clean-win fixture worldStore.setState({ influence: 8 })"
+    ],
+    "errors": [],
+    "state": {
+      "moments": 1,
+      "title": "INFLUENCE // 1 STABILIZE",
+      "body": "Affordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend.",
+      "acts": [
+        {
+          "name": "1 STABILIZE",
+          "status": "CLEAR",
+          "disabled": false,
+          "title": "-12 UNREST OVER 6H"
+        },
+        {
+          "name": "2 LOBBY",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "+8 CONTROL OVER 12H"
+        },
+        {
+          "name": "3 EXPEDITE",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "WAIVE INTEL GATE // +24H EXPIRY"
+        }
+      ],
+      "seenInfluence": 1,
+      "inset": false,
+      "opsRows": 2,
+      "selected": "eu"
+    },
+    "shots": [
+      "IF013-11-100.png"
+    ]
+  },
+  "IF013-12": {
+    "assists": [
+      "text scale via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "s90": {
+      "clip": [],
+      "rightOver": 0,
+      "opsBottom": 526,
+      "opsHeight": 172,
+      "moments": 1
+    },
+    "shots": [
+      "IF013-12-90.png",
+      "IF013-12-100.png",
+      "IF013-12-110.png",
+      "IF013-12-125.png"
+    ],
+    "s100": {
+      "clip": [],
+      "rightOver": 0,
+      "opsBottom": 526,
+      "opsHeight": 142,
+      "moments": 1
+    },
+    "s110": {
+      "clip": [],
+      "rightOver": 0,
+      "opsBottom": 526,
+      "opsHeight": 126,
+      "moments": 1
+    },
+    "s125": {
+      "clip": [],
+      "rightOver": 0,
+      "opsBottom": 525,
+      "opsHeight": 79,
+      "moments": 1
+    }
+  },
+  "IF013-13": {
+    "assists": [],
+    "errors": [],
+    "state": {
+      "moments": 0,
+      "inset": true,
+      "seenInfluence": 1
+    },
+    "shots": [
+      "IF013-13-100.png"
+    ]
+  },
+  "IF013-14": {
+    "assists": [
+      "recovery worldStore.setState({ influence: 20 })"
+    ],
+    "errors": [],
+    "before": {
+      "influence": 8,
+      "selected": "eu"
+    },
+    "afterSpend": {
+      "influence": 0,
+      "moments": 0,
+      "acts": [
+        {
+          "name": "1 STABILIZE",
+          "status": "ACTIVE",
+          "disabled": true,
+          "title": "-12 UNREST OVER 6H"
+        },
+        {
+          "name": "2 LOBBY",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "+8 CONTROL OVER 12H"
+        },
+        {
+          "name": "3 EXPEDITE",
+          "status": "UNAFFORDABLE",
+          "disabled": true,
+          "title": "WAIVE INTEL GATE // +24H EXPIRY"
+        }
+      ]
+    },
+    "perSector": {
+      "EUROPE": {
+        "selected": "eu",
+        "moments": 0,
+        "acts": [
+          "ACTIVE",
+          "CLEAR",
+          "CLEAR"
+        ]
+      },
+      "AFRICA": {
+        "selected": "af",
+        "moments": 0,
+        "acts": [
+          "CLEAR",
+          "CLEAR",
+          "NO TARGET"
+        ]
+      },
+      "ASIA": {
+        "selected": "as",
+        "moments": 0,
+        "acts": [
+          "CLEAR",
+          "CLEAR",
+          "NO TARGET"
+        ]
+      },
+      "OCEANIA": {
+        "selected": "oc",
+        "moments": 0,
+        "acts": [
+          "CLEAR",
+          "CLEAR",
+          "NO TARGET"
+        ]
+      },
+      "NORTH AMERICA": {
+        "selected": "na",
+        "moments": 0,
+        "acts": [
+          "CLEAR",
+          "CLEAR",
+          "NO TARGET"
+        ]
+      },
+      "SOUTH AMERICA": {
+        "selected": "sa",
+        "moments": 0,
+        "acts": [
+          "CLEAR",
+          "CLEAR",
+          "NO TARGET"
+        ]
+      }
+    },
+    "shots": [
+      "IF013-14-100-south-america.png"
+    ],
+    "afterNav": {
+      "phase": "world",
+      "moments": 0,
+      "seenInfluence": 1,
+      "influence": 20
+    }
+  },
+  "IF013-15": {
+    "assists": [],
+    "errors": [],
+    "blobHasHintInfluence": true,
+    "vp": [
+      1280,
+      720
+    ],
+    "state": {
+      "phase": "world",
+      "influence": 20,
+      "selected": "eu",
+      "acts": [
+        "ACTIVE",
+        "CLEAR",
+        "CLEAR"
+      ],
+      "moments": 0,
+      "card": false,
+      "seen": [
+        "hint-worldmap",
+        "hint-influence"
+      ],
+      "seenWorldmap": 1,
+      "seenInfluence": 1
+    },
+    "shots": [
+      "IF013-15-100.png"
+    ]
+  },
+  "IF013-17": {
+    "assists": [
+      "clean-win fixture influence 8 + worldStore.select(\"an\") in one eval",
+      "text scale via settingsStore.setTextScale"
+    ],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "s90": {
+      "selected": "an",
+      "acts": 0,
+      "moments": 0,
+      "seenInfluence": 0
+    },
+    "shots": [
+      "IF013-17-90.png",
+      "IF013-17-100.png",
+      "IF013-17-110.png",
+      "IF013-17-125.png",
+      "IF013-17-100-refocus-eu.png"
+    ],
+    "s100": {
+      "selected": "an",
+      "acts": 0,
+      "moments": 0,
+      "seenInfluence": 0
+    },
+    "s110": {
+      "selected": "an",
+      "acts": 0,
+      "moments": 0,
+      "seenInfluence": 0
+    },
+    "s125": {
+      "selected": "an",
+      "acts": 0,
+      "moments": 0,
+      "seenInfluence": 0
+    },
+    "refocusEU": {
+      "selected": "eu",
+      "moments": 1,
+      "seenInfluence": 1,
+      "title": "INFLUENCE // 1 STABILIZE"
+    }
+  },
+  "IF013-18": {
+    "assists": [
+      "worldStore.select(\"an\")"
+    ],
+    "errors": [],
+    "state": {
+      "selected": "an",
+      "moments": 1,
+      "text": "INFLUENCE // 1 STABILIZEUNDERSTOODAffordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend.",
+      "acts": 0,
+      "inset": false
+    },
+    "shots": [
+      "IF013-18-100.png"
+    ]
+  },
+  "IF013-19": {
+    "assists": [
+      "clean-win fixture worldStore.setState({ influence: 8 })"
+    ],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "before": {
+      "selected": "eu",
+      "moments": 1,
+      "seenInfluence": 1
+    },
+    "shots": [
+      "IF013-19-100-panel-up.png",
+      "IF013-19-100-after-return.png"
+    ],
+    "after": {
+      "phase": "world",
+      "moments": 0,
+      "seenInfluence": 1,
+      "inset": true
+    }
+  },
+  "IF013-20": {
+    "assists": [],
+    "errors": [],
+    "fno.viewport": [
+      1280,
+      720
+    ],
+    "fno.path": "real click << NEW OPERATION >> (localStorage.clear + reload first)",
+    "pre": {
+      "intel": 1,
+      "missionId": null
+    },
+    "shots": [
+      "IF013-20-100-glass-veil.png",
+      "IF013-20-100-hollow-crown.png",
+      "IF013-20-100-rust-haven.png"
+    ],
+    "rows": {
+      "GLASS VEIL": {
+        "codename": "GLASS VEIL",
+        "sub": "REQUIRES INTEL LVL 2",
+        "lockedClass": true,
+        "ariaDisabled": "true",
+        "ariaLabel": "GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2",
+        "lockGlyph": true,
+        "chips": [
+          "CHANCE 36%",
+          "ETA 2D"
+        ]
+      },
+      "HOLLOW CROWN": {
+        "codename": "HOLLOW CROWN",
+        "sub": "REQUIRES INTEL LVL 2",
+        "lockedClass": true,
+        "ariaDisabled": "true",
+        "ariaLabel": "HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2",
+        "lockGlyph": true,
+        "chips": [
+          "CHANCE 55%",
+          "ETA 4D"
+        ]
+      },
+      "RUST HAVEN": {
+        "codename": "RUST HAVEN",
+        "sub": "SABOTAGE // DETROIT SPRAWL",
+        "lockedClass": false,
+        "ariaDisabled": null,
+        "ariaLabel": "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+        "lockGlyph": false,
+        "chips": [
+          "CHANCE 82%",
+          "ETA 3D"
+        ]
+      }
+    },
+    "EXCEPTION": "locator.click: Timeout 3000ms exceeded.\nCall log:\n  - waiting for locator('button.wm-op').filter({ has: locator('.wm-op-main b').filter({ hasText: /^GLASS VEIL$/ }) })\n    - locator resolved to <button type=\"button\" class=\"wm-op locked\" aria-disabled=\"true\" aria-label=\"GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n      - waiting 100ms\n    5 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n      - waiting 500ms\n\n    at /Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:345:58\n    at async run (/Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:138:9)\n    at async file:///Users/machado/Projects/nexus-reborn/production/qa/evidence/if-013/manual-2026-10-22/run.mjs:336:1"
+  },
+  "IF013-21": {
+    "assists": [
+      "campaignStore.setState({ intelLevel: 2 })"
+    ],
+    "errors": [],
+    "shots": [
+      "IF013-21-100-glass-veil.png",
+      "IF013-21-100-hollow-crown.png",
+      "IF013-21-100-rust-haven.png",
+      "IF013-21-100-after-glass-veil-click.png",
+      "IF013-21-100-after-hollow-crown-click.png"
+    ],
+    "rows": {
+      "GLASS VEIL": {
+        "codename": "GLASS VEIL",
+        "sub": "SEIZURE // NEW CARTHAGE",
+        "lockedClass": false,
+        "ariaDisabled": null,
+        "ariaLabel": "OPEN CONTRACT GLASS VEIL // SEIZURE // NEW CARTHAGE",
+        "lockGlyph": false,
+        "chips": [
+          "CHANCE 36%",
+          "ETA 2D"
+        ]
+      },
+      "HOLLOW CROWN": {
+        "codename": "HOLLOW CROWN",
+        "sub": "EXTRACTION // SHINGANG",
+        "lockedClass": false,
+        "ariaDisabled": null,
+        "ariaLabel": "OPEN CONTRACT HOLLOW CROWN // EXTRACTION // SHINGANG",
+        "lockGlyph": false,
+        "chips": [
+          "CHANCE 55%",
+          "ETA 4D"
+        ]
+      },
+      "RUST HAVEN": {
+        "codename": "RUST HAVEN",
+        "sub": "SABOTAGE // DETROIT SPRAWL",
+        "lockedClass": false,
+        "ariaDisabled": null,
+        "ariaLabel": "OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL",
+        "lockGlyph": false,
+        "chips": [
+          "CHANCE 82%",
+          "ETA 3D"
+        ]
+      }
+    },
+    "afterGlassVeil": {
+      "missionId": "m01",
+      "phase": "brief"
+    },
+    "afterHollowCrown": {
+      "missionId": "m02",
+      "phase": "brief"
+    },
+    "ids": [
+      [
+        "m01",
+        "GLASS VEIL"
+      ],
+      [
+        "m02",
+        "HOLLOW CROWN"
+      ],
+      [
+        "m03",
+        "RUST HAVEN"
+      ]
+    ]
+  }
+}

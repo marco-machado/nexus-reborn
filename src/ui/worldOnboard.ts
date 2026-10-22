@@ -6,6 +6,7 @@
 // .influenceRefusal). Nothing here recomputes a board rule.
 import { INFLUENCE_ACTIONS, INFLUENCE_ACTION_ORDER } from '../game/influence'
 import type { InfluenceActionId } from '../game/influence'
+import type { SectorId } from '../game/types'
 
 // One open contract as the Scan lists it: the owner's Chance, already
 // derived, and whether the director can open it.
@@ -116,6 +117,16 @@ export function influenceMoment(
     if (refusal(action) === null) return action
   }
   return null
+}
+
+// The note shows only on the sector it fired on. Its copy says "the focused
+// sector", so a refocus hides it for good (owner ruling 2026-10-22, IF013-18);
+// the id is already seen, so it never refires.
+export function influenceMomentShown(
+  fired: { action: InfluenceActionId; sector: SectorId } | null,
+  sector: SectorId,
+): InfluenceActionId | null {
+  return fired !== null && fired.sector === sector ? fired.action : null
 }
 
 // The teaching panel's words for the affordable action: number, name, cost
