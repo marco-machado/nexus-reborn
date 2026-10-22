@@ -21,11 +21,11 @@ stories:
     name: "Rust Haven opens at intel 1; Glass Veil and Hollow Crown at 2"
     file: "production/epics/world-network/story-020-rust-haven-opens-at-intel-1-glass-veil-at-2.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-22"
   - id: "EC-023"
     name: "One Moderate market offer is seeded at New Operation"
     file: "production/epics/economy-and-contracts/story-023-opening-market-offer-seeded-at-new-operation.md"

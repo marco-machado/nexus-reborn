@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { applyOverrides } from '../game/bindings'
-import { DEFAULT_SQUAD, MISSIONS, ROSTER } from '../game/data'
+import { DEFAULT_SQUAD, MISSIONS, ROSTER, missionById } from '../game/data'
 import { CANDIDATE_REFRESH_SEC, INITIAL_RECRUIT_RNG } from '../game/recruits'
 import {
   CONTRACT_MIN_SEC,
@@ -3102,5 +3102,42 @@ describe('roster save and reload (RA-025)', () => {
     // The cursor advanced past the opening one: it was restored, not reseeded.
     expect(recordedCursor).not.toBe(INITIAL_RECRUIT_RNG)
     expect(useCampaignStore.getState().recruitRngState).not.toBe(INITIAL_RECRUIT_RNG)
+  })
+})
+
+describe('WN-020: Glass Veil won before the gate moved', () => {
+  // ADR-0020: `expectedWin` is the three authored ids, not the gate order. A
+  // campaign that won Glass Veil at intel 1 (the pre-2026-10-21 opening
+  // contract) still hydrates; the contract reads locked for new deploys and
+  // the completion record is whatever the blob carried.
+  it('a v10 blob at intel 1 with Glass Veil won validates, hydrates and stays incomplete', () => {
+    const save = captureSave()
+    save.campaign.intelLevel = 1
+    save.campaign.contractsWon = ['m01']
+    save.campaign.campaignWon = false
+    save.campaign.campaignFailed = false
+    expect(validateSave(save)).toBe(true)
+    hydrateSave(save)
+    const state = useCampaignStore.getState()
+    expect(state.intelLevel).toBe(1)
+    expect(state.contractsWon).toEqual(['m01'])
+    expect(state.campaignWon).toBe(false)
+    expect(missionLocked(missionById('m01'), state.intelLevel)).toBe(true)
+    expect(missionLocked(missionById('m03'), state.intelLevel)).toBe(false)
+    useAppStore.setState({ phase: 'world', missionId: null })
+    useAppStore.getState().selectMission('m01')
+    expect(useAppStore.getState().missionId).toBeNull()
+  })
+
+  it('a complete blob at intel 1 keeps campaignWon through hydrate', () => {
+    const save = captureSave()
+    save.campaign.intelLevel = 1
+    save.campaign.contractsWon = ['m01', 'm02', 'm03']
+    save.campaign.campaignWon = true
+    save.campaign.campaignFailed = false
+    expect(validateSave(save)).toBe(true)
+    hydrateSave(save)
+    expect(useCampaignStore.getState().campaignWon).toBe(true)
+    expect(useCampaignStore.getState().contractsWon).toEqual(['m01', 'm02', 'm03'])
   })
 })

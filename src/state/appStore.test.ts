@@ -175,18 +175,20 @@ describe('screen flow', () => {
     expect(useAppStore.getState().missionId).toBeNull()
   })
 
+  // Rust Haven (m03) is the opening contract at intel 1 (WN-020); Glass Veil
+  // (m01) opens at intel 2 and is the gate fixture below.
   it('selectMission stores the mission and moves to the brief', () => {
-    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().selectMission('m03')
     const s = useAppStore.getState()
-    expect(s.missionId).toBe('m01')
+    expect(s.missionId).toBe('m03')
     expect(s.phase).toBe('brief')
   })
 
   it('returnFromDebrief opens the World Network and clears the selected contract', () => {
-    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().selectMission('m03')
     useAppStore.getState().setOutcome(outcome())
     expect(useAppStore.getState().phase).toBe('debrief')
-    expect(useAppStore.getState().missionId).toBe('m01')
+    expect(useAppStore.getState().missionId).toBe('m03')
     useAppStore.getState().returnFromDebrief()
     const s = useAppStore.getState()
     expect(s.phase).toBe('world')
@@ -194,12 +196,12 @@ describe('screen flow', () => {
   })
 
   it('Replay keeps the selected contract when leaving debrief for the Brief', () => {
-    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().selectMission('m03')
     useAppStore.getState().setOutcome(outcome())
     useAppStore.getState().goto('brief')
     const s = useAppStore.getState()
     expect(s.phase).toBe('brief')
-    expect(s.missionId).toBe('m01')
+    expect(s.missionId).toBe('m03')
   })
 
   it('refuses an intel-locked mission until the campaign reaches its requirement', () => {
@@ -210,6 +212,16 @@ describe('screen flow', () => {
     useCampaignStore.setState({ intelLevel: 2 })
     useAppStore.getState().selectMission('m02')
     expect(useAppStore.getState().missionId).toBe('m02')
+    expect(useAppStore.getState().phase).toBe('brief')
+  })
+
+  it('WN-020: Glass Veil no-ops at intel 1 while Rust Haven selects', () => {
+    expect(useCampaignStore.getState().intelLevel).toBe(1)
+    useAppStore.getState().selectMission('m01')
+    expect(useAppStore.getState().missionId).toBeNull()
+    expect(useAppStore.getState().phase).toBe('menu')
+    useAppStore.getState().selectMission('m03')
+    expect(useAppStore.getState().missionId).toBe('m03')
     expect(useAppStore.getState().phase).toBe('brief')
   })
 })
@@ -450,6 +462,8 @@ describe('economy integration', () => {
 
   it('runs one campaign beat across the stores without the balance going negative', () => {
     const m01 = MISSIONS[0]
+    // Glass Veil opens at intel 2 (WN-020); the beat is about the EU sector.
+    useCampaignStore.setState({ intelLevel: 2 })
     useAppStore.getState().selectMission(m01.id)
     expect(useAppStore.getState().phase).toBe('brief')
 
@@ -1589,6 +1603,7 @@ describe('A loss pays nothing; a failed generated contract leaves the market (EC
   })
 
   it('a loss on an authored contract keeps the record selectable', () => {
+    useCampaignStore.setState({ intelLevel: 2 }) // Glass Veil opens at intel 2 (WN-020)
     useAppStore.setState({ phase: 'mission', missionId: 'm01' })
     useAppStore
       .getState()
@@ -2051,6 +2066,8 @@ describe('Accepting a contract is free; one pipeline for both kinds (EC-004)', (
       done: [],
       labs: { ballistics: null, cybernetics: null, control: null },
     })
+    // Glass Veil (m01) opens at intel 2 (WN-020); the fixtures below deploy it.
+    useCampaignStore.setState({ intelLevel: 2 })
     useAppStore.setState({ phase: 'world', missionId: null })
   })
 
@@ -2208,7 +2225,8 @@ describe('Abort writes nothing to Economy (EC-013)', () => {
       nextEventT: 1e12,
       nextContractT: Number.MAX_SAFE_INTEGER,
     })
-    useCampaignStore.setState(initialCampaignData())
+    // Glass Veil (m01) opens at intel 2 (WN-020); the fixtures below deploy it.
+    useCampaignStore.setState({ ...initialCampaignData(), intelLevel: 2 })
     useResearchStore.setState({
       done: [],
       labs: { ballistics: null, cybernetics: null, control: null },
@@ -2950,7 +2968,8 @@ describe('Labs frozen in the field; loss and abort leave Research alone (RS-010)
       nextEventT: 1e12,
       nextContractT: Number.MAX_SAFE_INTEGER,
     })
-    useCampaignStore.setState(initialCampaignData())
+    // Glass Veil (m01) opens at intel 2 (WN-020); the fixtures below deploy it.
+    useCampaignStore.setState({ ...initialCampaignData(), intelLevel: 2 })
     useResearchStore.setState({ done: [], labs: idleLabs() })
     useAppStore.setState({
       phase: 'world',

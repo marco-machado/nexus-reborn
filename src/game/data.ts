@@ -157,7 +157,7 @@ export const MISSIONS: MissionDef[] = [
       { id: 'ob2', label: 'ELIMINATE THE CORPSEC GARRISON', kind: 'eliminate-tag', tag: 'garrison' },
       { id: 'ob3', label: 'EXTRACT THE SQUAD', kind: 'extract' },
     ],
-    intelReq: 1,
+    intelReq: 2,
     mapPos: cityScanPos('nc'),
   },
   {
@@ -272,7 +272,7 @@ export const MISSIONS: MissionDef[] = [
       },
       { id: 'rh4', label: 'EXTRACT THE SQUAD', kind: 'extract' },
     ],
-    intelReq: 2,
+    intelReq: 1,
     mapPos: cityScanPos('dt'),
   },
 ]

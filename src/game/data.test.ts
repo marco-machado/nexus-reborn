@@ -143,6 +143,20 @@ describe('MISSIONS', () => {
     expect(open.length).toBeGreaterThan(0)
   })
 
+  it('WN-020: opens Rust Haven at intel 1 and Glass Veil and Hollow Crown at 2', () => {
+    // design/difficulty-curve.md (2026-10-21), living spec §9 authored table.
+    expect(missionById('m03').intelReq).toBe(1)
+    expect(missionById('m01').intelReq).toBe(2)
+    expect(missionById('m02').intelReq).toBe(2)
+    expect(MISSIONS.filter((m) => m.intelReq <= 1).map((m) => m.id)).toEqual(['m03'])
+    // The rest of each authored record is untouched by the gate change.
+    expect(MISSIONS.map((m) => [m.id, m.codename, m.city, m.sector])).toEqual([
+      ['m01', 'GLASS VEIL', 'NEW CARTHAGE', 'eu'],
+      ['m02', 'HOLLOW CROWN', 'SHINGANG', 'as'],
+      ['m03', 'RUST HAVEN', 'DETROIT SPRAWL', 'na'],
+    ])
+  })
+
   it('pins each authored contract on its city', () => {
     expect(missionById('m01').mapPos).toEqual(cityScanPos('nc'))
     expect(missionById('m02').mapPos).toEqual(cityScanPos('sg'))

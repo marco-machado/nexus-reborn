@@ -121,8 +121,9 @@ describe('AC5: Brief fields match the deployed mission', () => {
 })
 
 describe('AC6: Debrief return and Replay', () => {
+  // Rust Haven (m03) is the authored contract open at intel 1 (WN-020).
   it('return clears the selected contract and locks Brief', () => {
-    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().selectMission('m03')
     useAppStore.getState().setOutcome(outcome())
     useAppStore.getState().returnFromDebrief()
     const s = useAppStore.getState()
@@ -132,21 +133,21 @@ describe('AC6: Debrief return and Replay', () => {
   })
 
   it('Replay on an authored contract returns to Brief without reselecting', () => {
-    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().selectMission('m03')
     useAppStore.getState().setOutcome(outcome())
     const flags = debriefFlags(useAppStore.getState().outcome, false, useAppStore.getState().missionId)
     expect(flags.replay).toBe(true)
     useAppStore.getState().goto('brief')
-    expect(useAppStore.getState().missionId).toBe('m01')
+    expect(useAppStore.getState().missionId).toBe('m03')
     expect(useAppStore.getState().phase).toBe('brief')
   })
 
   it('the contract can be selected again after returning', () => {
-    useAppStore.getState().selectMission('m01')
+    useAppStore.getState().selectMission('m03')
     useAppStore.getState().setOutcome(outcome())
     useAppStore.getState().returnFromDebrief()
-    useAppStore.getState().selectMission('m01')
-    expect(useAppStore.getState().missionId).toBe('m01')
+    useAppStore.getState().selectMission('m03')
+    expect(useAppStore.getState().missionId).toBe('m03')
     expect(useAppStore.getState().phase).toBe('brief')
   })
 
@@ -157,6 +158,6 @@ describe('AC6: Debrief return and Replay', () => {
   })
 
   it('no Replay on a failed campaign (AC30 owns the rest)', () => {
-    expect(debriefFlags(outcome(), true, 'm01').replay).toBe(false)
+    expect(debriefFlags(outcome(), true, 'm03').replay).toBe(false)
   })
 })

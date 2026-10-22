@@ -82,6 +82,14 @@ describe('campaign initialization and intel', () => {
     expect(() => liveOperativeById('nope')).toThrow()
   })
 
+  it('WN-020: at intel 1 only Rust Haven is open; at intel 2 all three are', () => {
+    expect(useCampaignStore.getState().intelLevel).toBe(1)
+    expect(missionLocked(missionById('m03'), 1)).toBe(false)
+    expect(missionLocked(missionById('m01'), 1)).toBe(true)
+    expect(missionLocked(missionById('m02'), 1)).toBe(true)
+    for (const id of ['m01', 'm02', 'm03']) expect(missionLocked(missionById(id), 2)).toBe(false)
+  })
+
   it('rolls each 100 intel progress into another level', () => {
     useCampaignStore.getState().awardIntel(275)
     const state = useCampaignStore.getState()

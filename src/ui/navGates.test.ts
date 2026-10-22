@@ -1,7 +1,7 @@
 // IF-003 AC4/AC6: the destination nav gates Brief on a selected contract and
 // leaves Assembly open. Real stores, real resolveMission; no mocks.
 import { beforeEach, describe, expect, it } from 'vitest'
-import { MISSIONS } from '../game/data'
+import { missionById } from '../game/data'
 import { useAppStore } from '../state/appStore'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { useWorldStore } from '../state/worldStore'
@@ -11,6 +11,9 @@ import { canDeploy } from '../game/deployGate'
 import type { NavKind } from './bits'
 
 const KINDS: NavKind[] = ['world', 'research', 'brief', 'assembly']
+
+// Rust Haven is the authored contract open at intel 1 (WN-020).
+const OPEN_CONTRACT = missionById('m03').id
 
 beforeEach(() => {
   useAppStore.setState({ phase: 'world', missionId: null, outcome: null })
@@ -39,7 +42,7 @@ describe('navTabGate', () => {
   })
 
   it('opens Brief once an unlocked contract is selected (AC5)', () => {
-    useAppStore.getState().selectMission(MISSIONS[0].id)
+    useAppStore.getState().selectMission(OPEN_CONTRACT)
     const id = useAppStore.getState().missionId
     expect(briefReachable(id, useWorldStore.getState().contracts)).toBe(true)
     expect(navTabGate('brief', 'assembly', true)).toEqual({ open: true, locked: false, reason: undefined })
@@ -50,7 +53,7 @@ describe('navTabGate', () => {
   })
 
   it('locks Brief again after Debrief returns to the World Network (AC6)', () => {
-    useAppStore.getState().selectMission(MISSIONS[0].id)
+    useAppStore.getState().selectMission(OPEN_CONTRACT)
     useAppStore.setState({ phase: 'debrief' })
     useAppStore.getState().returnFromDebrief()
     const s = useAppStore.getState()
