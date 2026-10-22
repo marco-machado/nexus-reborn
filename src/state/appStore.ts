@@ -164,8 +164,11 @@ export interface AppState {
   // Team Deploy (ADR-0019). Enters the mission only while canDeploy is ok;
   // otherwise a no-op. The one start API: never goto('mission') directly.
   startMission: () => void
-  // Debrief → World Network. Drops the selected contract so Brief locks.
-  returnFromDebrief: () => void
+  // Debrief → World Network (default) or, from the first-Debrief Research
+  // prompt (IF-014), → the Research Screen. Either way drops the selected
+  // contract so Brief locks (ADR-0011: the selection is not blob content
+  // after Debrief). The one way out of Debrief; never a raw goto from there.
+  returnFromDebrief: (to?: 'world' | 'research') => void
   selectMission: (id: string) => void
   toggleOperative: (id: string) => void
   setLoadout: (opId: string, slot: number, item: LoadoutItemId | null) => void
@@ -223,7 +226,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     })
     if (gate.ok) set({ phase: 'mission' })
   },
-  returnFromDebrief: () => set({ phase: 'world', missionId: null }),
+  returnFromDebrief: (to = 'world') => set({ phase: to, missionId: null }),
   selectMission: (id) => {
     const campaign = useCampaignStore.getState()
     const mission = resolveMission(id)

@@ -195,6 +195,18 @@ describe('screen flow', () => {
     expect(s.missionId).toBeNull()
   })
 
+  it('IF-014: the Research control leaves Debrief with missionId null and phase research', () => {
+    useAppStore.getState().selectMission('m03')
+    useAppStore.getState().setOutcome(outcome())
+    expect(useAppStore.getState().phase).toBe('debrief')
+    useAppStore.getState().returnFromDebrief('research')
+    const s = useAppStore.getState()
+    expect(s.phase).toBe('research')
+    expect(s.missionId).toBeNull()
+    // Brief is locked again: the selection is gone, not a new Phase.
+    expect(['menu', 'world', 'research', 'brief', 'team', 'mission', 'debrief']).toContain(s.phase)
+  })
+
   it('Replay keeps the selected contract when leaving debrief for the Brief', () => {
     useAppStore.getState().selectMission('m03')
     useAppStore.getState().setOutcome(outcome())

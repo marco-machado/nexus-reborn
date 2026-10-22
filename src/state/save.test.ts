@@ -475,6 +475,21 @@ describe('save validation', () => {
     expect(validateSave(good)).toBe(true)
   })
 
+  it('IF-014: the first-Debrief Research prompt id validates in seen; a blob without it still validates', () => {
+    const save = captureSave()
+    const withPrompt = structuredClone(save) as SaveV10
+    withPrompt.tutorial.seen = ['hint-worldmap', 'hint-debrief-research']
+    expect(validateSave(withPrompt)).toBe(true)
+
+    const without = structuredClone(save) as SaveV10
+    without.tutorial.seen = ['hint-worldmap']
+    expect(validateSave(without)).toBe(true)
+
+    const twice = structuredClone(save) as SaveV10
+    twice.tutorial.seen = ['hint-debrief-research', 'hint-debrief-research']
+    expect(validateSave(twice)).toBe(false)
+  })
+
   it('rejects tampered generated contracts', () => {
     useWorldStore.setState({ nextEventT: 1e12, t: 7199 })
     useWorldStore.getState().tick(1)

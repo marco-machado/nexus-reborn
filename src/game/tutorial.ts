@@ -154,10 +154,17 @@ export const WORLD_ONBOARD_ID = 'hint-worldmap'
 // by Interface.
 export const INFLUENCE_MOMENT_ID = 'hint-influence'
 
+// The first-Debrief Research prompt (Interface Core Rule 13, AC32): Research
+// is taught once per campaign, on the first Debrief where a project is
+// affordable, not as an orientation-card row. Same pattern again: a standalone
+// seen id; the Debrief draws the prompt (ui/debriefResearch.ts).
+export const DEBRIEF_RESEARCH_ID = 'hint-debrief-research'
+
 // Every id the seen set may hold; the save validator checks against this.
 export const SEEN_IDS: readonly string[] = [
   ...TUTORIAL_IDS,
   ...HINT_IDS,
   WORLD_ONBOARD_ID,
   INFLUENCE_MOMENT_ID,
+  DEBRIEF_RESEARCH_ID,
 ]

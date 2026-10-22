@@ -3,7 +3,7 @@
 // Flow: menu -> world -> brief -> team -> mission -> debrief -> world. The
 // four Screens share ScreenChrome; Research and Assembly are also on the nav.
 import './ui.css'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { collateralFine, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -22,6 +22,13 @@ import { useSaveStatusStore } from '../state/saveStatusStore'
 import { continueOffered, menuSaveLine } from './menuSaveLine'
 import { NEW_OPERATION_ARM_MS, newOperationArmHint, pressNewOperation } from './newOperationArm'
 import { debriefInvoiceRows } from './debriefInvoice'
+import {
+  cheapestAvailableProject,
+  researchPromptCopy,
+  researchPromptShown,
+} from './debriefResearch'
+import { DEBRIEF_RESEARCH_ID } from '../game/tutorial'
+import { useTutorialStore } from '../state/tutorialStore'
 import { deployRefusalCopy } from './deployRefusal'
 import { assemblyRowHandlers, hireView } from './assemblyRows'
 import { WEAPONS } from '../game/data'
@@ -1553,6 +1560,43 @@ export function TeamSelect() {
   )
 }
 /* ================================= DEBRIEF ================================ */
+// The one-shot Research prompt (IF-014). Names the RESEARCH tab and the
+// cheapest project the director could AUTHORIZE now; OPEN RESEARCH leaves the
+// Debrief for that Screen, UNDERSTOOD only closes the note.
+function ResearchPromptNote(props: {
+  project: ResearchNode
+  onDismiss: () => void
+  onOpen: () => void
+}) {
+  const copy = researchPromptCopy(props.project)
+  return (
+    <div className="db-research corners" role="note" aria-label={copy.title}>
+      <span className="db-research-head">
+        <b className="db-research-title">{copy.title}</b>
+        <span className="db-research-btns">
+          <button
+            type="button"
+            className="hud-btn db-research-btn teal"
+            aria-label="Open the Research tab"
+            onClick={act(props.onOpen)}
+          >
+            OPEN RESEARCH
+          </button>
+          <button
+            type="button"
+            className="hud-btn db-research-btn"
+            aria-label="Dismiss the Research prompt"
+            onClick={act(props.onDismiss)}
+          >
+            UNDERSTOOD
+          </button>
+        </span>
+      </span>
+      <span className="db-research-body">{copy.body}</span>
+    </div>
+  )
+}
+
 function DebriefRow(props: { label: string; value: ReactNode; index: number; tone?: string }) {
   return (
     <div className="db-row" style={{ animationDelay: props.index * 110 + 'ms' }}>
@@ -1562,9 +1606,46 @@ function DebriefRow(props: { label: string; value: ReactNode; index: number; ton
     </div>
   )
 }
+// The first-Debrief Research prompt (IF-014, Interface Core Rule 13 / AC32).
+// Fires once per campaign, on the first Debrief where a project is affordable
+// after the payout: the candidate is read only once the apply-once key has
+// landed, so the figures are post-payout, post-sync. The mark is made from an
+// effect on firing (never during render), guarded by the seen set, and the
+// prompt stays up until dismissed or the Debrief is left. Marked on Debrief,
+// the id is memory only — autosave refuses here — so a reload on this
+// Debrief shows it again, beside the invoice's own unfiled status (ADR-0011);
+// the next Screen autosave makes it durable.
+function useDebriefResearchPrompt(): { project: ResearchNode | null; dismiss: () => void } {
+  const seen = useTutorialStore((s) => s.seen)
+  const markSeen = useTutorialStore((s) => s.markSeen)
+  const applied = useAppStore(
+    (s) => s.outcome !== null && s.lastAppliedKey >= s.outcome.applyKey,
+  )
+  const credits = useAppStore((s) => s.credits)
+  const done = useResearchStore((s) => s.done)
+  const labs = useResearchStore((s) => s.labs)
+  const candidate = useMemo(
+    () => cheapestAvailableProject(done, labs, credits),
+    [done, labs, credits],
+  )
+  const [shown, setShown] = useState<ResearchNode | null>(null)
+  useEffect(() => {
+    if (shown !== null) return
+    if (!researchPromptShown(seen, applied, candidate, DEBRIEF_RESEARCH_ID)) return
+    setShown(candidate)
+    markSeen(DEBRIEF_RESEARCH_ID)
+  }, [seen, applied, candidate, shown, markSeen])
+  const dismiss = useCallback(() => {
+    markSeen(DEBRIEF_RESEARCH_ID)
+    setShown(null)
+  }, [markSeen])
+  return { project: shown, dismiss }
+}
+
 export function Debrief() {
   const goto = useAppStore((s) => s.goto)
   const returnFromDebrief = useAppStore((s) => s.returnFromDebrief)
+  const research = useDebriefResearchPrompt()
   const outcome = useAppStore((s) => s.outcome)
   const credits = useAppStore((s) => s.credits)
   const missionId = useAppStore((s) => s.missionId)
@@ -1679,6 +1760,17 @@ export function Debrief() {
         <div className="db-filing" role="status">
           {filingLine}
         </div>
+        {/* Below the invoice and its filing line, above the actions: a
+            teaching note, never part of the filing chrome and never above
+            the CAMPAIGN FAILED banner (Rule 18). The Research control leaves
+            through returnFromDebrief like the World Network control does. */}
+        {research.project && (
+          <ResearchPromptNote
+            project={research.project}
+            onDismiss={research.dismiss}
+            onOpen={() => returnFromDebrief('research')}
+          />
+        )}
         <div className="db-actions">
           <button type="button" className="btn" onClick={act(returnFromDebrief)}>
             RETURN TO WORLD NETWORK

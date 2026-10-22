@@ -48,11 +48,11 @@ stories:
     name: "First-Debrief Research prompt"
     file: "production/epics/interface/story-014-first-debrief-research-prompt.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.4
     blocker: ""
-    completed: ""
+    completed: "2026-10-22"
   - id: "IF-015"
     name: "Brief KIT line from objective kinds"
     file: "production/epics/interface/story-015-brief-kit-line-from-objective-kinds.md"

@@ -4583,3 +4583,49 @@ body:has(.wm-onboard-wrap) .write-fail-region {
   padding: 2px 8px;
   font-size: calc(7.5px * var(--text-scale));
 }
+
+/* First-Debrief Research prompt (IF-014): a bordered teal note between the
+   filing line and the actions. Never inside the filing chrome, never above
+   the CAMPAIGN FAILED banner; the card's non-row children do not shrink, so
+   the invoice scrolls under it at large text scales. */
+.db-research {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--teal);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
+}
+
+.db-research-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.db-research-title {
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.18em;
+  color: var(--teal);
+  font-weight: 500;
+}
+
+.db-research-btns { display: flex; gap: 6px; flex: none; }
+
+.db-research-btn {
+  flex: none;
+  padding: 3px 10px;
+  font-size: calc(8px * var(--text-scale));
+}
+
+.db-research-btn.teal { color: var(--teal); border-color: var(--line-strong); }
+
+.db-research-body {
+  font-size: calc(10.5px * var(--text-scale));
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-transform: none;
+}

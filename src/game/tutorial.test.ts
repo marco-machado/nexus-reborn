@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { applyOverrides } from './bindings'
 import {
+  DEBRIEF_RESEARCH_ID,
   HINTS,
   HINT_IDS,
   SEEN_IDS,
@@ -83,6 +84,7 @@ describe('hint and seen ids', () => {
   it('lists every seen id exactly once, including the world onboarding', () => {
     expect(new Set(SEEN_IDS).size).toBe(SEEN_IDS.length)
     expect(SEEN_IDS).toContain(WORLD_ONBOARD_ID)
+    expect(SEEN_IDS).toContain(DEBRIEF_RESEARCH_ID)
     for (const id of TUTORIAL_IDS) expect(SEEN_IDS).toContain(id)
     for (const id of HINT_IDS) expect(SEEN_IDS).toContain(id)
   })

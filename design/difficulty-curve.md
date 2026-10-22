@@ -105,7 +105,7 @@ Phase order between 4 and 5 is the player's: both open at Intel 2 and neither is
 | Attack, Hold Fire, Hold Ground | Mission, first contact | Toasts 3 and 4; Alert advisory on the first combat state | Low on a MODERATE (82 Chance) |
 | Role ability (Q), Items (G, med kit) | Mission, when the first cooldown is ready or HP drops | Toast 5 and 6, ABILITY READY advisory after 60 s idle, CASUALTY RISK under 35% | Low; a missed Q keeps its cooldown but costs nothing else |
 | Weapon swap, Directives, Extraction | Mission mid to end | Toasts 7 to 9 | Low |
-| Research | After the first Debrief | Overlay row 9 moves to a first-Debrief prompt: "Labs are idle. 16,000 CR starts BALLISTICS in 2 hours." | Low, 2-hour project, cheap |
+| Research | After the first Debrief | Overlay row 9 moves to a first-Debrief prompt naming the RESEARCH tab and the cheapest available project, e.g. "The BALLISTICS LAB is idle. 14,000 CR starts BARREL WEAR COATING in 2 hours." "Available" means `eligibilityText` null **and** cost ≤ Credits after the payout (decided 2026-10-22, IF-014); when nothing qualifies the prompt waits, unfired, for a later Debrief. | Low, 2-hour project, cheap |
 | Influence | After the first win (6 or 8 points) | Sector panel prints what a Stabilize costs and does, at the moment it becomes affordable | Low |
 | Timed optional | Hollow Crown | Brief note and in-mission timer | Moderate, 9,000 CR optional only |
 | Hold wave, destroy kit | Rust Haven | Brief KIT line; wave announced in the briefing text | Moderate |
