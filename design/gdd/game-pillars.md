@@ -131,7 +131,7 @@ Each pillar can kill a proposal. If a pillar never does, it is copy, not design.
 | Department | This Pillar Says... | Example |
 | ---- | ---- | ---- |
 | **Game Design** | Two clocks; debrief spends ETA on a win only | ADR-0001 |
-| **Art** | Scan and district are different surfaces of one world | Scan is not a globe |
+| **Art** | Scan and district are different surfaces of one world | Scan is a 3D globe (owner decision 2026-10-22) |
 | **Audio** | Strategy bed vs mission bed follow screen ownership | `strategyAudio.ts` |
 | **Narrative** | Invoice includes sector movement, not only credits | Debrief write-back |
 | **Engineering** | Deploy snapshot; live World Network must not query the running mission | ADR-0002 |

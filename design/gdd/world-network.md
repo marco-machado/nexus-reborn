@@ -10,7 +10,7 @@
 
 ## Overview
 
-The World Network is the director’s job between missions: six open sectors (Antarctica locked), a Scan of cities and contracts, and **strategic time** as a spendable resource — pause included. It is not the district and not a globe. **Control**, **Unrest**, **Tax yield**, and **Garrison condition** print per sector; there is no defense rating and no standing bar. **Influence** is a wallet spent on Stabilize, Lobby, and Expedite, not an average of Control ([ADR-0008](../../docs/architecture/adr-0008-influence-is-a-wallet.md)). **Intel** is earned in the field and spent on access and foresight. Strategic time and tactical time are independent clocks: the network does not tick in the field; a win spends ETA as catch-up, a loss spends none ([ADR-0001](../../docs/architecture/adr-0001-two-clocks.md)). Mission results write back only at debrief. Without this system the player has no board to read and no two-layer loop — only a contract list.
+The World Network is the director’s job between missions: six open sectors (Antarctica locked), a Scan of cities and contracts, and **strategic time** as a spendable resource — pause included. It is not the district; the Scan is a 3D globe (owner decision 2026-10-22). **Control**, **Unrest**, **Tax yield**, and **Garrison condition** print per sector; there is no defense rating and no standing bar. **Influence** is a wallet spent on Stabilize, Lobby, and Expedite, not an average of Control ([ADR-0008](../../docs/architecture/adr-0008-influence-is-a-wallet.md)). **Intel** is earned in the field and spent on access and foresight. Strategic time and tactical time are independent clocks: the network does not tick in the field; a win spends ETA as catch-up, a loss spends none ([ADR-0001](../../docs/architecture/adr-0001-two-clocks.md)). Mission results write back only at debrief. Without this system the player has no board to read and no two-layer loop — only a contract list.
 
 Rules and numbers stay in `docs/game-design.md` §4–6. This overview does not fork them.
 
@@ -172,13 +172,13 @@ All knobs are owned by `docs/game-design.md` §5–6 (and `src/game/forecast.ts`
 
 ## Visual/Audio Requirements
 
-Presentation wrap is Interface / Audio. World Network requires the Scan to read as a flat projection (not a globe), sector color = majority holder, crisis as red hatch/stroke **plus** a non-color CRISIS mark (pillar 2: not color-only), Feed as a record. Palette and chrome: pillar 5 / `docs/game-design.md` §12–15. No second visual language for “the map.” Campaign banners live on this screen; crisis hatch is not those banners. One exception: on a **pyrrhic win** (Core Rule 12, living spec §10) Debrief also posts the CAMPAIGN FAILED banner, first and dominant above the invoice ([Interface](interface.md) Rule 18); World Network still owns the precedence and posts the failed banner on return.
+Presentation wrap is Interface / Audio. World Network requires the Scan to read as a 3D globe (owner decision 2026-10-22), sector color = majority holder, crisis as red hatch/stroke **plus** a non-color CRISIS mark (pillar 2: not color-only), Feed as a record. Palette and chrome: pillar 5 / `docs/game-design.md` §12–15. No second visual language for “the map.” Campaign banners live on this screen; crisis hatch is not those banners. One exception: on a **pyrrhic win** (Core Rule 12, living spec §10) Debrief also posts the CAMPAIGN FAILED banner, first and dominant above the invoice ([Interface](interface.md) Rule 18); World Network still owns the precedence and posts the failed banner on return.
 
 ## UI Requirements
 
 Screens and HUD belong to Interface. This GDD requires:
 
-- Focus, Scan (flat projection), sector readout (four numbers), clock/Pause/speed on the four Screens, Timeline with a Live vs Review cue, Influence actions with disable reason (unaffordable / cooldown / no target / Antarctica), Feed, contract list.
+- Focus, Scan (3D globe), sector readout (four numbers), clock/Pause/speed on the four Screens, Timeline with a Live vs Review cue, Influence actions with disable reason (unaffordable / cooldown / no target / Antarctica), Feed, contract list.
 - **Chance** always printed on World Network contract chrome. Brief Risk bands are not this surface.
 - Tax **paid vs printed**: opening Europe may show a figure that does not pay; North America is the opening paying tap.
 - Research-program completion line on the Feed when the 21st project is researched (living spec §19 #10; placement and copy in [Interface](interface.md) UI Requirements). Milestone only.

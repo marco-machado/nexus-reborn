@@ -40,7 +40,7 @@ This serves **One corporate operating system**, **Information is operational pow
 
 4. **One OS (lead).** Every screen is a module of the same terminal. Near-black ground. Teal = selection and live state. Ledger Amber = money only: prices, credit balances and spend authorization (art bible §4.1). It does not mark focus, the active objective, Settings ON, or a running clock. Red = danger, locks, damage, and failure. The active objective is VIP Ice plus a printed token. Nominal Green = machine confirmation in terminal chrome only, not the tactical feed. Small monospace uppercase labels; primary values larger than their labels. Thin technical borders, scanlines, vignette, radar sweeps, data chips, coordinate labels, barcodes. **No second visual language for “gameplay” versus “menu.”**
 
-5. **DOM around and over the 3D scene.** The Scan is a flat projection, not a globe. The District is the mission layout, not the Scan. Minimap up = screen up (shared camera yaw — Tactical owns the pose; Interface presents that orientation).
+5. **DOM around and over the 3D scene.** The Scan is a 3D globe (owner decision 2026-10-22). The District is the mission layout, not the Scan. Minimap up = screen up (shared camera yaw — Tactical owns the pose; Interface presents that orientation).
 
 6. **Readability floor.** Text must remain legible at 1280×720. Clipping or truncation at that size is a bug. Smaller windows keep the minimum layout and **scroll**; they do not compress panels. Critical state is **never color alone**. Building ghosting survives every Quality tier because it is readability, not spectacle.
 
