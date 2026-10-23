@@ -154,6 +154,29 @@ async function run(cmd, a) {
       await hold()
       return { ranMs: ms, screenshot: file, text: await visibleText() }
     }
+    // Harness-only (not for the playtester): carry a campaign between
+    // sessions through the game's own save blob.
+    case 'savefile': {
+      const blob = await page.evaluate(async () => {
+        const save = await import('/src/state/save.ts')
+        save.writeSave()
+        return localStorage.getItem(save.SAVE_KEY)
+      })
+      const { writeFileSync } = await import('fs')
+      writeFileSync(DIR + 'save.json', blob || '')
+      return { file: DIR + 'save.json', bytes: (blob || '').length }
+    }
+    case 'loadsave': {
+      const { readFileSync } = await import('fs')
+      const blob = readFileSync(a[0], 'utf8')
+      await page.evaluate(async (blob) => {
+        const save = await import('/src/state/save.ts')
+        localStorage.setItem(save.SAVE_KEY, blob)
+      }, blob)
+      await page.reload()
+      await sleep(1500)
+      return { ok: true }
+    }
     case 'state': {
       const st = await page.evaluate(async () => {
         const { useMissionStore } = await import('/src/state/missionStore.ts')
