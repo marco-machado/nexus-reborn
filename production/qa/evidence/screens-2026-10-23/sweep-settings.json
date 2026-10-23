@@ -1,0 +1,1173 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 157,
+  "small": [],
+  "low": [],
+  "exempt": [
+   "_ [blink]",
+   "RESET ALL [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]",
+   "RESET [inactive]"
+  ],
+  "dim": [],
+  "faint": [],
+  "targets": 57,
+  "underTargets": [],
+  "textBoxes": [
+   {
+    "text": "SYS:GN-7A // BOOT SEQUENCE COMPLETE",
+    "size": 10,
+    "w": 297,
+    "key": "div < div.menu-boot"
+   },
+   {
+    "text": "PRT:ON | SEC:LVL 3 | UPLINK EU-4 STRONG",
+    "size": 10,
+    "w": 297,
+    "key": "div < div.menu-boot"
+   },
+   {
+    "text": "AWAITING OPERATOR",
+    "size": 10,
+    "w": 297,
+    "key": "div.dim < div.menu-boot"
+   },
+   {
+    "text": "_",
+    "size": 10,
+    "w": 8,
+    "key": "span.cursor < div.dim"
+   },
+   {
+    "text": "05:42:24",
+    "size": 11,
+    "w": 106,
+    "key": "div.menu-clock < header.menu-top"
+   },
+   {
+    "text": "UTC",
+    "size": 11,
+    "w": 106,
+    "key": "div.menu-clock < header.menu-top"
+   },
+   {
+    "text": "NEXUS",
+    "size": 64.8,
+    "w": 292,
+    "key": "span < h1.menu-wordmark"
+   },
+   {
+    "text": "REBORN",
+    "size": 64.8,
+    "w": 351,
+    "key": "span < h1.menu-wordmark"
+   },
+   {
+    "text": "CORPORATE GEOSTRATEGIC COMMAND INTERFACE",
+    "size": 12.8,
+    "w": 571,
+    "key": "div.menu-tagline < div.menu-center"
+   },
+   {
+    "text": "NO CAMPAIGN ON FILE",
+    "size": 10,
+    "w": 160,
+    "key": "div.menu-save-line < div.menu-center"
+   },
+   {
+    "text": "<< NEW OPERATION >>",
+    "size": 16,
+    "w": 358,
+    "key": "span.cta-inner < button.cta.menu-cta"
+   },
+   {
+    "text": "SETTINGS",
+    "size": 12,
+    "w": 360,
+    "key": "button.btn.menu-settings-btn < div.menu-actions"
+   },
+   {
+    "text": "SETTINGS",
+    "size": 10,
+    "w": 64,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "STORED ON THIS TERMINAL",
+    "size": 10,
+    "w": 184,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "AUDIO",
+    "size": 10,
+    "w": 364,
+    "key": "div.hud-menu-group-head < div.set-section"
+   },
+   {
+    "text": "MASTER",
+    "size": 10,
+    "w": 84,
+    "key": "span.set-slider-label < label.set-slider"
+   },
+   {
+    "text": "100",
+    "size": 10,
+    "w": 34,
+    "key": "b.set-slider-val < label.set-slider"
+   },
+   {
+    "text": "UI CUES",
+    "size": 10,
+    "w": 84,
+    "key": "span.set-slider-label < label.set-slider"
+   },
+   {
+    "text": "100",
+    "size": 10,
+    "w": 34,
+    "key": "b.set-slider-val < label.set-slider"
+   },
+   {
+    "text": "COMBAT",
+    "size": 10,
+    "w": 84,
+    "key": "span.set-slider-label < label.set-slider"
+   },
+   {
+    "text": "100",
+    "size": 10,
+    "w": 34,
+    "key": "b.set-slider-val < label.set-slider"
+   },
+   {
+    "text": "MUSIC",
+    "size": 10,
+    "w": 84,
+    "key": "span.set-slider-label < label.set-slider"
+   },
+   {
+    "text": "100",
+    "size": 10,
+    "w": 34,
+    "key": "b.set-slider-val < label.set-slider"
+   },
+   {
+    "text": "AMBIENCE",
+    "size": 10,
+    "w": 84,
+    "key": "span.set-slider-label < label.set-slider"
+   },
+   {
+    "text": "100",
+    "size": 10,
+    "w": 34,
+    "key": "b.set-slider-val < label.set-slider"
+   },
+   {
+    "text": "MUTE",
+    "size": 10,
+    "w": 218,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "Silences every synthesized voice",
+    "size": 10,
+    "w": 218,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "OFF",
+    "size": 12,
+    "w": 71,
+    "key": "button.btn.set-toggle-btn < div.set-toggle"
+   },
+   {
+    "text": "ACCESSIBILITY",
+    "size": 10,
+    "w": 364,
+    "key": "div.hud-menu-group-head < div.set-section"
+   },
+   {
+    "text": "REDUCED MOTION",
+    "size": 10,
+    "w": 281,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "Stops sweeps and pulses; rain drops to m",
+    "size": 10,
+    "w": 281,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "OFF",
+    "size": 12,
+    "w": 71,
+    "key": "button.btn.set-toggle-btn < div.set-toggle"
+   },
+   {
+    "text": "HIGH CONTRAST",
+    "size": 10,
+    "w": 259,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "Brightens text against the dark panels",
+    "size": 10,
+    "w": 259,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "OFF",
+    "size": 12,
+    "w": 71,
+    "key": "button.btn.set-toggle-btn < div.set-toggle"
+   },
+   {
+    "text": "TEXT SCALE",
+    "size": 10,
+    "w": 124,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "Screens scroll rather than clip at large",
+    "size": 10,
+    "w": 124,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "90",
+    "size": 12,
+    "w": 47,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 47,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "100",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+   },
+   {
+    "text": "110",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "125",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "DIFFICULTY",
+    "size": 10,
+    "w": 364,
+    "key": "div.hud-menu-group-head < div.set-section"
+   },
+   {
+    "text": "THREAT PROFILE",
+    "size": 10,
+    "w": 158,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "HARDENED: extra patrols, longer confirm,",
+    "size": 10,
+    "w": 158,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "STANDARD",
+    "size": 12,
+    "w": 95,
+    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+   },
+   {
+    "text": "HARDENED",
+    "size": 12,
+    "w": 95,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "PERFORMANCE",
+    "size": 10,
+    "w": 364,
+    "key": "div.hud-menu-group-head < div.set-section"
+   },
+   {
+    "text": "QUALITY",
+    "size": 10,
+    "w": 133,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "AUTO probes the renderer and steps down ",
+    "size": 10,
+    "w": 133,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "AUTO",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+   },
+   {
+    "text": "HIGH",
+    "size": 12,
+    "w": 57,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "MED",
+    "size": 12,
+    "w": 47,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "LOW",
+    "size": 12,
+    "w": 47,
+    "key": "button.btn.set-scale-btn < span.set-scale"
+   },
+   {
+    "text": "DATA",
+    "size": 10,
+    "w": 364,
+    "key": "div.hud-menu-group-head < div.set-section"
+   },
+   {
+    "text": "TELEMETRY: LOCAL ONLY",
+    "size": 10,
+    "w": 281,
+    "key": "b < span.set-toggle-main"
+   },
+   {
+    "text": "Logs mission records on this terminal; n",
+    "size": 10,
+    "w": 281,
+    "key": "i.dim < span.set-toggle-main"
+   },
+   {
+    "text": "OFF",
+    "size": 12,
+    "w": 71,
+    "key": "button.btn.set-toggle-btn < div.set-toggle"
+   },
+   {
+    "text": "CONTROLS",
+    "size": 10,
+    "w": 510,
+    "key": "div.hud-menu-group-head < div.set-section"
+   },
+   {
+    "text": "RESET ALL",
+    "size": 10,
+    "w": 94,
+    "key": "button.btn.set-reset-all < div.hud-menu-group-head"
+   },
+   {
+    "text": "PAUSE, OPERATIVE SLOTS 1-4 AND THE MOUSE",
+    "size": 10,
+    "w": 510,
+    "key": "div.set-bind-note.dim < div.set-section"
+   },
+   {
+    "text": "CAMERA",
+    "size": 10,
+    "w": 506,
+    "key": "div.set-bind-group-head.dim < div.set-bind-group"
+   },
+   {
+    "text": "Pan forward",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "W",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "Up",
+    "size": 10,
+    "w": 31,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Pan back",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "S",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "Down",
+    "size": 10,
+    "w": 46,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Pan left",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "A",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "Left",
+    "size": 10,
+    "w": 46,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Pan right",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "D",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "Right",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Recenter on the squad",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "F",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Zoom in",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "=",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "+",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Zoom out",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "-",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "_",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Zoom",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "Wheel",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "MOUSE",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < span.set-bind-ctl"
+   },
+   {
+    "text": "SQUAD",
+    "size": 10,
+    "w": 506,
+    "key": "div.set-bind-group-head.dim < div.set-bind-group"
+   },
+   {
+    "text": "Select that operative",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "1-4",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "FIXED",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < span.set-bind-ctl"
+   },
+   {
+    "text": "Select the living squad",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "0",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "`",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Clear the selection",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "Backspace",
+    "size": 10,
+    "w": 83,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Stop and drop orders",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "X",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Hold position",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "H",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Hold fire",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "C",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Swap weapon",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "V",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Pause menu",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "Space",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "Esc",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "FIXED",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < span.set-bind-ctl"
+   },
+   {
+    "text": "ABILITIES",
+    "size": 10,
+    "w": 506,
+    "key": "div.set-bind-group-head.dim < div.set-bind-group"
+   },
+   {
+    "text": "Use role ability",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "Q",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Use med kit",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "E",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "M",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Use power cell",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "R",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "Arm / cancel grenade",
+    "size": 10,
+    "w": 190,
+    "key": "span.set-bind-label < div.set-bind-row"
+   },
+   {
+    "text": "G",
+    "size": 10,
+    "w": 23,
+    "key": "span.chip.dim < span.set-bind-keys"
+   },
+   {
+    "text": "REBIND",
+    "size": 10,
+    "w": 66,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "RESET",
+    "size": 10,
+    "w": 58,
+    "key": "button.btn.set-bind-btn < span.set-bind-ctl"
+   },
+   {
+    "text": "CLOSE",
+    "size": 10.5,
+    "w": 99,
+    "key": "button.hud-btn.pause < div.hud-menu-actions"
+   },
+   {
+    "text": "VER 7.2.1 // BUILD 2087.05.14",
+    "size": 10,
+    "w": 215,
+    "key": "span < footer.menu-foot"
+   },
+   {
+    "text": "UNAUTHORIZED ACCESS IS A CLASS-1 CORPORA",
+    "size": 10,
+    "w": 371,
+    "key": "span.dim < footer.menu-foot"
+   },
+   {
+    "text": "USER: OPS_DIRECTOR // NEXUS GLOBAL // CL",
+    "size": 10,
+    "w": 430,
+    "key": "span < footer.menu-foot"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "input",
+   "name": "MASTER volume",
+   "dis": null
+  },
+  {
+   "tag": "input",
+   "name": "UI CUES volume",
+   "dis": null
+  },
+  {
+   "tag": "input",
+   "name": "COMBAT volume",
+   "dis": null
+  },
+  {
+   "tag": "input",
+   "name": "MUSIC volume",
+   "dis": null
+  },
+  {
+   "tag": "input",
+   "name": "AMBIENCE volume",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "MUTE // OFF",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "REDUCED MOTION // OFF",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "HIGH CONTRAST // OFF",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Text scale 90%",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Text scale 100%",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Text scale 110%",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Text scale 125%",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Difficulty STANDARD",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Difficulty HARDENED",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Render quality auto",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Render quality high",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Render quality medium",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Render quality low",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "TELEMETRY: LOCAL ONLY // OFF",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Pan forward",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Pan back",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Pan left",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Pan right",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Recenter on the squad",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Zoom in",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Zoom out",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Select the living squad",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Clear the selection",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Stop and drop orders",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Hold position",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Hold fire",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Swap weapon",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Use role ability",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Use med kit",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Use power cell",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Rebind Arm / cancel grenade",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "CLOSE",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

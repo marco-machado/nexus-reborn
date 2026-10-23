@@ -64,6 +64,12 @@ QA Plan: `production/qa/qa-plan-sprint-011-2026-10-23.md` (written 2026-10-23, b
 | IF-021 | [Unrest ink and bar follow its state](../../production/epics/interface/story-021-unrest-ink-and-bar-follow-its-state.md) | ui-programmer | 0.2 | None | Per story file (UI) |
 | IF-022 | [Empty Feed prints -- CHANNEL OPEN --](../../production/epics/interface/story-022-empty-feed-prints-channel-open.md) | ui-programmer | 0.1 | None | Per story file (UI) |
 
+### Added during the sprint (2026-10-23)
+
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
+| IF-036 | [Every surface meets the Standard-tier type, ink and target floors](../../production/epics/interface/story-036-every-surface-meets-the-standard-tier-floors.md) | ui-programmer | 0.5 | IF-026, IF-027, IF-029, IF-031–IF-035 | Per story file (UI); added to close the gate's accessibility check |
+
 ### Nice to Have
 
 | ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |

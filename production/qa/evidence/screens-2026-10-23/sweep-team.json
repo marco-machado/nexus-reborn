@@ -1,0 +1,1490 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 224,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 32,
+  "underTargets": [],
+  "textBoxes": [
+   {
+    "text": "ASSEMBLY",
+    "size": 33.28,
+    "w": 549,
+    "key": "h1.screen-title < div"
+   },
+   {
+    "text": "STRIKE TEAM 04",
+    "size": 15.36,
+    "w": 185,
+    "key": "span.ts-strike < div.ts-sub"
+   },
+   {
+    "text": "SELECT UP TO FOUR OPERATIVES",
+    "size": 10,
+    "w": 224,
+    "key": "span.chip.amber < div.ts-sub"
+   },
+   {
+    "text": "4",
+    "size": 10,
+    "w": 120,
+    "key": "span.chip.dim < div.ts-sub"
+   },
+   {
+    "text": "/ 4 ASSIGNED",
+    "size": 10,
+    "w": 120,
+    "key": "span.chip.dim < div.ts-sub"
+   },
+   {
+    "text": "2087.05.14",
+    "size": 10,
+    "w": 157,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "14:32:44",
+    "size": 10,
+    "w": 157,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "CREDITS",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "128,450",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "CR",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "INFLUENCE",
+    "size": 10,
+    "w": 98,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "0",
+    "size": 10,
+    "w": 98,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "INTEL",
+    "size": 10,
+    "w": 68,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 68,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "ROSTER",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "ROSTER DATABASE",
+    "size": 10,
+    "w": 120,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 104,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 104,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 104,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "ON FILE",
+    "size": 10,
+    "w": 104,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "01",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "MARA",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "ASSAULT",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "−",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row.sel.focus"
+   },
+   {
+    "text": "02",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "GHOST",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "RECON",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "−",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row.sel"
+   },
+   {
+    "text": "03",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "DART",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "INFILTRATOR",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "−",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row.sel"
+   },
+   {
+    "text": "04",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "TORQ",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "DEMOLITIONS",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "−",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row.sel"
+   },
+   {
+    "text": "05",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "RAVEN",
+    "size": 12,
+    "w": 90,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "SNIPER",
+    "size": 10,
+    "w": 90,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "INJURED",
+    "size": 10,
+    "w": 51,
+    "key": "span.ts-row-status.red < button.ts-row-main"
+   },
+   {
+    "text": "+",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row.injured"
+   },
+   {
+    "text": "06",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "SLATE",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "TECH SPECIALIST",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "+",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row"
+   },
+   {
+    "text": "07",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "VEX",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "SUPPORT",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "+",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row"
+   },
+   {
+    "text": "08",
+    "size": 10,
+    "w": 24,
+    "key": "span.ts-row-idx < button.ts-row-main"
+   },
+   {
+    "text": "KESTREL",
+    "size": 12,
+    "w": 104,
+    "key": "span.ts-row-name < button.ts-row-main"
+   },
+   {
+    "text": "MEDIC",
+    "size": 10,
+    "w": 104,
+    "key": "span.ts-row-role < button.ts-row-main"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 36,
+    "key": "span.ts-row-status.teal < button.ts-row-main"
+   },
+   {
+    "text": "+",
+    "size": 15,
+    "w": 26,
+    "key": "button.ts-row-assign < div.ts-row"
+   },
+   {
+    "text": "RECRUIT + (",
+    "size": 12,
+    "w": 222,
+    "key": "button.btn.teal.ts-recruit-btn < div.scroll.ts-roster-list"
+   },
+   {
+    "text": "8",
+    "size": 12,
+    "w": 222,
+    "key": "button.btn.teal.ts-recruit-btn < div.scroll.ts-roster-list"
+   },
+   {
+    "text": "/",
+    "size": 12,
+    "w": 222,
+    "key": "button.btn.teal.ts-recruit-btn < div.scroll.ts-roster-list"
+   },
+   {
+    "text": "8",
+    "size": 12,
+    "w": 222,
+    "key": "button.btn.teal.ts-recruit-btn < div.scroll.ts-roster-list"
+   },
+   {
+    "text": ")",
+    "size": 12,
+    "w": 222,
+    "key": "button.btn.teal.ts-recruit-btn < div.scroll.ts-roster-list"
+   },
+   {
+    "text": "ROSTER SYNC",
+    "size": 10,
+    "w": 79,
+    "key": "span.dim < div.ts-roster-foot"
+   },
+   {
+    "text": "00:12:44 AGO",
+    "size": 10,
+    "w": 87,
+    "key": "span.dim < div.ts-roster-foot"
+   },
+   {
+    "text": "01",
+    "size": 17.92,
+    "w": 25,
+    "key": "b < div.ts-bay-top"
+   },
+   {
+    "text": "MARA",
+    "size": 15.36,
+    "w": 143,
+    "key": "div.ts-bay-name < div.ts-bay-info"
+   },
+   {
+    "text": "CONDITION",
+    "size": 10,
+    "w": 61,
+    "key": "span < div.kv.mini"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 34,
+    "key": "b.teal < div.kv.mini"
+   },
+   {
+    "text": "NEURAL",
+    "size": 10,
+    "w": 41,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "94",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "CHEST",
+    "size": 10,
+    "w": 34,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "93",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "ARMS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "90",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "LEGS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "96",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "- SELECTED -",
+    "size": 10,
+    "w": 108,
+    "key": "div.ts-bay-tag < button.ts-bay.corners.focus"
+   },
+   {
+    "text": "02",
+    "size": 17.92,
+    "w": 25,
+    "key": "b < div.ts-bay-top"
+   },
+   {
+    "text": "GHOST",
+    "size": 15.36,
+    "w": 143,
+    "key": "div.ts-bay-name < div.ts-bay-info"
+   },
+   {
+    "text": "CONDITION",
+    "size": 10,
+    "w": 61,
+    "key": "span < div.kv.mini"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 34,
+    "key": "b.teal < div.kv.mini"
+   },
+   {
+    "text": "NEURAL",
+    "size": 10,
+    "w": 41,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "94",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "CHEST",
+    "size": 10,
+    "w": 34,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "98",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "ARMS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "87",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "LEGS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "95",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "03",
+    "size": 17.92,
+    "w": 25,
+    "key": "b < div.ts-bay-top"
+   },
+   {
+    "text": "DART",
+    "size": 15.36,
+    "w": 143,
+    "key": "div.ts-bay-name < div.ts-bay-info"
+   },
+   {
+    "text": "CONDITION",
+    "size": 10,
+    "w": 61,
+    "key": "span < div.kv.mini"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 34,
+    "key": "b.teal < div.kv.mini"
+   },
+   {
+    "text": "NEURAL",
+    "size": 10,
+    "w": 41,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "96",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "CHEST",
+    "size": 10,
+    "w": 34,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "89",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "ARMS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "87",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "LEGS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "98",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "04",
+    "size": 17.92,
+    "w": 25,
+    "key": "b < div.ts-bay-top"
+   },
+   {
+    "text": "TORQ",
+    "size": 15.36,
+    "w": 143,
+    "key": "div.ts-bay-name < div.ts-bay-info"
+   },
+   {
+    "text": "CONDITION",
+    "size": 10,
+    "w": 61,
+    "key": "span < div.kv.mini"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 34,
+    "key": "b.teal < div.kv.mini"
+   },
+   {
+    "text": "NEURAL",
+    "size": 10,
+    "w": 41,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "94",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "CHEST",
+    "size": 10,
+    "w": 34,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "83",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "ARMS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "90",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "LEGS",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "96",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "%",
+    "size": 11,
+    "w": 22,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "01",
+    "size": 10,
+    "w": 16,
+    "key": "b.amber < span.panel-title"
+   },
+   {
+    "text": "MARA",
+    "size": 10,
+    "w": 136,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 136,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "ASSAULT",
+    "size": 10,
+    "w": 136,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "CONDITION:",
+    "size": 10,
+    "w": 126,
+    "key": "span.panel-right < header.panel-head"
+   },
+   {
+    "text": "READY",
+    "size": 10,
+    "w": 40,
+    "key": "b.teal < span.panel-right"
+   },
+   {
+    "text": "D. TORRES",
+    "size": 12.5,
+    "w": 214,
+    "key": "b < span.ts-id-main"
+   },
+   {
+    "text": "Frontline combat. Breach and clear.",
+    "size": 10,
+    "w": 214,
+    "key": "i.dim < span.ts-id-main"
+   },
+   {
+    "text": "HLTH",
+    "size": 10,
+    "w": 50,
+    "key": "label < div"
+   },
+   {
+    "text": "92",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "%",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "STAMINA",
+    "size": 10,
+    "w": 50,
+    "key": "label < div"
+   },
+   {
+    "text": "79",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "%",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "FOCUS",
+    "size": 10,
+    "w": 50,
+    "key": "label < div"
+   },
+   {
+    "text": "92",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "%",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "MOBILITY",
+    "size": 10,
+    "w": 50,
+    "key": "label < div"
+   },
+   {
+    "text": "81",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "%",
+    "size": 17.92,
+    "w": 50,
+    "key": "b < div"
+   },
+   {
+    "text": "ROLE PROTOCOL",
+    "size": 10,
+    "w": 272,
+    "key": "label < div.ts-box"
+   },
+   {
+    "text": "ACT",
+    "size": 10,
+    "w": 50,
+    "key": "span.ts-aug-slot < div.ts-aug"
+   },
+   {
+    "text": "OVERDRIVE",
+    "size": 10,
+    "w": 169,
+    "key": "b < span.ts-aug-main"
+   },
+   {
+    "text": "Combat stims flood the servos: fire dela",
+    "size": 10,
+    "w": 169,
+    "key": "i.dim < span.ts-aug-main"
+   },
+   {
+    "text": "PSV",
+    "size": 10,
+    "w": 50,
+    "key": "span.ts-aug-slot < div.ts-aug"
+   },
+   {
+    "text": "COMBAT DRILLS",
+    "size": 10,
+    "w": 169,
+    "key": "b < span.ts-aug-main"
+   },
+   {
+    "text": "Weapon handling under fire: +10% weapon ",
+    "size": 10,
+    "w": 169,
+    "key": "i.dim < span.ts-aug-main"
+   },
+   {
+    "text": "AUGMENTATIONS",
+    "size": 10,
+    "w": 272,
+    "key": "label < div.ts-box"
+   },
+   {
+    "text": "NEURAL",
+    "size": 10,
+    "w": 50,
+    "key": "span.ts-aug-slot < button.ts-aug.stock"
+   },
+   {
+    "text": "STOCK ISSUE",
+    "size": 10,
+    "w": 169,
+    "key": "b < span.ts-aug-main"
+   },
+   {
+    "text": "NO PROJECT RESEARCHED",
+    "size": 10,
+    "w": 169,
+    "key": "i.dim < span.ts-aug-main"
+   },
+   {
+    "text": "CHEST",
+    "size": 10,
+    "w": 50,
+    "key": "span.ts-aug-slot < button.ts-aug.stock"
+   },
+   {
+    "text": "STOCK ISSUE",
+    "size": 10,
+    "w": 169,
+    "key": "b < span.ts-aug-main"
+   },
+   {
+    "text": "NO PROJECT RESEARCHED",
+    "size": 10,
+    "w": 169,
+    "key": "i.dim < span.ts-aug-main"
+   },
+   {
+    "text": "ARMS",
+    "size": 10,
+    "w": 50,
+    "key": "span.ts-aug-slot < button.ts-aug.stock"
+   },
+   {
+    "text": "STOCK ISSUE",
+    "size": 10,
+    "w": 169,
+    "key": "b < span.ts-aug-main"
+   },
+   {
+    "text": "NO PROJECT RESEARCHED",
+    "size": 10,
+    "w": 169,
+    "key": "i.dim < span.ts-aug-main"
+   },
+   {
+    "text": "LEGS",
+    "size": 10,
+    "w": 50,
+    "key": "span.ts-aug-slot < button.ts-aug.stock"
+   },
+   {
+    "text": "STOCK ISSUE",
+    "size": 10,
+    "w": 169,
+    "key": "b < span.ts-aug-main"
+   },
+   {
+    "text": "NO PROJECT RESEARCHED",
+    "size": 10,
+    "w": 169,
+    "key": "i.dim < span.ts-aug-main"
+   },
+   {
+    "text": "LOADOUT",
+    "size": 10,
+    "w": 132,
+    "key": "label < div.ts-box"
+   },
+   {
+    "text": "PRIMARY",
+    "size": 10,
+    "w": 55,
+    "key": "span < div.ts-weapon-head"
+   },
+   {
+    "text": "30",
+    "size": 10,
+    "w": 47,
+    "key": "span.dim < div.ts-weapon-head"
+   },
+   {
+    "text": "/120",
+    "size": 10,
+    "w": 47,
+    "key": "span.dim < div.ts-weapon-head"
+   },
+   {
+    "text": "RFC-27 ASSAULT",
+    "size": 10,
+    "w": 116,
+    "key": "div.ts-weapon-name < div.ts-weapon.corners"
+   },
+   {
+    "text": "SECONDARY",
+    "size": 10,
+    "w": 70,
+    "key": "span < div.ts-weapon-head"
+   },
+   {
+    "text": "12",
+    "size": 10,
+    "w": 39,
+    "key": "span.dim < div.ts-weapon-head"
+   },
+   {
+    "text": "/48",
+    "size": 10,
+    "w": 39,
+    "key": "span.dim < div.ts-weapon-head"
+   },
+   {
+    "text": "S-18 PISTOL",
+    "size": 10,
+    "w": 116,
+    "key": "div.ts-weapon-name < div.ts-weapon.corners.secondary"
+   },
+   {
+    "text": "ITEM SLOTS",
+    "size": 10,
+    "w": 132,
+    "key": "label < div.ts-box"
+   },
+   {
+    "text": "MED",
+    "size": 10,
+    "w": 118,
+    "key": "span.dim < label"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 118,
+    "key": "span.dim < label"
+   },
+   {
+    "text": "KG / CELL",
+    "size": 10,
+    "w": 118,
+    "key": "span.dim < label"
+   },
+   {
+    "text": "6",
+    "size": 10,
+    "w": 118,
+    "key": "span.dim < label"
+   },
+   {
+    "text": "KG",
+    "size": 10,
+    "w": 118,
+    "key": "span.dim < label"
+   },
+   {
+    "text": "+",
+    "size": 15,
+    "w": 9,
+    "key": "span.ts-loadout-empty < button.ts-loadout-slot"
+   },
+   {
+    "text": "EMPTY SLOT",
+    "size": 10,
+    "w": 54,
+    "key": "b.dim < button.ts-loadout-slot"
+   },
+   {
+    "text": "0.0 KG",
+    "size": 10,
+    "w": 41,
+    "key": "i.dim < button.ts-loadout-slot"
+   },
+   {
+    "text": "+",
+    "size": 15,
+    "w": 9,
+    "key": "span.ts-loadout-empty < button.ts-loadout-slot"
+   },
+   {
+    "text": "EMPTY SLOT",
+    "size": 10,
+    "w": 54,
+    "key": "b.dim < button.ts-loadout-slot"
+   },
+   {
+    "text": "0.0 KG",
+    "size": 10,
+    "w": 41,
+    "key": "i.dim < button.ts-loadout-slot"
+   },
+   {
+    "text": "CARRIED:",
+    "size": 10,
+    "w": 132,
+    "key": "div.dim.mini.ts-loadout-mass < div.ts-box"
+   },
+   {
+    "text": "73.9",
+    "size": 10,
+    "w": 132,
+    "key": "div.dim.mini.ts-loadout-mass < div.ts-box"
+   },
+   {
+    "text": "KG",
+    "size": 10,
+    "w": 132,
+    "key": "div.dim.mini.ts-loadout-mass < div.ts-box"
+   },
+   {
+    "text": "ASSAULT",
+    "size": 10,
+    "w": 85,
+    "key": "b < span.ts-role-main"
+   },
+   {
+    "text": "OVERDRIVE",
+    "size": 10,
+    "w": 85,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "COMBAT DRILLS",
+    "size": 10,
+    "w": 85,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "RECON",
+    "size": 10,
+    "w": 72,
+    "key": "b < span.ts-role-main"
+   },
+   {
+    "text": "PULSE SCAN",
+    "size": 10,
+    "w": 72,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "SENSOR MESH",
+    "size": 10,
+    "w": 72,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "INFILTRATOR",
+    "size": 10,
+    "w": 82,
+    "key": "b < span.ts-role-main"
+   },
+   {
+    "text": "GHOST VEIL",
+    "size": 10,
+    "w": 82,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "LOW PROFILE",
+    "size": 10,
+    "w": 82,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "DEMOLITIONS",
+    "size": 10,
+    "w": 85,
+    "key": "b < span.ts-role-main"
+   },
+   {
+    "text": "FRAG CHARGE",
+    "size": 10,
+    "w": 85,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "BLAST PLATING",
+    "size": 10,
+    "w": 85,
+    "key": "i.dim < span.ts-role-main"
+   },
+   {
+    "text": "DEPLOYMENT MASS",
+    "size": 10,
+    "w": 192,
+    "key": "label < div.ts-mass.corners"
+   },
+   {
+    "text": "286.1",
+    "size": 23.04,
+    "w": 76,
+    "key": "b < div.ts-mass-num"
+   },
+   {
+    "text": "KG",
+    "size": 10,
+    "w": 15,
+    "key": "span.ts-mass-unit < div.ts-mass-num"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 192,
+    "key": "div.ts-mass-limit.dim < div.ts-mass.corners"
+   },
+   {
+    "text": "400.0",
+    "size": 10,
+    "w": 192,
+    "key": "div.ts-mass-limit.dim < div.ts-mass.corners"
+   },
+   {
+    "text": "KG LIMIT",
+    "size": 10,
+    "w": 192,
+    "key": "div.ts-mass-limit.dim < div.ts-mass.corners"
+   },
+   {
+    "text": "LIGHT LOAD // +0.15 M/S",
+    "size": 10,
+    "w": 192,
+    "key": "div.ts-mass-tier.light < div.ts-mass.corners"
+   },
+   {
+    "text": "DEPLOY TEAM >>",
+    "size": 23.04,
+    "w": 280,
+    "key": "span.cta-inner < button.cta.big"
+   },
+   {
+    "text": "CONFIRM AND DEPLOY STRIKE TEAM 04",
+    "size": 10,
+    "w": 282,
+    "key": "div.dim.mini.ts-deploy-sub < div.ts-deploy"
+   },
+   {
+    "text": "WORLD NETWORK",
+    "size": 11.5,
+    "w": 120,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "RESEARCH",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "BRIEF",
+    "size": 11.5,
+    "w": 46,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "ASSEMBLY",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab.active"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON MARA // ASSAULT // READY",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "UNASSIGN MARA // STRIKE TEAM 04",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON GHOST // RECON // READY",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "UNASSIGN GHOST // STRIKE TEAM 04",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON DART // INFILTRATOR // READY",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "UNASSIGN DART // STRIKE TEAM 04",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON TORQ // DEMOLITIONS // READY",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "UNASSIGN TORQ // STRIKE TEAM 04",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON RAVEN // SNIPER // INJURED",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON SLATE // TECH SPECIALIST // RE",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON VEX // SUPPORT // READY",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "READ THE DOSSIER ON KESTREL // MEDIC // READY",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "OPEN THE RECRUITMENT MARKET // ROSTER 8 OF 8",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BAY 01 // MARA // READ THE DOSSIER",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BAY 02 // GHOST // READ THE DOSSIER",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BAY 03 // DART // READ THE DOSSIER",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BAY 04 // TORQ // READ THE DOSSIER",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "ITEM SLOT 1 // EMPTY // CYCLE",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "ITEM SLOT 2 // EMPTY // CYCLE",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "DEPLOY STRIKE TEAM 04",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "WORLD NETWORK",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "RESEARCH",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BRIEF",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "ASSEMBLY",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

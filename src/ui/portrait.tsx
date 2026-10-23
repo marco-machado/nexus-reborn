@@ -10,7 +10,6 @@ import {
   FACE_NECK,
   FACE_SHOULDER,
   INK_A55,
-  INK_DIM_A9,
   RIM,
   TEAL_A05,
   TEAL_A16,
@@ -285,23 +284,14 @@ function PortraitSvg({ op, size = 96 }: { op: PortraitOp; size?: number }) {
       {/* scanline texture */}
       <rect x="0" y="0" width="100" height="100" fill={'url(#' + uid + '-s)'} opacity="0.35" />
 
-      {/* barcode strip + serial */}
+      {/* barcode strip. The serial that sat beside it drew at about 2 px on
+          every surface that shows a portrait, under the 10 px text floor;
+          the operative's name prints beside the portrait instead. */}
       <g fill={INK_A55}>
         {g.bars.map((b, i) => (
           <rect key={i} x={b.x} y={88} width={b.w} height={7} />
         ))}
       </g>
-      <text
-        x="92"
-        y="94"
-        textAnchor="end"
-        fontSize="4.2"
-        fontFamily="inherit"
-        fill={INK_DIM_A9}
-        letterSpacing="0.6"
-      >
-        {g.serial}
-      </text>
 
       {/* frame */}
       <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={TEAL_A16} strokeWidth="1" />

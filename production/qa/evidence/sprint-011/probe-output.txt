@@ -1,4 +1,4 @@
-# Sprint 11 probe — 2026-10-23T05:21:27.534Z
+# Sprint 11 probe — 2026-10-23T05:44:09.290Z
 PASS IF-026 opening-card: every text run >= 10 px // min 10px over 233 runs
 PASS IF-026 opening-card: readouts >= 12 px // 33 readouts, min 12px
 PASS IF-027 opening-card: no text in Ink Dim

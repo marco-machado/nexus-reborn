@@ -197,3 +197,12 @@ stories:
     estimate_days: 0.3
     blocker: ""
     completed: "2026-10-23"
+  - id: "IF-036"
+    name: "Every surface meets the Standard-tier type, ink and target floors"
+    file: "production/epics/interface/story-036-every-surface-meets-the-standard-tier-floors.md"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-10-23"

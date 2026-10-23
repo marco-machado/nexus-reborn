@@ -330,12 +330,3 @@ export function sidePoints(r: MapRect): string {
   const x1 = r.x + r.w
   return `${x1},${r.y} ${x1 + d.x},${r.y + d.y} ${x1 + d.x},${r.y + r.h + d.y} ${x1},${r.y + r.h}`
 }
-
-/* ------------------------------ callout sizing ----------------------------- */
-
-// The UI is set in a monospace stack, so a run of text is its length times the
-// glyph advance plus its tracking. Callout boxes are sized from this rather
-// than from a guess, which is what used to let the label overflow its frame.
-export function textWidth(text: string, size: number, tracking: number): number {
-  return text.length * (size * 0.6 + tracking)
-}

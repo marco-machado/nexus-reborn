@@ -11,7 +11,7 @@
 
 ## Next step
 
-1. **UX specs for Research, Brief, Assembly, Debrief and Settings** (`/ux-design` each, then `/ux-review`), measured on the running build with the Sprint 11 probe approach; fix the as-built accessibility deltas they find (type floors, ink contrast, hit targets) on those screens.
+1. **UX specs for Research, Brief, Assembly, Debrief and Settings** (`/ux-design` each, then `/ux-review`), from the measured sweep in `production/qa/evidence/screens-2026-10-23/` (accessibility floors already met on every surface, IF-036).
 
 ## After that
 
@@ -33,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-23 — IF-036: every surface (Menu, Settings, Research, Brief, Assembly, Debrief, Mission HUD, Pause) meets the 10 px / 4.5:1 / 24×24 floors and lays out at four text scales; sweep 0 failures; Brief recon type moved to an HTML overlay.
 - 2026-10-23 — Sprint 11 implemented: IF-016 to IF-035 Complete (World Network to its UX spec; type, ink and hit-target floors; card no longer blocks the clock). Probe `production/qa/evidence/sprint-011/probe.mjs` ALL PASS (152); 1642 tests; code review APPROVED WITH SUGGESTIONS, applied. `npm test` ×3 green before the first story (retro 10 action 4).
 - 2026-10-23 — `/qa-plan sprint`: `production/qa/qa-plan-sprint-011-2026-10-23.md` written; five missing guard cases (IF-020, IF-023, IF-026, IF-029, IF-030) added and back-filled into the stories; the four IF-015 gaps carried as Brief cases.
 - 2026-10-23 — `/sprint-plan new`: Sprint 11 written (`production/sprints/sprint-011.md`, `production/sprint-status.yaml`). Guard ACs added to IF-016 to IF-035 for the `/story-readiness` minimum; PR-SPRINT CONCERNS → owner Option A (IF-019, IF-025 Nice to Have); TR waiver for IF-031 to IF-035; view-control bar stays.

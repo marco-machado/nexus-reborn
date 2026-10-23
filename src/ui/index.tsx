@@ -93,7 +93,6 @@ import {
   roofPoints,
   sidePoints,
   targetWindows,
-  textWidth,
 } from './briefMap'
 import { act, fmt, hashOf, mmss, pad2, utcNow } from './util'
 import { Portrait } from './portrait'
@@ -286,26 +285,28 @@ const THREAT_BLOCKS: Record<MissionDef['threat'], number> = {
   SEVERE: 8,
 }
 const OBJECTIVE_TIER = ['PRIMARY', 'SECONDARY', 'TERTIARY']
-// Recon callout, sized from its own text so the frame always holds the label.
-// The stack sits below the readouts on the right, clear of both. The target
-// name follows the layout archetype the mission deploys.
+// Recon callout. Its type prints in HTML over the art (mb-recon-labels), so it
+// keeps the 10 px floor and follows the text scale; the SVG keeps only the
+// leader line. The target name follows the layout archetype the mission
+// deploys.
 const CALLOUT_NAME: Record<DistrictArchetype, string> = {
   checkpoint: 'CHECKPOINT GATE',
   compound: 'DETENTION COMPOUND',
   industrial: 'RELAY YARD',
 }
-const CALLOUT_PAD = 9
-const CALLOUT_H = 52
-const CALLOUT_Y = 104
+const CALLOUT_X = 712
+const CALLOUT_Y = 130
 function calloutFor(arch: DistrictArchetype, district: string) {
-  const lines = [
-    { text: 'TARGET BUILDING', size: 8, track: 0.9, cls: 'label' },
-    { text: CALLOUT_NAME[arch], size: 10.5, track: 1, cls: 'name' },
-    { text: 'ID: ' + district.replace('DISTRICT ', 'D-') + ' // GRID 77-2A', size: 8, track: 0.9, cls: 'sub' },
+  return [
+    { text: 'TARGET BUILDING', cls: 'label' },
+    { text: CALLOUT_NAME[arch], cls: 'name' },
+    { text: 'ID: ' + district.replace('DISTRICT ', 'D-') + ' // GRID 77-2A', cls: 'sub' },
   ]
-  const w = Math.max(...lines.map((l) => textWidth(l.text, l.size, l.track))) + CALLOUT_PAD * 2
-  return { lines, w, x: RECON_W - 16 - w }
 }
+// SVG user units to a percentage of the recon frame, which stretches to its
+// panel (preserveAspectRatio none), so HTML labels land on the same spot.
+const reconX = (x: number) => (x / RECON_W) * 100 + '%'
+const reconY = (y: number) => (y / RECON_H) * 100 + '%'
 const COMMS_WEATHER: Record<Exclude<Weather, 'none'>, string> = {
   heavy: 'WEATHER: HEAVY RAIN. VISIBILITY LOW.',
   light: 'WEATHER: LIGHT RAIN. VISIBILITY REDUCED.',
@@ -491,69 +492,47 @@ export function MissionBrief() {
                 points="126,338 214,316 292,290 356,258 412,228 452,208"
               />
               <polygon className="mb-tri ins" points="126,330 133,344 119,344" />
-              <g className="mb-tag ins">
-                <rect x="42" y="292" width="120" height="30" />
-                <text x="49" y="305">
-                  INSERTION
-                </text>
-                <text x="49" y="317" className="sub">
-                  ROUTE ALPHA
-                </text>
-              </g>
               {/* extraction route to the south east */}
               <polyline className="mb-route ext" points="544,176 640,228 726,276 806,318" />
               <polygon className="mb-tri ext" points="806,310 813,324 799,324" />
-              <g className="mb-tag ext">
-                <rect x="830" y="270" width="126" height="30" />
-                <text x="837" y="283">
-                  EXTRACTION
-                </text>
-                <text x="837" y="295" className="sub">
-                  ROUTE OMEGA
-                </text>
-              </g>
               {/* readouts and briefing, on a scrim so type stays crisp */}
               <rect x="0" y="0" width={RECON_W} height="98" fill="url(#mb-recon-scrim)" />
-              <g className="mb-readout">
-                {[
-                  'ALT: 1824M',
-                  'RNG: 3.7KM',
-                  'TRK: 117.3',
-                  'ZOOM: 1.6X',
-                  'MODE: IR-MONO',
-                ].map((line, i) => (
-                  <text key={line} x={RECON_W - 16} y={24 + i * 13} textAnchor="end">
-                    {line}
-                  </text>
-                ))}
-              </g>
-              <g className="mb-brieflines">
-                {m.briefing.map((line, i) => (
-                  <text key={i} x="18" y={24 + i * 13}>
-                    &gt; {line}
-                  </text>
-                ))}
-              </g>
-              {/* target callout, anchored clear of the readouts above */}
+              {/* target callout leader; the callout's type is in the overlay */}
               <polyline
                 className="mb-callout"
-                points={`544,150 700,${CALLOUT_Y + CALLOUT_H / 2} ${callout.x},${CALLOUT_Y + CALLOUT_H / 2}`}
+                points={`544,150 690,${CALLOUT_Y + 14} ${CALLOUT_X},${CALLOUT_Y + 14}`}
               />
               <circle className="mb-callout-dot" cx="544" cy="150" r="3" />
-              <g className="mb-callout-box">
-                <rect x={callout.x} y={CALLOUT_Y} width={callout.w} height={CALLOUT_H} />
-                {callout.lines.map((l, i) => (
-                  <text
-                    key={l.text}
-                    className={l.cls}
-                    x={callout.x + CALLOUT_PAD}
-                    y={CALLOUT_Y + 15 + i * 15}
-                  >
-                    {l.text}
-                  </text>
-                ))}
-              </g>
             </svg>
+            {/* The frame's type, in HTML at the 10 px floor and the text scale,
+                placed on the art by percentage. */}
+            <div className="mb-recon-labels">
+              <div className="mb-rbrief" style={{ left: reconX(18), top: reconY(12) }}>
+                {m.briefing.map((line, i) => (
+                  <span key={i}>&gt; {line}</span>
+                ))}
+              </div>
+              <div className="mb-rreadout" style={{ right: reconX(16), top: reconY(12) }} aria-hidden="true">
+                {['ALT: 1824M', 'RNG: 3.7KM', 'TRK: 117.3', 'ZOOM: 1.6X', 'MODE: IR-MONO'].map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
+              </div>
+              <div className="mb-rcallout" style={{ left: reconX(CALLOUT_X), right: reconX(16), top: reconY(CALLOUT_Y) }}>
+                {callout.map((l) => (
+                  <span key={l.text} className={l.cls}>
+                    {l.text}
+                  </span>
+                ))}
+              </div>
+              <div className="mb-rtag ins" style={{ left: reconX(42), top: reconY(286) }}>
+                <b>INSERTION</b>
+                <span>ROUTE ALPHA</span>
+              </div>
+              <div className="mb-rtag ext" style={{ right: reconX(16), top: reconY(262) }}>
+                <b>EXTRACTION</b>
+                <span>ROUTE OMEGA</span>
+              </div>
+            </div>
           </Panel>
           {/* tactical map, projected from the district the mission builds */}
           <Panel

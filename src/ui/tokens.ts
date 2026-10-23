@@ -76,7 +76,6 @@ export const INK_A55 = 'rgba(184, 216, 207, 0.55)'
 export const INK_A8 = 'rgba(184, 216, 207, 0.8)'
 export const INK_DIM_A7 = 'rgba(93, 125, 117, 0.7)'
 export const INK_DIM_A8 = 'rgba(93, 125, 117, 0.8)'
-export const INK_DIM_A9 = 'rgba(93, 125, 117, 0.9)'
 
 /* ------------------------------ shared tints ---------------------------- */
 

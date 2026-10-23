@@ -166,6 +166,11 @@ const HELPERS = () => {
     const overlay = (el) => !!el.closest('.hud-menu-wrap, .tip, .globe-view, .wm-map-wrap')
     for (const el of root.querySelectorAll('*')) {
       if (!visible(el) || el.closest('svg') || el.closest('canvas') || overlay(el)) continue
+      // A vertical list that also scrolls sideways hides text off its edge.
+      const ecs = getComputedStyle(el)
+      if (/(auto|scroll)/.test(ecs.overflowY) && el.scrollWidth > el.clientWidth + 1) {
+        bad.push('hscroll ' + path(el) + ' ' + el.scrollWidth + ' in ' + el.clientWidth)
+      }
       const own = [...el.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim())
       if (!own.length) continue
       const cs = getComputedStyle(el)
