@@ -89,7 +89,7 @@ function ToggleRow(props: {
       </span>
       <button
         type="button"
-        className={'btn set-toggle-btn' + (props.on ? ' amber' : '')}
+        className={'btn set-toggle-btn' + (props.on ? ' sel' : '')}
         aria-pressed={props.on}
         aria-label={props.label + (props.on ? ' // ON' : ' // OFF')}
         onClick={() => {
@@ -133,6 +133,17 @@ export default function SettingsPanel(props: { onClose: () => void }) {
   const balanceVisible = useBalanceEntryVisible()
   const panelRef = useRef<HTMLDivElement | null>(null)
   const closeRef = useRef<HTMLButtonElement | null>(null)
+  // Closing the Balance dashboard puts focus back on its OPEN control (P-05
+  // restore); the first render has nothing to restore.
+  const balanceBtnRef = useRef<HTMLButtonElement | null>(null)
+  const balanceWasOpen = useRef(false)
+  useEffect(() => {
+    if (balanceOpen) balanceWasOpen.current = true
+    else if (balanceWasOpen.current) {
+      balanceWasOpen.current = false
+      balanceBtnRef.current?.focus()
+    }
+  }, [balanceOpen])
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -261,7 +272,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                     <button
                       key={scale}
                       type="button"
-                      className={'btn set-scale-btn' + (textScale === scale ? ' amber' : '')}
+                      className={'btn set-scale-btn' + (textScale === scale ? ' sel' : '')}
                       aria-pressed={textScale === scale}
                       aria-label={'Text scale ' + scale + '%'}
                       onClick={() => {
@@ -289,7 +300,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                     <button
                       key={id}
                       type="button"
-                      className={'btn set-scale-btn' + (difficulty === id ? ' amber' : '')}
+                      className={'btn set-scale-btn' + (difficulty === id ? ' sel' : '')}
                       aria-pressed={difficulty === id}
                       aria-label={'Difficulty ' + DIFFICULTY_LABEL[id]}
                       onClick={() => {
@@ -319,7 +330,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                     <button
                       key={q}
                       type="button"
-                      className={'btn set-scale-btn' + (quality === q ? ' amber' : '')}
+                      className={'btn set-scale-btn' + (quality === q ? ' sel' : '')}
                       aria-pressed={quality === q}
                       aria-label={'Render quality ' + q}
                       onClick={() => {
@@ -351,6 +362,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                     type="button"
                     className="btn set-toggle-btn"
                     aria-label="Open the balance dashboard"
+                    ref={balanceBtnRef}
                     onClick={() => {
                       uiClick()
                       setBalanceOpen(true)
@@ -411,7 +423,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                                 <button
                                   type="button"
                                   className={
-                                    'btn set-bind-btn' + (capture === b.id ? ' amber' : '')
+                                    'btn set-bind-btn' + (capture === b.id ? ' sel' : '')
                                   }
                                   aria-label={
                                     capture === b.id

@@ -35,8 +35,16 @@ export default function PauseMenu({
   // Closing the menu drops a pending arm, so no lapse timer outlives it.
   useEffect(() => () => abortArm.disarm(), [abortArm])
 
+  // Opening the menu focuses RESUME; closing Settings returns focus to the
+  // SETTINGS control that opened it (P-05 restore).
+  const settingsRef = useRef<HTMLButtonElement | null>(null)
+  const settingsWasOpen = useRef(false)
   useEffect(() => {
-    if (!settingsOpen) resumeRef.current?.focus()
+    if (settingsOpen) settingsWasOpen.current = true
+    else if (settingsWasOpen.current) {
+      settingsWasOpen.current = false
+      settingsRef.current?.focus()
+    } else resumeRef.current?.focus()
   }, [settingsOpen])
 
   useEffect(
@@ -122,6 +130,7 @@ export default function PauseMenu({
               type="button"
               className="hud-btn"
               aria-label="Open settings"
+              ref={settingsRef}
               onClick={() => {
                 uiClick()
                 setSettingsOpen(true)

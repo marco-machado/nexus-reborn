@@ -3,13 +3,13 @@
   "svgRuns": 0,
   "svgSmall": [],
   "svgLow": [],
-  "runs": 39,
+  "runs": 43,
   "small": [],
   "low": [],
   "exempt": [],
   "dim": [],
   "faint": [],
-  "targets": 3,
+  "targets": 5,
   "underTargets": [],
   "textBoxes": [
    {
@@ -235,6 +235,30 @@
     "key": "div.db-filing < div.db-card.corners"
    },
    {
+    "text": "RESEARCH // BARREL WEAR COATING",
+    "size": 10,
+    "w": 242,
+    "key": "b.db-research-title < span.db-research-head"
+   },
+   {
+    "text": "OPEN RESEARCH",
+    "size": 10,
+    "w": 124,
+    "key": "button.hud-btn.db-research-btn.teal < span.db-research-btns"
+   },
+   {
+    "text": "UNDERSTOOD",
+    "size": 10,
+    "w": 100,
+    "key": "button.hud-btn.db-research-btn < span.db-research-btns"
+   },
+   {
+    "text": "The BALLISTICS LAB is idle. 14,000 CR st",
+    "size": 10.5,
+    "w": 540,
+    "key": "span.db-research-body < div.db-research.corners"
+   },
+   {
     "text": "RETURN TO WORLD NETWORK",
     "size": 12,
     "w": 278,
@@ -253,6 +277,16 @@
   {
    "tag": "div",
    "name": "Mission invoice",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Open the Research tab",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "Dismiss the Research prompt",
    "dis": null
   },
   {

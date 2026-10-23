@@ -33,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-23 — Five screen UX specs drafted (Research, Brief, Assembly, Debrief, Settings; In Review). IF-037: their committed-tier deltas fixed (no ellipsis anywhere, text-overlap check, P-05 focus for Settings-from-Pause / Balance / Recruitment Market, Debrief focus, reduced-motion overlays, researched check glyph, framed Settings selection).
 - 2026-10-23 — Difficulty-curve open questions decided (two wins to Intel 2; grenade centre 80; one-shot RADIO CALL advisory). Pattern library: P-20 / P-23 corrected, P-24 Scan marker and Focus selection and P-25 Inline moment note added (World Network spec OQ15, OQ19 closed).
 - 2026-10-23 — IF-036: every surface (Menu, Settings, Research, Brief, Assembly, Debrief, Mission HUD, Pause) meets the 10 px / 4.5:1 / 24×24 floors and lays out at four text scales; sweep 0 failures; Brief recon type moved to an HTML overlay.
 - 2026-10-23 — Sprint 11 implemented: IF-016 to IF-035 Complete (World Network to its UX spec; type, ink and hit-target floors; card no longer blocks the clock). Probe `production/qa/evidence/sprint-011/probe.mjs` ALL PASS (152); 1642 tests; code review APPROVED WITH SUGGESTIONS, applied. `npm test` ×3 green before the first story (retro 10 action 4).

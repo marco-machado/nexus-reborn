@@ -95,6 +95,7 @@ import {
   targetWindows,
 } from './briefMap'
 import { act, fmt, hashOf, mmss, pad2, utcNow } from './util'
+import { useModalFocus } from './modalFocus'
 import { Portrait } from './portrait'
 import { Figure } from './figure'
 import SettingsPanel from './Settings'
@@ -900,7 +901,7 @@ export function MissionBrief() {
         <div className="mb-comms corners">
           <b>COMMS LOG // CH 7A</b>
           {commsLog(m).map(([t, msg]) => (
-            <span key={t} className="dim" title={'[' + t + '] ' + msg}>
+            <span key={t} className="dim">
               <i>[{t}]</i> {msg}
             </span>
           ))}
@@ -939,9 +940,19 @@ function RecruitPanel(props: { onClose: () => void }) {
   const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const worldT = useWorldStore((s) => s.t)
   const hoursToNext = Math.max(1, Math.ceil((nextCandidateT - worldT) / 3600))
+  // P-05: focus enters the market, Tab stays in it, Escape closes it, and
+  // focus returns to the RECRUIT control that opened it.
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  useModalFocus(dialogRef, { onEscape: props.onClose })
   return (
     <div className="ts-recruit-overlay">
-      <div className="ts-recruit corners" role="dialog" aria-label="RECRUITMENT MARKET">
+      <div
+        className="ts-recruit corners"
+        role="dialog"
+        aria-modal="true"
+        aria-label="RECRUITMENT MARKET"
+        ref={dialogRef}
+      >
         <header className="ts-recruit-head">
           <b>RECRUITMENT MARKET</b>
           <span className="dim">
@@ -1636,6 +1647,7 @@ export function Debrief() {
   const goto = useAppStore((s) => s.goto)
   const returnFromDebrief = useAppStore((s) => s.returnFromDebrief)
   const research = useDebriefResearchPrompt()
+  const returnBtnRef = useRef<HTMLButtonElement | null>(null)
   const outcome = useAppStore((s) => s.outcome)
   const credits = useAppStore((s) => s.credits)
   const missionId = useAppStore((s) => s.missionId)
@@ -1757,12 +1769,17 @@ export function Debrief() {
         {research.project && (
           <ResearchPromptNote
             project={research.project}
-            onDismiss={research.dismiss}
+            onDismiss={() => {
+              research.dismiss()
+              // The note leaves the page; focus lands on the first action
+              // rather than falling to the document.
+              returnBtnRef.current?.focus()
+            }}
             onOpen={() => returnFromDebrief('research')}
           />
         )}
         <div className="db-actions">
-          <button type="button" className="btn" onClick={act(returnFromDebrief)}>
+          <button type="button" className="btn" ref={returnBtnRef} onClick={act(returnFromDebrief)}>
             RETURN TO WORLD NETWORK
           </button>
           {/* A generated contract is spent by its debrief; only authored

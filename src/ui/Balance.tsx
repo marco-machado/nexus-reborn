@@ -3,7 +3,8 @@
 // the localStorage records, EXPORT produces a JSON download through a data
 // URL, and CLEAR erases the log behind a two-step confirm. No chart library:
 // the bars are divs.
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useModalFocus } from './modalFocus'
 import { TELEMETRY_CAP, aggregate, loadRecords } from '../state/telemetry'
 import { useSettingsStore } from '../state/settingsStore'
 import { Panel } from './bits'
@@ -54,6 +55,11 @@ export default function BalancePanel(props: { onClose: () => void }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- serial invalidates the storage read
   const records = useMemo(() => loadRecords(), [serial])
   const agg = useMemo(() => aggregate(records), [records])
+  // P-05 inside Settings: focus enters the dashboard and Tab stays in it.
+  // Escape is Settings' (it peels the dashboard first); Settings puts focus
+  // back on its OPEN control when the dashboard closes.
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  useModalFocus(rootRef)
 
   useEffect(() => {
     if (!clearArmed) return
@@ -74,7 +80,7 @@ export default function BalancePanel(props: { onClose: () => void }) {
   }
 
   return (
-    <div className="hud-menu-panel balance-panel">
+    <div className="hud-menu-panel balance-panel" ref={rootRef}>
       <Panel
         title="BALANCE DATA"
         right={

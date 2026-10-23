@@ -133,11 +133,21 @@ function HexNode(props: {
       <g className="rs-node-glyph" transform={'translate(' + (x - 12) + ' ' + (y - 26) + ')'}>
         {researchShape(n.glyph as ResearchGlyphId)}
       </g>
-      {n.lines.map((line, i) => (
-        <text key={i} className="rs-node-label" x={x} y={y + 10 + i * 11} textAnchor="middle">
-          {line}
-        </text>
-      ))}
+      {/* Line pitch in em, so it grows with the label's text scale. */}
+      <text className="rs-node-label" x={x} y={y + 10} textAnchor="middle">
+        {n.lines.map((line, i) => (
+          <tspan key={i} x={x} dy={i === 0 ? 0 : '1.05em'}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+      {/* Researched carries a check as well as green, so it is never told by
+          colour alone (accessibility tier; the lock glyph does the same). */}
+      {props.state === 'researched' && (
+        <g className="rs-node-done" transform={'translate(' + (x + 29) + ' ' + (y - 24) + ')'} aria-hidden="true">
+          <path d="M0.5 5.5 L3.5 8.5 L9.5 1.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        </g>
+      )}
       {props.state === 'locked' && (
         <g className="rs-node-lock" transform={'translate(' + (x + 30) + ' ' + (y - 24) + ')'}>
           <path d="M1.4 5V3.6a2.6 2.6 0 0 1 5.2 0V5" fill="none" stroke="currentColor" strokeWidth="1.2" />

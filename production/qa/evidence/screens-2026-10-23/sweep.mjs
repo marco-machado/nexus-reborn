@@ -155,9 +155,14 @@ const HELPERS = () => {
       if (/(auto|scroll)/.test(ecs.overflowY) && el.scrollWidth > el.clientWidth + 1) {
         bad.push('hscroll ' + path(el) + ' ' + el.scrollWidth + ' in ' + el.clientWidth)
       }
+      const cs = getComputedStyle(el)
+      // An ellipsis cuts text whether or not the box holds text directly.
+      if (cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1 && el.textContent.trim()) {
+        bad.push('truncated ' + path(el) + ' "' + el.textContent.trim().slice(0, 30) + '"')
+        continue
+      }
       const own = [...el.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim())
       if (!own.length) continue
-      const cs = getComputedStyle(el)
       const scrolls = /(auto|scroll)/.test(cs.overflowY) || /(auto|scroll)/.test(cs.overflowX)
       const what = path(el) + ' "' + el.textContent.trim().slice(0, 30) + '"'
       // Cut by an ancestor that clips without scrolling (a fixed strip whose
@@ -198,6 +203,49 @@ const HELPERS = () => {
             break
           }
         }
+      }
+    }
+    // Text drawn over other text: every rendered line of every text node
+    // (HTML ranges and SVG text boxes), compared pairwise.
+    const lines = []
+    // A line's visible part: its rect cut by every ancestor that clips
+    // (overflow other than visible), so text scrolled out of view is ignored.
+    const visiblePart = (r, el) => {
+      let x1 = r.left, y1 = r.top, x2 = r.right, y2 = r.bottom
+      for (let n = el.parentElement; n && n !== document.documentElement; n = n.parentElement) {
+        const ns = getComputedStyle(n)
+        if (ns.overflowX !== 'visible' || ns.overflowY !== 'visible') {
+          const c = n.getBoundingClientRect()
+          x1 = Math.max(x1, c.left); y1 = Math.max(y1, c.top); x2 = Math.min(x2, c.right); y2 = Math.min(y2, c.bottom)
+        }
+      }
+      x1 = Math.max(x1, 0); y1 = Math.max(y1, 0); x2 = Math.min(x2, innerWidth); y2 = Math.min(y2, innerHeight)
+      return x2 - x1 > 1 && y2 - y1 > 1 ? { left: x1, top: y1, right: x2, bottom: y2, width: x2 - x1, height: y2 - y1 } : null
+    }
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    for (let t = tw.nextNode(); t; t = tw.nextNode()) {
+      const host = t.parentElement
+      if (!t.textContent.trim() || !host || !visible(host) || overlay(host) || host.closest('canvas')) continue
+      if (host.closest('svg')) continue
+      const rg = document.createRange()
+      rg.selectNodeContents(t)
+      for (const r0 of rg.getClientRects()) {
+        const r = visiblePart(r0, t.parentElement)
+        if (r) lines.push({ r, host, t: t.textContent.trim().slice(0, 24) })
+      }
+    }
+    for (const el of root.querySelectorAll('svg text, svg tspan')) {
+      if (el.tagName === 'text' && el.querySelector('tspan')) continue
+      if (!el.textContent.trim() || overlay(el)) continue
+      const r = visiblePart(el.getBoundingClientRect(), el)
+      if (r) lines.push({ r, host: el, t: el.textContent.trim().slice(0, 24) })
+    }
+    for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length; j++) {
+      const x = lines[i].r, y = lines[j].r
+      const w = Math.min(x.right, y.right) - Math.max(x.left, y.left)
+      const h = Math.min(x.bottom, y.bottom) - Math.max(x.top, y.top)
+      if (w > 2 && h > 2 && h > Math.min(x.height, y.height) * 0.3) {
+        bad.push('textoverlap "' + lines[i].t + '" x "' + lines[j].t + '" ' + Math.round(w) + 'x' + Math.round(h))
       }
     }
     const panels = [...root.querySelectorAll('.panel, .navtabs, .wm-campaign-fail, .wm-campaign-win')].filter((p) => visible(p) && !overlay(p))

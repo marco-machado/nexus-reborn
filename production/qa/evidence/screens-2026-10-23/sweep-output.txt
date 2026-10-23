@@ -59,7 +59,7 @@
   clip @110: 0
   clip @125: 0
   tab stops: 24
-## debrief: 39 runs, 3 targets
+## debrief: 43 runs, 5 targets
   <10px: 0
   <4.5:1 default: 0
   <4.5:1 high contrast: 0
@@ -70,7 +70,7 @@
   clip @100: 0
   clip @110: 0
   clip @125: 0
-  tab stops: 3
+  tab stops: 5
 ## mission: 126 runs, 13 targets
   <10px: 0
   <4.5:1 default: 0

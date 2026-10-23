@@ -97,18 +97,17 @@
   letter-spacing: 0.2em;
   color: var(--cyan);
   flex: none;
-  white-space: nowrap;
   min-width: 0;
   /* when the title and its right-hand readout do not fit one line (larger
      text scales), the readout drops to a second line rather than truncating
-     the title; the ellipsis is a last resort for a title wider than the panel */
+     the title; a title wider than the panel wraps (no ellipsis, IF-036) */
   flex-wrap: wrap;
   row-gap: 2px;
+  overflow-wrap: break-word;
 }
 
 .panel-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
 }
 
 .panel-right {
@@ -405,7 +404,7 @@
   transition: border-color 0.12s, color 0.12s;
 }
 
-.navtab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navtab-label { overflow-wrap: break-word; }
 .navtab-lock { display: flex; align-items: center; gap: 6px; color: var(--red-hot); }
 /* Locked (P-06): lock glyph, the word LOCKED and the condition, printed; red
    reinforces (red = locks, living §12). Never merely dimmed. */
@@ -571,9 +570,11 @@
   from { opacity: 0; transform: scale(1.05); }
   to { opacity: 1; transform: scale(1); }
 }
+/* Print, not travel: a row fades in place in <= 120 ms (art bible §7.4,
+   pattern library Animation Standards). */
 @keyframes row-in {
-  from { opacity: 0; transform: translateX(-6px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes sweep-x {
   from { left: -16%; }
@@ -981,9 +982,7 @@
 .wm-sector-name {
   font-size: calc(12px * var(--text-scale));
   letter-spacing: 0.07em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
 }
 
 .wm-sector.sel .wm-sector-name { color: var(--print-white); }
@@ -1377,9 +1376,7 @@
   background: rgba(4, 10, 9, 0.7);
   padding: 1px 4px;
   max-width: calc(100% - 8px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .wm-cu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1524,9 +1521,7 @@
   display: block;
   font-size: calc(12px * var(--text-scale));
   letter-spacing: 0.14em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
 }
 .wm-op-main i { display: block; font-size: calc(10px * var(--text-scale)); margin-top: 2px; letter-spacing: 0.08em; }
 
@@ -1732,7 +1727,7 @@
 .wm-feed-line.green { color: var(--green); }
 .wm-feed-line.notice { color: var(--print-white); }
 .wm-feed-t { color: var(--ink); }
-.wm-feed-x { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-feed-x { overflow-wrap: break-word; }
 .wm-feed-chev { opacity: 0; }
 .wm-feed-line:hover .wm-feed-chev { opacity: 0.75; }
 
@@ -2140,10 +2135,8 @@
   flex: none;
 }
 
-/* Sized to its longest entry up to a cap that follows the text scale, so the
-   entries keep their line at 1280x720. Below that it shrinks with the window
-   rather than dropping out of the footer: the entries ellipsize and keep their
-   full text on hover. */
+/* Sized to its longest entry up to a cap that follows the text scale. An
+   entry that does not fit wraps; it never ellipsizes (Interface Rule 6, IF-036). */
 .mb-comms {
   display: flex;
   flex: 0 1 auto;
@@ -2161,7 +2154,7 @@
 }
 
 .mb-comms b { color: var(--cyan); font-size: calc(10px * var(--text-scale)); letter-spacing: 0.18em; }
-.mb-comms span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mb-comms span { overflow-wrap: anywhere; }
 .mb-comms i { color: var(--ink); }
 
 .mb-accept { flex: 3 1 300px; align-self: center; }
@@ -2525,7 +2518,7 @@
 .ts-aug.stock .ts-aug-main b { color: var(--ink); }
 
 .ts-aug-main { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
-.ts-aug-main b { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts-aug-main b { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.1em; overflow-wrap: break-word; }
 .ts-aug-main i { font-size: calc(10px * var(--text-scale)); }
 
 .ts-kit {
@@ -2611,15 +2604,13 @@
 
 .ts-role-glyph { color: var(--cyan); flex: none; }
 .ts-role-main { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-.ts-role-main b { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts-role-main b { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.14em; overflow-wrap: break-word; }
 
 /* one sentence per line: the whole bio on one line cuts mid-word */
 .ts-role-main i {
   font-size: calc(10px * var(--text-scale));
   line-height: 1.35;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
 }
 
 .ts-role.empty {
@@ -2835,7 +2826,7 @@
   font-size: calc(12.5px * var(--text-scale));
   letter-spacing: 0.1em;
   opacity: 0;
-  animation: row-in 0.4s ease-out forwards;
+  animation: row-in 0.12s linear forwards;
 }
 
 .db-row-label { color: var(--ink); flex: none; }
@@ -3746,9 +3737,7 @@ button.hud-slot {
   font-size: calc(10.5px * var(--text-scale));
   letter-spacing: 0.08em;
   color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .rs-lab i.mini,
@@ -3808,10 +3797,13 @@ button.hud-slot {
 .rs-hex-fill { fill: color-mix(in srgb, var(--teal) 26%, transparent); }
 .rs-hex-ring { fill: none; stroke: var(--cyan); stroke-width: 1; stroke-dasharray: 5 4; }
 
+/* The tree is fixed geometry: its labels follow the text scale up to 110%,
+   where the node pitch still holds them; the detail panel prints the full
+   name at every scale (Research UX spec). */
 .rs-node-label {
   fill: var(--ink);
   font-family: var(--font-mono);
-  font-size: calc(10.6px * var(--text-scale));
+  font-size: calc(10.6px * min(var(--text-scale), 1.1));
   letter-spacing: 0.05em;
 }
 
@@ -3825,6 +3817,7 @@ button.hud-slot {
 
 .rs-node.researched .rs-hex { stroke: rgba(125, 224, 138, 0.7); fill: rgba(19, 44, 27, 0.85); }
 .rs-node.researched .rs-node-glyph { color: var(--green); }
+.rs-node-done { color: var(--green); }
 .rs-node.researched .rs-node-label { fill: rgba(125, 224, 138, 0.85); }
 
 /* In progress: teal like available, told apart by the 2px pulsing stroke,
@@ -3999,7 +3992,8 @@ button.hud-slot {
 :root.s-reduce-motion .rs-node.active .rs-hex,
 :root.s-reduce-motion .rs-link.live,
 :root.s-reduce-motion .hud-collateral.pulse,
-:root.s-reduce-motion .hud-edge-glow {
+:root.s-reduce-motion .hud-edge-glow,
+:root.s-reduce-motion .hud-menu-wrap {
   animation: none;
 }
 
@@ -4421,9 +4415,7 @@ body:has(.wm-onboard-wrap) .write-fail-region {
   font-size: calc(10px * var(--text-scale, 1));
   color: var(--ink);
   letter-spacing: 0.08em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .bal-bar-track {
@@ -4697,3 +4689,8 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 .mb-rtag.ins b { color: var(--teal); }
 .mb-rtag.ext { align-items: flex-end; border: 1px solid color-mix(in srgb, var(--red-hot) 50%, transparent); }
 .mb-rtag.ext b { color: var(--red-hot); }
+
+/* Settings: the selected segment and an ON toggle are selection (P-06), so a
+   closed 2 px frame carries them and teal reinforces; amber is money only
+   (art bible §4.2). The negative margin gives back the extra border width. */
+.btn.sel { color: var(--teal); border: 2px solid var(--teal); margin: -1px; }

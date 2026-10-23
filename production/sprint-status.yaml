@@ -206,3 +206,12 @@ stories:
     estimate_days: 0.5
     blocker: ""
     completed: "2026-10-23"
+  - id: "IF-037"
+    name: "The five screen specs' committed-tier deltas are fixed"
+    file: "production/epics/interface/story-037-screen-specs-committed-tier-deltas.md"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-10-23"

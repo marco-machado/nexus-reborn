@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/interface.md
 > **Architecture Module**: Interface — `src/ui/`, `src/scene/` (phase router, DOM, HUD, tokens, canvas host)
 > **Status**: Ready
-> **Stories**: 36 — see the Stories table below
+> **Stories**: 37 — see the Stories table below
 
 ## Overview
 
@@ -80,6 +80,7 @@ This epic is complete when:
 | 034 | [Inset steppers have a 24 px hit area](story-034-inset-steppers-have-a-24-px-hit-area.md) | UI | Complete | ADR-0017 |
 | 035 | [Remaining World Network pointer targets meet 24×24](story-035-remaining-world-network-pointer-targets-meet-24-px.md) | UI | Complete | ADR-0017 |
 | 036 | [Every surface meets the Standard-tier type, ink and target floors](story-036-every-surface-meets-the-standard-tier-floors.md) | UI | Complete | ADR-0017 |
+| 037 | [The five screen specs' committed-tier deltas are fixed](story-037-screen-specs-committed-tier-deltas.md) | UI | Complete | ADR-0017 |
 
 GDD AC24 (invoice money lines) is covered by economy-and-contracts story 022; the Research remaining label by research story 009.
 

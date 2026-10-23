@@ -57,7 +57,7 @@
     "key": "span.cursor < div.dim"
    },
    {
-    "text": "05:42:24",
+    "text": "06:16:06",
     "size": 11,
     "w": 106,
     "key": "div.menu-clock < header.menu-top"
@@ -269,14 +269,14 @@
    {
     "text": "100",
     "size": 12,
-    "w": 57,
-    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+    "w": 59,
+    "key": "button.btn.set-scale-btn.sel < span.set-scale"
    },
    {
     "text": "%",
     "size": 12,
-    "w": 57,
-    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+    "w": 59,
+    "key": "button.btn.set-scale-btn.sel < span.set-scale"
    },
    {
     "text": "110",
@@ -323,8 +323,8 @@
    {
     "text": "STANDARD",
     "size": 12,
-    "w": 95,
-    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+    "w": 97,
+    "key": "button.btn.set-scale-btn.sel < span.set-scale"
    },
    {
     "text": "HARDENED",
@@ -353,8 +353,8 @@
    {
     "text": "AUTO",
     "size": 12,
-    "w": 57,
-    "key": "button.btn.set-scale-btn.amber < span.set-scale"
+    "w": 59,
+    "key": "button.btn.set-scale-btn.sel < span.set-scale"
    },
    {
     "text": "HIGH",
