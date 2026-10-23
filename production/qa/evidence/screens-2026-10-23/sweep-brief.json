@@ -11,6 +11,7 @@
   "faint": [],
   "targets": 5,
   "underTargets": [],
+  "labelInName": [],
   "textBoxes": [
    {
     "text": "BRIEF",
@@ -121,7 +122,7 @@
     "key": "span.panel-title < header.panel-head"
    },
    {
-    "text": "06:16:14",
+    "text": "06:55:30",
     "size": 10,
     "w": 144,
     "key": "span.dim < span.panel-right"
@@ -135,49 +136,49 @@
    {
     "text": ">",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": "Stratos has located an Omnicorp relay ya",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": ">",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": "Three fuel relays sit in a fenced yard b",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": ">",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": "Drop the relays, then hold the yard whil",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": ">",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {
     "text": "CorpSec will push a response wave throug",
     "size": 10,
-    "w": 561,
+    "w": 547,
     "key": "span < div.mb-rbrief"
    },
    {

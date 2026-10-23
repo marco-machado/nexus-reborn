@@ -1,76 +1,3 @@
-## menu: 15 runs, 2 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 0 runs; <10px: 0; <4.5:1: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 2
-## settings: 157 runs, 57 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  exempt (inactive / blinking): _ [blink] | RESET ALL [inactive] | RESET [inactive]
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 0 runs; <10px: 0; <4.5:1: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 37
-## research: 85 runs, 26 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 42 runs; <10px: 0; <4.5:1: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 26
-## brief: 142 runs, 5 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 4 runs; <10px: 0; <4.5:1: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 7
-## team: 224 runs, 32 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 0 runs; <10px: 0; <4.5:1: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 24
-## debrief: 43 runs, 5 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 0 runs; <10px: 0; <4.5:1: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 5
 ## mission: 126 runs, 13 targets
   <10px: 0
   <4.5:1 default: 0
@@ -78,6 +5,7 @@
   exempt (inactive / blinking): + [inactive]
   Ink Dim text: 0; Ink Faint text: 0
   svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
   targets <24: 0
   clip @90: 0
   clip @100: 0
@@ -91,6 +19,7 @@
   exempt (inactive / blinking): + [inactive]
   Ink Dim text: 0; Ink Faint text: 0
   svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
   targets <24: 0
   clip @90: 0
   clip @100: 0

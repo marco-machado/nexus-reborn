@@ -390,7 +390,7 @@ await store(async () => {
   useAppStore.getState().selectMission('m03'); useAppStore.getState().goto('team')
 })
 await wait(900)
-const opener = page.locator('button[aria-label^="OPEN THE RECRUITMENT MARKET"]').first()
+const opener = page.locator('button[aria-label*="OPEN THE RECRUITMENT MARKET"]').first()
 await opener.focus(); await page.keyboard.press('Enter'); await wait(400)
 check('Recruitment Market takes focus', await inside('.ts-recruit'), String(await active()))
 for (let i = 0; i < 12; i++) await page.keyboard.press('Tab')
@@ -398,7 +398,7 @@ check('Tab stays inside the Recruitment Market', await inside('.ts-recruit'), St
 await page.keyboard.press('Escape'); await wait(400)
 const gone = await page.evaluate(() => !document.querySelector('.ts-recruit'))
 check('Escape closes the Recruitment Market', gone)
-check('focus returns to the RECRUIT control', ((await active()) || '').startsWith('OPEN THE RECRUITMENT MARKET'), String(await active()))
+check('focus returns to the RECRUIT control', ((await active()) || '').includes('OPEN THE RECRUITMENT MARKET'), String(await active()))
 
 // 4. Debrief research note: UNDERSTOOD -> focus on RETURN TO WORLD NETWORK.
 await fresh()
@@ -407,11 +407,31 @@ await store(async () => {
   useTutorialStore.setState({ seen: useTutorialStore.getState().seen.filter((x) => x !== 'hint-debrief-research') })
 })
 await SURFACES.debrief()
-const und = page.locator('button[aria-label="Dismiss the Research prompt"]')
+const und = page.locator('button[aria-label^="UNDERSTOOD // DISMISS THE RESEARCH PROMPT"]')
 if (await und.count()) {
   await und.focus(); await page.keyboard.press('Enter'); await wait(300)
   check('after UNDERSTOOD focus is on RETURN TO WORLD NETWORK', (await active()) === 'RETURN TO WORLD NETWORK', String(await active()))
 } else check('Debrief research note shows on the first Debrief', false, 'no note')
+// 4b. Balance from the Debrief: Escape closes it and focus returns to BALANCE DATA.
+await store(async () => {
+  const t = await import('/src/state/telemetry.ts')
+  t.saveRecords([{ at: Date.now(), missionId: 'm03', outcome: 'aborted', durationSec: 12, seed: 1, squadRoles: ['assault'] }])
+})
+await wait(400)
+const balDb = page.locator('button[aria-label^="BALANCE DATA"]')
+if (await balDb.count()) {
+  await balDb.focus(); await page.keyboard.press('Enter'); await wait(400)
+  check('Balance from the Debrief takes focus', await inside('.balance-panel'), String(await active()))
+  await page.keyboard.press('Escape'); await wait(300)
+  const closed = await page.evaluate(() => !document.querySelector('.balance-panel'))
+  check('Escape closes Balance on the Debrief and focus returns to BALANCE DATA', closed && ((await active()) || '').startsWith('BALANCE DATA'), String(await active()))
+} else check('BALANCE DATA shows on the Debrief with a record', false, 'no control')
+// 4c. The invoice is a named scroll region with the P-15 fade element.
+const inv = await page.evaluate(() => {
+  const r = document.querySelector('.scroll.db-rows')
+  return r ? { role: r.getAttribute('role'), label: r.getAttribute('aria-label'), fade: !!r.parentElement.querySelector('.scroll-fade') } : null
+})
+check('invoice is a named scroll region with the cut-edge fade', inv && inv.role === 'region' && inv.label === 'Mission invoice' && inv.fade, JSON.stringify(inv))
 
 // 5. Research: a researched node carries the check glyph.
 await fresh()

@@ -51,7 +51,21 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: 'tut-move',
     event: 'move',
     title: 'MOVEMENT',
-    body: (k) => k('moveOrder') + ' on open ground moves the selection there.',
+    // Camera keys ride on the movement step (playtest 2026-10-23: the tester
+    // found pan and zoom by accident after 25 minutes).
+    body: (k) =>
+      k('moveOrder') +
+      ' on open ground moves the selection there. ' +
+      k('panForward') +
+      ' ' +
+      k('panLeft') +
+      ' ' +
+      k('panBack') +
+      ' ' +
+      k('panRight') +
+      ' pan the camera, the wheel zooms, ' +
+      k('recenter') +
+      ' recenters on the squad.',
   },
   {
     id: 'tut-attack',
@@ -77,7 +91,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     event: 'item',
     title: 'ITEMS',
     body: (k) =>
-      k('useMed') + ' spends a med kit; ' + k('useCell') + ' spends a power cell.',
+      k('useMed') +
+      ' spends a med kit; ' +
+      k('useCell') +
+      ' spends a power cell. ' +
+      k('grenade') +
+      ' arms a grenade (one cell): its blast hurts everyone inside the red ring, your squad included.',
   },
   {
     id: 'tut-swap',

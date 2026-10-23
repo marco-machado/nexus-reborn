@@ -31,6 +31,7 @@
   "faint": [],
   "targets": 57,
   "underTargets": [],
+  "labelInName": [],
   "textBoxes": [
    {
     "text": "SYS:GN-7A // BOOT SEQUENCE COMPLETE",
@@ -57,7 +58,7 @@
     "key": "span.cursor < div.dim"
    },
    {
-    "text": "06:16:06",
+    "text": "06:55:21",
     "size": 11,
     "w": 106,
     "key": "div.menu-clock < header.menu-top"
@@ -1050,22 +1051,22 @@
   },
   {
    "tag": "button",
-   "name": "Render quality auto",
+   "name": "AUTO // RENDER QUALITY auto",
    "dis": null
   },
   {
    "tag": "button",
-   "name": "Render quality high",
+   "name": "HIGH // RENDER QUALITY high",
    "dis": null
   },
   {
    "tag": "button",
-   "name": "Render quality medium",
+   "name": "MED // RENDER QUALITY medium",
    "dis": null
   },
   {
    "tag": "button",
-   "name": "Render quality low",
+   "name": "LOW // RENDER QUALITY low",
    "dis": null
   },
   {

@@ -332,7 +332,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                       type="button"
                       className={'btn set-scale-btn' + (quality === q ? ' sel' : '')}
                       aria-pressed={quality === q}
-                      aria-label={'Render quality ' + q}
+                      aria-label={QUALITY_LABEL[q] + ' // RENDER QUALITY ' + q}
                       onClick={() => {
                         uiClick()
                         setQuality(q)
@@ -382,7 +382,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
                   type="button"
                   className="btn set-reset-all"
                   disabled={!anyOverride}
-                  aria-label="Reset every control to its default key"
+                  aria-label="RESET ALL // EVERY CONTROL TO ITS DEFAULT KEY"
                   onClick={() => {
                     uiClick()
                     setCapture(null)

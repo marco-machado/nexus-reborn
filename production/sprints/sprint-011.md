@@ -70,6 +70,8 @@ QA Plan: `production/qa/qa-plan-sprint-011-2026-10-23.md` (written 2026-10-23, b
 |----|------|-------------|-----------|-------------|-------------------|
 | IF-036 | [Every surface meets the Standard-tier type, ink and target floors](../../production/epics/interface/story-036-every-surface-meets-the-standard-tier-floors.md) | ui-programmer | 0.5 | IF-026, IF-027, IF-029, IF-031–IF-035 | Per story file (UI); added to close the gate's accessibility check |
 | IF-037 | [The five screen specs' committed-tier deltas are fixed](../../production/epics/interface/story-037-screen-specs-committed-tier-deltas.md) | ui-programmer | 0.5 | IF-036 | Per story file (UI) |
+| IF-038 | [Spec-review findings — label in name, Debrief Balance and invoice, no overlapping boxes](../../production/epics/interface/story-038-spec-review-and-overlap-fixes.md) | ui-programmer | 0.5 | IF-037 | Per story file (UI) |
+| TM-018 | [Playtest 2 mission fixes](../../production/epics/tactical-mission/story-018-playtest-two-mission-fixes.md) | gameplay-programmer | 0.5 | — | Per story file (Logic) |
 
 ### Nice to Have
 

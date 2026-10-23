@@ -259,7 +259,7 @@ function InfluenceMomentNote(props: { action: InfluenceActionId; onDismiss: () =
         <button
           type="button"
           className="hud-btn wm-moment-btn"
-          aria-label="Dismiss the Influence note"
+          aria-label="UNDERSTOOD // DISMISS THE INFLUENCE NOTE"
           onClick={props.onDismiss}
         >
           UNDERSTOOD
@@ -714,7 +714,7 @@ function UnreadBadge() {
       type="button"
       className="wm-unread"
       onClick={act(markRead)}
-      aria-label={'MARK ' + unread + ' EVENTS READ'}
+      aria-label={unread + ' UNREAD // MARK ALL EVENTS READ'}
     >
       {unread} UNREAD
     </button>
@@ -790,7 +790,7 @@ function WorldOnboard() {
             <button
               type="button"
               className="hud-btn pause"
-              aria-label="Dismiss the orientation"
+              aria-label="UNDERSTOOD // DISMISS THE ORIENTATION"
               autoFocus
               onClick={() => {
                 uiClick()

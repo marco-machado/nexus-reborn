@@ -15,6 +15,7 @@
 // save.startNewOperation; Brief through selectMission('m03'); Assembly through
 // goto('team'); Debrief through setOutcome(settleOutcome(...)) after a Screen
 // visit; the mission through startMission; Pause through the Escape key;
+// Balance through Settings with one seeded abort record (telemetry.saveRecords);
 // Settings through the menu's SETTINGS button; text scale and high contrast
 // through the settings store.
 //
@@ -248,6 +249,21 @@ const HELPERS = () => {
         bad.push('textoverlap "' + lines[i].t + '" x "' + lines[j].t + '" ' + Math.round(w) + 'x' + Math.round(h))
       }
     }
+    // Absolutely placed boxes that hold text must not cover one another
+    // (labels laid over art): compare positioned siblings pairwise.
+    const placed = [...root.querySelectorAll('*')].filter((el) => {
+      if (!visible(el) || overlay(el) || el.closest('svg')) return false
+      const pos = getComputedStyle(el).position
+      return (pos === 'absolute' || pos === 'fixed') && el.textContent.trim()
+    })
+    for (let i = 0; i < placed.length; i++) for (let j = i + 1; j < placed.length; j++) {
+      const A = placed[i], B = placed[j]
+      if (A.parentElement !== B.parentElement) continue
+      const x = A.getBoundingClientRect(), y = B.getBoundingClientRect()
+      const w = Math.min(x.right, y.right) - Math.max(x.left, y.left)
+      const h = Math.min(x.bottom, y.bottom) - Math.max(x.top, y.top)
+      if (w > 2 && h > 2) bad.push('boxoverlap ' + path(A) + ' x ' + path(B) + ' ' + Math.round(w) + 'x' + Math.round(h))
+    }
     const panels = [...root.querySelectorAll('.panel, .navtabs, .wm-campaign-fail, .wm-campaign-win')].filter((p) => visible(p) && !overlay(p))
     const outer = panels.filter((p) => !panels.some((q) => q !== p && q.contains(p)))
     for (let a = 0; a < outer.length; a++) for (let b = a + 1; b < outer.length; b++) {
@@ -286,6 +302,19 @@ async function fresh() {
 }
 
 const SURFACES = {
+  world: async () => {
+    await fresh()
+    await store(async () => {
+      const { useTutorialStore } = await import('/src/state/tutorialStore.ts')
+      useTutorialStore.setState({ seen: useTutorialStore.getState().seen.filter((x) => x !== 'hint-worldmap') })
+      const { useWorldStore } = await import('/src/state/worldStore.ts')
+      useWorldStore.setState({ influence: 8, selected: 'na', unread: 2 })
+      useTutorialStore.setState({ seen: useTutorialStore.getState().seen.filter((x) => x !== 'hint-influence') })
+      const { useAppStore } = await import('/src/state/appStore.ts')
+      useAppStore.getState().goto('world')
+    })
+    await wait(800)
+  },
   menu: async () => { await fresh(); await store(async () => (await import('/src/state/appStore.ts')).useAppStore.getState().goto('menu')) },
   settings: async () => {
     await SURFACES.menu(); await wait(400)
@@ -320,6 +349,20 @@ const SURFACES = {
     await wait(6000)
   },
   pause: async () => { await SURFACES.mission(); await page.keyboard.press('Escape'); await wait(600) },
+  balance: async () => {
+    await fresh()
+    await store(async () => {
+      const t = await import('/src/state/telemetry.ts')
+      t.saveRecords([
+        { at: Date.now() - 60000, missionId: 'm03', outcome: 'aborted', durationSec: 42, seed: 7, squadRoles: ['assault', 'recon'] },
+      ])
+      const { useAppStore } = await import('/src/state/appStore.ts')
+      useAppStore.getState().goto('menu')
+    })
+    await page.reload(); await wait(1500)
+    await page.locator('button', { hasText: 'SETTINGS' }).first().click(); await wait(400)
+    await page.locator('button[aria-label="Open the balance dashboard"]').click(); await wait(500)
+  },
 }
 
 const targetSel = 'button, a[href], [role="button"], [role="slider"], input, select, [tabindex="0"]'
@@ -327,7 +370,22 @@ async function measure() {
   await install()
   return page.evaluate(({ targetSel, INK_DIM, INK_FAINT }) => {
     const runs = window.__probe.runs('body').map(({ el, ...r }) => ({ ...r, inactive: !!el.closest(':disabled, [aria-disabled="true"]'), blink: el.getAnimations().some((a) => a.animationName === 'cursor-blink' || a.animationName === 'blink'), key: el.tagName.toLowerCase() + ([...el.classList].length ? '.' + [...el.classList].join('.') : '') + ' < ' + (el.parentElement ? el.parentElement.tagName.toLowerCase() + ([...el.parentElement.classList].length ? '.' + [...el.parentElement.classList].join('.') : '') : ''), w: Math.round(el.getBoundingClientRect().width) }))
-    const targets = [...document.querySelectorAll(targetSel)].filter(window.__probe.visible).map((el) => ({ name: (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40), ...window.__probe.box(el) }))
+    // A slider's hit area may extend past its drawn box (a transparent band):
+    // measure what the pointer reaches through its centre column.
+    const hitHeight = (el) => {
+      const r = el.getBoundingClientRect()
+      const x = r.left + r.width / 2
+      let top = null, bottom = null
+      for (let y = Math.floor(r.top) - 20; y <= Math.ceil(r.bottom) + 20; y++) {
+        if (document.elementFromPoint(x, y)?.closest('[role="slider"]') === el) { if (top === null) top = y; bottom = y }
+      }
+      return top === null ? r.height : bottom - top + 1
+    }
+    const targets = [...document.querySelectorAll(targetSel)].filter(window.__probe.visible).map((el) => {
+      const b = window.__probe.box(el)
+      if (el.getAttribute('role') === 'slider') b.h = Math.max(b.h, hitHeight(el))
+      return { name: (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40), ...b }
+    })
     // SVG text: rendered size is the computed font-size times the element's
     // screen scale; ink is its fill (times fill-opacity and ancestor opacity)
     // over the backgrounds under the <svg>.
@@ -369,6 +427,17 @@ async function measure() {
       faint: runs.filter((r) => r.color === INK_FAINT),
       targets: targets.length,
       underTargets: targets.filter((t) => t.w < 24 || t.h < 24),
+      // WCAG 2.5.3 Label in Name: a control's visible label (its first
+      // visible line that has a letter) must appear, as whole words, in its
+      // accessible name (case and punctuation ignored).
+      labelInName: [...document.querySelectorAll('button, a[href], [role="button"], [role="slider"]')].filter(window.__probe.visible).flatMap((el) => {
+        const label = el.getAttribute('aria-label')
+        // A one-character glyph (a key cap, a close X) is not a text label.
+        const first = (el.innerText || '').split('\n').map((x) => x.trim()).find((x) => /[A-Za-z]/.test(x) && x.length > 1)
+        if (!label || !first) return []
+        const norm = (x) => ' ' + x.toUpperCase().replace(/[^A-Z0-9%]+/g, ' ').trim() + ' '
+        return norm(label).includes(norm(first)) ? [] : [first.slice(0, 30) + ' => ' + label.slice(0, 50)]
+      }),
       textBoxes: runs.map((r) => ({ text: r.text, size: r.size, w: r.w, key: r.key })),
     }
   }, { targetSel, INK_DIM, INK_FAINT })
@@ -421,6 +490,7 @@ for (const name of (process.env.SURFACES || Object.keys(SURFACES).join(',')).spl
     if (def.exempt.length) note(`  exempt (inactive / blinking): ${[...new Set(def.exempt)].slice(0, 6).join(' | ')}`)
     note(`  Ink Dim text: ${def.dim.length}; Ink Faint text: ${def.faint.length}`)
     note(`  svg text: ${def.svgRuns} runs; <10px: ${def.svgSmall.length}; <4.5:1: ${def.svgLow.length}` + (def.svgSmall.length + def.svgLow.length ? '\n    ' + group([...def.svgSmall, ...def.svgLow]).slice(0, 12).join('\n    ') : ''))
+    note(`  label-in-name: ${def.labelInName.length}` + (def.labelInName.length ? '\n    ' + def.labelInName.slice(0, 12).join('\n    ') : ''))
     note(`  targets <24: ${def.underTargets.length}` + (def.underTargets.length ? '\n    ' + def.underTargets.map((t) => `${t.name} ${t.w}x${t.h}`).join('\n    ') : ''))
     for (const s of SCALES) note(`  clip @${s}: ${clips[s].length}` + (clips[s].length ? '\n    ' + clips[s].slice(0, 8).join('\n    ') : ''))
     note(`  tab stops: ${tab.length}`)

@@ -59,6 +59,9 @@ export default function Units() {
           view.rig.scale.y = 1 - 0.6 * k
           view.rig.position.y = 0
           view.faction.visible = false
+          // The emissive core goes dark: a destroyed device must not read as
+          // live from the play camera (playtest 2026-10-23).
+          if (view.core) view.core.visible = false
           continue
         }
         view.rig.rotation.z = (Math.PI / 2) * k

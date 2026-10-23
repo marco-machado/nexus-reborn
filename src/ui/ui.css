@@ -1368,14 +1368,14 @@
 
 .wm-inset-tag {
   position: absolute;
-  left: 4px;
+  left: 32px;
   bottom: 3px;
   font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.16em;
   color: var(--ink);
   background: rgba(4, 10, 9, 0.7);
   padding: 1px 4px;
-  max-width: calc(100% - 8px);
+  max-width: calc(100% - 64px);
   overflow-wrap: break-word;
 }
 
@@ -2762,7 +2762,7 @@
   min-height: 0;
 }
 
-.db-card > :not(.db-rows) { flex-shrink: 0; }
+.db-card > :not(.db-rows):not(.scroll-wrap) { flex-shrink: 0; }
 
 .db-failed {
   font-size: clamp(26px, 3.4vw, 42px);
@@ -2844,7 +2844,8 @@
   color: var(--amber-hot);
 }
 
-/* Screen write-failure advisory (P-11): words carry the state, not the hue.
+/* Screen write-failure advisory (P-11): words carry the state, not the hue;
+   red may reinforce FAILED, amber never (amber is money only).
    The region is always mounted (live region) and draws nothing when empty.
    31vh is the one band that covers no text on any of the four Screens at
    1280x720, 1366x768 and 1920x1080, text scale 100 and 125 (over the globe
@@ -2864,10 +2865,10 @@
   padding: 8px 14px;
   text-align: center;
   background: var(--bg-panel);
-  border: 1px solid var(--line-amber);
+  border: 1px solid color-mix(in srgb, var(--red-hot) 60%, transparent);
   font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.24em;
-  color: var(--amber-hot);
+  color: var(--red-hot);
   pointer-events: none;
 }
 
@@ -3669,7 +3670,8 @@ button.hud-slot {
 
 /* narrow-width safety tweaks */
 @media (max-width: 1360px) {
-  .hud-comms { width: 286px; }
+  /* gives back width as the weapons bar grows with the text scale */
+  .hud-comms { width: calc(286px - (var(--text-scale) - 1) * 80px); }
   .hud-wpn { width: 188px; }
   .hud-wpn.secondary { width: 146px; }
 }
@@ -3999,10 +4001,11 @@ button.hud-slot {
 
 /* tutorial and hint toasts: a small stack above the weapon bar. The stack
    itself takes no pointer events, so it never blocks the canvas. */
+/* Clears the weapons bar, which grows with the text scale (IF-037). */
 .hud-toasts {
   position: absolute;
   left: 50%;
-  bottom: 132px;
+  bottom: calc(18px + 114px * var(--text-scale));
   transform: translateX(-50%);
   width: 480px;
   display: flex;
@@ -4673,12 +4676,17 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 .wm-speed b { font-size: calc(12px * var(--text-scale)); }
 
 /* Brief recon frame type (IF-036): HTML over the art, placed by percentage of
-   the stretched frame, so it keeps the 10 px floor and the text scale. */
+   the stretched frame, so it keeps the 10 px floor and the text scale. Each
+   block sits on panel ground (contrast measurable, art behind it does not
+   matter); readouts and the target callout share one right-hand column, so
+   they cannot collide at any text scale. */
 .mb-recon-labels { position: absolute; inset: 0; pointer-events: none; font-family: var(--font-mono); }
 .mb-recon-labels > div { position: absolute; display: flex; flex-direction: column; gap: 2px; }
-.mb-rbrief { max-width: 62%; font-size: calc(10px * var(--text-scale)); letter-spacing: 0.06em; line-height: 1.3; color: var(--teal); text-transform: uppercase; }
-.mb-rreadout { align-items: flex-end; font-size: calc(10px * var(--text-scale)); letter-spacing: 0.08em; line-height: 1.3; color: var(--teal); }
-.mb-rcallout { align-items: flex-start; padding: 5px 8px; background: var(--bg-inset); border: 1px solid color-mix(in srgb, var(--vip) 55%, transparent); letter-spacing: 0.08em; }
+.mb-rright > div { display: flex; flex-direction: column; gap: 2px; }
+.mb-rbrief { max-width: 62%; padding: 4px 7px; background: var(--bg-panel); font-size: calc(10px * var(--text-scale)); letter-spacing: 0.06em; line-height: 1.3; color: var(--teal); text-transform: uppercase; }
+.mb-rright { align-items: flex-end; gap: 8px; max-width: 34%; }
+.mb-rreadout { align-items: flex-end; padding: 4px 7px; background: var(--bg-panel); font-size: calc(10px * var(--text-scale)); letter-spacing: 0.08em; line-height: 1.3; color: var(--teal); }
+.mb-rcallout { align-items: flex-start; align-self: stretch; padding: 5px 8px; background: var(--bg-inset); border: 1px solid color-mix(in srgb, var(--vip) 55%, transparent); letter-spacing: 0.08em; }
 .mb-rcallout .label { font-size: calc(10px * var(--text-scale)); color: var(--ink); }
 .mb-rcallout .name { font-size: calc(12px * var(--text-scale)); color: var(--vip); }
 .mb-rcallout .sub { font-size: calc(10px * var(--text-scale)); color: var(--cyan); }

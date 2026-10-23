@@ -376,7 +376,7 @@ function DetailPanel(props: { node: ResearchNode; done: string[]; labs: Labs }) 
         type="button"
         className="cta spend rs-auth"
         disabled={!can}
-        aria-label={'AUTHORIZE ' + nodeTitle(n) + ' // ' + sub}
+        aria-label={'AUTHORIZE PROJECT // ' + nodeTitle(n) + ' // ' + sub}
         onClick={act(() => {
           // appStore.authorizeResearch bills only a lab that actually took the
           // project, against the balance as it stands now (ADR-0013).

@@ -9,7 +9,7 @@ export const UNFILED_LINE = 'INVOICE UNFILED // COMMITS ON NEXT SCREEN'
 /**
  * The sentence shown while a campaign write or New Operation erase was
  * swallowed. One generic sentence for every reason (ADR-0022 allows it);
- * placeholder copy pending /ux-design.
+ * adopted in the Debrief UX spec (design/ux/debrief.md, 2026-10-23).
  */
 export const WRITE_FAILED_LINE = 'SAVE FAILED // CAMPAIGN NOT FILED'
 

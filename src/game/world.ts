@@ -103,7 +103,8 @@ const ABILITY_IDLE_HINT_SEC = 60
 const LOW_HP_HINT_FRAC = 0.35
 const GRENADE_COOLDOWN = 4
 const GRENADE_RANGE = 18
-const GRENADE_RADIUS = 3.5
+// Exported for the targeting ring the scene draws (Input.tsx).
+export const GRENADE_RADIUS = 3.5
 // 80 at the centre kills a Severe trooper (72 HP) and never a heavy (100 HP,
 // 0.85 taken); difficulty curve Open Question, decided 2026-10-23.
 const GRENADE_DAMAGE_CENTER = 80
@@ -941,7 +942,32 @@ export function createWorld(
     return best
   }
 
-  // Free fire agents take up whatever walks into range, on a slow cadence.
+  // A device under an active required destroy objective, in range and in
+  // sight. A device is a fire-lane Unit (living spec §10, owner 2026-10-19):
+  // with no hostile to take up, free fire works on it, slowly, so a squad out
+  // of cells is never stuck. An optional device stays the player's choice.
+  // There is still no Attack or Demolish verb on a device (ADR-0016).
+  function nearestObjectiveDevice(u: SimUnit, range: number): SimUnit | null {
+    const tags = new Set<string>()
+    objectives.forEach((d, i) => {
+      if (d.kind === 'destroy' && !d.optional && d.tag && objState[i] === 'active') tags.add(d.tag)
+    })
+    if (tags.size === 0) return null
+    let best: SimUnit | null = null
+    let bestD = range
+    for (const e of units) {
+      if (e.kind !== 'device' || e.stance === 'dead' || !e.tag || !tags.has(e.tag)) continue
+      const d = dist(u.pos, e.pos)
+      if (d <= bestD && hasLos(city, u.pos, e.pos)) {
+        best = e
+        bestD = d
+      }
+    }
+    return best
+  }
+
+  // Free fire agents take up whatever walks into range, on a slow cadence;
+  // with no hostile in sight they work on an objective device (above).
   // Hold fire agents never pick a target up on their own, so only an explicit
   // attack order gives them one.
   function refreshAutoTarget(u: SimUnit): void {
@@ -952,7 +978,7 @@ export function createWorld(
     if (world.time < (u.acquireT ?? 0)) return
     u.acquireT = world.time + ACQUIRE_INTERVAL
     const w = u.weapon
-    const t = w ? nearestVisibleEnemy(u, w.range) : null
+    const t = w ? (nearestVisibleEnemy(u, w.range) ?? nearestObjectiveDevice(u, w.range)) : null
     u.targetId = t ? t.id : null
   }
 

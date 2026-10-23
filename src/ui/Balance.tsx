@@ -48,7 +48,9 @@ function ShareBars(props: {
   )
 }
 
-export default function BalancePanel(props: { onClose: () => void }) {
+// escapeCloses: on the Debrief nothing else owns Escape, so the dashboard
+// closes itself; inside Settings, Settings peels it.
+export default function BalancePanel(props: { onClose: () => void; escapeCloses?: boolean }) {
   const telemetryOn = useSettingsStore((s) => s.telemetry)
   const [serial, setSerial] = useState(0)
   const [clearArmed, setClearArmed] = useState(false)
@@ -59,7 +61,7 @@ export default function BalancePanel(props: { onClose: () => void }) {
   // Escape is Settings' (it peels the dashboard first); Settings puts focus
   // back on its OPEN control when the dashboard closes.
   const rootRef = useRef<HTMLDivElement | null>(null)
-  useModalFocus(rootRef)
+  useModalFocus(rootRef, { onEscape: props.escapeCloses ? props.onClose : undefined })
 
   useEffect(() => {
     if (!clearArmed) return
@@ -127,7 +129,7 @@ export default function BalancePanel(props: { onClose: () => void }) {
             type="button"
             className="btn"
             disabled={records.length === 0}
-            aria-label="Export the telemetry records as JSON"
+            aria-label="EXPORT JSON // THE TELEMETRY RECORDS"
             onClick={onExport}
           >
             EXPORT JSON

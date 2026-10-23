@@ -264,6 +264,21 @@ const HELPERS = () => {
         bad.push('textoverlap "' + lines[i].t + '" x "' + lines[j].t + '" ' + Math.round(w) + 'x' + Math.round(h))
       }
     }
+    // Absolutely placed boxes that hold text must not cover one another
+    // (labels laid over art): compare positioned siblings pairwise.
+    const placed = [...root.querySelectorAll('*')].filter((el) => {
+      if (!visible(el) || overlay(el) || el.closest('svg')) return false
+      const pos = getComputedStyle(el).position
+      return (pos === 'absolute' || pos === 'fixed') && el.textContent.trim()
+    })
+    for (let i = 0; i < placed.length; i++) for (let j = i + 1; j < placed.length; j++) {
+      const A = placed[i], B = placed[j]
+      if (A.parentElement !== B.parentElement) continue
+      const x = A.getBoundingClientRect(), y = B.getBoundingClientRect()
+      const w = Math.min(x.right, y.right) - Math.max(x.left, y.left)
+      const h = Math.min(x.bottom, y.bottom) - Math.max(x.top, y.top)
+      if (w > 2 && h > 2) bad.push('boxoverlap ' + path(A) + ' x ' + path(B) + ' ' + Math.round(w) + 'x' + Math.round(h))
+    }
     const panels = [...root.querySelectorAll('.panel, .navtabs, .wm-campaign-fail, .wm-campaign-win')].filter((p) => visible(p) && !overlay(p))
     const outer = panels.filter((p) => !panels.some((q) => q !== p && q.contains(p)))
     for (let a = 0; a < outer.length; a++) for (let b = a + 1; b < outer.length; b++) {

@@ -46,6 +46,9 @@ Contrast floors are inherited, not restated as new numbers: body and readout tex
 | P-23 | First-visit overlay | Overlay | 2026-10-05, revised 2026-10-23 |
 | P-24 | Scan marker and Focus selection | Data Display / Input | 2026-10-23 |
 | P-25 | Inline moment note | Feedback | 2026-10-23 |
+| P-26 | Research node graph | Data Display / Input | 2026-10-23 |
+| P-27 | Bay and slot cycle | Input | 2026-10-23 |
+| P-28 | Candidate card | Data Display / Input | 2026-10-23 |
 
 ---
 
@@ -182,7 +185,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 ### P-05 Modal overlay with focus trap
 
 **Category**: Overlay
-**Used In**: Pause; Settings; Balance; Settings nested inside Pause
+**Used In**: Pause; Settings; Balance; Settings nested inside Pause; Recruitment Market (Assembly). Shared hook for dialogs that open over a Screen or panel: `src/ui/modalFocus.ts` (initial focus, Tab trap, Escape, focus back to the opener)
 
 **Description**: An overlay that takes focus, freezes what must freeze, and restores state on close.
 
@@ -370,8 +373,10 @@ These are specified here so a screen spec does not invent them. Unused controls 
 **Specification**:
 - Slider: range input 0–100 in steps of 5 with the numeric value printed beside it; accessible label `<channel> volume`.
 - Toggle: button with `aria-pressed`, an ON/OFF text label and accessible label `<name> // ON|OFF`. The word carries the state. Ledger Amber does not mark ON.
+- Selected look (toggle ON, the active segment, a capturing REBIND): the P-06 selected treatment, a closed 2 px teal frame with teal ink (`.btn.sel`). Never an amber hue alone (IF-037).
 - Segmented choice (text scale, Difficulty, Quality): `aria-pressed` on the active option, the value printed on it. Text scale is the discrete set 90 / 100 / 110 / 125%, never a continuous slider.
 - Remap: a capture mode that Escape cancels; a reset control per binding and a reset-all control. Pause, slots 1–4 and the mouse are reserved and shown as reserved.
+- Conflict notice: when a captured key is already bound elsewhere, one line under the remap header names the key and the action that held it, in Red Hot words; it clears on the next capture. It is a status line, not a toast (P-11) and not a dialog.
 - Mute preserves chosen levels and restores them on unmute (Audio UI Requirements). The toggle word carries mute. Do not add a caption row; captions are backlog.
 
 **States**: Each control has its value printed. Hover is not a state. Focus is P-04. Reserved is shown as reserved, not as an error. Escape during capture cancels capture; that is not an error. Disabled does not replace reserved.
@@ -658,6 +663,70 @@ These are specified here so a screen spec does not invent them. Unused controls 
 
 **Implementation notes**: `useInfluenceMoment` in `src/ui/WorldMap.tsx`; `src/ui/worldOnboard.ts` (`influenceMoment`); ids `hint-influence`, `hint-debrief-research` in `src/game/tutorial.ts`. `markSeen` is guarded (no duplicate ids).
 
+### P-26 Research node graph
+
+**Category**: Data Display / Input
+**Used In**: Research
+
+**Description**: The three branch trees of research projects. A node is a control; the tree is a fixed-geometry diagram. Source: Research UX spec; Research GDD UI Requirements.
+
+**Specification**:
+- Each node is a focusable element (`tabIndex 0`, `aria-pressed` when selected) whose accessible name is `<project> // <branch> // <state>`. Pointer, Enter and Space select it; selection is P-04 and is distinct from authorizing (P-02 on the detail panel).
+- States: locked (lock glyph + dashed frame), available, in progress (fill computed from the painted remaining, P-22), researched (check glyph + green). Each state has a shape cue besides hue.
+- Labels follow the text scale up to 110% inside the fixed tree; the detail panel prints the full project name at every scale.
+- Links between nodes are decoration of the prerequisite relation; the detail panel's PREREQUISITES list is the content.
+
+**States**: Locked, Available, In progress, Researched; Selected (P-04). Hover is not a state. Disabled does not apply (a locked node stays selectable to read its reason).
+
+**When to Use**: the Research program only.
+**When NOT to Use**: any list a P-15 scroll list can hold.
+
+**Accessibility**: shape cue per state; labels at the 10 px floor; Tab order follows branches left to right, nodes top to bottom.
+
+**Implementation notes**: `src/ui/Research.tsx` (`ResearchNode`), `.rs-node-*` in `src/ui/ui.css`. Reduced motion freezes the in-progress pulse and link flow.
+
+### P-27 Bay and slot cycle
+
+**Category**: Input
+**Used In**: Assembly (augmentation bays, Item slots)
+
+**Description**: A slot whose value is chosen by clicking through a short fixed list, for a choice with three to five options where a dropdown would hide them. Source: Assembly UX spec; Roster GDD.
+
+**Specification**:
+- One button per slot; each activation (pointer, Enter, Space) moves to the next option and wraps: Item slots empty → med kit → power cell → empty; augmentation bays default (latest researched) → each researched part → stock → default.
+- The current value prints on the button as words; the accessible name is `<slot> // <value> // NEXT <next value>`.
+- The cycle never spends money and never confirms; the mass readout and the dossier update in the same frame.
+
+**States**: one per option, printed. Hover is not a state. Focus is P-04. Disabled with a printed reason (P-03) when the operative cannot change it.
+
+**When to Use**: a per-operative slot with a few fixed options.
+**When NOT to Use**: a spend (P-02), a choice with more than five options (use a list).
+
+**Accessibility**: the value is a word, never colour alone; ≥24×24 target.
+
+**Implementation notes**: `cycleBay` / `cycleSlot` in `TeamSelect` (`src/ui/index.tsx`).
+
+### P-28 Candidate card
+
+**Category**: Data Display / Input
+**Used In**: Assembly, Recruitment Market
+
+**Description**: One hireable operative inside the Recruitment Market dialog (P-05): portrait, codename, name, role, max HP, speed, weapon, the hire ledger line, and a HIRE spend. Source: Roster GDD; Interface hire row (IF-012).
+
+**Specification**:
+- HIRE is a single-step spend (P-02) whose accessible name carries codename, cost and the refusal reason when refused; a refused HIRE is disabled with the reason printed in the ledger line (P-03).
+- The ledger line states the cost against the current Credits and roster cap in words.
+- Cards are a P-15 list inside the dialog; the dialog's head prints the roster count and Credits.
+
+**States**: Hireable, Refused (credits / roster cap / failed campaign, with its reason). Hover is not a state. Focus is P-04.
+
+**When to Use**: candidates in the Recruitment Market.
+**When NOT to Use**: rostered operatives (the roster rows and P-09 in the mission).
+
+**Accessibility**: numbers printed; the reason is text; HIRE ≥24×24.
+
+**Implementation notes**: `RecruitPanel` in `src/ui/index.tsx`; `hireView` for the ledger and refusal.
+
 ---
 
 ## Animation Standards
@@ -712,9 +781,9 @@ One key, consumed by the innermost owner. It never confirms a spend or a discard
 
 ## Gaps & Patterns Needed
 
-Interface GDD interaction behaviors are covered by P-01–P-25 or by the Standard controls table. Layout of screens that do not have a UX spec yet is not a missing pattern.
+Interface GDD interaction behaviors are covered by P-01–P-28 or by the Standard controls table. Layout of screens that do not have a UX spec yet is not a missing pattern.
 
-Not yet their own patterns, and not required before the screen spec that uses them: Brief map (the District); Assembly bays and dossier; candidate market; Research node graph. (Scan marker / Focus selection is P-24 since 2026-10-23.) Those specs must use P-03, P-04, P-14, and P-15 where they apply, and must add a pattern here before inventing a behavior this library does not have.
+Not yet their own patterns: Brief map (the District) — a read-only illustration with no interaction of its own, specified in `design/ux/brief.md`; the Assembly dossier — a read-only P-14 readout block, specified in `design/ux/assembly.md`. Added 2026-10-23: P-24 Scan marker and Focus selection, P-25 Inline moment note, P-26 Research node graph, P-27 Bay and slot cycle, P-28 Candidate card; the Recruitment Market is a P-05 dialog. Those specs must use P-03, P-04, P-14, and P-15 where they apply, and must add a pattern here before inventing a behavior this library does not have.
 
 ---
 

@@ -11,6 +11,7 @@
   "faint": [],
   "targets": 5,
   "underTargets": [],
+  "labelInName": [],
   "textBoxes": [
    {
     "text": "OPERATIONAL DEBRIEF // STRIKE TEAM 04 //",
@@ -281,12 +282,12 @@
   },
   {
    "tag": "button",
-   "name": "Open the Research tab",
+   "name": "OPEN RESEARCH // THE RESEARCH TAB",
    "dis": null
   },
   {
    "tag": "button",
-   "name": "Dismiss the Research prompt",
+   "name": "UNDERSTOOD // DISMISS THE RESEARCH PROMPT",
    "dis": null
   },
   {

@@ -1537,6 +1537,51 @@ describe('milestone 2 missions', () => {
     expect(useMissionStore.getState().result).toBe('lost')
   })
 
+  // Playtest 2026-10-23: out of cells, with no hostile left, a relay could
+  // not be reduced at all. A device is a fire-lane Unit (living spec §10):
+  // free fire now takes up a device under an active destroy objective.
+  it('free fire works an active objective device down when no hostile is in sight', () => {
+    const w = spawn(RUST_HAVEN, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')!
+    const relay = w.units.find((u) => u.kind === 'device' && u.tag === 'relay')!
+    const start = relay.hp
+
+    // Reach the yard: the destroy objective becomes active and free fire works.
+    expect(row('rh2').active).toBe(false)
+    put(a1, w.city.landmarks['yard-a'])
+    w.tick(STEP)
+    expect(row('rh2').active).toBe(true)
+    const spots = [3, -3].flatMap((dx) => [{ x: relay.pos.x + dx, z: relay.pos.z }, { x: relay.pos.x, z: relay.pos.z + dx }])
+    let worked = false
+    for (const p of spots) {
+      put(a1, p)
+      warm(w, 6)
+      if (relay.hp < start) { worked = true; break }
+    }
+    expect(worked).toBe(true)
+  })
+
+  it('Hold Fire keeps free fire off an objective device', () => {
+    const w = spawn(RUST_HAVEN, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    for (const u of w.units) if (u.kind === 'enemy') u.stance = 'dead'
+    const a1 = w.unit('a1')!
+    put(a1, w.city.landmarks['yard-a'])
+    w.tick(STEP)
+    const relay = w.units.find((u) => u.kind === 'device' && u.tag === 'relay')!
+    const start = relay.hp
+    w.orderHoldFire(['a1'], true)
+    for (const p of [{ x: relay.pos.x + 3, z: relay.pos.z }, { x: relay.pos.x, z: relay.pos.z + 3 }]) {
+      put(a1, p)
+      warm(w, 6)
+    }
+    expect(relay.hp).toBe(start)
+  })
+
   it('runs Rust Haven: destroy, paused defend countdown, no bonus when skipped', () => {
     const w = spawn(RUST_HAVEN, ops(DEFAULT_SQUAD))
     deployReset()

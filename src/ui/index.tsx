@@ -513,17 +513,19 @@ export function MissionBrief() {
                   <span key={i}>&gt; {line}</span>
                 ))}
               </div>
-              <div className="mb-rreadout" style={{ right: reconX(16), top: reconY(12) }} aria-hidden="true">
-                {['ALT: 1824M', 'RNG: 3.7KM', 'TRK: 117.3', 'ZOOM: 1.6X', 'MODE: IR-MONO'].map((line) => (
-                  <span key={line}>{line}</span>
-                ))}
-              </div>
-              <div className="mb-rcallout" style={{ left: reconX(CALLOUT_X), right: reconX(16), top: reconY(CALLOUT_Y) }}>
-                {callout.map((l) => (
-                  <span key={l.text} className={l.cls}>
-                    {l.text}
-                  </span>
-                ))}
+              <div className="mb-rright" style={{ right: reconX(16), top: reconY(12) }}>
+                <div className="mb-rreadout" aria-hidden="true">
+                  {['ALT: 1824M', 'RNG: 3.7KM', 'TRK: 117.3', 'ZOOM: 1.6X', 'MODE: IR-MONO'].map((line) => (
+                    <span key={line}>{line}</span>
+                  ))}
+                </div>
+                <div className="mb-rcallout">
+                  {callout.map((l) => (
+                    <span key={l.text} className={l.cls}>
+                      {l.text}
+                    </span>
+                  ))}
+                </div>
               </div>
               <div className="mb-rtag ins" style={{ left: reconX(42), top: reconY(286) }}>
                 <b>INSERTION</b>
@@ -1082,7 +1084,7 @@ export function TeamSelect() {
           <button
             type="button"
             className="cta"
-            aria-label="OPEN THE RECRUITMENT MARKET"
+            aria-label="RECRUIT // OPEN THE RECRUITMENT MARKET"
             onClick={act(() => setRecruitOpen(true))}
           >
             <span className="cta-inner">RECRUIT &gt;&gt;</span>
@@ -1232,10 +1234,7 @@ export function TeamSelect() {
                 type="button"
                 className="btn teal ts-recruit-btn"
                 aria-label={
-                  'OPEN THE RECRUITMENT MARKET // ROSTER ' +
-                  operatives.length +
-                  ' OF ' +
-                  ROSTER_CAP
+                  'RECRUIT + (' + operatives.length + '/' + ROSTER_CAP + ') // OPEN THE RECRUITMENT MARKET'
                 }
                 onClick={act(() => setRecruitOpen(true))}
               >
@@ -1466,11 +1465,7 @@ export function TeamSelect() {
                         type="button"
                         className={'ts-loadout-slot' + (item ? ' filled' : '')}
                         aria-label={
-                          'ITEM SLOT ' +
-                          (slot + 1) +
-                          ' // ' +
-                          (item ? ITEM_LABEL[item] : 'EMPTY') +
-                          ' // CYCLE'
+                          (item ? ITEM_LABEL[item] : 'EMPTY SLOT') + ' // ITEM SLOT ' + (slot + 1) + ' // CYCLE'
                         }
                         title="CYCLE: EMPTY / MED KIT / POWER CELL"
                         onClick={act(() => cycleSlot(slot))}
@@ -1546,7 +1541,7 @@ export function TeamSelect() {
             type="button"
             className="cta big"
             disabled={!deployable}
-            aria-label={refused ? 'DEPLOY TEAM // ' + refused[0] : 'DEPLOY STRIKE TEAM 04'}
+            aria-label={refused ? 'DEPLOY TEAM // ' + refused[0] : 'DEPLOY TEAM // STRIKE TEAM 04'}
             onClick={act(() => startMission())}
           >
             <span className="cta-inner">DEPLOY TEAM &gt;&gt;</span>
@@ -1578,7 +1573,7 @@ function ResearchPromptNote(props: {
           <button
             type="button"
             className="hud-btn db-research-btn teal"
-            aria-label="Open the Research tab"
+            aria-label="OPEN RESEARCH // THE RESEARCH TAB"
             onClick={act(props.onOpen)}
           >
             OPEN RESEARCH
@@ -1586,7 +1581,7 @@ function ResearchPromptNote(props: {
           <button
             type="button"
             className="hud-btn db-research-btn"
-            aria-label="Dismiss the Research prompt"
+            aria-label="UNDERSTOOD // DISMISS THE RESEARCH PROMPT"
             onClick={act(props.onDismiss)}
           >
             UNDERSTOOD
@@ -1730,7 +1725,7 @@ export function Debrief() {
           // Present at mount, so a live region may stay silent; focus it too
           // so a screen reader starts on the failure either way. No overlay
           // can be open here: PauseMenu lives in the mission Hud.
-          <div ref={bannerRef} className="db-failed" role="alert" tabIndex={-1}>
+          <div ref={bannerRef} className="db-failed" role="status" tabIndex={-1}>
             CAMPAIGN FAILED
           </div>
         )}
@@ -1753,11 +1748,13 @@ export function Debrief() {
                 : 'EXTRACTION CONFIRMED // PAYMENT RELEASED'
               : 'SQUAD LINK LOST // PAYMENT WITHHELD'}
         </div>
-        <div className="db-rows" role="region" tabIndex={0} aria-label="Mission invoice">
+        {/* P-15: the invoice scrolls with the cut-edge fade, so rows below the
+            fold read as more to come (Debrief UX spec, Open Question 8). */}
+        <ScrollBox className="db-rows" dep={rows.length} region="Mission invoice">
           {rows.map((r, i) => (
             <DebriefRow key={r.label} index={i} label={r.label} value={r.value} tone={r.tone} />
           ))}
-        </div>
+        </ScrollBox>
         {/* Always mounted: a live region that mounts with its text is not announced. */}
         <div className="db-filing" role="status">
           {filingLine}
@@ -1793,7 +1790,7 @@ export function Debrief() {
             <button
               type="button"
               className="btn"
-              aria-label="Open the balance dashboard over the local mission log"
+              aria-label="BALANCE DATA // OPEN THE DASHBOARD OVER THE LOCAL MISSION LOG"
               onClick={act(() => setBalanceOpen(true))}
             >
               BALANCE DATA
@@ -1804,7 +1801,7 @@ export function Debrief() {
       </div>
       {balanceOpen && (
         <div className="hud-menu-wrap" role="dialog" aria-modal="true" aria-label="Balance data">
-          <BalancePanel onClose={() => setBalanceOpen(false)} />
+          <BalancePanel onClose={() => setBalanceOpen(false)} escapeCloses />
         </div>
       )}
     </div>

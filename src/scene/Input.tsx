@@ -15,6 +15,8 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three/webgpu'
 import { bindingFor, codeOf } from '../game/bindings'
 import { getWorld } from '../game/runtime'
+import { GRENADE_RADIUS } from '../game/world'
+import { RED_HOT } from '../ui/tokens'
 import { clickSelection, isAlive as alive, isLivingAgent, openingSelection, selectAll, selectSlot } from '../game/selection'
 import type { SelectionPick as Pick } from '../game/selection'
 import { noteTutorial } from '../state/tutorialStore'
@@ -403,6 +405,20 @@ export default function Input() {
     if (alive(u)) document.body.style.cursor = grenadeTargeting ? 'crosshair' : cursor
   }
 
+  const blastRing = useRef<THREE.Mesh | null>(null)
+  const blastGeom = useMemo(() => new THREE.RingGeometry(GRENADE_RADIUS - 0.15, GRENADE_RADIUS, 48), [])
+  const blastMat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: RED_HOT,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      }),
+    [],
+  )
+
   const onPickOut = (): void => {
     document.body.style.cursor = grenadeTargeting ? 'crosshair' : ''
   }
@@ -414,9 +430,26 @@ export default function Input() {
         rotation={[-Math.PI / 2, 0, 0]}
         material={invisibleMat}
         onPointerDown={onGround}
+        onPointerMove={(e) => {
+          // The blast ring follows the pointer by ref; nothing per-frame
+          // enters React state.
+          const r = blastRing.current
+          if (r) r.position.set(e.point.x, 0.06, e.point.z)
+        }}
       >
         <planeGeometry args={[size, size]} />
       </mesh>
+      {/* Grenade targeting: the blast radius on the ground, red because the
+          blast hurts everyone inside it, the squad included (playtest
+          2026-10-23). */}
+      <mesh
+        ref={blastRing}
+        rotation={[-Math.PI / 2, 0, 0]}
+        geometry={blastGeom}
+        material={blastMat}
+        visible={grenadeTargeting}
+        renderOrder={8}
+      />
       {picks.map((p) => (
         <mesh
           key={p.id}

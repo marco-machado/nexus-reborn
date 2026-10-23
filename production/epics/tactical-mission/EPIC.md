@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/tactical-mission.md
 > **Architecture Module**: Tactical — `src/game/`, `src/world/citygen.ts` (`WorldApi` sim, citygen, weather script, Opening hour)
 > **Status**: Ready
-> **Stories**: 16 — see the Stories table below
+> **Stories**: 18 — see the Stories table below
 
 ## Overview
 
@@ -66,6 +66,8 @@ This epic is complete when:
 | 014 | Quiet replay outcome and the deploy freeze | Logic | Ready | ADR-0009 |
 | 015 | Hardened profile keeps minimap data; camera pose is fixed | Integration | Ready | ADR-0016 |
 | 016 | Grenade confirm spends one power cell; refusal spends nothing | Logic | Ready | ADR-0016 |
+| 017 | [a rolled hit strikes the first body on the fire lane](story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md) | Logic | Complete | ADR-0016 |
+| 018 | [Playtest 2 mission fixes — no destroy soft-lock, legible grenades and devices, camera taught](story-018-playtest-two-mission-fixes.md) | Logic | Complete | ADR-0016 |
 
 
 ## Next Step

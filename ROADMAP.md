@@ -11,16 +11,14 @@
 
 ## Next step
 
-1. **UX specs for Research, Brief, Assembly, Debrief and Settings** (`/ux-design` each, then `/ux-review`), from the measured sweep in `production/qa/evidence/screens-2026-10-23/` (accessibility floors already met on every surface, IF-036).
+1. **Agent playtests 3 and 4** (fresh testers, fixed harness: `production/qa/playtests/harness/`): new-player through several contracts, and mid-game / difficulty spike; then `/playtest-report` for sessions 2–4 with CD-PLAYTEST, and the fun-hypothesis validation.
 
 ## After that
 
-2. **Interaction pattern library**: add any pattern the five new specs need (P-24 and P-25 done 2026-10-23).
+2. **Performance profile** (`production/polish/perf-2026-10-23/perf.mjs`: frame time, draw calls, heap, load times) — also the World Network p95 re-profile dated 2026-10-28.
 3. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
-4. **Playtests 2 and 3**, `/playtest-report`, and the fun-hypothesis validation (gate blocker 2).
-5. **World Network p95 re-profile** (dated 2026-10-28) and the draw-call / memory sampling.
-6. **`/retrospective`**, then **`/gate-check`** Production → Polish.
-7. Register a hit-target TR at a later `/architecture-review` (IF-031 to IF-035 waiver).
+4. **`/retrospective`**, then **`/gate-check`** Production → Polish.
+5. Register a hit-target TR at a later `/architecture-review` (IF-031 to IF-035 waiver).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -33,6 +31,7 @@
 
 ## Done recently
 
+- 2026-10-23 — Five screen UX specs APPROVED by `/ux-review` (Research, Brief, Assembly, Debrief, Settings). Pattern library P-26 to P-28; P-05 / P-13 updated. IF-038 (label in name, Debrief Balance and invoice, no overlapping boxes). Agent playtest 2 run; its mission findings fixed in TM-018 (no destroy soft-lock, blast ring, dark destroyed devices, camera taught); harness fixed (pause ownership, no time leak between commands, grenade targeting kept).
 - 2026-10-23 — Five screen UX specs drafted (Research, Brief, Assembly, Debrief, Settings; In Review). IF-037: their committed-tier deltas fixed (no ellipsis anywhere, text-overlap check, P-05 focus for Settings-from-Pause / Balance / Recruitment Market, Debrief focus, reduced-motion overlays, researched check glyph, framed Settings selection).
 - 2026-10-23 — Difficulty-curve open questions decided (two wins to Intel 2; grenade centre 80; one-shot RADIO CALL advisory). Pattern library: P-20 / P-23 corrected, P-24 Scan marker and Focus selection and P-25 Inline moment note added (World Network spec OQ15, OQ19 closed).
 - 2026-10-23 — IF-036: every surface (Menu, Settings, Research, Brief, Assembly, Debrief, Mission HUD, Pause) meets the 10 px / 4.5:1 / 24×24 floors and lays out at four text scales; sweep 0 failures; Brief recon type moved to an HTML overlay.

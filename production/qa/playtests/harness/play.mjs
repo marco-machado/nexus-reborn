@@ -5,10 +5,13 @@
 //   move <x> <y>          move the pointer (hover)
 //   wheel <dy>            mouse wheel (camera zoom)
 //   key <Key>             e.g. Space, Escape, 1, q, g, Tab, Enter, ArrowLeft
+//   holdkey <Key> [ms]    hold a key down (e.g. camera pan W/A/S/D), default 400 ms
 //   type <text>
 //   clicktext <words>     click the first element whose text contains the words
 //   wait <ms>             mission: run ms real milliseconds, then the harness pauses the game
 //                         again and returns a capture (max 30000). Screens: let ms pass.
+// In a mission the harness keeps the game paused between your commands; each
+// input lets about 120 ms pass. A pause YOU open (Space, Escape, PAUSE) stays.
 const [cmd, ...args] = process.argv.slice(2)
 const port = process.env.PLAY_PORT || 4399
 const qs = args.map((a) => 'a=' + encodeURIComponent(a)).join('&')

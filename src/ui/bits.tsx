@@ -75,6 +75,8 @@ export function ScrollBox(props: {
   className?: string
   dep?: unknown
   boxRef?: RefObject<HTMLDivElement | null>
+  // A named, focusable region (keyboard scrolling), e.g. the Debrief invoice.
+  region?: string
   children: ReactNode
 }) {
   const [ref, more] = useScrollEdge(props.dep)
@@ -88,7 +90,13 @@ export function ScrollBox(props: {
   )
   return (
     <div className="scroll-wrap">
-      <div ref={setRef} className={'scroll' + (props.className ? ' ' + props.className : '')}>
+      <div
+        ref={setRef}
+        className={'scroll' + (props.className ? ' ' + props.className : '')}
+        role={props.region ? 'region' : undefined}
+        tabIndex={props.region ? 0 : undefined}
+        aria-label={props.region}
+      >
         {props.children}
       </div>
       <span className={'scroll-fade' + (more ? ' on' : '')} aria-hidden="true" />

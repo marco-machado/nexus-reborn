@@ -241,6 +241,8 @@ export interface View {
   faction: THREE.Mesh
   factionHot: boolean
   glow: THREE.Mesh | null
+  // A device's emissive core; it goes dark when the device is destroyed.
+  core: THREE.Mesh | null
   tag: THREE.Group | null
   tagFg: THREE.Mesh | null
   tagLow: boolean
@@ -297,10 +299,11 @@ export function buildView(u: UnitAppearance, s: Shared): View {
     legL.position.set(0, 0.7, -0.09)
     legR.position.set(0, 0.7, 0.09)
   }
+  let core: THREE.Mesh | null = null
   if (u.kind === 'device') {
     const base = new THREE.Mesh(s.deviceGeom, s.deviceBody)
     base.position.set(0, 0.5, 0)
-    const core = new THREE.Mesh(s.deviceCoreGeom, s.deviceCore)
+    core = new THREE.Mesh(s.deviceCoreGeom, s.deviceCore)
     core.position.set(0, 1.11, 0)
     rig.add(base, core)
   } else if (!agent) {
@@ -421,6 +424,7 @@ export function buildView(u: UnitAppearance, s: Shared): View {
     faction,
     factionHot: false,
     glow,
+    core,
     tag,
     tagFg,
     tagLow: false,

@@ -11,6 +11,7 @@
   "faint": [],
   "targets": 32,
   "underTargets": [],
+  "labelInName": [],
   "textBoxes": [
    {
     "text": "ASSEMBLY",
@@ -49,7 +50,7 @@
     "key": "span.chip.dim < div.screen-head-right"
    },
    {
-    "text": "14:32:46",
+    "text": "14:32:45",
     "size": 10,
     "w": 157,
     "key": "span.chip.dim < div.screen-head-right"
@@ -1422,7 +1423,7 @@
   },
   {
    "tag": "button",
-   "name": "OPEN THE RECRUITMENT MARKET // ROSTER 8 OF 8",
+   "name": "RECRUIT + (8/8) // OPEN THE RECRUITMENT MARKET",
    "dis": null
   },
   {
@@ -1447,17 +1448,17 @@
   },
   {
    "tag": "button",
-   "name": "ITEM SLOT 1 // EMPTY // CYCLE",
+   "name": "EMPTY SLOT // ITEM SLOT 1 // CYCLE",
    "dis": null
   },
   {
    "tag": "button",
-   "name": "ITEM SLOT 2 // EMPTY // CYCLE",
+   "name": "EMPTY SLOT // ITEM SLOT 2 // CYCLE",
    "dis": null
   },
   {
    "tag": "button",
-   "name": "DEPLOY STRIKE TEAM 04",
+   "name": "DEPLOY TEAM // STRIKE TEAM 04",
    "dis": null
   },
   {

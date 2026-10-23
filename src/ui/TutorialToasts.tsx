@@ -30,7 +30,7 @@ export default function TutorialToasts() {
               <button
                 type="button"
                 className="hud-toast-btn"
-                aria-label="Skip the whole tutorial"
+                aria-label="SKIP TUTORIAL // SKIP THE WHOLE TUTORIAL"
                 onClick={() => {
                   uiClick()
                   skipTutorial()

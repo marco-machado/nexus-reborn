@@ -46,24 +46,31 @@ const missionLive = () =>
     const s = useMissionStore.getState()
     return s.live && (!s.result || s.result === 'none')
   })
-// Before input in a mission: close the game's Pause, through the same store
-// action the HUD's PAUSE button and the pause menu's RESUME call.
+// The harness's own hold sets the store's paused flag directly rather than
+// through setPaused, which also cancels grenade targeting: an armed grenade
+// must survive the pause between the playtester's turns. The sim, camera and
+// HUD read the same flag, so the scene freezes exactly as under PAUSE.
 const setPaused = (on) =>
   page.evaluate(async (on) => {
     const { useMissionStore } = await import('/src/state/missionStore.ts')
-    useMissionStore.getState().setPaused(on)
+    useMissionStore.setState({ paused: on })
   }, on)
+// Only a pause the harness made is undone by the harness; a pause the
+// playtester opened (Space, Escape, PAUSE) stays open and visible.
+let harnessHeld = false
 async function resume() {
-  if ((await inMission()) && (await pauseOpen())) {
+  if (harnessHeld && (await inMission()) && (await pauseOpen())) {
     await setPaused(false)
     await sleep(60)
   }
+  harnessHeld = false
 }
 // After a turn in a mission: pause so nothing moves while the playtester
 // thinks.
 async function hold() {
   if ((await inMission()) && (await missionLive()) && !(await pauseOpen())) {
     await setPaused(true)
+    harnessHeld = true
     await sleep(60)
   }
 }
@@ -71,9 +78,17 @@ const settle = () => sleep(120)
 // Captures hide the Pause panel so the paused scene can be read; the panel
 // is the game's, the hiding is the harness's.
 async function capture(file) {
-  await page.addStyleTag({ content: '.hud-menu-wrap[aria-label="Mission paused"]{visibility:hidden}', }).then((h) => h.evaluate((el) => el.setAttribute('data-harness', '1')))
+  if (harnessHeld) {
+    await page.addStyleTag({ content: '.hud-menu-wrap[aria-label="Mission paused"]{visibility:hidden}' }).then((h) => h.evaluate((el) => el.setAttribute('data-harness', '1')))
+  }
   await page.screenshot({ path: file, timeout: 15000 })
   await page.evaluate(() => document.querySelectorAll('style[data-harness]').forEach((e) => e.remove()))
+}
+// After any input in a mission the harness pauses again, so game time moves
+// only while the playtester acts (about 120 ms per input) or waits.
+const settleHold = async () => {
+  await sleep(120)
+  await hold()
 }
 
 const visibleText = () =>
@@ -91,7 +106,7 @@ async function run(cmd, a) {
       await resume()
       const [x, y, button] = a
       await page.mouse.click(Number(x), Number(y), { button: button === 'right' ? 'right' : 'left' })
-      await settle()
+      await settleHold()
       return { ok: true }
     }
     case 'drag': {
@@ -101,32 +116,38 @@ async function run(cmd, a) {
       await page.mouse.down()
       await page.mouse.move(x2, y2, { steps: 8 })
       await page.mouse.up()
-      await settle()
+      await settleHold()
       return { ok: true }
     }
     case 'move': {
       await resume()
       await page.mouse.move(Number(a[0]), Number(a[1]))
-      await settle()
+      await settleHold()
       return { ok: true }
     }
     case 'wheel': {
       await resume()
       await page.mouse.wheel(0, Number(a[0]))
-      await settle()
+      await settleHold()
       return { ok: true }
     }
     case 'key': {
-      // Space and Escape are the player's own pause keys: pass them through.
+      // Space and Escape are the player's own pause keys. While the harness
+      // holds the game, pressing one hands the pause to the player: the
+      // pause menu stays and shows.
+      if ((a[0] === 'Space' || a[0] === 'Escape') && harnessHeld && (await pauseOpen())) {
+        harnessHeld = false
+        return { ok: true, note: 'game paused by you; the pause menu is open' }
+      }
       if (a[0] !== 'Space' && a[0] !== 'Escape') await resume()
       await page.keyboard.press(a[0])
-      await settle()
+      await settleHold()
       return { ok: true }
     }
     case 'type': {
       await resume()
       await page.keyboard.type(a.join(' '))
-      await settle()
+      await settleHold()
       return { ok: true }
     }
     case 'clicktext': {
@@ -138,7 +159,17 @@ async function run(cmd, a) {
       const box = await page.getByText(t, { exact: false }).filter({ visible: true }).first().boundingBox({ timeout: 2000 })
       if (!box) return { error: 'no visible element with text: ' + t }
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-      await settle()
+      await settleHold()
+      return { ok: true }
+    }
+    case 'holdkey': {
+      // Hold a key down for ms real milliseconds (camera pan keys need it).
+      await resume()
+      const ms = Math.max(50, Math.min(3000, Number(a[1] || 400)))
+      await page.keyboard.down(a[0])
+      await sleep(ms)
+      await page.keyboard.up(a[0])
+      await settleHold()
       return { ok: true }
     }
     case 'wait': {
