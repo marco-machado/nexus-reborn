@@ -1,0 +1,71 @@
+PASS card@90: up with four rows THE JOB / START HERE / STRATEGIC TIME / THE FOUR NUMBERS // THE JOB|START HERE|STRATEGIC TIME|THE FOUR NUMBERS
+PASS card@90: no Influence or Research row
+PASS card@90: START HERE names the highest-Chance open contract and its Chance // Focus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).
+PASS card@90: Pause/Clock speed as control over strategic time; Nexus-held Tax
+PASS card@90: four number lines // 4
+PASS card@90: nothing clipped
+PASS card@100: up with four rows THE JOB / START HERE / STRATEGIC TIME / THE FOUR NUMBERS // THE JOB|START HERE|STRATEGIC TIME|THE FOUR NUMBERS
+PASS card@100: no Influence or Research row
+PASS card@100: START HERE names the highest-Chance open contract and its Chance // Focus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).
+PASS card@100: Pause/Clock speed as control over strategic time; Nexus-held Tax
+PASS card@100: four number lines // 4
+PASS card@100: nothing clipped
+PASS card@110: up with four rows THE JOB / START HERE / STRATEGIC TIME / THE FOUR NUMBERS // THE JOB|START HERE|STRATEGIC TIME|THE FOUR NUMBERS
+PASS card@110: no Influence or Research row
+PASS card@110: START HERE names the highest-Chance open contract and its Chance // Focus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).
+PASS card@110: Pause/Clock speed as control over strategic time; Nexus-held Tax
+PASS card@110: four number lines // 4
+PASS card@110: nothing clipped
+PASS card@125: up with four rows THE JOB / START HERE / STRATEGIC TIME / THE FOUR NUMBERS // THE JOB|START HERE|STRATEGIC TIME|THE FOUR NUMBERS
+PASS card@125: no Influence or Research row
+PASS card@125: START HERE names the highest-Chance open contract and its Chance // Focus a sector and read its four numbers; Pause while you read. Start with NEON GARDEN in OSLO, the open contract with the highest Chance (87%).
+PASS card@125: Pause/Clock speed as control over strategic time; Nexus-held Tax
+PASS card@125: four number lines // 4
+PASS card@125: nothing clipped
+PASS UNDERSTOOD marks hint-worldmap seen exactly once // ["hint-worldmap"]
+PASS card does not return after leaving and re-entering World Network
+PASS influence0@90: Europe: Stabilize, Lobby and Expedite (seeded target) UNAFFORDABLE, all disabled // [{"name":"1 STABILIZE","status":"UNAFFORDABLE","disabled":true},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS influence0@90: no teaching panel, inset shown
+PASS influence0@90: nothing clipped //  over 0
+PASS influence0@100: Europe: Stabilize, Lobby and Expedite (seeded target) UNAFFORDABLE, all disabled // [{"name":"1 STABILIZE","status":"UNAFFORDABLE","disabled":true},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS influence0@100: no teaching panel, inset shown
+PASS influence0@100: nothing clipped //  over 0
+PASS influence0@110: Europe: Stabilize, Lobby and Expedite (seeded target) UNAFFORDABLE, all disabled // [{"name":"1 STABILIZE","status":"UNAFFORDABLE","disabled":true},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS influence0@110: no teaching panel, inset shown
+PASS influence0@110: nothing clipped //  over 0
+PASS influence0@125: Europe: Stabilize, Lobby and Expedite (seeded target) UNAFFORDABLE, all disabled // [{"name":"1 STABILIZE","status":"UNAFFORDABLE","disabled":true},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS influence0@125: no teaching panel, inset shown
+PASS influence0@125: nothing clipped //  over 0
+PASS influence0: North America (no generated offer): Stabilize and Lobby UNAFFORDABLE, Expedite NO TARGET, no teaching panel // [{"name":"1 STABILIZE","status":"UNAFFORDABLE","disabled":true},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"NO TARGET","disabled":true}]
+PASS moment@90: one note names STABILIZE, 8 PTS and the effect; inset yields its slot // INFLUENCE // 1 STABILIZEUNDERSTOODAffordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend. inset false
+PASS moment@90: Stabilize CLEAR and enabled, Lobby and Expedite UNAFFORDABLE // [{"name":"1 STABILIZE","status":"CLEAR","disabled":false},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS moment@90: hint-influence marked seen once on firing // ["hint-worldmap","hint-influence"]
+PASS moment@90: OPEN CONTRACTS still on screen with its list // bottom 526 h 172
+PASS moment@90: nothing clipped //  over 0
+PASS moment@100: one note names STABILIZE, 8 PTS and the effect; inset yields its slot // INFLUENCE // 1 STABILIZEUNDERSTOODAffordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend. inset false
+PASS moment@100: Stabilize CLEAR and enabled, Lobby and Expedite UNAFFORDABLE // [{"name":"1 STABILIZE","status":"CLEAR","disabled":false},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS moment@100: hint-influence marked seen once on firing // ["hint-worldmap","hint-influence"]
+PASS moment@100: OPEN CONTRACTS still on screen with its list // bottom 526 h 142
+PASS moment@100: nothing clipped //  over 0
+PASS moment@110: one note names STABILIZE, 8 PTS and the effect; inset yields its slot // INFLUENCE // 1 STABILIZEUNDERSTOODAffordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend. inset false
+PASS moment@110: Stabilize CLEAR and enabled, Lobby and Expedite UNAFFORDABLE // [{"name":"1 STABILIZE","status":"CLEAR","disabled":false},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS moment@110: hint-influence marked seen once on firing // ["hint-worldmap","hint-influence"]
+PASS moment@110: OPEN CONTRACTS still on screen with its list // bottom 526 h 126
+PASS moment@110: nothing clipped //  over 0
+PASS moment@125: one note names STABILIZE, 8 PTS and the effect; inset yields its slot // INFLUENCE // 1 STABILIZEUNDERSTOODAffordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend. inset false
+PASS moment@125: Stabilize CLEAR and enabled, Lobby and Expedite UNAFFORDABLE // [{"name":"1 STABILIZE","status":"CLEAR","disabled":false},{"name":"2 LOBBY","status":"UNAFFORDABLE","disabled":true},{"name":"3 EXPEDITE","status":"UNAFFORDABLE","disabled":true}]
+PASS moment@125: hint-influence marked seen once on firing // ["hint-worldmap","hint-influence"]
+PASS moment@125: OPEN CONTRACTS still on screen with its list // bottom 525 h 79
+PASS moment@125: nothing clipped //  over 0
+PASS exactly one teaching panel // 1
+PASS dismiss closes the note, restores the inset and keeps hint-influence seen exactly once // ["hint-worldmap","hint-influence"]
+PASS never returns after Influence is spent and recovers, on another sector too // {"moment":null,"influence":20}
+PASS seen holds hint-worldmap and hint-influence exactly once each // ["hint-worldmap","hint-influence"]
+PASS never returns after leaving and re-entering World Network
+PASS antarctica@90: no actions offered, no teaching panel, moment unseen // {"acts":[],"moment":null,"seen":["hint-worldmap"]}
+PASS antarctica@100: no actions offered, no teaching panel, moment unseen // {"acts":[],"moment":null,"seen":["hint-worldmap"]}
+PASS antarctica@110: no actions offered, no teaching panel, moment unseen // {"acts":[],"moment":null,"seen":["hint-worldmap"]}
+PASS antarctica@125: no actions offered, no teaching panel, moment unseen // {"acts":[],"moment":null,"seen":["hint-worldmap"]}
+PASS refocusing Europe at Influence 8 fires the moment once
+PASS no console or page errors
+ALL PASS
