@@ -37,7 +37,7 @@ Settings has two openers. Both mount the same component, `SettingsPanel`, in a `
 | Arrival | What the player was just doing | Assumed emotional state | What they most need |
 |---|---|---|---|
 | **From the Menu** (`phase = 'menu'`) | Looking at the Menu; no campaign yet or about to Continue | Unhurried; often a first-time player fixing sound, text size or keys before playing | Audio and the accessibility controls visible without scrolling; every change visible at once |
-| **From Pause, mid-mission** (`phase = 'mission'`, `missionStore.paused`) | Fighting; pressed Space or Escape, then SETTINGS | Interrupted, possibly stressed; wants one quick fix (a key that fights them, a loud channel) and to be back in the same frozen mission | A fast path in and out; the sim stays frozen; closing returns to the Pause menu with focus on its SETTINGS control, not to the fight; honest words about what applies now vs next mission |
+| **From Pause, mid-mission** (`phase = 'mission'`, `missionStore.paused`) | Fighting; pressed Escape, then SETTINGS | Interrupted, possibly stressed; wants one quick fix (a key that fights them, a loud channel) and to be back in the same frozen mission | A fast path in and out; the sim stays frozen; closing returns to the Pause menu with focus on its SETTINGS control, not to the fight; honest words about what applies now vs next mission |
 
 - **Voluntary**: yes. Nothing sends the player here.
 - **Time pressure**: none. On Menu no clock runs. From Pause the sim and camera are frozen and Settings leaves `missionStore.paused` untouched (file header, `Settings.tsx`).

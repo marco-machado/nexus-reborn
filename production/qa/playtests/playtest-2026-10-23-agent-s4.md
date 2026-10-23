@@ -14,7 +14,7 @@
 
 **Save.** The harness `fixture` command: New Operation, then Neon Garden won, Intel 2 at 20/100, 141,000 CR, Influence 14, three projects researched, every tutorial and hint marked seen.
 
-**Harness artifact (verified 2026-10-23).** The "seen" set did not reach the game: the page loaded `save.ts` and `tutorialStore.ts` with a Vite `?t=` stamp, and the fixture's imports without it reached a second store instance. So the tester saw the FIRST UPLINK card (which pointed at the already-won Neon Garden) and tutorial 1/9 on a continued save. Those two observations are artifacts, not game bugs. The harness is fixed to import the URLs the page loaded.
+**Harness artifact (verified 2026-10-23).** The "seen" set did not reach the game: the page loaded `save.ts` and `tutorialStore.ts` with a Vite `?t=` stamp, and the fixture's imports without it reached a second store instance. So the tester saw the FIRST UPLINK card (which pointed at the already-won Neon Garden) and tutorial 1/9 on a continued save. Those two observations are artifacts, not game bugs. The harness fix (import the URLs the page loaded) is not yet made; restarting the dev server clears the stamps (ROADMAP).
 
 **Method caveat.** As session 3: the game refuses orders while paused, the harness lets about 120 ms pass per input.
 
@@ -60,7 +60,7 @@ Picking up a save; the authored High and Severe contracts; Influence, Research a
 ## Bugs Encountered
 | # | Description | Severity | Reproducible | Status |
 |---|-------------|----------|-------------|--------|
-| 1 | FIRST UPLINK card and tutorial 1/9 on a continued save | — | Harness artifact | Harness fixed; not a game bug |
+| 1 | FIRST UPLINK card and tutorial 1/9 on a continued save | — | Harness artifact | Not a game bug; harness fix pending (ROADMAP) |
 | 2 | Brief `COLLATERAL TOLERANCE: LOW (10%)` vs notes MODERATE | S3 | Yes | IF-039 |
 | 3 | Two required objectives labelled TERTIARY (four-step contracts) | S4 | Yes | IF-039 (Brief OQ11) |
 | 4 | Two recruits named V. LINDQVIST; callsign LYNX reused | S4 | Seen | Polish backlog |

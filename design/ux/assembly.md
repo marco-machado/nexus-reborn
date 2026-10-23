@@ -2,7 +2,7 @@
 
 > **Status**: Approved (/ux-review design/ux/assembly.md 2026-10-23)
 > **Author**: Claude (delegated by owner /goal 2026-10-23) + ux-designer
-> **Last Updated**: 2026-10-23
+> **Last Updated**: 2026-10-23 (IF-039: deploy line names the contract and the days a win spends; slot-cycle hint)
 > **Journey Phase(s)**: unknown — no journey map
 > **Platform Target**: Desktop browser (1280×720 minimum). Keyboard and mouse. No gamepad. No touch.
 > **Template**: UX Spec
@@ -154,10 +154,10 @@ Recruitment Market (overlay over the whole screen, `position: absolute; inset: 0
 | Right | ROLE PROTOCOL | Readout ×2 | `ACT` and `PSV`: name and description | No | P-14 |
 | Right | Augmentation rows ×4 | Button each | Bay name, worn project or `STOCK ISSUE`, effect line or `NO PROJECT RESEARCHED` / `PINNED EMPTY`, `PIN` / `AUTO` chip; the name and effect lines wrap (no ellipsis) | Yes: cycles the pin; disabled when nothing is researched for that bay | **New: bay cycle** (library gap, Open Question 21); P-03 |
 | Right | LOADOUT | Readout ×2 | `PRIMARY n/120`, `SECONDARY n/48`, silhouette, weapon name | No | P-14 |
-| Right | Item slots ×2 | Button each | `MED KIT 8.0 KG`, `POWER CELL 6.0 KG` or `EMPTY SLOT 0.0 KG`; header `MED 8KG / CELL 6KG`; line `CARRIED: n KG` | Yes: cycles empty → med kit → power cell | **New: slot cycle** |
+| Right | Item slots ×2 | Button each | `MED KIT 8.0 KG`, `POWER CELL 6.0 KG` or `EMPTY SLOT 0.0 KG`; header `MED 8KG / CELL 6KG`; line `CARRIED: n KG`; hint `CLICK A SLOT TO CYCLE: EMPTY > MED KIT > POWER CELL` (IF-039: playtests 2 and 3 found the cycle by trial) | Yes: cycles empty → med kit → power cell | **New: slot cycle** |
 | Bottom | Role cells ×4 | Readout | Role label, active name, passive name (names wrap, no ellipsis); or `EMPTY SLOT` | No | P-14 |
 | Bottom | DEPLOYMENT MASS | Readout | Value in kg (one decimal), `/ 400.0 KG LIMIT`, segmented bar, tier sentence | No | P-14; bar never the sole carrier |
-| Bottom | DEPLOY TEAM | Primary button + reason line | `DEPLOY TEAM >>`; below it `CONFIRM AND DEPLOY STRIKE TEAM 04` or the refusal sentence | Yes, when enabled | Standard primary button; P-03 |
+| Bottom | DEPLOY TEAM | Primary button + reason line | `DEPLOY TEAM >>`; below it `<CODENAME> // A WIN SPENDS n DAYS OF WORLD TIME` (the selected contract; IF-039, 2026-10-23), `CONFIRM AND DEPLOY STRIKE TEAM 04` only with no contract, or the refusal sentence | Yes, when enabled | Standard primary button; P-03 |
 | Overlay | Recruitment Market | Modal overlay | Three candidate cards, `CLOSE`, 24-hour footer. `role="dialog"`, `aria-modal="true"`; focus enters on the first enabled control (as measured, `CLOSE`), Tab and Shift+Tab wrap inside, Escape closes, focus returns to the RECRUIT control that opened it | Yes | **P-05** for focus, trap, Escape and restore (as built, `useModalFocus`); **New: candidate market** for the card body (library gap, Open Question 21); P-02 (hire), P-03 (refusal) |
 | Overlay | HIRE | Button | `HIRE // n CR`, amber (spend) | Yes | P-02, P-03 |
 | Nav | Four-Screen tabs | Tab bar | Assembly selected | Yes | P-06 |
@@ -185,7 +185,7 @@ Ranked by what the player needs first when the screen opens with a contract sele
 
 | State / Variant | Trigger | What Changes |
 |---|---|---|
-| **Default** | Arrival with a contract, default squad | Four bays filled, `4 / 4 ASSIGNED`, mass 286.1 KG, `LIGHT LOAD // +0.15 M/S`, DEPLOY enabled with `CONFIRM AND DEPLOY STRIKE TEAM 04` (measured state) |
+| **Default** | Arrival with a contract, default squad | Four bays filled, `4 / 4 ASSIGNED`, mass 286.1 KG, `LIGHT LOAD // +0.15 M/S`, DEPLOY enabled with `<CODENAME> // A WIN SPENDS n DAYS OF WORLD TIME` (IF-039; the 2026-10-23 measurement predates it and showed `CONFIRM AND DEPLOY STRIKE TEAM 04`) |
 | **Assigned 4** | Four assigned | All unassigned `+` keys disabled (squad full). To bring in Slate the player must first unassign someone (Open Question 3) |
 | **Assigned 2–3** | Unassign | Empty bays print `EMPTY BAY` / `AWAITING ASSIGNMENT`; the footer shows `EMPTY SLOT` cells; the later bays renumber upward (assignment is an ordered list) |
 | **Assigned 1** | One left | That operative's `−` is disabled (the last assigned cannot be removed while editing, Roster Core Rule 3); reason is `title` only |
@@ -201,7 +201,7 @@ Ranked by what the player needs first when the screen opens with a contract sele
 | **Mass: standard** | `340 < mass ≤ 380` | `STANDARD LOAD` (Ink). No speed delta |
 | **Mass: heavy** | `380 < mass ≤ 400` | `HEAVY LOAD // -0.15 M/S` (red as built). Deploy still enabled. The one-time hint `HEAVY LOADOUT` fires in the Mission on a valid heavy deployment, not here (Interface advisory rule; `world.ts`, `tutorial.ts`) |
 | **Mass: over the limit** | `mass > 400` | Mass number red, bar red, DEPLOY disabled, sub-line `OFFLOAD n.n KG BEFORE DEPLOYMENT`, accessible name `DEPLOY TEAM // n.n KG OVER THE MASS LIMIT`. Exactly 400 kg is allowed |
-| **Deploy: enabled** | Contract selected, 1–4 assigned, all Ready, mass ≤ 400 | `DEPLOY STRIKE TEAM 04`, sub-line `CONFIRM AND DEPLOY STRIKE TEAM 04` |
+| **Deploy: enabled** | Contract selected, 1–4 assigned, all Ready, mass ≤ 400 | `DEPLOY STRIKE TEAM 04`, sub-line `<CODENAME> // A WIN SPENDS n DAYS OF WORLD TIME` |
 | **Deploy: refused, no contract** | `missionId` null | Sub-line `SELECT A CONTRACT ON THE WORLD NETWORK`; Brief tab also locked |
 | **Deploy: refused, none assigned** | 0 assigned | `ASSIGN AT LEAST ONE READY OPERATIVE` |
 | **Deploy: refused, not Ready** | Injured assigned | `REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT` |
@@ -423,7 +423,7 @@ Scope: English only. No localization system exists; every string is a literal in
 | Role cell name (strip) | about 132 px (inferred from the grid: 176 px cell minus padding, glyph, gap), wraps (`overflow-wrap: break-word`; ellipsis removed in IF-037) | 10 px, 0.14 em (names) / light (ability lines) | 17 / 16 | `TECH SPECIALIST` (15), `SUPPRESSION SWEEP` (17) | **HIGH**. `SUPPRESSION SWEEP` is predicted to wrap to two lines at 125% (inferred; Support was not in the captured squad), growing the strip (the strip already grows at 125%, from the captures); fit with Support in the squad is not measured |
 | Mass tier line | 192 px | 10 px, 0.1 em | 27 / 21 | `LIGHT LOAD // +0.15 M/S` (23) | **HIGH**. Wraps at 125% as built (seen); +40% is about 32 |
 | Mass limit line | 192 px, `nowrap` | 10 px, 0.12 em | 26 / 21 | `/ 400.0 KG LIMIT` (16) | Medium; `nowrap`, must wrap rather than clip |
-| Deploy sub-line | 282 px | 10 px, 0.2 em | 35 / 28 | `CONFIRM AND DEPLOY STRIKE TEAM 04` (33), `REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT` (43) | **HIGH**. 2 of the 4 refusal sentences (43, 38) exceed 35 in English at 100% (inferred; refusals not captured); the default sentence wraps at 110% and 125% (seen) |
+| Deploy sub-line | 282 px | 10 px, 0.2 em | 35 / 28 | `<CODENAME> // A WIN SPENDS n DAYS OF WORLD TIME` (40 with a 7-letter codename and 1-digit days; IF-039), `CONFIRM AND DEPLOY STRIKE TEAM 04` (33), `REMOVE INJURED OPERATIVES BEFORE DEPLOYMENT` (43) | **HIGH**. 2 of the 4 refusal sentences (43, 38) exceed 35 in English at 100% (inferred; refusals not captured); the default sentence wraps at 110% and 125% (seen) |
 | `DEPLOY TEAM >>` | 280 px | 23 px | wraps to two lines by design | — | Low; two lines at every scale (seen) |
 | RECRUIT button | 222 px | 12 px, 0.2 em | 23 / 22 | `RECRUIT + (8/8)` (15) | Medium |
 | Header chips | content-sized, wrapping rows | 10 px, 0.2 em | no fixed box | `SELECT UP TO FOUR OPERATIVES` (28) | Medium; at 125% the squad chip and the roster chip already wrap (seen), growing the header |

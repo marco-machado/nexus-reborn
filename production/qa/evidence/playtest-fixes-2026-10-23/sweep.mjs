@@ -394,6 +394,17 @@ const SURFACES = {
 
 const targetSel = 'button, a[href], [role="button"], [role="slider"], input, select, [tabindex="0"]'
 async function measure() {
+  // Let every finite animation end first: measured mid fade-in, the World
+  // Network orientation card read 14 low-contrast runs that a settled card
+  // does not have (ancestor opacity under 1). Looping animations never end.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => {})),
+    ),
+  )
   await install()
   return page.evaluate(({ targetSel, INK_DIM, INK_FAINT }) => {
     const runs = window.__probe.runs('body').map(({ el, ...r }) => ({ ...r, inactive: !!el.closest(':disabled, [aria-disabled="true"]'), blink: el.getAnimations().some((a) => a.animationName === 'cursor-blink' || a.animationName === 'blink'), key: el.tagName.toLowerCase() + ([...el.classList].length ? '.' + [...el.classList].join('.') : '') + ' < ' + (el.parentElement ? el.parentElement.tagName.toLowerCase() + ([...el.parentElement.classList].length ? '.' + [...el.parentElement.classList].join('.') : '') : ''), w: Math.round(el.getBoundingClientRect().width) }))

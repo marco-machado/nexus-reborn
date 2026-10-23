@@ -2,7 +2,7 @@
 
 > **Status**: Approved (/ux-review design/ux/interaction-patterns.md 2026-10-05)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-10-23 (P-20 speed-while-paused as built; P-23 four-row card and clock-use dismissal; P-24 Scan marker / Focus selection and P-25 Influence moment note added; locked and disabled controls dim the frame, never the text — IF-029 / IF-036)
+> **Last Updated**: 2026-10-23 (Abort hint names its consequence, P-01; Space is the tactical hold, not Pause, P-05 and Escape step 4 — TM-019, IF-039. Earlier: P-20 speed-while-paused as built; P-23 four-row card and clock-use dismissal; P-24 Scan marker / Focus selection and P-25 Influence moment note added; locked and disabled controls dim the frame, never the text — IF-029 / IF-036)
 > **Platform Target**: Desktop browser, keyboard and mouse only, 1280×720 minimum. No gamepad. No touch.
 > **Template**: Interaction Pattern Library
 > **Sources**: `design/gdd/interface.md` Rules 4–19; UI Requirements of all eight system GDDs; `design/art/art-bible.md` §7.1–7.5; `design/accessibility-requirements.md` (Standard tier); `src/ui/PauseMenu.tsx`; `src/ui/WorldMap.tsx`; `src/ui/Nav.tsx`
@@ -98,7 +98,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 - Timeout disarms; the next activation only re-arms. No timing pressure is placed on the player. Expiry cancels the arm; it does not confirm.
 - Escape disarms; it never confirms. Same outcome as timeout. See Escape.
 - Library default arming window is 3 real seconds (the Abort value, Interface Rule 12). Screen specs may not shorten it. New Operation and Balance Clear use this same expiry. Living spec §12 names the three seconds for Abort; this library applies that expiry to every P-01 use so chrome does not invent a second duration.
-- While armed, a reserved message slot prints a hint. The slot is not a toast and not P-11. The screen spec owns the sentence. The sentence must name the window and the consequence. Menu copy is `PRESS AGAIN WITHIN 3 S TO ERASE` or `PRESS AGAIN WITHIN 3 S TO START`. Abort and Balance Clear use the same slot; they may not omit it. Disarm clears the slot and is silent.
+- While armed, a reserved message slot prints a hint. The slot is not a toast and not P-11. The screen spec owns the sentence. The sentence must name the window and the consequence. Menu copy is `PRESS AGAIN WITHIN 3 S TO ERASE` or `PRESS AGAIN WITHIN 3 S TO START`. Abort copy is `PRESS AGAIN WITHIN 3 S TO ABORT // NO INVOICE, CONTRACT STAYS OPEN, ROSTER AS DEPLOYED` (IF-039, 2026-10-23: the consequence, not only the window). Abort and Balance Clear use the same slot; they may not omit it. Disarm clears the slot and is silent.
 
 **States**: Idle, Armed, Confirmed. Hover is not a state. Focus is P-04. A discard that must not be offered is absent, not a disabled P-01. A failed write after confirm is P-19 and, when it needs immediate attention, P-11 — not a third confirm step.
 
@@ -192,7 +192,8 @@ These are specified here so a screen spec does not invent them. Unused controls 
 **Specification**:
 - Focus is trapped while open and restored to the invoking control on close; nested Settings returns to Pause.
 - In a mission the sim and camera freeze; the feed stays visible behind a translucent panel. No drop shadow or glow separates panel from feed (art bible §7.1).
-- Pause opens with Space or Escape. Escape is consumed by remap capture, then by the top overlay, before it toggles Pause. See Escape.
+- Pause opens with Escape. Escape is consumed by remap capture, then by the top overlay, before it toggles Pause. See Escape.
+- The tactical hold (Space; TM-019, 2026-10-23) is not this pattern: no overlay, no focus trap, orders stay open; the HUD prints a status banner (`design/ux/hud.md` E16). A focused dialog or toast button keeps Space, so Space never toggles the hold from inside an overlay.
 - Tutorial toasts are not modal: they never block input or pause the sim. The first-visit overlay (P-23) is not this pattern.
 
 **States**: Closed, Open, Nested (Settings inside Pause). Hover is not a state. Focus is trapped. Error is not an overlay state; a failed write uses P-19. Disabled does not apply to the overlay itself.
@@ -776,7 +777,7 @@ One key, consumed by the innermost owner. It never confirms a spend or a discard
 1. **Remap capture (P-13).** Escape cancels capture and does not close Settings. Shipped in `src/ui/Settings.tsx`.
 2. **Top overlay only.** Balance over Settings: Escape closes Balance and leaves Settings. Settings inside Pause: Escape returns to Pause. Shipped for Balance; P-05 and Interface AC 18 for the nest.
 3. **Armed confirm (P-01).** Escape disarms and does not discard. The hint slot clears. On Menu there is no parent overlay, so the screen stays. On Pause, Escape still closes the overlay (step 4); closing it disarms Abort and does not confirm. The 3 s timeout remains the other disarm. This is the Menu spec's rule, not current Menu code.
-4. **Pause.** If nothing above consumed it, Space or Escape opens Pause. Escape also closes Pause from anywhere, including when a dialog button is focused. Space does not: a focused dialog button keeps Space. Shipped in `src/scene/Input.tsx`.
+4. **Pause.** If nothing above consumed it, Escape opens Pause. Escape also closes Pause from anywhere, including when a dialog button is focused. Space is the tactical hold, not Pause (TM-019, 2026-10-23); a focused dialog button keeps Space. Shipped in `src/scene/Input.tsx`.
 5. **Grenade targeting (P-08).** G arms and cancels, and does not open Pause. Escape does not cancel targeting in place. It opens Pause, and entering Pause clears targeting (`setPaused` already sets `grenadeTargeting: false`). No second Escape meaning.
 
 ## Gaps & Patterns Needed

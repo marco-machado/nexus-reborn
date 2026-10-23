@@ -281,7 +281,7 @@ Ownership does not change research prices, tactical layouts, or weapon tables. I
 
 ### World Events
 
-World Events fire every 15–45 strategic minutes and favor high-unrest sectors. Crisis doubles how often events pick that sector.
+World Events fire every 15–45 strategic minutes and favor high-unrest sectors. Crisis doubles how often events pick that sector. The mix settles rather than runs away: as unrest rises, raids (which cool it) gain weight faster than riots, and seizures stay rare and flat, so with no player action a sector drifts back toward about 30 unrest, crisis stays rare, and a city flips about every two months (WN-021, 2026-10-23). The world still presses: most campaigns see a sector pass 40 unrest within 20 days.
 
 | Event | World effect | Market effect |
 |---|---|---|
@@ -291,7 +291,7 @@ World Events fire every 15–45 strategic minutes and favor high-unrest sectors.
 | Trade agreement | Improves control, may reduce unrest | — |
 | Seizure | May change city ownership and control/unrest | A city flip re-clients the sector’s open generated contracts |
 
-The feed also carries contract offers, priority tags, expiries, withdrawals, re-clienting, crisis entry and exit, and influence spends. It holds 40 events and shows the most recent 14 for the selected timeline point.
+The feed also carries contract offers, priority tags, expiries, withdrawals, re-clienting, crisis entry and exit, and influence spends. A Stabilize or Lobby posts again when its last step lands, with the number it moved (`STABILIZATION COMPLETE IN <SECTOR> // UNREST NOW n%`). It holds 40 events and shows the most recent 14 for the selected timeline point.
 
 A mission result writes into this system. A win raises the sector’s control and lowers unrest. A loss does the opposite. Civilian hits add unrest. Each result posts its own feed event.
 
@@ -545,7 +545,7 @@ For a newly rolled offer, `Reward = clamp(500 × round(B × (0.9 + 0.3u) × P / 
 
 ### The brief
 
-The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the Opening hour, the weather script (opening intensity and any coming change with its clock), the sequential objectives, collateral tolerance, a recon image, a **required-kit line** derived from the objective kinds (destroy: power cells arm grenades, the fast tool, gunfire works slowly; interact: an operative holds the console for its channel duration; escort: the asset must reach the pad alive; defend: hold the zone for its duration), and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts. The kit line comes from the objective data, never from hand-written notes, so generated contracts carry it too (difficulty curve, approved 2026-10-21).
+The brief is the translation of a contract into an operational plan. It carries identity, client, type, threat, reward, narrative notes, the Opening hour, the weather script (opening intensity and any coming change with its clock), the sequential objectives, the collateral rule (5,000 CR per civilian hit, capped at the reward; there is no tolerance band), the world time a win spends, a recon image, a **required-kit line** derived from the objective kinds (destroy: power cells arm grenades, the fast tool, gunfire works slowly; interact: an operative holds the console for its channel duration; escort: the asset must reach the pad alive; defend: hold the zone for its duration), and a tactical map built from the same district the mission will use: insertion, target, extraction, street patrols, CorpSec zones, and estimated civilian and force counts. The kit line comes from the objective data, never from hand-written notes, so generated contracts carry it too (difficulty curve, approved 2026-10-21).
 
 If the brief’s geometry does not match the deployed district, the brief is wrong. If the brief’s weather or Opening hour does not match the deployed mission, the brief is wrong.
 
@@ -718,7 +718,7 @@ Required objectives are strictly sequential. Optional objectives activate with t
 
 **Pyrrhic win.** A tiebreak Win that empties the living roster on an **incomplete** campaign still fails the campaign in the same debrief (§4 Campaign: an empty roster fails an incomplete campaign) — this combined beat is a **pyrrhic win**. Every rule that reads `won` reads a Win: full net payout, Intel, Influence, ETA spend, ownership shove, KIA grading. Presentation is authored, not free: the **CAMPAIGN FAILED banner takes precedence** — posted first and visually dominant — and the invoice still prints the full net payout with the explicit note `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED`. Hire-after-failed remains Roster Open Question 1 (no recovery path is authored here). A quiet replay can also be pyrrhic: both banners print, CAMPAIGN FAILED first. On any failed campaign the debrief offers no Replay; its only exit is the World Network.
 
-The HUD shows the result immediately. After 2.5 seconds the game enters the debrief, which reports target, eliminations, KIA, new injuries and recovery times, survivor experience, civilian collateral, tactical time elapsed, Reward, optional bonus, Collateral, ETA spent, net payout, and the new balance. A quiet replay still debriefs: the banner is `REPLAY // FEE ALREADY COLLECTED`; currency and sector lines read as not paid; roster and ETA still print.
+The HUD shows the result immediately. After 2.5 seconds the game enters the debrief, which reports target, eliminations, KIA (one row each, with the experience lost and the roster left), new injuries and recovery times, survivor experience, civilian collateral, tactical time elapsed, Reward, optional bonus, Collateral, ETA spent, net payout, the new balance, and the mission sector's Control and Unrest before and after the result and, on a win, after the ETA days, with any holder change. A quiet replay still debriefs: the banner is `REPLAY // FEE ALREADY COLLECTED`; currency and sector lines read as not paid; roster and ETA still print.
 
 ---
 
@@ -730,7 +730,7 @@ Each authored contract is a designed problem, not a reskin. Generated contracts 
 
 Sable wants District 07 opened for an asset transfer at 23:00. Omnicorp CorpSec has sealed it behind a checkpoint. The squad inserts on the south perimeter and advances through market blocks under heavy rain. The front clears to light at 22:16:38. The 23:00 transfer is contract fiction, not mission length.
 
-Heavy rain is the squad’s ally on the approach: the largest sight penalty in the game, which is why a Severe contract is still workable. At 22:16:38 that ally lifts one step. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Collateral tolerance is low. Severe threat adds three extra street patrols (four if unrest is high), scales CorpSec health to 1.2, and upgrades one garrison member to an officer and one to a heavy.
+Heavy rain is the squad’s ally on the approach: the largest sight penalty in the game, which is why a Severe contract is still workable. At 22:16:38 that ally lifts one step. Rain does not change accuracy or movement. Civilian density is moderate (22, or 28 if the sector is above 20 unrest). Every civilian hit is billed. Severe threat adds three extra street patrols (four if unrest is high), scales CorpSec health to 1.2, and upgrades one garrison member to an officer and one to a heavy.
 
 1. Reach the checkpoint gate.
 2. Eliminate the seven-garrison (street patrols are optional unless they threaten the squad).
@@ -795,7 +795,7 @@ The interface is the game’s character. It is a secure corporate OS wrapped aro
 
 **Assembly.** Inspect, assign, wear or pin augmentation bays, read research-adjusted stats from what is worn, fill two item slots, and pass the 400 kg gate. Reachable between contracts; Deploy is refused without a selected contract.
 
-**Mission HUD.** District clock, live weather, alert, credits, live collateral, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim. A weather front writes a comm-log line.
+**Mission HUD.** District clock, live weather, alert, credits, live collateral, squad cards (health, magazine, selection, stances), objectives, comm log, drawn weapons, the ability bar, item counts, grenade control, the minimap, pause, the tactical hold banner, ground markers on every active objective (a beam over required ones), the result banner, and first-mission tutorial toasts. Toasts never block input and never pause the sim. A weather front writes a comm-log line.
 
 **Debrief.** The invoice. It applies sector, intel, influence, and roster consequences exactly once. A quiet replay names the zero and still applies roster and ETA.
 
@@ -809,7 +809,7 @@ Difficulty must not strip this information.
 
 ### Pause and discovery
 
-Space or Escape opens a modal pause: the sim and the camera freeze, every remappable binding prints from the same table the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a two-step confirm with a three-second arming window — first activation arms, a second while armed confirms, timeout disarms — that discards the mission without a debrief. New Operation and telemetry Clear use the same window.
+Space is the **tactical hold**: the sim and its clock freeze with no menu, every order stays open, and Space again resumes. An operative whose health crosses under 35% holds the sim once per crossing; the banner names them and the hold, and they hold again only after healing back over the line (TM-019, 2026-10-23). Escape opens a modal pause: the sim and the camera freeze, orders are refused, every remappable binding prints from the same table the input uses, focus is trapped, Resume returns, Settings stays inside the freeze, and Abort is a two-step confirm with a three-second arming window — first activation arms, a second while armed confirms, timeout disarms — that discards the mission without a debrief. New Operation and telemetry Clear use the same window.
 
 The first mission teaches with nine dismissible HUD toasts — Select, Move, Attack, stances, role ability, items, weapon swap, Directives, extraction — that name the current bindings and advance on action or dismiss. Skip Tutorial marks all steps seen. One-shot advisories fire at most once per campaign: an operative under 35% with med kits in stock, the first combat Alert, a role ability left ready for a minute, a deployment over the mass gate. The first Debrief carries a one-shot prompt that names the Research tab and the cheapest available project; it is the only place Research is taught (difficulty curve, approved 2026-10-21).
 
@@ -821,7 +821,7 @@ Designed in, not bolted on:
 - Research projects activate on Enter and Space.
 - Timeline: arrows, Home, End.
 - Pause and Settings trap and restore focus.
-- Remappable controls, with pause, operative slots, and mouse reserved.
+- Remappable controls, with the tactical hold, pause, operative slots, and mouse reserved.
 - Reduced motion: decorative sweeps gone, looping pulses frozen, rain at minimum.
 - High contrast: brighter ink, stronger frames.
 - Text scale 90 / 100 / 110 / 125%; screens scroll rather than clip.
@@ -832,7 +832,7 @@ Product backlog, not open design: full keyboard travel across every panel, color
 
 ## 13. Controls
 
-Defaults below. Every keyboard action except pause and the operative slots can be remapped. The pause menu, the tutorial, and the input handlers read one table, so a remap renames itself everywhere at once.
+Defaults below. Every keyboard action except the tactical hold, pause and the operative slots can be remapped. The pause menu, the tutorial, and the input handlers read one table, so a remap renames itself everywhere at once.
 
 ### Camera
 
@@ -859,7 +859,8 @@ Defaults below. Every keyboard action except pause and the operative slots can b
 | H | Toggle Hold Ground |
 | C | Toggle Hold Fire |
 | V | Swap weapon |
-| Space / Escape | Pause |
+| Space | Tactical hold (orders stay open) |
+| Escape | Pause menu |
 
 ### Abilities and items
 

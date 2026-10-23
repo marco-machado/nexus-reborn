@@ -82,6 +82,7 @@ This epic is complete when:
 | 036 | [Every surface meets the Standard-tier type, ink and target floors](story-036-every-surface-meets-the-standard-tier-floors.md) | UI | Complete | ADR-0017 |
 | 037 | [The five screen specs' committed-tier deltas are fixed](story-037-screen-specs-committed-tier-deltas.md) | UI | Complete | ADR-0017 |
 | 038 | [Spec-review findings — label in name, Debrief Balance and invoice, no overlapping boxes](story-038-spec-review-and-overlap-fixes.md) | UI | Complete | ADR-0017 |
+| 039 | [Brief, Assembly, Debrief and Abort say what actually happens](story-039-brief-assembly-debrief-and-abort-say-what-happens.md) | UI | Complete | ADR-0017 |
 
 GDD AC24 (invoice money lines) is covered by economy-and-contracts story 022; the Research remaining label by research story 009.
 

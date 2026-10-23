@@ -68,6 +68,9 @@ This epic is complete when:
 | 016 | Grenade confirm spends one power cell; refusal spends nothing | Logic | Ready | ADR-0016 |
 | 017 | [a rolled hit strikes the first body on the fire lane](story-017-a-rolled-hit-strikes-the-first-body-on-the-fire-lane.md) | Logic | Complete | ADR-0016 |
 | 018 | [Playtest 2 mission fixes — no destroy soft-lock, legible grenades and devices, camera taught](story-018-playtest-two-mission-fixes.md) | Logic | Complete | ADR-0016 |
+| 019 | [Tactical hold — Space stops time with orders open; a casualty holds it once](story-019-tactical-hold-and-casualty-hold.md) | Logic | Complete | ADR-0016 |
+| 020 | [Active objectives are marked in the 3D view](story-020-objective-markers-in-the-3d-view.md) | Visual/Feel | Complete | ADR-0016 |
+| 021 | [Taught before it hurts, answered when refused — grenade hint, hold key, order feedback](story-021-grenade-hint-hold-key-and-order-feedback.md) | Logic | Complete | ADR-0016 |
 
 
 ## Next Step

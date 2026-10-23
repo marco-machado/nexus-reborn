@@ -2,7 +2,7 @@
 
 > **Status**: Approved (/ux-review design/ux/world-network.md 2026-10-23, re-review after one NEEDS REVISION pass)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-10-23
+> **Last Updated**: 2026-10-23 (HELD BY row and card copy, WN-022)
 > **Journey Phase(s)**: unknown — no journey map
 > **Platform Target**: Desktop browser (1280×720 minimum). Keyboard and mouse. No gamepad. No touch.
 > **Template**: UX Spec
@@ -95,7 +95,8 @@ No exit from this screen is destructive. Leaving never spends Influence and neve
 |     UNREST  000%    |      S C A N                               | CONTROL 000%  [====    ]        |
 |  NORTH AMERICA      |      sector fill = majority holder         | UNREST  000%  [==      ]        |
 |     CONTROL 000%    |      contract markers (one button each)    | TAX YIELD 000 CR / 24H          |
-|     UNREST  000%    |      CRISIS = hatch + word CRISIS          | TAX PAID  NO // NOT NEXUS-HELD  |
+|     UNREST  000%    |      CRISIS = hatch + word CRISIS          | HELD BY   HELIX CORP // 2 OF 3  |
+|                     |                                            | TAX PAID  NO // NOT NEXUS-HELD  |
 |  ... (4 more)       |                                            | GARRISON  SECURE|STRAINED|CRIT|
 |  ANTARCTICA [lock]  |                                            | [1 STABILIZE 8P  NEED 8 PTS]    |
 |     NO SURVEY DATA  | [-][+][HOME][FOCUS SECTOR][SOUTH POLE]     | [2 LOBBY 10P ..][3 EXPEDITE 12P]|
@@ -162,7 +163,7 @@ First-visit orientation card (P-23) sits over the Scan column, four rows, one `U
 | Center | Fiction chrome | Decorative | `ORBITAL VIEW`, `SAT-16E // LIVE`, unrest sparkline, coordinates | No — `aria-hidden`, never carries state | none |
 | Right | Focus panel header | Title + chip | Sector title; chip `FOCUS` or `CRISIS` | No | P-14 |
 | Right | Sector inset | Decorative flat map with stepper | Flat sector outline, `<` `>` buttons named `FOCUS PREVIOUS SECTOR` / `FOCUS NEXT SECTOR` | Yes — step Focus | Standard buttons. Replaced by the Influence moment note while that is up |
-| Right | Four numbers | Readouts | `CONTROL n%` + bar, `UNREST n%` + bar, `TAX YIELD n CR / 24H`, `TAX PAID` line, `GARRISON CONDITION` word | No | P-14 |
+| Right | Four numbers | Readouts | `CONTROL n%` + bar, `UNREST n%` + bar, `HELD BY` line (`NEXUS GLOBAL // 2 OF 3 CITIES` teal; another holder in the default tone; `CONTESTED // CITIES SPLIT 1-1-1`; WN-022, 2026-10-23), `TAX YIELD n CR / 24H`, `TAX PAID` line, `GARRISON CONDITION` word | No | P-14 |
 | Right | Influence actions ×3 | Buttons | `1 STABILIZE 8P`, `2 LOBBY 10P`, `3 EXPEDITE 12P`; status word beside each: `CLEAR`, `ACTIVE`, unaffordable / cooldown `nH` / no target / Antarctica | Yes — spend | P-02, P-03 |
 | Right | Influence moment note | Note + dismiss | One teaching note, once per campaign, first time any action is affordable on the focused sector; `UNDERSTOOD` | Yes — dismiss | **New** (not P-23, which covers only the first-visit card); non-modal. Open Question 15 |
 | Right | Event forecast | Readout | Intel < 2: `EVENT FORECAST` + the intel-gate text. Intel 2+: five chips (riot, blackout, raid, trade, seizure) with `n%` over the next 6 strategic hours | No | P-14 |
@@ -413,7 +414,7 @@ Tier: **Standard** (`design/accessibility-requirements.md`, committed 2026-09-23
 
 | Committed row | How the World Network satisfies it |
 |---|---|
-| Critical state never by color alone | Selection: `aria-pressed` + P-04 marker. Focus: P-04 brackets. Lock: lock glyph + `LOCKED` / `NO SURVEY DATA` / requirement text. Crisis: hatch + the word `CRISIS` + chip. Unrest pressure: `UNREST PRESSURE` chip. Garrison: the word `SECURE` / `STRAINED` / `CRITICAL`. Tax: `YES // NEXUS-HELD` vs `NO // NOT NEXUS-HELD`. Clock: `PAUSED` / `nX`. Live vs Review: `LIVE` + dot vs `REVIEW -<ago>` + `> GO LIVE`. Holder on the Scan: sector fill **and** the Control key names and the focus title's holder name. Campaign: the words `CAMPAIGN COMPLETE` / `CAMPAIGN FAILED` |
+| Critical state never by color alone | Selection: `aria-pressed` + P-04 marker. Focus: P-04 brackets. Lock: lock glyph + `LOCKED` / `NO SURVEY DATA` / requirement text. Crisis: hatch + the word `CRISIS` + chip. Unrest pressure: `UNREST PRESSURE` chip. Garrison: the word `SECURE` / `STRAINED` / `CRITICAL`. Tax: `YES // NEXUS-HELD` vs `NO // NOT NEXUS-HELD`. Holder: the HELD BY words, not the teal. Clock: `PAUSED` / `nX`. Live vs Review: `LIVE` + dot vs `REVIEW -<ago>` + `> GO LIVE`. Holder on the Scan: sector fill **and** the Control key names and the focus title's holder name. Campaign: the words `CAMPAIGN COMPLETE` / `CAMPAIGN FAILED` |
 | Text legible at 1280×720 | No clipping at 90 / 100 / 110 / 125%; overflow scrolls (P-15). Readouts ≥12 px, tertiary labels ≥10 px at 100% scale; fiction chrome ≥10 px. Readouts are (owner 2026-10-23): header resource values, sector names, CONTROL and UNREST values (rows and panel), TAX YIELD, TAX PAID and GARRISON values, contract codenames, the CLOCK SPEED value, the time code |
 | Text scale 90 / 100 / 110 / 125% | All sizes scale with `--text-scale`; the layout absorbs growth by scrolling the SECTORS list, OPEN CONTRACTS and the Feed, never by compressing a panel. Measured 2026-10-23: at 100% SECTORS already scrolls (356 px box, 396 px content); at 125% OPEN CONTRACTS shows a 57 px box for 151 px of content (about one row) and the bottom strip fits visually (screenshot check; `overflow: clip` makes scrollHeight unreliable there) |
 | High-contrast mode | CSS-variable remap only. Brackets, rings and words survive. Ratios in Contrast below |
@@ -511,6 +512,7 @@ Each criterion is checkable by a tester without the GDDs. They are UX criteria; 
 **Core purpose**
 - [ ] **Opening desk.** On a New Operation, the first screen shows: Focus on Europe; `INFLUENCE 0 PTS`; `INTEL 1`; all three Influence actions disabled with `UNAFFORDABLE` visible beside each; `TAX PAID NO // NOT NEXUS-HELD`; Rust Haven open with `CHANCE n%`; Glass Veil and Hollow Crown locked with their requirement as text; exactly one generated Moderate offer open; the orientation card showing.
 - [ ] **The first minute is not "click a marker".** Without selecting a contract, a tester can change Focus among the six open sectors, read the four numbers, and change Pause/speed so that the time code advances or stops. Contract select is not the only enabled verb.
+- [ ] **Held by is not Control.** Opening North America reads `HELD BY NEXUS GLOBAL // 2 OF 3 CITIES`; Europe `HELIX CORP // 2 OF 3 CITIES`; South America `CONTESTED // CITIES SPLIT 1-1-1`. The orientation card's CONTROL line says Control is the order kept in the sector, not who holds it, and points at HELD BY.
 - [ ] **Paid vs printed.** Focus North America: `TAX PAID YES // NEXUS-HELD` and `4,080 CR / 24H` at the opening state. Focus Europe: a Tax figure prints and `TAX PAID NO // NOT NEXUS-HELD`. Color is not the only difference.
 - [ ] **Influence reasons.** At Influence 7, Stabilize shows `UNAFFORDABLE` and a click changes nothing. After a first clean win (Influence 8), only Stabilize is enabled; Lobby and Expedite show their words. Expedite with no generated target shows `NO TARGET`. A spend takes one click, shows `ACTIVE` (not for Expedite), and debits the header in the same frame. No confirm or undo exists.
 - [ ] **Chance everywhere on the Scan side.** Every open contract row and open marker shows `CHANCE n%` at intel 1 and at intel 2+. No Risk-index band appears on this screen.

@@ -1,12 +1,6 @@
 ## world: 202 runs, 36 targets
   <10px: 0
-  <4.5:1 default: 14
-    span.panel-title < header.panel-head 10px 3.11 :: WORLD NETWORK // ORIENTATION
-    span.dim < span.panel-right 10px 3.42 :: FIRST UPLINK
-    b < div.wm-onboard-row.lead 10px 3 :: THE JOB | START HERE | STRATEGIC TIME
-    span < div.wm-onboard-row.lead 10px 3.47 :: You run the network from this desk. Ever | Focus a sector and read its four numbers | Pause and Clock speed control strategic 
-    span < span.wm-onboard-lines 10px 3.47 :: CONTROL: the order kept in the sector; a | UNREST: pressure against that hold; past | TAX YIELD: Credits per 24 strategic hour
-    button.hud-btn.pause < div.hud-menu-actions 10.5px 3.7 :: UNDERSTOOD
+  <4.5:1 default: 0
   <4.5:1 high contrast: 0
   Ink Dim text: 0; Ink Faint text: 0
   svg text: 0 runs; <10px: 0; <4.5:1: 0
@@ -17,6 +11,47 @@
   clip @110: 0
   clip @125: 0
   tab stops: 4
+## menu: 15 runs, 2 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): _ [blink]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 2
+## settings: 159 runs, 57 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): _ [blink] | RESET ALL [inactive] | RESET [inactive]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 37
+## research: 85 runs, 26 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 42 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 26
 ## brief: 143 runs, 5 targets
   <10px: 0
   <4.5:1 default: 0
@@ -56,34 +91,7 @@
   clip @110: 0
   clip @125: 0
   tab stops: 3
-## debriefkia: 60 runs, 3 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 0 runs; <10px: 0; <4.5:1: 0
-  label-in-name: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 3
 ## mission: 126 runs, 13 targets
-  <10px: 0
-  <4.5:1 default: 0
-  <4.5:1 high contrast: 0
-  exempt (inactive / blinking): + [inactive]
-  Ink Dim text: 0; Ink Faint text: 0
-  svg text: 0 runs; <10px: 0; <4.5:1: 0
-  label-in-name: 0
-  targets <24: 0
-  clip @90: 0
-  clip @100: 0
-  clip @110: 0
-  clip @125: 0
-  tab stops: 0
-## hold: 132 runs, 13 targets
   <10px: 0
   <4.5:1 default: 0
   <4.5:1 high contrast: 0
@@ -102,6 +110,47 @@
   <4.5:1 default: 0
   <4.5:1 high contrast: 0
   exempt (inactive / blinking): + [inactive]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 3
+## hold: 132 runs, 13 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): + [inactive]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 0
+## debriefkia: 60 runs, 3 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 3
+## balance: 53 runs, 5 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): _ [blink]
   Ink Dim text: 0; Ink Faint text: 0
   svg text: 0 runs; <10px: 0; <4.5:1: 0
   label-in-name: 0

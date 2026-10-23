@@ -74,6 +74,8 @@ This epic is complete when:
 | 018 | Campaign complete and failed banners, incl. pyrrhic win | Integration | Ready | ADR-0020 |
 | 019 | Campaign flag edge cases | Logic | Ready | ADR-0020 |
 | 020 | [Rust Haven opens at intel 1; Glass Veil and Hollow Crown at 2](story-020-rust-haven-opens-at-intel-1-glass-veil-at-2.md) | Logic | Ready | ADR-0012 |
+| 021 | [World drift settles, and the Debrief and Feed show what the player moved](story-021-world-drift-settles-and-influence-moves-it.md) | Logic | Complete | ADR-0002 |
+| 022 | [HELD BY names the city majority; the card stops saying Control is ownership](story-022-held-by-names-the-city-majority.md) | UI | Complete | ADR-0017 |
 
 ## Next Step
 

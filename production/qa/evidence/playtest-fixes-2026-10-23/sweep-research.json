@@ -1,0 +1,667 @@
+{
+ "def": {
+  "svgRuns": 42,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 85,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 26,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "RESEARCH",
+    "size": 33.28,
+    "w": 388,
+    "key": "h1.screen-title < div"
+   },
+   {
+    "text": "CORPORATE R&D NETWORK // ADVANCING TOMOR",
+    "size": 10,
+    "w": 388,
+    "key": "div.screen-sub < div"
+   },
+   {
+    "text": "2087.05.14",
+    "size": 10,
+    "w": 157,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "14:33:07",
+    "size": 10,
+    "w": 157,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "CREDITS",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "128,450",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "CR",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "INFLUENCE",
+    "size": 10,
+    "w": 98,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "0",
+    "size": 10,
+    "w": 98,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "INTEL",
+    "size": 10,
+    "w": 68,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 68,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "ROSTER",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "DIVISION OVERVIEW",
+    "size": 10,
+    "w": 136,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "0",
+    "size": 10,
+    "w": 48,
+    "key": "b.green < span.panel-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 48,
+    "key": "b.green < span.panel-right"
+   },
+   {
+    "text": "21",
+    "size": 10,
+    "w": 48,
+    "key": "b.green < span.panel-right"
+   },
+   {
+    "text": "PROJECTS COMPLETE",
+    "size": 11,
+    "w": 128,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "0",
+    "size": 13,
+    "w": 9,
+    "key": "b.green < div.kv"
+   },
+   {
+    "text": "PROJECTS RUNNING",
+    "size": 11,
+    "w": 120,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "0",
+    "size": 13,
+    "w": 44,
+    "key": "b.amber < div.kv"
+   },
+   {
+    "text": "/ 3",
+    "size": 13,
+    "w": 44,
+    "key": "b.amber < div.kv"
+   },
+   {
+    "text": "READY TO AUTHORIZE",
+    "size": 11,
+    "w": 135,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "6",
+    "size": 13,
+    "w": 9,
+    "key": "b.teal < div.kv"
+   },
+   {
+    "text": "COMMITTED CREDITS",
+    "size": 11,
+    "w": 128,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "0",
+    "size": 13,
+    "w": 35,
+    "key": "b.amber < div.kv"
+   },
+   {
+    "text": "CR",
+    "size": 13,
+    "w": 35,
+    "key": "b.amber < div.kv"
+   },
+   {
+    "text": "AVAILABLE CREDITS",
+    "size": 11,
+    "w": 128,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "128,450",
+    "size": 13,
+    "w": 87,
+    "key": "b.amber < div.kv"
+   },
+   {
+    "text": "CR",
+    "size": 13,
+    "w": 87,
+    "key": "b.amber < div.kv"
+   },
+   {
+    "text": "LABORATORY STATUS",
+    "size": 10,
+    "w": 136,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "BALLISTICS LAB",
+    "size": 10,
+    "w": 104,
+    "key": "b < span.rs-lab-top"
+   },
+   {
+    "text": "IDLE",
+    "size": 10,
+    "w": 30,
+    "key": "i.dim < span.rs-lab-top"
+   },
+   {
+    "text": "NO PROJECT AUTHORIZED",
+    "size": 10,
+    "w": 177,
+    "key": "i.dim.mini < div.rs-lab"
+   },
+   {
+    "text": "CYBERNETICS LAB",
+    "size": 10,
+    "w": 111,
+    "key": "b < span.rs-lab-top"
+   },
+   {
+    "text": "IDLE",
+    "size": 10,
+    "w": 30,
+    "key": "i.dim < span.rs-lab-top"
+   },
+   {
+    "text": "NO PROJECT AUTHORIZED",
+    "size": 10,
+    "w": 177,
+    "key": "i.dim.mini < div.rs-lab"
+   },
+   {
+    "text": "SYSTEMS LAB",
+    "size": 10,
+    "w": 82,
+    "key": "b < span.rs-lab-top"
+   },
+   {
+    "text": "IDLE",
+    "size": 10,
+    "w": 30,
+    "key": "i.dim < span.rs-lab-top"
+   },
+   {
+    "text": "NO PROJECT AUTHORIZED",
+    "size": 10,
+    "w": 177,
+    "key": "i.dim.mini < div.rs-lab"
+   },
+   {
+    "text": "BALLISTICS",
+    "size": 11.5,
+    "w": 216,
+    "key": "b < div.rs-branch-head"
+   },
+   {
+    "text": "//",
+    "size": 10,
+    "w": 216,
+    "key": "i.dim < div.rs-branch-head"
+   },
+   {
+    "text": "WEAPONS DEVELOPMENT",
+    "size": 10,
+    "w": 216,
+    "key": "i.dim < div.rs-branch-head"
+   },
+   {
+    "text": "CYBERNETICS",
+    "size": 11.5,
+    "w": 205,
+    "key": "b < div.rs-branch-head"
+   },
+   {
+    "text": "//",
+    "size": 10,
+    "w": 205,
+    "key": "i.dim < div.rs-branch-head"
+   },
+   {
+    "text": "HUMAN AUGMENTATION",
+    "size": 10,
+    "w": 205,
+    "key": "i.dim < div.rs-branch-head"
+   },
+   {
+    "text": "CONTROL SYSTEMS",
+    "size": 11.5,
+    "w": 205,
+    "key": "b < div.rs-branch-head"
+   },
+   {
+    "text": "//",
+    "size": 10,
+    "w": 205,
+    "key": "i.dim < div.rs-branch-head"
+   },
+   {
+    "text": "AUTOMATION & AI",
+    "size": 10,
+    "w": 205,
+    "key": "i.dim < div.rs-branch-head"
+   },
+   {
+    "text": "RESEARCHED",
+    "size": 10,
+    "w": 89,
+    "key": "span.rs-legend-item.researched < div.rs-legend"
+   },
+   {
+    "text": "IN PROGRESS",
+    "size": 10,
+    "w": 97,
+    "key": "span.rs-legend-item.active < div.rs-legend"
+   },
+   {
+    "text": "AVAILABLE",
+    "size": 10,
+    "w": 82,
+    "key": "span.rs-legend-item.available < div.rs-legend"
+   },
+   {
+    "text": "LOCKED",
+    "size": 10,
+    "w": 60,
+    "key": "span.rs-legend-item.locked < div.rs-legend"
+   },
+   {
+    "text": "ONE PROJECT PER LAB // PROJECTS RUN ON W",
+    "size": 10,
+    "w": 364,
+    "key": "span.rs-legend-note.dim < div.rs-legend"
+   },
+   {
+    "text": "ADVANCED PROPELLANTS",
+    "size": 10,
+    "w": 160,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "AVAILABLE",
+    "size": 10,
+    "w": 83,
+    "key": "span.chip.teal < span.panel-right"
+   },
+   {
+    "text": "BRANCH",
+    "size": 10,
+    "w": 41,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "BALLISTICS",
+    "size": 10,
+    "w": 68,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "LABORATORY",
+    "size": 10,
+    "w": 68,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "BALLISTICS LAB",
+    "size": 10,
+    "w": 96,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "TIER",
+    "size": 10,
+    "w": 27,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "RUN TIME",
+    "size": 10,
+    "w": 55,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "2",
+    "size": 10,
+    "w": 14,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "H",
+    "size": 10,
+    "w": 14,
+    "key": "b < span.kv.mini"
+   },
+   {
+    "text": "FUNDING",
+    "size": 10,
+    "w": 48,
+    "key": "span < span.kv.mini"
+   },
+   {
+    "text": "16,000",
+    "size": 10,
+    "w": 61,
+    "key": "b.amber < span.kv.mini"
+   },
+   {
+    "text": "CR",
+    "size": 10,
+    "w": 61,
+    "key": "b.amber < span.kv.mini"
+   },
+   {
+    "text": "DESCRIPTION",
+    "size": 10,
+    "w": 276,
+    "key": "label < div.rs-box"
+   },
+   {
+    "text": "A hotter burning charge in the standard ",
+    "size": 10,
+    "w": 276,
+    "key": "p.rs-blurb < div.rs-box"
+   },
+   {
+    "text": "PREREQUISITES",
+    "size": 10,
+    "w": 117,
+    "key": "label < div.rs-box"
+   },
+   {
+    "text": "NONE",
+    "size": 10,
+    "w": 99,
+    "key": "span < div.rs-req.met"
+   },
+   {
+    "text": "PROJECTED BENEFIT",
+    "size": 10,
+    "w": 133,
+    "key": "label < div.rs-box"
+   },
+   {
+    "text": "+12% DAMAGE",
+    "size": 10.5,
+    "w": 133,
+    "key": "b.teal < div.rs-benefit"
+   },
+   {
+    "text": "RFC-27 ASSAULT",
+    "size": 10,
+    "w": 133,
+    "key": "i.dim < div.rs-benefit"
+   },
+   {
+    "text": "AUTHORIZE PROJECT",
+    "size": 14,
+    "w": 296,
+    "key": "span.cta-inner < button.cta.spend.rs-auth"
+   },
+   {
+    "text": "COMMITS 16,000 CR // 2H IN BALLISTICS LA",
+    "size": 10,
+    "w": 298,
+    "key": "div.rs-auth-sub < div.panel-body.rs-detail-body"
+   },
+   {
+    "text": "WORLD NETWORK",
+    "size": 11.5,
+    "w": 120,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "RESEARCH",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab.active"
+   },
+   {
+    "text": "BRIEF",
+    "size": 11.5,
+    "w": 46,
+    "key": "span.navtab-label < span.navtab-locked-row"
+   },
+   {
+    "text": "LOCKED",
+    "size": 11.5,
+    "w": 70,
+    "key": "span.navtab-lock < span.navtab-locked-row"
+   },
+   {
+    "text": "NO CONTRACT SELECTED",
+    "size": 10,
+    "w": 144,
+    "key": "span.navtab-cond < button.navtab.locked"
+   },
+   {
+    "text": "ASSEMBLY",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "g",
+   "name": "ADVANCED PROPELLANTS // BALLISTICS // AVAILABLE",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "BARREL WEAR COATING // BALLISTICS // AVAILABLE",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "HYPERVELOCITY CORE // BALLISTICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "CASELESS AMMO FEED // BALLISTICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "RAIL STABILIZATION // BALLISTICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "SMART FRAGMENTATION // BALLISTICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "TUNGSTEN SABOT // BALLISTICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "NEURAL INTERFACE I // CYBERNETICS // AVAILABLE",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "SYNAPTIC ENHANCEMENT // CYBERNETICS // AVAILABLE",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "REFLEX BOOSTER // CYBERNETICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "PAIN INHIBITOR // CYBERNETICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "NEURAL ACCELERATOR MK II // CYBERNETICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "SUBDERMAL WEAVE // CYBERNETICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "NEURAL CACHE ARRAY // CYBERNETICS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "TARGETING AI SUITE // CONTROL SYSTEMS // AVAILABLE",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "SENSOR FUSION ARRAY // CONTROL SYSTEMS // AVAILABL",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "SWARM COORDINATION // CONTROL SYSTEMS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "THREAT PREDICTION // CONTROL SYSTEMS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "EM HARDENING // CONTROL SYSTEMS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "ENCRYPTION CORE // CONTROL SYSTEMS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "g",
+   "name": "ADAPTIVE COMMAND AI // CONTROL SYSTEMS // LOCKED",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "AUTHORIZE PROJECT // ADVANCED PROPELLANTS // COMMI",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "WORLD NETWORK",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "RESEARCH",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+   "dis": "true"
+  },
+  {
+   "tag": "button",
+   "name": "ASSEMBLY",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

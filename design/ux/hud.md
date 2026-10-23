@@ -2,7 +2,7 @@
 
 > **Status**: Approved (/ux-review hud 2026-09-29; 2 advisory items open: objective-mark accessible names, null-data handling)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-09-29
+> **Last Updated**: 2026-10-23 (E16 tactical hold banner, E17 objective ground markers; Pause is Escape only — TM-019, TM-020)
 > **Template**: HUD Design
 
 ---
@@ -114,6 +114,8 @@ Patterns are referenced from `design/ux/interaction-patterns.md`, not redefined 
 | E13 Minimap | Z6 | Must Show | P-10 | Real time | Objective pulse (static marker when reduced) |
 | E14 Result banner | Z7 | Contextual | `CONTRACT FULFILLED` or `SQUAD ELIMINATED` plus a sub-line; P-18 | Once, on result | Prints in one frame |
 | E15 Toasts and advisories | Z8, Z9 | Contextual | P-11 | Event-driven | Prints in one frame |
+| E16 Tactical hold banner | Between Z2 and Z3, top (bounded by the squad and objectives panels; wraps at 125%) | Contextual (while held) | `TACTICAL HOLD`, then `CASUALTY RISK: <CODENAME> AT n%` when a casualty entered it, then `ORDERS OPEN // <hold key> RESUMES`; `role="status"`; frame Red Hot only for a casualty, the words carry the state (TM-019, 2026-10-23) | On hold enter and exit | Prints in one frame |
+| E17 Objective ground markers (3D, not DOM) | Scene | Contextual (active objectives) | VIP Ice ring on each active objective's zone, or on each living device of a destroy; light beam over required ones; extraction keeps the city ring (TM-020, 2026-10-23) | Refreshed every 0.2 s | Ring pulse (steady when reduced) |
 
 Motion budget: at most ~6 chrome readouts animate at once (art bible 7.5). The candidates are Alert, Collateral, selection, the objective pulse, an ability sweep and the minimap pulse; alarm is the only red-cadence motion.
 
@@ -131,7 +133,8 @@ Motion budget: at most ~6 chrome readouts animate at once (art bible 7.5). The c
 | Civilian hit by the squad | E4 appears at count 1, then increments | CR is never shown in mission |
 | Operative injured or KIA | Squad card shows pip, glyph and text (P-09); low-HP advisory once per campaign | KIA is never color-only |
 | Objective completes or activates | E8 mark changes with a printed check. Active mark is VIP Ice. Complete is the check, not a hue | Ledger Amber and Nominal Green are never the cue |
-| Pause (Space or Escape) | Modal overlay (P-05); the sim and camera freeze, so no new Comm lines arrive; the HUD stays visible behind the panel | Toasts never pause the sim |
+| Tactical hold (Space, or a casualty under 35%) | E16 shows; the sim and its clock freeze; orders are taken; no overlay | Not a modal; never opens the menu |
+| Pause (Escape) | Modal overlay (P-05); the sim and camera freeze, so no new Comm lines arrive; orders are refused; the HUD stays visible behind the panel | Toasts never pause the sim |
 | Result (Win or Loss) | E14 appears in one frame; Debrief follows 2.5 s of Tactical elapsed time | Banner duration is not guaranteed |
 | Hardened difficulty | No HUD change | Never strips the minimap or any panel |
 | Quality tier | No HUD change. Interface Rule 17 places bloom and ghosting in the scene; not checked against the code | Never hides ghosting or the minimap |

@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: extract from docs/game-design.md §5
-> **Last Updated**: 2026-10-21 (difficulty curve approved: Rust Haven opens at intel 1, Glass Veil at 2; one Moderate generated offer seeded at New Operation; first-visit overlay cut to four rows — Core Rules 7, 10, 13, Opening desk ACs; living spec §5, §9, §12 aligned the same day. Earlier: 2026-10-07 pyrrhic-win Debrief banner placement aliased to Interface Rule 18 — cross-review W-01; not a new `/design-review`. Earlier: 2026-09-16 header Status aligned to independent `/design-review` APPROVED 2026-09-14)
+> **Last Updated**: 2026-10-23 (playtest 3–4 fixes: HELD BY row, Core Rule 9; event kind weights retuned so drift settles, Tuning Knobs and World drift ACs; spend-complete Feed line and Debrief sector rows, UI Requirements. Earlier: 2026-10-21 difficulty curve approved: Rust Haven opens at intel 1, Glass Veil at 2; one Moderate generated offer seeded at New Operation; first-visit overlay cut to four rows — Core Rules 7, 10, 13, Opening desk ACs; living spec §5, §9, §12 aligned the same day. Earlier: 2026-10-07 pyrrhic-win Debrief banner placement aliased to Interface Rule 18 — cross-review W-01; not a new `/design-review`. Earlier: 2026-09-16 header Status aligned to independent `/design-review` APPROVED 2026-09-14)
 > **Independent `/design-review`**: 2026-09-14 APPROVED
 > **Implements Pillar**: Information is operational power; The two layers feed each other
 > **Living spec**: `docs/game-design.md` §4 (campaign end), §5 (board/clock), §6 (Influence income) — this file aliases them; do not fork rules
@@ -42,7 +42,7 @@ This serves **Information is operational power** and **The two layers feed each 
 
 8. **Tax.** World Network **computes** Tax yield and **emits** Credits amount + sector + tick time into Economy. Only Nexus-held sectors pay. Contested does not. A non-Nexus majority does not. Opening paying tap is **North America** only. Economy owns the Credits ledger.
 
-9. **Ownership.** City holders; sector color = majority; ties = Contested. Win/loss flip at debrief or seizure event; a flip re-clients Economy’s market via a hook. A win hands the mission city to Nexus. A loss of a Nexus-held city returns it to its **default** holder (Nexus-default cities are a no-op on that loss — §5).
+9. **Ownership.** City holders; sector color = majority; ties = Contested. Win/loss flip at debrief or seizure event; a flip re-clients Economy’s market via a hook. A win hands the mission city to Nexus. A loss of a Nexus-held city returns it to its **default** holder (Nexus-default cities are a no-op on that loss — §5). Control is not ownership: the sector panel prints the holder as its own **HELD BY** row (majority holder and its city count, or `CONTESTED` with the split), so a high-Control sector that is not Nexus-held reads as such (WN-022, 2026-10-23).
 
 10. **Contracts on Scan.** Economy owns instances, Reward, expiry math. World Network presents. Locked **generated** offers do not appear. Authored intel-locked offers may still appear locked. At New Operation one Moderate generated offer is already open in a Secure sector (Economy seeds the instance from the market seed, §9; World Network presents it), so the opening Scan holds Rust Haven and one market offer, both at intel 1. Expedite is a World Network verb on Economy records. **Chance** always prints on World Network contract chrome; Tactical computes `missionChance`; Brief at intel 2+ swaps that percentage for Risk index **bands** — Chance does not leave the Scan ([Interface](interface.md)). Chance is not the Scan job (Focus / four numbers / Pause are). `selectMission` no-ops when the campaign is failed ([ADR-0020](../../docs/architecture/adr-0020-campaign-fail-flags.md)).
 
@@ -168,6 +168,7 @@ All knobs are owned by `docs/game-design.md` §5–6 (and `src/game/forecast.ts`
 | Tax bases / strain | §5 | Trickle vs replacing the generated market |
 | Unrest pressure / crisis thresholds | §5 | Crisis unreachable vs always-on |
 | Event interval 15–45 min | §5 | Dead board vs unreadable Feed |
+| Event kind weights (riot / blackout / raid / trade by unrest; seizure flat) | `forecast.ts` (WN-021, 2026-10-23) | Runaway crisis with no lever (4 of 6 sectors in crisis by day 6 before the retune) vs a static board with no pressure |
 | Intel awards and gates | §5 | Authored spine unreachable vs no gate |
 
 ## Visual/Audio Requirements
@@ -185,6 +186,9 @@ Screens and HUD belong to Interface. This GDD requires:
 - Campaign-complete and campaign-failed banners (ADR-0020). Complete does not lock contracts; failed makes select a no-op. On a pyrrhic win, Debrief carries the CAMPAIGN FAILED banner first, then World Network on return (Interface Rule 18).
 - First-visit overlay teaches the desk job (Core Rule 13), not “click the marker.”
 - Locked generated offers absent from Scan / OPEN CONTRACTS. Authored intel-locked may still appear locked.
+- HELD BY on the sector panel: the majority holder and its city count, or Contested (Core Rule 9).
+- A Feed line when a Stabilize or Lobby finishes, naming the number it moved.
+- Debrief rows for the mission sector: Control and Unrest before and after the result and, on a win, after the ETA days, with any holder change (data from this system; rows are Interface's).
 - Control / Unrest / Tax / Garrison and Influence spends are visible and actionable when legal (pillar 2 veto: undecorated numbers). Disabled Influence at opening 0 must read as later, not as broken.
 
 ## Acceptance Criteria
@@ -232,6 +236,14 @@ Screens and HUD belong to Interface. This GDD requires:
 - **GIVEN** an open sector with Unrest **12**, Influence **8**, Stabilize off cooldown, and no other Unrest-changing effects during the interval, **WHEN** Stabilize is activated and all six hourly steps complete, **THEN** Influence immediately becomes **0** and Unrest ends at **2**, not **0**, because each step respects the §5 clamp.
 - **GIVEN** an open sector with Unrest **2**, Influence **8**, Stabilize off cooldown, and no other Unrest-changing effects during the interval, **WHEN** Stabilize is activated and all six hourly steps complete, **THEN** Influence immediately becomes **0**, Unrest stays **2**, and the staged spend retires. Interleaved World Events remain governed by the ordinary catch-up rules, not a guaranteed net reduction.
 - **GIVEN** no generated target, **WHEN** Expedite is activated, **THEN** blocked and Influence is unchanged.
+- **GIVEN** a Stabilize or Lobby, **WHEN** its last staged step lands, **THEN** the Feed posts `STABILIZATION COMPLETE IN <SECTOR> // UNREST NOW n%` or `LOBBYING COMPLETE IN <SECTOR> // CONTROL NOW n%`.
+- **GIVEN** a sector in crisis at Unrest **90**, **WHEN** a Stabilize runs, **THEN** the sector leaves crisis within **2** strategic days.
+
+### World drift (WN-021, 2026-10-23)
+
+- **GIVEN** a new campaign and no player action, **WHEN** the clock runs 20 strategic days on 20 RNG cursors, **THEN** at most one sector is in crisis by day 6 on every cursor and fewer than 0.5 sectors a day are in crisis on average.
+- **GIVEN** the same run, **WHEN** North America is read on day 10, **THEN** it is Nexus-held on at least 15 of 20 cursors.
+- **GIVEN** the same run, **WHEN** the 20 days are read, **THEN** some sector passes Unrest 40 on at least 15 of 20 cursors (the world keeps pressing).
 
 ### Intel
 
@@ -260,6 +272,7 @@ Screens and HUD belong to Interface. This GDD requires:
 - **GIVEN** two otherwise identical non-quiet wins, `civiliansHit = 0` vs `N &gt; 0` (not at unrest clamp), **WHEN** World Network applies, **THEN** Unrest after **N** is greater than after **0**. Dirty-win **net** Unrest versus pre-mission U is unnamed until §5 names integers.
 - **GIVEN** a non-quiet win, **WHEN** the mission city is read, **THEN** holder is Nexus.
 - **GIVEN** a non-quiet loss of a Nexus-held city, **WHEN** the city is read, **THEN** holder is that city’s default holder.
+- **GIVEN** a sector whose cities are split one each among three holders, **WHEN** its panel is read, **THEN** HELD BY reads `CONTESTED // CITIES SPLIT 1-1-1` whatever its Control.
 
 ### Opening desk and post-win Scan
 

@@ -11,15 +11,17 @@
 
 ## Next step
 
-1. **Finish and commit the playtest 3–4 fixes** (uncommitted, 1664 tests green): WN-021 world drift, WN-022 HELD BY, TM-019 tactical hold (Space) and casualty hold, TM-020 3D objective markers, TM-021 grenade hint, IF-039 Brief/Assembly/Debrief/Abort copy, no-selection order feedback, HUD panel heads wrap. Still to do: write the story files; update the specs (living spec pause section and Interface AC11, world-network, brief, assembly, debrief, interaction patterns); `design/difficulty-curve.md`; the fun-hypothesis doc (`production/qa/playtests/fun-hypothesis-2026-10-23.md`, CD-PLAYTEST returned CONCERNS, hypothesis revised); settle the World Network sweep timing (0 alone, 14 low-contrast hits when measured first in a batch, mid card fade).
+1. **Performance profile** (`production/polish/perf-2026-10-23/perf.mjs`: frame time, draw calls, heap, load times) — also the World Network p95 re-profile dated 2026-10-28.
 
 ## After that
 
-2. **Performance profile** (`production/polish/perf-2026-10-23/perf.mjs`: frame time, draw calls, heap, load times) — also the World Network p95 re-profile dated 2026-10-28.
-3. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
-4. **`/retrospective`**, then **`/gate-check`** Production → Polish.
-5. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents); owner hand-play dated 2026-10-28.
-6. Register a hit-target TR at a later `/architecture-review` (IF-031 to IF-035 waiver).
+2. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
+3. **`/retrospective`**, then **`/gate-check`** Production → Polish.
+4. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
+5. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
+6. `/code-review` of the playtest 3–4 fixes (WN-021, WN-022, TM-019 to TM-021, IF-039; not run); Visual/Feel sign-off for TM-020.
+7. Harness: import the module URLs the page loaded (the Vite `?t=` stamp split the fixture's tutorial store in session 4).
+8. Register TRs at a later `/architecture-review`: hit targets (IF-031 to IF-035 waiver), world event weights (WN-021), in-world objective markers (TM-020).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -32,6 +34,7 @@
 
 ## Done recently
 
+- 2026-10-23 — Playtest 3–4 fixes closed out: story files WN-021, WN-022, TM-019 to TM-021, IF-039 (code in `2c73542`); living spec, Interface, World Network and Tactical GDDs, and the World Network, Brief, Assembly, Debrief, HUD, Settings and pattern-library specs updated (Space is the tactical hold, Escape the menu; HELD BY; drift settles; Debrief KIA and sector rows; Abort hint); `design/difficulty-curve.md` given the playtest evidence (two levers, three cross-system rows, "too hard" still open); `production/qa/playtests/fun-hypothesis-2026-10-23.md` written (CD-PLAYTEST CONCERNS, hypothesis revised, adoption the owner's call). Sweep now waits for finite animations before measuring: all 12 surfaces 0 failures at 1280×720, World Network measured first with the card up, Menu, Research, Settings and Balance re-swept.
 - 2026-10-23 — Agent playtests 3 and 4 run; reports for sessions 2–4 written (`production/qa/playtests/playtest-2026-10-23-agent-s{2,3,4}.md`); CD-PLAYTEST: CONCERNS, hypothesis revised. Polish milestone (`production/milestones/polish.md`) and risk register (RISK-0001 to 0005) written. Harness `fixture` command added (`123e323`).
 - 2026-10-23 — Five screen UX specs APPROVED by `/ux-review` (Research, Brief, Assembly, Debrief, Settings). Pattern library P-26 to P-28; P-05 / P-13 updated. IF-038 (label in name, Debrief Balance and invoice, no overlapping boxes). Agent playtest 2 run; its mission findings fixed in TM-018 (no destroy soft-lock, blast ring, dark destroyed devices, camera taught); harness fixed (pause ownership, no time leak between commands, grenade targeting kept).
 - 2026-10-23 — Five screen UX specs drafted (Research, Brief, Assembly, Debrief, Settings; In Review). IF-037: their committed-tier deltas fixed (no ellipsis anywhere, text-overlap check, P-05 focus for Settings-from-Pause / Balance / Recruitment Market, Debrief focus, reduced-motion overlays, researched check glyph, framed Settings selection).

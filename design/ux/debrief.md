@@ -2,7 +2,7 @@
 
 > **Status**: Approved (/ux-review design/ux/debrief.md 2026-10-23)
 > **Author**: Claude (delegated by owner /goal 2026-10-23) + ux-designer
-> **Last Updated**: 2026-10-23 (brought to IF-037: row print, focus after UNDERSTOOD, Balance focus, ellipsis removal, overlay reduced motion, final 2026-10-23 sweep; Open Questions 1 and 2 decided)
+> **Last Updated**: 2026-10-23 (IF-039 KIA cost rows; WN-021 sector rows. Earlier: brought to IF-037: row print, focus after UNDERSTOOD, Balance focus, ellipsis removal, overlay reduced motion, final 2026-10-23 sweep; Open Questions 1 and 2 decided)
 > **Journey Phase(s)**: unknown — no journey map
 > **Platform Target**: Desktop browser (1280×720 minimum). Keyboard and mouse. No gamepad. No touch.
 > **Template**: UX Spec
@@ -93,7 +93,7 @@ Both exits that file the result (World Network, Replay) are the **trigger** for 
 |          | > TARGET ............................ DISTRICT 00 // CITY    |     |
 |          | > ELIMINATIONS ...................................... 0       |     |
 |          | > SQUAD CASUALTIES .................................. 0       |     |
-|          | > KILLED IN ACTION ........... CODENAME   (only if any)       |     |
+|          | > KIA // CODENAME ...... n XP LOST // ROSTER r/8 (one each)  |     |
 |          | > INJURED // CODENAME ......... 00H RECOVERY (one per injury) |     |
 |          | > EXPERIENCE // CODENAME ...... +00 XP (000) (one per op)     |     |
 |          | > COLLATERAL ........................................ 0       |     |
@@ -114,7 +114,7 @@ Both exits that file the result (World Network, Replay) are the **trigger** for 
 +------------------------------------------------------------------------------+
 ```
 
-`KILLED IN ACTION`, `INJURED`, `EXPERIENCE` rows exist only when Roster's report has them; `CONTRACT ETA` only on a win; `NOTE` only on a pyrrhic win; `REPLAY MISSION` and `BALANCE DATA` only when their conditions hold; the Research note only while the prompt is up.
+`KIA // <codename>`, `INJURED`, `EXPERIENCE` rows exist only when Roster's report has them; the `SECTOR` rows only when the Debrief applied a non-quiet result; `CONTRACT ETA` only on a win; `NOTE` only on a pyrrhic win; `REPLAY MISSION` and `BALANCE DATA` only when their conditions hold; the Research note only while the prompt is up.
 
 ### Layout Zones
 
@@ -153,7 +153,7 @@ Both exits that file the result (World Network, Replay) are the **trigger** for 
 | Card | Result title | `h1` | `CONTRACT FULFILLED` (teal), `CONTRACT TERMINATED` (red), or on a quiet replay `REPLAY // FEE ALREADY COLLECTED` in the same win / loss color | No | P-18 |
 | Card | Subtitle | Text | Win: `EXTRACTION CONFIRMED // PAYMENT RELEASED`, or `// PAYMENT ADJUSTED` when a collateral fine applies. Loss: `SQUAD LINK LOST // PAYMENT WITHHELD`. Quiet: `EXTRACTION CONFIRMED // NO FEE` or `SQUAD LINK LOST // NO FEE` | No | P-18 |
 | Invoice | Invoice region | Scroller | The rows below, in this order | Yes — focusable (`tabIndex=0`), `role="region"`, `aria-label="Mission invoice"` | P-15, P-04 (bracket set drawn on the box itself) |
-| Invoice | Count rows | Label + value | `TARGET` (`DISTRICT nn // CITY`), `ELIMINATIONS`, `SQUAD CASUALTIES` (red above 0, teal at 0), `KILLED IN ACTION` (codenames, comma-joined), `INJURED // <codename>` (`nH RECOVERY`), `EXPERIENCE // <codename>` (`+n XP (total)`), `COLLATERAL` (count, red above 0), `MISSION TIME` (`m:ss`) | No | P-14 |
+| Invoice | Count rows | Label + value | `TARGET` (`DISTRICT nn // CITY`), `ELIMINATIONS`, `SQUAD CASUALTIES` (red above 0, teal at 0), `KIA // <codename>` (one row per death, `n XP LOST // ROSTER r/cap`, red; IF-039 replaced the comma-joined codename list), `INJURED // <codename>` (`nH RECOVERY`), `EXPERIENCE // <codename>` (`+n XP (total)`), `COLLATERAL` (count, red above 0), `MISSION TIME` (`m:ss`), then the mission sector (WN-021): `SECTOR // <NAME>` (`CONTROL a% > b% // UNREST c% > d%`, teal when Control rose, red when it fell), on a win `AFTER +n DAYS // <NAME>` (`CONTROL x% // UNREST y% // [NOW] <HOLDER>`), or with no ETA a `HOLDER // <NAME>` row (`NOW <HOLDER>`) when the result flipped it | No | P-14 |
 | Invoice | Money rows | Label + value | `CONTRACT VALUE`, `COLLATERAL PENALTY`, `OPTIONAL BONUS`, then (win only) `CONTRACT ETA` (`+n DAYS ELAPSED`), `PAYOUT`, (pyrrhic only) `NOTE`, `ACCOUNT BALANCE`. All five money lines print on every outcome. On a loss or quiet replay, `COLLATERAL PENALTY` and `OPTIONAL BONUS` keep their priced values, print dim and carry ` — NOT APPLIED` | No | P-14, P-18 |
 | Card | Filing line | Live status | `INVOICE UNFILED // COMMITS ON NEXT SCREEN`, or `SAVE FAILED // CAMPAIGN NOT FILED`, or empty (filed: the sentence is removed, OQ 1 decided). Always mounted, `role="status"` | No | P-19 |
 | Card | Research prompt | Inline note | Title `RESEARCH // <project>`; body sentence naming the lab, cost, hours and the RESEARCH tab; `OPEN RESEARCH`, `UNDERSTOOD`. `role="note"`, labeled with its title | Yes — two buttons | P-25 Inline moment note (lists the Debrief prompt since 2026-10-23) |
@@ -358,7 +358,7 @@ Tier: **Standard** (`design/accessibility-requirements.md`, committed 2026-09-23
 
 | Committed row | How the Debrief satisfies it |
 |---|---|
-| Critical state never by color alone | Result: the title words and the subtitle words (`CONTRACT FULFILLED` / `TERMINATED`, `PAYMENT RELEASED` / `WITHHELD`), not teal vs red. Campaign failure: the words `CAMPAIGN FAILED` and, on a pyrrhic win, the `NOTE` row. Quiet replay: the title words and `NOT APPLIED` tags. Filing: the sentences `INVOICE UNFILED ...` and `SAVE FAILED ...`, and the removal of the sentence when filed. Casualties: the value and the `KILLED IN ACTION` row, not the red alone. Focus: brackets |
+| Critical state never by color alone | Result: the title words and the subtitle words (`CONTRACT FULFILLED` / `TERMINATED`, `PAYMENT RELEASED` / `WITHHELD`), not teal vs red. Campaign failure: the words `CAMPAIGN FAILED` and, on a pyrrhic win, the `NOTE` row. Quiet replay: the title words and `NOT APPLIED` tags. Filing: the sentences `INVOICE UNFILED ...` and `SAVE FAILED ...`, and the removal of the sentence when filed. Casualties: the value and the `KIA // <codename>` rows, not the red alone. Sector move: the `>` and the numbers, not teal vs red. Focus: brackets |
 | Text legible at 1280×720; no clipping or truncation | Measured (won, note up): no text under 10 px; no clip, truncation, spill or text-over-text at 90 / 100 / 110 / 125%; no `text-overflow: ellipsis` rule left in `ui.css` (IF-037). Readout values 15 px, row labels 12.5 px, tag, subtitle, status and note title 10 px, note body 10.5 px (at 100%) |
 | Text scale 90 / 100 / 110 / 125% | Row, tag, subtitle, status, button and prompt sizes scale with `--text-scale`; the card absorbs growth by scrolling the invoice, never by compressing. The 42 px title and banner use a `clamp()` in px and **do not scale** (OQ 5) |
 | High-contrast mode | CSS-variable remap only; measured clean on the won variant (`hcLow: []`) |
@@ -410,7 +410,7 @@ Scope: English only. No localization system or plan exists in the GDDs; every st
 | Row value, `TARGET` | 476 | 15 px | 51 / 41 | 46 / 35 | `DISTRICT 03 // DETROIT SPRAWL` 29 | Medium (41): wraps at 125%. District and city names are proper nouns |
 | Row value, `COLLATERAL PENALTY` unpaid | 370 | 15 px | 40 / 32 | 35 / 25 | `-15,000 CR — NOT APPLIED` 24 | **HIGH PRIORITY**: 34 wraps at 100% and 125%. Not measured (loss variant) |
 | Row value, `NOTE` | 494 | 15 px | 53 / 42 | 47 / 37 | `PYRRHIC — SQUAD LOST // CAMPAIGN FAILED` 38 | **HIGH PRIORITY**: over the 125% limit in English. Computed, not measured |
-| Row value, `KILLED IN ACTION` | 389 | 15 px | 42 / 33 | 37 / 27 | Up to 4 codenames, longest 7 chars: 34 | **HIGH PRIORITY** at 125% in English worst case. Computed |
+| Row value, `KIA // <codename>` | 389 | 15 px | 42 / 33 | 37 / 27 | `nnn XP LOST // ROSTER 7/8` 25 | Low (one row per death since IF-039). Not measured for the `SECTOR` rows (`CONTROL 100% > 100% // UNREST 100% > 100%`, 42 worst case); the 2026-10-23 sweep (`sweep-debrief.json`, `sweep-debriefkia.json`) captured them with 0 clip or overlap failures |
 | Row value, `CONTRACT ETA` | 424 | 15 px | 45 / 36 | 41 / 32 | `+3 DAYS ELAPSED` 15 | Low |
 | Filing line | 566 | 10 px | 91 / 73 | 67 / 53 | `INVOICE UNFILED // COMMITS ON NEXT SCREEN` 41 | Medium (57): wraps at 125%. The slot is `min-height`, so it grows without clipping |
 | Button, two-up | 236 text width (278 − padding − border) | 12 px | 31 / 25 | 24 / 19 | `RETURN TO WORLD NETWORK` 23 | **HIGH PRIORITY**: already wraps at 110 and 125% in English (2026-10-23 screenshots) |
