@@ -34,9 +34,10 @@ The Garrison word prints `SECURE` teal, `STRAINED` amber, `CRITICAL` red. Ledger
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN a focused sector WHEN Garrison is `SECURE` / `STRAINED` / `CRITICAL` THEN the word prints in teal / the Print White notice tone / Red Hot respectively, and the amber class is never used for Garrison.
+- [ ] GIVEN the World Network viewed in grayscale WHEN Garrison is `SECURE`, `STRAINED` or `CRITICAL` THEN the word alone tells the state, and Credits still print in Ledger Amber.
 
 ---
 
@@ -67,6 +68,8 @@ The Garrison word prints `SECURE` teal, `STRAINED` amber, `CRITICAL` red. Ledger
   - Verify: read the computed colour and class of the Garrison value.
   - Pass condition: SECURE is teal `rgb(126,240,212)`; STRAINED is Print White `rgb(232,251,242)` (`notice`); CRITICAL is Red Hot `rgb(255,107,85)`; no `amber` class on the Garrison element in any state.
   - Edge cases: Credits stay amber; Antarctica prints no Garrison.
+
+- **AC-2** (guard): partly covered by AC-1's edge cases (Credits stay amber); the grayscale check has no qa-lead case yet — `/qa-plan` adds it.
 
 ---
 

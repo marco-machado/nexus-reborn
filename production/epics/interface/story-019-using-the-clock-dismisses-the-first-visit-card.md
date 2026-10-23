@@ -34,9 +34,11 @@ P-23 and the spec say using Pause or a speed dismisses the first-visit card for 
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the first-visit card showing WHEN the player activates Pause/Resume or any of `1X` `2X` `4X` `8X` THEN the clock action applies, `WORLD_ONBOARD_ID` is marked seen, the card leaves, and it does not return after a save and reload.
+- [ ] GIVEN the card showing WHEN Focus changes, a Feed row is clicked, or Esc is pressed THEN the card stays and `WORLD_ONBOARD_ID` is not marked seen.
+- [ ] GIVEN a card already dismissed by clock use WHEN the clock is used again, and WHEN New Operation starts a new campaign THEN the id is never added twice, and the new campaign shows the card again.
 
 ---
 
@@ -68,6 +70,9 @@ P-23 and the spec say using Pause or a speed dismisses the first-visit card for 
   - When: each of Pause/Resume, 1X, 2X, 4X and 8X is applied through the same handler the buttons use.
   - Then: the clock effect applies (`paused` toggles, or `speed` is set); `seen` contains `WORLD_ONBOARD_ID` exactly once, so `WorldOnboard` returns null; a save blob built from the stores carries it in `tutorial.seen`, and hydrating that blob into reset stores keeps the card gone.
   - Edge cases: the already-active speed still dismisses; a speed chosen while paused selects only and still dismisses; a second activation does not duplicate the id; `UNDERSTOOD` still works; Focus changes, Feed rows and Esc do not dismiss; New Operation resets the id so the card returns. If the wiring cannot be reached without a DOM, fall back to a documented Playwright playtest with screenshots of the card before and after each of the five controls.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
+- **AC-3** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

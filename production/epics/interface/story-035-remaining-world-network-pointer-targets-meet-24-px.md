@@ -11,7 +11,7 @@
 ## Context
 
 **GDD**: `design/gdd/interface.md` (Standard accessibility tier)
-**Requirement**: `TR-interface-???` — **no TR registered for hit-target size.** Source: WCAG 2.2 SC 2.5.8 (AA, 24×24 CSS px), owner decision 2026-10-23, spec Open Question 21 and Input checklist. Register it at the next `/architecture-review`.
+**Requirement**: `TR-interface-???` — **no TR registered for hit-target size.** Source: WCAG 2.2 SC 2.5.8 (AA, 24×24 CSS px), owner decision 2026-10-23, spec Open Question 21 and Input checklist. **Owner waiver 2026-10-23 (Sprint 11 planning): this story proceeds without a registered TR; register it at a later `/architecture-review`.**
 *(no registry entry yet)*
 **Design source**: `design/ux/world-network.md` (Approved 2026-10-23) — Open Question 21 (owner 2026-10-23: WCAG 2.2 SC 2.5.8, 24×24 CSS px); Input checklist hit-target table.
 
@@ -34,9 +34,10 @@ Only four targets were measured for the spec. The owner added this story on 2026
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the World Network at 1280×720, text scale 100% WHEN Pause/Resume, `n UNREAD`, `> GO LIVE`, the Scan view controls (zoom, HOME, FOCUS SECTOR, SOUTH POLE, LABELS), the imagery credit link, `UNDERSTOOD` on the first-visit card and on the Influence moment note, and the four nav tabs are measured THEN each hit area is ≥24×24 CSS px, or meets a WCAG 2.2 SC 2.5.8 exception (spacing, equivalent, inline) named in the evidence with its measurement.
+- [ ] GIVEN the enlarged targets WHEN measured THEN no hit area overlaps a neighbouring target (transport row, globe toolbar, nav).
 
 ---
 
@@ -68,6 +69,8 @@ Only four targets were measured for the spec. The owner added this story on 2026
   - Verify: `getBoundingClientRect` of each target (nav tabs on all four Screens, Brief locked and unlocked); for any under 24×24, test the spacing exception (a 24 px circle centred on the target intersects no other target or circle).
   - Pass condition: each target ≥24×24 CSS px, or the README names its exception (spacing, equivalent — naming the equivalent control — or inline) with the measurement; Scan markers not measured.
   - Edge cases: `FEED CLEAR` recorded N/A (not interactive); if the view-control bar has been removed (owner playtest 2026-10-19 suggests Polish), record those controls N/A; enlarged hit areas do not overlap neighbours (transport row, toolbar).
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

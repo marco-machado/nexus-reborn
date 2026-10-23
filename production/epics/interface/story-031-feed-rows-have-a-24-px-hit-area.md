@@ -11,7 +11,7 @@
 ## Context
 
 **GDD**: `design/gdd/interface.md` (Standard accessibility tier)
-**Requirement**: `TR-interface-???` — **no TR registered for hit-target size.** Source: WCAG 2.2 SC 2.5.8 (AA, 24×24 CSS px), owner decision 2026-10-23, spec Open Question 21 and Input checklist. Register it at the next `/architecture-review`.
+**Requirement**: `TR-interface-???` — **no TR registered for hit-target size.** Source: WCAG 2.2 SC 2.5.8 (AA, 24×24 CSS px), owner decision 2026-10-23, spec Open Question 21 and Input checklist. **Owner waiver 2026-10-23 (Sprint 11 planning): this story proceeds without a registered TR; register it at a later `/architecture-review`.**
 *(no registry entry yet)*
 **Design source**: `design/ux/world-network.md` (Approved 2026-10-23) — Open Question 21 (owner 2026-10-23: WCAG 2.2 SC 2.5.8, 24×24 CSS px); Input checklist hit-target table.
 
@@ -34,9 +34,10 @@ Feed rows stack at 17 px (512×17 measured 2026-10-23), so their spacing circles
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the Feed at 1280×720, text scale 100% WHEN each row's element box is measured THEN it is ≥24 px high.
+- [ ] GIVEN the taller rows and 14 events WHEN the Feed is used THEN it scrolls with the newest row reachable, rows do not overlap, and a row click still focuses its sector and marks the event read.
 
 ---
 
@@ -66,6 +67,8 @@ Feed rows stack at 17 px (512×17 measured 2026-10-23), so their spacing circles
   - Verify: `getBoundingClientRect` on every `.wm-feed-line`.
   - Pass condition: every row ≥24 px high.
   - Edge cases: wrapped rows are taller; rows do not overlap; the Feed scrolls with the newest row reachable; a click still focuses the sector and marks the event read.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

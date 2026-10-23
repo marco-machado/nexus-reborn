@@ -34,9 +34,10 @@ On a failed campaign the shipped secondary line says `ROSTER EMPTY // NETWORK CO
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN a failed campaign (empty living roster, campaign incomplete) WHEN the World Network shows THEN the `CAMPAIGN FAILED` banner's secondary line reads exactly `ROSTER EMPTY // NO CONTRACT CAN BE TAKEN`, and `NETWORK COMMAND SUSPENDED` appears nowhere in `src/`.
+- [ ] GIVEN a completed campaign (three authored wins) WHEN the World Network shows THEN the `CAMPAIGN COMPLETE` banner, its secondary line and the `n / 3` count are unchanged.
 
 ---
 
@@ -66,6 +67,8 @@ On a failed campaign the shipped secondary line says `ROSTER EMPTY // NETWORK CO
   - Setup: load a failed campaign (empty living roster, campaign incomplete) and open the World Network.
   - Verify: read the `CAMPAIGN FAILED` banner (`role="status"`) secondary line; run `rg -n "NETWORK COMMAND SUSPENDED" src`.
   - Pass condition: the line equals exactly `ROSTER EMPTY // NO CONTRACT CAN BE TAKEN`; the grep returns nothing; the headline and the `n / 3` count are unchanged; the `CAMPAIGN COMPLETE` secondary line is unchanged.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

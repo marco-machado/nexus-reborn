@@ -34,9 +34,10 @@ Feed times and the Timeline axis print in Ink Faint (`#35504a`, 2.21:1). Ink Fai
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the Feed and the Timeline in default mode WHEN measured as rendered THEN Feed times and the axis labels print in Ink at ≥4.5:1, and no text run on the screen uses Ink Faint.
+- [ ] GIVEN the Timeline and Feed WHEN rendered THEN the axis `NOW` stays teal, tone-coloured Feed lines keep their tone, and high contrast does not regress.
 
 ---
 
@@ -66,6 +67,8 @@ Feed times and the Timeline axis print in Ink Faint (`#35504a`, 2.21:1). Ink Fai
   - Verify: read the computed colour of `.wm-feed-t` and the `.wm-tl-axis` labels; run the full-screen sweep for Ink Faint.
   - Pass condition: Feed times and axis labels are Ink and ≥4.5:1; no text run, header and nav included, has `rgb(53,80,74)`.
   - Edge cases: `NOW` stays teal; tone-coloured Feed lines unaffected; high contrast does not regress.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

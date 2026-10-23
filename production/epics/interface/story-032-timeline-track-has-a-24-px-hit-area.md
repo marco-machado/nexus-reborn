@@ -11,7 +11,7 @@
 ## Context
 
 **GDD**: `design/gdd/interface.md` (Standard accessibility tier)
-**Requirement**: `TR-interface-???` — **no TR registered for hit-target size.** Source: WCAG 2.2 SC 2.5.8 (AA, 24×24 CSS px), owner decision 2026-10-23, spec Open Question 21 and Input checklist. Register it at the next `/architecture-review`.
+**Requirement**: `TR-interface-???` — **no TR registered for hit-target size.** Source: WCAG 2.2 SC 2.5.8 (AA, 24×24 CSS px), owner decision 2026-10-23, spec Open Question 21 and Input checklist. **Owner waiver 2026-10-23 (Sprint 11 planning): this story proceeds without a registered TR; register it at a later `/architecture-review`.**
 *(no registry entry yet)*
 **Design source**: `design/ux/world-network.md` (Approved 2026-10-23) — Open Question 21 (owner 2026-10-23: WCAG 2.2 SC 2.5.8, 24×24 CSS px); Input checklist hit-target table.
 
@@ -34,9 +34,10 @@ The Timeline track is 12 px high (measured 2026-10-23). The visible glyph may st
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the Timeline at 1280×720, text scale 100% WHEN the slider's pointer hit area is measured THEN it is ≥24 px high; the drawn track may stay 12 px.
+- [ ] GIVEN the enlarged hit area WHEN the focused slider gets Left/Right/Home/End, and WHEN the transport buttons' centres are hit-tested THEN the keys still scrub, and `elementFromPoint` at each transport button centre returns that button.
 
 ---
 
@@ -67,6 +68,8 @@ The Timeline track is 12 px high (measured 2026-10-23). The visible glyph may st
   - Verify: measure the slider's hit box; press the pointer 11 px above and below the track's centre line.
   - Pass condition: the hit area is ≥24 px high and the pointer scrubs from both offsets; the drawn track may stay 12 px.
   - Edge cases: Left/Right/Home/End still work; the hit area does not steal the transport buttons' centres (`elementFromPoint`); dragging past ~98.5% returns Live.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

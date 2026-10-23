@@ -34,9 +34,10 @@ The first-visit card is `role="dialog" aria-modal="true"`. P-23 says it is not P
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the first-visit card showing WHEN its DOM is inspected and Tab is pressed from `UNDERSTOOD` THEN the card carries no `aria-modal="true"`, `UNDERSTOOD` has initial focus, and Tab moves focus to the nav.
+- [ ] GIVEN the card showing WHEN Esc is pressed, or Shift+Tab from `UNDERSTOOD` THEN Esc leaves the card in place and Shift+Tab reverses the focus order.
 
 ---
 
@@ -67,6 +68,8 @@ The first-visit card is `role="dialog" aria-modal="true"`. P-23 says it is not P
   - Verify: inspect the card root; read `document.activeElement`; press Tab once.
   - Pass condition: no `aria-modal="true"` on the card (`role="dialog"` and its label may stay); `UNDERSTOOD` has initial focus; after Tab, focus is inside `.navtabs`.
   - Edge cases: Shift+Tab reverses; Esc does not dismiss the card.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

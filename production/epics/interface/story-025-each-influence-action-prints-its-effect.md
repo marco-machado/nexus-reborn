@@ -34,9 +34,10 @@ Each action's effect (e.g. `-2 UNREST OVER 6H`) is only in `title` and `aria-lab
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the focused sector's three Influence actions WHEN rendered THEN each prints its effect (the `actionEffect` text) as static visible text on its own line under the button, not only in `title` / `aria-label`, without clipping at 1280×720 and text scales 90 / 100 / 110 / 125.
+- [ ] GIVEN an action that is disabled (`UNAFFORDABLE`, `COOLDOWN nH`, `NO TARGET`, `SECTOR LOCKED`) or `ACTIVE` WHEN rendered THEN its effect line still shows and never overlaps the status word.
 
 ---
 
@@ -68,6 +69,8 @@ Each action's effect (e.g. `-2 UNREST OVER 6H`) is only in `title` and `aria-lab
   - Verify: for each action find the static text equal to `actionEffect(id)`; confirm it is rendered text, not only `title`/`aria-label`; compare its box with the button's.
   - Pass condition: each effect is visible on its own line with its top at or below the button's bottom; it is visible while the button is disabled; nothing clips at the four scales.
   - Edge cases: the Expedite effect (`WAIVE INTEL GATE // +nH EXPIRY`) may wrap but not clip; the status word does not overlap the effect line; OPEN CONTRACTS still scrolls with every row reachable at 125%; Antarctica offers no actions.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

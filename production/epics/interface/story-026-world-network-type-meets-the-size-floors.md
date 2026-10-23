@@ -34,9 +34,10 @@ Measured 2026-10-23 at 100%: many World Network labels render under the 10 px fl
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the World Network at 1280×720, text scale 100%, in each state (opening desk; focused sector at each Garrison state; pressure; crisis; Review; failed campaign; first-visit card showing; Influence moment note showing) WHEN the computed font-size of every visible text node is measured THEN every run is ≥10 px, and these readout runs are ≥12 px: header resource values, sector names, CONTROL and UNREST values (rows and panel), TAX YIELD, TAX PAID and GARRISON values, contract codenames, the CLOCK SPEED value, the time code.
+- [ ] GIVEN text scale 125 after the size change WHEN the World Network, Research, Brief and Assembly render at 1280×720 THEN nothing clips (overflow scrolls, P-15), including the shared header resources.
 
 ---
 
@@ -68,6 +69,8 @@ Measured 2026-10-23 at 100%: many World Network labels render under the 10 px fl
   - Verify: a script walks every visible text node (`getClientRects` non-empty, not `visibility:hidden`) and records the parent's computed `font-size` and a selector path; `aria-hidden` fiction chrome and the globe labels (LABELS on) count; screen-reader-only text does not.
   - Pass condition: every run ≥10 px; each listed readout run ≥12 px; the README lists the measured minimum per state and each listed readout with its measured size.
   - Edge cases: runs that exist in one state only (`REVIEW -<ago>`, `> GO LIVE`, `CRISIS` and `UNREST PRESSURE` chips, banner lines, `EXPIRY` chip, forecast chips at intel 2+) are measured in their own state (intel 2+ recorded as an extra state); re-check clipping at 125% in the README.
+
+- **AC-2** (guard): partly covered (the 125% clipping recheck on the World Network); the other three Screens have no qa-lead case yet — `/qa-plan` adds it.
 
 ---
 

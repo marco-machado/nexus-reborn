@@ -34,9 +34,10 @@ The empty Feed prints `NO TRAFFIC IN THIS WINDOW`; the P-16 empty-channel token 
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN no events in the Feed window WHEN the Feed renders THEN it prints `-- CHANNEL OPEN --` and not `NO TRAFFIC IN THIS WINDOW`.
+- [ ] GIVEN at least one event in the window WHEN the Feed renders THEN `-- CHANNEL OPEN --` is absent; with none, the token is not clipped in the bottom strip at text scale 125.
 
 ---
 
@@ -67,6 +68,8 @@ The empty Feed prints `NO TRAFFIC IN THIS WINDOW`; the P-16 empty-channel token 
   - Verify: read the Feed body; run `rg -n "NO TRAFFIC" src`.
   - Pass condition: it prints `-- CHANNEL OPEN --`; `NO TRAFFIC IN THIS WINDOW` is in neither the DOM nor `src`.
   - Edge cases: with at least one event the token is absent; the token is not clipped in the bottom strip; the header shows `FEED CLEAR`.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

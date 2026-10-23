@@ -34,9 +34,10 @@ Red is danger. As built, the Focus panel prints the Unrest value in red and draw
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN a sector row and the Focus panel WHEN Unrest is calm (≤ `PRESSURE_UNREST_MIN`, not in crisis) / past the pressure line / in crisis THEN the Unrest value prints in Ink / the Print White notice tone / Red Hot respectively, each ≥4.5:1 as rendered, and the Focus-panel Unrest bar takes the matching tone.
+- [ ] GIVEN a sector in crisis whose Unrest has fallen back under the pressure line (hysteresis) WHEN rendered THEN the value and bar stay Red Hot (crisis wins over pressure), and the `UNREST PRESSURE` chip shows on the sector row only.
 
 ---
 
@@ -69,6 +70,8 @@ Red is danger. As built, the Focus panel prints the Unrest value in red and draw
   - Verify: read the computed colour of the Unrest value in the sector row and the Focus panel, and the Focus-panel bar's fill; note the chips; compute the ratios.
   - Pass condition: calm (≤60, not in crisis) is Ink `rgb(184,216,207)`; pressure is Print White with the `UNREST PRESSURE` chip on the row; crisis is Red Hot with the `CRISIS` chip; each value ≥4.5:1 on both surfaces; the bar's tone matches the value's state.
   - Edge cases: the pressure chip sits on the row only (the Focus panel changes tone only); crisis wins over pressure; Antarctica prints none.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

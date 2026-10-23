@@ -34,9 +34,10 @@ Locked OPEN CONTRACTS rows are drawn at `opacity: 0.55` (`src/ui/ui.css:1508`), 
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN a locked OPEN CONTRACTS row (intel-locked, and failed campaign) in default and high-contrast modes WHEN it renders THEN every text run in the row has effective opacity 1 and is ≥4.5:1 as rendered (the reason in Red Hot; codename, `TYPE // CITY` and chips in Ink or brighter), and the row still reads as locked through its dimmed frame, the lock glyph and the reason text.
+- [ ] GIVEN a locked row and an open row viewed in grayscale WHEN compared THEN the locked row is told apart by its lock glyph (≥3:1 non-text floor) and reason text, and it keeps `aria-disabled`.
 
 ---
 
@@ -69,6 +70,8 @@ Locked OPEN CONTRACTS rows are drawn at `opacity: 0.55` (`src/ui/ui.css:1508`), 
   - Verify: for every text run in a locked row: the product of ancestor `opacity` and the text colour alpha; the computed colour; the ratio as rendered. Compare the locked row's frame (border, background or a frame-only opacity) with an open row's; check the lock glyph and the reason are present.
   - Pass condition: every run has effective opacity 1 and ≥4.5:1 in both modes; the reason is Red Hot `rgb(255,107,85)` and the `red-dim` class is not used on it; the locked frame differs from an open row's; the lock glyph is drawn instead of the target glyph and the reason is visible.
   - Edge cases: in a failed campaign `CAMPAIGN LOST` is the same element and gets the same treatment; `aria-disabled` unchanged; the lock glyph ≥3:1 (non-text floor).
+
+- **AC-2** (guard): partly covered (lock glyph ≥3:1, `aria-disabled`); the grayscale comparison has no qa-lead case yet — `/qa-plan` adds it.
 
 ---
 

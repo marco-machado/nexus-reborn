@@ -34,9 +34,10 @@ The left INFLUENCE panel repeats the Influence figure the header already prints.
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the World Network at 1280×720 and text scales 90 / 100 / 110 / 125 WHEN it renders THEN the left column holds SECTORS only (no INFLUENCE panel), the header still prints Influence, and nothing clips.
+- [ ] GIVEN an Influence spend or a Debrief award WHEN the World Network shows THEN the header Influence carries the new value in the same frame, so no Influence figure is lost with the panel.
 
 ---
 
@@ -67,6 +68,8 @@ The left INFLUENCE panel repeats the Influence figure the header already prints.
   - Verify: list the panel titles in `aside.wm-left`; read the header resources; check clipping, overlap and scroll at each scale.
   - Pass condition: only `SECTORS` is in the left column; the header still prints `INFLUENCE n PTS`; nothing clips or overlaps at the four scales (a scrolling SECTORS list with Antarctica reachable counts as not clipped).
   - Edge cases: a campaign banner posted at 125%; the first-visit card showing; record how many sector rows are visible as an observation.
+
+- **AC-2** (guard): no qa-lead case yet (header Influence after a spend or award) — `/qa-plan` adds it.
 
 ---
 

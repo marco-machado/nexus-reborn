@@ -34,9 +34,10 @@ When the campaign is failed, Scan markers already read `CAMPAIGN LOST`, but OPEN
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN a failed campaign WHEN OPEN CONTRACTS is read THEN every contract row's visible lock reason and the cause in its `aria-label` read `CAMPAIGN LOST` (as the Scan markers already do), never `REQUIRES INTEL LVL n`.
+- [ ] GIVEN a campaign that has not failed WHEN an intel-locked row is read THEN it still reads `REQUIRES INTEL LVL n`, and clicking a locked row on a failed campaign leaves the phase on the World Network.
 
 ---
 
@@ -67,6 +68,8 @@ When the campaign is failed, Scan markers already read `CAMPAIGN LOST`, but OPEN
   - Verify: for every OPEN CONTRACTS row read the visible gate text and the `aria-label`; click a row; compare with the Scan markers.
   - Pass condition: the visible text is `CAMPAIGN LOST` and the `aria-label` ends `// LOCKED // CAMPAIGN LOST`; a click leaves the phase on the World Network; the markers still read `CAMPAIGN LOST`.
   - Edge cases: a row both intel-locked and campaign-lost reads `CAMPAIGN LOST`; on a campaign that has not failed, intel-locked rows still read `REQUIRES INTEL LVL n` (regression).
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

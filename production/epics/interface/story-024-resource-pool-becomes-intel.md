@@ -34,9 +34,10 @@ The bottom RESOURCE POOL repeats Credits, Influence and Roster from the header. 
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the bottom strip at 1280×720 and text scales 90 / 100 / 110 / 125 WHEN it renders THEN the panel titled `INTEL` prints the intel level and progress as `n / 100` text, prints no Credits, Influence or Roster, and nothing clips.
+- [ ] GIVEN an intel level-up WHEN the INTEL panel renders THEN its progress wraps below 100 and its level matches the header Intel.
 
 ---
 
@@ -66,6 +67,8 @@ The bottom RESOURCE POOL repeats Credits, Influence and Roster from the header. 
   - Verify: read the bottom strip's fourth panel; check clipping.
   - Pass condition: the panel title is `INTEL` and no `RESOURCE POOL` remains; it prints the level and `n / 100` progress text; no CREDITS, INFLUENCE or ROSTER; nothing clips at the four scales.
   - Edge cases: progress 0 prints `0 / 100`; after a level-up the progress wraps below 100 (`addIntel`, no cap); the header Intel is unchanged.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

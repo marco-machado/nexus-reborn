@@ -34,9 +34,10 @@ Ink Dim (`#5d7d75`) text measures 4.29–4.48:1 composited on the panel in defau
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the World Network in default mode WHEN every text run that used Ink Dim (spec Contrast table) is measured as rendered THEN it uses Ink and reaches ≥4.5:1; no World Network text run renders in Ink Dim.
+- [ ] GIVEN Research, Brief and Assembly WHEN rendered THEN their text colours are unchanged: `--ink-dim` is unchanged in `src/index.css` and `src/ui/tokens.ts`, and any `.dim` / `.chip.dim` change is scoped to World Network selectors.
 
 ---
 
@@ -69,6 +70,8 @@ Ink Dim (`#5d7d75`) text measures 4.29–4.48:1 composited on the panel in defau
   - Verify: script a sweep of every text node (computed colour, effective opacity, ratio as rendered).
   - Pass condition: no World Network text run has colour `rgb(93,125,117)`; each former Ink Dim run is Ink `rgb(184,216,207)` and ≥4.5:1 as rendered.
   - Edge cases: disabled Influence status words; `--ink-dim` unchanged in `index.css` and `tokens.ts`; other Screens unchanged (any `.dim` / `.chip.dim` change scoped to World Network selectors). Locked rows are IF-029's.
+
+- **AC-2** (guard): verified by the Edge cases of AC-1 above; record the result separately in the evidence README or test name.
 
 ---
 

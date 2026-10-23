@@ -34,9 +34,10 @@ The idle Research / Brief / Assembly tab labels measure 4.29:1 in default mode a
 
 ## Acceptance Criteria
 
-*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion):*
+*From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
 - [ ] GIVEN the nav on each of the four Screens WHEN the idle tab labels are measured in default and high-contrast modes against the nav's own composited background THEN each is ≥4.5:1.
+- [ ] GIVEN high-contrast mode WHEN the nav renders THEN the idle labels take the high-contrast remap (the as-built cause traced and recorded in the commit message), and the selected tab still carries `aria-current="page"`.
 
 ---
 
@@ -67,6 +68,8 @@ The idle Research / Brief / Assembly tab labels measure 4.29:1 in default mode a
   - Verify: measure the idle tab labels against the nav's own composited background (not the panel value).
   - Pass condition: every idle label ≥4.5:1 on all four Screens in both modes.
   - Edge cases: Brief locked and unlocked; the selected tab excluded; the high-contrast non-remap cause traced and recorded; `NO CONTRACT SELECTED` ratio reported as an observation.
+
+- **AC-2** (guard): partly covered (high-contrast cause traced); the `aria-current` check has no qa-lead case yet — `/qa-plan` adds it.
 
 ---
 
