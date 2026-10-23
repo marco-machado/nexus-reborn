@@ -42,7 +42,7 @@ Run `/gate-check` only when moving to a new stage (`production/gate-checks/`). A
 
 ## Done
 
-Stop every dev server you started (`npm run dev`, `vite preview`) before the turn ends. Confirm the listener on port 4200 is gone.
+Stop every dev server you started (`npm run dev`, `vite preview`) before the turn ends. Confirm the listener on port 4200 is gone. Close every in-app browser tab you opened (`tabs_close`) and confirm with `tabs_context` that the pane is closed. Say in the report that the server, test browsers and in-app tabs are closed.
 
 ## Layers
 
