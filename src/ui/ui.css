@@ -210,6 +210,7 @@
 
 .segbar.amber > i { background: linear-gradient(90deg, rgba(240, 180, 69, 0.55), var(--amber)); }
 .segbar.red > i { background: linear-gradient(90deg, rgba(224, 75, 60, 0.5), var(--red)); }
+.segbar.notice > i { background: linear-gradient(90deg, color-mix(in srgb, var(--print-white) 45%, transparent), var(--print-white)); }
 .segbar.green > i { background: linear-gradient(90deg, rgba(125, 224, 138, 0.5), var(--green)); }
 
 .segbar.mini { height: 7px; }
@@ -395,7 +396,7 @@
   padding: 9px 8px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
-  color: var(--ink-dim);
+  color: var(--ink);
   font: inherit;
   font-size: calc(11.5px * var(--text-scale));
   letter-spacing: 0.2em;
@@ -419,7 +420,7 @@
 }
 .navtab-locked-row { display: flex; align-items: center; gap: 8px; }
 .navtab-cond {
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.12em;
   color: var(--red-hot);
   white-space: nowrap;
@@ -464,11 +465,12 @@
 /* utility tones */
 .dim { color: var(--ink-dim); }
 .red { color: var(--red-hot); }
-.red-dim { color: rgba(224, 75, 60, 0.75); }
 .teal { color: var(--teal); }
 .amber { color: var(--amber-hot); }
 /* Notice: worth reading, neither price nor alarm; Print White plus a word. */
 .notice { color: var(--print-white); }
+/* Ink: the default readout ink, for text that must not inherit a tone. */
+.ink { color: var(--ink); }
 .green { color: var(--green); }
 .mini { font-size: calc(9.5px * var(--text-scale)); }
 
@@ -825,7 +827,7 @@
 
 .wm-campaign-win i {
   color: var(--ink-dim);
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.12em;
   font-style: normal;
 }
@@ -867,7 +869,7 @@
 
 .wm-campaign-fail i {
   color: var(--ink-dim);
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.12em;
   font-style: normal;
 }
@@ -909,14 +911,14 @@
   gap: 5px;
   padding: 14px 10px;
   text-align: center;
-  font-size: calc(9.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.14em;
   color: var(--ink-dim);
   border: 1px dashed var(--line);
   flex: none;
 }
 
-.wm-empty i { font-size: calc(8.5px * var(--text-scale)); color: var(--ink-faint); }
+.wm-empty i { font-size: calc(10px * var(--text-scale)); color: var(--ink-faint); }
 
 /* continental sector list */
 .wm-sectors { flex: 1; }
@@ -949,14 +951,14 @@
   box-shadow: inset 0 0 16px color-mix(in srgb, var(--teal) 6%, transparent);
 }
 
-.wm-sector.locked { opacity: 0.5; cursor: default; }
+.wm-sector.locked { cursor: default; border-style: dashed; background: transparent; }
 
 .wm-sector.crisis { border-left-color: var(--red-hot); }
 .wm-sector.crisis .wm-sector-pct { color: var(--red-hot); }
 
 .wm-sector-crisis {
   color: var(--red-hot);
-  font-size: calc(7.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.14em;
   animation: crisis-pulse 1.6s ease-in-out infinite;
 }
@@ -977,7 +979,7 @@
 }
 
 .wm-sector-name {
-  font-size: calc(11px * var(--text-scale));
+  font-size: calc(12px * var(--text-scale));
   letter-spacing: 0.07em;
   white-space: nowrap;
   overflow: hidden;
@@ -994,7 +996,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.06em;
   min-width: 0;
 }
@@ -1269,14 +1271,14 @@
   padding: 5px 8px;
   background: rgba(4, 10, 9, 0.88);
   border: 1px solid var(--line);
-  font-size: calc(8px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.14em;
   color: var(--ink-dim);
   z-index: 4;
   pointer-events: none;
 }
 
-.wm-ov b { font-size: calc(9px * var(--text-scale)); color: var(--cyan); letter-spacing: 0.2em; }
+.wm-ov b { font-size: calc(10px * var(--text-scale)); color: var(--cyan); letter-spacing: 0.2em; }
 .wm-ov.tl { top: 8px; left: 8px; }
 .wm-ov.tc { top: 8px; left: 50%; transform: translateX(-50%); text-align: center; }
 .wm-ov.br {
@@ -1297,7 +1299,7 @@
   align-items: baseline;
   gap: 14px;
 }
-.wm-key-head span { font-size: calc(7.5px * var(--text-scale)); letter-spacing: 0.14em; }
+.wm-key-head span { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.14em; }
 .wm-key-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 5px; min-width: 0; }
 .wm-key-row i {
   width: 10px;
@@ -1306,8 +1308,9 @@
   background: var(--corp-fill);
   box-shadow: inset 0 0 0 1px var(--corp);
 }
-.wm-key-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wm-key-n { color: var(--ink); font-size: calc(9px * var(--text-scale)); letter-spacing: 0; }
+/* Wraps rather than truncates (Interface Rule 6). */
+.wm-key-name { overflow-wrap: anywhere; }
+.wm-key-n { color: var(--ink); font-size: calc(10px * var(--text-scale)); letter-spacing: 0; }
 
 /* right column: focused sector. The inset gave up height to the influence
    actions and the forecast below it; 62px still reads at 1280x720. */
@@ -1346,7 +1349,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 18px;
+  width: 24px;
   height: 30px;
   display: grid;
   place-items: center;
@@ -1368,7 +1371,7 @@
   position: absolute;
   left: 4px;
   bottom: 3px;
-  font-size: calc(7.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.16em;
   color: var(--ink-dim);
   background: rgba(4, 10, 9, 0.7);
@@ -1381,29 +1384,33 @@
 
 .wm-cu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .wm-cu > div { display: flex; flex-direction: column; gap: 3px; }
-.wm-cu label { font-size: calc(8.5px * var(--text-scale)); color: var(--ink-dim); letter-spacing: 0.2em; }
+.wm-cu label { font-size: calc(10px * var(--text-scale)); color: var(--ink-dim); letter-spacing: 0.2em; }
 .wm-cu b { font-size: clamp(15px, 1.4vw, 21px); letter-spacing: 0.06em; }
 
 .wm-sector-panel-body { padding: 6px 10px; gap: 5px; }
+.wm-sector-scroll { gap: 5px; padding-right: 3px; }
 
-/* numbered influence actions on the sector panel. Single-line rows: the
-   effect text rides in the button title and aria-label, so the three actions
-   and the forecast fit the panel at 1280x720 without crushing the ops list. */
+/* numbered influence actions on the sector panel. One row per action: the
+   button, then its effect printed underneath (P-03: no tooltip-only information);
+   OPEN CONTRACTS absorbs the height by scrolling (P-15). */
 .wm-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 3px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
   border-top: 1px solid var(--line);
   padding-top: 5px;
 }
 
 .wm-act {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-  gap: 1px;
+  gap: 2px 8px;
+  min-height: 24px;
   min-width: 0;
-  padding: 3px 2px;
+  padding: 3px 6px;
   background: var(--bg-inset);
   border: 1px solid var(--line);
   color: inherit;
@@ -1419,34 +1426,32 @@
   background: color-mix(in srgb, var(--teal) 8%, transparent);
 }
 
-.wm-act:disabled { opacity: 0.55; cursor: default; }
+.wm-act:disabled { cursor: default; border-style: dashed; background: transparent; }
 .wm-act.active { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
-.wm-act-num { color: var(--cyan); font-size: calc(8.5px * var(--text-scale)); }
+.wm-act-num { color: var(--cyan); font-size: calc(10px * var(--text-scale)); }
 .wm-act-name {
   max-width: 100%;
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.08em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 /* cost and status wrap onto two centred lines when "10P UNAFFORDABLE" is
    wider than a third of the panel (125% text scale) */
 .wm-act-sub {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: baseline;
   gap: 0 4px;
   max-width: 100%;
 }
-.wm-act-cost { font-size: calc(8.5px * var(--text-scale)); letter-spacing: 0.04em; }
-.wm-act-status { font-size: calc(7px * var(--text-scale)); letter-spacing: 0.08em; font-style: normal; }
+.wm-act-cost { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.04em; }
+.wm-act-status { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.08em; font-style: normal; }
 
 /* next-6-hours event forecast, intel level 2+ */
 .wm-fc {
   display: flex;
   align-items: stretch;
+  flex-wrap: wrap;
   gap: 3px;
   border-top: 1px solid var(--line);
   padding-top: 5px;
@@ -1455,14 +1460,14 @@
 .wm-fc label {
   align-self: center;
   flex: none;
-  font-size: calc(6.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   color: var(--ink-dim);
   letter-spacing: 0.1em;
-  width: 38px;
+  flex-basis: 100%;
   line-height: 1.3;
 }
 
-.wm-fc-lock { align-self: center; font-size: calc(8px * var(--text-scale)); letter-spacing: 0.08em; }
+.wm-fc-lock { align-self: center; font-size: calc(10px * var(--text-scale)); letter-spacing: 0.08em; }
 
 .wm-fc-chip {
   flex: 1;
@@ -1476,11 +1481,13 @@
   border: 1px solid var(--line);
 }
 
-.wm-fc-chip i { font-size: calc(6.5px * var(--text-scale)); color: var(--ink-dim); letter-spacing: 0.04em; }
-.wm-fc-chip b { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.02em; }
+.wm-fc-chip i { font-size: calc(10px * var(--text-scale)); color: var(--ink-dim); letter-spacing: 0.04em; }
+.wm-fc-chip b { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.02em; }
 
 /* operations list */
-.wm-ops { flex: 1; }
+.wm-ops { flex: 1 1 0;
+  /* the panel head and one contract row always stay on screen */
+  min-height: calc(112px * var(--text-scale)); }
 .wm-ops-body { padding: 8px; gap: 8px; }
 .wm-ops-list { gap: 6px; padding-right: 3px; }
 
@@ -1505,7 +1512,9 @@
   background: rgba(126, 240, 212, 0.06);
 }
 
-.wm-op.locked { opacity: 0.55; cursor: default; }
+/* Locked: the frame dims (dashed, no fill); the text keeps full ink so the
+   reason reads at 4.5:1 (IF-029). */
+.wm-op.locked { cursor: default; border-style: dashed; background: transparent; }
 
 .wm-op-glyph { color: var(--cyan); display: grid; place-items: center; }
 .wm-op.locked .wm-op-glyph { color: var(--ink-dim); }
@@ -1513,16 +1522,16 @@
 .wm-op-main { min-width: 0; }
 .wm-op-main b {
   display: block;
-  font-size: calc(11.5px * var(--text-scale));
+  font-size: calc(12px * var(--text-scale));
   letter-spacing: 0.14em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.wm-op-main i { display: block; font-size: calc(8.5px * var(--text-scale)); margin-top: 2px; letter-spacing: 0.08em; }
+.wm-op-main i { display: block; font-size: calc(10px * var(--text-scale)); margin-top: 2px; letter-spacing: 0.08em; }
 
 .wm-op-meta { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-.wm-op-meta .chip { font-size: calc(8px * var(--text-scale)); padding: 1px 5px; }
+.wm-op-meta .chip { font-size: calc(10px * var(--text-scale)); padding: 1px 5px; }
 
 /* bottom strip. The height is fixed so the events feed cannot drag the rest of
    the screen down as traffic comes in: grid stretch hands the same box to all
@@ -1554,7 +1563,7 @@
 .wm-date { font-size: clamp(15px, 1.5vw, 22px); color: #e8fbf2; letter-spacing: 0.1em; }
 /* Review: Signal Cyan with the printed REVIEW line; amber does not mark a clock. */
 .wm-date.review { color: var(--cyan); }
-.wm-clock { color: var(--cyan); font-size: calc(11.5px * var(--text-scale)); letter-spacing: 0.16em; }
+.wm-clock { color: var(--cyan); font-size: calc(12px * var(--text-scale)); letter-spacing: 0.16em; }
 
 .wm-live {
   display: inline-flex;
@@ -1562,7 +1571,7 @@
   gap: 6px;
   align-self: flex-start;
   text-align: left;
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.18em;
   color: var(--teal);
   background: none;
@@ -1577,6 +1586,7 @@
   align-items: flex-start;
   gap: 2px;
   color: var(--cyan);
+  min-height: 24px;
   cursor: pointer;
 }
 
@@ -1596,6 +1606,9 @@
   cursor: pointer;
   touch-action: none;
 }
+/* The drawn track stays 12 px; this band gives the slider a 24 px pointer
+   hit area (WCAG 2.2 SC 2.5.8, IF-032). */
+.wm-tl-track::before { content: ''; position: absolute; inset: -7px -1px; }
 
 .wm-tl-track:hover { border-color: var(--line-strong); }
 
@@ -1652,9 +1665,9 @@
 .wm-tl-axis {
   display: flex;
   justify-content: space-between;
-  font-size: calc(8px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.14em;
-  color: var(--ink-faint);
+  color: var(--ink);
 }
 
 .wm-tl-axis .now { color: var(--teal); font-weight: 700; }
@@ -1664,7 +1677,7 @@
 
 .wm-tbtn {
   min-width: 30px;
-  height: 20px;
+  height: 24px;
   display: grid;
   place-items: center;
   padding: 0 5px;
@@ -1672,7 +1685,7 @@
   border: 1px solid var(--line);
   color: var(--ink-dim);
   font-family: inherit;
-  font-size: calc(9.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.08em;
   cursor: pointer;
   transition: border-color 0.12s, color 0.12s, background 0.12s;
@@ -1689,7 +1702,7 @@
   background: color-mix(in srgb, var(--teal) 14%, transparent);
 }
 
-.wm-speed { font-size: calc(9px * var(--text-scale)); letter-spacing: 0.14em; color: var(--ink-dim); }
+.wm-speed { font-size: calc(10px * var(--text-scale)); letter-spacing: 0.14em; color: var(--ink-dim); }
 
 /* events feed */
 .wm-feed-body { padding: 6px 8px; }
@@ -1700,6 +1713,7 @@
   grid-template-columns: auto minmax(0, 1fr) 8px;
   align-items: center;
   gap: 8px;
+  min-height: 24px;
   padding: 3px 4px;
   background: none;
   border: 0;
@@ -1717,7 +1731,7 @@
 .wm-feed-line.red { color: var(--red-hot); }
 .wm-feed-line.green { color: var(--green); }
 .wm-feed-line.notice { color: var(--print-white); }
-.wm-feed-t { color: var(--ink-faint); }
+.wm-feed-t { color: var(--ink); }
 .wm-feed-x { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wm-feed-chev { opacity: 0; }
 .wm-feed-line:hover .wm-feed-chev { opacity: 0.75; }
@@ -1725,23 +1739,21 @@
 .wm-unread {
   background: none;
   border: 0;
-  padding: 0;
+  min-height: 24px;
+  padding: 0 4px;
   color: var(--red-hot);
   font-family: inherit;
-  font-size: calc(9.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.14em;
   cursor: pointer;
 }
 
 .wm-unread:hover { color: #ff9986; }
 
-/* resource pool: the figures carry the panel, so they sit a class above their
-   labels rather than level with them */
-.wm-pool .panel-body { gap: 5px; justify-content: center; }
-.wm-pool .kv b { font-size: calc(13px * var(--text-scale)); }
-.wm-intel-val { display: inline-flex; align-items: center; gap: 8px; }
-.wm-intel-val b { font-size: calc(15px * var(--text-scale)); color: var(--teal); }
-.wm-intel { width: 66px; }
+/* INTEL panel: level and progress to the next level. The figures carry the
+   panel, so they sit a class above their labels rather than level with them. */
+.wm-intel-panel .panel-body { gap: 5px; justify-content: center; }
+.wm-intel-panel .kv b { font-size: calc(13px * var(--text-scale)); }
 
 @keyframes wm-arc-flow {
   to { stroke-dashoffset: -28; }
@@ -4273,6 +4285,15 @@ button.hud-slot {
   width: 680px;
 }
 
+/* P-23: the card is not modal. The clock keeps running under it and the
+   transport stays usable, so the wrap neither dims the desk nor takes its
+   clicks; only the card itself is interactive. */
+.wm-onboard-wrap {
+  pointer-events: none;
+  background: transparent;
+}
+.wm-onboard-wrap .wm-onboard { pointer-events: auto; }
+
 .wm-onboard .panel {
   flex: 1;
   background: var(--bg-panel-solid);
@@ -4444,9 +4465,9 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 .wm-resource { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 3px 8px; color: var(--cyan); }
 .wm-resource + .wm-resource { border-left: 1px solid var(--line); }
 .wm-resource > span { display: flex; flex-direction: column; gap: 3px; }
-.wm-resource small { font-size: calc(8px * var(--text-scale)); letter-spacing: .04em; }
+.wm-resource small { font-size: calc(10px * var(--text-scale)); letter-spacing: .04em; }
 .wm-resource b { font-size: calc(12px * var(--text-scale)); white-space: nowrap; letter-spacing: .02em; }
-.wm-resource em { font-size: calc(8px * var(--text-scale)); font-style: normal; color: var(--ink-dim); }
+.wm-resource em { font-size: calc(10px * var(--text-scale)); font-style: normal; color: var(--ink-dim); }
 
 .wm-sectors-body { padding: 0; gap: 0; }
 .wm-sector-list { gap: 0; padding: 0; min-height: 100%; }
@@ -4456,16 +4477,17 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 .wm-sector.sel { border: 1px solid var(--line-strong); border-left: 2px solid var(--teal); }
 .wm-sector-glyph svg { width: 44px; height: 44px; display: block; }
 .wm-sector-main { gap: 2px; }
-.wm-sector-reading { display: flex; justify-content: space-between; align-items: center; font-size: calc(8px * var(--text-scale)); letter-spacing: 0; }
+.wm-sector-reading { display: flex; justify-content: space-between; align-items: center; font-size: calc(10px * var(--text-scale)); letter-spacing: 0; }
 .wm-sector-reading > span { color: var(--ink-dim); }
-.wm-sector-reading b { font-size: calc(10px * var(--text-scale)); color: var(--teal); }
-.wm-sector-warning { display: flex; align-items: center; gap: 4px; font-size: calc(7.5px * var(--text-scale)); letter-spacing: 0; }
+.wm-sector-reading b { font-size: calc(12px * var(--text-scale)); color: var(--teal); }
+.wm-sector-warning { display: flex; align-items: center; gap: 4px; font-size: calc(10px * var(--text-scale)); letter-spacing: 0; }
 .wm-sector-warning svg { width: 11px; height: 11px; }
 .wm-sector-bar { width: 48px; margin-left: auto; }
 .wm-sector .wm-sector-reading b.red { color: var(--red-hot); }
 /* Unrest pressure is not alarm (red stays for CRISIS) and not price: Print
    White plus the warning glyph and the printed UNREST PRESSURE word. */
 .wm-sector .wm-sector-reading b.notice { color: var(--print-white); }
+.wm-sector .wm-sector-reading b.ink { color: var(--ink); }
 
 .globe-view { position: absolute; inset: 0; overflow: hidden; background: #010308; outline: none; }
 /* The globe clips its own box, so its brackets sit inside the edge. */
@@ -4482,26 +4504,26 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 .globe-marker-label { position: absolute; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: max-content; padding: 3px 5px; background: #020713ba; border-radius: 2px; font-size: calc(11px * var(--text-scale)); line-height: 1.1; letter-spacing: .08em; color: #d9e8ef; text-shadow: 0 1px 3px #000; pointer-events: none; }
 .globe-marker-label b { font-weight: 500; }
 .globe-marker.contract .globe-marker-label { pointer-events: auto; }
-.globe-marker-label small { font-size: calc(8px * var(--text-scale)); color: #acbecb; letter-spacing: .06em; }
+.globe-marker-label small { font-size: calc(10px * var(--text-scale)); color: #acbecb; letter-spacing: .06em; }
 .globe-marker.contract .globe-marker-label b { color: #ffe1a1; }
 .globe-marker.locked .globe-marker-label b { color: #a8bac6; }
 .globe-marker:hover, .globe-marker:focus-visible { z-index: 6; }
 .globe-marker:hover .globe-marker-label, .globe-marker:focus-visible .globe-marker-label { visibility: visible !important; background: #061222; }
 .globe-marker:hover .tip, .globe-marker:focus-visible .tip { display: flex; bottom: 24px; left: 50%; transform: translateX(-50%); }
-.globe-coordinates, .globe-hint, .globe-credit { position: absolute; font-family: var(--font-mono); font-size: calc(8px * var(--text-scale)); letter-spacing: .08em; color: #8ba3bb; pointer-events: none; }
+.globe-coordinates, .globe-hint, .globe-credit { position: absolute; font-family: var(--font-mono); font-size: calc(10px * var(--text-scale)); letter-spacing: .08em; color: #8ba3bb; pointer-events: none; }
 .globe-coordinates { top: 40px; right: 10px; }
 .globe-hint { bottom: 46px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
-.globe-hint span { padding: 0 7px; color: #4c6882; }
-.globe-credit { bottom: 48px; right: 10px; font-size: calc(6px * var(--text-scale)); pointer-events: auto; text-decoration: none; }
+.globe-hint span { padding: 0 7px; }
+.globe-credit { bottom: 44px; right: 10px; min-height: 24px; display: inline-flex; align-items: center; font-size: calc(10px * var(--text-scale)); pointer-events: auto; text-decoration: none; }
 .globe-credit:hover { color: #cce8ff; }
 .globe-toolbar { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 3px; width: max-content; max-width: calc(100% - 16px); padding: 4px; border: 1px solid #294057; background: #040c17e8; border-radius: 3px; }
-.globe-toolbar button { min-height: 28px; padding: 0 9px; font-family: var(--font-mono); font-size: calc(9px * var(--text-scale)); letter-spacing: .04em; color: #b5cadc; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+.globe-toolbar button { min-height: 28px; min-width: 24px; padding: 0 9px; font-family: var(--font-mono); font-size: calc(10px * var(--text-scale)); letter-spacing: .04em; color: #b5cadc; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
 .globe-toolbar button:hover, .globe-toolbar button:focus-visible { color: #e6f5ff; border-color: #527492; background: #14263b; }
 .globe-toolbar button[aria-pressed="true"] { color: #8bd4ff; background: #122337; }
 .globe-toolbar > span { width: 1px; height: 14px; background: #294057; }
 .globe-status { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; background: #010308; color: #b8d4ec; font-size: 11px; letter-spacing: .14em; }
 .globe-polar-caption { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; color: #e6f1fb; text-shadow: 0 1px 4px #000; font-size: calc(12px * var(--text-scale)); letter-spacing: .22em; text-align: center; pointer-events: none; }
-.globe-polar-caption span { font-size: calc(7px * var(--text-scale)); color: #a8bed1; }
+.globe-polar-caption span { font-size: calc(10px * var(--text-scale)); color: #a8bed1; }
 @container (max-width: 650px) {
   .globe-credit { top: 44px; left: 10px; bottom: auto; right: auto; }
   .globe-toolbar button { padding: 0 6px; }
@@ -4537,10 +4559,10 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 .wm-map-wrap .wm-ov.tl .wm-spark { display: none; }
 .wm-map-wrap .wm-ov.tc { left: auto; right: 4px; top: 3px; transform: none; text-align: right; }
 .wm-map-wrap .wm-ov.tc b { display: none; }
-.wm-map-wrap .wm-ov.br { bottom: 64px; left: 10px; right: auto; width: calc(165px * var(--text-scale)); display: flex; border: 1px solid #294057; background: #040c17ba; padding: 7px; gap: 3px; }
-.wm-map-wrap .wm-ov b { font-size: calc(8px * var(--text-scale)); letter-spacing: .05em; }
-.wm-map-wrap .wm-key-name { font-size: calc(8px * var(--text-scale)); }
-.wm-map-wrap .wm-key-head span { font-size: calc(6px * var(--text-scale)); }
+.wm-map-wrap .wm-ov.br { bottom: 64px; left: 10px; right: auto; width: calc(190px * var(--text-scale)); display: flex; border: 1px solid #294057; background: #040c17ba; padding: 7px; gap: 3px; }
+.wm-map-wrap .wm-ov b { font-size: calc(10px * var(--text-scale)); letter-spacing: .05em; }
+.wm-map-wrap .wm-key-name { font-size: calc(10px * var(--text-scale)); }
+.wm-map-wrap .wm-key-head span { font-size: calc(10px * var(--text-scale)); }
 .wm-map .wm-marker-core { width: 10px; height: 10px; background: var(--bg); border: 1px solid var(--amber); transform: rotate(45deg); }
 .wm-map .wm-marker-ring { display: none; }
 .wm-map .wm-marker-label { opacity: 0; pointer-events: none; }
@@ -4580,14 +4602,14 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 }
 
 .wm-moment-title {
-  font-size: calc(8.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   letter-spacing: 0.1em;
   color: var(--teal);
   font-weight: 500;
 }
 
 .wm-moment-body {
-  font-size: calc(9px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
   line-height: 1.35;
   letter-spacing: 0.02em;
   color: var(--ink);
@@ -4596,8 +4618,9 @@ body:has(.wm-onboard-wrap) .write-fail-region {
 
 .wm-moment-btn {
   flex: none;
+  min-height: 24px;
   padding: 2px 8px;
-  font-size: calc(7.5px * var(--text-scale));
+  font-size: calc(10px * var(--text-scale));
 }
 
 /* First-Debrief Research prompt (IF-014): a bordered teal note between the
@@ -4645,3 +4668,24 @@ body:has(.wm-onboard-wrap) .write-fail-region {
   color: var(--ink);
   text-transform: none;
 }
+
+/* World Network type and ink floors (UX spec world-network.md, IF-026 /
+   IF-027): within this Screen Ink Dim text reads in Ink, and shared chrome
+   meets the 10 px floor. The --ink-dim token itself is unchanged for the
+   other Screens. */
+.wm { --ink-dim: var(--ink); }
+.wm .chip { font-size: calc(10px * var(--text-scale)); }
+.wm .tip, .wm .tip b { font-size: calc(10px * var(--text-scale)); }
+
+/* Influence action effect, printed under each button (IF-025): the effect
+   is static text, not only the button's title. */
+.wm-act-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wm-act-effect {
+  padding-left: 6px;
+  font-size: calc(10px * var(--text-scale));
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.wm-kv-readout { font-size: calc(12px * var(--text-scale)); }
+.wm-speed b { font-size: calc(12px * var(--text-scale)); }

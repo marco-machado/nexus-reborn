@@ -21,179 +21,179 @@ stories:
     name: "Failed-campaign banner reads ROSTER EMPTY // NO CONTRACT CAN BE TAKEN"
     file: "production/epics/interface/story-016-failed-campaign-banner-reads-no-contract-can-be-taken.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-017"
     name: "Failed-campaign contract rows read CAMPAIGN LOST"
     file: "production/epics/interface/story-017-failed-campaign-contract-rows-read-campaign-lost.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-023"
     name: "Remove the duplicate left INFLUENCE panel"
     file: "production/epics/interface/story-023-remove-the-duplicate-left-influence-panel.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-024"
     name: "RESOURCE POOL becomes INTEL"
     file: "production/epics/interface/story-024-resource-pool-becomes-intel.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-026"
     name: "World Network type meets the size floors"
     file: "production/epics/interface/story-026-world-network-type-meets-the-size-floors.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-027"
     name: "Ink Dim text on the World Network moves to Ink"
     file: "production/epics/interface/story-027-ink-dim-text-on-the-world-network-moves-to-ink.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-028"
     name: "Feed times and the Timeline axis move off Ink Faint"
     file: "production/epics/interface/story-028-feed-times-and-timeline-axis-move-off-ink-faint.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-029"
     name: "Locked contract rows dim the frame, not the text, and their reason prints in Red Hot"
     file: "production/epics/interface/story-029-locked-contract-rows-dim-the-frame-not-the-text.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-030"
     name: "Idle nav tab labels reach 4.5:1 in both modes"
     file: "production/epics/interface/story-030-idle-nav-tab-labels-reach-4-5-in-both-modes.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-031"
     name: "Feed rows have a 24 px hit area"
     file: "production/epics/interface/story-031-feed-rows-have-a-24-px-hit-area.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-032"
     name: "Timeline track has a 24 px hit area"
     file: "production/epics/interface/story-032-timeline-track-has-a-24-px-hit-area.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-033"
     name: "Speed buttons have a 24 px hit area"
     file: "production/epics/interface/story-033-speed-buttons-have-a-24-px-hit-area.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-034"
     name: "Inset steppers have a 24 px hit area"
     file: "production/epics/interface/story-034-inset-steppers-have-a-24-px-hit-area.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-035"
     name: "Remaining World Network pointer targets meet 24×24"
     file: "production/epics/interface/story-035-remaining-world-network-pointer-targets-meet-24-px.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-018"
     name: "First-visit card is not aria-modal"
     file: "production/epics/interface/story-018-first-visit-card-is-not-aria-modal.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-020"
     name: "STRAINED Garrison prints in the notice tone, not amber"
     file: "production/epics/interface/story-020-strained-garrison-prints-in-the-notice-tone.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-021"
     name: "Unrest ink and bar follow its state"
     file: "production/epics/interface/story-021-unrest-ink-and-bar-follow-its-state.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-022"
     name: "Empty Feed prints -- CHANNEL OPEN --"
     file: "production/epics/interface/story-022-empty-feed-prints-channel-open.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-019"
     name: "Using the clock dismisses the first-visit card for the campaign"
     file: "production/epics/interface/story-019-using-the-clock-dismisses-the-first-visit-card.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"
   - id: "IF-025"
     name: "Each Influence action prints its effect as visible text"
     file: "production/epics/interface/story-025-each-influence-action-prints-its-effect.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-10-23"

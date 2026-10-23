@@ -1,12 +1,12 @@
 # Story 026: World Network type meets the size floors
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 0.5 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: [set by /dev-story when implementation begins]
+> **Last Updated**: 2026-10-23
 
 ## Context
 
@@ -36,8 +36,8 @@ Measured 2026-10-23 at 100%: many World Network labels render under the 10 px fl
 
 *From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
-- [ ] GIVEN the World Network at 1280×720, text scale 100%, in each state (opening desk; focused sector at each Garrison state; pressure; crisis; Review; failed campaign; first-visit card showing; Influence moment note showing) WHEN the computed font-size of every visible text node is measured THEN every run is ≥10 px, and these readout runs are ≥12 px: header resource values, sector names, CONTROL and UNREST values (rows and panel), TAX YIELD, TAX PAID and GARRISON values, contract codenames, the CLOCK SPEED value, the time code.
-- [ ] GIVEN text scale 125 after the size change WHEN the World Network, Research, Brief and Assembly render at 1280×720 THEN nothing clips (overflow scrolls, P-15), including the shared header resources.
+- [x] GIVEN the World Network at 1280×720, text scale 100%, in each state (opening desk; focused sector at each Garrison state; pressure; crisis; Review; failed campaign; first-visit card showing; Influence moment note showing) WHEN the computed font-size of every visible text node is measured THEN every run is ≥10 px, and these readout runs are ≥12 px: header resource values, sector names, CONTROL and UNREST values (rows and panel), TAX YIELD, TAX PAID and GARRISON values, contract codenames, the CLOCK SPEED value, the time code.
+- [x] GIVEN text scale 125 after the size change WHEN the World Network, Research, Brief and Assembly render at 1280×720 THEN nothing clips (overflow scrolls, P-15), including the shared header resources.
 
 ---
 
@@ -85,7 +85,7 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 **Required evidence**:
 - UI: a retained screenshot of each state touched in `production/qa/evidence/if-026/`, plus a click-through `README.md` naming the screens and states exercised and the measured values. Capture with headless `npx playwright-cli` at exactly 1280×720 (never the user's Chrome); stop the dev server and confirm nothing listens on port 4200 afterwards. Contrast is the composited ratio as rendered over `rgba(7, 16, 15, 0.92)` on Void `#04070a`, computed by script.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720)
 
 ---
 
@@ -93,3 +93,14 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 
 - Depends on: IF-023, IF-024 (soft: settle the panel layout first)
 - Unlocks: IF-025 (soft), IF-031 to IF-035 (soft)
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-23
+**Verdict**: COMPLETE
+**Criteria**: all passing (AC-1 and guards; none deferred)
+**Implementation**: 47 font-size rules raised to the floors, plus `.wm .chip`, `.wm .tip`, `.wm-kv-readout` and `.wm-speed b`; the control key widened and allowed to wrap. Measured in 11 states and at 125 on all four Screens.
+**Test Evidence**: `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720). Probe watched failing on the as-built code (60 FAIL, then a hard stop under the card) and on two layout mutations (truncation, spill), then ALL PASS. `npm test` 1642/1642, `npm run lint` clean, `npm run build` OK.
+**Code Review**: APPROVED WITH SUGGESTIONS — ui-programmer, lead-programmer, qa-tester (2026-10-23). Applied: shared `unrestTone` / `lockReason` helpers with unit tests; dead CSS removed; `.wm-intel-panel` rename; IF-019 tests that could pass by accident fixed and `paused` pinned; browser checks for all five transport buttons and a Feed-row click under the card; Review mode checked at four scales.
+**Manifest**: story 2026-10-08 = current 2026-10-08.

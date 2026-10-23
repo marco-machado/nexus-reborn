@@ -205,7 +205,7 @@ Ranked by "what the player needs first on the opening desk", with the decision t
 | **Default (Live, running)** | Normal visit | Clock `nX` (default 2×), `LIVE` + closed dot, all panels populated |
 | **Opening desk** | New Operation | Influence **0**: all three actions show `UNAFFORDABLE` beside the button (reads as later, not broken). Focus **Europe**: Tax prints, `TAX PAID NO // NOT NEXUS-HELD`. North America is the one paying tap. Intel 1: Event forecast shows the intel-2 gate text. OPEN CONTRACTS: Rust Haven open; Glass Veil and Hollow Crown locked with their intel gate as text; exactly one seeded Moderate generated offer. First-visit card showing |
 | **First-visit card showing / dismissed** | First `phase='world'` of a campaign / `UNDERSTOOD` or use of the clock control | Card (P-23) over the Scan column; the clock keeps running underneath and the transport stays usable. Dismissal persists with the save through the tutorial seen set. Never returns in that campaign |
-| **Paused** | Pause control | Readout `CLOCK SPEED: PAUSED` (red may reinforce, the word carries it); play glyph on the control (`RESUME STRATEGIC CLOCK`). Choosing a speed while paused selects it; readout stays `PAUSED` |
+| **Paused** | Pause control | Readout `CLOCK SPEED: PAUSED` (red may reinforce, the word carries it); play glyph on the control (`RESUME STRATEGIC CLOCK`). Choosing a speed while paused sets it and resumes the clock (as built, `worldStore.setSpeed`; ruled 2026-10-23, IF-019 review) |
 | **Running 1× / 2× / 4× / 8×** | Speed control | `aria-pressed` on the active speed button; readout `nX` |
 | **Review** | Scrub the Timeline off NOW | `TIME CODE` reads `REVIEW -<ago>` plus `> GO LIVE`; no live dot; handle and Feed follow the pin; **Scan numbers, Influence, Tax and contracts stay live** (ADR-0014). Review is a view, not a third clock; the strategic clock keeps running |
 | **Focus: open sector** | Click a sector row, Scan sector or marker, Feed row, stepper | Focus panel, inset, `FOCUS` chip, Scan title and the Influence actions retarget. `selected` is a Focus, never the selected contract |
@@ -264,7 +264,7 @@ Mapping interactions for: **keyboard and mouse** (`project.yaml` `platform.prima
 | TIME CODE `> GO LIVE` | Leave Review | Click; Enter/Space | Dot returns, words change in one frame | `setReview(null)` |
 | Timeline track | Scrub | Pointer down/drag; Left/Right/Home/End on the focused slider | Handle and Feed follow the pin; `REVIEW` words appear | `setReview(t')`; drag past ~98.5% of the track returns Live. Never writes `t` (ADR-0014). Home = oldest point in the window; End = Live |
 | Pause / Resume | Toggle strategic clock | Click; Enter/Space | Glyph and readout change in one frame | `togglePause()` |
-| Speed `1X` `2X` `4X` `8X` | Set speed | Click; Enter/Space | `aria-pressed` moves | `setSpeed(n)`; while paused it selects only |
+| Speed `1X` `2X` `4X` `8X` | Set speed | Click; Enter/Space | `aria-pressed` moves | `setSpeed(n)`; while paused it also resumes |
 | Feed row | Focus that event's sector, mark read | Click; Enter/Space | Focus retargets; unread count drops | `markRead()`, `select(sector)` |
 | `n UNREAD` | Mark all read | Click | Becomes `FEED CLEAR` | `markRead()` |
 | Orientation card `UNDERSTOOD` | Dismiss | Click; Enter/Space | Card leaves | Marks `WORLD_ONBOARD_ID` seen. Using Pause or a speed also dismisses it (P-23) |
@@ -452,7 +452,7 @@ Measured 2026-10-23 on the running build, text composited over `--bg-panel` `rgb
 | Signal teal `rgb(89,214,201)` | 9.78–11.43:1 | same | Panel titles, header resource labels, clock | Pass |
 | Red Hot `rgb(255,107,85)` | 6.90:1 | 6.90:1 | Unrest value, red Feed lines, Brief lock condition | Pass |
 | Ink Dim `#5d7d75` | **4.29–4.48:1** | 10.07–10.51:1 | Sector reading labels, CONTROL/UNREST labels, every key-value label, `TAX PAID NO` value, Influence status words, forecast label and gate, contract `TYPE // CITY`, contract chips, `CLOCK SPEED`, Control key names, subtitle, Scan fiction chrome | **Fails** default mode at every size it is used (7–11.5 px) |
-| Idle nav tab labels (Ink Dim in default mode) | **4.29:1** | **4.29:1** (measured; the label does not take the high-contrast remap — cause not traced) | Research, Brief, Assembly tab labels | **Fails** in both modes |
+| Idle nav tab labels (Ink Dim) | **4.29:1** | remaps to `#9dc3b8` (re-measured 2026-10-23 on the as-built code: the earlier "not remapped" reading was a measurement error) | Research, Brief, Assembly tab labels | **Fails** default mode. Fixed by IF-030 (labels in Ink) |
 | Ink Faint `#35504a` | **2.21:1** | 5.70:1 | Feed times, Timeline axis | **Fails**; banned for text |
 | `red-dim` `rgba(224,75,60,0.75)` | **3.18:1** | **3.18:1** (not remapped) | Locked contract gate text | **Fails** in both modes |
 

@@ -1,12 +1,12 @@
 # Story 019: Using the clock dismisses the first-visit card for the campaign
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Integration
 > **Estimate**: 0.3 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: [set by /dev-story when implementation begins]
+> **Last Updated**: 2026-10-23
 
 ## Context
 
@@ -36,9 +36,9 @@ P-23 and the spec say using Pause or a speed dismisses the first-visit card for 
 
 *From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
-- [ ] GIVEN the first-visit card showing WHEN the player activates Pause/Resume or any of `1X` `2X` `4X` `8X` THEN the clock action applies, `WORLD_ONBOARD_ID` is marked seen, the card leaves, and it does not return after a save and reload.
-- [ ] GIVEN the card showing WHEN Focus changes, a Feed row is clicked, or Esc is pressed THEN the card stays and `WORLD_ONBOARD_ID` is not marked seen.
-- [ ] GIVEN a card already dismissed by clock use WHEN the clock is used again, and WHEN New Operation starts a new campaign THEN the id is never added twice, and the new campaign shows the card again.
+- [x] GIVEN the first-visit card showing WHEN the player activates Pause/Resume or any of `1X` `2X` `4X` `8X` THEN the clock action applies, `WORLD_ONBOARD_ID` is marked seen, the card leaves, and it does not return after a save and reload.
+- [x] GIVEN the card showing WHEN Focus changes, a Feed row is clicked, or Esc is pressed THEN the card stays and `WORLD_ONBOARD_ID` is not marked seen.
+- [x] GIVEN a card already dismissed by clock use WHEN the clock is used again, and WHEN New Operation starts a new campaign THEN the id is never added twice, and the new campaign shows the card again.
 
 ---
 
@@ -84,7 +84,7 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 **Required evidence**:
 - Integration: a vitest test beside the module that owns the clock-to-dismiss wiring (e.g. `src/ui/worldOnboard.test.ts`), OR a documented Playwright playtest with screenshots in `production/qa/evidence/if-019/` when no node-only seam exists (vitest here has no DOM environment).
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720); unit seam `src/ui/worldOnboard.test.ts` (`clockUse` describe, 10 tests)
 
 ---
 
@@ -92,3 +92,14 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 
 - Depends on: None
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-23
+**Verdict**: COMPLETE
+**Criteria**: all passing (AC-1 and guards; none deferred)
+**Implementation**: `clockUse(apply, markSeen)` in `src/ui/worldOnboard.ts`, wired into the five transport buttons. Two findings on the way: (1) the card's full-screen wrap took every click, so the transport could not be used under the card as P-23 and the spec require — fixed (`.wm-onboard-wrap { pointer-events: none }`, only the card is interactive, no dimming). (2) `setSpeed` resumes a paused clock as built; the spec said a speed chosen while paused only selects. Ruled 2026-10-23: keep the build (a speed button resumes, as on any transport) and amend the spec; the tests pin `paused === false` after a speed. The story's edge-case wording ("selects only") is superseded by that ruling.
+**Test Evidence**: `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720); unit seam `src/ui/worldOnboard.test.ts` (`clockUse` describe, 10 tests). Probe watched failing on the as-built code (60 FAIL, then a hard stop under the card) and on two layout mutations (truncation, spill), then ALL PASS. `npm test` 1642/1642, `npm run lint` clean, `npm run build` OK.
+**Code Review**: APPROVED WITH SUGGESTIONS — ui-programmer, lead-programmer, qa-tester (2026-10-23). Applied: shared `unrestTone` / `lockReason` helpers with unit tests; dead CSS removed; `.wm-intel-panel` rename; IF-019 tests that could pass by accident fixed and `paused` pinned; browser checks for all five transport buttons and a Feed-row click under the card; Review mode checked at four scales.
+**Manifest**: story 2026-10-08 = current 2026-10-08.

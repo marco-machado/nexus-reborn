@@ -6,17 +6,21 @@
 
 **Last updated:** 2026-10-23
 **Stage:** Production (`project.yaml`)
-**Sprint:** Sprint 11 — planned 2026-10-23 to 2026-10-28 (`production/sprints/sprint-011.md`); 20 stories IF-016 to IF-035, 3.2 d committed (PR-SPRINT CONCERNS, owner Option A)
+**Sprint:** Sprint 11 (2026-10-23 to 2026-10-28) — all 20 stories IF-016 to IF-035 Complete 2026-10-23; QA sign-off pending
+**Goal (owner, 2026-10-23):** pass the Production → Polish `/gate-check`. Open blockers from gate re-run 3 (`gate-check-polish-2026-10-19-r3.md`): five screens without UX specs; playtests 2–3 and the fun hypothesis; smoke at HEAD; plus accessibility compliance and the pattern library.
 
 ## Next step
 
-1. **`npm test` three times in a row** (retro 10 action 4), before the first Sprint 11 story.
+1. **UX specs for Research, Brief, Assembly, Debrief and Settings** (`/ux-design` each, then `/ux-review`), measured on the running build with the Sprint 11 probe approach; fix the as-built accessibility deltas they find (type floors, ink contrast, hit targets) on those screens.
 
 ## After that
 
-2. **Shared probe script** `production/qa/evidence/sprint-011/probe.mjs` (QA plan; watch it fail on the as-built screen), before IF-026.
-3. **`/story-readiness` then `/dev-story`**, wave by wave per `production/sprints/sprint-011.md`, starting with IF-016.
-4. **Register a hit-target TR** at a later `/architecture-review` (owner waiver for Sprint 11: IF-031 to IF-035 cite `TR-interface-???`).
+2. **Interaction pattern library**: add the Scan marker / Focus selection and the Influence moment note (spec Open Question 15).
+3. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
+4. **Playtests 2 and 3**, `/playtest-report`, and the fun-hypothesis validation (gate blocker 2).
+5. **World Network p95 re-profile** (dated 2026-10-28) and the draw-call / memory sampling.
+6. **`/retrospective`**, then **`/gate-check`** Production → Polish.
+7. Register a hit-target TR at a later `/architecture-review` (IF-031 to IF-035 waiver).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -29,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-23 — Sprint 11 implemented: IF-016 to IF-035 Complete (World Network to its UX spec; type, ink and hit-target floors; card no longer blocks the clock). Probe `production/qa/evidence/sprint-011/probe.mjs` ALL PASS (152); 1642 tests; code review APPROVED WITH SUGGESTIONS, applied. `npm test` ×3 green before the first story (retro 10 action 4).
 - 2026-10-23 — `/qa-plan sprint`: `production/qa/qa-plan-sprint-011-2026-10-23.md` written; five missing guard cases (IF-020, IF-023, IF-026, IF-029, IF-030) added and back-filled into the stories; the four IF-015 gaps carried as Brief cases.
 - 2026-10-23 — `/sprint-plan new`: Sprint 11 written (`production/sprints/sprint-011.md`, `production/sprint-status.yaml`). Guard ACs added to IF-016 to IF-035 for the `/story-readiness` minimum; PR-SPRINT CONCERNS → owner Option A (IF-019, IF-025 Nice to Have); TR waiver for IF-031 to IF-035; view-control bar stays.
 - 2026-10-23 — `/create-stories interface`: IF-016 to IF-035 written (19 UI, 1 Integration) from the World Network spec's as-built deltas. Owner rulings recorded in the spec and decision log: OQ2 Unrest ink and bar by state; OQ3 left INFLUENCE panel removed, RESOURCE POOL → INTEL; OQ5 `-- CHANNEL OPEN --`; OQ8 effect on its own line; OQ17 Ink Dim and Ink Faint text → Ink, locked rows dim the frame only; IF-026 readout list; IF-035 added.

@@ -1,12 +1,12 @@
 # Story 027: Ink Dim text on the World Network moves to Ink
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 0.3 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: [set by /dev-story when implementation begins]
+> **Last Updated**: 2026-10-23
 
 ## Context
 
@@ -36,8 +36,8 @@ Ink Dim (`#5d7d75`) text measures 4.29–4.48:1 composited on the panel in defau
 
 *From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
-- [ ] GIVEN the World Network in default mode WHEN every text run that used Ink Dim (spec Contrast table) is measured as rendered THEN it uses Ink and reaches ≥4.5:1; no World Network text run renders in Ink Dim.
-- [ ] GIVEN Research, Brief and Assembly WHEN rendered THEN their text colours are unchanged: `--ink-dim` is unchanged in `src/index.css` and `src/ui/tokens.ts`, and any `.dim` / `.chip.dim` change is scoped to World Network selectors.
+- [x] GIVEN the World Network in default mode WHEN every text run that used Ink Dim (spec Contrast table) is measured as rendered THEN it uses Ink and reaches ≥4.5:1; no World Network text run renders in Ink Dim.
+- [x] GIVEN Research, Brief and Assembly WHEN rendered THEN their text colours are unchanged: `--ink-dim` is unchanged in `src/index.css` and `src/ui/tokens.ts`, and any `.dim` / `.chip.dim` change is scoped to World Network selectors.
 
 ---
 
@@ -83,7 +83,7 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 **Required evidence**:
 - UI: a retained screenshot of each state touched in `production/qa/evidence/if-027/`, plus a click-through `README.md` naming the screens and states exercised and the measured values. Capture with headless `npx playwright-cli` at exactly 1280×720 (never the user's Chrome); stop the dev server and confirm nothing listens on port 4200 afterwards. Contrast is the composited ratio as rendered over `rgba(7, 16, 15, 0.92)` on Void `#04070a`, computed by script.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720)
 
 ---
 
@@ -91,3 +91,14 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 
 - Depends on: None
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-23
+**Verdict**: COMPLETE
+**Criteria**: all passing (AC-1 and guards; none deferred)
+**Implementation**: Scoped token override `.wm { --ink-dim: var(--ink); }` (`--ink-dim` unchanged for other Screens; verified by the four-Screen sweep).
+**Test Evidence**: `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720). Probe watched failing on the as-built code (60 FAIL, then a hard stop under the card) and on two layout mutations (truncation, spill), then ALL PASS. `npm test` 1642/1642, `npm run lint` clean, `npm run build` OK.
+**Code Review**: APPROVED WITH SUGGESTIONS — ui-programmer, lead-programmer, qa-tester (2026-10-23). Applied: shared `unrestTone` / `lockReason` helpers with unit tests; dead CSS removed; `.wm-intel-panel` rename; IF-019 tests that could pass by accident fixed and `paused` pinned; browser checks for all five transport buttons and a Feed-row click under the card; Review mode checked at four scales.
+**Manifest**: story 2026-10-08 = current 2026-10-08.

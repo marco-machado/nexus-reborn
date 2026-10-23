@@ -7,6 +7,7 @@
 import { INFLUENCE_ACTIONS, INFLUENCE_ACTION_ORDER } from '../game/influence'
 import type { InfluenceActionId } from '../game/influence'
 import type { SectorId } from '../game/types'
+import { WORLD_ONBOARD_ID } from '../game/tutorial'
 
 // One open contract as the Scan lists it: the owner's Chance, already
 // derived, and whether the director can open it.
@@ -145,4 +146,12 @@ export function influenceMomentCopy(
       effect +
       ' on the focused sector. Field wins earn the points to spend.',
   }
+}
+
+// Using the clock is the lesson the card teaches (P-23): Pause or any speed
+// applies, then marks the card seen for the campaign, as UNDERSTOOD does.
+// markSeen is the tutorial store's own guard, so repeats never duplicate.
+export function clockUse(apply: () => void, markSeen: (id: string) => void): void {
+  apply()
+  markSeen(WORLD_ONBOARD_ID)
 }

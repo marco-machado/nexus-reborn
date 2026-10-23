@@ -88,3 +88,28 @@ export function taxEligibilityLine(eligible: boolean): TaxEligibilityReadout {
 export function eventToneClass(tone: EventTone): string {
   return tone === 'amber' ? 'notice' : tone
 }
+
+// Unrest ink by state (owner 2026-10-23, World Network UX spec Open Question
+// 2): Ink when calm, the Print White notice tone past the pressure line, Red
+// Hot in crisis; crisis wins. Red is danger, so calm Unrest is never red. The
+// bar takes the same tone, with no tone (the default bar) when calm.
+export interface UnrestTone {
+  ink: 'ink' | 'notice' | 'red'
+  bar: 'notice' | 'red' | undefined
+}
+
+export function unrestTone(inCrisis: boolean, pressure: boolean): UnrestTone {
+  if (inCrisis) return { ink: 'red', bar: 'red' }
+  if (pressure) return { ink: 'notice', bar: 'notice' }
+  return { ink: 'ink', bar: undefined }
+}
+
+export function intelGate(level: number): string {
+  return 'REQUIRES INTEL LVL ' + level
+}
+
+// Why a contract cannot be opened, in words (P-03: the actual cause). A
+// failed campaign locks every contract, whatever its intel gate.
+export function lockReason(campaignFailed: boolean, intelReq: number): string {
+  return campaignFailed ? 'CAMPAIGN LOST' : intelGate(intelReq)
+}

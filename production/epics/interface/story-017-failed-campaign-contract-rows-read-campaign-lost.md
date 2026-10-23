@@ -1,12 +1,12 @@
 # Story 017: Failed-campaign contract rows read CAMPAIGN LOST
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 0.1 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: [set by /dev-story when implementation begins]
+> **Last Updated**: 2026-10-23
 
 ## Context
 
@@ -36,8 +36,8 @@ When the campaign is failed, Scan markers already read `CAMPAIGN LOST`, but OPEN
 
 *From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
-- [ ] GIVEN a failed campaign WHEN OPEN CONTRACTS is read THEN every contract row's visible lock reason and the cause in its `aria-label` read `CAMPAIGN LOST` (as the Scan markers already do), never `REQUIRES INTEL LVL n`.
-- [ ] GIVEN a campaign that has not failed WHEN an intel-locked row is read THEN it still reads `REQUIRES INTEL LVL n`, and clicking a locked row on a failed campaign leaves the phase on the World Network.
+- [x] GIVEN a failed campaign WHEN OPEN CONTRACTS is read THEN every contract row's visible lock reason and the cause in its `aria-label` read `CAMPAIGN LOST` (as the Scan markers already do), never `REQUIRES INTEL LVL n`.
+- [x] GIVEN a campaign that has not failed WHEN an intel-locked row is read THEN it still reads `REQUIRES INTEL LVL n`, and clicking a locked row on a failed campaign leaves the phase on the World Network.
 
 ---
 
@@ -81,7 +81,7 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 **Required evidence**:
 - UI: a retained screenshot of each state touched in `production/qa/evidence/if-017/`, plus a click-through `README.md` naming the screens and states exercised and the measured values. Capture with headless `npx playwright-cli` at exactly 1280×720 (never the user's Chrome); stop the dev server and confirm nothing listens on port 4200 afterwards. Contrast is the composited ratio as rendered over `rgba(7, 16, 15, 0.92)` on Void `#04070a`, computed by script.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720)
 
 ---
 
@@ -89,3 +89,14 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 
 - Depends on: None
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-23
+**Verdict**: COMPLETE
+**Criteria**: all passing (AC-1 and guards; none deferred)
+**Implementation**: `lockReason(campaignFailed, intelReq)` in `src/ui/worldChrome.ts` now feeds both the Scan markers and the OPEN CONTRACTS rows (one rule, unit-tested in `worldChrome.test.ts`).
+**Test Evidence**: `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720). Probe watched failing on the as-built code (60 FAIL, then a hard stop under the card) and on two layout mutations (truncation, spill), then ALL PASS. `npm test` 1642/1642, `npm run lint` clean, `npm run build` OK.
+**Code Review**: APPROVED WITH SUGGESTIONS — ui-programmer, lead-programmer, qa-tester (2026-10-23). Applied: shared `unrestTone` / `lockReason` helpers with unit tests; dead CSS removed; `.wm-intel-panel` rename; IF-019 tests that could pass by accident fixed and `paused` pinned; browser checks for all five transport buttons and a Feed-row click under the card; Review mode checked at four scales.
+**Manifest**: story 2026-10-08 = current 2026-10-08.

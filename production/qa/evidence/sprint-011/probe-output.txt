@@ -1,0 +1,155 @@
+# Sprint 11 probe — 2026-10-23T05:21:27.534Z
+PASS IF-026 opening-card: every text run >= 10 px // min 10px over 233 runs
+PASS IF-026 opening-card: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 opening-card: no text in Ink Dim
+PASS IF-028 opening-card: no text in Ink Faint
+PASS IF-027 opening-card: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 opening: every text run >= 10 px // min 10px over 219 runs
+PASS IF-026 opening: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 opening: no text in Ink Dim
+PASS IF-028 opening: no text in Ink Faint
+PASS IF-027 opening: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 garrison-secure: every text run >= 10 px // min 10px over 219 runs
+PASS IF-026 garrison-secure: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 garrison-secure: no text in Ink Dim
+PASS IF-028 garrison-secure: no text in Ink Faint
+PASS IF-027 garrison-secure: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 garrison-strained: every text run >= 10 px // min 10px over 219 runs
+PASS IF-026 garrison-strained: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 garrison-strained: no text in Ink Dim
+PASS IF-028 garrison-strained: no text in Ink Faint
+PASS IF-027 garrison-strained: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 garrison-critical: every text run >= 10 px // min 10px over 219 runs
+PASS IF-026 garrison-critical: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 garrison-critical: no text in Ink Dim
+PASS IF-028 garrison-critical: no text in Ink Faint
+PASS IF-027 garrison-critical: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 pressure: every text run >= 10 px // min 10px over 220 runs
+PASS IF-026 pressure: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 pressure: no text in Ink Dim
+PASS IF-028 pressure: no text in Ink Faint
+PASS IF-027 pressure: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 crisis: every text run >= 10 px // min 10px over 220 runs
+PASS IF-026 crisis: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 crisis: no text in Ink Dim
+PASS IF-028 crisis: no text in Ink Faint
+PASS IF-027 crisis: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 review: every text run >= 10 px // min 10px over 221 runs
+PASS IF-026 review: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 review: no text in Ink Dim
+PASS IF-028 review: no text in Ink Faint
+PASS IF-027 review: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 failed: every text run >= 10 px // min 10px over 219 runs
+PASS IF-026 failed: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 failed: no text in Ink Dim
+PASS IF-028 failed: no text in Ink Faint
+PASS IF-027 failed: every text run >= 4.5:1 as rendered // min 4.83:1
+PASS IF-026 influence-note: every text run >= 10 px // min 10px over 201 runs
+PASS IF-026 influence-note: readouts >= 12 px // 32 readouts, min 12px
+PASS IF-027 influence-note: no text in Ink Dim
+PASS IF-028 influence-note: no text in Ink Faint
+PASS IF-027 influence-note: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-026 intel2: every text run >= 10 px // min 10px over 235 runs
+PASS IF-026 intel2: readouts >= 12 px // 33 readouts, min 12px
+PASS IF-027 intel2: no text in Ink Dim
+PASS IF-028 intel2: no text in Ink Faint
+PASS IF-027 intel2: every text run >= 4.5:1 as rendered // min 6.42:1
+PASS IF-016 failed banner line // "ROSTER EMPTY // NO CONTRACT CAN BE TAKEN"
+PASS IF-017 failed: every row in eu reads CAMPAIGN LOST // []
+PASS IF-017 failed: every row in na reads CAMPAIGN LOST // []
+PASS IF-017 failed: every row in as reads CAMPAIGN LOST // []
+PASS IF-017 failed: clicking a row stays on the World Network // world
+PASS IF-017 not failed: intel-locked rows read REQUIRES INTEL LVL n // ["REQUIRES INTEL LVL 2"]
+PASS IF-016 complete banner unchanged // {"b":"CAMPAIGN COMPLETE","i":"ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE","n":"3 / 3"}
+PASS IF-018 card has no aria-modal="true" // null
+PASS IF-018 UNDERSTOOD has initial focus // UNDERSTOOD
+PASS IF-018 Tab from UNDERSTOOD reaches the nav
+PASS IF-018 Shift+Tab returns to UNDERSTOOD // UNDERSTOOD
+PASS IF-018 Esc leaves the card in place
+PASS IF-019 PAUSE under the card applies and dismisses it // {"paused":true,"speed":2,"card":false}
+PASS IF-019 1X under the card applies and dismisses it // {"paused":false,"speed":1,"card":false}
+PASS IF-019 2X under the card applies and dismisses it // {"paused":false,"speed":2,"card":false}
+PASS IF-019 4X under the card applies and dismisses it // {"paused":false,"speed":4,"card":false}
+PASS IF-019 8X under the card applies and dismisses it // {"paused":false,"speed":8,"card":false}
+PASS IF-019 a Feed row click under the card focuses its sector and leaves the card up // eu -> af, card true
+PASS IF-020 SECURE prints rgb(126, 240, 212) // {"text":"SECURE","color":"rgb(126, 240, 212)","amber":false}
+PASS IF-020 STRAINED prints rgb(226, 246, 238) // {"text":"STRAINED","color":"rgb(226, 246, 238)","amber":false}
+PASS IF-020 CRITICAL prints rgb(255, 107, 85) // {"text":"CRITICAL","color":"rgb(255, 107, 85)","amber":false}
+PASS IF-020 Credits stay Ledger Amber // rgb(255, 208, 117)
+PASS IF-021 opening unrest 50: row and panel ink // {"row":"rgb(184, 216, 207)","panel":"rgb(184, 216, 207)","seg":"segbar mini","panelChip":false} row 12.68:1 panel 12.68:1
+PASS IF-021 opening unrest 60: row and panel ink // {"row":"rgb(184, 216, 207)","panel":"rgb(184, 216, 207)","seg":"segbar mini","panelChip":false} row 12.68:1 panel 12.68:1
+PASS IF-021 pressure unrest 61: row and panel ink // {"row":"rgb(226, 246, 238)","panel":"rgb(226, 246, 238)","seg":"segbar notice mini","chip":"UNREST PRESSURE","panelChip":false} row 17.18:1 panel 17.18:1
+PASS IF-021 pressure chip on the row only // {"row":"rgb(226, 246, 238)","panel":"rgb(226, 246, 238)","seg":"segbar notice mini","chip":"UNREST PRESSURE","panelChip":false}
+PASS IF-021 crisis unrest 80: row and panel ink // {"row":"rgb(255, 107, 85)","panel":"rgb(255, 107, 85)","seg":"segbar red mini","chip":"CRISIS","panelChip":false} row 6.9:1 panel 6.9:1
+PASS IF-021 crisis unrest 40: row and panel ink // {"row":"rgb(255, 107, 85)","panel":"rgb(255, 107, 85)","seg":"segbar red mini","chip":"CRISIS","panelChip":false} row 6.9:1 panel 6.9:1
+PASS IF-022 empty Feed prints -- CHANNEL OPEN -- // "-- CHANNEL OPEN --"
+PASS IF-022 empty Feed header shows FEED CLEAR
+PASS IF-022 empty token not clipped at 125
+PASS IF-022 token absent with events
+PASS IF-023 scale 90: left column holds SECTORS only; header prints Influence // 1 panel(s) ["SECTORS"] header ["CREDITS128,450 CR","INFLUENCE0 PTS","INTEL1","ROSTER8 / 8"]
+PASS IF-024 scale 90: INTEL panel // "INTEL LEVEL 1 PROGRESS 25 / 100"
+PASS IF-026 world network scale 90: nothing clips
+PASS IF-023 scale 100: left column holds SECTORS only; header prints Influence // 1 panel(s) ["SECTORS"] header ["CREDITS128,450 CR","INFLUENCE0 PTS","INTEL1","ROSTER8 / 8"]
+PASS IF-024 scale 100: INTEL panel // "INTEL LEVEL 1 PROGRESS 25 / 100"
+PASS IF-026 world network scale 100: nothing clips
+PASS IF-023 scale 110: left column holds SECTORS only; header prints Influence // 1 panel(s) ["SECTORS"] header ["CREDITS128,450 CR","INFLUENCE0 PTS","INTEL1","ROSTER8 / 8"]
+PASS IF-024 scale 110: INTEL panel // "INTEL LEVEL 1 PROGRESS 25 / 100"
+PASS IF-026 world network scale 110: nothing clips
+PASS IF-023 scale 125: left column holds SECTORS only; header prints Influence // 1 panel(s) ["SECTORS"] header ["CREDITS128,450 CR","INFLUENCE0 PTS","INTEL1","ROSTER8 / 8"]
+PASS IF-024 scale 125: INTEL panel // "INTEL LEVEL 1 PROGRESS 25 / 100"
+PASS IF-026 world network scale 125: nothing clips
+PASS IF-023 header Influence debits in the frame the action turns ACTIVE // INFLUENCE8 PTS -> INFLUENCE0 PTS, status ACTIVE
+PASS IF-024 level and progress agree with the header // {"pool":"INTEL LEVEL 2 PROGRESS 15 / 100","hdr":"INTEL2"}
+PASS IF-025 scale 90: each action prints its effect below the button // [{"text":"-12 UNREST OVER 6H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"+8 CONTROL OVER 12H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"WAIVE INTEL GATE // +24H EXPIRY","below":true,"visible":true,"overlap":false,"disabled":true}]
+PASS IF-025 scale 90: right column does not clip
+PASS IF-025 scale 100: each action prints its effect below the button // [{"text":"-12 UNREST OVER 6H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"+8 CONTROL OVER 12H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"WAIVE INTEL GATE // +24H EXPIRY","below":true,"visible":true,"overlap":false,"disabled":true}]
+PASS IF-025 scale 100: right column does not clip
+PASS IF-025 scale 110: each action prints its effect below the button // [{"text":"-12 UNREST OVER 6H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"+8 CONTROL OVER 12H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"WAIVE INTEL GATE // +24H EXPIRY","below":true,"visible":true,"overlap":false,"disabled":true}]
+PASS IF-025 scale 110: right column does not clip
+PASS IF-025 scale 125: each action prints its effect below the button // [{"text":"-12 UNREST OVER 6H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"+8 CONTROL OVER 12H","below":true,"visible":true,"overlap":false,"disabled":true},{"text":"WAIVE INTEL GATE // +24H EXPIRY","below":true,"visible":true,"overlap":false,"disabled":true}]
+PASS IF-025 scale 125: right column does not clip
+PASS IF-029 default: locked-row text opacity 1 and >= 4.5:1 // n 1 alpha 1 ratio 6.9 
+PASS IF-029 default: reason in Red Hot, frame dimmed, glyph and aria-disabled // {"n":1,"minAlpha":1,"minRatio":6.9,"low":[],"reason":"rgb(255, 107, 85)","redDim":false,"lockedFrame":{"border":"rgba(126, 240, 212, 0.22)","bg":"rgba(0, 0, 0, 0)","op":"1"},"openFrame":{"border":"rgba(126, 240, 212, 0.22)","bg":"rgba(4, 10, 9, 0.9)","op":"1"},"glyph":true,"disabled":true,"openDisabled":null}
+PASS IF-029 high contrast: locked-row text opacity 1 and >= 4.5:1 // n 1 alpha 1 ratio 6.9 
+PASS IF-029 high contrast: reason in Red Hot, frame dimmed, glyph and aria-disabled // {"n":1,"minAlpha":1,"minRatio":6.9,"low":[],"reason":"rgb(255, 107, 85)","redDim":false,"lockedFrame":{"border":"rgba(126, 240, 212, 0.42)","bg":"rgba(0, 0, 0, 0)","op":"1"},"openFrame":{"border":"rgba(126, 240, 212, 0.42)","bg":"rgba(4, 10, 9, 0.9)","op":"1"},"glyph":true,"disabled":true,"openDisabled":null}
+PASS IF-030 World Network default: idle labels >= 4.5:1 // [{"label":"RESEARCH","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"BRIEF","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"ASSEMBLY","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false}]
+PASS IF-030 World Network default: one tab aria-current="page" // [{"label":"WORLD NETWORK","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 World Network high contrast: idle labels >= 4.5:1 // [{"label":"RESEARCH","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"BRIEF","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"ASSEMBLY","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false}]
+PASS IF-030 World Network high contrast: one tab aria-current="page" // [{"label":"WORLD NETWORK","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 World Network: idle labels take the high-contrast remap // {"false":["rgb(184, 216, 207)","rgb(184, 216, 207)","rgb(184, 216, 207)"],"true":["rgb(226, 246, 238)","rgb(226, 246, 238)","rgb(226, 246, 238)"]}
+PASS IF-026 World Network at 125: nothing clips; nav labels not truncated
+PASS IF-030 Research default: idle labels >= 4.5:1 // [{"label":"WORLD NETWORK","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"BRIEF","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"ASSEMBLY","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false}]
+PASS IF-030 Research default: one tab aria-current="page" // [{"label":"RESEARCH","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 Research high contrast: idle labels >= 4.5:1 // [{"label":"WORLD NETWORK","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"BRIEF","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"ASSEMBLY","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false}]
+PASS IF-030 Research high contrast: one tab aria-current="page" // [{"label":"RESEARCH","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 Research: idle labels take the high-contrast remap // {"false":["rgb(184, 216, 207)","rgb(184, 216, 207)","rgb(184, 216, 207)"],"true":["rgb(226, 246, 238)","rgb(226, 246, 238)","rgb(226, 246, 238)"]}
+PASS IF-026 Research at 125: nothing clips; nav labels not truncated
+PASS IF-030 Brief default: idle labels >= 4.5:1 // [{"label":"WORLD NETWORK","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"RESEARCH","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"ASSEMBLY","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false}]
+PASS IF-030 Brief default: one tab aria-current="page" // [{"label":"BRIEF","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 Brief high contrast: idle labels >= 4.5:1 // [{"label":"WORLD NETWORK","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"RESEARCH","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"ASSEMBLY","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false}]
+PASS IF-030 Brief high contrast: one tab aria-current="page" // [{"label":"BRIEF","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 Brief: idle labels take the high-contrast remap // {"false":["rgb(184, 216, 207)","rgb(184, 216, 207)","rgb(184, 216, 207)"],"true":["rgb(226, 246, 238)","rgb(226, 246, 238)","rgb(226, 246, 238)"]}
+PASS IF-026 Brief at 125: nothing clips; nav labels not truncated
+PASS IF-030 Assembly default: idle labels >= 4.5:1 // [{"label":"WORLD NETWORK","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"RESEARCH","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false},{"label":"BRIEF","active":false,"current":null,"color":"rgb(184, 216, 207)","ratio":12.68,"trunc":false}]
+PASS IF-030 Assembly default: one tab aria-current="page" // [{"label":"ASSEMBLY","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 Assembly high contrast: idle labels >= 4.5:1 // [{"label":"WORLD NETWORK","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"RESEARCH","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false},{"label":"BRIEF","active":false,"current":null,"color":"rgb(226, 246, 238)","ratio":17.18,"trunc":false}]
+PASS IF-030 Assembly high contrast: one tab aria-current="page" // [{"label":"ASSEMBLY","active":true,"current":"page","color":"rgb(126, 240, 212)","ratio":14.71,"trunc":false}]
+PASS IF-030 Assembly: idle labels take the high-contrast remap // {"false":["rgb(184, 216, 207)","rgb(184, 216, 207)","rgb(184, 216, 207)"],"true":["rgb(226, 246, 238)","rgb(226, 246, 238)","rgb(226, 246, 238)"]}
+PASS IF-026 Assembly at 125: nothing clips; nav labels not truncated
+PASS IF-031 every Feed row >= 24 px high // 14 rows, min h 24
+PASS IF-031 Feed rows do not overlap
+PASS IF-032 Timeline slider pointer hit area >= 24 px high // {"drawn":12,"hit":25}
+PASS IF-032 pointer hits the slider at +-11 px; transport centres hit their buttons // {"up":true,"down":true,"transport":true}
+PASS IF-033 1X-8X each >= 24x24 // [{"t":"1X","x":236.75,"y":603.140625,"w":30,"h":24},{"t":"2X","x":270.75,"y":603.140625,"w":30,"h":24},{"t":"4X","x":304.75,"y":603.140625,"w":30,"h":24},{"t":"8X","x":338.75,"y":603.140625,"w":30,"h":24}]
+PASS IF-034 inset steppers each >= 24x24 // [{"x":972.453125,"y":127.296875,"w":24,"h":30},{"x":1222.640625,"y":127.296875,"w":24,"h":30}]
+PASS IF-035 pause, unread, view controls, credit link, nav tabs >= 24x24 // 13 targets
+PASS IF-026 review at 90: nothing clips
+PASS IF-026 review at 100: nothing clips
+PASS IF-026 review at 110: nothing clips
+PASS IF-026 review at 125: nothing clips
+PASS IF-035 > GO LIVE button >= 24x24 // [{"x":26.359375,"y":619.140625,"w":93.9,"h":24}]
+PASS IF-035 card UNDERSTOOD >= 24x24 // [{"x":569.9375,"y":490.5,"w":140.1,"h":26}]
+PASS IF-035 Influence note UNDERSTOOD >= 24x24 // [{"x":1145.421875,"y":375.296875,"w":96.2,"h":24}]
+PASS IF-034 steppers absent while the Influence note is up // []
+no console or page errors
+ALL PASS

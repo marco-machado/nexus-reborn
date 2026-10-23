@@ -27,7 +27,6 @@ import {
 import type { InfluenceActionId } from '../game/influence'
 import { eventForecast } from '../game/forecast'
 import type { ForecastKind } from '../game/forecast'
-import { ROSTER_CAP } from '../game/recruits'
 import { missionChance, missionMods, missionVariant } from '../game/missionParams'
 import type { Difficulty } from '../game/missionParams'
 import { useSettingsStore } from '../state/settingsStore'
@@ -74,9 +73,12 @@ import {
   influenceStatus,
   taxEligibilityLine,
   eventToneClass,
+  intelGate,
+  lockReason,
+  unrestTone,
   worldChance,
 } from './worldChrome'
-import { influenceMoment, influenceMomentCopy, influenceMomentShown, orientationRows, startHere } from './worldOnboard'
+import { clockUse, influenceMoment, influenceMomentCopy, influenceMomentShown, orientationRows, startHere } from './worldOnboard'
 
 const WorldGlobe = lazy(() => import('./WorldGlobe'))
 
@@ -108,10 +110,6 @@ function chanceFor(
   difficulty: Difficulty,
 ): number {
   return missionChance(m, missionMods(m, sectors[m.sector], difficulty), researchedCount)
-}
-
-function intelGate(level: number): string {
-  return 'REQUIRES INTEL LVL ' + level
 }
 
 // One operations entry: an authored mission, or a generated contract with its
@@ -178,32 +176,37 @@ function InfluenceAction(props: { sector: SectorId; action: InfluenceActionId })
   const blocked = refusal !== null
   const status = influenceStatus(refusal, active, coolHours)
   return (
-    <button
-      type="button"
-      className={'wm-act' + (active ? ' active' : '')}
-      disabled={blocked}
-      aria-label={
-        def.num + ' ' + def.name + ' // ' + def.cost + ' PTS // ' +
-        actionEffect(props.action) + ' // ' + status
-      }
-      title={actionEffect(props.action)}
-      onClick={act(() => spend(props.sector, props.action))}
-    >
-      <span className="wm-act-name">
-        <b className="wm-act-num">{def.num}</b> {def.name}
+    <div className="wm-act-wrap">
+      <button
+        type="button"
+        className={'wm-act' + (active ? ' active' : '')}
+        disabled={blocked}
+        aria-label={
+          def.num + ' ' + def.name + ' // ' + def.cost + ' PTS // ' +
+          actionEffect(props.action) + ' // ' + status
+        }
+        onClick={act(() => spend(props.sector, props.action))}
+      >
+        <span className="wm-act-name">
+          <b className="wm-act-num">{def.num}</b> {def.name}
+        </span>
+        <span className="wm-act-sub">
+          <b className="wm-act-cost">{def.cost}P</b>
+          <i
+            className={
+              'wm-act-status ' +
+              (status === 'ACTIVE' ? 'teal' : status === 'CLEAR' ? '' : 'dim')
+            }
+          >
+            {status}
+          </i>
+        </span>
+      </button>
+      {/* The effect prints as text under its button (P-03; spec Open Question 8). */}
+      <span className="wm-act-effect" aria-hidden="true">
+        {actionEffect(props.action)}
       </span>
-      <span className="wm-act-sub">
-        <b className="wm-act-cost">{def.cost}P</b>
-        <i
-          className={
-            'wm-act-status ' +
-            (status === 'ACTIVE' ? 'teal' : status === 'CLEAR' ? '' : 'dim')
-          }
-        >
-          {status}
-        </i>
-      </span>
-    </button>
+    </div>
   )
 }
 
@@ -335,7 +338,7 @@ function WorldScan() {
       id: m.id, name: m.codename, city: m.city, sector: m.sector,
       location: CITIES.find((city) => city.name === m.city) ?? unprojectScan(m.mapPos.x / 100 * SCAN_W, m.mapPos.y / 100 * SCAN_H),
       locked: campaignFailed || missionLocked(m, intelLevel),
-      requirement: campaignFailed ? 'CAMPAIGN LOST' : intelGate(m.intelReq),
+      requirement: lockReason(campaignFailed, m.intelReq),
       type: m.type, chance: chanceFor(m, sectors, researched.length, difficulty), etaDays: m.etaDays,
     })), [marks, campaignFailed, intelLevel, sectors, researched.length, difficulty])
   // sectors changes on every strategic tick (20 Hz) but the rounded chance a
@@ -602,13 +605,14 @@ function TimeControl() {
   const paused = useWorldStore((s) => s.paused)
   const setSpeed = useWorldStore((s) => s.setSpeed)
   const togglePause = useWorldStore((s) => s.togglePause)
+  const markSeen = useTutorialStore((s) => s.markSeen)
   return (
     <div className="wm-tc">
       <div className="wm-transport">
         <button
           type="button"
           className={'wm-tbtn' + (paused ? ' on' : '')}
-          onClick={act(togglePause)}
+          onClick={act(() => clockUse(togglePause, markSeen))}
           aria-pressed={paused}
           aria-label={paused ? 'RESUME STRATEGIC CLOCK' : 'PAUSE STRATEGIC CLOCK'}
         >
@@ -628,7 +632,7 @@ function TimeControl() {
             key={s}
             type="button"
             className={'wm-tbtn' + (!paused && speed === s ? ' on' : '')}
-            onClick={act(() => setSpeed(s))}
+            onClick={act(() => clockUse(() => setSpeed(s), markSeen))}
             aria-pressed={!paused && speed === s}
             aria-label={'CLOCK SPEED ' + s + 'X'}
           >
@@ -693,7 +697,7 @@ function EventsFeed() {
   return (
     <ScrollBox className="wm-feed-list" dep={dep}>
       {shown.length === 0 ? (
-        <div className="wm-empty">NO TRAFFIC IN THIS WINDOW</div>
+        <div className="wm-empty">-- CHANNEL OPEN --</div>
       ) : (
         shown.map((e) => <FeedRow key={e.id} event={e} />)
       )}
@@ -757,7 +761,6 @@ function WorldOnboard() {
     <div
       className="hud-menu-wrap wm-onboard-wrap"
       role="dialog"
-      aria-modal="true"
       aria-label="World Network orientation"
     >
       <div className="hud-menu-panel wm-onboard">
@@ -805,7 +808,6 @@ function WorldOnboard() {
 
 export function WorldMap() {
   const selectMission = useAppStore((s) => s.selectMission)
-  const credits = useAppStore((s) => s.credits)
   const sectors = useWorldStore((s) => s.sectors)
   const selected = useWorldStore((s) => s.selected)
   const select = useWorldStore((s) => s.select)
@@ -814,11 +816,9 @@ export function WorldMap() {
   const campaignWon = useCampaignStore((s) => s.campaignWon)
   const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const contractsWon = useCampaignStore((s) => s.contractsWon)
-  const operativeCount = useCampaignStore((s) => s.operatives.length)
   const researched = useResearchStore((s) => s.done)
   const difficulty = useSettingsStore((s) => s.difficulty)
   const contracts = useWorldStore((s) => s.contracts)
-  const points = useWorldStore((s) => s.influence)
   const crisis = useWorldStore((s) => s.crisis)
 
   const def = sectorDef(selected)
@@ -832,6 +832,10 @@ export function WorldMap() {
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
   const banner = campaignBanner(campaignWon, campaignFailed)
   const moment = useInfluenceMoment(selected)
+  const focusUnrest = unrestTone(
+    crisis.includes(selected),
+    !def.locked && read.unrest > PRESSURE_UNREST_MIN,
+  )
 
   return (
     <ScreenChrome
@@ -845,7 +849,7 @@ export function WorldMap() {
           <span className="wm-campaign-sigil fail" aria-hidden="true">◆</span>
           <span>
             <b>CAMPAIGN FAILED</b>
-            <i>ROSTER EMPTY // NETWORK COMMAND SUSPENDED</i>
+            <i>ROSTER EMPTY // NO CONTRACT CAN BE TAKEN</i>
           </span>
           <strong>0 / {MISSIONS.length}</strong>
         </div>
@@ -862,14 +866,8 @@ export function WorldMap() {
       )}
 
       <div className="wm-main">
-        {/* left: influence + sectors */}
+        {/* left: sectors (Influence prints in the header only) */}
         <aside className="wm-left">
-          <Panel title="INFLUENCE" right={<b>{points} PTS</b>}>
-            <div className="kv">
-              <span>POINTS</span>
-              <b>{points} PTS</b>
-            </div>
-          </Panel>
           <Panel
             title="SECTORS"
             right={
@@ -924,7 +922,7 @@ export function WorldMap() {
                       {sec.locked ? <span className="wm-sector-sub dim">NO SURVEY DATA</span> : (
                         <>
                           <span className="wm-sector-reading"><span>CONTROL</span><b>{Math.round(st.control)}%</b></span>
-                          <span className="wm-sector-reading"><span>UNREST</span><b className={inCrisis ? 'red' : pressure ? 'notice' : undefined}>{Math.round(st.unrest)}%</b></span>
+                          <span className="wm-sector-reading"><span>UNREST</span><b className={unrestTone(inCrisis, pressure).ink}>{Math.round(st.unrest)}%</b></span>
                           {pressure || inCrisis ? <span className={'wm-sector-warning ' + (inCrisis ? 'red' : 'notice')}><WarningGlyph />{inCrisis ? 'CRISIS' : 'UNREST PRESSURE'}</span> : <SegBar value={st.control} mini className="wm-sector-bar" />}
                         </>
                       )}
@@ -956,46 +954,50 @@ export function WorldMap() {
             }
             bodyClassName="wm-sector-panel-body"
           >
-            {moment.shown === null && <SectorInset id={selected} />}
-            <div className="kv">
-              <span>COORD</span>
-              <b>{SECTOR_COORD[selected]}</b>
-            </div>
-            <div className="wm-cu">
-              <div>
-                <label>CONTROL</label>
-                <b className="teal">{Math.round(read.control)}%</b>
-                <SegBar value={read.control} mini />
+            {/* Scrolls when the readout, actions and forecast outgrow the
+                column (125% text scale); OPEN CONTRACTS keeps its row. */}
+            <ScrollBox className="wm-sector-scroll" dep={selected}>
+              {moment.shown === null && <SectorInset id={selected} />}
+              <div className="kv">
+                <span>COORD</span>
+                <b>{SECTOR_COORD[selected]}</b>
               </div>
-              <div>
-                <label>UNREST</label>
-                <b className="red">{Math.round(read.unrest)}%</b>
-                <SegBar value={read.unrest} tone="red" mini />
+              <div className="wm-cu">
+                <div>
+                  <label>CONTROL</label>
+                  <b className="teal">{Math.round(read.control)}%</b>
+                  <SegBar value={read.control} mini />
+                </div>
+                <div>
+                  <label>UNREST</label>
+                  <b className={focusUnrest.ink}>{Math.round(read.unrest)}%</b>
+                  <SegBar value={read.unrest} tone={focusUnrest.bar} mini />
+                </div>
               </div>
-            </div>
-            <div className="kv">
-              <span>TAX YIELD</span>
-              <b>{fmt(read.taxYield)} CR / 24h</b>
-            </div>
-            <div className="kv wm-tax-pay">
-              <span>TAX PAID</span>
-              <b className={taxLine.tone}>{taxLine.text}</b>
-            </div>
-            <div className="kv">
-              <span>GARRISON CONDITION</span>
-              <b className={read.garrison === 'SECURE' ? 'teal' : read.garrison === 'STRAINED' ? 'amber' : 'red'}>
-                {read.garrison}
-              </b>
-            </div>
-            <div className="wm-actions">
-              {influenceActionsFor(selected).map((action) => (
-                <InfluenceAction key={action} sector={selected} action={action} />
-              ))}
-            </div>
-            {moment.shown !== null && (
-              <InfluenceMomentNote action={moment.shown} onDismiss={moment.dismiss} />
-            )}
-            <SectorForecast id={selected} />
+              <div className="kv">
+                <span>TAX YIELD</span>
+                <b className="wm-kv-readout">{fmt(read.taxYield)} CR / 24h</b>
+              </div>
+              <div className="kv wm-tax-pay">
+                <span>TAX PAID</span>
+                <b className={'wm-kv-readout ' + taxLine.tone}>{taxLine.text}</b>
+              </div>
+              <div className="kv">
+                <span>GARRISON CONDITION</span>
+                <b className={'wm-kv-readout ' + (read.garrison === 'SECURE' ? 'teal' : read.garrison === 'STRAINED' ? 'notice' : 'red')}>
+                  {read.garrison}
+                </b>
+              </div>
+              <div className="wm-actions">
+                {influenceActionsFor(selected).map((action) => (
+                  <InfluenceAction key={action} sector={selected} action={action} />
+                ))}
+              </div>
+              {moment.shown !== null && (
+                <InfluenceMomentNote action={moment.shown} onDismiss={moment.dismiss} />
+              )}
+              <SectorForecast id={selected} />
+            </ScrollBox>
           </Panel>
           <Panel
             title="OPEN CONTRACTS"
@@ -1016,6 +1018,7 @@ export function WorldMap() {
               ) : (
                 ops.map(({ m, gen }) => {
                   const locked = campaignFailed || missionLocked(m, intelLevel)
+                  const reason = lockReason(campaignFailed, m.intelReq)
                   return (
                     <button
                       key={m.id}
@@ -1024,7 +1027,7 @@ export function WorldMap() {
                       aria-disabled={locked || undefined}
                       aria-label={
                         locked
-                          ? m.codename + ' // LOCKED // ' + intelGate(m.intelReq)
+                          ? m.codename + ' // LOCKED // ' + reason
                           : 'OPEN CONTRACT ' +
                             m.codename +
                             ' // ' +
@@ -1039,7 +1042,7 @@ export function WorldMap() {
                       <span className="wm-op-main">
                         <b>{m.codename}</b>
                         {locked ? (
-                          <i className="red-dim">{intelGate(m.intelReq)}</i>
+                          <i className="red">{reason}</i>
                         ) : (
                           <i className="dim">
                             {m.type} // {m.city}
@@ -1083,26 +1086,18 @@ export function WorldMap() {
         <Panel title="FEED" right={<UnreadBadge />} className="wm-feed" bodyClassName="wm-feed-body">
           <EventsFeed />
         </Panel>
-        <Panel title="RESOURCE POOL" className="wm-pool">
+        {/* Credits, Influence and Roster print in the header; this panel
+            carries only what the header does not: progress to the next level. */}
+        <Panel title="INTEL" className="wm-intel-panel">
           <div className="kv">
-            <span>CREDITS</span>
-            <b className="amber">{fmt(credits)} CR</b>
+            <span>LEVEL</span>
+            <b>{intelLevel}</b>
           </div>
           <div className="kv">
-            <span>INFLUENCE</span>
-            <b>{points}</b>
+            <span>PROGRESS</span>
+            <b>{Math.round(intelProgress)} / 100</b>
           </div>
-          <div className="kv">
-            <span>ROSTER</span>
-            <b>{operativeCount} / {ROSTER_CAP}</b>
-          </div>
-          <div className="kv">
-            <span>INTEL LEVEL</span>
-            <span className="wm-intel-val">
-              <b>{intelLevel}</b>
-              <SegBar value={intelProgress} mini className="wm-intel" />
-            </span>
-          </div>
+          <SegBar value={intelProgress} mini />
         </Panel>
       </div>
 

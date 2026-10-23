@@ -59,26 +59,26 @@ This epic is complete when:
 | 013 | [Four-row orientation card and the sector-panel Influence moment](story-013-four-row-orientation-card-and-sector-panel-influence-moment.md) | UI | Ready | ADR-0017 |
 | 014 | [First-Debrief Research prompt](story-014-first-debrief-research-prompt.md) | Integration | Ready | ADR-0017 |
 | 015 | [Brief KIT line from objective kinds](story-015-brief-kit-line-from-objective-kinds.md) | UI | Ready | ADR-0017 |
-| 016 | [Failed-campaign banner reads ROSTER EMPTY // NO CONTRACT CAN BE TAKEN](story-016-failed-campaign-banner-reads-no-contract-can-be-taken.md) | UI | Ready | ADR-0017 |
-| 017 | [Failed-campaign contract rows read CAMPAIGN LOST](story-017-failed-campaign-contract-rows-read-campaign-lost.md) | UI | Ready | ADR-0017 |
-| 018 | [First-visit card is not aria-modal](story-018-first-visit-card-is-not-aria-modal.md) | UI | Ready | ADR-0017 |
-| 019 | [Using the clock dismisses the first-visit card for the campaign](story-019-using-the-clock-dismisses-the-first-visit-card.md) | Integration | Ready | ADR-0017 |
-| 020 | [STRAINED Garrison prints in the notice tone, not amber](story-020-strained-garrison-prints-in-the-notice-tone.md) | UI | Ready | ADR-0017 |
-| 021 | [Unrest ink and bar follow its state](story-021-unrest-ink-and-bar-follow-its-state.md) | UI | Ready | ADR-0017 |
-| 022 | [Empty Feed prints -- CHANNEL OPEN --](story-022-empty-feed-prints-channel-open.md) | UI | Ready | ADR-0017 |
-| 023 | [Remove the duplicate left INFLUENCE panel](story-023-remove-the-duplicate-left-influence-panel.md) | UI | Ready | ADR-0017 |
-| 024 | [RESOURCE POOL becomes INTEL](story-024-resource-pool-becomes-intel.md) | UI | Ready | ADR-0017 |
-| 025 | [Each Influence action prints its effect as visible text](story-025-each-influence-action-prints-its-effect.md) | UI | Ready | ADR-0017 |
-| 026 | [World Network type meets the size floors](story-026-world-network-type-meets-the-size-floors.md) | UI | Ready | ADR-0017 |
-| 027 | [Ink Dim text on the World Network moves to Ink](story-027-ink-dim-text-on-the-world-network-moves-to-ink.md) | UI | Ready | ADR-0017 |
-| 028 | [Feed times and the Timeline axis move off Ink Faint](story-028-feed-times-and-timeline-axis-move-off-ink-faint.md) | UI | Ready | ADR-0017 |
-| 029 | [Locked contract rows dim the frame, not the text, and their reason prints in Red Hot](story-029-locked-contract-rows-dim-the-frame-not-the-text.md) | UI | Ready | ADR-0017 |
-| 030 | [Idle nav tab labels reach 4.5:1 in both modes](story-030-idle-nav-tab-labels-reach-4-5-in-both-modes.md) | UI | Ready | ADR-0017 |
-| 031 | [Feed rows have a 24 px hit area](story-031-feed-rows-have-a-24-px-hit-area.md) | UI | Ready | ADR-0017 |
-| 032 | [Timeline track has a 24 px hit area](story-032-timeline-track-has-a-24-px-hit-area.md) | UI | Ready | ADR-0017 |
-| 033 | [Speed buttons have a 24 px hit area](story-033-speed-buttons-have-a-24-px-hit-area.md) | UI | Ready | ADR-0017 |
-| 034 | [Inset steppers have a 24 px hit area](story-034-inset-steppers-have-a-24-px-hit-area.md) | UI | Ready | ADR-0017 |
-| 035 | [Remaining World Network pointer targets meet 24×24](story-035-remaining-world-network-pointer-targets-meet-24-px.md) | UI | Ready | ADR-0017 |
+| 016 | [Failed-campaign banner reads ROSTER EMPTY // NO CONTRACT CAN BE TAKEN](story-016-failed-campaign-banner-reads-no-contract-can-be-taken.md) | UI | Complete | ADR-0017 |
+| 017 | [Failed-campaign contract rows read CAMPAIGN LOST](story-017-failed-campaign-contract-rows-read-campaign-lost.md) | UI | Complete | ADR-0017 |
+| 018 | [First-visit card is not aria-modal](story-018-first-visit-card-is-not-aria-modal.md) | UI | Complete | ADR-0017 |
+| 019 | [Using the clock dismisses the first-visit card for the campaign](story-019-using-the-clock-dismisses-the-first-visit-card.md) | Integration | Complete | ADR-0017 |
+| 020 | [STRAINED Garrison prints in the notice tone, not amber](story-020-strained-garrison-prints-in-the-notice-tone.md) | UI | Complete | ADR-0017 |
+| 021 | [Unrest ink and bar follow its state](story-021-unrest-ink-and-bar-follow-its-state.md) | UI | Complete | ADR-0017 |
+| 022 | [Empty Feed prints -- CHANNEL OPEN --](story-022-empty-feed-prints-channel-open.md) | UI | Complete | ADR-0017 |
+| 023 | [Remove the duplicate left INFLUENCE panel](story-023-remove-the-duplicate-left-influence-panel.md) | UI | Complete | ADR-0017 |
+| 024 | [RESOURCE POOL becomes INTEL](story-024-resource-pool-becomes-intel.md) | UI | Complete | ADR-0017 |
+| 025 | [Each Influence action prints its effect as visible text](story-025-each-influence-action-prints-its-effect.md) | UI | Complete | ADR-0017 |
+| 026 | [World Network type meets the size floors](story-026-world-network-type-meets-the-size-floors.md) | UI | Complete | ADR-0017 |
+| 027 | [Ink Dim text on the World Network moves to Ink](story-027-ink-dim-text-on-the-world-network-moves-to-ink.md) | UI | Complete | ADR-0017 |
+| 028 | [Feed times and the Timeline axis move off Ink Faint](story-028-feed-times-and-timeline-axis-move-off-ink-faint.md) | UI | Complete | ADR-0017 |
+| 029 | [Locked contract rows dim the frame, not the text, and their reason prints in Red Hot](story-029-locked-contract-rows-dim-the-frame-not-the-text.md) | UI | Complete | ADR-0017 |
+| 030 | [Idle nav tab labels reach 4.5:1 in both modes](story-030-idle-nav-tab-labels-reach-4-5-in-both-modes.md) | UI | Complete | ADR-0017 |
+| 031 | [Feed rows have a 24 px hit area](story-031-feed-rows-have-a-24-px-hit-area.md) | UI | Complete | ADR-0017 |
+| 032 | [Timeline track has a 24 px hit area](story-032-timeline-track-has-a-24-px-hit-area.md) | UI | Complete | ADR-0017 |
+| 033 | [Speed buttons have a 24 px hit area](story-033-speed-buttons-have-a-24-px-hit-area.md) | UI | Complete | ADR-0017 |
+| 034 | [Inset steppers have a 24 px hit area](story-034-inset-steppers-have-a-24-px-hit-area.md) | UI | Complete | ADR-0017 |
+| 035 | [Remaining World Network pointer targets meet 24×24](story-035-remaining-world-network-pointer-targets-meet-24-px.md) | UI | Complete | ADR-0017 |
 
 GDD AC24 (invoice money lines) is covered by economy-and-contracts story 022; the Research remaining label by research story 009.
 

@@ -1,12 +1,12 @@
 # Story 030: Idle nav tab labels reach 4.5:1 in both modes
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 0.2 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: [set by /dev-story when implementation begins]
+> **Last Updated**: 2026-10-23
 
 ## Context
 
@@ -36,8 +36,8 @@ The idle Research / Brief / Assembly tab labels measure 4.29:1 in default mode a
 
 *From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
-- [ ] GIVEN the nav on each of the four Screens WHEN the idle tab labels are measured in default and high-contrast modes against the nav's own composited background THEN each is ≥4.5:1.
-- [ ] GIVEN high-contrast mode WHEN the nav renders THEN the idle labels take the high-contrast remap (the as-built cause traced and recorded in the commit message), and the selected tab still carries `aria-current="page"`.
+- [x] GIVEN the nav on each of the four Screens WHEN the idle tab labels are measured in default and high-contrast modes against the nav's own composited background THEN each is ≥4.5:1.
+- [x] GIVEN high-contrast mode WHEN the nav renders THEN the idle labels take the high-contrast remap (the as-built cause traced and recorded in the commit message), and the selected tab still carries `aria-current="page"`.
 
 ---
 
@@ -84,7 +84,7 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 **Required evidence**:
 - UI: a retained screenshot of each state touched in `production/qa/evidence/if-030/`, plus a click-through `README.md` naming the screens and states exercised and the measured values. Capture with headless `npx playwright-cli` at exactly 1280×720 (never the user's Chrome); stop the dev server and confirm nothing listens on port 4200 afterwards. Contrast is the composited ratio as rendered over `rgba(7, 16, 15, 0.92)` on Void `#04070a`, computed by script.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720)
 
 ---
 
@@ -92,3 +92,14 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 
 - Depends on: None
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-23
+**Verdict**: COMPLETE
+**Criteria**: all passing (AC-1 and guards; none deferred)
+**Implementation**: `.navtab` colour Ink (shared by the four Screens). Cause of the spec's "no high-contrast remap": not a defect — re-measured on the as-built code, the label is `rgb(93,125,117)` by default and remaps to `rgb(157,195,184)` under high contrast; the 2026-10-23 spec reading was a measurement error and the spec row is corrected. The real failure was 4.29:1 in default mode.
+**Test Evidence**: `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720). Probe watched failing on the as-built code (60 FAIL, then a hard stop under the card) and on two layout mutations (truncation, spill), then ALL PASS. `npm test` 1642/1642, `npm run lint` clean, `npm run build` OK.
+**Code Review**: APPROVED WITH SUGGESTIONS — ui-programmer, lead-programmer, qa-tester (2026-10-23). Applied: shared `unrestTone` / `lockReason` helpers with unit tests; dead CSS removed; `.wm-intel-panel` rename; IF-019 tests that could pass by accident fixed and `paused` pinned; browser checks for all five transport buttons and a Feed-row click under the card; Review mode checked at four scales.
+**Manifest**: story 2026-10-08 = current 2026-10-08.

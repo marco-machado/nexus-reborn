@@ -3,6 +3,7 @@
 // here, not read back from the module under test.
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  clockUse,
   influenceMoment,
   influenceMomentCopy,
   influenceMomentShown,
@@ -18,6 +19,9 @@ import { cooldownKey } from '../game/influence'
 import type { InfluenceActionId } from '../game/influence'
 import { missionChance, missionMods } from '../game/missionParams'
 import { missionLocked } from '../state/campaignStore'
+import { useTutorialStore } from '../state/tutorialStore'
+import { captureSave, hydrateSave, startNewOperation } from '../state/save'
+import type { SaveStorage } from '../state/save'
 import { INFLUENCE_MOMENT_ID, SEEN_IDS, WORLD_ONBOARD_ID } from '../game/tutorial'
 
 const snapshot = useWorldStore.getState()
@@ -204,5 +208,78 @@ describe('seen ids', () => {
     expect(SEEN_IDS).toContain(INFLUENCE_MOMENT_ID)
     expect(SEEN_IDS).toContain(WORLD_ONBOARD_ID)
     expect(SEEN_IDS.filter((id) => id === INFLUENCE_MOMENT_ID)).toHaveLength(1)
+  })
+})
+
+// IF-019: using the clock dismisses the first-visit card for the campaign
+// (P-23; World Network UX spec, Open Question 4). Driven through clockUse,
+// the handler the transport buttons call.
+describe('clockUse: the clock dismisses the first-visit card (IF-019)', () => {
+  const memory = (): SaveStorage => {
+    const data = new Map<string, string>()
+    return {
+      getItem: (k) => data.get(k) ?? null,
+      setItem: (k, v) => void data.set(k, v),
+      removeItem: (k) => void data.delete(k),
+    }
+  }
+  const seenCount = () =>
+    useTutorialStore.getState().seen.filter((id) => id === 'hint-worldmap').length
+  const markSeen = (id: string) => useTutorialStore.getState().markSeen(id)
+
+  beforeEach(() => {
+    startNewOperation(memory())
+    useWorldStore.setState({ paused: false, speed: 2 })
+  })
+
+  it('a fresh campaign has the card unseen', () => {
+    expect(seenCount()).toBe(0)
+  })
+
+  it('Pause applies and marks the card seen once', () => {
+    clockUse(() => useWorldStore.getState().togglePause(), markSeen)
+    expect(useWorldStore.getState().paused).toBe(true)
+    expect(seenCount()).toBe(1)
+  })
+
+  // Each case starts paused at a speed other than the one chosen, so the
+  // clock assertions cannot pass without the action running.
+  it.each([1, 2, 4, 8] as const)('speed %sX applies and marks the card seen', (s) => {
+    useWorldStore.setState({ paused: true, speed: s === 1 ? 2 : 1 })
+    clockUse(() => useWorldStore.getState().setSpeed(s), markSeen)
+    expect(useWorldStore.getState().speed).toBe(s)
+    expect(useWorldStore.getState().paused).toBe(false)
+    expect(seenCount()).toBe(1)
+  })
+
+  it('the already-active speed still dismisses; repeats never duplicate the id', () => {
+    clockUse(() => useWorldStore.getState().setSpeed(2), markSeen)
+    clockUse(() => useWorldStore.getState().setSpeed(4), markSeen)
+    clockUse(() => useWorldStore.getState().togglePause(), markSeen)
+    expect(useWorldStore.getState().speed).toBe(4)
+    expect(useWorldStore.getState().paused).toBe(true)
+    expect(seenCount()).toBe(1)
+  })
+
+  it('the dismissal survives a save and reload', () => {
+    clockUse(() => useWorldStore.getState().togglePause(), markSeen)
+    const blob = captureSave()
+    expect(blob.tutorial.seen).toContain('hint-worldmap')
+    useTutorialStore.getState().resetAll()
+    hydrateSave(blob)
+    expect(seenCount()).toBe(1)
+  })
+
+  it('focus changes and mark-read do not dismiss (AC-2)', () => {
+    useWorldStore.getState().select('na')
+    useWorldStore.getState().markRead()
+    expect(seenCount()).toBe(0)
+  })
+
+  it('New Operation brings the card back (AC-3)', () => {
+    clockUse(() => useWorldStore.getState().togglePause(), markSeen)
+    expect(seenCount()).toBe(1)
+    startNewOperation(memory())
+    expect(seenCount()).toBe(0)
   })
 })

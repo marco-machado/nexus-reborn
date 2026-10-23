@@ -112,7 +112,7 @@ export function Chip(props: { children: ReactNode; tone?: ChipTone; className?: 
 
 export function SegBar(props: {
   value: number
-  tone?: 'amber' | 'red' | 'green'
+  tone?: 'amber' | 'red' | 'green' | 'notice'
   mini?: boolean
   className?: string
 }) {

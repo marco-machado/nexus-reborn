@@ -7,7 +7,10 @@ import {
   eventToneClass,
   influenceActionsFor,
   influenceStatus,
+  intelGate,
+  lockReason,
   taxEligibilityLine,
+  unrestTone,
   worldChance,
 } from './worldChrome'
 import {
@@ -179,5 +182,31 @@ describe('Feed tone classes (Ledger Amber is price only, living §12)', () => {
     expect(eventToneClass('red')).toBe('red')
     expect(eventToneClass('green')).toBe('green')
     expect(eventToneClass('dim')).toBe('dim')
+  })
+})
+
+// IF-021: Unrest ink by state (owner 2026-10-23). Crisis wins over pressure.
+describe('unrestTone (IF-021)', () => {
+  it('calm Unrest prints Ink with the default bar', () => {
+    expect(unrestTone(false, false)).toEqual({ ink: 'ink', bar: undefined })
+  })
+  it('past the pressure line: the notice tone', () => {
+    expect(unrestTone(false, true)).toEqual({ ink: 'notice', bar: 'notice' })
+  })
+  it('in crisis: Red Hot, whether or not the pressure line is crossed', () => {
+    expect(unrestTone(true, false)).toEqual({ ink: 'red', bar: 'red' })
+    expect(unrestTone(true, true)).toEqual({ ink: 'red', bar: 'red' })
+  })
+})
+
+// IF-017: the lock reason names the actual cause (P-03).
+describe('lockReason (IF-017)', () => {
+  it('a failed campaign reads CAMPAIGN LOST whatever the intel gate', () => {
+    expect(lockReason(true, 1)).toBe('CAMPAIGN LOST')
+    expect(lockReason(true, 2)).toBe('CAMPAIGN LOST')
+  })
+  it('otherwise the intel gate', () => {
+    expect(lockReason(false, 2)).toBe('REQUIRES INTEL LVL 2')
+    expect(intelGate(3)).toBe('REQUIRES INTEL LVL 3')
   })
 })

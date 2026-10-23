@@ -1,12 +1,12 @@
 # Story 021: Unrest ink and bar follow its state
 
 > **Epic**: Interface
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: 0.2 d
 > **Manifest Version**: 2026-10-08
-> **Last Updated**: [set by /dev-story when implementation begins]
+> **Last Updated**: 2026-10-23
 
 ## Context
 
@@ -36,8 +36,8 @@ Red is danger. As built, the Focus panel prints the Unrest value in red and draw
 
 *From `design/ux/world-network.md` (Approved 2026-10-23), scoped to this story (story granularity `fine`: one criterion, plus guard criteria added by the owner on 2026-10-23 to meet the `/story-readiness` minimum; each guard is drawn from the spec or the qa-lead's edge cases):*
 
-- [ ] GIVEN a sector row and the Focus panel WHEN Unrest is calm (≤ `PRESSURE_UNREST_MIN`, not in crisis) / past the pressure line / in crisis THEN the Unrest value prints in Ink / the Print White notice tone / Red Hot respectively, each ≥4.5:1 as rendered, and the Focus-panel Unrest bar takes the matching tone.
-- [ ] GIVEN a sector in crisis whose Unrest has fallen back under the pressure line (hysteresis) WHEN rendered THEN the value and bar stay Red Hot (crisis wins over pressure), and the `UNREST PRESSURE` chip shows on the sector row only.
+- [x] GIVEN a sector row and the Focus panel WHEN Unrest is calm (≤ `PRESSURE_UNREST_MIN`, not in crisis) / past the pressure line / in crisis THEN the Unrest value prints in Ink / the Print White notice tone / Red Hot respectively, each ≥4.5:1 as rendered, and the Focus-panel Unrest bar takes the matching tone.
+- [x] GIVEN a sector in crisis whose Unrest has fallen back under the pressure line (hysteresis) WHEN rendered THEN the value and bar stay Red Hot (crisis wins over pressure), and the `UNREST PRESSURE` chip shows on the sector row only.
 
 ---
 
@@ -83,7 +83,7 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 **Required evidence**:
 - UI: a retained screenshot of each state touched in `production/qa/evidence/if-021/`, plus a click-through `README.md` naming the screens and states exercised and the measured values. Capture with headless `npx playwright-cli` at exactly 1280×720 (never the user's Chrome); stop the dev server and confirm nothing listens on port 4200 afterwards. Contrast is the composited ratio as rendered over `rgba(7, 16, 15, 0.92)` on Void `#04070a`, computed by script.
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720)
 
 ---
 
@@ -91,3 +91,14 @@ QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
 
 - Depends on: None
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-10-23
+**Verdict**: COMPLETE
+**Criteria**: all passing (AC-1 and guards; none deferred)
+**Implementation**: `unrestTone(inCrisis, pressure)` in `src/ui/worldChrome.ts` (unit-tested) drives the sector row, the Focus-panel value and its bar; new `.ink` utility and `SegBar` `notice` tone. Observation: in the Focus panel the pressure state is told from calm by tone only; the non-colour cue is the `UNREST PRESSURE` chip on the same sector's row, which is what the spec requires.
+**Test Evidence**: `production/qa/evidence/sprint-011/` (`README.md` story map, `probe-output.txt` ALL PASS 152 checks, PNGs at 1280×720). Probe watched failing on the as-built code (60 FAIL, then a hard stop under the card) and on two layout mutations (truncation, spill), then ALL PASS. `npm test` 1642/1642, `npm run lint` clean, `npm run build` OK.
+**Code Review**: APPROVED WITH SUGGESTIONS — ui-programmer, lead-programmer, qa-tester (2026-10-23). Applied: shared `unrestTone` / `lockReason` helpers with unit tests; dead CSS removed; `.wm-intel-panel` rename; IF-019 tests that could pass by accident fixed and `paused` pinned; browser checks for all five transport buttons and a Feed-row click under the card; Review mode checked at four scales.
+**Manifest**: story 2026-10-08 = current 2026-10-08.
