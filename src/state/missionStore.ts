@@ -72,6 +72,10 @@ export interface ObjectiveUi {
 export interface MissionUiState {
   live: boolean
   paused: boolean
+  // Tactical hold (TM-019): the sim and its clock freeze, orders stay open.
+  // The player toggles it on Space; a casualty sets it with a reason line.
+  held: boolean
+  holdReason: string | null
   selected: string[]
   squad: SquadMemberUi[]
   objectives: ObjectiveUi[]
@@ -87,6 +91,7 @@ export interface MissionUiState {
   grenadeTargeting: boolean
   setLive: (v: boolean) => void
   setPaused: (v: boolean) => void
+  setHeld: (on: boolean, reason?: string | null) => void
   setSelected: (ids: string[]) => void
   setSquad: (rows: SquadMemberUi[]) => void
   setObjectives: (rows: ObjectiveUi[]) => void
@@ -111,6 +116,8 @@ const emptyAbility = (duration: number): AbilitySnapshot => ({
 const initial = {
   live: false,
   paused: false,
+  held: false,
+  holdReason: null as string | null,
   selected: [] as string[],
   squad: [] as SquadMemberUi[],
   objectives: [] as ObjectiveUi[],
@@ -131,6 +138,7 @@ export const useMissionStore = create<MissionUiState>((set) => ({
   ...initial,
   setLive: (v) => set({ live: v, ...(!v ? { grenadeTargeting: false } : {}) }),
   setPaused: (v) => set({ paused: v, ...(v ? { grenadeTargeting: false } : {}) }),
+  setHeld: (on, reason = null) => set({ held: on, holdReason: on ? reason : null }),
   setSelected: (ids) => set({ selected: ids }),
   setSquad: (rows) =>
     set((s) => ({
@@ -144,7 +152,9 @@ export const useMissionStore = create<MissionUiState>((set) => ({
   addLog: (e) => set((s) => ({ log: [...s.log.slice(-60), e] })),
   setAlert: (n) => set({ alert: n }),
   setCiviliansHit: (n) => set({ civiliansHit: n }),
-  setResult: (r) => set({ result: r, ...(r !== 'none' ? { grenadeTargeting: false } : {}) }),
+  // A result releases the hold: the 2.5 s Debrief delay is sim time.
+  setResult: (r) =>
+    set({ result: r, ...(r !== 'none' ? { grenadeTargeting: false, held: false, holdReason: null } : {}) }),
   setClock: (c) => set({ clock: c }),
   setWeather: (w) => set({ weather: w }),
   setInventory: (inventory) => set({ inventory }),

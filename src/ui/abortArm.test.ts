@@ -38,12 +38,20 @@ function deployLive(): ReturnType<typeof composeMission>['world'] {
   return world
 }
 
-// Space / Esc on the live mission, through the same gate scene/Input.tsx runs.
-function pressPauseKey(code: 'Space' | 'Escape'): void {
+// Esc on the live mission, through the same gate scene/Input.tsx runs.
+function pressPauseKey(code: 'Escape'): void {
   const b = bindingFor(code)
   expect(b?.id).toBe('pause')
   const ms = useMissionStore.getState()
   if (b && missionKeyAnswers(b.id, ms)) ms.setPaused(!ms.paused)
+}
+
+// Space: the tactical hold (TM-019), through the same gate.
+function pressHoldKey(): void {
+  const b = bindingFor('Space')
+  expect(b?.id).toBe('tacticalHold')
+  const ms = useMissionStore.getState()
+  if (b && missionKeyAnswers(b.id, ms)) ms.setHeld(!ms.held)
 }
 
 // Counts every outcome hand-off (the Debrief/invoice entry) across `fn`.
@@ -79,9 +87,9 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('AC11: Space or Escape opens a modal pause that freezes the mission', () => {
-  it('both pause keys open the menu on a live mission with no result, and the sim stops', () => {
-    for (const code of ['Space', 'Escape'] as const) {
+describe('AC11: Escape opens a modal pause that freezes the mission; Space holds with orders open', () => {
+  it('Escape opens the menu on a live mission with no result, and the sim stops', () => {
+    for (const code of ['Escape'] as const) {
       const world = deployLive()
       expect(pauseMenuShown(useMissionStore.getState())).toBe(false)
       pressPauseKey(code)
@@ -97,6 +105,25 @@ describe('AC11: Space or Escape opens a modal pause that freezes the mission', (
     }
   })
 
+  it('Space holds the mission with no menu: the sim stops, orders still answer, Space resumes (TM-019)', () => {
+    const world = deployLive()
+    pressHoldKey()
+    const ms = useMissionStore.getState()
+    expect(ms.held).toBe(true)
+    expect(ms.paused).toBe(false)
+    expect(pauseMenuShown(ms)).toBe(false)
+    const t = world.time
+    for (let i = 0; i < 40; i++) tickIfLive(world, useMissionStore.getState(), 0.05)
+    expect(world.time).toBe(t)
+    for (const id of ['selectSlot', 'useMed', 'useAbility', 'grenade', 'stop'] as const) {
+      expect(missionKeyAnswers(id, useMissionStore.getState())).toBe(true)
+    }
+    pressHoldKey()
+    expect(useMissionStore.getState().held).toBe(false)
+    tickIfLive(world, useMissionStore.getState(), 0.05)
+    expect(world.time).toBeGreaterThan(t)
+  })
+
   it('while paused only the pause key answers; every squad and camera order is held', () => {
     const paused = { paused: true, result: 'none' as const }
     for (const b of BINDINGS) {
@@ -108,12 +135,12 @@ describe('AC11: Space or Escape opens a modal pause that freezes the mission', (
 
   it('BUG-0001: Space on a focused Settings slider, opened from pause, keeps the freeze', () => {
     const world = deployLive()
-    pressPauseKey('Space')
+    pressPauseKey('Escape')
     const t = world.time
     const slider = { tag: 'INPUT', inDialog: true }
     expect(dialogControlOwnsKey('Space', slider)).toBe(true)
-    // The gate Input.tsx runs: an owned press never reaches the pause toggle.
-    if (!dialogControlOwnsKey('Space', slider)) pressPauseKey('Space')
+    // The gate Input.tsx runs: an owned press never reaches the hold toggle.
+    if (!dialogControlOwnsKey('Space', slider)) pressHoldKey()
     expect(useMissionStore.getState().paused).toBe(true)
     for (let i = 0; i < 20; i++) tickIfLive(world, useMissionStore.getState(), 0.05)
     expect(world.time).toBe(t)
@@ -132,7 +159,7 @@ describe('AC11: Space or Escape opens a modal pause that freezes the mission', (
     const dismiss = { tag: 'BUTTON', inDialog: false, inToast: true }
     expect(dialogControlOwnsKey('Space', dismiss)).toBe(true)
     // The gate Input.tsx runs: an owned press never reaches the pause toggle.
-    if (!dialogControlOwnsKey('Space', dismiss)) pressPauseKey('Space')
+    if (!dialogControlOwnsKey('Space', dismiss)) pressHoldKey()
     expect(useMissionStore.getState().paused).toBe(false)
     tickIfLive(world, useMissionStore.getState(), 0.05)
     expect(world.time).toBeGreaterThan(t)
@@ -214,7 +241,7 @@ describe('AC12: the two-step Abort', () => {
 
   it('three real seconds without confirmation disarm, the mission stays paused, and the next activation only re-arms', () => {
     const world = deployLive()
-    pressPauseKey('Space')
+    pressPauseKey('Escape')
     const t = world.time
     const arm = createAbortArm()
     const onAbort = vi.fn(() => abortMission(MISSION_ID))
@@ -272,15 +299,16 @@ describe('EC-remap: Settings opened from pause', () => {
     expect(useMissionStore.getState().paused).toBe(true)
   })
 
-  it('Pause, operative slots 1-4 and mouse rows are not offered for remap', () => {
+  it('Pause, the tactical hold, operative slots 1-4 and mouse rows are not offered for remap', () => {
     const byId = (id: BindingId) => BINDINGS.find((b) => b.id === id)!
     expect(remappable(byId('pause'))).toBe(false)
+    expect(remappable(byId('tacticalHold'))).toBe(false)
     expect(remappable(byId('selectSlot'))).toBe(false)
     for (const b of BINDINGS.filter((x) => x.group === 'mouse')) expect(remappable(b)).toBe(false)
     expect(remappable(byId('stop'))).toBe(true)
     // An attempt to remap them is dropped and the defaults stand.
     useSettingsStore.getState().setBindingOverride('pause', ['KeyP'])
-    expect(bindingFor('Space')?.id).toBe('pause')
+    expect(bindingFor('Escape')?.id).toBe('pause')
     expect(bindingFor('KeyP')).toBeUndefined()
   })
 })

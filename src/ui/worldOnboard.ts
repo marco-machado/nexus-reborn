@@ -73,8 +73,8 @@ export function orientationRows(target: StartHereCandidate | null): OrientationR
       title: ORIENTATION_ROW_TITLES.job,
       lines: [
         'You run the network from this desk. Every sector prints a Tax yield, but only a ' +
-          'Nexus-held sector pays it: North America pays from the start, Europe does not. ' +
-          'Keep sectors Nexus-held.',
+          'Nexus-held sector pays it: one where Nexus holds most of its cities. North America ' +
+          'pays from the start, Europe does not. A win hands the mission city to Nexus.',
       ],
     },
     {
@@ -97,7 +97,8 @@ export function orientationRows(target: StartHereCandidate | null): OrientationR
       id: 'numbers',
       title: ORIENTATION_ROW_TITLES.numbers,
       lines: [
-        'CONTROL: how much of the sector Nexus holds; a win raises it.',
+        'CONTROL: the order kept in the sector; a win raises it. It sets Tax yield and ' +
+          'Garrison, not who holds the sector (HELD BY on the sector panel).',
         'UNREST: pressure against that hold; past the pressure line a crisis can break out.',
         'TAX YIELD: Credits per 24 strategic hours, paid only while Nexus-held.',
         'GARRISON CONDITION: SECURE, STRAINED or CRITICAL, read from Control.',

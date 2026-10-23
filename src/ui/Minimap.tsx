@@ -18,6 +18,7 @@ import {
   type WorldApi,
 } from '../game/types'
 import { ROLE_ABILITIES } from '../game/abilities'
+import { objectiveZone } from '../game/objectiveMarks'
 import { uiClick } from './sound'
 import {
   ART_BG,
@@ -270,12 +271,7 @@ export default function Minimap({
         ? world.mission.objectives.find((d) => d.id === activeObj.id)
         : undefined
       if (def) {
-        const zone =
-          def.kind === 'extract'
-            ? city.extraction
-            : (def.zone ??
-              (def.landmark ? city.landmarks[def.landmark] : undefined) ??
-              city.checkpoint)
+        const zone = def.kind === 'extract' ? city.extraction : objectiveZone(def, city)
         // Reduced motion swaps the expanding pulse for a steady ring.
         const reduced = useSettingsStore.getState().reducedMotion
         const phase = reduced ? 0 : (Date.now() % 1400) / 1400

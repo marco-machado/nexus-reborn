@@ -5,7 +5,7 @@
 import './ui.css'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { collateralFine, useAppStore } from '../state/appStore'
+import { COLLATERAL_FINE, collateralFine, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
 import { injuryLineHours, useCampaignStore } from '../state/campaignStore'
 import { useSettingsStore } from '../state/settingsStore'
@@ -15,8 +15,9 @@ import {
   menuSaveStatus,
   startNewOperation,
 } from '../state/save'
-import { applyDebrief } from '../state/debrief'
+import { applyDebrief, useDebriefMoveStore } from '../state/debrief'
 import { debriefFlags } from './debriefFlags'
+import { kiaCostRows, sectorMoveRows } from './debriefWorld'
 import { debriefFilingLine } from './filingStatus'
 import { useSaveStatusStore } from '../state/saveStatusStore'
 import { continueOffered, menuSaveLine } from './menuSaveLine'
@@ -285,7 +286,9 @@ const THREAT_BLOCKS: Record<MissionDef['threat'], number> = {
   HIGH: 6,
   SEVERE: 8,
 }
-const OBJECTIVE_TIER = ['PRIMARY', 'SECONDARY', 'TERTIARY']
+// One word per required step, by position (Brief OQ11: a four-step contract
+// printed TERTIARY twice).
+const OBJECTIVE_TIER = ['PRIMARY', 'SECONDARY', 'TERTIARY', 'QUATERNARY']
 // Recon callout. Its type prints in HTML over the art (mb-recon-labels), so it
 // keeps the 10 px floor and follows the text scale; the SVG keeps only the
 // leader line. The target name follows the layout archetype the mission
@@ -837,6 +840,11 @@ export function MissionBrief() {
                     </b>
                     <span className="dim">CORP CREDITS</span>
                   </div>
+                  {/* The ETA is world time a win spends (ADR-0001); playtests 3
+                      and 4 read "ETA 4D" as travel (IF-039). */}
+                  <div className="mb-reward-eta">
+                    A WIN SPENDS {m.etaDays} {m.etaDays === 1 ? 'DAY' : 'DAYS'} OF WORLD TIME
+                  </div>
                 </div>
                 <div className="mb-box">
                   <label>OBJECTIVES:</label>
@@ -853,7 +861,7 @@ export function MissionBrief() {
                             <b>
                               {o.optional
                                 ? 'OPTIONAL:'
-                                : OBJECTIVE_TIER[Math.min(tier++, 2)] + ':'}
+                                : OBJECTIVE_TIER[Math.min(tier++, OBJECTIVE_TIER.length - 1)] + ':'}
                             </b>{' '}
                             {o.label}
                             {o.optional && o.bonusReward ? (
@@ -870,19 +878,13 @@ export function MissionBrief() {
                     })
                   })()}
                 </div>
+                {/* The rule Economy prices by, not a tolerance: there is none
+                    (IF-039, Brief OQ7; playtests 3 and 4 read "LOW (10%)" against
+                    notes that said MODERATE). */}
                 <div className="mb-box">
-                  <label>
-                    COLLATERAL TOLERANCE: <b className="red">LOW (10%)</b>
-                  </label>
-                  <div className="mb-meter">
-                    <i style={{ left: '10%' }} />
-                  </div>
-                  <div className="axis">
-                    <span>0%</span>
-                    <span>25%</span>
-                    <span>50%</span>
-                    <span>75%</span>
-                    <span>100%</span>
+                  <label>COLLATERAL:</label>
+                  <div className="mb-collateral">
+                    <b className="amber">{fmt(COLLATERAL_FINE)} CR</b> PER CIVILIAN HIT // CAPPED AT THE REWARD
                   </div>
                 </div>
                 <div className="mb-box">
@@ -1458,6 +1460,8 @@ export function TeamSelect() {
                       MED {ITEM_MASS_KG.med}KG / CELL {ITEM_MASS_KG.cell}KG
                     </span>
                   </label>
+                  {/* Playtests 2 and 3 found the cycle by trial (IF-039). */}
+                  <div className="ts-loadout-hint">CLICK A SLOT TO CYCLE: EMPTY &gt; MED KIT &gt; POWER CELL</div>
                   <div className="ts-loadout">
                     {focusItems.map((item, slot) => (
                       <button
@@ -1547,7 +1551,11 @@ export function TeamSelect() {
             <span className="cta-inner">DEPLOY TEAM &gt;&gt;</span>
           </button>
           <div className="dim mini ts-deploy-sub">
-            {refused ? refused[1] : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
+            {refused
+              ? refused[1]
+              : mission
+                ? mission.codename + ' // A WIN SPENDS ' + mission.etaDays + (mission.etaDays === 1 ? ' DAY' : ' DAYS') + ' OF WORLD TIME'
+                : 'CONFIRM AND DEPLOY STRIKE TEAM 04'}
           </div>
         </div>
       </footer>
@@ -1648,6 +1656,8 @@ export function Debrief() {
   const missionId = useAppStore((s) => s.missionId)
   const m = missionId ? resolveMission(missionId) : null
   const report = useCampaignStore((s) => s.lastReport)
+  const rosterLeft = useCampaignStore((s) => s.operatives.length)
+  const move = useDebriefMoveStore((s) => s.move)
   const campaignFailed = useCampaignStore((s) => s.campaignFailed)
   const won = outcome?.won ?? false
   const quiet = outcome?.quietReplay === true
@@ -1679,15 +1689,9 @@ export function Debrief() {
       value: outcome ? outcome.casualties : '--',
       tone: outcome && outcome.casualties > 0 ? 'red' : 'teal',
     },
-    ...(outcome && report && report.kia.length > 0
-      ? [
-          {
-            label: 'KILLED IN ACTION',
-            value: report.kia.map((k) => k.codename).join(', '),
-            tone: 'red',
-          },
-        ]
-      : []),
+    // One row per death with what it cost (IF-039); replaces the codename
+    // list, which read as "just a red name" (playtest 3).
+    ...(outcome && report ? kiaCostRows(report.kia, rosterLeft, ROSTER_CAP) : []),
     ...(outcome && report
       ? report.injured.map((inj) => ({
           label: 'INJURED // ' + inj.codename,
@@ -1708,6 +1712,9 @@ export function Debrief() {
       tone: outcome && outcome.civiliansHit > 0 ? 'red' : undefined,
     },
     { label: 'MISSION TIME', value: outcome ? mmss(outcome.timeSec) : '--:--' },
+    // What the contract moved on the World Network, and where the sector
+    // stands after the ETA days (WN-021).
+    ...sectorMoveRows(move),
   ]
   // All five money lines, zeros included (EC-022); Economy prices them.
   rows.push(

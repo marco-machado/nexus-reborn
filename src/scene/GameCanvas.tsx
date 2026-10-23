@@ -31,6 +31,7 @@ import CityView from './CityView'
 import Effects from './Effects'
 import { sceneWarm } from './sceneWarm'
 import Fx from './Fx'
+import ObjectiveMarkers from './ObjectiveMarkers'
 import Input from './Input'
 import Rain from './Rain'
 import Units from './Units'
@@ -121,6 +122,7 @@ function SceneTree({ diagnostics }: ReviewScene) {
       {diagnostics}
       <Units />
       <Fx />
+      <ObjectiveMarkers />
       <Rain />
       <Input />
       <Effects />

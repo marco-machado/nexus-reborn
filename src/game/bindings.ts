@@ -9,9 +9,10 @@
 // The settings screen may remap most keyboard rows: applyOverrides swaps the
 // codes and printed keys in place and rebuilds the code lookup, so every
 // consumer of this table (handlers, pause menu, tutorial) follows the player's
-// keys with no edit of its own. Two rows stay fixed: pause, because
-// scene/Input.tsx guards on the Space literal for focused dialog buttons, and
-// selectSlot, because the slot is the digit the pressed code ends in.
+// keys with no edit of its own. Three rows stay fixed: the tactical hold,
+// because scene/Input.tsx guards on the Space literal for focused dialog
+// buttons; pause, so the menu is always one known key away; and selectSlot,
+// because the slot is the digit the pressed code ends in.
 
 export type BindingGroup = 'camera' | 'squad' | 'abilities' | 'mouse'
 
@@ -37,6 +38,7 @@ export type BindingId =
   | 'useMed'
   | 'useCell'
   | 'grenade'
+  | 'tacticalHold'
   | 'pause'
   | 'pickSelect'
   | 'boxSelect'
@@ -90,10 +92,13 @@ export const BINDINGS: Binding[] = [
   { id: 'holdGround', group: 'squad', codes: ['KeyH'], keys: ['H'], label: 'Hold position' },
   { id: 'holdFire', group: 'squad', codes: ['KeyC'], keys: ['C'], label: 'Hold fire' },
   { id: 'swapWeapon', group: 'squad', codes: ['KeyV'], keys: ['V'], label: 'Swap weapon' },
-  // Escape is the key players reach for to leave a game, so it opens the menu
-  // and clearing the selection moved to Backspace. Both keys are one action:
-  // the menu is what the paused state looks like.
-  { id: 'pause', group: 'squad', codes: ['Space', 'Escape'], keys: ['Space', 'Esc'], label: 'Pause menu' },
+  // Space freezes the mission with orders still open: the tactical pause the
+  // living spec lists as a player advantage (TM-019, CD-PLAYTEST 2026-10-23:
+  // one pause state, entered by the player or by a casualty). Escape is the
+  // key players reach for to leave a game, so it opens the menu, and
+  // clearing the selection lives on Backspace.
+  { id: 'tacticalHold', group: 'squad', codes: ['Space'], keys: ['Space'], label: 'Tactical hold (orders stay open)' },
+  { id: 'pause', group: 'squad', codes: ['Escape'], keys: ['Esc'], label: 'Pause menu' },
 
   /* abilities, handled in src/scene/Input.tsx */
   { id: 'useAbility', group: 'abilities', codes: ['KeyQ'], keys: ['Q'], label: 'Use role ability' },
@@ -133,10 +138,10 @@ const DEFAULTS = new Map<BindingId, { codes: string[]; keys: string[] }>(
   BINDINGS.map((b) => [b.id, { codes: [...b.codes], keys: [...b.keys] }]),
 )
 
-// Pause and selectSlot stay fixed (see the header); mouse rows and the wheel
-// carry no codes to replace.
+// The hold, pause and selectSlot stay fixed (see the header); mouse rows and
+// the wheel carry no codes to replace.
 export function remappable(b: Binding): boolean {
-  return b.codes.length > 0 && b.id !== 'pause' && b.id !== 'selectSlot'
+  return b.codes.length > 0 && b.id !== 'tacticalHold' && b.id !== 'pause' && b.id !== 'selectSlot'
 }
 
 export function defaultCodes(id: BindingId): string[] {

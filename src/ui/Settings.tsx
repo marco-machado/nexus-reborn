@@ -222,7 +222,7 @@ export default function SettingsPanel(props: { onClose: () => void }) {
 
   const fixedNote = (b: Binding): string | null => {
     if (b.group === 'mouse' || b.codes.length === 0) return 'MOUSE'
-    if (b.id === 'pause') return 'FIXED'
+    if (b.id === 'pause' || b.id === 'tacticalHold') return 'FIXED'
     if (b.id === 'selectSlot') return 'FIXED'
     return null
   }

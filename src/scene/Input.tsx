@@ -19,7 +19,7 @@ import { GRENADE_RADIUS } from '../game/world'
 import { RED_HOT } from '../ui/tokens'
 import { clickSelection, isAlive as alive, isLivingAgent, openingSelection, selectAll, selectSlot } from '../game/selection'
 import type { SelectionPick as Pick } from '../game/selection'
-import { noteTutorial } from '../state/tutorialStore'
+import { fireTutorialHint, noteTutorial } from '../state/tutorialStore'
 import { useMissionStore } from '../state/missionStore'
 import type { WorldApi } from '../game/types'
 import { pushClickMarker } from './clickMarkers'
@@ -154,6 +154,9 @@ export default function Input() {
         case 'pause':
           ms.setPaused(!ms.paused)
           break
+        case 'tacticalHold':
+          ms.setHeld(!ms.held)
+          break
         // The item orders take the whole selection: the sim picks the target
         // and answers a bad selection with a comm fail line.
         case 'useMed':
@@ -170,6 +173,7 @@ export default function Input() {
           const id = selectedAgents(w)[0]
           if (id && ms.abilities.grenade.availability === 'usable') {
             ms.setGrenadeTargeting(true)
+            fireTutorialHint('hint-grenade')
           }
           break
         }
@@ -360,11 +364,11 @@ export default function Input() {
     const w = getWorld()
     if (!w) return
     const ids = selectedAgents(w)
-    if (ids.length === 0) return
     const x = Math.max(2, Math.min(w.city.size - 2, e.point.x))
     const z = Math.max(2, Math.min(w.city.size - 2, e.point.z))
+    // An empty selection still reaches the sim, which says why nothing moved.
     w.orderMove(ids, { x, z })
-    pushClickMarker(x, z)
+    if (ids.length > 0) pushClickMarker(x, z)
   }
 
   // Left records the unit under the pointer for the window pointerup above;
@@ -394,8 +398,7 @@ export default function Input() {
       hitPick.current = { id, agent: false }
     } else if (e.button === 2 && !drag.current.on) {
       e.stopPropagation()
-      const ids = selectedAgents(w)
-      if (ids.length > 0) w.orderAttack(ids, id)
+      w.orderAttack(selectedAgents(w), id)
     }
   }
 

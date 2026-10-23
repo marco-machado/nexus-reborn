@@ -1184,7 +1184,9 @@ describe('unrest pressure and crisis', () => {
     const s = useWorldStore.getState()
     expect(s.sectors.eu.unrest).toBe(59)
     expect(s.crisis).toEqual([])
-    expect(s.events.at(-1)).toMatchObject({ kind: 'crisis', sector: 'eu', tone: 'green' })
+    expect(s.events.filter((e) => e.kind === 'crisis').at(-1)).toMatchObject({ kind: 'crisis', sector: 'eu', tone: 'green' })
+    // The spend's last step (hour 6) posts after the crisis cleared (hour 1).
+    expect(s.events.at(-1)?.text).toBe('STABILIZATION COMPLETE IN EUROPE // UNREST NOW 59%')
     // Back under the pressure mark too: the decay timer disarmed.
     expect(s.pressure.eu).toBeUndefined()
   })
@@ -1602,6 +1604,10 @@ describe('catch-up collision order (ADR-0018)', () => {
 
   it('expiry, then World Event, then contract generation at one timestamp', () => {
     stageMarketCollision()
+    // A world cursor whose first roll is a riot that posts a priority
+    // contract under the WN-021 kind weights (found by search; the old
+    // opening cursor now rolls a blackout here).
+    useWorldStore.setState({ rngState: 0xa03fea02 })
     const before = useWorldStore.getState().events.length
     useWorldStore.getState().tick(0.01)
     const s = useWorldStore.getState()
@@ -2558,5 +2564,70 @@ describe('opening market offer seeded at New Operation (story 023)', () => {
     const secure = openingInputs().filter((i) => i.garrison === 'SECURE')
     expect(secure.length).toBeGreaterThan(0)
     expect(secure.map((i) => i.sector)).toContain(snapshot.contracts[0].sector)
+  })
+})
+
+describe('world drift settles and Influence moves it (WN-021)', () => {
+  // Twenty world cursors, twenty strategic days each, no player action.
+  function untouched(days: number, seeds: number, each: (seed: number, day: number) => void): void {
+    for (let k = 0; k < seeds; k++) {
+      useWorldStore.setState(structuredClone(snapshot))
+      useWorldStore.setState({ rngState: (snapshot.rngState + k * 7919) >>> 0 })
+      for (let d = 1; d <= days; d++) {
+        useWorldStore.getState().advanceDays(1)
+        each(k, d)
+      }
+    }
+  }
+
+  it('with no player action, crisis stays rare: at most one sector in crisis by day 6 on every cursor, under 0.5 a day on average', () => {
+    let crisisDays = 0
+    untouched(20, 20, (_k, d) => {
+      const n = useWorldStore.getState().crisis.length
+      crisisDays += n
+      if (d <= 6) expect(n).toBeLessThanOrEqual(1)
+    })
+    expect(crisisDays / 400).toBeLessThan(0.5)
+  })
+
+  it('with no player action, North America stays Nexus-held through day 10 on at least 15 of 20 cursors', () => {
+    const lost = new Set<number>()
+    untouched(10, 20, (k) => {
+      if (sectorCorp('na', useWorldStore.getState().owner) !== 'nexus') lost.add(k)
+    })
+    expect(lost.size).toBeLessThanOrEqual(5)
+  })
+
+  it('the world keeps pressing: some sector passes 40 unrest within 20 days on most cursors', () => {
+    const hot = new Set<number>()
+    untouched(20, 20, (k) => {
+      const s = useWorldStore.getState()
+      if (OPEN_SECTORS.some((id) => s.sectors[id].unrest > 40)) hot.add(k)
+    })
+    expect(hot.size).toBeGreaterThanOrEqual(15)
+  })
+
+  it('a sector in crisis at 90 unrest with a Stabilize leaves crisis within two strategic days', () => {
+    for (let k = 0; k < 10; k++) {
+      useWorldStore.setState(structuredClone(snapshot))
+      useWorldStore.setState({
+        rngState: (snapshot.rngState + k * 104729) >>> 0,
+        sectors: { ...snapshot.sectors, af: { control: 20, unrest: 90 } },
+        crisis: ['af'],
+        influence: 8,
+      })
+      useWorldStore.getState().spendInfluence('af', 'stabilize')
+      useWorldStore.getState().advanceDays(2)
+      expect(useWorldStore.getState().crisis).not.toContain('af')
+    }
+  })
+
+  it('a finished spend posts the number it moved', () => {
+    pinFlows()
+    useWorldStore.setState({ influence: 10, sectors: { ...snapshot.sectors, eu: { control: 40, unrest: 30 } } })
+    useWorldStore.getState().spendInfluence('eu', 'lobby')
+    useWorldStore.getState().advanceDays(1)
+    const last = useWorldStore.getState().events.filter((e) => e.kind === 'influence').at(-1)
+    expect(last?.text).toBe('LOBBYING COMPLETE IN EUROPE // CONTROL NOW 48%')
   })
 })

@@ -6,8 +6,12 @@
 /** How long an armed Abort waits for its confirm before disarming (P-01: 3 real seconds). */
 export const ABORT_ARM_MS = 3000
 
-/** P-01 armed hint: names the window and the consequence. Placeholder copy pending /ux-design. */
-export const ABORT_ARM_HINT = 'PRESS AGAIN WITHIN 3 S TO ABORT MISSION'
+/**
+ * P-01 armed hint: names the window and the consequence, which is no debrief
+ * at all (ADR-0002; CD-PLAYTEST 2026-10-23: say what Abort does).
+ */
+export const ABORT_ARM_HINT =
+  'PRESS AGAIN WITHIN 3 S TO ABORT // NO INVOICE, CONTRACT STAYS OPEN, ROSTER AS DEPLOYED'
 
 /** Text for the Pause menu's P-01 message slot; empty while idle, so a disarm clears it silently. */
 export function abortArmHint(armed: boolean): string {

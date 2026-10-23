@@ -40,12 +40,16 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: 'tut-select',
     event: 'select',
     title: 'SELECTION',
+    // The tactical hold rides on the first step (TM-019): it is the answer to
+    // a fight that moves faster than the player can read it.
     body: (k) =>
       'Click an operative or drag a box to select. ' +
       k('selectSlot') +
       ' picks a slot; ' +
       k('selectAll') +
-      ' takes the living squad.',
+      ' takes the living squad. ' +
+      k('tacticalHold') +
+      ' stops time with orders open; press it again to resume.',
   },
   {
     id: 'tut-move',
@@ -134,6 +138,7 @@ export type HintId =
   | 'hint-ability-idle'
   | 'hint-overweight'
   | 'hint-radio'
+  | 'hint-grenade'
 
 export const HINTS: Record<HintId, { title: string; body: (key: KeyLookup) => string }> = {
   'hint-lowhp': {
@@ -167,6 +172,17 @@ export const HINTS: Record<HintId, { title: string; body: (key: KeyLookup) => st
   // The officer radio was taught by nothing before Glass Veil (difficulty
   // curve Open Question, decided 2026-10-23): one hint when the first officer
   // starts the call, while it can still be stopped.
+  // The ITEMS step advances only after the step before it is acted on, so
+  // it can reach a player a mission after their first throw (playtest 3,
+  // TM-021). This fires on the first arming instead, before any throw.
+  'hint-grenade': {
+    title: 'BLAST RADIUS',
+    body: (k) =>
+      'The red ring is the blast: everyone inside it takes damage, your squad included. ' +
+      'Left click throws; ' +
+      k('grenade') +
+      ' cancels.',
+  },
   'hint-radio': {
     title: 'RADIO CALL',
     body: () =>

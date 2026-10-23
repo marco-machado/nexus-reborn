@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   briefOdds,
   eventToneClass,
+  holderLine,
   influenceActionsFor,
   influenceStatus,
   intelGate,
@@ -208,5 +209,24 @@ describe('lockReason (IF-017)', () => {
   it('otherwise the intel gate', () => {
     expect(lockReason(false, 2)).toBe('REQUIRES INTEL LVL 2')
     expect(intelGate(3)).toBe('REQUIRES INTEL LVL 3')
+  })
+})
+
+describe('HELD BY names the city majority, not Control (WN-022)', () => {
+  it('opening North America: Nexus holds two of three cities', () => {
+    expect(holderLine('na', initialOwner())).toEqual({ text: 'NEXUS GLOBAL // 2 OF 3 CITIES', tone: 'teal' })
+  })
+
+  it('opening Europe: Helix holds two of three', () => {
+    expect(holderLine('eu', initialOwner())).toEqual({ text: 'HELIX CORP // 2 OF 3 CITIES', tone: 'dim' })
+  })
+
+  it('opening South America is a three-way split', () => {
+    expect(holderLine('sa', initialOwner())).toEqual({ text: 'CONTESTED // CITIES SPLIT 1-1-1', tone: 'dim' })
+  })
+
+  it('one seized city turns North America contested whatever its Control', () => {
+    const owner = { ...initialOwner(), nb: 'omni' as const }
+    expect(holderLine('na', owner).text).toMatch(/^CONTESTED/)
   })
 })

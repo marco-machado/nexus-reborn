@@ -63,7 +63,7 @@ describe('bindingFor', () => {
   })
 
   it('maps the shared keys the handlers depend on', () => {
-    expect(bindingFor('Space')?.id).toBe('pause')
+    expect(bindingFor('Space')?.id).toBe('tacticalHold')
     expect(bindingFor('Escape')?.id).toBe('pause')
     expect(bindingFor('Digit1')?.id).toBe('selectSlot')
     expect(bindingFor('Numpad4')?.id).toBe('selectSlot')
@@ -115,9 +115,9 @@ describe('overrides', () => {
     applyOverrides({})
   })
 
-  it('keeps pause, selectSlot and the mouse rows out of remapping', () => {
+  it('keeps the tactical hold, pause, selectSlot and the mouse rows out of remapping', () => {
     for (const b of BINDINGS) {
-      if (b.id === 'pause' || b.id === 'selectSlot' || b.codes.length === 0) {
+      if (b.id === 'tacticalHold' || b.id === 'pause' || b.id === 'selectSlot' || b.codes.length === 0) {
         expect(remappable(b)).toBe(false)
       } else {
         expect(remappable(b)).toBe(true)

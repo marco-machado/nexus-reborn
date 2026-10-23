@@ -44,7 +44,7 @@ export interface CampaignRosterEntry {
 // What the last debrief did to the roster, for the debrief screen. Transient:
 // never saved, rebuilt by every reportMission.
 export interface DebriefReport {
-  kia: Array<{ id: string; codename: string }>
+  kia: Array<{ id: string; codename: string; xp: number }>
   injured: Array<{ id: string; codename: string; downtimeSec: number }>
   xp: Array<{ id: string; codename: string; gained: number; total: number }>
 }
@@ -254,7 +254,7 @@ export const useCampaignStore = create<CampaignState>((set) => ({
       const dead = new Set(outcome.deadIds)
       const kia = state.operatives
         .filter((o) => dead.has(o.id))
-        .map((o) => ({ id: o.id, codename: o.codename }))
+        .map((o) => ({ id: o.id, codename: o.codename, xp: state.roster[o.id]?.xp ?? 0 }))
       const operatives = state.operatives.filter((o) => !dead.has(o.id))
       const roster: Record<string, CampaignRosterEntry> = {}
       const injured: DebriefReport['injured'] = []

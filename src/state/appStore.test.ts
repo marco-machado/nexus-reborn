@@ -3200,7 +3200,7 @@ describe('Death drops the assignment, not the program (RS-015)', () => {
       applyDebrief('m01')
 
       const c = useCampaignStore.getState()
-      expect(c.lastReport?.kia).toEqual([{ id: 'op1', codename: 'MARA' }])
+      expect(c.lastReport?.kia).toEqual([{ id: 'op1', codename: 'MARA', xp: 0 }])
       expect(c.operatives.some((o) => o.id === 'op1')).toBe(false)
       expect(c.roster.op1).toBeUndefined()
       expect(useAppStore.getState().squad).not.toContain('op1')
@@ -3377,7 +3377,7 @@ describe('Abort writes no roster; debrief applies roster once (RA-019)', () => {
       expect(reports).toBe(1)
       const after = rosterState()
       expect(after).toEqual(once)
-      expect(after.lastReport?.kia).toEqual([{ id: 'op4', codename: 'TORQ' }])
+      expect(after.lastReport?.kia).toEqual([{ id: 'op4', codename: 'TORQ', xp: 0 }])
       expect(after.lastReport?.injured.map((i) => i.id)).toEqual(['op1'])
       expect([after.roster.op1.xp, after.roster.op2.xp, after.roster.op3.xp]).toEqual([1, 1, 1])
       expect(useAppStore.getState().squad).toEqual(squadOnce)

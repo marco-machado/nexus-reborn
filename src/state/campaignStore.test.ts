@@ -143,7 +143,7 @@ describe('permanent death', () => {
     expect(state.operatives.some((o) => o.id === 'op1')).toBe(false)
     expect(state.roster.op1).toBeUndefined()
     expect(state.lastReport).toEqual({
-      kia: [{ id: 'op1', codename: 'MARA' }],
+      kia: [{ id: 'op1', codename: 'MARA', xp: 0 }],
       injured: [],
       xp: [],
     })
@@ -829,7 +829,7 @@ describe('injuryRecoverySec helper values (RA-012)', () => {
       .reportMission('m01', outcome({ casualties: 1, deadIds: ['op1'], survivorHp: {} }), 9000)
     const state = useCampaignStore.getState()
     expect(state.roster.op1).toBeUndefined()
-    expect(state.lastReport?.kia).toEqual([{ id: 'op1', codename: 'MARA' }])
+    expect(state.lastReport?.kia).toEqual([{ id: 'op1', codename: 'MARA', xp: 0 }])
     expect(state.lastReport?.injured).toEqual([])
   })
 
@@ -984,7 +984,7 @@ describe('KIA removes the operative from the living roster (RA-014)', () => {
     }
     expect(useAppStore.getState().squad).toEqual(['op1', 'op3'])
     expect(useAppStore.getState().loadout.op2).toBeUndefined()
-    expect(state.lastReport?.kia).toEqual([{ id: 'op2', codename: 'GHOST' }])
+    expect(state.lastReport?.kia).toEqual([{ id: 'op2', codename: 'GHOST', xp: 0 }])
     const events = kiaEvents()
     expect(events).toHaveLength(1)
     expect(events[0].text).toContain('GHOST')
@@ -1024,7 +1024,7 @@ describe('KIA removes the operative from the living roster (RA-014)', () => {
     const state = useCampaignStore.getState()
     expect(state.lastReport?.xp.map((x) => x.id)).toEqual(['op1', 'op3'])
     expect(state.lastReport?.xp.some((x) => x.id === 'op2')).toBe(false)
-    expect(state.lastReport?.kia).toEqual([{ id: 'op2', codename: 'GHOST' }])
+    expect(state.lastReport?.kia).toEqual([{ id: 'op2', codename: 'GHOST', xp: 0 }])
     expect(state.lastReport?.injured).toEqual([])
     expect(state.roster.op2).toBeUndefined()
     expect(state.operatives.some((o) => o.id === 'op2')).toBe(false)
@@ -1453,7 +1453,7 @@ describe('loss and quiet-replay debrief roster apply (RA-018)', () => {
     // KIA: gone from the living roster and its loadout.
     expect(state.operatives.some((o) => o.id === 'op4')).toBe(false)
     expect(state.roster.op4).toBeUndefined()
-    expect(state.lastReport?.kia).toEqual([{ id: 'op4', codename: 'TORQ' }])
+    expect(state.lastReport?.kia).toEqual([{ id: 'op4', codename: 'TORQ', xp: 0 }])
     expect(useAppStore.getState().loadout.op4).toBeUndefined()
     // Injury recorded at t0 with D, bay cleared, then caught up at t1.
     expect(state.lastReport?.injured).toEqual([{ id: 'op1', codename: 'MARA', downtimeSec: D }])

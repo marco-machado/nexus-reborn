@@ -33,6 +33,7 @@ import type { DeployParams } from './deploy'
 import { generateCity } from '../world/citygen'
 import { mulberry32 } from './rng'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
+import { objectiveZone } from './objectiveMarks'
 import { missionSfx as sfx } from './audioBridge'
 import { fireTutorialHint, noteTutorial } from '../state/tutorialStore'
 import type { MissionTelemetry } from '../state/telemetry'
@@ -101,6 +102,9 @@ const MED_KIT_HEAL = 50
 const ABILITY_IDLE_HINT_SEC = 60
 // Health fraction under which the med-kit hint fires while stock remains.
 const LOW_HP_HINT_FRAC = 0.35
+// Casualty hold line (TM-019): an operative crossing under it holds the sim
+// with orders open, once per crossing; healing back over it re-arms.
+const CASUALTY_HOLD_FRAC = LOW_HP_HINT_FRAC
 const GRENADE_COOLDOWN = 4
 const GRENADE_RANGE = 18
 // Exported for the targeting ring the scene draws (Input.tsx).
@@ -320,6 +324,8 @@ export function createWorld(
   let abilityIdleT = 0
   let abilityUsed = false
   let abilityIdleHinted = false
+  // Operatives whose casualty hold has fired and not yet re-armed.
+  const casualtyHeld = new Set<string>()
   let lowHpHinted = false
 
   // Thrown frag charges waiting on their fuse.
@@ -772,7 +778,10 @@ export function createWorld(
           color: t.kind === 'agent' ? '#ff6a55' : '#ffd9a0',
         })
       }
-      if (t.kind === 'agent') sfx.agentHit()
+      if (t.kind === 'agent') {
+        sfx.agentHit()
+        casualtyCheck(t)
+      }
     }
     if (t.kind === 'enemy') {
       t.lastSeenT = world.time
@@ -1569,9 +1578,7 @@ export function createWorld(
   }
 
   function zoneFor(def: ObjectiveDef): Zone {
-    if (def.zone) return def.zone
-    if (def.landmark && city.landmarks[def.landmark]) return city.landmarks[def.landmark]
-    return city.checkpoint
+    return objectiveZone(def, city)
   }
 
   function inZone(p: Vec2, zone: Zone): boolean {
@@ -2072,10 +2079,30 @@ export function createWorld(
     }
   }
 
+  // Casualty hold (TM-019, CD-PLAYTEST 2026-10-23): CorpSec takes an exposed
+  // operative from 40% to dead in about two seconds, faster than a human can
+  // unpause, select and heal, and the menu pause refuses orders. The first
+  // hit that drops an operative under the line holds the sim with orders
+  // open and names who is at risk. No RNG is drawn; time simply stops.
+  function casualtyCheck(u: SimUnit): void {
+    if (u.hp >= u.maxHp * CASUALTY_HOLD_FRAC || casualtyHeld.has(u.id)) return
+    if (result !== 'none') return
+    casualtyHeld.add(u.id)
+    const pct = Math.max(1, Math.round((u.hp / u.maxHp) * 100))
+    const who = u.operative?.codename ?? u.name
+    pushLog('SYS', 'CASUALTY RISK: ' + who + ' AT ' + pct + '%. TACTICAL HOLD.', 'alert')
+    useMissionStore.getState().setHeld(true, who + ' AT ' + pct + '%')
+  }
+
   // Contextual one-shots, checked at sync rate: a wounded operative while med
   // kits remain, and a role ability sitting ready unused. Sync-rate precision
-  // is plenty for a sixty second idle threshold.
+  // is plenty for a sixty second idle threshold. The same pass re-arms the
+  // casualty hold for anyone healed back over its line.
   function checkHints(): void {
+    for (const id of casualtyHeld) {
+      const u = byId.get(id)
+      if (u && u.stance !== 'dead' && u.hp >= u.maxHp * CASUALTY_HOLD_FRAC) casualtyHeld.delete(id)
+    }
     if (!lowHpHinted && inventory.med > 0) {
       for (const u of units) {
         if (u.kind !== 'agent' || u.stance === 'dead') continue
@@ -2144,9 +2171,17 @@ export function createWorld(
     pushLog('SYS', line)
   }
 
+  // A right-click with nobody living selected is answered, not dropped: a
+  // left click on bare ground clears the selection, and playtest 4 lost 15 s
+  // of an escort to a move order that went nowhere in silence.
+  const NOBODY_SELECTED = 'NO LIVING OPERATIVE SELECTED. ORDER NOT TAKEN.'
+
   function orderMove(agentIds: string[], dest: Vec2): void {
     const movers = ordered(agentIds)
-    if (movers.length === 0) return
+    if (movers.length === 0) {
+      pushLog('SYS', NOBODY_SELECTED, 'alert')
+      return
+    }
     noteTutorial('move')
     const base = isWalkable(city, dest.x, dest.z)
       ? { x: dest.x, z: dest.z }
@@ -2163,6 +2198,12 @@ export function createWorld(
       u.holdGround = false
       u.stance = u.path.length > 0 ? 'moving' : 'idle'
     })
+    // An order nobody can walk is said out loud, never dropped in silence
+    // (playtest 4: 15 s of a 90 s escort lost to a move with no route).
+    if (movers.every((u) => u.path.length === 0) && movers.some((u) => Math.hypot(u.pos.x - base.x, u.pos.z - base.z) > 1)) {
+      pushLog('SYS', 'NO ROUTE TO THAT POINT. ORDER NOT TAKEN.', 'alert')
+      return
+    }
     sfx.confirmBlip()
     orderChatter(movers, MOVE_LINES)
   }
@@ -2173,7 +2214,10 @@ export function createWorld(
     // (no Demolish verb, ADR-0016); grenades and charges still reach it.
     if (!t || t.kind !== 'enemy' || t.stance === 'dead') return
     const shooters = ordered(agentIds)
-    if (shooters.length === 0) return
+    if (shooters.length === 0) {
+      pushLog('SYS', NOBODY_SELECTED, 'alert')
+      return
+    }
     noteTutorial('attack')
     for (const u of shooters) {
       u.targetId = targetId

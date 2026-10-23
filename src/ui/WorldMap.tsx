@@ -72,6 +72,7 @@ import {
   influenceActionsFor,
   influenceStatus,
   taxEligibilityLine,
+  holderLine,
   eventToneClass,
   intelGate,
   lockReason,
@@ -825,6 +826,7 @@ export function WorldMap() {
   const read = sectorReadout(selected, sectors[selected])
   const owner = useWorldStore((s) => s.owner)
   const taxLine = taxEligibilityLine(taxEligible(selected, owner))
+  const holder = holderLine(selected, owner)
   const ops = useMemo(
     () => opsFor(selected, contracts, intelLevel),
     [selected, contracts, intelLevel],
@@ -973,6 +975,10 @@ export function WorldMap() {
                   <b className={focusUnrest.ink}>{Math.round(read.unrest)}%</b>
                   <SegBar value={read.unrest} tone={focusUnrest.bar} mini />
                 </div>
+              </div>
+              <div className="kv">
+                <span>HELD BY</span>
+                <b className={'wm-kv-readout ' + holder.tone}>{holder.text}</b>
               </div>
               <div className="kv">
                 <span>TAX YIELD</span>

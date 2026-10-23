@@ -585,6 +585,17 @@ function applySpendSteps(f: WorldFlow, t: number): void {
     }
     if (s.remaining > 1) {
       spends.push({ ...s, nextT: s.nextT + def.stepSec, remaining: s.remaining - 1 })
+    } else {
+      // The last step names the number it moved, so the player can see the
+      // spend landed (WN-021; playtest 4: "the promised +8 never showed").
+      const now = f.sectors[s.sector]
+      appendEvent(f, {
+        id: nextEventId(f), t: s.nextT, sector: s.sector, kind: 'influence', tone: 'amber',
+        text:
+          s.action === 'stabilize'
+            ? 'STABILIZATION COMPLETE IN ' + sectorDef(s.sector).name + ' // UNREST NOW ' + Math.round(now.unrest) + '%'
+            : 'LOBBYING COMPLETE IN ' + sectorDef(s.sector).name + ' // CONTROL NOW ' + Math.round(now.control) + '%',
+      })
     }
   }
   f.spends = spends

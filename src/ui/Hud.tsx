@@ -29,6 +29,7 @@ import { ACTIVE_OBJECTIVE_TOKEN, healthCue, objectiveCue } from './criticalCues'
 import type { ObjectiveCue } from './criticalCues'
 import { fmt, pad2 } from './util'
 import { uiClick } from './sound'
+import { bindingKeys } from '../game/tutorial'
 
 function weaponIdByName(name: string): WeaponId {
   for (const w of Object.values(WEAPONS)) {
@@ -185,6 +186,8 @@ export default function Hud() {
   const alert = useMissionStore((s) => s.alert)
   const civiliansHit = useMissionStore((s) => s.civiliansHit)
   const paused = useMissionStore((s) => s.paused)
+  const held = useMissionStore((s) => s.held)
+  const holdReason = useMissionStore((s) => s.holdReason)
   const result = useMissionStore((s) => s.result)
   const clock = useMissionStore((s) => s.clock)
   const weather = useMissionStore((s) => s.weather)
@@ -322,6 +325,16 @@ export default function Hud() {
           </button>
         </div>
       </div>
+
+      {/* Tactical hold (TM-019): time is stopped and orders are open. Printed
+          words carry the state; the frame is Red Hot only for a casualty. */}
+      {held && result === 'none' && (
+        <div className={'hud-hold' + (holdReason ? ' casualty' : '')} role="status">
+          <b>TACTICAL HOLD</b>
+          {holdReason ? <span>CASUALTY RISK: {holdReason}</span> : null}
+          <span>ORDERS OPEN // {bindingKeys('tacticalHold')} RESUMES</span>
+        </div>
+      )}
 
       {/* ----------------------------- squad link --------------------------- */}
       <div className="hud-panel hud-squad corners">

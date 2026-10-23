@@ -8,7 +8,8 @@ import type { EventTone, InfluenceRefusal } from '../state/worldStore'
 import type { SectorId } from '../game/types'
 import { INFLUENCE_ACTION_ORDER } from '../game/influence'
 import type { InfluenceActionId } from '../game/influence'
-import { sectorDef } from '../game/atlas'
+import { CITIES_BY_SECTOR, CORPS, HOLDERS, sectorCorp, sectorDef } from '../game/atlas'
+import type { CorpId } from '../game/atlas'
 
 export interface OddsReadout {
   label: string
@@ -112,4 +113,31 @@ export function intelGate(level: number): string {
 // failed campaign locks every contract, whatever its intel gate.
 export function lockReason(campaignFailed: boolean, intelReq: number): string {
   return campaignFailed ? 'CAMPAIGN LOST' : intelGate(intelReq)
+}
+
+export interface HolderReadout {
+  text: string
+  tone: 'teal' | 'dim'
+}
+
+// Who holds the sector and why, in words (WN-022): ownership is the majority
+// holder of the sector's cities, not Control, and playtests 3 and 4 could not
+// tell the two apart ("86% control but not Nexus-held"). The rule is the
+// owner's (atlas.sectorCorp); this only counts what it counts.
+export function holderLine(sector: SectorId, owner: Record<string, CorpId>): HolderReadout {
+  const cities = CITIES_BY_SECTOR[sector] ?? []
+  const holder = sectorCorp(sector, owner)
+  if (holder === 'unknown') return { text: 'UNKNOWN', tone: 'dim' }
+  const total = cities.length
+  if (holder === 'contested') {
+    const split = HOLDERS.map((corp) => cities.filter((c) => (owner[c.id] ?? c.corp) === corp).length)
+      .filter((n) => n > 0)
+      .join('-')
+    return { text: 'CONTESTED // CITIES SPLIT ' + split, tone: 'dim' }
+  }
+  const held = cities.filter((c) => (owner[c.id] ?? c.corp) === holder).length
+  return {
+    text: CORPS[holder].name + ' // ' + held + ' OF ' + total + ' CITIES',
+    tone: holder === 'nexus' ? 'teal' : 'dim',
+  }
 }

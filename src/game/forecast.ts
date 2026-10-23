@@ -17,18 +17,27 @@ export const EVENT_SPAN_SEC = 1800
 export const FORECAST_KINDS = ['riot', 'blackout', 'raid', 'trade', 'seizure'] as const
 export type ForecastKind = (typeof FORECAST_KINDS)[number]
 
-const KIND_WEIGHT_FLOOR = 0.02
+const KIND_WEIGHT_FLOOR = 0.005
+const SEIZURE_WEIGHT = 0.008
 
-// Unrest pulls the table toward the violent kinds. This is the table the
-// generator draws from; the forecast reads the same rows.
+// Unrest makes a sector violent both ways: riots and blackouts rise with it,
+// and CorpSec raids rise faster, so a hot sector cools on its own. The mean
+// unrest step per event is zero near unrest 30 and negative above it; crisis
+// comes from losses, collateral and riot streaks, and Stabilize can pull a
+// sector back out (WN-021, playtests 3 and 4: the old table pushed four of
+// six sectors into a crisis no action could leave by strategic day 6).
+// Seizures are rare and flat: about one city in the world changes hands
+// every three strategic days, so a given city holds for about two months.
+// This is the table the generator draws from; the forecast reads the same
+// rows.
 export function kindWeights(unrest: number): Array<[ForecastKind, number]> {
   const heat = unrest / 40
   const table: Array<[ForecastKind, number]> = [
-    ['riot', 0.1 + heat],
-    ['blackout', 0.12 + heat * 0.4],
-    ['raid', 0.18 + heat * 0.5],
-    ['trade', 0.3 - heat * 0.3],
-    ['seizure', 0.22 - heat * 0.1],
+    ['riot', 0.3 + heat * 0.6],
+    ['blackout', 0.12 + heat * 0.25],
+    ['raid', 0.18 + heat * 1.5],
+    ['trade', 0.3 - heat * 0.1],
+    ['seizure', SEIZURE_WEIGHT],
   ]
   return table.map(([kind, w]) => [kind, Math.max(KIND_WEIGHT_FLOOR, w)])
 }

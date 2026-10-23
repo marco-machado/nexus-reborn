@@ -3031,7 +3031,7 @@ describe('roster save and reload (RA-025)', () => {
       }),
     })
     useCampaignStore.setState({
-      lastReport: { kia: [{ id: 'op4', codename: 'x' }], injured: [], xp: [] },
+      lastReport: { kia: [{ id: 'op4', codename: 'x', xp: 0 }], injured: [], xp: [] },
     })
     expect(useAppStore.getState().outcome).not.toBeNull()
     expect(useCampaignStore.getState().lastReport).not.toBeNull()

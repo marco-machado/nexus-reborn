@@ -11,14 +11,15 @@
 
 ## Next step
 
-1. **Agent playtests 3 and 4** — running since 2026-10-23 (fresh testers, fixed harness: `production/qa/playtests/harness/`): session 3 new player through several contracts (`agent-2026-10-23-s3/`); session 4 mid-game and difficulty from the harness `fixture` save (one win, Intel 2, three projects, 141,000 CR, Influence 14; Hollow Crown and Glass Veil; `agent-2026-10-23-s4/`). Then `/playtest-report` for sessions 2–4 with CD-PLAYTEST, and the fun-hypothesis validation.
+1. **Finish and commit the playtest 3–4 fixes** (uncommitted, 1664 tests green): WN-021 world drift, WN-022 HELD BY, TM-019 tactical hold (Space) and casualty hold, TM-020 3D objective markers, TM-021 grenade hint, IF-039 Brief/Assembly/Debrief/Abort copy, no-selection order feedback, HUD panel heads wrap. Still to do: write the story files; update the specs (living spec pause section and Interface AC11, world-network, brief, assembly, debrief, interaction patterns); `design/difficulty-curve.md`; the fun-hypothesis doc (`production/qa/playtests/fun-hypothesis-2026-10-23.md`, CD-PLAYTEST returned CONCERNS, hypothesis revised); settle the World Network sweep timing (0 alone, 14 low-contrast hits when measured first in a batch, mid card fade).
 
 ## After that
 
 2. **Performance profile** (`production/polish/perf-2026-10-23/perf.mjs`: frame time, draw calls, heap, load times) — also the World Network p95 re-profile dated 2026-10-28.
 3. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
 4. **`/retrospective`**, then **`/gate-check`** Production → Polish.
-5. Register a hit-target TR at a later `/architecture-review` (IF-031 to IF-035 waiver).
+5. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents); owner hand-play dated 2026-10-28.
+6. Register a hit-target TR at a later `/architecture-review` (IF-031 to IF-035 waiver).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -31,6 +32,7 @@
 
 ## Done recently
 
+- 2026-10-23 — Agent playtests 3 and 4 run; reports for sessions 2–4 written (`production/qa/playtests/playtest-2026-10-23-agent-s{2,3,4}.md`); CD-PLAYTEST: CONCERNS, hypothesis revised. Polish milestone (`production/milestones/polish.md`) and risk register (RISK-0001 to 0005) written. Harness `fixture` command added (`123e323`).
 - 2026-10-23 — Five screen UX specs APPROVED by `/ux-review` (Research, Brief, Assembly, Debrief, Settings). Pattern library P-26 to P-28; P-05 / P-13 updated. IF-038 (label in name, Debrief Balance and invoice, no overlapping boxes). Agent playtest 2 run; its mission findings fixed in TM-018 (no destroy soft-lock, blast ring, dark destroyed devices, camera taught); harness fixed (pause ownership, no time leak between commands, grenade targeting kept).
 - 2026-10-23 — Five screen UX specs drafted (Research, Brief, Assembly, Debrief, Settings; In Review). IF-037: their committed-tier deltas fixed (no ellipsis anywhere, text-overlap check, P-05 focus for Settings-from-Pause / Balance / Recruitment Market, Debrief focus, reduced-motion overlays, researched check glyph, framed Settings selection).
 - 2026-10-23 — Difficulty-curve open questions decided (two wins to Intel 2; grenade centre 80; one-shot RADIO CALL advisory). Pattern library: P-20 / P-23 corrected, P-24 Scan marker and Focus selection and P-25 Inline moment note added (World Network spec OQ15, OQ19 closed).

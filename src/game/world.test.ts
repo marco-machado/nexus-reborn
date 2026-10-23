@@ -577,6 +577,57 @@ describe('orders', () => {
     expect(useMissionStore.getState().inventory.cell).toBe(0)
   })
 
+  it('TM-019: crossing under 35% holds the sim with orders open, names the operative, and re-arms once healed', () => {
+    const w = spawn(BARE_MISSION, ops(['op2']), { loadout: { op2: ['cell', 'cell'] } })
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+    const here = { x: a1.pos.x, z: a1.pos.z }
+
+    // 110 - 80 = 30 HP, 27%: the hold fires and names Ghost.
+    expect(w.orderGrenade(['a1'], here)).toBe(true)
+    let ms = useMissionStore.getState()
+    expect(ms.held).toBe(true)
+    expect(ms.paused).toBe(false)
+    expect(ms.holdReason).toBe('GHOST AT 27%')
+    expect(ms.log.some((e) => e.msg === 'CASUALTY RISK: GHOST AT 27%. TACTICAL HOLD.')).toBe(true)
+
+    // Held: the frame gate banks no time, and the med kit still lands.
+    const t = w.time
+    for (let i = 0; i < 10; i++) frame(w, STEP)
+    expect(w.time).toBe(t)
+    expect(w.orderUseMed(['a1'])).toBe(true)
+    expect(a1.hp).toBeCloseTo(80, 6)
+
+    // Released and healed over the line: the next crossing holds again.
+    useMissionStore.getState().setHeld(false)
+    warm(w, 5)
+    expect(w.orderGrenade(['a1'], { x: here.x + 2, z: here.z })).toBe(true)
+    ms = useMissionStore.getState()
+    expect(ms.held).toBe(true)
+    expect(ms.holdReason).toMatch(/^GHOST AT \d+%$/)
+  })
+
+  it('a move or attack order with nobody living selected says so instead of dropping silently', () => {
+    const w = spawn(BARE_MISSION, ops(['op1']))
+    deployReset()
+    w.tick(STEP)
+    const a1 = w.unit('a1')
+    expect(a1).toBeDefined()
+    if (!a1) return
+    w.orderMove([], { x: a1.pos.x + 3, z: a1.pos.z })
+    expect(useMissionStore.getState().log.at(-1)?.msg).toBe('NO LIVING OPERATIVE SELECTED. ORDER NOT TAKEN.')
+    expect(a1.path).toHaveLength(0)
+    const foe = w.units.find((u) => u.kind === 'enemy' && u.stance !== 'dead')
+    if (foe) {
+      useMissionStore.getState().addLog({ t: '', who: 'X', msg: 'marker' })
+      w.orderAttack([], foe.id)
+      expect(useMissionStore.getState().log.at(-1)?.msg).toBe('NO LIVING OPERATIVE SELECTED. ORDER NOT TAKEN.')
+    }
+  })
+
   it('heals the most wounded selected operative with a med kit while stock lasts', () => {
     const w = spawn(BARE_MISSION, ops(['op1', 'op2']))
     deployReset()

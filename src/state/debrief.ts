@@ -1,11 +1,45 @@
 // The Debrief apply transaction (ADR-0021). The only caller of the Debrief
 // owner mutators: Credits, campaign report, World Network write-back, squad
 // cleanup and the win ETA catch-up all run here, once, behind one key.
+import { create } from 'zustand'
+import { sectorCorp } from '../game/atlas'
+import type { CorpId } from '../game/atlas'
+import type { SectorId } from '../game/types'
 import { isPaid, netPayout, useAppStore } from './appStore'
 import { useCampaignStore } from './campaignStore'
 import { useResearchStore } from './researchStore'
 import { recordMissionOutcome } from './telemetry'
 import { resolveMission, useWorldStore } from './worldStore'
+
+/** One reading of the mission's sector: its two numbers and its holder. */
+export interface SectorReading {
+  control: number
+  unrest: number
+  holder: CorpId
+}
+
+/**
+ * What this Debrief moved on the World Network (WN-021, CD-PLAYTEST
+ * 2026-10-23: "the numbers move but the player can't tell it was their
+ * doing"). `before` is the sector at t0, `result` right after the write-back,
+ * `after` once the win's ETA has run (equal to `result` on a loss). Memory
+ * only: read by the Debrief, never saved.
+ */
+export interface SectorMove {
+  sector: SectorId
+  before: SectorReading
+  result: SectorReading
+  after: SectorReading
+  days: number
+}
+
+export const useDebriefMoveStore = create<{ move: SectorMove | null }>(() => ({ move: null }))
+
+function readSector(sector: SectorId): SectorReading {
+  const w = useWorldStore.getState()
+  const st = w.sectors[sector]
+  return { control: st.control, unrest: st.unrest, holder: sectorCorp(sector, w.owner) }
+}
 
 /**
  * Applies the stored outcome for `missionId` exactly once.
@@ -36,9 +70,12 @@ export function applyDebrief(missionId: string): void {
   // KIA codenames: it must run before applyMissionResult.
   useCampaignStore.getState().reportMission(missionId, outcome, t0)
   const report = useCampaignStore.getState().lastReport
+  const mission = resolveMission(missionId)
+  const before = mission ? readSector(mission.sector) : null
   useWorldStore
     .getState()
     .applyMissionResult(missionId, outcome, report?.kia.map((k) => k.codename) ?? [])
+  const result = mission ? readSector(mission.sector) : null
 
   // Dead or newly injured operatives leave the squad; the player re-fills the
   // bays in Assembly (nothing auto-assigns). The dead also lose their loadout.
@@ -54,10 +91,17 @@ export function applyDebrief(missionId: string): void {
 
   // A win costs the contract's ETA in strategic days (ADR-0001); a loss
   // spends none. Labs and recovery clocks then catch up to the new time.
+  const days = outcome.won ? (mission?.etaDays ?? 0) : 0
   if (outcome.won) {
-    useWorldStore.getState().advanceDays(resolveMission(missionId)?.etaDays ?? 0)
+    useWorldStore.getState().advanceDays(days)
     const t = useWorldStore.getState().t
     useResearchStore.getState().sync(t)
     useCampaignStore.getState().sync(t)
   }
+  useDebriefMoveStore.setState({
+    move:
+      mission && before && result
+        ? { sector: mission.sector, before, result, after: readSector(mission.sector), days }
+        : null,
+  })
 }

@@ -415,8 +415,8 @@ const CONTRACT_ARCHETYPE: Record<ContractType, DistrictArchetype> = {
 const WEATHERS: Weather[] = ['heavy', 'light', 'none']
 
 const DENSITY_NOTE: Record<DistrictArchetype, string> = {
-  checkpoint: 'CIVILIAN DENSITY MODERATE. COLLATERAL TOLERANCE LOW.',
-  compound: 'CIVILIAN DENSITY LOW. COLLATERAL TOLERANCE MODERATE.',
+  checkpoint: 'CIVILIAN DENSITY MODERATE. EVERY CIVILIAN HIT IS BILLED.',
+  compound: 'CIVILIAN DENSITY LOW. EVERY CIVILIAN HIT IS BILLED.',
   industrial: 'CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.',
 }
 
