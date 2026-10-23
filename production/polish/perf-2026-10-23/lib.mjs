@@ -98,7 +98,7 @@ export const tagPhases = (page) =>
   })
 
 export async function dismiss(page) {
-  await page.locator('[aria-label="Dismiss the orientation"]').click({ timeout: 1500 }).catch(() => {})
+  await page.locator('[aria-label^="UNDERSTOOD // DISMISS THE ORIENTATION"]').click({ timeout: 1500 }).catch(() => {})
 }
 
 // Live store reads through the dev server's own module instances.

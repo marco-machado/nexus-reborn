@@ -11,7 +11,7 @@
 
 ## Next step
 
-1. **Agent playtests 3 and 4** (fresh testers, fixed harness: `production/qa/playtests/harness/`): new-player through several contracts, and mid-game / difficulty spike; then `/playtest-report` for sessions 2–4 with CD-PLAYTEST, and the fun-hypothesis validation.
+1. **Agent playtests 3 and 4** — running since 2026-10-23 (fresh testers, fixed harness: `production/qa/playtests/harness/`): session 3 new player through several contracts (`agent-2026-10-23-s3/`); session 4 mid-game and difficulty from the harness `fixture` save (one win, Intel 2, three projects, 141,000 CR, Influence 14; Hollow Crown and Glass Veil; `agent-2026-10-23-s4/`). Then `/playtest-report` for sessions 2–4 with CD-PLAYTEST, and the fun-hypothesis validation.
 
 ## After that
 

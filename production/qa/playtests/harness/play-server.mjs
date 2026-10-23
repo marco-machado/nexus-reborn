@@ -197,6 +197,33 @@ async function run(cmd, a) {
       writeFileSync(DIR + 'save.json', blob || '')
       return { file: DIR + 'save.json', bytes: (blob || '').length }
     }
+    // Harness-only: a documented mid-campaign state for a mid-game session.
+    // New Operation, then the state one won contract and a few research
+    // projects would leave (Rust Haven won, Intel 2, three tier-1 projects,
+    // Credits and Influence from the payouts, tutorial steps seen), saved
+    // through the game's own save; the playtester starts with CONTINUE.
+    case 'fixture': {
+      await page.evaluate(async () => {
+        const save = await import('/src/state/save.ts')
+        save.startNewOperation()
+        const { useCampaignStore } = await import('/src/state/campaignStore.ts')
+        useCampaignStore.setState({ intelLevel: 2, intelProgress: 20, contractsWon: ['m03'] })
+        const { useAppStore } = await import('/src/state/appStore.ts')
+        useAppStore.setState({ credits: 141000 })
+        const { useResearchStore } = await import('/src/state/researchStore.ts')
+        useResearchStore.setState({ done: ['b-propellants', 'b-coating', 'c-interface'] })
+        const { useWorldStore } = await import('/src/state/worldStore.ts')
+        useWorldStore.setState({ influence: 14 })
+        const tut = await import('/src/game/tutorial.ts')
+        const { useTutorialStore } = await import('/src/state/tutorialStore.ts')
+        useTutorialStore.setState({ seen: [...tut.SEEN_IDS] })
+        save.writeSave()
+        useAppStore.getState().goto('menu')
+      })
+      await page.reload()
+      await sleep(1500)
+      return { ok: true }
+    }
     case 'loadsave': {
       const { readFileSync } = await import('fs')
       const blob = readFileSync(a[0], 'utf8')
