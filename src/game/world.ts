@@ -104,7 +104,9 @@ const LOW_HP_HINT_FRAC = 0.35
 const GRENADE_COOLDOWN = 4
 const GRENADE_RANGE = 18
 const GRENADE_RADIUS = 3.5
-const GRENADE_DAMAGE_CENTER = 70
+// 80 at the centre kills a Severe trooper (72 HP) and never a heavy (100 HP,
+// 0.85 taken); difficulty curve Open Question, decided 2026-10-23.
+const GRENADE_DAMAGE_CENTER = 80
 const GRENADE_DAMAGE_EDGE = 35
 const GRENADE_NOISE_RADIUS = 24
 const FRAG_NOISE_RADIUS = 24
@@ -1056,6 +1058,7 @@ export function createWorld(
     if (e.archetype === 'officer' && !e.radioDone && e.radioAt === undefined) {
       e.radioAt = world.time + OFFICER_RADIO_DELAY
       pushLog('SYS', 'OFFICER ON COMMS. CUT THE LINK.', 'alert')
+      fireTutorialHint('hint-radio')
     }
     if (!firstContact) {
       firstContact = true

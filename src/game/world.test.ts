@@ -15,6 +15,7 @@ import { contractMission } from './contracts'
 import type { ContractType, GeneratedContract } from './contracts'
 import { DIFFICULTY_FX, missionMods, missionPeriod, weatherMul } from './missionParams'
 import { findPath, hasLos, nearestWalkable } from './pathfind'
+import { useTutorialStore } from '../state/tutorialStore'
 import { useMissionStore } from '../state/missionStore'
 import { netPayout, settleOutcome, useAppStore } from '../state/appStore'
 import { useResearchStore } from '../state/researchStore'
@@ -567,7 +568,7 @@ describe('orders', () => {
 
     // On target: spends the cell and hurts whoever stands at the blast centre.
     expect(w.orderGrenade(['a1'], here)).toBe(true)
-    expect(a1.hp).toBeCloseTo(a1.maxHp - 70, 10)
+    expect(a1.hp).toBeCloseTo(a1.maxHp - 80, 10)
 
     // Stock is gone (and the cooldown running): the next throw is refused.
     expect(w.orderGrenade(['a1'], here)).toBe(false)
@@ -1330,11 +1331,11 @@ describe('role abilities', () => {
     mara.pos.x = torq.pos.x
     mara.pos.z = torq.pos.z
     mara.path.length = 0
-    // One grenade at both their feet: same 70-damage center hit, and only the
+    // One grenade at both their feet: same 80-damage center hit, and only the
     // demolitions frame takes 15% less.
     expect(w.orderGrenade(['a1'], { x: torq.pos.x, z: torq.pos.z })).toBe(true)
-    expect(torq.hp).toBeCloseTo(torq.maxHp - 70 * 0.85, 5)
-    expect(mara.hp).toBeCloseTo(mara.maxHp - 70, 5)
+    expect(torq.hp).toBeCloseTo(torq.maxHp - 80 * 0.85, 5)
+    expect(mara.hp).toBeCloseTo(mara.maxHp - 80, 5)
   })
 
   it('gates a retrigger on the cooldown', () => {
@@ -1529,7 +1530,7 @@ describe('milestone 2 missions', () => {
     expect(vip).toBeDefined()
     expect(a1).toBeDefined()
     if (!vip || !a1) return
-    // A grenade on the cell block: 70 damage at the centre beats 60 vip hp.
+    // A grenade on the cell block: 80 damage at the centre beats 60 vip hp.
     put(a1, { x: vip.pos.x + 5, z: vip.pos.z })
     expect(w.orderGrenade(['a1'], { x: vip.pos.x, z: vip.pos.z })).toBe(true)
     expect(vip.stance).toBe('dead')
@@ -1682,6 +1683,10 @@ describe('enemy archetypes', () => {
       0.5,
     )
     expect(tripped).toBe(true)
+    // The first call starts the one-shot RADIO CALL hint (difficulty curve,
+    // decided 2026-10-23), while it can still be stopped.
+    expect(useTutorialStore.getState().seen).toContain('hint-radio')
+    expect(useTutorialStore.getState().hints).toContain('hint-radio')
     // Break contact so both sides live through the delay: the officer stays
     // in combat for DISENGAGE_T (6s) after losing sight, past the 4s fuse,
     // and a1 stops soaking the whole garrison's fire.
@@ -4558,7 +4563,7 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
     throw new Error('no wall pair found near the thrower')
   }
 
-  it('AC 23: a valid throw spends exactly one cell, arms the cooldown and deals 70 at the centre', () => {
+  it('AC 23: a valid throw spends exactly one cell, arms the cooldown and deals 80 at the centre', () => {
     const { w, a1 } = setup(['op1', 'op6']) // tech carries a second cell
     expect(cells()).toBe(2)
     const at = { x: a1.pos.x, z: a1.pos.z - 3 }
@@ -4566,7 +4571,7 @@ describe('grenade confirm spends one power cell (TM-016, AC 23 / AC 24)', () => 
     expect(hasLos(w.city, at, c.pos)).toBe(true)
 
     expect(w.orderGrenade(['a1'], at)).toBe(true)
-    expect(c.hp).toBeCloseTo(TOUGH - 70, 5)
+    expect(c.hp).toBeCloseTo(TOUGH - 80, 5)
     expect(cooldown(w)).toBeGreaterThan(0)
     expect(cells()).toBe(1)
   })

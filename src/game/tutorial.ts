@@ -109,7 +109,12 @@ export function currentStep(seen: readonly string[]): TutorialStep | null {
 
 // One-shot contextual hints. Each fires at most once per campaign: firing
 // marks it seen, and seen ids persist with the save.
-export type HintId = 'hint-lowhp' | 'hint-alert' | 'hint-ability-idle' | 'hint-overweight'
+export type HintId =
+  | 'hint-lowhp'
+  | 'hint-alert'
+  | 'hint-ability-idle'
+  | 'hint-overweight'
+  | 'hint-radio'
 
 export const HINTS: Record<HintId, { title: string; body: (key: KeyLookup) => string }> = {
   'hint-lowhp': {
@@ -139,6 +144,15 @@ export const HINTS: Record<HintId, { title: string; body: (key: KeyLookup) => st
     title: 'HEAVY LOADOUT',
     body: () =>
       'The squad deployed over the heavy mass line: every operative moves slower this mission.',
+  },
+  // The officer radio was taught by nothing before Glass Veil (difficulty
+  // curve Open Question, decided 2026-10-23): one hint when the first officer
+  // starts the call, while it can still be stopped.
+  'hint-radio': {
+    title: 'RADIO CALL',
+    body: () =>
+      'An officer is calling in your position. Drop the officer in the next few seconds, ' +
+      'or nearby guards converge on the spot.',
   },
 }
 

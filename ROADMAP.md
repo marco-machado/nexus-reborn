@@ -15,7 +15,7 @@
 
 ## After that
 
-2. **Interaction pattern library**: add the Scan marker / Focus selection and the Influence moment note (spec Open Question 15).
+2. **Interaction pattern library**: add any pattern the five new specs need (P-24 and P-25 done 2026-10-23).
 3. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
 4. **Playtests 2 and 3**, `/playtest-report`, and the fun-hypothesis validation (gate blocker 2).
 5. **World Network p95 re-profile** (dated 2026-10-28) and the draw-call / memory sampling.
@@ -33,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-23 — Difficulty-curve open questions decided (two wins to Intel 2; grenade centre 80; one-shot RADIO CALL advisory). Pattern library: P-20 / P-23 corrected, P-24 Scan marker and Focus selection and P-25 Inline moment note added (World Network spec OQ15, OQ19 closed).
 - 2026-10-23 — IF-036: every surface (Menu, Settings, Research, Brief, Assembly, Debrief, Mission HUD, Pause) meets the 10 px / 4.5:1 / 24×24 floors and lays out at four text scales; sweep 0 failures; Brief recon type moved to an HTML overlay.
 - 2026-10-23 — Sprint 11 implemented: IF-016 to IF-035 Complete (World Network to its UX spec; type, ink and hit-target floors; card no longer blocks the clock). Probe `production/qa/evidence/sprint-011/probe.mjs` ALL PASS (152); 1642 tests; code review APPROVED WITH SUGGESTIONS, applied. `npm test` ×3 green before the first story (retro 10 action 4).
 - 2026-10-23 — `/qa-plan sprint`: `production/qa/qa-plan-sprint-011-2026-10-23.md` written; five missing guard cases (IF-020, IF-023, IF-026, IF-029, IF-030) added and back-filled into the stories; the four IF-015 gaps carried as Brief cases.

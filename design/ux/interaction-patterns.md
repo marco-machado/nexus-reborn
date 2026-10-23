@@ -2,7 +2,7 @@
 
 > **Status**: Approved (/ux-review design/ux/interaction-patterns.md 2026-10-05)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-10-05
+> **Last Updated**: 2026-10-23 (P-20 speed-while-paused as built; P-23 four-row card and clock-use dismissal; P-24 Scan marker / Focus selection and P-25 Influence moment note added; locked and disabled controls dim the frame, never the text — IF-029 / IF-036)
 > **Platform Target**: Desktop browser, keyboard and mouse only, 1280×720 minimum. No gamepad. No touch.
 > **Template**: Interaction Pattern Library
 > **Sources**: `design/gdd/interface.md` Rules 4–19; UI Requirements of all eight system GDDs; `design/art/art-bible.md` §7.1–7.5; `design/accessibility-requirements.md` (Standard tier); `src/ui/PauseMenu.tsx`; `src/ui/WorldMap.tsx`; `src/ui/Nav.tsx`
@@ -43,7 +43,9 @@ Contrast floors are inherited, not restated as new numbers: body and readout tex
 | P-20 | Strategic clock transport | Input | 2026-10-05 |
 | P-21 | Campaign banner | Feedback | 2026-10-05 |
 | P-22 | Research remaining readout | Data Display | 2026-10-05 |
-| P-23 | First-visit overlay | Overlay | 2026-10-05 |
+| P-23 | First-visit overlay | Overlay | 2026-10-05, revised 2026-10-23 |
+| P-24 | Scan marker and Focus selection | Data Display / Input | 2026-10-23 |
+| P-25 | Inline moment note | Feedback | 2026-10-23 |
 
 ---
 
@@ -151,7 +153,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 
 **Accessibility**: The word carries the refusal. Dimming may reinforce. Contrast of the reason is ≥4.5:1. Do not require the player to focus the control to learn why it refused.
 
-**Implementation notes**: A `title` attribute or hover tip does not satisfy the visible reason. Brief's shipped lock tip is not this pattern; P-06 requires the word on the tab.
+**Implementation notes**: A disabled or locked control dims its frame (dashed border, no fill), never its text: the reason must read at 4.5:1 (IF-029, IF-036; inactive controls are exempt from the contrast floor under WCAG 1.4.3, but the reason text beside them is not). A `title` attribute or hover tip does not satisfy the visible reason. Brief's shipped lock tip is not this pattern; P-06 requires the word on the tab.
 
 ### P-04 Selection / focus marker
 
@@ -528,7 +530,7 @@ These are specified here so a screen spec does not invent them. Unused controls 
 - The readout prints the word `PAUSED` or `nX`. Red may mark paused. The word carries running. Ledger Amber does not mark a running clock.
 - Pause control: play and pause shapes, `aria-pressed`, accessible name `RESUME STRATEGIC CLOCK` or `PAUSE STRATEGIC CLOCK`.
 - Speed controls: four buttons labeled `1X` `2X` `4X` `8X`, `aria-pressed` on the active speed while not paused.
-- Setting a speed while paused may select that speed. The readout stays `PAUSED` until resume.
+- Setting a speed while paused sets that speed and resumes the clock (as built, `worldStore.setSpeed`; ruled 2026-10-23 in the World Network spec).
 - Menu, Mission, and Debrief do not run this clock. Mission pause is P-05 and does not change this speed.
 - Review (P-17) does not advance this clock.
 - Pointer activates. Do not invent a new key binding. Full keyboard travel is backlog.
@@ -597,9 +599,9 @@ These are specified here so a screen spec does not invent them. Unused controls 
 **Description**: One-shot teaching for the desk, not a mission toast and not a modal. Source: World Network UI Requirements; Interface AC 27.
 
 **Specification**:
-- Once per campaign. Teaches Pause and clock speed as control over strategic time, opening Influence as later rather than broken, and Nexus-held Tax eligibility as distinct from a printed Tax figure. Also names the panel groups and the Research tab. It does not say "click the marker."
+- Once per campaign. Four rows: THE JOB, START HERE (names the open contract with the highest Chance), STRATEGIC TIME (Pause and clock speed as control over strategic time), THE FOUR NUMBERS (incl. Nexus-held Tax eligibility as distinct from a printed Tax figure). No Influence row (Influence is taught by P-25) and no Research row (taught on the first Debrief). It does not say "click the marker." (World Network Core Rule 13, 2026-10-21.)
 - Does not spend, does not arm a confirm, and does not pause strategic time by being open. The clock control (P-20) stays usable.
-- Does not trap focus. It is not P-05. It is not P-11 (that pattern is the HUD toast and the failure toast).
+- Does not trap focus and is not `aria-modal`. It is not P-05. It is not P-11 (that pattern is the HUD toast and the failure toast). Its wrapper takes no pointer events and does not dim the desk; only the card is interactive.
 - Dismisses on an explicit dismiss or when the player uses the clock control it is teaching. It does not return.
 
 **States**: Unseen, Showing, Dismissed. Hover is not a state. Focus is not trapped. Disabled does not apply. Error does not apply.
@@ -610,6 +612,51 @@ These are specified here so a screen spec does not invent them. Unused controls 
 **Accessibility**: Teaching sentences are visible text, not color. Dismiss has an accessible label. The overlay does not block the clock control. Captions stay backlog.
 
 **Implementation notes**: Do not pause strategic time while it is open. Do not spend. Copy of the three lessons stays in the World Network spec; the lessons themselves are required.
+
+### P-24 Scan marker and Focus selection
+
+**Category**: Data Display / Input
+**Used In**: World Network (Scan, sector list, sector inset, Feed rows)
+
+**Description**: Focus is which sector the desk is reading. It is not the selected contract. A marker on the Scan opens a contract; a sector region, a sector row, the inset steppers or a Feed row move Focus. Source: World Network UX spec (Component Inventory, Interaction Map).
+
+**Specification**:
+- Focus moves from a sector row, a Scan sector region or city marker, the inset `<` `>` steppers (they skip locked sectors), or a Feed row (also marks read). One sector is focused at a time; there is always one.
+- The focused row carries P-04 (2 px teal left bar and frame) and `aria-pressed="true"`; the Focus panel title and the `FOCUS` chip retarget in the same frame (≤100 ms).
+- A contract marker is a button: open contract → `selectMission` (Brief); locked → nothing, and its requirement text stays visible beside it (P-03). A failed campaign locks every marker with the cause `CAMPAIGN LOST`.
+- Every Scan job has an equivalent off the Scan: Focus via the sector rows and steppers, contracts via OPEN CONTRACTS. The marker's hit area may be under 24×24 only because of that equivalent (WCAG 2.2 SC 2.5.8, equivalent exception).
+- A locked sector (Antarctica) is never focusable; its row stays a tab stop with `aria-disabled` and the visible reason `NO SURVEY DATA`.
+
+**States**: Focused, Unfocused, Locked (sector), Open / Locked (marker). Hover is not a state. Focus ring is P-04. Error does not apply.
+
+**When to Use**: choosing what the World Network desk reads.
+**When NOT to Use**: selecting a contract (that is a marker or an OPEN CONTRACTS row, and it changes phase). Mission unit selection (P-04 in the HUD).
+
+**Accessibility**: Sector buttons are labelled `NAME // CONTROL n% // UNREST n%` (+ `CRISIS` / `UNREST PRESSURE`); markers carry the contract or city name and lock reason. Focus is never told by colour alone (bar + frame + `aria-pressed`).
+
+**Implementation notes**: `worldStore.select` / `stepSector`; `src/ui/WorldMap.tsx` (sector list, `SectorInset`), `src/ui/WorldGlobe.tsx` (markers). Reduced motion: the Scan view cuts instead of travelling.
+
+### P-25 Inline moment note
+
+**Category**: Feedback
+**Used In**: World Network (Influence moment), Debrief (first-Debrief Research prompt)
+
+**Description**: A one-shot teaching note that appears inside the panel it teaches, the first time the lesson becomes actionable, once per campaign. Not a toast, not a modal, not the first-visit card. Source: World Network Core Rule 13 and the Debrief prompt (IF-013, IF-014).
+
+**Specification**:
+- Fires on an owner condition, never on a timer: the World Network note when `influenceRefusal` first returns none for an action on the focused sector; the Debrief note on the first Debrief that has an affordable project.
+- Takes a slot in the panel's own flow (World Network: the sector inset's slot; Debrief: below the invoice and filing line, above the actions). It never covers the content it teaches.
+- One `UNDERSTOOD` control dismisses it; the mark is made in the tutorial seen set and persists with the campaign on the next autosave. A refocus hides the World Network note for good.
+- Copy names the action, its cost and its effect from the owner's data; it prints no number the owner did not supply.
+
+**States**: Unfired, Showing, Dismissed. Hover is not a state. Focus is P-04 on `UNDERSTOOD`; the note does not take focus on its own. Error does not apply.
+
+**When to Use**: teaching a verb the moment it first becomes available.
+**When NOT to Use**: first-visit teaching (P-23), mission tutorial steps (P-11), confirmations (P-01, P-02).
+
+**Accessibility**: `role="note"` with a label; text at the 10 px floor and 4.5:1; `UNDERSTOOD` ≥24×24.
+
+**Implementation notes**: `useInfluenceMoment` in `src/ui/WorldMap.tsx`; `src/ui/worldOnboard.ts` (`influenceMoment`); ids `hint-influence`, `hint-debrief-research` in `src/game/tutorial.ts`. `markSeen` is guarded (no duplicate ids).
 
 ---
 
@@ -665,9 +712,9 @@ One key, consumed by the innermost owner. It never confirms a spend or a discard
 
 ## Gaps & Patterns Needed
 
-Interface GDD interaction behaviors are covered by P-01–P-23 or by the Standard controls table. Layout of screens that do not have a UX spec yet is not a missing pattern.
+Interface GDD interaction behaviors are covered by P-01–P-25 or by the Standard controls table. Layout of screens that do not have a UX spec yet is not a missing pattern.
 
-Not yet their own patterns, and not required before the screen spec that uses them: Scan marker / Focus selection on World Network; Brief map (the District); Assembly bays and dossier; candidate market; Research node graph. Those specs must use P-03, P-04, P-14, and P-15 where they apply, and must add a pattern here before inventing a behavior this library does not have.
+Not yet their own patterns, and not required before the screen spec that uses them: Brief map (the District); Assembly bays and dossier; candidate market; Research node graph. (Scan marker / Focus selection is P-24 since 2026-10-23.) Those specs must use P-03, P-04, P-14, and P-15 where they apply, and must add a pattern here before inventing a behavior this library does not have.
 
 ---
 

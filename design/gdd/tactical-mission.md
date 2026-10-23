@@ -221,7 +221,7 @@ The `guard_vision` formula (alias of §10 distances + §16 add) is defined as:
 
 The `grenade_damage` formula is defined as linear falloff between the two §10 endpoints, LoS only:
 
-`grenade_damage = 70 − 35 × min(1, d / 3.5)` for a **living** unit with LoS and d ≤ 3.5 m; else **no blast damage to that living unit**.
+`grenade_damage = 80 − 45 × min(1, d / 3.5)` for a **living** unit with LoS and d ≤ 3.5 m; else **no blast damage to that living unit**.
 
 This formula does **not** decide Device HP. Devices are Rule 13 / OQ3 (fire lane / charge / grenade-as-channel remainder) — do not read the living-unit `else` as Device-zero.
 
@@ -233,7 +233,7 @@ Throw: spends one power cell; pavement snap ≤ 2.5 m; land ≤ 18 m; 24 m noise
 |----------|--------|------|-------|-------------|
 | distance from blast | d | float | 0–3.5 m in-blast | Metres from detonation |
 | centre / edge | 70 / 35 | float | 70, 35 | Authored damage at centre and 3.5 m edge |
-| grenade damage | grenade_damage | float | 35–70 in-blast | Applied per LoS body |
+| grenade damage | grenade_damage | float | 35–80 in-blast | Applied per LoS body |
 
 **Output Range:** 70 at centre, 35 at 3.5 m; 0 outside radius or without LoS.
 **Example (§10):** Centre 70; edge 3.5 m → 35.
