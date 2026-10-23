@@ -62,3 +62,11 @@ Contracts: files whose header starts `CONTRACT FILE` — shared types, static da
 
 - Per-frame data stays out of React state. Preserve mission research/loadout snapshots.
 - Preserve deterministic gameplay, campaign, and procedural RNG.
+
+## Roadmap
+
+`ROADMAP.md` in the project root must be current at all times. It always lists the next steps, and at the very least the very next step.
+
+- Update it in the same turn whenever a step finishes, the plan changes, or a new step appears: move finished steps to "Done recently", and set "Next step".
+- Never end a turn with `ROADMAP.md` out of date. When you commit, include the `ROADMAP.md` change in that commit.
+- When asked "what's next?", answer from `ROADMAP.md` after checking it is still true.
