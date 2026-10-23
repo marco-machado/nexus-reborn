@@ -153,7 +153,7 @@ First-visit orientation card (P-23) sits over the Scan column, four rows, one `U
 | Zone | Component | Type | Content | Interactive | Pattern |
 |---|---|---|---|---|---|
 | Header | Resource readouts | Stat display ×4 | `CREDITS n CR` (amber, money only), `INFLUENCE n PTS`, `INTEL n`, `ROSTER n / cap` | No | P-14 |
-| Banner | Campaign banner | Status record | `CAMPAIGN COMPLETE` or `CAMPAIGN FAILED`, sigil (`aria-hidden`), secondary line, `n / 3` count. Secondary lines are the shipped ones, which P-21 allows until this spec replaces them: complete `ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE`; failed `ROSTER EMPTY // NETWORK COMMAND SUSPENDED` (owner to confirm, **Open Question 20**) | No | P-21 |
+| Banner | Campaign banner | Status record | `CAMPAIGN COMPLETE` or `CAMPAIGN FAILED`, sigil (`aria-hidden`), secondary line, `n / 3` count. Secondary lines: complete `ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE` (shipped, kept); failed `ROSTER EMPTY // NO CONTRACT CAN BE TAKEN` (replaces the shipped `ROSTER EMPTY // NETWORK COMMAND SUSPENDED`, owner 2026-10-23, Open Question 20) | No | P-21 |
 | Left | SECTORS list | Scrollable list of buttons | Per open sector: glyph, name, `CONTROL n%`, `UNREST n%`, bar or `CRISIS` / `UNREST PRESSURE` chip. Antarctica: lock glyph, name, `NO SURVEY DATA` | Yes — Focus (`aria-pressed`) | P-15, P-04 (selection), P-03 for Antarctica (reason is the visible text) |
 | Center | Scan | Spatial display | Sector fill = majority holder; Contested; Unknown (Antarctica); crisis hatch + word `CRISIS`; city marks | Yes — Focus by sector (as built: drag/zoom, markers) | New: **Scan marker / Focus selection** (library Gaps list) |
 | Center | Contract markers | One button per Scan-visible contract | Label, open or locked; locked shows its requirement as text | Yes — select contract (→ Brief) | P-03 for locked; New with Scan |
@@ -389,7 +389,18 @@ Platform Target: keyboard and mouse. Gamepad and touch are out of scope (ADR-001
 - [x] Every action is a single click.
 - [x] No information appears only on hover; hover is not a state (the scrollbar is the one hover affordance, P-15). Marker tips and `title` text are not relied on.
 - [x] No right-click, double-click or drag is required. Dragging the Timeline is an alternative to the keyboard path, not the only one. Globe drag is a view control, not a game verb.
-- [ ] Hit-target sizes are specified. Measured as built at 1280×720, 100% scale (2026-10-23): sector rows ≥46 px high; contract rows 275×45; Influence buttons 93×29; inset steppers 18×30; speed buttons 30×20; Scan markers 16×16; Feed rows 512×17; Timeline track 12 px high. No project minimum exists to judge them against. **Open Question 21.**
+- [x] Hit-target sizes are specified: every pointer target is at least **24×24 CSS px**, or meets one of the WCAG 2.2 SC 2.5.8 (AA) exceptions — spacing (a 24 px circle centered on the target touches no other target or circle) or an equivalent control on the same screen. Owner decision 2026-10-23 (Open Question 21). The visible glyph may stay smaller; the hit area carries the size.
+
+| Target (as built, 1280×720, 100%) | Size | Meets 24×24? |
+|---|---|---|
+| Sector rows | ≥46 px high, full column width | Yes |
+| Contract rows | 275×45 | Yes |
+| Influence buttons | 93×29 | Yes |
+| Scan markers | 16×16 | No by size; passes by **equivalent** (every contract marker has an OPEN CONTRACTS row, every city marker's Focus has a sector row) |
+| Inset steppers | 18×30 | No by size; spacing at the inset's two ends is likely to pass but is **not verified** — spec: widen the hit area to 24 px |
+| Speed buttons | 30×20 | No by size; spec: hit area ≥24 px high |
+| Feed rows | 512×17 | **No**: rows stack at 17 px, so the spacing circles overlap. Spec: row hit area ≥24 px high |
+| Timeline track | 12 px high | **No**. Spec: hit area ≥24 px high; the drawn track may stay 12 px |
 
 **Gamepad / touch**: not supported; no checklist.
 
@@ -530,6 +541,7 @@ Each criterion is checkable by a tester without the GDDs. They are UX criteria; 
 - [ ] **Layout.** At 1280×720 and text scale 90 / 100 / 110 / 125%, no text is clipped or truncated and no box overlaps another except declared overlays; overflow scrolls and is reachable.
 - [ ] **Focus and labels.** Every control shows P-04 brackets when focused, in high contrast too; the Timeline moves with Left/Right/Home/End; every control in the Accessibility table has the named accessible label.
 - [ ] **Non-color cues.** For selection, lock, crisis, unrest pressure, Garrison, Tax paid, paused and Review, a tester viewing the screen in grayscale can still tell the states apart.
+- [ ] **Hit targets.** At 1280×720 and 100% scale, every pointer target except the Scan markers has a hit area of at least 24×24 CSS px (measure the element box, not the glyph). Each Scan marker's contract or city has a full-size row elsewhere on the screen.
 - [ ] **Motion.** With reduced motion on, no Scan sweep runs, the `LIVE` dot and Focus selection are static, and the Scan view cuts instead of travelling. With it off, no more than two idle motions run.
 
 ---
@@ -559,5 +571,5 @@ Items marked **As-built delta** record where the shipped screen (`src/ui/WorldMa
 | 17 | **As-built delta, type size and contrast.** Measured 2026-10-23 at 100% scale: many World Network labels render below the 10 px floor (Influence status 7 px, forecast label 6.5 px, header resource labels, sector readings, chips, Control key and Timeline axis 8 px, several others 8.5–9 px). Ink Dim text fails 4.5:1 in default mode (4.29–4.48:1), Ink Faint text is 2.21:1, and `red-dim` is 3.18:1 in both modes. See Accessibility → Contrast. Implementation fix in `src/ui/ui.css` (sizes) and the token pair (inks) | ui-programmer / art-director | Open |
 | 18 | **No numeric open-time budget.** The Interface GDD forbids inventing one. The World Network p95 re-profile due 2026-10-28 (retro 10 action 3) is to set it; the Response-budget acceptance criterion gains the number then | performance-analyst | Open (dated) |
 | 19 | **Two docs still describe the old nine-row card.** `design/gdd/interface.md` Screens table (World Network row) says the first-visit overlay teaches "Influence enablement … alongside panel groups and the Research tab"; `design/ux/interaction-patterns.md` P-23 says it teaches "opening Influence as later" and "names the panel groups and the Research tab". World Network Core Rule 13 (2026-10-21), the Interface UI Requirements table and this spec say four rows, no Influence or Research row. Neither doc is edited by this spec | game-designer / ux-designer | Open |
-| 20 | **Campaign-failed banner copy.** The shipped secondary line `ROSTER EMPTY // NETWORK COMMAND SUSPENDED` says command is suspended, but on a failed campaign Focus, the clock, Influence and Research all stay usable (GDD Edge Cases). Keep it, or replace it? | owner | Open |
-| 21 | **No minimum hit-target size exists** for mouse targets in the art bible, the accessibility tier or the pattern library. The measured World Network targets (Input checklist) include 16×16 Scan markers, a 12 px Timeline track and 17 px Feed rows. Set a minimum, or record that none applies | owner / ux-designer | Open |
+| 20 | **Campaign-failed banner copy.** The shipped secondary line `ROSTER EMPTY // NETWORK COMMAND SUSPENDED` said command was suspended, but on a failed campaign Focus, the clock, Influence and Research all stay usable (GDD Edge Cases). **Owner 2026-10-23: replace it.** New line: `ROSTER EMPTY // NO CONTRACT CAN BE TAKEN` (states the one thing that stops: `selectMission` is a no-op). **As-built delta**: `src/ui/WorldMap.tsx` still prints the old line | owner | Closed 2026-10-23 (spec); code change open |
+| 21 | **Minimum hit-target size.** Owner 2026-10-23: research it. Adopted WCAG 2.2 SC 2.5.8 Target Size (Minimum), Level AA: 24×24 CSS px, with its spacing / equivalent / inline / user-agent / essential exceptions. This matches the tier's WCAG AA orientation; SC 2.5.5 (44×44, Level AAA) was not adopted. **As-built delta**: Feed rows (17 px), the Timeline track (12 px), speed buttons (20 px high) and inset steppers (18 px wide) are under it — see the Input checklist table | owner / ui-programmer | Closed 2026-10-23 (spec); code change open |
