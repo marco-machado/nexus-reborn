@@ -10,12 +10,12 @@
 
 ## Next step
 
-1. **`/create-stories`** — turn the World Network spec's as-built deltas into stories (Open Questions 2–6, 8, 17, 20, 21; sub-floor type sizes and failing contrast are the largest, the failed-banner line and the 24×24 hit targets are small). `/sprint-plan new` stopped BLOCKED on 2026-10-23: all 145 stories under `production/epics/` are Complete, so Sprint 11 has nothing Ready to plan.
+1. **`/sprint-plan new`** — Sprint 11, planned from the 20 Ready stories IF-016 to IF-035 (`production/epics/interface/`). The last Sprint 10 close-out step (CLAUDE.md → Gate Checks).
 
 ## After that
 
-2. **`/sprint-plan new`** — Sprint 11, planned from those stories. The last Sprint 10 close-out step (CLAUDE.md → Gate Checks).
-3. **Next `/qa-plan`** — add the four IF-015 coverage gaps as cases (Sprint 10 QA condition 4; listed in `production/session-state/active.md`).
+2. **Next `/qa-plan`** — Sprint 11 cases, plus the four IF-015 coverage gaps (Sprint 10 QA condition 4; listed in `production/session-state/active.md`).
+3. **Register a hit-target TR** at the next `/architecture-review`: IF-031 to IF-035 cite `TR-interface-???` (WCAG 2.2 SC 2.5.8, 24×24).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -28,6 +28,7 @@
 
 ## Done recently
 
+- 2026-10-23 — `/create-stories interface`: IF-016 to IF-035 written (19 UI, 1 Integration) from the World Network spec's as-built deltas. Owner rulings recorded in the spec and decision log: OQ2 Unrest ink and bar by state; OQ3 left INFLUENCE panel removed, RESOURCE POOL → INTEL; OQ5 `-- CHANNEL OPEN --`; OQ8 effect on its own line; OQ17 Ink Dim and Ink Faint text → Ink, locked rows dim the frame only; IF-026 readout list; IF-035 added.
 - 2026-10-23 — `/sprint-plan new` run: BLOCKED, no Ready stories (145 of 145 Complete). No sprint file written.
 - 2026-10-23 — World Network spec Open Questions 20 and 21 closed by the owner: failed-banner line replaced (`ROSTER EMPTY // NO CONTRACT CAN BE TAKEN`); minimum hit target 24×24 CSS px (WCAG 2.2 SC 2.5.8 AA). Spec only; code still open.
 - 2026-10-23 — World Network spec revised (focus order, measured contrast, character limits, null handling, flagged doc conflicts) and re-reviewed: APPROVED, 3 advisory; header marked Approved and committed.
