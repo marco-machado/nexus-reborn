@@ -60,6 +60,8 @@ Feed rows stack at 17 px (512×17 measured 2026-10-23), so their spacing circles
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `feed-row-hit-area`

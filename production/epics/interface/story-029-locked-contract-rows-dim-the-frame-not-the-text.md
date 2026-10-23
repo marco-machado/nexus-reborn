@@ -63,6 +63,8 @@ Locked OPEN CONTRACTS rows are drawn at `opacity: 0.55` (`src/ui/ui.css:1508`), 
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE (assembled from the qa-lead's IF-029 and IF-036 blocks after the owner merged them; IF-036 alone was GAPS for the circular dependency)). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `locked-row-frame-and-reason`
@@ -71,7 +73,10 @@ Locked OPEN CONTRACTS rows are drawn at `opacity: 0.55` (`src/ui/ui.css:1508`), 
   - Pass condition: every run has effective opacity 1 and ≥4.5:1 in both modes; the reason is Red Hot `rgb(255,107,85)` and the `red-dim` class is not used on it; the locked frame differs from an open row's; the lock glyph is drawn instead of the target glyph and the reason is visible.
   - Edge cases: in a failed campaign `CAMPAIGN LOST` is the same element and gets the same treatment; `aria-disabled` unchanged; the lock glyph ≥3:1 (non-text floor).
 
-- **AC-2** (guard): partly covered (lock glyph ≥3:1, `aria-disabled`); the grayscale comparison has no qa-lead case yet — `/qa-plan` adds it.
+- **AC-2** (guard) — added by `/qa-plan` 2026-10-23:
+  - Setup: opening desk (Glass Veil and Hollow Crown locked, Rust Haven open); grayscale filter on.
+  - Verify: compare a locked row and an open row side by side; measure the lock glyph's contrast against the row (non-text); read `aria-disabled`.
+  - Pass condition: the locked row is identifiable by its lock glyph and reason text with colour removed; the glyph is ≥3:1; locked rows carry `aria-disabled="true"`, open rows do not.
 
 ---
 

@@ -60,6 +60,8 @@ The `1X` `2X` `4X` `8X` buttons are 30×20 (measured 2026-10-23). The visible gl
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `speed-button-hit-area`

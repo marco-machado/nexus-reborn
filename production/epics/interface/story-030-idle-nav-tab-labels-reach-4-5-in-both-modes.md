@@ -61,6 +61,8 @@ The idle Research / Brief / Assembly tab labels measure 4.29:1 in default mode a
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `nav-idle-contrast`
@@ -69,7 +71,10 @@ The idle Research / Brief / Assembly tab labels measure 4.29:1 in default mode a
   - Pass condition: every idle label ≥4.5:1 on all four Screens in both modes.
   - Edge cases: Brief locked and unlocked; the selected tab excluded; the high-contrast non-remap cause traced and recorded; `NO CONTRACT SELECTED` ratio reported as an observation.
 
-- **AC-2** (guard): partly covered (high-contrast cause traced); the `aria-current` check has no qa-lead case yet — `/qa-plan` adds it.
+- **AC-2** (guard) — added by `/qa-plan` 2026-10-23:
+  - Setup: high contrast on; each of the four Screens.
+  - Verify: compare each idle label's computed colour with and without high contrast; read `aria-current` on every tab; read the commit message for the traced cause.
+  - Pass condition: the idle label colour changes when high contrast is on (it takes the remap); exactly the current Screen's tab carries `aria-current="page"`; the cause of the as-built non-remap is written in the commit message.
 
 ---
 

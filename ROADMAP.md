@@ -10,11 +10,11 @@
 
 ## Next step
 
-1. **`/qa-plan sprint`** — Sprint 11 cases, including the five guard cases the stories mark missing (IF-020, IF-023, IF-026, IF-029, IF-030) and the four IF-015 coverage gaps (Sprint 10 QA condition 4; listed in `production/session-state/active.md`).
+1. **`npm test` three times in a row** (retro 10 action 4), before the first Sprint 11 story.
 
 ## After that
 
-2. **`npm test` three times in a row** (retro 10 action 4), before the first story.
+2. **Shared probe script** `production/qa/evidence/sprint-011/probe.mjs` (QA plan; watch it fail on the as-built screen), before IF-026.
 3. **`/story-readiness` then `/dev-story`**, wave by wave per `production/sprints/sprint-011.md`, starting with IF-016.
 4. **Register a hit-target TR** at a later `/architecture-review` (owner waiver for Sprint 11: IF-031 to IF-035 cite `TR-interface-???`).
 
@@ -29,6 +29,7 @@
 
 ## Done recently
 
+- 2026-10-23 — `/qa-plan sprint`: `production/qa/qa-plan-sprint-011-2026-10-23.md` written; five missing guard cases (IF-020, IF-023, IF-026, IF-029, IF-030) added and back-filled into the stories; the four IF-015 gaps carried as Brief cases.
 - 2026-10-23 — `/sprint-plan new`: Sprint 11 written (`production/sprints/sprint-011.md`, `production/sprint-status.yaml`). Guard ACs added to IF-016 to IF-035 for the `/story-readiness` minimum; PR-SPRINT CONCERNS → owner Option A (IF-019, IF-025 Nice to Have); TR waiver for IF-031 to IF-035; view-control bar stays.
 - 2026-10-23 — `/create-stories interface`: IF-016 to IF-035 written (19 UI, 1 Integration) from the World Network spec's as-built deltas. Owner rulings recorded in the spec and decision log: OQ2 Unrest ink and bar by state; OQ3 left INFLUENCE panel removed, RESOURCE POOL → INTEL; OQ5 `-- CHANNEL OPEN --`; OQ8 effect on its own line; OQ17 Ink Dim and Ink Faint text → Ink, locked rows dim the frame only; IF-026 readout list; IF-035 added.
 - 2026-10-23 — `/sprint-plan new` run: BLOCKED, no Ready stories (145 of 145 Complete). No sprint file written.

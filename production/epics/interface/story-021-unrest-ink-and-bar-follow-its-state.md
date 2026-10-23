@@ -63,6 +63,8 @@ Red is danger. As built, the Focus panel prints the Unrest value in red and draw
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE (bar clause added by owner ruling after the gate; covered by the same Setup and states)). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `unrest-ink-states`

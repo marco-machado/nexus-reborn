@@ -63,6 +63,8 @@ Ink Dim (`#5d7d75`) text measures 4.29–4.48:1 composited on the panel in defau
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `ink-dim-removed`

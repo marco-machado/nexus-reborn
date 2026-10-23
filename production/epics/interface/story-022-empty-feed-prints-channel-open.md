@@ -61,6 +61,8 @@ The empty Feed prints `NO TRAFFIC IN THIS WINDOW`; the P-16 empty-channel token 
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `feed-empty-token`

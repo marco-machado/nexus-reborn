@@ -62,6 +62,8 @@ Measured 2026-10-23 at 100%: many World Network labels render under the 10 px fl
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: GAPS → revised with the owner (readout list), then ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `type-size-floors`
@@ -70,7 +72,10 @@ Measured 2026-10-23 at 100%: many World Network labels render under the 10 px fl
   - Pass condition: every run ≥10 px; each listed readout run ≥12 px; the README lists the measured minimum per state and each listed readout with its measured size.
   - Edge cases: runs that exist in one state only (`REVIEW -<ago>`, `> GO LIVE`, `CRISIS` and `UNREST PRESSURE` chips, banner lines, `EXPIRY` chip, forecast chips at intel 2+) are measured in their own state (intel 2+ recorded as an extra state); re-check clipping at 125% in the README.
 
-- **AC-2** (guard): partly covered (the 125% clipping recheck on the World Network); the other three Screens have no qa-lead case yet — `/qa-plan` adds it.
+- **AC-2** (guard) — added by `/qa-plan` 2026-10-23:
+  - Setup: text scale 125; open World Network, Research, Brief (with a contract selected) and Assembly.
+  - Verify: run the probe's clip/overlap pass on every panel of each Screen; check `.navtab-label` for ellipsis (`text-overflow` active: `scrollWidth > clientWidth`); check the header resources.
+  - Pass condition: no clipped or overlapping box on any of the four Screens (scrolled overflow reachable counts as not clipped); no nav label truncated; BUG-0009's Brief threat box still clear.
 
 ---
 

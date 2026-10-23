@@ -17,7 +17,7 @@ Bring the World Network screen up to its approved UX spec (`design/ux/world-netw
 - No milestone is defined — planning against the story backlog alone. No risk register exists; risks are assessed from the sprint contents only.
 - PR-SPRINT: **CONCERNS** (producer, 2026-10-23): 3.8 d against 3.2 d. Owner chose Option A: IF-023 / IF-024 promoted to Must, IF-019 and IF-025 deferred to Nice to Have.
 
-QA plan: run `/qa-plan sprint` before implementation begins (none exists for Sprint 11; option [A] chosen in autonomous mode). It must add the five guard cases the stories mark as missing (IF-020, IF-023, IF-026, IF-029, IF-030) and the four IF-015 coverage gaps (Sprint 10 QA condition 4).
+QA Plan: `production/qa/qa-plan-sprint-011-2026-10-23.md` (written 2026-10-23, before implementation; option [A] chosen in autonomous mode at planning). It must add the five guard cases the stories mark as missing (IF-020, IF-023, IF-026, IF-029, IF-030) and the four IF-015 coverage gaps (Sprint 10 QA condition 4).
 
 ### Owner rulings at planning (2026-10-23)
 

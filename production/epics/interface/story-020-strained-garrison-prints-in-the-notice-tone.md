@@ -61,6 +61,8 @@ The Garrison word prints `SECURE` teal, `STRAINED` amber, `CRITICAL` red. Ledger
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `garrison-tones`
@@ -69,7 +71,10 @@ The Garrison word prints `SECURE` teal, `STRAINED` amber, `CRITICAL` red. Ledger
   - Pass condition: SECURE is teal `rgb(126,240,212)`; STRAINED is Print White `rgb(232,251,242)` (`notice`); CRITICAL is Red Hot `rgb(255,107,85)`; no `amber` class on the Garrison element in any state.
   - Edge cases: Credits stay amber; Antarctica prints no Garrison.
 
-- **AC-2** (guard): partly covered by AC-1's edge cases (Credits stay amber); the grayscale check has no qa-lead case yet — `/qa-plan` adds it.
+- **AC-2** (guard) — added by `/qa-plan` 2026-10-23:
+  - Setup: the three Garrison states; apply `filter: grayscale(1)` to the page (or capture and desaturate).
+  - Verify: read the Garrison slot in each grayscale capture; read the header Credits colour without the filter.
+  - Pass condition: each state is told apart by its word alone (`SECURE` / `STRAINED` / `CRITICAL` present and legible); Credits compute to Ledger Amber `rgb(255,208,117)`.
 
 ---
 

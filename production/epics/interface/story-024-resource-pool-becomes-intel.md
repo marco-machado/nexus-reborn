@@ -60,6 +60,8 @@ The bottom RESOURCE POOL repeats Credits, Influence and Roster from the header. 
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `bottom-intel-panel`

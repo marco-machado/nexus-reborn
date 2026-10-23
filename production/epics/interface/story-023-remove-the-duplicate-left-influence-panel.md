@@ -61,6 +61,8 @@ The left INFLUENCE panel repeats the Influence figure the header already prints.
 
 ## QA Test Cases
 
+QA plan: `production/qa/qa-plan-sprint-011-2026-10-23.md`.
+
 *Written by qa-lead at story creation (QL-STORY-READY, 2026-10-23: ADEQUATE). The developer implements against these — do not invent new test cases during implementation.*
 
 - **AC-1** — Manual check: `left-column-sectors-only`
@@ -69,7 +71,10 @@ The left INFLUENCE panel repeats the Influence figure the header already prints.
   - Pass condition: only `SECTORS` is in the left column; the header still prints `INFLUENCE n PTS`; nothing clips or overlaps at the four scales (a scrolling SECTORS list with Antarctica reachable counts as not clipped).
   - Edge cases: a campaign banner posted at 125%; the first-visit card showing; record how many sector rows are visible as an observation.
 
-- **AC-2** (guard): no qa-lead case yet (header Influence after a spend or award) — `/qa-plan` adds it.
+- **AC-2** (guard) — added by `/qa-plan` 2026-10-23:
+  - Setup: a fixture with Influence ≥ the Stabilize cost on an open focused sector; then a clean-win Debrief return.
+  - Verify: read the header `INFLUENCE n PTS` immediately before and after a Stabilize spend (same captured frame as the status word change), and immediately on the World Network after the Debrief return.
+  - Pass condition: the header shows the debited value in the frame the status word turns `ACTIVE`, and the awarded value on the first frame of the return; no other Influence figure remains on the screen.
 
 ---
 
