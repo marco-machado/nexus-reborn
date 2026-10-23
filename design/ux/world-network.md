@@ -1,8 +1,8 @@
 # UX Spec: World Network
 
-> **Status**: In Review (written 2026-10-22; awaiting `/ux-review design/ux/world-network.md`)
+> **Status**: Approved (/ux-review design/ux/world-network.md 2026-10-23, re-review after one NEEDS REVISION pass)
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-10-22
+> **Last Updated**: 2026-10-23
 > **Journey Phase(s)**: unknown — no journey map
 > **Platform Target**: Desktop browser (1280×720 minimum). Keyboard and mouse. No gamepad. No touch.
 > **Template**: UX Spec
@@ -123,7 +123,7 @@ First-visit orientation card (P-23) sits over the Scan column, four rows, one `U
 | Option | Description | For | Against |
 |---|---|---|---|
 | **A — Three columns + bottom time strip (chosen)** | Sectors left, Scan center, Focus panel and OPEN CONTRACTS right, time strip along the bottom | Already the shipped grid and tuned to the 1280×720 floor (`src/ui/ui.css` `.wm-main`, `.wm-bottom`). The numbers and the action that acts on them share one column. Time controls sit with the Feed, the thing they change | The right column has no slack at 720p (a comment in `WorldMap.tsx` says so); anything added there compresses OPEN CONTRACTS |
-| B — Scan full-bleed, panels floating over it | Art bible §7.1 "windows over a video wall" taken literally | Maximum Scan | Panels over a moving Scan fail the composited 4.5:1 text floor in the worst case; floating panels collide at 125% text scale |
+| B — Scan full-bleed, panels floating over it | Art bible §7.1 "windows over a video wall" taken literally | Maximum Scan | Panels over a moving, bright Scan are likely to miss the composited 4.5:1 text floor in the worst case (estimate, not measured), and floating panels have no fixed slots to absorb 125% text growth |
 | C — Scan top, a single readout strip below | Wide Scan, one horizontal readout | Good for a flat map | Four numbers, three actions, a forecast and a contract list do not fit one strip at 720p without truncation (a bug per Interface Rule 6) |
 
 **Chosen zones (A)**, widths at 1280 from the shipped CSS clamps:
@@ -153,7 +153,7 @@ First-visit orientation card (P-23) sits over the Scan column, four rows, one `U
 | Zone | Component | Type | Content | Interactive | Pattern |
 |---|---|---|---|---|---|
 | Header | Resource readouts | Stat display ×4 | `CREDITS n CR` (amber, money only), `INFLUENCE n PTS`, `INTEL n`, `ROSTER n / cap` | No | P-14 |
-| Banner | Campaign banner | Status record | `CAMPAIGN COMPLETE` or `CAMPAIGN FAILED`, sigil (`aria-hidden`), secondary line, `n / 3` count | No | P-21 |
+| Banner | Campaign banner | Status record | `CAMPAIGN COMPLETE` or `CAMPAIGN FAILED`, sigil (`aria-hidden`), secondary line, `n / 3` count. Secondary lines are the shipped ones, which P-21 allows until this spec replaces them: complete `ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE`; failed `ROSTER EMPTY // NETWORK COMMAND SUSPENDED` (owner to confirm, **Open Question 20**) | No | P-21 |
 | Left | SECTORS list | Scrollable list of buttons | Per open sector: glyph, name, `CONTROL n%`, `UNREST n%`, bar or `CRISIS` / `UNREST PRESSURE` chip. Antarctica: lock glyph, name, `NO SURVEY DATA` | Yes — Focus (`aria-pressed`) | P-15, P-04 (selection), P-03 for Antarctica (reason is the visible text) |
 | Center | Scan | Spatial display | Sector fill = majority holder; Contested; Unknown (Antarctica); crisis hatch + word `CRISIS`; city marks | Yes — Focus by sector (as built: drag/zoom, markers) | New: **Scan marker / Focus selection** (library Gaps list) |
 | Center | Contract markers | One button per Scan-visible contract | Label, open or locked; locked shows its requirement as text | Yes — select contract (→ Brief) | P-03 for locked; New with Scan |
@@ -164,7 +164,7 @@ First-visit orientation card (P-23) sits over the Scan column, four rows, one `U
 | Right | Sector inset | Decorative flat map with stepper | Flat sector outline, `<` `>` buttons named `FOCUS PREVIOUS SECTOR` / `FOCUS NEXT SECTOR` | Yes — step Focus | Standard buttons. Replaced by the Influence moment note while that is up |
 | Right | Four numbers | Readouts | `CONTROL n%` + bar, `UNREST n%` + bar, `TAX YIELD n CR / 24H`, `TAX PAID` line, `GARRISON CONDITION` word | No | P-14 |
 | Right | Influence actions ×3 | Buttons | `1 STABILIZE 8P`, `2 LOBBY 10P`, `3 EXPEDITE 12P`; status word beside each: `CLEAR`, `ACTIVE`, unaffordable / cooldown `nH` / no target / Antarctica | Yes — spend | P-02, P-03 |
-| Right | Influence moment note | Note + dismiss | One teaching note, once per campaign, first time any action is affordable on the focused sector; `UNDERSTOOD` | Yes — dismiss | P-23 family; non-modal |
+| Right | Influence moment note | Note + dismiss | One teaching note, once per campaign, first time any action is affordable on the focused sector; `UNDERSTOOD` | Yes — dismiss | **New** (not P-23, which covers only the first-visit card); non-modal. Open Question 15 |
 | Right | Event forecast | Readout | Intel < 2: `EVENT FORECAST` + the intel-gate text. Intel 2+: five chips (riot, blackout, raid, trade, seizure) with `n%` over the next 6 strategic hours | No | P-14 |
 | Right | OPEN CONTRACTS | Scrollable list of buttons | Per row: codename, `TYPE // CITY`, chips `PRIORITY` / `GENERATED`, `CHANCE n%`, `ETA nD`, `EXPIRY nH` (generated only). Locked authored rows show the intel gate in text. Empty: `NO CONTRACTS POSTED IN <SECTOR>` | Yes — select (→ Brief) | P-15, P-03 |
 | Bottom | TIME CODE | Readout | Date, `hh:mm UTC`; Live: `LIVE` + closed dot. Review: `REVIEW -<ago>` + `> GO LIVE` | Yes in Review (return) | P-17 |
@@ -302,6 +302,25 @@ Mapping interactions for: **keyboard and mouse** (`project.yaml` `platform.prima
 | Save status | Persistence (`saveStatusStore`) | Read | Write-failure copy |
 | Geography, outlines, Earth imagery | `src/game/geography.ts`, `sectorOutlines.ts`, `public/textures/earth/` | Read | The only `public/` art asset (CLAUDE.md) |
 
+**Update triggers and missing values.** "Missing" means the owner supplied nothing; the UI never fabricates a 0 (P-14). A 0 the owner supplies prints as 0.
+
+| Data | Updates when | If missing |
+|---|---|---|
+| Control, Unrest, Tax yield, Garrison, holders, crisis | Strategic tick (`t`), debrief write-back, World Event, staged spend step; repainted only when the rounded value changes | Dim em dash in the value slot; label stays |
+| Tax eligibility line | Holder change | Dim em dash |
+| Influence wallet, refusal, cooldown hours, Active | Spend, debrief award, staged-spend retire, cooldown expiry (repainted at hour resolution) | Wallet: dim em dash. The refusal is never missing: the owner's `influenceRefusal` always returns a reason or none |
+| Event forecast | Strategic tick at intel 2+ | Gate text below intel 2; em dash per chip otherwise |
+| Intel level / progress | Debrief award | Dim em dash |
+| Credits | Tax deposit, debrief, any spend | Dim em dash |
+| Roster count | Debrief, hire | Dim em dash |
+| Contracts, Chance, ETA, expiry | Market post/expire/withdraw, Expedite, intel change, Focus change; expiry repainted at hour resolution | Empty-list text for the Focus; Chance with no value prints `CHANCE —` |
+| `t` / time code / Timeline | Every strategic tick; the Timeline handle on every tick | Cannot be missing while the screen runs |
+| Review pin | Scrub, GO LIVE | Null = Live |
+| Feed, unread count | Event appended, mark read | Empty token (P-16) |
+| Campaign flags | Debrief | No banner |
+| Seen set | Dismiss | Treated as unseen, so the card shows (as built: `seen.includes` is false) |
+| Save status | Persistence outcome | No notice |
+
 Real-time: `t` advances at up to 20 Hz. The UI keeps per-frame data out of React state: header and rows subscribe at hour or rounded-value resolution so a tick re-renders one chip, not the screen (as built; guardrail in CLAUDE.md). No UI-owned game state is introduced by this spec.
 
 ---
@@ -363,14 +382,14 @@ Platform Target: keyboard and mouse. Gamepad and touch are out of scope (ADR-001
 - [x] Esc behavior: consumed by the innermost overlay; never confirms a spend; never dismisses the first-visit card (Interaction Map, Escape section of the library).
 - [x] Focus is visible on every control: P-04 corner brackets, including in high contrast.
 - [x] No keyboard trap: the first-visit card and the Influence note do not trap focus (P-23); Settings/Balance trap and restore (P-05).
-- [ ] Tab order across panels is specified. **Not required at the Standard tier**: full keyboard travel across every panel is Backlog (`accessibility-requirements.md`) and this spec does not promote it. Native buttons are tab stops as built; their order is not a requirement here.
-- [ ] Keyboard path to every Scan job. The Scan itself is pointer-first, but Focus is reachable via the sector rows and the inset steppers, and contracts via OPEN CONTRACTS, so no Scan job is keyboard-only-blocked. The globe region has arrow, `+`/`-` and Home keys as built; they are not a requirement.
+- [x] Tab order is specified zone by zone in Accessibility → Focus order (measured against the running build 2026-10-23).
+- [x] Every Scan job has a keyboard path off the Scan: Focus via the sector rows and the inset steppers, contracts via OPEN CONTRACTS. The globe region's arrow, `+`/`-` and Home keys exist as built and are not a requirement.
 
 **Mouse**
 - [x] Every action is a single click.
 - [x] No information appears only on hover; hover is not a state (the scrollbar is the one hover affordance, P-15). Marker tips and `title` text are not relied on.
 - [x] No right-click, double-click or drag is required. Dragging the Timeline is an alternative to the keyboard path, not the only one. Globe drag is a view control, not a game verb.
-- [ ] Hit-target sizes are specified. Sector rows are ≥46 px high as built (`.wm-sector` min-height); the Timeline track height, Scan marker target (16×16 px as built), the inset steppers and the speed buttons are **not specified or measured**. Listed as Open Question 11.
+- [ ] Hit-target sizes are specified. Measured as built at 1280×720, 100% scale (2026-10-23): sector rows ≥46 px high; contract rows 275×45; Influence buttons 93×29; inset steppers 18×30; speed buttons 30×20; Scan markers 16×16; Feed rows 512×17; Timeline track 12 px high. No project minimum exists to judge them against. **Open Question 21.**
 
 **Gamepad / touch**: not supported; no checklist.
 
@@ -384,14 +403,48 @@ Tier: **Standard** (`design/accessibility-requirements.md`, committed 2026-09-23
 |---|---|
 | Critical state never by color alone | Selection: `aria-pressed` + P-04 marker. Focus: P-04 brackets. Lock: lock glyph + `LOCKED` / `NO SURVEY DATA` / requirement text. Crisis: hatch + the word `CRISIS` + chip. Unrest pressure: `UNREST PRESSURE` chip. Garrison: the word `SECURE` / `STRAINED` / `CRITICAL`. Tax: `YES // NEXUS-HELD` vs `NO // NOT NEXUS-HELD`. Clock: `PAUSED` / `nX`. Live vs Review: `LIVE` + dot vs `REVIEW -<ago>` + `> GO LIVE`. Holder on the Scan: sector fill **and** the Control key names and the focus title's holder name. Campaign: the words `CAMPAIGN COMPLETE` / `CAMPAIGN FAILED` |
 | Text legible at 1280×720 | No clipping at 90 / 100 / 110 / 125%; overflow scrolls (P-15). Readouts ≥12 px, tertiary labels ≥10 px at 100% scale; fiction chrome ≥10 px |
-| Text scale 90 / 100 / 110 / 125% | All sizes scale with `--text-scale`; the layout absorbs growth by scrolling the SECTORS list, OPEN CONTRACTS and the Feed, never by compressing a panel. The bottom strip is a fixed 124 px as built, so its content must scroll or wrap at 125% (**not measured**, Open Question 11) |
-| High-contrast mode | CSS-variable remap only. Brackets, rings and words survive. Contrast of World-Network-specific tokens (`notice`, `red-dim`, `dim` chips) is **not measured** in this spec |
+| Text scale 90 / 100 / 110 / 125% | All sizes scale with `--text-scale`; the layout absorbs growth by scrolling the SECTORS list, OPEN CONTRACTS and the Feed, never by compressing a panel. Measured 2026-10-23: at 100% SECTORS already scrolls (356 px box, 396 px content); at 125% OPEN CONTRACTS shows a 57 px box for 151 px of content (about one row) and the bottom strip fits visually (screenshot check; `overflow: clip` makes scrollHeight unreliable there) |
+| High-contrast mode | CSS-variable remap only. Brackets, rings and words survive. Ratios in Contrast below |
 | Full keyboard operability of the committed set | Timeline arrows/Home/End; Enter/Space on every button; Settings/pause focus trap and restore |
 | Contextual accessible labels | Sector buttons `NAME // CONTROL n% // UNREST n%` (+ crisis / pressure); locked `NAME // NO SURVEY DATA`; contracts `OPEN CONTRACT <code> // <type> // <city>` or `<code> // LOCKED // <gate>`; Influence `<num> <name> // <cost> PTS // <effect> // <status>`; transport `PAUSE STRATEGIC CLOCK` / `RESUME STRATEGIC CLOCK` / `CLOCK SPEED nX`; Timeline `role="slider"`, `aria-valuetext` = `LIVE` or the pin time; GO LIVE `REVIEWING <ago> BACK // RETURN TO LIVE`; nav locked `LABEL // LOCKED // <condition>` with `aria-current="page"` on the selected tab |
 | Two-step destructive confirms | None occur on this screen. Influence spends are single-step by library decision (P-02): bounded, recoverable by play |
 | One-shot advisories, bounded | Orientation card once per campaign; Influence moment note once per campaign. Neither blocks input or the clock |
 | Reduced motion | Scan sweep absent; Scan view retarget cuts; `LIVE` dot static; Focus selection is the closed double ring; money tick static |
 | Consistent one-OS chrome | Same palette and glyph grammar as every Screen; no second visual language for the map |
+
+### Focus order
+
+Tab follows reading order, zone by zone. This orders the tab stops that exist; it does not promote full keyboard travel (no arrow-key movement inside panels, no skip links — Backlog). Measured against the running build on 2026-10-23 (New Operation, 1280×720); the as-built DOM order already matches.
+
+1. **Left — SECTORS**: the seven rows top to bottom (North America, South America, Europe, Africa, Asia, Oceania, Antarctica). Antarctica stays a tab stop with `aria-disabled` so its `NO SURVEY DATA` reason is announced; activating it does nothing.
+2. **Center — Scan**: the Scan region (one stop), then each contract marker, then each city marker, then the view controls and the imagery credit link (as built; the view controls are not required, Component Inventory).
+3. **Right — Focus panel**: `FOCUS PREVIOUS SECTOR`, `FOCUS NEXT SECTOR`, the **enabled** Influence actions (a disabled action is not a tab stop; its reason is static text beside it, P-03), the Influence note's `UNDERSTOOD` while shown, then each OPEN CONTRACTS row (locked rows stay tab stops with `aria-disabled` so their reason is announced).
+4. **Bottom strip**: `> GO LIVE` (Review only), the Timeline slider, Pause/Resume, `1X` `2X` `4X` `8X`, `n UNREAD` (only when unread), then Feed rows newest first.
+5. **First-visit card**: `UNDERSTOOD` takes initial focus when the card appears. Tab moves on to the nav; the card does not trap focus (verified 2026-10-23).
+6. **Nav**: World Network, Research, Brief, Assembly. A locked Brief tab stays a stop with its `LOCKED // NO CONTRACT SELECTED` name.
+
+Without the card, no control takes initial focus; the first Tab lands on the first sector row (the header has no controls). Shift+Tab reverses the order.
+
+### Contrast
+
+Requirement (art bible §7.5): body and readout text ≥4.5:1 composited against its panel; Ink Dim only at ≥18.66 px bold or ≥24 px; Ink Faint never carries text; semantic red text uses Red Hot; non-text state strokes ≥3:1.
+
+Measured 2026-10-23 on the running build, text composited over `--bg-panel` `rgba(7, 16, 15, 0.92)` on Void `#04070a` (the panels are not over the Scan canvas, so this is their worst case):
+
+| Ink used for text | Default mode | High contrast | Where it is used as built | Verdict |
+|---|---|---|---|---|
+| Print White `rgb(232,251,242)` | 17.98:1 | 17.98:1 | Time code date | Pass |
+| Teal `rgb(126,240,212)` | 14.10:1 | 14.10:1 | Control value, `LIVE`, selected nav tab | Pass |
+| Ledger Amber `rgb(255,208,117)` | 13.39:1 | 13.39:1 | Credits | Pass |
+| Ink `#b8d8cf` | 12.27–13.04:1 | 16.63–17.67:1 | Orientation rows, Influence costs | Pass |
+| Signal teal `rgb(89,214,201)` | 9.78–11.43:1 | same | Panel titles, header resource labels, clock | Pass |
+| Red Hot `rgb(255,107,85)` | 6.90:1 | 6.90:1 | Unrest value, red Feed lines, Brief lock condition | Pass |
+| Ink Dim `#5d7d75` | **4.29–4.48:1** | 10.07–10.51:1 | Sector reading labels, CONTROL/UNREST labels, every key-value label, `TAX PAID NO` value, Influence status words, forecast label and gate, contract `TYPE // CITY`, contract chips, `CLOCK SPEED`, Control key names, subtitle, Scan fiction chrome | **Fails** default mode at every size it is used (7–11.5 px) |
+| Idle nav tab labels (Ink Dim in default mode) | **4.29:1** | **4.29:1** (measured; the label does not take the high-contrast remap — cause not traced) | Research, Brief, Assembly tab labels | **Fails** in both modes |
+| Ink Faint `#35504a` | **2.21:1** | 5.70:1 | Feed times, Timeline axis | **Fails**; banned for text |
+| `red-dim` `rgba(224,75,60,0.75)` | **3.18:1** | **3.18:1** (not remapped) | Locked contract gate text | **Fails** in both modes |
+
+Spec: every text run on this screen meets 4.5:1 in default mode. Ink Dim text moves to Ink (or a panel-safe dim pair is defined in `src/index.css` and `src/ui/tokens.ts`); Feed times and the Timeline axis move off Ink Faint; locked-contract reasons use Red Hot. As-built delta: **Open Question 17**.
 
 Screen-reader considerations for the non-text elements:
 
@@ -409,21 +462,27 @@ Color roles (art bible §4.2, Interface Rule 4): teal = selection and live state
 
 Scope: English only. No localization system or plan exists in the GDDs, and every string on this screen is a literal in `src/ui/*.tsx`. The flags below apply if that changes (see Open Question 13). The test is 40% expansion (English → German / French). Rule for all rows: expanded text wraps or scrolls; it never clips, truncates or shrinks type (Interface Rule 6).
 
-| Element | Longest text | Layout-critical? | 40% expansion risk |
-|---|---|---|---|
-| Influence action button | `1 STABILIZE 8P` + status `COOLDOWN nH` / `UNAFFORDABLE` in a ~290 px column | Yes, fixed-width button with two text runs | **HIGH PRIORITY**. Name and status must wrap onto two lines |
-| `TAX PAID` value | `NO // NOT NEXUS-HELD` (20 chars) | Yes, beside a label in a ~290 px column | **HIGH PRIORITY** (~28 chars). Wraps under the label |
-| `GARRISON CONDITION` label | 18 chars | Label + value on one row | **HIGH PRIORITY**. Label may wrap above the value |
-| Sector row chip | `UNREST PRESSURE` (15 chars) in a ~256 px column | Yes | **HIGH PRIORITY**. Chip wraps inside the row; row height grows, list scrolls |
-| Contract row chips | `PRIORITY` `GENERATED` `CHANCE nn%` `ETA nD` `EXPIRY nH` | Yes, a chip row | **HIGH PRIORITY**. Chips wrap onto a second line |
-| Locked contract / marker reason | `REQUIRES INTEL LVL n`; `CAMPAIGN LOST` | Medium | Wraps |
-| Empty list text | `NO CONTRACTS POSTED IN <SECTOR>` / `SECTOR UNDER PASSIVE MONITORING` | No | Low; wraps |
-| Banner secondary line | `ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE` (~68 chars) | Banner has a fixed 42 px min-height | **HIGH PRIORITY** (~95 chars). Banner grows; it does not clip |
-| Time code | `REVIEW -<ago>` + `> GO LIVE` in the 166 px TIME CODE panel | Yes, fixed bottom-strip height | **HIGH PRIORITY**. The panel body is `overflow: clip` as built, so growth would clip; needs wrap or scroll |
-| Nav locked tab | `BRIEF` + `LOCKED` + `NO CONTRACT SELECTED` | Yes | Medium. Tab grows to two lines |
-| Orientation card rows | Four rows of full sentences (THE JOB, START HERE, STRATEGIC TIME, THE FOUR NUMBERS with four lines) | No, but long | Medium. The card scrolls inside its own panel; it never pushes the `UNDERSTOOD` control off screen |
-| Feed lines | `hh:mm` + event text + chevron | No, wraps | Low |
-| Sector and corporation names, codenames, city names | Proper nouns | n/a | Not translated |
+**How the limits were derived.** Box widths were measured on the running build at 1280×720 (2026-10-23). The per-character advance of the system monospace, letter-spacing included, was measured on the same build (0.60–0.78 em depending on tracking). Limits are characters per line at the **spec** size (10 px labels and tertiary text, 12 px readouts — the as-built sizes are smaller, Open Question 17), at text scale 100% and 125%. Above the limit a run wraps to a second line; it never clips.
+
+| Element | Box at 1280 | Spec size | Max chars / line (100% / 125%) | Longest English text | Risk at +40% |
+|---|---|---|---|---|---|
+| Influence action name | 93 px | 10 px | 13 / 10 | `1 STABILIZE` (11) | **HIGH PRIORITY**. Wraps at 125% already in English |
+| Influence status word | 72 px | 10 px | 10 / 8 | `UNAFFORDABLE`, `COOLDOWN 12H` (12) | **HIGH PRIORITY**. Over the limit in English at 100%: the status needs its own full-width line under the button |
+| Key-value row (label + value) | 285 px | 10 px label, 12 px value | 34 / 27 combined | `GARRISON CONDITION` + `CRITICAL` (26); `TAX PAID` + `NO // NOT NEXUS-HELD` (28) | **HIGH PRIORITY**. Value wraps under its label at 125% |
+| Sector name | 177 px | 12 px | 21 / 17 | `NORTH AMERICA` (13) | Medium (~18) |
+| Sector reading / chip | 177 px | 10 px | 29 / 23 | `UNREST PRESSURE` (15) | Medium (~21) |
+| Contract codename | 148 px | 12 px | 16 / 13 | `HOLLOW CROWN` (12) | **HIGH PRIORITY** at 125% (~17) |
+| Contract `TYPE // CITY` | 148 px | 10 px | 21 / 17 | `SABOTAGE // DETROIT SPRAWL` (26) | **HIGH PRIORITY**. Over the limit in English: wraps to two lines |
+| Contract chip (one per line) | 71 px | 10 px | 10 / 8 | `CHANCE 82%`, `EXPIRY 48H` (10) | **HIGH PRIORITY**. At the limit in English at 100% |
+| Locked reason | 148 px | 10 px | 21 / 17 | `REQUIRES INTEL LVL 2` (20) | **HIGH PRIORITY** (~28). Wraps |
+| Time code live/review line | 164 px | 10 px | 21 / 16 | `REVIEW -23H 59M` + `> GO LIVE` | **HIGH PRIORITY**. Fixed 124 px strip with `overflow: clip` as built: must wrap inside the strip, never clip |
+| Nav locked condition | 306 px | 10 px | 42 / 33 | `NO CONTRACT SELECTED` (20) | Low |
+| Panel title | 256 px | 10 px | 31 / 25 | `WORLD NETWORK // ORIENTATION` (28) | Medium; wraps at 125% |
+| Banner secondary line | ≈1,100 px | 10 px | ≈160 / 128 | `ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE` (70) | Low. Banner grows from its 42 px minimum; never clips |
+| Empty contract list | 285 px | 10 px | 41 / 33 | `SECTOR UNDER PASSIVE MONITORING` (31) | Medium; wraps |
+| Feed line text | 512 px | 10 px | 77 / 61 | Event lines ≤ ~60 | Low; wraps |
+| Orientation row text | 658 px | 10 px | 100 / 80 | Full sentences, ~230 chars per row | Medium. Rows wrap; the card scrolls inside its own panel and never pushes `UNDERSTOOD` off screen |
+| Sector, corporation, city names; codenames | — | — | — | Proper nouns | Not translated |
 
 Numbers and formats: Credits use thousands separators with the `CR` suffix, no `k` / `M` (P-14); percentages print as integers with `%`; the clock is `HH:MM UTC` and the date is locale-independent (`stamp()`), so none changes with locale. Coordinates are decimal degrees with `N/S/E/W`. A future locale would need these formats chosen deliberately, not inherited from the browser.
 
@@ -452,7 +511,7 @@ Each criterion is checkable by a tester without the GDDs. They are UX criteria; 
 
 **Empty / error states**
 - [ ] **Antarctica.** The row reads `NO SURVEY DATA`; it cannot be focused by click, inset stepper or Feed row; it prints no Control, Unrest, Tax or Garrison; no Influence action is offered for it.
-- [ ] **Empty lists.** A sector with no contract shows `NO CONTRACTS POSTED IN <SECTOR>`. An empty Feed shows the library empty token (`-- CHANNEL OPEN --`), not a blank panel.
+- [ ] **Empty lists.** A sector with no contract shows `NO CONTRACTS POSTED IN <SECTOR>`. An empty Feed shows a printed empty-channel line, not a blank panel.
 - [ ] **Erase failure.** After a refused erase on New Operation, `ERASE FAILED // SAVE NOT ERASED` appears as a dismissible `role="status"` toast (one frame, ≥3 s unless dismissed) and as a Feed line; it never says the save was erased, never covers the transport or header, and does not pause the clock.
 - [ ] **Scan unavailable.** With the Scan failed, a tester can still Focus every open sector, read everything, and open every open contract.
 
@@ -484,16 +543,21 @@ Items marked **As-built delta** record where the shipped screen (`src/ui/WorldMa
 | 1 | **The Scan is a 3D globe; the design documents say it is not.** `design/gdd/world-network.md` (Visual/Audio, UI Requirements), `design/gdd/interface.md` Rule 5 and `game-pillars.md` (Art row: "Scan is not a globe") require a flat projection. Commit `e0a978b` ("Render the World Network Scan as a 3D globe") swapped it in; `production/session-logs/session-log.md` records "globe work (e0a978b) has no story or acceptance criteria". No document in `docs/game-design.md`, `design/gdd/`, the art bible or `docs/architecture/` records an approval. The owner's own 2026-10-19 playtest called the globe control bar unnecessary and BUG-0006 (globe home vs Focus) is an open "design question first". This spec is written at the requirement level (holder fill, crisis hatch + word, Focus path, marker buttons, all jobs doable without the Scan). **Owner decision 2026-10-22: the Scan is the 3D globe; the flat map is not restored.** The pillar, Interface Rule 5 and the World Network GDD (lines 13, 175, 181) were amended the same day to match | owner | **Closed 2026-10-22 (owner): globe** |
 | 2 | **As-built delta, color roles.** `STRAINED` Garrison prints in the amber class (`WorldMap.tsx` garrison line) although Ledger Amber is money only (Interface Rule 4; art bible §4.2). Unrest always prints in the red class, even when calm, although red is danger. Spec: Garrison `SECURE` teal / `STRAINED` Print White notice / `CRITICAL` red; Unrest red only past the pressure line or in crisis. The words already carry state, so this is a role correction, not an accessibility failure | ui-programmer / art-director | Open |
 | 3 | **As-built delta, duplicate resource panels.** The left INFLUENCE panel and the bottom RESOURCE POOL repeat Credits, Influence and Roster already in the header. Spec recommends deleting the left panel and turning the pool into INTEL (level + `n / 100`). Needs layout measurement at 1280×720 and 125% before commit | ux-designer / ui-programmer | Open (recommendation) |
-| 4 | **As-built delta, first-visit card.** The card is `role="dialog" aria-modal="true"` with `autoFocus` on `UNDERSTOOD`. P-23 says it is not P-05, does not trap focus, and the clock control stays usable; session state records an owner ruling that the clock runs under it. Whether Tab is actually trapped was **not verified**. Also: it dismisses only on `UNDERSTOOD`, not on use of the clock control as P-23 describes | ui-programmer / ux-designer | Open |
+| 4 | **As-built delta, first-visit card.** The card is `role="dialog" aria-modal="true"` with `autoFocus` on `UNDERSTOOD`. P-23 says it is not P-05, does not trap focus, and the clock control stays usable; session state records an owner ruling that the clock runs under it. Verified 2026-10-23: Tab is **not** trapped (Tab from `UNDERSTOOD` moves to the nav), so `aria-modal="true"` misdescribes it to assistive tech. Also: it is marked seen only on `UNDERSTOOD` (code read), not on use of the clock control as P-23 describes | ui-programmer / ux-designer | Open |
 | 5 | **As-built delta, Feed empty token.** Built `NO TRAFFIC IN THIS WINDOW`; library P-16 token is `-- CHANNEL OPEN --`. Either the library records the World Network variant or the string changes | ux-designer | Open |
 | 6 | **As-built delta, failed-campaign reason.** Scan markers read `CAMPAIGN LOST` when the campaign is failed, but OPEN CONTRACTS rows show `REQUIRES INTEL LVL n` for the same locked state. P-03 requires the actual cause. Spec: `CAMPAIGN LOST` on both | ui-programmer | Open |
 | 7 | **Research-program completion line has no emitting event.** Living spec §19 #10 requires the line; cross-review W-02 notes the edge is missing on both sides; no event name exists. Copy proposed above; the event is Research / World Network's to name, not this spec's | systems-designer / game-designer | Open |
 | 8 | **As-built delta, Influence effect text.** The effect (`-2 UNREST OVER 6H` style) is in `title` and `aria-label` only. P-03 and the Standard controls table forbid relying on a tooltip. A static visible effect line needs space in a column the code says has none. Options: put the effect in the moment note and the inset slot, or shorten the row | ux-designer | Open |
 | 9 | Whether `paused` and `speed` are in the strategy blob (so a Continue reopens paused or at the old speed) was not verified | persistence / world-network owners | Open |
 | 10 | Player journey map missing: `design/player-journey.md` does not exist. Arrival situations in this spec come from the GDD and playtests. Also carried from the GDD: the screen's attention budget (about seven live systems; cross-review D-10) is unclassified | game-designer | Open (non-blocking) |
-| 11 | **Not measured:** hit-target sizes for the Timeline track, speed buttons, inset steppers and Scan markers (16×16 px as built); SECTORS list fit at each text scale; bottom-strip content at 125% (fixed 124 px, `overflow: clip`); contrast of `notice`, `red-dim` and dim chips on their panels; Scan view-retarget duration. Each needs a measurement pass | qa-lead | Open |
+| 11 | **Still not measured:** Scan view-retarget duration; text scale 90% and 110%; contrast of the `notice` tone (no `notice` text was on screen during the 2026-10-23 pass). Measured that day and now in the spec: hit targets, SECTORS fit, bottom strip at 125%, every other text ink | qa-lead | Open |
 | 12 | Fiction chrome `SAT-16E // LIVE` shows the word `LIVE` while the Timeline can be in Review. The Scan numbers are live in Review so the word is true, but it sits beside P-17's `LIVE`. Spec keeps it `aria-hidden`; consider dropping the word | art-director | Open (minor) |
 | 13 | `.claude/rules/ui-code.md` says to support gamepad and route all text through a localization system. ADR-0017 forbids gamepad and touch and no localization system exists, and `main-menu.md` made the same call. This spec follows ADR-0017 and `project.yaml`. The rule file is out of step with the project | owner | Open (rule file) |
 | 14 | `design/ux/main-menu.md` Open Question 3 (host for the erase-failure contract) is answered by the hosted-contract subsection under States & Variants | — | Closed by this spec once `/ux-review` approves; `main-menu.md` not edited |
-| 15 | Library gap: **Scan marker / Focus selection** is listed as a missing pattern (interaction-patterns.md, Gaps). This spec uses it as a "New" component; a pattern entry must be added before implementation invents behavior | ux-designer | Open |
+| 15 | Library gap: **Scan marker / Focus selection** is listed as a missing pattern (interaction-patterns.md, Gaps). This spec uses it as a "New" component; a pattern entry must be added before implementation invents behavior. Same for the **Influence moment note**: a once-per-campaign, non-modal teaching note that takes the sector inset's slot. P-23 covers only the first-visit card, so the note is either a P-23 variant or a new pattern | ux-designer | Open |
 | 16 | Accessibility tier: defined (Standard) | — | Closed |
+| 17 | **As-built delta, type size and contrast.** Measured 2026-10-23 at 100% scale: many World Network labels render below the 10 px floor (Influence status 7 px, forecast label 6.5 px, header resource labels, sector readings, chips, Control key and Timeline axis 8 px, several others 8.5–9 px). Ink Dim text fails 4.5:1 in default mode (4.29–4.48:1), Ink Faint text is 2.21:1, and `red-dim` is 3.18:1 in both modes. See Accessibility → Contrast. Implementation fix in `src/ui/ui.css` (sizes) and the token pair (inks) | ui-programmer / art-director | Open |
+| 18 | **No numeric open-time budget.** The Interface GDD forbids inventing one. The World Network p95 re-profile due 2026-10-28 (retro 10 action 3) is to set it; the Response-budget acceptance criterion gains the number then | performance-analyst | Open (dated) |
+| 19 | **Two docs still describe the old nine-row card.** `design/gdd/interface.md` Screens table (World Network row) says the first-visit overlay teaches "Influence enablement … alongside panel groups and the Research tab"; `design/ux/interaction-patterns.md` P-23 says it teaches "opening Influence as later" and "names the panel groups and the Research tab". World Network Core Rule 13 (2026-10-21), the Interface UI Requirements table and this spec say four rows, no Influence or Research row. Neither doc is edited by this spec | game-designer / ux-designer | Open |
+| 20 | **Campaign-failed banner copy.** The shipped secondary line `ROSTER EMPTY // NETWORK COMMAND SUSPENDED` says command is suspended, but on a failed campaign Focus, the clock, Influence and Research all stay usable (GDD Edge Cases). Keep it, or replace it? | owner | Open |
+| 21 | **No minimum hit-target size exists** for mouse targets in the art bible, the accessibility tier or the pattern library. The measured World Network targets (Input checklist) include 16×16 Scan markers, a 12 px Timeline track and 17 px Feed rows. Set a minimum, or record that none applies | owner / ux-designer | Open |
