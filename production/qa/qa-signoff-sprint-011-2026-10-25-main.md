@@ -92,3 +92,17 @@ These are not defects. Each one is a question for the owner or UX.
 - The four bugs were set to Verified Fixed from the tests that ran and Claude's headless walks of their reproduction steps on `93c58e0`; each bug file carries a `**Verified by**:` line.
 - No `/smoke-check` report exists for `93c58e0`. The suite, lint, build and R1–R4 re-runs on `93c58e0` cover the same ground.
 - Cleanup: the dev server is stopped and port 4200 has no listener. No Chrome for Testing process is running. The in-app browser pane is closed.
+
+### Conditions status (2026-10-25, after this report)
+1. TM-020: art-director and qa-lead agents reviewed the evidence on the owner's instruction and both approved; rows signed in the evidence doc.
+2. TM-018: lead-programmer agent reviewed and approved; row signed.
+3. BUG-0010 to BUG-0013: Closed with closure records; `/bug-triage` refreshed (`production/qa/bug-triage-2026-10-25.md`, 1 open: BUG-0008).
+4. BUG-0008: stays deferred to Polish.
+
+All conditions are met. Sprint 11 can close: `/retrospective`, then `/sprint-plan new`.
+
+Reviewer follow-ups (not blocking):
+- TM-018 story AC-2 still carries the old wording; update it to the owner's measurable form (also the evidence doc's AC-2 row). The story's QA section should point at the headless scripts in `sprint-011-head-2026-10-24/tm-018/`.
+- TM-020 story Test Evidence line says "No signed ... evidence (gap)" and points at the 2026-10-23 captures; the cases file names other paths, and its TM-020-07 expected opacity ranges are wrong (its own formula gives [0.36, 0.90] and [0.22, 0.55]).
+- No unit test covers `failed` objective rows for markers (only TM-020-05 does).
+- Art: bright white ellipses (likely wet-ground highlights) overlap hero shapes at full contrast in several mission captures, against art bible §3.4; optional rings can be half hidden by buildings (Hollow Crown server findability untested); destroy objectives pulse the zone on the minimap while 3D rings sit on the devices (design question).

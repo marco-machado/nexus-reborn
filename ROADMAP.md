@@ -11,7 +11,7 @@
 
 ## Next step
 
-1. **Meet the Sprint 11 sign-off conditions, then `/retrospective`.** Re-run on `main` `93c58e0` (2026-10-25): APPROVED WITH CONDITIONS (`production/qa/qa-signoff-sprint-011-2026-10-25-main.md`). Conditions: TM-020 art lead and QA lead sign-off, TM-018 lead sign-off (rows in their `production/qa/evidence/*-evidence.md`); `/bug-report close` BUG-0010 to BUG-0013 (Verified Fixed) and `/bug-triage`. BUG-0008 stays deferred to Polish.
+1. **`/retrospective` for Sprint 11**, then `/sprint-plan new`. Sprint 11 QA: APPROVED WITH CONDITIONS, all conditions met 2026-10-25 (TM-020 and TM-018 signed; BUG-0010 to BUG-0013 closed; triage `production/qa/bug-triage-2026-10-25.md`, 1 open: BUG-0008 deferred). Reviewer follow-ups are listed at the foot of `production/qa/qa-signoff-sprint-011-2026-10-25-main.md`.
 
 ## After that
 
@@ -34,6 +34,7 @@
 
 ## Done recently
 
+- 2026-10-25 — Sprint 11 sign-off conditions met: TM-020 art lead and QA lead, TM-018 lead signed (agent reviews, all APPROVED); BUG-0010 to BUG-0013 closed; `/bug-triage` run.
 - 2026-10-25 — `/team-qa sprint` re-run on `main` `93c58e0`: APPROVED WITH CONDITIONS. Tests 1678/1678 ×3, lint and build clean; R1 152/152, R2 and R4 at 0, R3 16/16 after fixing the `focus.mjs` step-4 ordering; IF-036, IF-037, IF-039 failing cases re-walked PASS; BUG-0010 to BUG-0013 Verified Fixed (`production/qa/evidence/sprint-011-main-2026-10-25/`).
 - 2026-10-25 — Fixed BUG-0010 to BUG-0013, each in its own worktree and merged into `main`: industrial and Rust Haven Brief notes end `EVERY CIVILIAN HIT IS BILLED.` (new `src/game/briefNotes.test.ts`); Assembly stat tiles laid out 2 by 2, so MOBILITY stays on one line at 90–125%; the failed banner counts wins (`campaignBannerCount`, tests); Research side columns keep a fixed minimum at 1280, so node labels hold their 110% size at 125%. Specs updated: assembly.md Open Question 15 closed, research.md layout and Open Question 16.
 

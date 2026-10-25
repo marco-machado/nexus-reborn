@@ -73,6 +73,6 @@ See the Notes section of `sprint-011-head-2026-10-24/tm-018/results.md`. None of
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
-| Lead (lead-programmer / designer) | | | [ ] Approved |
+| Lead (lead-programmer / designer) | lead-programmer agent (Claude), on the owner's instruction | 2026-10-25 | [x] Approved — AC-1 code and tests reviewed; AC-2 core mesh `visible:false` on the next frame and no glow in `relay-dead.png`; AC-3 ring 3.5 m within 1.5 px and follows the pointer; untouched between `131a5c1` and `93c58e0` |
 
 *Template: `.claude/docs/templates/test-evidence.md`*

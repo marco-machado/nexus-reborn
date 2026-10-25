@@ -68,7 +68,7 @@ See the Notes section of `sprint-011-head-2026-10-24/tm-020/results.md`. None of
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
-| Lead (art-director / designer) | | | [ ] Approved |
-| QA lead | | | [ ] Approved |
+| Lead (art-director / designer) | art-director agent (Claude), on the owner's instruction | 2026-10-25 | [x] Approved — all ten 3D captures and the hc2 minimap crop reviewed against AC-1 and art bible §3.3, §3.4, §5.2; reduced motion accepted on the probe's opacity samples |
+| QA lead | qa-lead agent (Claude), on the owner's instruction | 2026-10-25 | [x] Approved — AC-1a to AC-1g each proven by a case, the probe log and a retained PNG; `src/game/objectiveMarks.test.ts` asserts the placement rule; no marker code changed between `131a5c1` and `93c58e0` |
 
 *Template: `.claude/docs/templates/test-evidence.md`*
