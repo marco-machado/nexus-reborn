@@ -17,7 +17,7 @@
 │   ├── qa/evidence/             # QA evidence — path rule below
 │   ├── session-state/           # Ephemeral session state (active.md — gitignored)
 │   └── session-logs/            # Session audit trail (gitignored)
-└── CCGS Skill Testing Framework/ # QA for the skills/agents themselves — /skill-test, /skill-improve
+└── studio-tests/                # QA for the skills/agents themselves — /skill-test, /skill-improve
 ```
 
 ## The code root is engine-specific
@@ -59,7 +59,6 @@ One rule for every story, so `/story-done`, `/story-readiness`,
   its own folder, `production/qa/evidence/[run-name]-[date]/`, and never writes
   into a story's folder or another run's.
 
-`[story-slug]` is the story's epic prefix and number in lower case (`if-005`,
-`ra-013`). Visual/Feel captures are 1280x720, taken headless (Playwright), not
-from the in-app browser pane.
+Visual/Feel captures are 1280x720, taken headless (Playwright), not from the
+in-app browser pane.
 

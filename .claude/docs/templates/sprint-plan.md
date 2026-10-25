@@ -1,54 +1,43 @@
 # Sprint [N] — [Start Date] to [End Date]
 
 ## Sprint Goal
+[One sentence describing what this sprint achieves toward the milestone]
 
-[One sentence: what does this sprint achieve toward the current milestone?]
+## Goal Prerequisites
+| Needed to show the goal | Status |
+|-------------------------|--------|
 
 ## Milestone Context
-
-- **Current Milestone**: [Name]
-- **Milestone Deadline**: [Date]
-- **Sprints Remaining**: [N]
+- Current Milestone: [Name]
+- Milestone Deadline: [Date]
+- Sprints Remaining: [N]
 
 ## Capacity
-
-- **Total days**: [X]
-- **Buffer (20%)**: [Y days reserved for unplanned work]
-- **Available**: [Z days]
+- Total days: [X]
+- Buffer (20%): [Y days reserved for unplanned work]
+- Available: [Z days]
 
 ## Tasks
 
 ### Must Have (Critical Path)
-
-| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria | Status |
-|----|------|-------------|-----------|-------------|-------------------|--------|
-| S[N]-001 | | | | None | | Not Started |
-| S[N]-002 | | | | S[N]-001 | | Not Started |
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
 
 ### Should Have
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
 
-| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria | Status |
-|----|------|-------------|-----------|-------------|-------------------|--------|
-| S[N]-010 | | | | | | Not Started |
+### Nice to Have
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
 
-### Nice to Have (Cut First)
+## Carryover from Previous Sprint
+| Task | Reason | New Estimate |
+|------|--------|-------------|
 
-| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria | Status |
-|----|------|-------------|-----------|-------------|-------------------|--------|
-| S[N]-020 | | | | | | Not Started |
+## Risks
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
 
-## Carryover from Sprint [N-1]
-
-| Original ID | Task | Reason for Carryover | New Estimate | Priority Change |
-|------------|------|---------------------|-------------|----------------|
-
-## Risks to This Sprint
-
-| Risk | Probability | Impact | Mitigation | Owner |
-|------|------------|--------|-----------|-------|
-
-## External Dependencies
-
-| Dependency | Status | Impact if Delayed | Contingency |
-|-----------|--------|------------------|-------------|
-
+## Dependencies on External Factors
+- [List any external dependencies]

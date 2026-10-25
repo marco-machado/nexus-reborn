@@ -9,6 +9,16 @@
 - Show file paths in all code references
 - Explain architectural decisions briefly
 
+## Collaboration Protocol
+
+- Agents MUST ask "May I write this to [filepath]?" before using Write/Edit tools
+  (exempt: `active.md` appends, agent memory, a subagent's new file at the path
+  its orchestrating skill named; see `.claude/rules/agent-memory.md`)
+- A skipped or dismissed question is not an answer: act on nothing, re-ask in
+  plain text and wait
+- Started outside this file's folder? Warn first: hooks, deny rules and the
+  ask-first mode load only when Claude Code starts here
+
 ## Personal Shortcuts
 - When I say "review", run /code-review on the last changed files
 - When I say "status", show git status + sprint progress

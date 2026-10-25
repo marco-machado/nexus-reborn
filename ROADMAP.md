@@ -44,6 +44,8 @@ Carried:
 
 ## Done recently
 
+- 2026-10-25 — CCGS framework upgraded 1.1.2 → 1.2.0 (template `v1.2.0`, `05ad7c8`; UPGRADING.md Strategy A2; `template` remote added). Your edits re-applied on the new files: Web engine, mutation-check and specialist-review gates in `dev-story`/`story-done`, STATUS breadcrumb, QA evidence paths, status-line tokens, `qa-tester` maxTurns 20, no sprint DoD, `defaultMode: auto`. Evidence folders now use the full story file name (1.2.0's `[story-slug]`). Added `.worktreeinclude`, `.gitattributes`, a Collaboration Protocol section in `CLAUDE.md`, `.claude/worktrees/` in `.gitignore`; CI `actions/checkout@v7`. `docs/registry/architecture.yaml`: `telemetry_envelope` status quoted as `"superseded_by: ADR-0015"` (registry validate: status 0). New hooks load at the next session start.
+
 - 2026-10-25 — `/gate-check` Production → Polish: **FAIL** (one blocker: no smoke report for the current build; all four directors CONCERNS). Owner overrode the verdict; stage set to Polish in `project.yaml` and `production/stage.txt`. Report and accepted risks: `production/gate-checks/gate-check-polish-2026-10-25.md`. Tests 1678/1678 during the gate.
 - 2026-10-25 — `/retrospective` for Sprint 11: `production/retrospectives/retro-sprint-11-2026-10-25.md`. 20/20 planned stories done on day 1 (24/24 in the yaml, 30 in QA scope); two QA cycles; five actions (four-scale check in `story-done`, `/code-review` of six stories, person-only items by 2026-10-28, sprint rows for six stories, debt register entries).
 - 2026-10-25 — Sprint 11 sign-off conditions met: TM-020 art lead and QA lead, TM-018 lead signed (agent reviews, all APPROVED); BUG-0010 to BUG-0013 closed; `/bug-triage` run.

@@ -76,8 +76,7 @@ state_ownership:
     revised: ""
 
   - state: telemetry_envelope
-    status: superseded_by
-    superseded_by: ADR-0015
+    status: "superseded_by: ADR-0015"
     owner_system: persistence-and-validation
     adr: docs/architecture/adr-0011-campaign-persistence-envelope.md
     interface: "telemetry.ts TELEMETRY_KEY; may write on debrief/abort while campaign autosave is suspended. Cap/privacy not decided here."
