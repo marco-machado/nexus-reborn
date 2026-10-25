@@ -3724,12 +3724,15 @@ button.hud-slot {
 
 .rs-main {
   display: grid;
-  /* the side columns widen with the text scale so their figures and titles
-     keep their line; the tree takes what is left */
+  /* The side columns widen with the text scale only where the window has
+     room for it (the vw term, up to the scaled maximum). Their minimum is
+     not scaled: at 1280x720 a scaled minimum took the width from the tree,
+     its SVGs (meet) shrank, and node labels drew smaller at 125% than at
+     100% (BUG-0013). The side panels wrap instead. */
   grid-template-columns:
-    clamp(calc(218px * var(--text-scale)), 17vw, calc(258px * var(--text-scale)))
+    clamp(218px, 17vw, calc(258px * var(--text-scale)))
     minmax(0, 1fr)
-    clamp(calc(286px * var(--text-scale)), 25vw, calc(350px * var(--text-scale)));
+    clamp(286px, 25vw, calc(350px * var(--text-scale)));
   gap: 10px;
   flex: 1;
   min-height: 0;
@@ -3938,6 +3941,10 @@ button.hud-slot {
 
 .rs-spec { display: flex; flex-direction: column; justify-content: center; gap: 3px; min-width: 0; }
 .rs-spec .kv b { white-space: nowrap; }
+/* the side column no longer widens with the text scale at 1280 (BUG-0013):
+   a value too wide for its row drops under its label instead of spilling */
+.rs-spec .kv { flex-wrap: wrap; row-gap: 2px; }
+.rs-spec .kv b { margin-left: auto; }
 
 .rs-box {
   display: flex;
@@ -3967,7 +3974,12 @@ button.hud-slot {
 .rs-prog-pct { font-size: calc(19px * var(--text-scale)); letter-spacing: 0.08em; color: var(--teal); }
 .rs-prog-top .dim { margin-left: auto; font-size: calc(10px * var(--text-scale)); letter-spacing: 0.14em; }
 
-.rs-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 8px; }
+/* PREREQUISITES and PROJECTED BENEFIT share a row (1 : 1.12) while neither
+   box is narrower than its longest word; when the panel is too narrow for
+   that (125% at 1280, BUG-0013), the second box drops under the first */
+.rs-cols { display: flex; flex-wrap: wrap; gap: 8px; }
+.rs-cols > .rs-box { flex: 1 1 0; min-width: min-content; }
+.rs-cols > .rs-box + .rs-box { flex-grow: 1.12; }
 
 .rs-req {
   display: grid;
