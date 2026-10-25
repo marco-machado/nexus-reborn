@@ -16,6 +16,9 @@ dist-ssr
 production/session-state/
 production/session-logs/
 
+# Playtest screenshots (owner, 2026-10-24): kept on disk, not in the repo
+production/qa/playtests/*/shots/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

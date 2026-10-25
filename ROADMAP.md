@@ -33,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-24 — Playtest screenshots gitignored (`production/qa/playtests/*/shots/`); session 2's 150 tracked shots untracked, kept on disk (owner).
 - 2026-10-24 — Production-build perf run (`perf-2026-10-23/perf-prod.json`): heap max 69.2 MB vs 192, mission entry 4364 ms vs 5 s, menu ready 52 ms vs 1 s; frame time, hitches and draw calls also within budget. RISK-0003 closed. Harness reaches the stores through `src/perfHooks.ts` under `VITE_PERF_HOOKS=1` (absent from normal builds); `preview-perf` launch config added.
 - 2026-10-24 — Owner set the memory ceiling (192 MB heap) and load-time budget (mission entry 5 s, menu ready 1 s), both on the production build: `project.yaml`, `docs/technical-preferences.md`, report amended, RISK-0003 updated (still Open until measured).
 - 2026-10-24 — `/perf-profile full` report written: `production/polish/full-report-2026-10-24.md`. Frame time (p95 7.2–7.3 ms vs 16.7), hitches (0 over 50 ms live) and draw calls (max 224 vs 300) OK; memory and load time NOT ASSESSED (no budgets). Open: mission-entry hitch trace, production-build load measurement.
