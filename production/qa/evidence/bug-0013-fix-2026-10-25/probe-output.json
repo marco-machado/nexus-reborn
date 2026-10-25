@@ -1,0 +1,179 @@
+{
+ "sizes": {
+  "90": {
+   "ref": "ADV.PROPELLANTS",
+   "labels": 21,
+   "lines": 42,
+   "fs": 9.54,
+   "ctm": 1.01,
+   "rendered": 9.632,
+   "perBranch": [
+    {
+     "branch": "BALLISTICS",
+     "svgW": 218.1,
+     "ctm": 1.01,
+     "rendered": 9.632
+    },
+    {
+     "branch": "CYBERNETICS",
+     "svgW": 207.1,
+     "ctm": 0.959,
+     "rendered": 9.147
+    },
+    {
+     "branch": "CONTROL SYSTEMS",
+     "svgW": 207.1,
+     "ctm": 0.959,
+     "rendered": 9.147
+    }
+   ],
+   "overlap": [],
+   "crossNode": [],
+   "outside": [],
+   "minMargin": 16.866,
+   "minSameLineGap": 19.329,
+   "cols": "218px 696.281px 315px",
+   "hscroll": false,
+   "expected": 9.559,
+   "pass": true
+  },
+  "100": {
+   "ref": "ADV.PROPELLANTS",
+   "labels": 21,
+   "lines": 42,
+   "fs": 10.6,
+   "ctm": 1.002,
+   "rendered": 10.621,
+   "perBranch": [
+    {
+     "branch": "BALLISTICS",
+     "svgW": 216.4,
+     "ctm": 1.002,
+     "rendered": 10.621
+    },
+    {
+     "branch": "CYBERNETICS",
+     "svgW": 205.4,
+     "ctm": 0.951,
+     "rendered": 10.081
+    },
+    {
+     "branch": "CONTROL SYSTEMS",
+     "svgW": 205.4,
+     "ctm": 0.951,
+     "rendered": 10.081
+    }
+   ],
+   "overlap": [],
+   "crossNode": [],
+   "outside": [],
+   "minMargin": 12.433,
+   "minSameLineGap": 10.164,
+   "cols": "218px 691.281px 320px",
+   "hscroll": false,
+   "expected": 10.621,
+   "pass": true
+  },
+  "110": {
+   "ref": "ADV.PROPELLANTS",
+   "labels": 21,
+   "lines": 42,
+   "fs": 11.66,
+   "ctm": 1.002,
+   "rendered": 11.683,
+   "perBranch": [
+    {
+     "branch": "BALLISTICS",
+     "svgW": 216.4,
+     "ctm": 1.002,
+     "rendered": 11.683
+    },
+    {
+     "branch": "CYBERNETICS",
+     "svgW": 205.4,
+     "ctm": 0.951,
+     "rendered": 11.089
+    },
+    {
+     "branch": "CONTROL SYSTEMS",
+     "svgW": 205.4,
+     "ctm": 0.951,
+     "rendered": 11.089
+    }
+   ],
+   "overlap": [],
+   "crossNode": [],
+   "outside": [],
+   "minMargin": 8.191,
+   "minSameLineGap": 1.18,
+   "cols": "218px 691.281px 320px",
+   "hscroll": false,
+   "expected": 11.683,
+   "pass": true
+  },
+  "125": {
+   "ref": "ADV.PROPELLANTS",
+   "labels": 21,
+   "lines": 42,
+   "fs": 11.66,
+   "ctm": 1.002,
+   "rendered": 11.683,
+   "perBranch": [
+    {
+     "branch": "BALLISTICS",
+     "svgW": 216.4,
+     "ctm": 1.002,
+     "rendered": 11.683
+    },
+    {
+     "branch": "CYBERNETICS",
+     "svgW": 205.4,
+     "ctm": 0.951,
+     "rendered": 11.089
+    },
+    {
+     "branch": "CONTROL SYSTEMS",
+     "svgW": 205.4,
+     "ctm": 0.951,
+     "rendered": 11.089
+    }
+   ],
+   "overlap": [],
+   "crossNode": [],
+   "outside": [],
+   "minMargin": 8.191,
+   "minSameLineGap": 1.18,
+   "cols": "218px 691.281px 320px",
+   "hscroll": false,
+   "expected": 11.683,
+   "pass": true
+  }
+ },
+ "clips": {
+  "default": {
+   "90": [],
+   "100": [],
+   "110": [],
+   "125": []
+  },
+  "hc": {
+   "90": [],
+   "100": [],
+   "110": [],
+   "125": []
+  }
+ },
+ "selections": {
+  "NEURAL CACHE ARRAY": [],
+  "TUNGSTEN SABOT": [],
+  "ADAPTIVE COMMAND AI": [],
+  "SMART FRAGMENTATION": [],
+  "SENSOR FUSION ARRAY": [],
+  "hc NEURAL CACHE ARRAY": [],
+  "hc TUNGSTEN SABOT": [],
+  "hc ADAPTIVE COMMAND AI": [],
+  "hc SMART FRAGMENTATION": [],
+  "hc SENSOR FUSION ARRAY": []
+ },
+ "errors": []
+}
