@@ -1,0 +1,17 @@
+PASS Pause opens with focus on RESUME // RESUME
+PASS closing Settings from Pause returns focus to SETTINGS // Open settings
+PASS Balance takes focus inside its panel // EXPORT JSON // THE TELEMETRY RECORDS
+PASS Tab stays inside Balance // CLOSE
+PASS closing Balance returns focus to its OPEN control // Open the balance dashboard
+PASS selected segment is framed teal, not amber // {"cls":"btn set-scale-btn sel","color":"rgb(126, 240, 212)","border":"2px solid"}
+PASS Recruitment Market takes focus // CLOSE THE RECRUITMENT MARKET
+PASS Tab stays inside the Recruitment Market // CLOSE THE RECRUITMENT MARKET
+PASS Escape closes the Recruitment Market
+PASS focus returns to the RECRUIT control // RECRUIT + (8/8) // OPEN THE RECRUITMENT MARKET
+PASS after UNDERSTOOD focus is on RETURN TO WORLD NETWORK // RETURN TO WORLD NETWORK
+PASS Balance from the Debrief takes focus // EXPORT JSON // THE TELEMETRY RECORDS
+PASS Escape closes Balance on the Debrief and focus returns to BALANCE DATA // BALANCE DATA // OPEN THE DASHBOARD OVER THE LOCAL MISSION LO
+PASS invoice is a named scroll region with the cut-edge fade // {"role":"region","label":"Mission invoice","fade":true}
+PASS every researched node draws the check glyph // [true]
+PASS reduced motion: the overlay has no fade-in // none
+ALL PASS

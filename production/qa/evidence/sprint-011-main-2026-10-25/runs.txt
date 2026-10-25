@@ -1,0 +1,32 @@
+r1-probe exit 0
+PASS IF-034 steppers absent while the Influence note is up // []
+no console or page errors
+ALL PASS
+r2-sweep exit 0
+  clip @125: 0
+  tab stops: 3
+no page errors
+r3-focus exit 1
+PASS every researched node draws the check glyph // [true]
+PASS reduced motion: the overlay has no fade-in // none
+FAILED 1
+r4-playtest-sweep exit 0
+  clip @125: 0
+  tab stops: 3
+no page errors
+w10-bug0010 exit 0
+PASS TR-interface-002 sabotage-gc7518e2d3 notes do not overrun at text scale 125
+PASS - no page errors
+ALL PASS
+w11-bug0011 exit 0
+hc-125: grid 159.75px 159.75px; dossier 345 of 797 px, scrolls true (auto) :: HLTH 1 line (32.1/146px @12.5px) | STAMINA 1 line (56.2/146px @12.5px) | FOCUS 1 line (40.1/146px @12.5px) | MOBILITY 1 line (64.2/146px @12.5px)
+RESULT every .ts-stats label is 1 line box, no overflow, at every scale and contrast
+no page errors
+w12-bug0012 exit 0
+OBSERVED complete count: "3 / 3"
+PASS BUG-0012 no page errors during the walk
+# ALL PASS (4 checks)
+w13-bug0013 exit 0
+   @125 high contrast selected SENSOR FUSION ARRAY: clipped('body') 0
+no page errors
+RESULT: PASS

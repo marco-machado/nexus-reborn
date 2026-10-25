@@ -1,0 +1,920 @@
+{
+ "def": {
+  "svgRuns": 4,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 143,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 5,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "BRIEF",
+    "size": 33.28,
+    "w": 253,
+    "key": "h1.screen-title < div"
+   },
+   {
+    "text": "RUST HAVEN",
+    "size": 10,
+    "w": 253,
+    "key": "div.screen-sub < div"
+   },
+   {
+    "text": "//",
+    "size": 10,
+    "w": 253,
+    "key": "div.screen-sub < div"
+   },
+   {
+    "text": "DETROIT SPRAWL",
+    "size": 10,
+    "w": 253,
+    "key": "div.screen-sub < div"
+   },
+   {
+    "text": "2087.05.14",
+    "size": 10,
+    "w": 157,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "14:32:46",
+    "size": 10,
+    "w": 157,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "CREDITS",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "128,450",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "CR",
+    "size": 10,
+    "w": 150,
+    "key": "span.chip.amber < div.screen-head-right"
+   },
+   {
+    "text": "INFLUENCE",
+    "size": 10,
+    "w": 98,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "0",
+    "size": 10,
+    "w": 98,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "INTEL",
+    "size": 10,
+    "w": 68,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 68,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "ROSTER",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 105,
+    "key": "span.chip.dim < div.screen-head-right"
+   },
+   {
+    "text": "RECON FEED // SAT-7A",
+    "size": 10,
+    "w": 160,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "04:04:11",
+    "size": 10,
+    "w": 144,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "| IR-MONO",
+    "size": 10,
+    "w": 144,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": ">",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": "Stratos has located an Omnicorp relay ya",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": ">",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": "Three fuel relays sit in a fenced yard b",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": ">",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": "Drop the relays, then hold the yard whil",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": ">",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": "CorpSec will push a response wave throug",
+    "size": 10,
+    "w": 547,
+    "key": "span < div.mb-rbrief"
+   },
+   {
+    "text": "ALT: 1824M",
+    "size": 10,
+    "w": 68,
+    "key": "span < div.mb-rreadout"
+   },
+   {
+    "text": "RNG: 3.7KM",
+    "size": 10,
+    "w": 68,
+    "key": "span < div.mb-rreadout"
+   },
+   {
+    "text": "TRK: 117.3",
+    "size": 10,
+    "w": 68,
+    "key": "span < div.mb-rreadout"
+   },
+   {
+    "text": "ZOOM: 1.6X",
+    "size": 10,
+    "w": 68,
+    "key": "span < div.mb-rreadout"
+   },
+   {
+    "text": "MODE: IR-MONO",
+    "size": 10,
+    "w": 89,
+    "key": "span < div.mb-rreadout"
+   },
+   {
+    "text": "TARGET BUILDING",
+    "size": 10,
+    "w": 106,
+    "key": "span.label < div.mb-rcallout"
+   },
+   {
+    "text": "RELAY YARD",
+    "size": 12,
+    "w": 83,
+    "key": "span.name < div.mb-rcallout"
+   },
+   {
+    "text": "ID: D-03 // GRID 77-2A",
+    "size": 10,
+    "w": 155,
+    "key": "span.sub < div.mb-rcallout"
+   },
+   {
+    "text": "INSERTION",
+    "size": 10,
+    "w": 81,
+    "key": "b < div.mb-rtag.ins"
+   },
+   {
+    "text": "ROUTE ALPHA",
+    "size": 10,
+    "w": 81,
+    "key": "span < div.mb-rtag.ins"
+   },
+   {
+    "text": "EXTRACTION",
+    "size": 10,
+    "w": 73,
+    "key": "b < div.mb-rtag.ext"
+   },
+   {
+    "text": "ROUTE OMEGA",
+    "size": 10,
+    "w": 81,
+    "key": "span < div.mb-rtag.ext"
+   },
+   {
+    "text": "TACTICAL MAP // DETROIT SPRAWL - DISTRIC",
+    "size": 10,
+    "w": 353,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "GRID REF: 77-2A |",
+    "size": 10,
+    "w": 225,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "96",
+    "size": 10,
+    "w": 225,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "M SQUARE",
+    "size": 10,
+    "w": 225,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "CITY BLOCKS",
+    "size": 10,
+    "w": 73,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "35",
+    "size": 13,
+    "w": 17,
+    "key": "b < div.mb-tac-stat"
+   },
+   {
+    "text": "STREETS",
+    "size": 10,
+    "w": 46,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "06",
+    "size": 13,
+    "w": 17,
+    "key": "b < div.mb-tac-stat"
+   },
+   {
+    "text": "CIVILIANS",
+    "size": 10,
+    "w": 60,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "08",
+    "size": 13,
+    "w": 17,
+    "key": "b < div.mb-tac-stat"
+   },
+   {
+    "text": "PATROL CONTACTS",
+    "size": 10,
+    "w": 99,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "03",
+    "size": 13,
+    "w": 17,
+    "key": "b < div.mb-tac-stat"
+   },
+   {
+    "text": "GARRISON",
+    "size": 10,
+    "w": 53,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "04",
+    "size": 13,
+    "w": 17,
+    "key": "b.red < div.mb-tac-stat"
+   },
+   {
+    "text": "ROUTE ALPHA",
+    "size": 10,
+    "w": 73,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "61 M",
+    "size": 13,
+    "w": 34,
+    "key": "b.teal < div.mb-tac-stat"
+   },
+   {
+    "text": "ROUTE OMEGA",
+    "size": 10,
+    "w": 73,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "58 M",
+    "size": 13,
+    "w": 34,
+    "key": "b.red < div.mb-tac-stat"
+   },
+   {
+    "text": "WEATHER",
+    "size": 10,
+    "w": 46,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "CLEAR DUSK // 18:14:08",
+    "size": 13,
+    "w": 168,
+    "key": "b < div.mb-tac-stat"
+   },
+   {
+    "text": "PROJECTED SUCCESS",
+    "size": 10,
+    "w": 113,
+    "key": "label < div.mb-tac-stat"
+   },
+   {
+    "text": "82%",
+    "size": 13,
+    "w": 26,
+    "key": "b.teal < div.mb-tac-stat"
+   },
+   {
+    "text": "INSERTION POINT",
+    "size": 10,
+    "w": 108,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "EXTRACTION POINT",
+    "size": 10,
+    "w": 116,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "TARGET ZONE",
+    "size": 10,
+    "w": 79,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "ROUTE ALPHA",
+    "size": 10,
+    "w": 79,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "ROUTE OMEGA",
+    "size": 10,
+    "w": 79,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "HOSTILE ZONE",
+    "size": 10,
+    "w": 87,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "PATROL ROUTE",
+    "size": 10,
+    "w": 87,
+    "key": "span < div.mb-legend-row"
+   },
+   {
+    "text": "CONTRACT DOSSIER",
+    "size": 10,
+    "w": 128,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "OPERATION:",
+    "size": 10,
+    "w": 192,
+    "key": "label < div.field"
+   },
+   {
+    "text": "RUST HAVEN",
+    "size": 17.92,
+    "w": 192,
+    "key": "div.value.big < div.field"
+   },
+   {
+    "text": "LOCATION:",
+    "size": 10,
+    "w": 192,
+    "key": "label < div.field"
+   },
+   {
+    "text": "DETROIT SPRAWL",
+    "size": 12.5,
+    "w": 192,
+    "key": "div.value < div.field"
+   },
+   {
+    "text": "MISSION TYPE:",
+    "size": 10,
+    "w": 192,
+    "key": "label < div.field"
+   },
+   {
+    "text": "SABOTAGE",
+    "size": 12.5,
+    "w": 192,
+    "key": "div.value < div.field"
+   },
+   {
+    "text": "CLIENT:",
+    "size": 10,
+    "w": 192,
+    "key": "label < div.field"
+   },
+   {
+    "text": "STRATOS INDUSTRIES",
+    "size": 12.5,
+    "w": 192,
+    "key": "div.value < div.field"
+   },
+   {
+    "text": "ID:",
+    "size": 10,
+    "w": 77,
+    "key": "span.mb-sil-id < div.mb-sil.corners"
+   },
+   {
+    "text": "RH",
+    "size": 10,
+    "w": 77,
+    "key": "span.mb-sil-id < div.mb-sil.corners"
+   },
+   {
+    "text": "-77",
+    "size": 10,
+    "w": 77,
+    "key": "span.mb-sil-id < div.mb-sil.corners"
+   },
+   {
+    "text": "THREAT RATING",
+    "size": 10,
+    "w": 262,
+    "key": "label < span.mb-threat-main"
+   },
+   {
+    "text": "MODERATE",
+    "size": 20.48,
+    "w": 122,
+    "key": "b < span.mb-threat-main"
+   },
+   {
+    "text": "ETA RESPONSE: < 06:00",
+    "size": 10,
+    "w": 156,
+    "key": "span.mb-threat-eta < span.mb-threat-side"
+   },
+   {
+    "text": "REWARD:",
+    "size": 10,
+    "w": 291,
+    "key": "label < div.mb-reward.corners"
+   },
+   {
+    "text": "41,000",
+    "size": 29.44,
+    "w": 141,
+    "key": "b < div.mb-reward-line"
+   },
+   {
+    "text": "CR",
+    "size": 12.3648,
+    "w": 19,
+    "key": "i < b"
+   },
+   {
+    "text": "CORP CREDITS",
+    "size": 10,
+    "w": 94,
+    "key": "span.dim < div.mb-reward-line"
+   },
+   {
+    "text": "A WIN SPENDS",
+    "size": 10,
+    "w": 291,
+    "key": "div.mb-reward-eta < div.mb-reward.corners"
+   },
+   {
+    "text": "3",
+    "size": 10,
+    "w": 291,
+    "key": "div.mb-reward-eta < div.mb-reward.corners"
+   },
+   {
+    "text": "DAYS",
+    "size": 10,
+    "w": 291,
+    "key": "div.mb-reward-eta < div.mb-reward.corners"
+   },
+   {
+    "text": "OF WORLD TIME",
+    "size": 10,
+    "w": 291,
+    "key": "div.mb-reward-eta < div.mb-reward.corners"
+   },
+   {
+    "text": "OBJECTIVES:",
+    "size": 10,
+    "w": 295,
+    "key": "label < div.mb-box"
+   },
+   {
+    "text": "PRIMARY:",
+    "size": 10.5,
+    "w": 56,
+    "key": "b < span"
+   },
+   {
+    "text": "REACH THE RELAY YARD",
+    "size": 10.5,
+    "w": 202,
+    "key": "span < div.mb-obj"
+   },
+   {
+    "text": "OPTIONAL:",
+    "size": 10.5,
+    "w": 63,
+    "key": "b < span"
+   },
+   {
+    "text": "DROP THE BACKUP TRANSFORMER",
+    "size": 10.5,
+    "w": 279,
+    "key": "span < div.mb-obj.has-kit"
+   },
+   {
+    "text": "(+",
+    "size": 10.5,
+    "w": 76,
+    "key": "i.dim < span"
+   },
+   {
+    "text": "6,000",
+    "size": 10.5,
+    "w": 76,
+    "key": "i.dim < span"
+   },
+   {
+    "text": "CR)",
+    "size": 10.5,
+    "w": 76,
+    "key": "i.dim < span"
+   },
+   {
+    "text": "KIT:",
+    "size": 10,
+    "w": 26,
+    "key": "b < span.mb-obj-kit"
+   },
+   {
+    "text": "power cells arm grenades, the fast tool;",
+    "size": 10,
+    "w": 279,
+    "key": "span.mb-obj-kit < span"
+   },
+   {
+    "text": "SECONDARY:",
+    "size": 10.5,
+    "w": 70,
+    "key": "b < span"
+   },
+   {
+    "text": "DESTROY THE THREE FUEL RELAYS",
+    "size": 10.5,
+    "w": 279,
+    "key": "span < div.mb-obj.has-kit"
+   },
+   {
+    "text": "KIT:",
+    "size": 10,
+    "w": 26,
+    "key": "b < span.mb-obj-kit"
+   },
+   {
+    "text": "power cells arm grenades, the fast tool;",
+    "size": 10,
+    "w": 279,
+    "key": "span.mb-obj-kit < span"
+   },
+   {
+    "text": "TERTIARY:",
+    "size": 10.5,
+    "w": 63,
+    "key": "b < span"
+   },
+   {
+    "text": "HOLD THE YARD FOR THE BURN",
+    "size": 10.5,
+    "w": 250,
+    "key": "span < div.mb-obj.has-kit"
+   },
+   {
+    "text": "KIT:",
+    "size": 10,
+    "w": 26,
+    "key": "b < span.mb-obj-kit"
+   },
+   {
+    "text": "hold the zone for 45 s",
+    "size": 10,
+    "w": 250,
+    "key": "span.mb-obj-kit < span"
+   },
+   {
+    "text": "QUATERNARY:",
+    "size": 10.5,
+    "w": 76,
+    "key": "b < span"
+   },
+   {
+    "text": "EXTRACT THE SQUAD",
+    "size": 10.5,
+    "w": 202,
+    "key": "span < div.mb-obj"
+   },
+   {
+    "text": "COLLATERAL:",
+    "size": 10,
+    "w": 295,
+    "key": "label < div.mb-box"
+   },
+   {
+    "text": "5,000",
+    "size": 10.5,
+    "w": 59,
+    "key": "b.amber < div.mb-collateral"
+   },
+   {
+    "text": "CR",
+    "size": 10.5,
+    "w": 59,
+    "key": "b.amber < div.mb-collateral"
+   },
+   {
+    "text": "PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "size": 10.5,
+    "w": 295,
+    "key": "div.mb-collateral < div.mb-box"
+   },
+   {
+    "text": "MISSION NOTES:",
+    "size": 10,
+    "w": 295,
+    "key": "label < div.mb-box"
+   },
+   {
+    "text": "CLEAR DUSK. GUARDS SEE AND HEAR AT FULL ",
+    "size": 10,
+    "w": 295,
+    "key": "div.mb-note.dim < div.mb-box"
+   },
+   {
+    "text": "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND",
+    "size": 10,
+    "w": 295,
+    "key": "div.mb-note.dim < div.mb-box"
+   },
+   {
+    "text": "DEMOLITION CELLS ARE THE FAST TOOL. GUNF",
+    "size": 10,
+    "w": 295,
+    "key": "div.mb-note.dim < div.mb-box"
+   },
+   {
+    "text": "THE YARD GUARD CAN BE BYPASSED ON THE WA",
+    "size": 10,
+    "w": 295,
+    "key": "div.mb-note.dim < div.mb-box"
+   },
+   {
+    "text": "COMMS LOG // CH 7A",
+    "size": 10,
+    "w": 308,
+    "key": "b < div.mb-comms.corners"
+   },
+   {
+    "text": "[",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "23:40:12",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "]",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "INTEL: SECURITY PATROLS INCREASED.",
+    "size": 10,
+    "w": 308,
+    "key": "span.dim < div.mb-comms.corners"
+   },
+   {
+    "text": "[",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "23:40:45",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "]",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "WEATHER: CLEAR DUSK. VISIBILITY FULL.",
+    "size": 10,
+    "w": 308,
+    "key": "span.dim < div.mb-comms.corners"
+   },
+   {
+    "text": "[",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "23:41:02",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "]",
+    "size": 10,
+    "w": 64,
+    "key": "i < span.dim"
+   },
+   {
+    "text": "LOCAL: CORPSEC TASKFORCE ONSITE.",
+    "size": 10,
+    "w": 308,
+    "key": "span.dim < div.mb-comms.corners"
+   },
+   {
+    "text": "<< ACCEPT CONTRACT >>",
+    "size": 23.04,
+    "w": 661,
+    "key": "span.cta-inner < button.cta.big.mb-accept"
+   },
+   {
+    "text": "CONTRACT ID:",
+    "size": 10,
+    "w": 218,
+    "key": "span < div.mb-contract.corners"
+   },
+   {
+    "text": "77A-RUSTHAVEN-2087",
+    "size": 10,
+    "w": 126,
+    "key": "b < span"
+   },
+   {
+    "text": "CLEARANCE LEVEL:",
+    "size": 10,
+    "w": 218,
+    "key": "span < div.mb-contract.corners"
+   },
+   {
+    "text": "EXECUTIVE",
+    "size": 10,
+    "w": 63,
+    "key": "b.red < span"
+   },
+   {
+    "text": "WORLD NETWORK",
+    "size": 11.5,
+    "w": 120,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "RESEARCH",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "BRIEF",
+    "size": 11.5,
+    "w": 46,
+    "key": "span.navtab-label < button.navtab.active"
+   },
+   {
+    "text": "ASSEMBLY",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "div",
+   "name": "CITY BLOCKS35STREETS06CIVILIANS08PATROL CONTACTS03",
+   "dis": null
+  },
+  {
+   "tag": "div",
+   "name": "OPERATION:RUST HAVENLOCATION:DETROIT SPRAWLMISSION",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "ACCEPT CONTRACT RUST HAVEN // 41,000 CR",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "WORLD NETWORK",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "RESEARCH",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BRIEF",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "ASSEMBLY",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

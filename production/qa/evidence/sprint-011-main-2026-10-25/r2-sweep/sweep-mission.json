@@ -1,0 +1,784 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 126,
+  "small": [],
+  "low": [],
+  "exempt": [
+   "+ [inactive]"
+  ],
+  "dim": [],
+  "faint": [],
+  "targets": 13,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "DISTRICT 03",
+    "size": 12.5,
+    "w": 110,
+    "key": "b.hud-district < div.hud-top-left"
+   },
+   {
+    "text": "18:14:08",
+    "size": 12,
+    "w": 71,
+    "key": "span.hud-clock < div.hud-top-left"
+   },
+   {
+    "text": "13.7C",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < div.hud-top-left"
+   },
+   {
+    "text": "CLEAR",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.dim < div.hud-top-left"
+   },
+   {
+    "text": "1.2M/S",
+    "size": 10,
+    "w": 61,
+    "key": "span.chip.dim < div.hud-top-left"
+   },
+   {
+    "text": "|||",
+    "size": 12,
+    "w": 28,
+    "key": "span.hud-alert-bars < div.hud-alert"
+   },
+   {
+    "text": "ALERT:",
+    "size": 12,
+    "w": 79,
+    "key": "span.hud-alert-num < div.hud-alert"
+   },
+   {
+    "text": "0",
+    "size": 12,
+    "w": 79,
+    "key": "span.hud-alert-num < div.hud-alert"
+   },
+   {
+    "text": "|||",
+    "size": 12,
+    "w": 28,
+    "key": "span.hud-alert-bars < div.hud-alert"
+   },
+   {
+    "text": "CREDITS",
+    "size": 12,
+    "w": 54,
+    "key": "span.dim < div.hud-top-right"
+   },
+   {
+    "text": "128,450",
+    "size": 15,
+    "w": 100,
+    "key": "b.hud-credits < div.hud-top-right"
+   },
+   {
+    "text": "CR",
+    "size": 10,
+    "w": 15,
+    "key": "i < b.hud-credits"
+   },
+   {
+    "text": "PAUSE",
+    "size": 10.5,
+    "w": 67,
+    "key": "button.hud-btn.pause < div.hud-top-right"
+   },
+   {
+    "text": "SQUAD LINK",
+    "size": 10,
+    "w": 80,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "4",
+    "size": 10,
+    "w": 64,
+    "key": "span.dim < div.hud-panel-head"
+   },
+   {
+    "text": "ONLINE",
+    "size": 10,
+    "w": 64,
+    "key": "span.dim < div.hud-panel-head"
+   },
+   {
+    "text": "ACTIVE",
+    "size": 10,
+    "w": 56,
+    "key": "span.hud-agent-active < div.hud-agent.sel"
+   },
+   {
+    "text": "1",
+    "size": 11,
+    "w": 22,
+    "key": "span.hud-agent-slot < div.hud-agent.sel"
+   },
+   {
+    "text": "MARA",
+    "size": 11,
+    "w": 33,
+    "key": "b < span.hud-agent-name"
+   },
+   {
+    "text": "D. TORRES",
+    "size": 10,
+    "w": 59,
+    "key": "i.dim < span.hud-agent-name"
+   },
+   {
+    "text": "124",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "124",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "30",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "30",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "PRI",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "MOVE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "FREE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "2",
+    "size": 11,
+    "w": 22,
+    "key": "span.hud-agent-slot < div.hud-agent.sel"
+   },
+   {
+    "text": "GHOST",
+    "size": 11,
+    "w": 41,
+    "key": "b < span.hud-agent-name"
+   },
+   {
+    "text": "L. FERNANDEZ",
+    "size": 10,
+    "w": 79,
+    "key": "i.dim < span.hud-agent-name"
+   },
+   {
+    "text": "110",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "110",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "40",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "40",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "PRI",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "MOVE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "FREE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "3",
+    "size": 11,
+    "w": 22,
+    "key": "span.hud-agent-slot < div.hud-agent.sel"
+   },
+   {
+    "text": "DART",
+    "size": 11,
+    "w": 33,
+    "key": "b < span.hud-agent-name"
+   },
+   {
+    "text": "K. PARK",
+    "size": 10,
+    "w": 46,
+    "key": "i.dim < span.hud-agent-name"
+   },
+   {
+    "text": "98",
+    "size": 10,
+    "w": 35,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 35,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "98",
+    "size": 10,
+    "w": 35,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "40",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "40",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "PRI",
+    "size": 10,
+    "w": 63,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "MOVE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "FREE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "4",
+    "size": 11,
+    "w": 22,
+    "key": "span.hud-agent-slot < div.hud-agent.sel"
+   },
+   {
+    "text": "TORQ",
+    "size": 11,
+    "w": 33,
+    "key": "b < span.hud-agent-name"
+   },
+   {
+    "text": "M. IVANOVA",
+    "size": 10,
+    "w": 65,
+    "key": "i.dim < span.hud-agent-name"
+   },
+   {
+    "text": "132",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "132",
+    "size": 10,
+    "w": 49,
+    "key": "span < span.hud-agent-sub"
+   },
+   {
+    "text": "6",
+    "size": 10,
+    "w": 49,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 49,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "6",
+    "size": 10,
+    "w": 49,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "PRI",
+    "size": 10,
+    "w": 49,
+    "key": "span.dim < span.hud-agent-sub"
+   },
+   {
+    "text": "MOVE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "FREE",
+    "size": 10,
+    "w": 38,
+    "key": "span.chip.dim < span.hud-agent-orders"
+   },
+   {
+    "text": "MISSION DIRECTIVES //",
+    "size": 10,
+    "w": 241,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "SABOTAGE",
+    "size": 10,
+    "w": 241,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "REACH THE RELAY YARD",
+    "size": 10.5,
+    "w": 191,
+    "key": "span.hud-obj-text < span.hud-obj-label"
+   },
+   {
+    "text": "ACTIVE",
+    "size": 10,
+    "w": 53,
+    "key": "i.hud-obj-tok < span.hud-obj-label"
+   },
+   {
+    "text": "DROP THE BACKUP TRANSFORMER",
+    "size": 10.5,
+    "w": 177,
+    "key": "span.hud-obj-text < span.hud-obj-label"
+   },
+   {
+    "text": "OPTIONAL",
+    "size": 10,
+    "w": 67,
+    "key": "i.hud-obj-opt < span.hud-obj-label"
+   },
+   {
+    "text": "DESTROY THE THREE FUEL RELAYS",
+    "size": 10.5,
+    "w": 250,
+    "key": "span.hud-obj-text < span.hud-obj-label"
+   },
+   {
+    "text": "HOLD THE YARD FOR THE BURN",
+    "size": 10.5,
+    "w": 250,
+    "key": "span.hud-obj-text < span.hud-obj-label"
+   },
+   {
+    "text": "EXTRACT THE SQUAD",
+    "size": 10.5,
+    "w": 250,
+    "key": "span.hud-obj-text < span.hud-obj-label"
+   },
+   {
+    "text": "COMM LOG",
+    "size": 10,
+    "w": 64,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "18:14:08",
+    "size": 10,
+    "w": 64,
+    "key": "span.dim < div.hud-panel-head"
+   },
+   {
+    "text": "18:14:08",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "SYS",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": ":",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "SQUAD LINK ESTABLISHED. 4 ONLINE.",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "18:14:08",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "SYS",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": ":",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "OBJECTIVE: REACH THE RELAY YARD",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "18:14:08",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "SYS",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": ":",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "PERFORMANCE GOVERNOR: SUSTAINED FRAME LO",
+    "size": 10,
+    "w": 268,
+    "key": "div.hud-log.sys < div.scroll.hud-comms-body"
+   },
+   {
+    "text": "PRIMARY //",
+    "size": 10,
+    "w": 120,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "MARA",
+    "size": 10,
+    "w": 120,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "DRAWN",
+    "size": 10,
+    "w": 40,
+    "key": "span.teal < div.hud-panel-head"
+   },
+   {
+    "text": "RFC-27 ASSAULT",
+    "size": 10,
+    "w": 98,
+    "key": "span.hud-wpn-name < div.hud-wpn-info"
+   },
+   {
+    "text": "30",
+    "size": 23,
+    "w": 30,
+    "key": "b < span.hud-ammo"
+   },
+   {
+    "text": "/",
+    "size": 11,
+    "w": 21,
+    "key": "i < span.hud-ammo"
+   },
+   {
+    "text": "30",
+    "size": 11,
+    "w": 21,
+    "key": "i < span.hud-ammo"
+   },
+   {
+    "text": "SECONDARY",
+    "size": 10,
+    "w": 72,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "S-18 PISTOL",
+    "size": 10,
+    "w": 69,
+    "key": "span.hud-wpn-name < div.hud-wpn-info"
+   },
+   {
+    "text": "12",
+    "size": 18,
+    "w": 23,
+    "key": "b < span.hud-ammo.sm"
+   },
+   {
+    "text": "/",
+    "size": 11,
+    "w": 21,
+    "key": "i < span.hud-ammo.sm"
+   },
+   {
+    "text": "12",
+    "size": 11,
+    "w": 21,
+    "key": "i < span.hud-ammo.sm"
+   },
+   {
+    "text": "ABILITIES",
+    "size": 10,
+    "w": 72,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "Q / G",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < div.hud-panel-head"
+   },
+   {
+    "text": "G",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.ability.usable"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.ability.usable"
+   },
+   {
+    "text": "2",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.ability.usable"
+   },
+   {
+    "text": "3",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.ability.usable"
+   },
+   {
+    "text": "4",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.ability.usable"
+   },
+   {
+    "text": "ITEMS",
+    "size": 10,
+    "w": 40,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "E / R",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < div.hud-panel-head"
+   },
+   {
+    "text": "E",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.item.usable"
+   },
+   {
+    "text": "02",
+    "size": 10,
+    "w": 12,
+    "key": "i < button.hud-slot.item.usable"
+   },
+   {
+    "text": "R",
+    "size": 10,
+    "w": 6,
+    "key": "span.hud-slot-key < button.hud-slot.item.usable"
+   },
+   {
+    "text": "01",
+    "size": 10,
+    "w": 12,
+    "key": "i < button.hud-slot.item.usable"
+   },
+   {
+    "text": "DISTRICT 03",
+    "size": 10,
+    "w": 88,
+    "key": "span < div.hud-panel-head"
+   },
+   {
+    "text": "SECTOR B",
+    "size": 10,
+    "w": 64,
+    "key": "span.dim < div.hud-panel-head"
+   },
+   {
+    "text": "+",
+    "size": 12,
+    "w": 24,
+    "key": "button < div.hud-mm-zoom"
+   },
+   {
+    "text": "-",
+    "size": 12,
+    "w": 24,
+    "key": "button < div.hud-mm-zoom"
+   },
+   {
+    "text": "TUTORIAL",
+    "size": 10,
+    "w": 196,
+    "key": "b < div.hud-toast-head"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 196,
+    "key": "b < div.hud-toast-head"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 196,
+    "key": "b < div.hud-toast-head"
+   },
+   {
+    "text": "9",
+    "size": 10,
+    "w": 196,
+    "key": "b < div.hud-toast-head"
+   },
+   {
+    "text": "//",
+    "size": 10,
+    "w": 196,
+    "key": "b < div.hud-toast-head"
+   },
+   {
+    "text": "SELECTION",
+    "size": 10,
+    "w": 196,
+    "key": "b < div.hud-toast-head"
+   },
+   {
+    "text": "SKIP TUTORIAL",
+    "size": 10,
+    "w": 112,
+    "key": "button.hud-toast-btn < span.hud-toast-ctl"
+   },
+   {
+    "text": "X",
+    "size": 10,
+    "w": 24,
+    "key": "button.hud-toast-btn < span.hud-toast-ctl"
+   },
+   {
+    "text": "Click an operative or drag a box to sele",
+    "size": 10.5,
+    "w": 458,
+    "key": "div.hud-toast-body < div.hud-toast.corners"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

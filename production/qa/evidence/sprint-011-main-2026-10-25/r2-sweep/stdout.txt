@@ -1,0 +1,135 @@
+## world: 202 runs, 36 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 4
+## menu: 15 runs, 2 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): _ [blink]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 2
+## settings: 159 runs, 57 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): _ [blink] | RESET ALL [inactive] | RESET [inactive]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 37
+## research: 85 runs, 26 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 42 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 26
+## brief: 143 runs, 5 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 4 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 7
+## team: 225 runs, 32 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 24
+## debrief: 45 runs, 3 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 3
+## mission: 126 runs, 13 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): + [inactive]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 0
+## pause: 200 runs, 16 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  exempt (inactive / blinking): + [inactive]
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 3
+## balance: 52 runs, 5 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 3
+no page errors

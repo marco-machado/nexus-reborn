@@ -1,0 +1,10 @@
+default-90: grid 133.188px 133.203px; dossier 432 of 656 px, scrolls true (auto) :: HLTH 1 line (23.1/119px @9px) | STAMINA 1 line (40.5/119px @9px) | FOCUS 1 line (28.9/119px @9px) | MOBILITY 1 line (46.2/119px @9px)
+default-100: grid 133.188px 133.203px; dossier 428 of 687 px, scrolls true (auto) :: HLTH 1 line (25.7/119px @10px) | STAMINA 1 line (45/119px @10px) | FOCUS 1 line (32.1/119px @10px) | MOBILITY 1 line (51.4/119px @10px)
+default-110: grid 138.891px 138.906px; dossier 404 of 736 px, scrolls true (auto) :: HLTH 1 line (28.3/125px @11px) | STAMINA 1 line (49.5/125px @11px) | FOCUS 1 line (35.3/125px @11px) | MOBILITY 1 line (56.5/125px @11px)
+default-125: grid 159.75px 159.75px; dossier 345 of 797 px, scrolls true (auto) :: HLTH 1 line (32.1/146px @12.5px) | STAMINA 1 line (56.2/146px @12.5px) | FOCUS 1 line (40.1/146px @12.5px) | MOBILITY 1 line (64.2/146px @12.5px)
+hc-90: grid 133.188px 133.203px; dossier 432 of 656 px, scrolls true (auto) :: HLTH 1 line (23.1/119px @9px) | STAMINA 1 line (40.5/119px @9px) | FOCUS 1 line (28.9/119px @9px) | MOBILITY 1 line (46.2/119px @9px)
+hc-100: grid 133.188px 133.203px; dossier 428 of 687 px, scrolls true (auto) :: HLTH 1 line (25.7/119px @10px) | STAMINA 1 line (45/119px @10px) | FOCUS 1 line (32.1/119px @10px) | MOBILITY 1 line (51.4/119px @10px)
+hc-110: grid 138.891px 138.906px; dossier 404 of 736 px, scrolls true (auto) :: HLTH 1 line (28.3/125px @11px) | STAMINA 1 line (49.5/125px @11px) | FOCUS 1 line (35.3/125px @11px) | MOBILITY 1 line (56.5/125px @11px)
+hc-125: grid 159.75px 159.75px; dossier 345 of 797 px, scrolls true (auto) :: HLTH 1 line (32.1/146px @12.5px) | STAMINA 1 line (56.2/146px @12.5px) | FOCUS 1 line (40.1/146px @12.5px) | MOBILITY 1 line (64.2/146px @12.5px)
+RESULT every .ts-stats label is 1 line box, no overflow, at every scale and contrast
+no page errors

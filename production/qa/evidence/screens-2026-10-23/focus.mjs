@@ -301,8 +301,14 @@ const SURFACES = {
       useAppStore.getState().goto('team')
     })
   },
-  debrief: async () => {
+  // unseeResearchHint: team() -> fresh() marks hint-debrief-research seen, so a
+  // check that needs the first-Debrief note has to unsee it here, after fresh().
+  debrief: async ({ unseeResearchHint = false } = {}) => {
     await SURFACES.team(); await wait(900)
+    if (unseeResearchHint) await store(async () => {
+      const { useTutorialStore } = await import('/src/state/tutorialStore.ts')
+      useTutorialStore.setState({ seen: useTutorialStore.getState().seen.filter((x) => x !== 'hint-debrief-research') })
+    })
     await store(async () => {
       const { useAppStore, settleOutcome } = await import('/src/state/appStore.ts')
       const applyKey = useAppStore.getState().lastAppliedKey + 1
@@ -401,12 +407,7 @@ check('Escape closes the Recruitment Market', gone)
 check('focus returns to the RECRUIT control', ((await active()) || '').includes('OPEN THE RECRUITMENT MARKET'), String(await active()))
 
 // 4. Debrief research note: UNDERSTOOD -> focus on RETURN TO WORLD NETWORK.
-await fresh()
-await store(async () => {
-  const { useTutorialStore } = await import('/src/state/tutorialStore.ts')
-  useTutorialStore.setState({ seen: useTutorialStore.getState().seen.filter((x) => x !== 'hint-debrief-research') })
-})
-await SURFACES.debrief()
+await SURFACES.debrief({ unseeResearchHint: true })
 const und = page.locator('button[aria-label^="UNDERSTOOD // DISMISS THE RESEARCH PROMPT"]')
 if (await und.count()) {
   await und.focus(); await page.keyboard.press('Enter'); await wait(300)

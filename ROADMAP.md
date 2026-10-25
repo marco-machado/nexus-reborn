@@ -11,14 +11,12 @@
 
 ## Next step
 
-1. **Verify the four bug fixes on `main` and close them, then re-decide the Sprint 11 sign-off** (conditions 1–3). BUG-0010 to BUG-0013 are fixed and merged (2026-10-25), each re-walked PASS on its fix branch (`production/qa/evidence/bug-001{0,1,2,3}-fix-2026-10-25/`), and all four are Fixed - Awaiting Verification. Re-walk on the merged HEAD: IF-039 TC-02, IF-036 TC-036-22, IF-037 TC-037-03, IF-016-04 B. Then `/bug-report verify` and close each one, and run a targeted `/team-qa` for IF-036, IF-037 and IF-039.
-   - Sign-offs still open: TM-020 art lead and QA lead; TM-018 lead (rows in their `production/qa/evidence/*-evidence.md`).
+1. **Meet the Sprint 11 sign-off conditions, then `/retrospective`.** Re-run on `main` `93c58e0` (2026-10-25): APPROVED WITH CONDITIONS (`production/qa/qa-signoff-sprint-011-2026-10-25-main.md`). Conditions: TM-020 art lead and QA lead sign-off, TM-018 lead sign-off (rows in their `production/qa/evidence/*-evidence.md`); `/bug-report close` BUG-0010 to BUG-0013 (Verified Fixed) and `/bug-triage`. BUG-0008 stays deferred to Polish.
 
 ## After that
 
 2. **`/retrospective`**, then **`/gate-check`** Production → Polish.
 2a. Owner questions from the Sprint 11 sign-off "Observations" (Influence note below the fold since HELD BY; Review NOW in Ink; crisis bar `--red`; `.pp-live` blink under reduced motion; Antarctica Garrison CRITICAL; Print White spec value).
-2b. Harness: `production/qa/evidence/screens-2026-10-23/focus.mjs` step 4 re-marks the Debrief note seen (R3 15/16); fix the ordering.
 3. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
 4. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
 5. `/code-review` of the playtest 3–4 fixes (WN-021, WN-022, TM-019 to TM-021, IF-039; not run); Visual/Feel sign-off for TM-020.
@@ -36,6 +34,7 @@
 
 ## Done recently
 
+- 2026-10-25 — `/team-qa sprint` re-run on `main` `93c58e0`: APPROVED WITH CONDITIONS. Tests 1678/1678 ×3, lint and build clean; R1 152/152, R2 and R4 at 0, R3 16/16 after fixing the `focus.mjs` step-4 ordering; IF-036, IF-037, IF-039 failing cases re-walked PASS; BUG-0010 to BUG-0013 Verified Fixed (`production/qa/evidence/sprint-011-main-2026-10-25/`).
 - 2026-10-25 — Fixed BUG-0010 to BUG-0013, each in its own worktree and merged into `main`: industrial and Rust Haven Brief notes end `EVERY CIVILIAN HIT IS BILLED.` (new `src/game/briefNotes.test.ts`); Assembly stat tiles laid out 2 by 2, so MOBILITY stays on one line at 90–125%; the failed banner counts wins (`campaignBannerCount`, tests); Research side columns keep a fixed minimum at 1280, so node labels hold their 110% size at 125%. Specs updated: assembly.md Open Question 15 closed, research.md layout and Open Question 16.
 
 - 2026-10-25 — `/team-qa sprint` for Sprint 11: **NOT APPROVED** (`production/qa/qa-signoff-sprint-011-2026-10-25.md`). 30 stories in scope: the sprint's 24 plus TM-019 to TM-021, IF-039, WN-021 and WN-022 from `2c73542`. All executed on HEAD `131a5c1`: 26 PASS or PASS WITH NOTES, 3 FAIL (IF-036, IF-037, IF-039), and TM-020 passes its cases with sign-off open. Scripted re-runs R1 152/152; R2 and R4 0 on every surface; R3 15/16 (a script defect). The F2 "14 low-contrast hits" happen only mid-fade at 40 ms (alpha 0.378); the settled reading is 0. Bugs filed: BUG-0010 to BUG-0013 (all S3). TM-021 tests added (4, mutation-checked; suite 1668/1668 three times in a row). Carried Sprint 10 condition 4 (Brief H5–H8) PASS. Evidence: `production/qa/evidence/sprint-011-head-2026-10-24/`.

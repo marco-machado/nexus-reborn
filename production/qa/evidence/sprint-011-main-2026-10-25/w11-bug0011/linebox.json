@@ -1,0 +1,386 @@
+{
+ "default-90": {
+  "cols": "133.188px 133.203px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "432 of 656",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 23.1,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 40.5,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 28.9,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 46.2,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "default-100": {
+  "cols": "133.188px 133.203px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "428 of 687",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 25.7,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 45,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 32.1,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 51.4,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "default-110": {
+  "cols": "138.891px 138.906px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "404 of 736",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 28.3,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 49.5,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 35.3,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 56.5,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "default-125": {
+  "cols": "159.75px 159.75px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "345 of 797",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 32.1,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 56.2,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 40.1,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 64.2,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "hc-90": {
+  "cols": "133.188px 133.203px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "432 of 656",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 23.1,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 40.5,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 28.9,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 46.2,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "9px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "hc-100": {
+  "cols": "133.188px 133.203px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "428 of 687",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 25.7,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 45,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 32.1,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 51.4,
+    "labelW": 119.2,
+    "tileInnerW": 119,
+    "font": "10px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "hc-110": {
+  "cols": "138.891px 138.906px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "404 of 736",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 28.3,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 49.5,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 35.3,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 56.5,
+    "labelW": 124.9,
+    "tileInnerW": 125,
+    "font": "11px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ },
+ "hc-125": {
+  "cols": "159.75px 159.75px",
+  "detailScrolls": true,
+  "detailOverflowY": "auto",
+  "detail": "345 of 797",
+  "labels": [
+   {
+    "text": "HLTH",
+    "lines": 1,
+    "textW": 32.1,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "STAMINA",
+    "lines": 1,
+    "textW": 56.2,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "FOCUS",
+    "lines": 1,
+    "textW": 40.1,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   },
+   {
+    "text": "MOBILITY",
+    "lines": 1,
+    "textW": 64.2,
+    "labelW": 145.8,
+    "tileInnerW": 146,
+    "font": "12.5px",
+    "overflowWrap": "normal",
+    "overflows": false
+   }
+  ]
+ }
+}

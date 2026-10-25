@@ -1,0 +1,402 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 60,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 3,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "OPERATIONAL DEBRIEF // STRIKE TEAM 04 //",
+    "size": 10,
+    "w": 566,
+    "key": "div.db-tag.dim < div.db-card.corners"
+   },
+   {
+    "text": "CONTRACT FULFILLED",
+    "size": 42,
+    "w": 566,
+    "key": "h1.db-title.won < div.db-card.corners"
+   },
+   {
+    "text": "EXTRACTION CONFIRMED // PAYMENT ADJUSTED",
+    "size": 10,
+    "w": 566,
+    "key": "div.db-subtitle < div.db-card.corners"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 70,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "TARGET",
+    "size": 12.5,
+    "w": 70,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "DISTRICT 03 // DETROIT SPRAWL",
+    "size": 15,
+    "w": 298,
+    "key": "b < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 123,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "ELIMINATIONS",
+    "size": 12.5,
+    "w": 123,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "6",
+    "size": 15,
+    "w": 10,
+    "key": "b < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 158,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "SQUAD CASUALTIES",
+    "size": 12.5,
+    "w": 158,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "1",
+    "size": 15,
+    "w": 10,
+    "key": "b.red < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 114,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "KIA // DART",
+    "size": 12.5,
+    "w": 114,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "0 XP LOST // ROSTER 7/8",
+    "size": 15,
+    "w": 236,
+    "key": "b.red < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 158,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "INJURED // GHOST",
+    "size": 12.5,
+    "w": 158,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "18H RECOVERY",
+    "size": 15,
+    "w": 123,
+    "key": "b.amber < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 176,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "EXPERIENCE // MARA",
+    "size": 12.5,
+    "w": 176,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "+1 XP (1)",
+    "size": 15,
+    "w": 93,
+    "key": "b.teal < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 184,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "EXPERIENCE // GHOST",
+    "size": 12.5,
+    "w": 184,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "+1 XP (1)",
+    "size": 15,
+    "w": 93,
+    "key": "b.teal < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 176,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "EXPERIENCE // TORQ",
+    "size": 12.5,
+    "w": 176,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "+1 XP (1)",
+    "size": 15,
+    "w": 93,
+    "key": "b.teal < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 105,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "COLLATERAL",
+    "size": 12.5,
+    "w": 105,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "1",
+    "size": 15,
+    "w": 10,
+    "key": "b.red < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 123,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "MISSION TIME",
+    "size": 12.5,
+    "w": 123,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "1:12",
+    "size": 15,
+    "w": 41,
+    "key": "b < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 219,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "SECTOR // NORTH AMERICA",
+    "size": 12.5,
+    "w": 219,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "CONTROL 68% > 74% // UNREST 12% > 10%",
+    "size": 15,
+    "w": 327,
+    "key": "b.teal < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 281,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "AFTER +3 DAYS // NORTH AMERICA",
+    "size": 12.5,
+    "w": 281,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "CONTROL 89% // UNREST 5% // NEXUS-HELD",
+    "size": 15,
+    "w": 265,
+    "key": "b.teal < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 140,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "CONTRACT VALUE",
+    "size": 12.5,
+    "w": 140,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "37,000 CR",
+    "size": 15,
+    "w": 93,
+    "key": "b < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 176,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "COLLATERAL PENALTY",
+    "size": 12.5,
+    "w": 176,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "-5,000 CR",
+    "size": 15,
+    "w": 93,
+    "key": "b.red < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 140,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "OPTIONAL BONUS",
+    "size": 12.5,
+    "w": 140,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "0 CR",
+    "size": 15,
+    "w": 41,
+    "key": "b < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 123,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "CONTRACT ETA",
+    "size": 12.5,
+    "w": 123,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "+3 DAYS ELAPSED",
+    "size": 15,
+    "w": 154,
+    "key": "b.amber < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 70,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "PAYOUT",
+    "size": 12.5,
+    "w": 70,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "+32,000 CR",
+    "size": 15,
+    "w": 103,
+    "key": "b.teal < div.db-row"
+   },
+   {
+    "text": ">",
+    "size": 12.5,
+    "w": 149,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "ACCOUNT BALANCE",
+    "size": 12.5,
+    "w": 149,
+    "key": "span.db-row-label < div.db-row"
+   },
+   {
+    "text": "175,982 CR",
+    "size": 15,
+    "w": 103,
+    "key": "b.amber < div.db-row"
+   },
+   {
+    "text": "INVOICE UNFILED // COMMITS ON NEXT SCREE",
+    "size": 10,
+    "w": 566,
+    "key": "div.db-filing < div.db-card.corners"
+   },
+   {
+    "text": "RETURN TO WORLD NETWORK",
+    "size": 12,
+    "w": 278,
+    "key": "button.btn < div.db-actions"
+   },
+   {
+    "text": "REPLAY MISSION",
+    "size": 12,
+    "w": 278,
+    "key": "button.btn.teal < div.db-actions"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "div",
+   "name": "Mission invoice",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "RETURN TO WORLD NETWORK",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "REPLAY MISSION",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}
