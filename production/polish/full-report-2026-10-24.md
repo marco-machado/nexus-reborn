@@ -9,8 +9,8 @@ Generated: 2026-10-24 at HEAD ab1cf1e. `performance.enforce`: warn (violations a
 | Frame time (p95 per phase) | 16.7 ms (60 fps) | 7.2–7.3 ms in every phase (world 7.3, brief 7.2, team 7.2, mission 7.3, debrief 7.3) | OK (~56% headroom on the fixture) |
 | Live-play hitches | no frame > 50 ms (load moments excluded) | live mission n 11997, p95 7.3, max 25 ms, 0 over 50 ms | OK |
 | Draw calls | 300 | mission p50 71, p95 186, p99 192, max 224; debrief 182; world and menu 5 | OK (max 224, 76 under) |
-| Memory | none set | heap max 117.1 MB (mission), world 76.5, debrief 69.7, startup 50.9, brief 43.3 | NOT ASSESSED — no budget (data FOUND) |
-| Load time | none set | DOMContentLoaded 43 ms, load 44 ms, menu ready 68 ms, mission entry 4370 ms | NOT ASSESSED — no budget (data FOUND) |
+| Memory | 192 MB heap, production build (set 2026-10-24, amended below) | dev server only: heap max 117.1 MB (mission), world 76.5, debrief 69.7, startup 50.9, brief 43.3 | NOT ASSESSED — no production-build measurement |
+| Load time | mission entry 5 s, menu ready 1 s, production build (set 2026-10-24, amended below) | dev server only: DOMContentLoaded 43 ms, load 44 ms, menu ready 68 ms, mission entry 4370 ms | NOT ASSESSED — no production-build measurement |
 
 Per-phase frames (ms): world n 8344, p50 6.2, p95 7.3, p99 7.7, max 170 · brief n 113, p95 7.2, p99 24.8, max 31 · team n 134, p95 7.2, max 31.3 · mission n 12262, p95 7.3, max 226.1 · debrief n 621, p95 7.3, max 18.8. Versus 2026-10-19 (9.2 ms p95): about 2 ms lower per phase, but the contract changed from Glass Veil to Rust Haven and the 10-19 draw-call and memory figures were never measured, so only frame time compares, and only per phase. Both runs are on a 120 Hz display, so p50 6.2–8.3 ms is near the display floor.
 
@@ -43,7 +43,7 @@ None required: every set budget is met, and there is no violation to fix. Two in
 - Mission-entry and startup hitches (above).
 - Run-to-run heap variance (117 MB vs 93 MB) before a memory ceiling is set from one number.
 
-### Owner Decisions Needed
-- Set `performance.memory_ceiling_mb` and a load-time budget (closes RISK-0003). Until then those two rows stay NOT ASSESSED.
+### Amendment 2026-10-24: budgets set
+After this report the owner set the memory ceiling to 192 MB (`project.yaml` `memory_ceiling_mb: 192`) and the load-time budget to mission entry ≤ 5 s and menu ready ≤ 1 s, both measured on the production build (`vite build` + `vite preview`). This run was on the warm dev server, so both rows stay NOT ASSESSED until the fixture runs on the production build. The dev-server numbers would be within all three (117 / 192 MB, 4.4 / 5 s, 68 ms / 1 s), but that is not the agreed measurement.
 
 Verdict: **COMPLETE** — performance profile generated (saved to `production/polish/full-report-2026-10-24.md`).

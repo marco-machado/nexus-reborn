@@ -41,7 +41,9 @@ performance:
   target_framerate: 60
   frame_budget_ms: 16.7
   draw_call_limit: 300
-  memory_ceiling_mb: null
+  # Memory ceiling and load-time budgets owner-set 2026-10-24, measured on the production build (vite build + vite preview).
+  memory_ceiling_mb: 192
+  # Load time (no config key; docs/technical-preferences.md): mission entry 5000 ms, menu ready 1000 ms.
 
 platform:
   targets: ["Desktop browser (1280×720 minimum)"]

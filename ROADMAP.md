@@ -11,7 +11,7 @@
 
 ## Next step
 
-1. **Owner: set the memory ceiling and the load-time budget** (closes RISK-0003). The 2026-10-24 report (`production/polish/full-report-2026-10-24.md`) leaves both NOT ASSESSED until you do; data: `production/polish/perf-2026-10-23/perf.json` (heap max 93–117 MB across two runs, mission entry 4.4 s, menu ready 68 ms, warm dev server). Set them in `project.yaml` and `docs/technical-preferences.md`, then amend the report rows.
+1. **Run the perf fixture on the production build** (`vite build` + `vite preview`; `production/polish/perf-2026-10-23/perf.mjs`) to assess the memory ceiling (192 MB) and load-time budget (mission entry 5 s, menu ready 1 s), then fill those two rows in `production/polish/full-report-2026-10-24.md` and close RISK-0003 if both are met.
 
 ## After that
 
@@ -34,6 +34,7 @@
 
 ## Done recently
 
+- 2026-10-24 — Owner set the memory ceiling (192 MB heap) and load-time budget (mission entry 5 s, menu ready 1 s), both on the production build: `project.yaml`, `docs/technical-preferences.md`, report amended, RISK-0003 updated (still Open until measured).
 - 2026-10-24 — `/perf-profile full` report written: `production/polish/full-report-2026-10-24.md`. Frame time (p95 7.2–7.3 ms vs 16.7), hitches (0 over 50 ms live) and draw calls (max 224 vs 300) OK; memory and load time NOT ASSESSED (no budgets). Open: mission-entry hitch trace, production-build load measurement.
 - 2026-10-24 — Performance profile run at `ab1cf1e` (Rust Haven fixture, owner 2026-10-24; `technical-preferences.md` updated): p95 7.2–7.4 ms in every phase, World Network 7.3 ms (the p95 re-profile dated 2026-10-28, unless World Network code changes before then); live mission max 25 ms, 0 frames over 50 ms; draw calls max 224 (mission), under 300; heap max 117 MB; 0 errors. Harness fixed: the IF-038 deploy label, resuming the TM-019 casualty hold, and the 10-19 live-mission window and spike timings ported back.
 - 2026-10-23 — Playtest 3–4 fixes closed out: story files WN-021, WN-022, TM-019 to TM-021, IF-039 (code in `2c73542`); living spec, Interface, World Network and Tactical GDDs, and the World Network, Brief, Assembly, Debrief, HUD, Settings and pattern-library specs updated (Space is the tactical hold, Escape the menu; HELD BY; drift settles; Debrief KIA and sector rows; Abort hint); `design/difficulty-curve.md` given the playtest evidence (two levers, three cross-system rows, "too hard" still open); `production/qa/playtests/fun-hypothesis-2026-10-23.md` written (CD-PLAYTEST CONCERNS, hypothesis revised, adoption the owner's call). Sweep now waits for finite animations before measuring: all 12 surfaces 0 failures at 1280×720, World Network measured first with the card up, Menu, Research, Settings and Balance re-swept.
