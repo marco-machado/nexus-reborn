@@ -416,7 +416,7 @@ Scope: English only. No localization system exists; every string is a literal in
 | Roster name | 104 px | 12 px, 0.16 em | 11 / 12 | `KESTREL` (7) | Proper noun, not translated |
 | Roster panel head | title 120 + right 104 in about 227 px | 10 px, 0.2 em | one line holds about 28 | `ROSTER DATABASE` + `8 / 8 ON FILE` (28) | **HIGH**. Wraps to two lines at 100% as built; fits at 90% |
 | Dossier head | title 136 (17 chars) + right 126 in about 275 px | 10 px, 0.2 em | about 34 combined | `01 SLATE / TECH SPECIALIST` + `CONDITION: READY` (42) | **HIGH**. Over the limit in English (inferred; only Mara was captured) |
-| Stat tile label | 50 px | 10 px, 0.04 em | 7 / 7 | `MOBILITY` (8) | **HIGH**. Breaks mid-word (`MOBILIT` / `Y`) in English at 100% (seen); +40% is 11 |
+| Stat tile label | about 119 px (2 by 2 tiles, BUG-0011, 2026-10-25; was 50 px four across) | 10 px, 0.04 em | 7 / 7 | `MOBILITY` (8) | Low. One line at 90–125% (MOBILITY 64.2 px in a 146 px tile at 125); +40% is 11 |
 | Augmentation / role-protocol name | 169 px, wraps (`overflow-wrap: break-word`; ellipsis removed in IF-037) | 10 px, 0.1 em | 24 / 25 | `STOCK ISSUE` (11); project titles not measured | Medium; a longer name wraps to a second line and grows the row |
 | Augmentation / role description | 169 px, wraps | 10 px | 26 / 26 | `NO PROJECT RESEARCHED` (21) | Low (wraps); role-protocol text already runs 3 lines |
 | Specialty line | 214 px, wraps | 10 px | 32 / 32 | `Frontline combat. Breach and clear.` (35) | Low (wraps); already 2 lines |

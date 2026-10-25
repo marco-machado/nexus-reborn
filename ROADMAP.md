@@ -11,17 +11,13 @@
 
 ## Next step
 
-1. **Fix the three Sprint 11 story FAILs**, then re-walk only their failing cases on the new HEAD (sign-off conditions 1–3):
-   - BUG-0010 (S3, P1): Fixed - Awaiting Verification (2026-10-25, branch `worktree-agent-a94c804036698f7c1`): industrial density note and m03 notes now end `EVERY CIVILIAN HIT IS BILLED.`; IF-039 TC-02 re-walked PASS on the worktree build (`production/qa/evidence/bug-0010-fix-2026-10-25/`). Next: merge to `main`, then QA verifies and closes.
-   - BUG-0011 (S3, P2): Assembly `MOBILITY` mid-word break (IF-036 AC-2; `src/ui/ui.css:2471`). Re-walk TC-036-22.
-   - BUG-0013 (S3, P2): Research node labels draw smaller at 125% than at 100% (IF-037 AC-1). Re-walk TC-037-03.
-   - Sign-offs: TM-020 art lead and QA lead; TM-018 lead (rows in their `production/qa/evidence/*-evidence.md`).
-   - The owner may instead record a workaround or accept a FAIL, story by story.
+1. **Verify the four bug fixes on `main` and close them, then re-decide the Sprint 11 sign-off** (conditions 1–3). BUG-0010 to BUG-0013 are fixed and merged (2026-10-25), each re-walked PASS on its fix branch (`production/qa/evidence/bug-001{0,1,2,3}-fix-2026-10-25/`), and all four are Fixed - Awaiting Verification. Re-walk on the merged HEAD: IF-039 TC-02, IF-036 TC-036-22, IF-037 TC-037-03, IF-016-04 B. Then `/bug-report verify` and close each one, and run a targeted `/team-qa` for IF-036, IF-037 and IF-039.
+   - Sign-offs still open: TM-020 art lead and QA lead; TM-018 lead (rows in their `production/qa/evidence/*-evidence.md`).
 
 ## After that
 
 2. **`/retrospective`**, then **`/gate-check`** Production → Polish.
-2a. Owner questions from the Sprint 11 sign-off "Observations" (Influence note below the fold since HELD BY; Review NOW in Ink; crisis bar `--red`; `.pp-live` blink under reduced motion; Antarctica Garrison CRITICAL; Print White spec value). BUG-0012 (failed banner `0 / 3`, P3) in the backlog.
+2a. Owner questions from the Sprint 11 sign-off "Observations" (Influence note below the fold since HELD BY; Review NOW in Ink; crisis bar `--red`; `.pp-live` blink under reduced motion; Antarctica Garrison CRITICAL; Print White spec value).
 2b. Harness: `production/qa/evidence/screens-2026-10-23/focus.mjs` step 4 re-marks the Debrief note seen (R3 15/16); fix the ordering.
 3. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
 4. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
@@ -39,6 +35,8 @@
 | Polish | BUG-0008 (deferred) |
 
 ## Done recently
+
+- 2026-10-25 — Fixed BUG-0010 to BUG-0013, each in its own worktree and merged into `main`: industrial and Rust Haven Brief notes end `EVERY CIVILIAN HIT IS BILLED.` (new `src/game/briefNotes.test.ts`); Assembly stat tiles laid out 2 by 2, so MOBILITY stays on one line at 90–125%; the failed banner counts wins (`campaignBannerCount`, tests); Research side columns keep a fixed minimum at 1280, so node labels hold their 110% size at 125%. Specs updated: assembly.md Open Question 15 closed, research.md layout and Open Question 16.
 
 - 2026-10-25 — `/team-qa sprint` for Sprint 11: **NOT APPROVED** (`production/qa/qa-signoff-sprint-011-2026-10-25.md`). 30 stories in scope: the sprint's 24 plus TM-019 to TM-021, IF-039, WN-021 and WN-022 from `2c73542`. All executed on HEAD `131a5c1`: 26 PASS or PASS WITH NOTES, 3 FAIL (IF-036, IF-037, IF-039), and TM-020 passes its cases with sign-off open. Scripted re-runs R1 152/152; R2 and R4 0 on every surface; R3 15/16 (a script defect). The F2 "14 low-contrast hits" happen only mid-fade at 40 ms (alpha 0.378); the settled reading is 0. Bugs filed: BUG-0010 to BUG-0013 (all S3). TM-021 tests added (4, mutation-checked; suite 1668/1668 three times in a row). Carried Sprint 10 condition 4 (Brief H5–H8) PASS. Evidence: `production/qa/evidence/sprint-011-head-2026-10-24/`.
 
