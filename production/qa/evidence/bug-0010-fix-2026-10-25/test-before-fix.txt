@@ -1,0 +1,50 @@
+
+ RUN  v4.1.10 /Users/machado/Projects/nexus-reborn/.claude/worktrees/agent-a94c804036698f7c1
+
+ ❯ src/game/briefNotes.test.ts (6 tests | 2 failed) 4ms
+     × authored mission m03 notes contain it 2ms
+     × DENSITY_NOTE.industrial contains it 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/game/briefNotes.test.ts > Brief contract notes carry the billing sentence > authored mission m03 notes contain it
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/game/briefNotes.test.ts:14:53
+     12|     'authored mission %s notes contain it',
+     13|     (_id, notes) => {
+     14|       expect(notes.some((n) => n.includes(BILLED))).toBe(true)
+       |                                                     ^
+     15|     },
+     16|   )
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/game/briefNotes.test.ts > Brief contract notes carry the billing sentence > DENSITY_NOTE.industrial contains it
+AssertionError: expected 'CIVILIAN DENSITY SPARSE. INDUSTRIAL B…' to contain 'EVERY CIVILIAN HIT IS BILLED.'
+
+Expected: "EVERY CIVILIAN HIT IS BILLED."
+Received: "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY."
+
+ ❯ src/game/briefNotes.test.ts:19:18
+     17|
+     18|   it.each(Object.entries(DENSITY_NOTE))('DENSITY_NOTE.%s contains it',…
+     19|     expect(note).toContain(BILLED)
+       |                  ^
+     20|   })
+     21| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  00:33:41
+   Duration  176ms (transform 68ms, setup 0ms, import 98ms, tests 4ms, environment 0ms)
+

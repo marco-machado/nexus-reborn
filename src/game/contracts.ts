@@ -414,10 +414,10 @@ const CONTRACT_ARCHETYPE: Record<ContractType, DistrictArchetype> = {
 
 const WEATHERS: Weather[] = ['heavy', 'light', 'none']
 
-const DENSITY_NOTE: Record<DistrictArchetype, string> = {
+export const DENSITY_NOTE: Record<DistrictArchetype, string> = {
   checkpoint: 'CIVILIAN DENSITY MODERATE. EVERY CIVILIAN HIT IS BILLED.',
   compound: 'CIVILIAN DENSITY LOW. EVERY CIVILIAN HIT IS BILLED.',
-  industrial: 'CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.',
+  industrial: 'CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY. EVERY CIVILIAN HIT IS BILLED.',
 }
 
 function pad2(n: number): string {
