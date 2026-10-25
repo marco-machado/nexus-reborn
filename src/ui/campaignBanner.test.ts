@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { campaignBanner } from './campaignBanner'
+import { campaignBanner, campaignBannerCount } from './campaignBanner'
 import { initialCampaignData, useCampaignStore } from '../state/campaignStore'
 import { settleOutcome } from '../state/appStore'
 import type { MissionOutcome } from '../state/appStore'
@@ -44,5 +44,34 @@ describe('campaignBanner', () => {
   it('an incomplete campaign wiped at debrief shows the fail banner (WN-019)', () => {
     useCampaignStore.getState().reportMission('m01', outcome(wipe()), 0)
     expect(banner()).toBe('failed')
+  })
+
+  describe('campaignBannerCount (BUG-0012)', () => {
+    const count = () => campaignBannerCount(banner(), useCampaignStore.getState().contractsWon)
+
+    it('no banner, no count', () => {
+      expect(count()).toBeNull()
+    })
+
+    it('a failed campaign with no wins reads 0 / 3', () => {
+      useCampaignStore.getState().reportMission('m01', outcome(wipe()), 0)
+      expect(banner()).toBe('failed')
+      expect(count()).toBe('0 / 3')
+    })
+
+    it('a failed campaign after one authored win reads 1 / 3', () => {
+      useCampaignStore.getState().reportMission('m01', outcome(), 0)
+      useCampaignStore.getState().reportMission('m02', outcome(wipe()), 0)
+      expect(banner()).toBe('failed')
+      expect(count()).toBe('1 / 3')
+    })
+
+    it('a complete campaign reads 3 / 3', () => {
+      for (const id of ['m01', 'm02', 'm03']) {
+        useCampaignStore.getState().reportMission(id, outcome(), 0)
+      }
+      expect(banner()).toBe('complete')
+      expect(count()).toBe('3 / 3')
+    })
   })
 })

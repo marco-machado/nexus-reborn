@@ -66,7 +66,7 @@ import { act, agoLabel, fmt } from './util'
 import { uiClick } from './sound'
 import type { GlobeOperation } from './WorldGlobe'
 import { unprojectScan } from '../game/geography'
-import { campaignBanner } from './campaignBanner'
+import { campaignBanner, campaignBannerCount } from './campaignBanner'
 import { reviewKey } from './timelineKeys'
 import {
   influenceActionsFor,
@@ -833,6 +833,7 @@ export function WorldMap() {
   )
   const openOps = ops.filter(({ m }) => !missionLocked(m, intelLevel)).length
   const banner = campaignBanner(campaignWon, campaignFailed)
+  const bannerCount = campaignBannerCount(banner, contractsWon)
   const moment = useInfluenceMoment(selected)
   const focusUnrest = unrestTone(
     crisis.includes(selected),
@@ -853,7 +854,7 @@ export function WorldMap() {
             <b>CAMPAIGN FAILED</b>
             <i>ROSTER EMPTY // NO CONTRACT CAN BE TAKEN</i>
           </span>
-          <strong>0 / {MISSIONS.length}</strong>
+          <strong>{bannerCount}</strong>
         </div>
       )}
       {banner === 'complete' && (
@@ -863,7 +864,7 @@ export function WorldMap() {
             <b>CAMPAIGN COMPLETE</b>
             <i>ALL THREE AUTHORED CONTRACTS FULFILLED // WORLD NETWORK REMAINS ACTIVE</i>
           </span>
-          <strong>{contractsWon.length} / {MISSIONS.length}</strong>
+          <strong>{bannerCount}</strong>
         </div>
       )}
 
