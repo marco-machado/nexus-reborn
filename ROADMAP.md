@@ -12,7 +12,7 @@
 ## Next step
 
 1. **Fix the three Sprint 11 story FAILs**, then re-walk only their failing cases on the new HEAD (sign-off conditions 1–3):
-   - BUG-0010 (S3, P1): Rust Haven and industrial generated Brief notes lack `EVERY CIVILIAN HIT IS BILLED.` (IF-039 AC-1; `src/game/data.ts:246`, `src/game/contracts.ts:420`). Re-walk IF-039 TC-02.
+   - BUG-0010 (S3, P1): Fixed - Awaiting Verification (2026-10-25, branch `worktree-agent-a94c804036698f7c1`): industrial density note and m03 notes now end `EVERY CIVILIAN HIT IS BILLED.`; IF-039 TC-02 re-walked PASS on the worktree build (`production/qa/evidence/bug-0010-fix-2026-10-25/`). Next: merge to `main`, then QA verifies and closes.
    - BUG-0011 (S3, P2): Assembly `MOBILITY` mid-word break (IF-036 AC-2; `src/ui/ui.css:2471`). Re-walk TC-036-22.
    - BUG-0013 (S3, P2): Research node labels draw smaller at 125% than at 100% (IF-037 AC-1). Re-walk TC-037-03.
    - Sign-offs: TM-020 art lead and QA lead; TM-018 lead (rows in their `production/qa/evidence/*-evidence.md`).

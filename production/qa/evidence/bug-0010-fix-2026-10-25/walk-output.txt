@@ -1,0 +1,19 @@
+seeded contracts [{"id":"gc7518e2d3","type":"SABOTAGE","seed":1964565203}]
+PASS IF039-TC02 fresh New Operation seeds a SABOTAGE contract // gc7518e2d3
+m03 phase=brief notes:
+  CLEAR DUSK. GUARDS SEE AND HEAR AT FULL RANGE.
+  CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY. EVERY CIVILIAN HIT IS BILLED.
+  DEMOLITION CELLS ARE THE FAST TOOL. GUNFIRE WORKS, SLOWLY.
+  THE YARD GUARD CAN BE BYPASSED ON THE WAY IN.
+PASS IF039-TC02 m03 Brief notes contain "EVERY CIVILIAN HIT IS BILLED."
+PASS TR-interface-002 m03 notes do not overrun at text scale 100
+PASS TR-interface-002 m03 notes do not overrun at text scale 125
+sabotage-gc7518e2d3 phase=brief notes:
+  HEAVY RAIN. VISIBILITY REDUCED.
+  CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY. EVERY CIVILIAN HIT IS BILLED.
+  GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED.
+PASS IF039-TC02 sabotage-gc7518e2d3 Brief notes contain "EVERY CIVILIAN HIT IS BILLED."
+PASS TR-interface-002 sabotage-gc7518e2d3 notes do not overrun at text scale 100
+PASS TR-interface-002 sabotage-gc7518e2d3 notes do not overrun at text scale 125
+PASS - no page errors
+ALL PASS

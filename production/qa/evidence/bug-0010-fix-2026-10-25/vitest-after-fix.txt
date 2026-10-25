@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/machado/Projects/nexus-reborn/.claude/worktrees/agent-a94c804036698f7c1
+
+
+ Test Files  69 passed (69)
+      Tests  1674 passed (1674)
+   Start at  00:33:52
+   Duration  2.00s (transform 4.91s, setup 0ms, import 9.65s, tests 8.48s, environment 4ms)
+
