@@ -1,0 +1,209 @@
+{
+ "at": "2026-10-25T00:44:59.269Z",
+ "wallSec": 139,
+ "nav": {
+  "domContentLoadedMs": 28,
+  "loadMs": 28,
+  "menuReadyMs": 52
+ },
+ "missionEntryMs": 4364,
+ "play": {
+  "result": "won",
+  "simTime": 73,
+  "log": [
+   [
+    0,
+    "rh1",
+    "reach-zone"
+   ],
+   [
+    8,
+    "rh2",
+    "destroy"
+   ],
+   [
+    11,
+    "resume-hold",
+    "DART AT 30%"
+   ],
+   [
+    12,
+    "hand-kill",
+    "relay"
+   ],
+   [
+    17,
+    "hand-kill",
+    "relay"
+   ],
+   [
+    17,
+    "rh3",
+    "defend"
+   ],
+   [
+    62,
+    "rh4",
+    "extract"
+   ]
+  ]
+ },
+ "frames": {
+  "world": {
+   "n": 7997,
+   "p50": 6.3,
+   "p95": 8.4,
+   "p99": 9,
+   "max": 175.2,
+   "over50ms": 1
+  },
+  "brief": {
+   "n": 89,
+   "p50": 8.3,
+   "p95": 9,
+   "p99": 16.8,
+   "max": 16.8,
+   "over50ms": 0
+  },
+  "team": {
+   "n": 101,
+   "p50": 8.3,
+   "p95": 9.2,
+   "p99": 9.3,
+   "max": 9.4,
+   "over50ms": 0
+  },
+  "mission": {
+   "n": 11589,
+   "p50": 6.3,
+   "p95": 8.4,
+   "p99": 9,
+   "max": 234.4,
+   "over50ms": 3
+  },
+  "debrief": {
+   "n": 623,
+   "p50": 6.2,
+   "p95": 6.8,
+   "p99": 7,
+   "max": 12.8,
+   "over50ms": 0
+  }
+ },
+ "missionLive": {
+  "n": 11391,
+  "p50": 6.3,
+  "p95": 8.4,
+  "max": 17.6,
+  "over50ms": 0
+ },
+ "spikes": [
+  {
+   "phase": "?",
+   "msIntoPhase": 291,
+   "frameInPhase": 7,
+   "ms": 232.5
+  },
+  {
+   "phase": "?",
+   "msIntoPhase": 1154,
+   "frameInPhase": 85,
+   "ms": 157.7
+  },
+  {
+   "phase": "mission",
+   "msIntoPhase": 395,
+   "frameInPhase": 40,
+   "ms": 74.2
+  },
+  {
+   "phase": "mission",
+   "msIntoPhase": 904,
+   "frameInPhase": 74,
+   "ms": 234.4
+  },
+  {
+   "phase": "mission",
+   "msIntoPhase": 1004,
+   "frameInPhase": 78,
+   "ms": 75.1
+  },
+  {
+   "phase": "world",
+   "msIntoPhase": 93793,
+   "frameInPhase": 1438,
+   "ms": 175.2
+  }
+ ],
+ "draws": {
+  "?": {
+   "n": 82,
+   "p50": 5,
+   "p95": 5,
+   "p99": 5,
+   "max": 5
+  },
+  "world": {
+   "n": 121,
+   "p50": 5,
+   "p95": 5,
+   "p99": 5,
+   "max": 5
+  },
+  "mission": {
+   "n": 11526,
+   "p50": 68,
+   "p95": 180,
+   "p99": 192,
+   "max": 224
+  },
+  "debrief": {
+   "n": 1,
+   "p50": 179,
+   "p95": 179,
+   "p99": 179,
+   "max": 179
+  }
+ },
+ "heapMb": {
+  "?": {
+   "max": 25.6,
+   "last": 25.6
+  },
+  "world": {
+   "max": 36.6,
+   "last": 30.2
+  },
+  "brief": {
+   "max": 15.7,
+   "last": 15.7
+  },
+  "mission": {
+   "max": 69.2,
+   "last": 32.8
+  },
+  "debrief": {
+   "max": 37.3,
+   "last": 37.3
+  }
+ },
+ "longTasks": [
+  [
+   "?",
+   237
+  ],
+  [
+   "?",
+   162
+  ],
+  [
+   "mission",
+   240
+  ],
+  [
+   "world",
+   169
+  ]
+ ],
+ "errs": []
+}

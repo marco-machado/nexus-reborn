@@ -67,5 +67,6 @@ const stats = await page.evaluate(() => {
 })
 const res = { at: new Date().toISOString(), wallSec: Math.round((Date.now() - t0) / 1000), nav, missionEntryMs, play, ...stats, errs }
 console.log(JSON.stringify(res, null, 1))
-writeFileSync(L.OUT + 'perf.json', JSON.stringify(res, null, 1))
+// PERF_OUT keeps the production-build run beside the dev-server perf.json.
+writeFileSync(L.OUT + (process.env.PERF_OUT || 'perf.json'), JSON.stringify(res, null, 1))
 await browser.close()

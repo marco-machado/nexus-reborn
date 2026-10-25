@@ -11,17 +11,16 @@
 
 ## Next step
 
-1. **Run the perf fixture on the production build** (`vite build` + `vite preview`; `production/polish/perf-2026-10-23/perf.mjs`) to assess the memory ceiling (192 MB) and load-time budget (mission entry 5 s, menu ready 1 s), then fill those two rows in `production/polish/full-report-2026-10-24.md` and close RISK-0003 if both are met.
+1. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
 
 ## After that
 
-2. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
-3. **`/retrospective`**, then **`/gate-check`** Production → Polish.
-4. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
-5. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
-6. `/code-review` of the playtest 3–4 fixes (WN-021, WN-022, TM-019 to TM-021, IF-039; not run); Visual/Feel sign-off for TM-020.
-7. Harness: import the module URLs the page loaded (the Vite `?t=` stamp split the fixture's tutorial store in session 4).
-8. Register TRs at a later `/architecture-review`: hit targets (IF-031 to IF-035 waiver), world event weights (WN-021), in-world objective markers (TM-020).
+2. **`/retrospective`**, then **`/gate-check`** Production → Polish.
+3. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
+4. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
+5. `/code-review` of the playtest 3–4 fixes (WN-021, WN-022, TM-019 to TM-021, IF-039; not run); Visual/Feel sign-off for TM-020.
+6. Harness: import the module URLs the page loaded (the Vite `?t=` stamp split the fixture's tutorial store in session 4).
+7. Register TRs at a later `/architecture-review`: hit targets (IF-031 to IF-035 waiver), world event weights (WN-021), in-world objective markers (TM-020).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -34,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-24 — Production-build perf run (`perf-2026-10-23/perf-prod.json`): heap max 69.2 MB vs 192, mission entry 4364 ms vs 5 s, menu ready 52 ms vs 1 s; frame time, hitches and draw calls also within budget. RISK-0003 closed. Harness reaches the stores through `src/perfHooks.ts` under `VITE_PERF_HOOKS=1` (absent from normal builds); `preview-perf` launch config added.
 - 2026-10-24 — Owner set the memory ceiling (192 MB heap) and load-time budget (mission entry 5 s, menu ready 1 s), both on the production build: `project.yaml`, `docs/technical-preferences.md`, report amended, RISK-0003 updated (still Open until measured).
 - 2026-10-24 — `/perf-profile full` report written: `production/polish/full-report-2026-10-24.md`. Frame time (p95 7.2–7.3 ms vs 16.7), hitches (0 over 50 ms live) and draw calls (max 224 vs 300) OK; memory and load time NOT ASSESSED (no budgets). Open: mission-entry hitch trace, production-build load measurement.
 - 2026-10-24 — Performance profile run at `ab1cf1e` (Rust Haven fixture, owner 2026-10-24; `technical-preferences.md` updated): p95 7.2–7.4 ms in every phase, World Network 7.3 ms (the p95 re-profile dated 2026-10-28, unless World Network code changes before then); live mission max 25 ms, 0 frames over 50 ms; draw calls max 224 (mission), under 300; heap max 117 MB; 0 errors. Harness fixed: the IF-038 deploy label, resuming the TM-019 casualty hold, and the 10-19 live-mission window and spike timings ported back.

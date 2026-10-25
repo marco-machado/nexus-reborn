@@ -79,7 +79,7 @@ See `production/risk-register/` (RISK-0001 to RISK-0005).
 |------|------------|--------|-----------|-------|--------|
 | RISK-0001 Agent playtesters stand in for humans | High | Moderate | Owner hand-play 2026-10-28; one human playtest in Polish | producer | Open |
 | RISK-0002 BUG-0008 trigger never isolated | Medium | Minor | Listening pass; mixer source-lifetime trace (ADR-0017) | gameplay-programmer | Open |
-| RISK-0003 Memory and load budgets unset | Medium | Moderate | Sprint 12 profile sets both | performance-analyst | Open |
+| RISK-0003 Memory and load budgets unset | Medium | Moderate | Sprint 12 profile sets both | performance-analyst | Closed 2026-10-24 (budgets set and met on the production build) |
 | RISK-0004 One owner reviews everything | High | Moderate | Autonomous mode with logged delegated decisions; owner review at sprint close | producer | Open |
 | RISK-0005 Only Chromium measured | Medium | Moderate | Firefox and Safari smoke in Sprint 13 | qa-lead | Open |
 

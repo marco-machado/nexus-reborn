@@ -9,8 +9,8 @@ Generated: 2026-10-24 at HEAD ab1cf1e. `performance.enforce`: warn (violations a
 | Frame time (p95 per phase) | 16.7 ms (60 fps) | 7.2–7.3 ms in every phase (world 7.3, brief 7.2, team 7.2, mission 7.3, debrief 7.3) | OK (~56% headroom on the fixture) |
 | Live-play hitches | no frame > 50 ms (load moments excluded) | live mission n 11997, p95 7.3, max 25 ms, 0 over 50 ms | OK |
 | Draw calls | 300 | mission p50 71, p95 186, p99 192, max 224; debrief 182; world and menu 5 | OK (max 224, 76 under) |
-| Memory | 192 MB heap, production build (set 2026-10-24, amended below) | dev server only: heap max 117.1 MB (mission), world 76.5, debrief 69.7, startup 50.9, brief 43.3 | NOT ASSESSED — no production-build measurement |
-| Load time | mission entry 5 s, menu ready 1 s, production build (set 2026-10-24, amended below) | dev server only: DOMContentLoaded 43 ms, load 44 ms, menu ready 68 ms, mission entry 4370 ms | NOT ASSESSED — no production-build measurement |
+| Memory | 192 MB heap, production build (set 2026-10-24, amended below) | production build: heap max 69.2 MB (mission), world 36.6, debrief 37.3, startup 25.6, brief 15.7 (dev server: 117.1 MB) | OK (64% headroom) |
+| Load time | mission entry 5 s, menu ready 1 s, production build (set 2026-10-24, amended below) | production build: menu ready 52 ms (DOMContentLoaded 28, load 28), mission entry 4364 ms (dev server: 68 ms, 4370 ms) | OK (mission entry 13% headroom; menu ready 95%) |
 
 Per-phase frames (ms): world n 8344, p50 6.2, p95 7.3, p99 7.7, max 170 · brief n 113, p95 7.2, p99 24.8, max 31 · team n 134, p95 7.2, max 31.3 · mission n 12262, p95 7.3, max 226.1 · debrief n 621, p95 7.3, max 18.8. Versus 2026-10-19 (9.2 ms p95): about 2 ms lower per phase, but the contract changed from Glass Veil to Rust Haven and the 10-19 draw-call and memory figures were never measured, so only frame time compares, and only per phase. Both runs are on a 120 Hz display, so p50 6.2–8.3 ms is near the display floor.
 
@@ -44,6 +44,11 @@ None required: every set budget is met, and there is no violation to fix. Two in
 - Run-to-run heap variance (117 MB vs 93 MB) before a memory ceiling is set from one number.
 
 ### Amendment 2026-10-24: budgets set
-After this report the owner set the memory ceiling to 192 MB (`project.yaml` `memory_ceiling_mb: 192`) and the load-time budget to mission entry ≤ 5 s and menu ready ≤ 1 s, both measured on the production build (`vite build` + `vite preview`). This run was on the warm dev server, so both rows stay NOT ASSESSED until the fixture runs on the production build. The dev-server numbers would be within all three (117 / 192 MB, 4.4 / 5 s, 68 ms / 1 s), but that is not the agreed measurement.
+After this report the owner set the memory ceiling to 192 MB (`project.yaml` `memory_ceiling_mb: 192`) and the load-time budget to mission entry ≤ 5 s and menu ready ≤ 1 s, both measured on the production build (`vite build` + `vite preview`). Production-build run, same day: `VITE_PERF_HOOKS=1 npm run build`, `vite preview` on 4200, same fixture and script (`SMOKE_URL`, `PERF_OUT=perf-prod.json`); data `production/polish/perf-2026-10-23/perf-prod.json`, log `perf-prod.log` (local only; `*.log` is gitignored). The harness reaches the stores through `window.__nexus` (`src/perfHooks.ts`), loaded only under that flag; a normal build has no hook (checked: no `__nexus` in `dist/assets`), and the flag build's shell chunk is 1.3 kB larger (427.48 vs 426.15 kB). Mission won at sim time 73, 0 errors, 139 s wall.
+
+- Memory: heap max 69.2 MB (mission), against 192 MB. OK.
+- Load time: menu ready 52 ms against 1 s; mission entry 4364 ms against 5 s. OK. Mission entry is near-identical on the dev server (4370 ms), so the bundle is not what sets it.
+- Frame time, same build: p95 6.8–9.2 ms per phase (world 8.4, brief 9.0, team 9.2, mission 8.4, debrief 6.8); live mission max 17.6 ms, 0 over 50 ms; draw calls max 224 (mission). All within budget.
+- Limits: one run; served from local disk by `vite preview`, so no network transfer time is in the load numbers.
 
 Verdict: **COMPLETE** — performance profile generated (saved to `production/polish/full-report-2026-10-24.md`).

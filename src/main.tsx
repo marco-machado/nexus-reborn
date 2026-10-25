@@ -9,6 +9,8 @@ import { initSettings } from './state/settingsStore'
 // before any screen renders or any handler reads the table.
 initSettings()
 initializeSaveSystem()
+// Perf harness only; the flag is unset in normal builds, so this is removed.
+if (import.meta.env.VITE_PERF_HOOKS === '1') void import('./perfHooks')
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

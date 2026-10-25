@@ -89,10 +89,13 @@ export async function newOperation(page) {
   await tagPhases(page)
 }
 
+// Module reads go through window.__nexus (src/perfHooks.ts) when the page is a
+// VITE_PERF_HOOKS=1 production build, else through the dev server's /src paths.
+
 // Tags every recorded frame with the live app phase.
 export const tagPhases = (page) =>
   page.evaluate(async () => {
-    const A = (await import('/src/state/appStore.ts')).useAppStore
+    const A = (await (window.__nexus?.['/src/state/appStore.ts'] ?? (() => import('/src/state/appStore.ts')))()).useAppStore
     window.__phase = A.getState().phase
     A.subscribe((s) => (window.__phase = s.phase))
   })
@@ -104,9 +107,9 @@ export async function dismiss(page) {
 // Live store reads through the dev server's own module instances.
 export const state = (page) =>
   page.evaluate(async () => {
-    const w = (await import('/src/state/worldStore.ts')).useWorldStore.getState()
-    const c = (await import('/src/state/campaignStore.ts')).useCampaignStore.getState()
-    const a = (await import('/src/state/appStore.ts')).useAppStore.getState()
+    const w = (await (window.__nexus?.['/src/state/worldStore.ts'] ?? (() => import('/src/state/worldStore.ts')))()).useWorldStore.getState()
+    const c = (await (window.__nexus?.['/src/state/campaignStore.ts'] ?? (() => import('/src/state/campaignStore.ts')))()).useCampaignStore.getState()
+    const a = (await (window.__nexus?.['/src/state/appStore.ts'] ?? (() => import('/src/state/appStore.ts')))()).useAppStore.getState()
     return {
       phase: a.phase,
       credits: a.credits,
@@ -133,9 +136,9 @@ export const state = (page) =>
 // only: the original function runs unchanged.
 export const armEtaProbe = (page) =>
   page.evaluate(async () => {
-    const W = (await import('/src/state/worldStore.ts')).useWorldStore
-    const C = (await import('/src/state/campaignStore.ts')).useCampaignStore
-    const A = (await import('/src/state/appStore.ts')).useAppStore
+    const W = (await (window.__nexus?.['/src/state/worldStore.ts'] ?? (() => import('/src/state/worldStore.ts')))()).useWorldStore
+    const C = (await (window.__nexus?.['/src/state/campaignStore.ts'] ?? (() => import('/src/state/campaignStore.ts')))()).useCampaignStore
+    const A = (await (window.__nexus?.['/src/state/appStore.ts'] ?? (() => import('/src/state/appStore.ts')))()).useAppStore
     window.__eta = null
     const orig = W.getState().advanceDays
     if (orig.__probe) return
@@ -187,8 +190,8 @@ export async function deploy(page, label) {
 // the garrison at 1 HP to lose. opts.ff: extra sim ticks per step.
 export const play = (page, opts) =>
   page.evaluate(async (opts) => {
-    const rt = await import('/src/game/runtime.ts')
-    const MS = (await import('/src/state/missionStore.ts')).useMissionStore
+    const rt = await (window.__nexus?.['/src/game/runtime.ts'] ?? (() => import('/src/game/runtime.ts')))()
+    const MS = (await (window.__nexus?.['/src/state/missionStore.ts'] ?? (() => import('/src/state/missionStore.ts')))()).useMissionStore
     const wait = (ms) => new Promise((r) => setTimeout(r, ms))
     const d2 = (a, b) => (a.x - b.x) ** 2 + (a.z - b.z) ** 2
     let w = null
@@ -270,7 +273,7 @@ export const play = (page, opts) =>
 
 export async function waitDebrief(page) {
   for (let i = 0; i < 240; i++) {
-    const p = await page.evaluate(async () => (await import('/src/state/appStore.ts')).useAppStore.getState().phase)
+    const p = await page.evaluate(async () => (await (window.__nexus?.['/src/state/appStore.ts'] ?? (() => import('/src/state/appStore.ts')))()).useAppStore.getState().phase)
     if (p === 'debrief') return page.waitForTimeout(800)
     await page.waitForTimeout(250)
   }
@@ -279,7 +282,7 @@ export async function waitDebrief(page) {
 
 export const outcome = (page) =>
   page.evaluate(async () => {
-    const o = (await import('/src/state/appStore.ts')).useAppStore.getState().outcome
+    const o = (await (window.__nexus?.['/src/state/appStore.ts'] ?? (() => import('/src/state/appStore.ts')))()).useAppStore.getState().outcome
     return o && { won: o.won, civiliansHit: o.civiliansHit, quietReplay: o.quietReplay, casualties: o.casualties, deadIds: o.deadIds, applyKey: o.applyKey }
   })
 
