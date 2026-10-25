@@ -2457,7 +2457,10 @@
 .ts-id-main b { letter-spacing: 0.16em; font-size: calc(12.5px * var(--text-scale)); }
 .ts-id-main i { font-size: calc(10px * var(--text-scale)); }
 
-.ts-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+/* Two by two, not four across: a tile about 50 px wide could not hold the
+   8-character MOBILITY at 10 px and up (BUG-0011). Each tile is now about
+   half the dossier column, so every label sits on one line at 90-125%. */
+.ts-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 
 .ts-stats > div {
   border: 1px solid var(--line);
@@ -2468,7 +2471,7 @@
   gap: 2px;
 }
 
-.ts-stats label { font-size: calc(10px * var(--text-scale)); color: var(--ink); letter-spacing: 0.04em; overflow-wrap: anywhere; }
+.ts-stats label { font-size: calc(10px * var(--text-scale)); color: var(--ink); letter-spacing: 0.04em; }
 .ts-stats b { font-size: clamp(15px, 1.4vw, 20px); line-height: 1.2; color: var(--teal); }
 
 .ts-box { display: flex; flex-direction: column; gap: 5px; }
