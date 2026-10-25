@@ -11,7 +11,7 @@
 
 ## Next step
 
-1. **`/smoke-check sprint`** at HEAD, then **`/team-qa sprint`** for Sprint 11.
+1. **`/team-qa sprint`** for Sprint 11. Smoke check at HEAD passed 2026-10-24 (`production/qa/smoke-2026-10-24-sprint-011.md`: suite 1664/1664, lint and build green, all eight smoke items pass). Open owner call carried: Assembly `MOBILITY` mid-word break (`design/ux/assembly.md` Open Question 15).
 
 ## After that
 
@@ -33,6 +33,7 @@
 
 ## Done recently
 
+- 2026-10-24 — `/smoke-check sprint` for Sprint 11: PASS (`production/qa/smoke-2026-10-24-sprint-011.md`). Suite 1664/1664, lint and build green; all eight QA-plan smoke items walked, incl. the Rust Haven Debrief return (Influence 0 → 8), the failed-campaign fixture, 125% + high contrast on four screens, and the frame fixture (World Network p95 9.1 ms, 0 live-mission frames over 50 ms; `evidence/smoke-2026-10-24-s11/perf.json`).
 - 2026-10-24 — Playtest screenshots gitignored (`production/qa/playtests/*/shots/`); session 2's 150 tracked shots untracked, kept on disk (owner).
 - 2026-10-24 — Production-build perf run (`perf-2026-10-23/perf-prod.json`): heap max 69.2 MB vs 192, mission entry 4364 ms vs 5 s, menu ready 52 ms vs 1 s; frame time, hitches and draw calls also within budget. RISK-0003 closed. Harness reaches the stores through `src/perfHooks.ts` under `VITE_PERF_HOOKS=1` (absent from normal builds); `preview-perf` launch config added.
 - 2026-10-24 — Owner set the memory ceiling (192 MB heap) and load-time budget (mission entry 5 s, menu ready 1 s), both on the production build: `project.yaml`, `docs/technical-preferences.md`, report amended, RISK-0003 updated (still Open until measured).
