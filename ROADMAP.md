@@ -5,23 +5,33 @@
 > next steps, and at the very least the very next step. Rules: `CLAUDE.md` → Roadmap.
 
 **Last updated:** 2026-10-25
-**Stage:** Production (`project.yaml`)
-**Sprint:** Sprint 11 (2026-10-23 to 2026-10-28) — all 24 stories Complete 2026-10-23 (IF-016 to IF-035, plus IF-036 to IF-038 and TM-018 added during the sprint); QA sign-off 2026-10-25: **NOT APPROVED** (`production/qa/qa-signoff-sprint-011-2026-10-25.md`)
-**Goal (owner, 2026-10-23):** pass the Production → Polish `/gate-check`. Open blockers from gate re-run 3 (`gate-check-polish-2026-10-19-r3.md`): five screens without UX specs; playtests 2–3 and the fun hypothesis; smoke at HEAD; plus accessibility compliance and the pattern library.
+**Stage:** Polish (`project.yaml`) — entered 2026-10-25 by owner override of a FAIL gate verdict (`production/gate-checks/gate-check-polish-2026-10-25.md`, Accepted Risks)
+**Sprint:** Sprint 11 (2026-10-23 to 2026-10-28) — all 24 stories Complete 2026-10-23; QA 2026-10-25: APPROVED WITH CONDITIONS, all conditions met (`production/qa/qa-signoff-sprint-011-2026-10-25-main.md`); retrospective written 2026-10-25 (`production/retrospectives/retro-sprint-11-2026-10-25.md`)
+**Milestone:** Polish (`production/milestones/polish.md`, target 2026-11-13, Sprints 12–13)
 
 ## Next step
 
-1. **`/retrospective` for Sprint 11**, then `/sprint-plan new`. Sprint 11 QA: APPROVED WITH CONDITIONS, all conditions met 2026-10-25 (TM-020 and TM-018 signed; BUG-0010 to BUG-0013 closed; triage `production/qa/bug-triage-2026-10-25.md`, 1 open: BUG-0008 deferred). Reviewer follow-ups are listed at the foot of `production/qa/qa-signoff-sprint-011-2026-10-25-main.md`.
+1. **`/sprint-plan new`** for Sprint 12, starting from the Sprint 11 retro's five actions (`production/retrospectives/retro-sprint-11-2026-10-25.md`): four-scale check in `story-done` for UI stories; `/code-review` of WN-021, WN-022, TM-019 to TM-021 and IF-039; the person-only items due 2026-10-28; a sprint row for the six stories outside the yaml; the debt entries. Put the gate follow-ups below (steps 2–9) into it.
 
 ## After that
 
-2. **`/retrospective`**, then **`/gate-check`** Production → Polish.
-2a. Owner questions from the Sprint 11 sign-off "Observations" (Influence note below the fold since HELD BY; Review NOW in Ink; crisis bar `--red`; `.pp-live` blink under reduced motion; Antarctica Garrison CRITICAL; Print White spec value).
-3. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
-4. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
-5. `/code-review` of the playtest 3–4 fixes (WN-021, WN-022, TM-019 to TM-021, IF-039; not run); Visual/Feel sign-off for TM-020.
-6. Harness: import the module URLs the page loaded (the Vite `?t=` stamp split the fixture's tutorial store in session 4).
-7. Register TRs at a later `/architecture-review`: hit targets (IF-031 to IF-035 waiver), world event weights (WN-021), in-world objective markers (TM-020).
+Gate follow-ups (director panel and recommendations, `gate-check-polish-2026-10-25.md`):
+
+2. `/smoke-check sprint` on current `main` (the gate's one blocker, overridden by the owner: no smoke report covers the BUG-0010 to BUG-0013 fixes).
+3. Write the owner's 2026-10-25 rulings down: the revised hypothesis into `design/gdd/game-concept.md:233`; the "too hard" decision into `design/difficulty-curve.md` Open Questions and `fun-hypothesis-2026-10-23.md` "Open for the owner"; that agent playtests count toward the three sessions; a short `/playtest-report` of the owner's informal post-fix session.
+4. Settle the order of `/sprint-plan new` and the gate: ROADMAP/CLAUDE.md put the sprint plan first, `production/milestones/polish.md` § Dependencies puts it after the gate. Fix the stale lines in `polish.md` (memory/load-budget criterion unchecked; "Playtest-finding stories" In progress).
+5. Technical (TD): `/code-review` of WN-021, WN-022, TM-019, TM-020, TM-021 and IF-039; register the three TRs (hit targets, world event weights, objective markers); trace the mission-entry hitch (3 spikes > 50 ms per deploy; mission entry 4364 ms vs 5 s); test beyond Chromium (Firefox/Safari WebGPU, WebGL2 fallback; RISK-0005).
+6. Art (AD): white ellipses overlapping hero shapes at full contrast (art bible §3.4); decide whether the destroy objective's minimap zone pulse or its 3D device rings is canonical; optional rings half hidden by buildings (Hollow Crown server findability); Print White token (226,246,238 vs spec 232,251,242) and crisis Unrest bar `--red` vs Red Hot; `.pp-live` blink under reduced motion.
+7. Producer (PR): record the audio listening pass outcome (Must Ship in `polish.md`, dated 2026-10-23); sprint rows for the six stories outside the yaml.
+8. Write up the 2026-10-28 human session against the `design/difficulty-curve.md` Validation Checklist (CD).
+9. Re-run the Production → Polish gate on or after 2026-10-28, once the hand-play and World Network re-profile are recorded.
+
+Carried:
+
+10. Owner questions from the Sprint 11 sign-off "Observations" (Influence note below the fold since HELD BY; Review NOW in Ink; crisis bar `--red`; `.pp-live` blink under reduced motion; Antarctica Garrison CRITICAL; Print White spec value).
+11. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
+12. In Polish, whether to reopen Abort (§19 #8) (`fun-hypothesis-2026-10-23.md`).
+13. Harness: import the module URLs the page loaded (the Vite `?t=` stamp split the fixture's tutorial store in session 4).
 
 ## Dated commitments (owner, retro 10 action 3)
 
@@ -34,6 +44,8 @@
 
 ## Done recently
 
+- 2026-10-25 — `/gate-check` Production → Polish: **FAIL** (one blocker: no smoke report for the current build; all four directors CONCERNS). Owner overrode the verdict; stage set to Polish in `project.yaml` and `production/stage.txt`. Report and accepted risks: `production/gate-checks/gate-check-polish-2026-10-25.md`. Tests 1678/1678 during the gate.
+- 2026-10-25 — `/retrospective` for Sprint 11: `production/retrospectives/retro-sprint-11-2026-10-25.md`. 20/20 planned stories done on day 1 (24/24 in the yaml, 30 in QA scope); two QA cycles; five actions (four-scale check in `story-done`, `/code-review` of six stories, person-only items by 2026-10-28, sprint rows for six stories, debt register entries).
 - 2026-10-25 — Sprint 11 sign-off conditions met: TM-020 art lead and QA lead, TM-018 lead signed (agent reviews, all APPROVED); BUG-0010 to BUG-0013 closed; `/bug-triage` run.
 - 2026-10-25 — `/team-qa sprint` re-run on `main` `93c58e0`: APPROVED WITH CONDITIONS. Tests 1678/1678 ×3, lint and build clean; R1 152/152, R2 and R4 at 0, R3 16/16 after fixing the `focus.mjs` step-4 ordering; IF-036, IF-037, IF-039 failing cases re-walked PASS; BUG-0010 to BUG-0013 Verified Fixed (`production/qa/evidence/sprint-011-main-2026-10-25/`).
 - 2026-10-25 — Fixed BUG-0010 to BUG-0013, each in its own worktree and merged into `main`: industrial and Rust Haven Brief notes end `EVERY CIVILIAN HIT IS BILLED.` (new `src/game/briefNotes.test.ts`); Assembly stat tiles laid out 2 by 2, so MOBILITY stays on one line at 90–125%; the failed banner counts wins (`campaignBannerCount`, tests); Research side columns keep a fixed minimum at 1280, so node labels hold their 110% size at 125%. Specs updated: assembly.md Open Question 15 closed, research.md layout and Open Question 16.
