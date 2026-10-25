@@ -1,0 +1,354 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 52,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 5,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "SYS:GN-7A // BOOT SEQUENCE COMPLETE",
+    "size": 10,
+    "w": 297,
+    "key": "div < div.menu-boot"
+   },
+   {
+    "text": "PRT:ON | SEC:LVL 3 | UPLINK EU-4 STRONG",
+    "size": 10,
+    "w": 297,
+    "key": "div < div.menu-boot"
+   },
+   {
+    "text": "AWAITING OPERATOR",
+    "size": 10,
+    "w": 297,
+    "key": "div.dim < div.menu-boot"
+   },
+   {
+    "text": "02:37:03",
+    "size": 11,
+    "w": 106,
+    "key": "div.menu-clock < header.menu-top"
+   },
+   {
+    "text": "UTC",
+    "size": 11,
+    "w": 106,
+    "key": "div.menu-clock < header.menu-top"
+   },
+   {
+    "text": "NEXUS",
+    "size": 64.8,
+    "w": 292,
+    "key": "span < h1.menu-wordmark"
+   },
+   {
+    "text": "REBORN",
+    "size": 64.8,
+    "w": 351,
+    "key": "span < h1.menu-wordmark"
+   },
+   {
+    "text": "CORPORATE GEOSTRATEGIC COMMAND INTERFACE",
+    "size": 12.8,
+    "w": 571,
+    "key": "div.menu-tagline < div.menu-center"
+   },
+   {
+    "text": "NO CAMPAIGN ON FILE",
+    "size": 10,
+    "w": 160,
+    "key": "div.menu-save-line < div.menu-center"
+   },
+   {
+    "text": "<< NEW OPERATION >>",
+    "size": 16,
+    "w": 358,
+    "key": "span.cta-inner < button.cta.menu-cta"
+   },
+   {
+    "text": "SETTINGS",
+    "size": 12,
+    "w": 360,
+    "key": "button.btn.menu-settings-btn < div.menu-actions"
+   },
+   {
+    "text": "BALANCE DATA",
+    "size": 10,
+    "w": 96,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "LOCAL ONLY //",
+    "size": 10,
+    "w": 209,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 209,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 209,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "60",
+    "size": 10,
+    "w": 209,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "RECORDS",
+    "size": 10,
+    "w": 209,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "CAMPAIGN AGGREGATES",
+    "size": 10,
+    "w": 370,
+    "key": "div.hud-menu-group-head < div.bal-section"
+   },
+   {
+    "text": "MISSIONS",
+    "size": 10,
+    "w": 55,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "1",
+    "size": 12,
+    "w": 8,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "WIN RATE",
+    "size": 10,
+    "w": 55,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "ABORTS",
+    "size": 10,
+    "w": 41,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "1",
+    "size": 12,
+    "w": 8,
+    "key": "b.amber < div.bal-stat"
+   },
+   {
+    "text": "MEAN DURATION",
+    "size": 10,
+    "w": 89,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "MEAN FIRST CONTACT",
+    "size": 10,
+    "w": 123,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "COLLATERAL RATE",
+    "size": 10,
+    "w": 102,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "CIVILIANS HIT",
+    "size": 10,
+    "w": 89,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "OPERATIVES KIA",
+    "size": 10,
+    "w": 96,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "MED / CELL USED",
+    "size": 10,
+    "w": 102,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "MEAN PAYOUT",
+    "size": 10,
+    "w": 75,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "TOTAL PAYOUT",
+    "size": 10,
+    "w": 82,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "TOTAL FINES",
+    "size": 10,
+    "w": 75,
+    "key": "label < div.bal-stat"
+   },
+   {
+    "text": "--",
+    "size": 12,
+    "w": 16,
+    "key": "b < div.bal-stat"
+   },
+   {
+    "text": "WEAPON DAMAGE SHARE",
+    "size": 10,
+    "w": 444,
+    "key": "div.hud-menu-group-head < div.bal-section"
+   },
+   {
+    "text": "NO SQUAD FIRE RECORDED.",
+    "size": 10,
+    "w": 444,
+    "key": "div.dim.mini < div.bal-section"
+   },
+   {
+    "text": "ABILITY USE BY ROLE",
+    "size": 10,
+    "w": 444,
+    "key": "div.hud-menu-group-head < div.bal-section"
+   },
+   {
+    "text": "NO ROLE ABILITIES TRIGGERED.",
+    "size": 10,
+    "w": 444,
+    "key": "div.dim.mini < div.bal-section"
+   },
+   {
+    "text": "EXPORT JSON",
+    "size": 12,
+    "w": 148,
+    "key": "button.btn < div.hud-menu-actions"
+   },
+   {
+    "text": "CLEAR",
+    "size": 12,
+    "w": 90,
+    "key": "button.btn < div.hud-menu-actions"
+   },
+   {
+    "text": "CLOSE",
+    "size": 10.5,
+    "w": 99,
+    "key": "button.hud-btn.pause < div.hud-menu-actions"
+   },
+   {
+    "text": "VER 7.2.1 // BUILD 2087.05.14",
+    "size": 10,
+    "w": 215,
+    "key": "span < footer.menu-foot"
+   },
+   {
+    "text": "UNAUTHORIZED ACCESS IS A CLASS-1 CORPORA",
+    "size": 10,
+    "w": 371,
+    "key": "span.dim < footer.menu-foot"
+   },
+   {
+    "text": "USER: OPS_DIRECTOR // NEXUS GLOBAL // CL",
+    "size": 10,
+    "w": 430,
+    "key": "span < footer.menu-foot"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "button",
+   "name": "EXPORT JSON // THE TELEMETRY RECORDS",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "CLEAR the telemetry records",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "CLOSE",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

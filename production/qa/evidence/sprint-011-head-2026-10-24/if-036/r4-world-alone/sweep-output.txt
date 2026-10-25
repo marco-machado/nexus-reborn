@@ -1,0 +1,14 @@
+## world: 202 runs, 36 targets
+  <10px: 0
+  <4.5:1 default: 0
+  <4.5:1 high contrast: 0
+  Ink Dim text: 0; Ink Faint text: 0
+  svg text: 0 runs; <10px: 0; <4.5:1: 0
+  label-in-name: 0
+  targets <24: 0
+  clip @90: 0
+  clip @100: 0
+  clip @110: 0
+  clip @125: 0
+  tab stops: 4
+no page errors

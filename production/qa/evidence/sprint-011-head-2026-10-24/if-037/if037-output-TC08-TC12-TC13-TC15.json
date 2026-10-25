@@ -1,0 +1,184 @@
+{
+  "TC08": {
+    "start": "RESUME",
+    "afterOpen": "CLOSE",
+    "afterOpenInside": true,
+    "afterOpenTag": "BUTTON",
+    "tabLast": "Rebind Hold position",
+    "stabLast": "CLOSE",
+    "tabInside": 30,
+    "stabInside": 30,
+    "tabOutIdx": [],
+    "stabOutIdx": []
+  },
+  "TC12": {
+    "seenBeforeOutcome": false,
+    "noteCount": 1,
+    "focusedBefore": "UNDERSTOOD // DISMISS THE RESEARCH PROMPT",
+    "after": "RETURN TO WORLD NETWORK",
+    "afterTag": "<button type=\"button\" class=\"btn\">RETURN TO WORLD NETWORK</button>",
+    "noteGone": true
+  },
+  "TC13": {
+    "s1closeCount": 1,
+    "s1": "Open settings",
+    "s2closeCount": 1,
+    "s2": "Open the balance dashboard",
+    "s3inside": true,
+    "s3open": "CLOSE THE RECRUITMENT MARKET",
+    "s3gone": true,
+    "s3": "RECRUIT + (8/8) // OPEN THE RECRUITMENT MARKET"
+  },
+  "TC15": {
+    "pause": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".hud-menu-wrap[aria-label=\"Mission paused\"]",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 22507.899999976158,
+      "msAfterArm": 18
+    },
+    "pauseSettings": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".hud-menu-wrap[aria-label=\"Settings\"]",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel settings-panel",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 23294,
+      "msAfterArm": 62
+    },
+    "balance": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".balance-panel",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel balance-panel",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 2217.2000000476837,
+      "msAfterArm": 23
+    },
+    "balanceWrap": {
+      "anim": "none",
+      "opacity": "1"
+    },
+    "market": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".ts-recruit-overlay",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "ts-recruit corners",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": [
+            {
+              "name": "blink",
+              "cls": "pp-live < portrait-svg",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "pp-live < portrait-svg",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "pp-live < portrait-svg",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            }
+          ]
+        },
+        {
+          "sel": ".ts-recruit",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "ts-recruit corners",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": [
+            {
+              "name": "blink",
+              "cls": "pp-live < portrait-svg",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "pp-live < portrait-svg",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "pp-live < portrait-svg",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            }
+          ]
+        }
+      ],
+      "at": 2489.2000000476837,
+      "msAfterArm": 70
+    },
+    "world": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".wm-onboard-wrap",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel wm-onboard",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 1298.7000000476837,
+      "msAfterArm": 0
+    }
+  },
+  "pageerrors_total": []
+}

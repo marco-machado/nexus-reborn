@@ -1,0 +1,32 @@
+== FAILED fixture; intel 1; campaignFailed set; orientation card up=false
+ROWS eu count=2 empty=null [{"name":"GLASS VEIL","reason":"CAMPAIGN LOST","label":"GLASS VEIL // LOCKED // CAMPAIGN LOST","disabled":"true","chips":["CHANCE 36%","ETA 2D"]},{"name":"NEON GARDEN","reason":"CAMPAIGN LOST","label":"NEON GARDEN // LOCKED // CAMPAIGN LOST","disabled":"true","chips":["GENERATED","CHANCE 87%","ETA 2D","EXPIRY 35H"]}]
+ROWS na count=1 empty=null [{"name":"RUST HAVEN","reason":"CAMPAIGN LOST","label":"RUST HAVEN // LOCKED // CAMPAIGN LOST","disabled":"true","chips":["CHANCE 82%","ETA 3D"]}]
+ROWS as count=1 empty=null [{"name":"HOLLOW CROWN","reason":"CAMPAIGN LOST","label":"HOLLOW CROWN // LOCKED // CAMPAIGN LOST","disabled":"true","chips":["CHANCE 55%","ETA 4D"]}]
+ROWS sa count=0 empty="NO CONTRACTS POSTED IN SOUTH AMERICASECTOR UNDER PASSIVE MONITORING" []
+ROWS af count=0 empty="NO CONTRACTS POSTED IN AFRICASECTOR UNDER PASSIVE MONITORING" []
+ROWS oc count=0 empty="NO CONTRACTS POSTED IN OCEANIASECTOR UNDER PASSIVE MONITORING" []
+IF-017-03 rows total=4 breaking=0 generated/priority rows=[{"sec":"eu","name":"NEON GARDEN"}]
+captured if-017-failed-generated-row.png in eu
+globe-status after wait: null
+MARKERS [{"label":"GLASS VEIL // LOCKED // CAMPAIGN LOST","disabled":"true","hidden":false,"tip":"CAMPAIGN LOST"},{"label":"HOLLOW CROWN // LOCKED // CAMPAIGN LOST","disabled":"true","hidden":false,"tip":"CAMPAIGN LOST"},{"label":"RUST HAVEN // LOCKED // CAMPAIGN LOST","disabled":"true","hidden":false,"tip":"CAMPAIGN LOST"}]
+IF-017-04 markers=3 breaking=0 [] disagree/no-row=[]
+hover GLASS VEIL tip computed {"hover":true,"ancestorWmMarker":false,"display":"flex","visibility":"visible","opacity":"0","w":137.99996948242188,"h":38,"text":"GLASS VEILCAMPAIGN LOST"}
+captured if-017-failed-marker-tip.png
+IF-017-06 before {"phase":"world","missionId":null}
+click eu#0 GLASS VEIL // LOCKED // CAMPAIGN LOST aria-disabled=true -> {"phase":"world","missionId":null}
+click eu#1 NEON GARDEN // LOCKED // CAMPAIGN LOST aria-disabled=true -> {"phase":"world","missionId":null}
+click na#0 RUST HAVEN // LOCKED // CAMPAIGN LOST aria-disabled=true -> {"phase":"world","missionId":null}
+click as#0 HOLLOW CROWN // LOCKED // CAMPAIGN LOST aria-disabled=true -> {"phase":"world","missionId":null}
+tab to row: focused=true after 1 Tab presses, label="GLASS VEIL // LOCKED // CAMPAIGN LOST"
+key Enter -> {"phase":"world","missionId":null} focus="GLASS VEIL // LOCKED // CAMPAIGN LOST"
+key Space -> {"phase":"world","missionId":null} focus="GLASS VEIL // LOCKED // CAMPAIGN LOST"
+IF-017-06 clicks=4 changed=0 notDisabled=0 keyChanged=0 focusedRow=true
+== OPENING fixture; intel 1; orientation card up=false
+ROWS eu [{"name":"GLASS VEIL","reason":"REQUIRES INTEL LVL 2","label":"GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2","disabled":"true","chips":["CHANCE 36%","ETA 2D"]},{"name":"NEON GARDEN","reason":"SABOTAGE // OSLO","label":"OPEN CONTRACT NEON GARDEN // SABOTAGE // OSLO // GENERATED CONTRACT","disabled":null,"chips":["GENERATED","CHANCE 87%","ETA 2D","EXPIRY 35H"]}]
+captured if-017-not-failed-locked-row.png
+ROWS as [{"name":"HOLLOW CROWN","reason":"REQUIRES INTEL LVL 2","label":"HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2","disabled":"true","chips":["CHANCE 55%","ETA 4D"]}]
+ROWS na [{"name":"RUST HAVEN","reason":"SABOTAGE // DETROIT SPRAWL","label":"OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL","disabled":null,"chips":["CHANCE 82%","ETA 3D"]}]
+globe-status after wait: null
+MARKERS [{"label":"GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2","disabled":"true","hidden":false,"tip":"REQUIRES INTEL LVL 2"},{"label":"HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2","disabled":"true","hidden":false,"tip":"REQUIRES INTEL LVL 2"},{"label":"OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL","disabled":null,"hidden":false,"tip":"82% CHANCE"},{"label":"OPEN CONTRACT NEON GARDEN // SABOTAGE // OSLO","disabled":null,"hidden":false,"tip":"87% CHANCE"}]
+IF-017-08 GV=true {"name":"GLASS VEIL","reason":"REQUIRES INTEL LVL 2","label":"GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2","disabled":"true","chips":["CHANCE 36%","ETA 2D"]} | HC=true {"name":"HOLLOW CROWN","reason":"REQUIRES INTEL LVL 2","label":"HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2","disabled":"true","chips":["CHANCE 55%","ETA 4D"]} | RH=true {"name":"RUST HAVEN","reason":"SABOTAGE // DETROIT SPRAWL","label":"OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL","disabled":null,"chips":["CHANCE 82%","ETA 3D"]} | lockedMarkers=true ["GLASS VEIL // LOCKED // REQUIRES INTEL LVL 2","HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2"] | CAMPAIGN LOST {"text":0,"labels":0}
+no console or page errors

@@ -1,0 +1,1157 @@
+{
+ "midfade": {
+  "goto": {
+   "wrap": true,
+   "anim": true,
+   "reduceClass": false
+  },
+  "steps": {
+   "40": {
+    "anim": [
+     {
+      "name": "fade-in",
+      "state": "paused",
+      "t": 40
+     }
+    ],
+    "low": [
+     {
+      "text": "WORLD NETWORK // ORIENTATION",
+      "size": 10,
+      "color": "rgb(89, 214, 201)",
+      "alpha": 0.378,
+      "ratio": 2.51,
+      "path": "div.hud-menu-panel.wm-onboard > section.panel.corners > header.panel-head > span.panel-title",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "FIRST UPLINK",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.73,
+      "path": "section.panel.corners > header.panel-head > span.panel-right > span.dim",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "THE JOB",
+      "size": 10,
+      "color": "rgb(240, 180, 69)",
+      "alpha": 0.378,
+      "ratio": 2.4,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > b",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "You run the network from this desk. Ever",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "START HERE",
+      "size": 10,
+      "color": "rgb(240, 180, 69)",
+      "alpha": 0.378,
+      "ratio": 2.4,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > b",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "Focus a sector and read its four numbers",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "STRATEGIC TIME",
+      "size": 10,
+      "color": "rgb(240, 180, 69)",
+      "alpha": 0.378,
+      "ratio": 2.4,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > b",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "Pause and Clock speed control strategic ",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "THE FOUR NUMBERS",
+      "size": 10,
+      "color": "rgb(240, 180, 69)",
+      "alpha": 0.378,
+      "ratio": 2.4,
+      "path": "div.panel-body > div.wm-onboard-rows > div.wm-onboard-row.lead > b",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "CONTROL: the order kept in the sector; a",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.wm-onboard-rows > div.wm-onboard-row.lead > span.wm-onboard-lines > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "UNREST: pressure against that hold; past",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.wm-onboard-rows > div.wm-onboard-row.lead > span.wm-onboard-lines > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "TAX YIELD: Credits per 24 strategic hour",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.wm-onboard-rows > div.wm-onboard-row.lead > span.wm-onboard-lines > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "GARRISON CONDITION: SECURE, STRAINED or ",
+      "size": 10,
+      "color": "rgb(184, 216, 207)",
+      "alpha": 0.378,
+      "ratio": 2.72,
+      "path": "div.wm-onboard-rows > div.wm-onboard-row.lead > span.wm-onboard-lines > span",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     },
+     {
+      "text": "UNDERSTOOD",
+      "size": 10.5,
+      "color": "rgb(126, 240, 212)",
+      "alpha": 0.378,
+      "ratio": 2.84,
+      "path": "section.panel.corners > div.panel-body > div.hud-menu-actions > button.hud-btn.pause",
+      "inCard": true,
+      "wrapOp": 0.378138,
+      "alphaNoWrap": 1,
+      "explained": true
+     }
+    ]
+   },
+   "80": {
+    "anim": [
+     {
+      "name": "fade-in",
+      "state": "paused",
+      "t": 80
+     }
+    ],
+    "low": []
+   },
+   "120": {
+    "anim": [
+     {
+      "name": "fade-in",
+      "state": "paused",
+      "t": 120
+     }
+    ],
+    "low": []
+   }
+  },
+  "settled": [],
+  "opacity": {
+   "product": 1,
+   "understood": [
+    "UNDERSTOOD"
+   ]
+  },
+  "reduced": {
+   "goto": {
+    "wrap": true,
+    "anim": false,
+    "reduceClass": true
+   },
+   "anim": [],
+   "low": []
+  }
+ },
+ "menu": {
+  "svg": {
+   "n": 0,
+   "fills": [],
+   "hits": []
+  },
+  "exempt": [],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 0,
+     "hits": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 0,
+     "hits": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 0,
+     "hits": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 0,
+     "hits": []
+    }
+   }
+  }
+ },
+ "settings": {
+  "svg": {
+   "n": 0,
+   "fills": [],
+   "hits": []
+  },
+  "exempt": [
+   {
+    "text": "_",
+    "ratio": 3.84,
+    "path": "header.menu-top > div.menu-boot > div.dim > span.cursor",
+    "control": null,
+    "disabled": null,
+    "ariaDisabled": null,
+    "inactive": false,
+    "anims": [
+     "cursor-blink(inf)"
+    ]
+   },
+   {
+    "text": "RESET ALL",
+    "ratio": 2.48,
+    "path": "div.set-col > div.set-section > div.hud-menu-group-head > button.btn.set-reset-all",
+    "control": "RESET ALL // EVERY CONTROL TO ITS DEFAULT KEY",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Pan forward to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Pan back to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Pan left to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Pan right to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Recenter on the squad to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Zoom in to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Zoom out to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Select the living squad to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Clear the selection to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Stop and drop orders to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Hold position to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Hold fire to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Swap weapon to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Use role ability to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Use med kit to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Use power cell to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   },
+   {
+    "text": "RESET",
+    "ratio": 2.48,
+    "path": "div.set-bind-group > div.set-bind-row > span.set-bind-ctl > button.btn.set-bind-btn",
+    "control": "Reset Arm / cancel grenade to its default key",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   }
+  ],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 7,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 26,
+     "body": [
+      "textoverlap \"NEXUS\" x \"100\" 20x10",
+      "textoverlap \"NEXUS\" x \"100\" 20x10",
+      "textoverlap \"NEXUS\" x \"Pan back\" 49x10",
+      "textoverlap \"NEXUS\" x \"S\" 7x10",
+      "textoverlap \"NEXUS\" x \"Pan left\" 49x10",
+      "textoverlap \"NEXUS\" x \"A\" 7x10",
+      "textoverlap \"NEXUS\" x \"Pan right\" 55x8",
+      "textoverlap \"NEXUS\" x \"D\" 7x8",
+      "textoverlap \"REBORN\" x \"100\" 20x10",
+      "textoverlap \"REBORN\" x \"OFF\" 26x13"
+     ],
+     "scrollers": [
+      "div.hud-menu-panel.settings-panel > section.panel.corners > div.panel-body > div.set-grid 691/569",
+      "div.set-grid > div.set-col > div.set-section > div.set-bind-list 619/380"
+     ],
+     "hscroll": [],
+     "end": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 7,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 18,
+     "body": [
+      "textoverlap \"NEXUS\" x \"100\" 22x7",
+      "textoverlap \"NEXUS\" x \"100\" 22x11",
+      "textoverlap \"NEXUS\" x \"100\" 22x7",
+      "textoverlap \"NEXUS\" x \"Pan back\" 55x11",
+      "textoverlap \"NEXUS\" x \"S\" 7x11",
+      "textoverlap \"NEXUS\" x \"Pan left\" 55x11",
+      "textoverlap \"NEXUS\" x \"A\" 7x11",
+      "textoverlap \"REBORN\" x \"100\" 22x11",
+      "textoverlap \"REBORN\" x \"OFF\" 29x14",
+      "textoverlap \"REBORN\" x \"Pan right\" 61x11"
+     ],
+     "scrollers": [
+      "div.hud-menu-panel.settings-panel > section.panel.corners > div.panel-body > div.set-grid 725/567",
+      "div.set-grid > div.set-col > div.set-section > div.set-bind-list 627/380"
+     ],
+     "hscroll": [],
+     "end": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 8,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 25,
+     "body": [
+      "textoverlap \"PRT:ON | SEC:LVL 3 | UPL\" x \"SETTINGS\" 71x5",
+      "textoverlap \"NEXUS\" x \"100\" 25x13",
+      "textoverlap \"NEXUS\" x \"100\" 25x13",
+      "textoverlap \"NEXUS\" x \"Pan forward\" 83x11",
+      "textoverlap \"NEXUS\" x \"W\" 8x11",
+      "textoverlap \"NEXUS\" x \"Pan back\" 60x13",
+      "textoverlap \"NEXUS\" x \"S\" 8x13",
+      "textoverlap \"NEXUS\" x \"Pan left\" 60x13",
+      "textoverlap \"NEXUS\" x \"A\" 8x13",
+      "textoverlap \"REBORN\" x \"100\" 25x13"
+     ],
+     "scrollers": [
+      "div.hud-menu-panel.settings-panel > section.panel.corners > div.panel-body > div.set-grid 820/563",
+      "div.set-grid > div.set-col > div.set-section > div.set-bind-list 643/380"
+     ],
+     "hscroll": [],
+     "end": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 11,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 27,
+     "body": [
+      "textoverlap \"PRT:ON | SEC:LVL 3 | UPL\" x \"SETTINGS\" 80x9",
+      "textoverlap \"NEXUS\" x \"100\" 28x15",
+      "textoverlap \"NEXUS\" x \"100\" 28x15",
+      "textoverlap \"NEXUS\" x \"CAMERA\" 62x12",
+      "textoverlap \"NEXUS\" x \"Pan forward\" 94x15",
+      "textoverlap \"NEXUS\" x \"W\" 9x15",
+      "textoverlap \"NEXUS\" x \"Pan back\" 68x15",
+      "textoverlap \"NEXUS\" x \"S\" 9x15",
+      "textoverlap \"REBORN\" x \"100\" 28x14",
+      "textoverlap \"REBORN\" x \"100\" 28x15"
+     ],
+     "scrollers": [
+      "div.hud-menu-panel.settings-panel > section.panel.corners > div.panel-body > div.set-grid 1022/560",
+      "div.set-grid > div.set-col > div.set-section > div.set-bind-list 665/380"
+     ],
+     "hscroll": [],
+     "end": []
+    }
+   }
+  },
+  "resets": [
+   {
+    "text": "RESET ALL",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   },
+   {
+    "text": "RESET",
+    "disabled": true,
+    "aria": null
+   }
+  ]
+ },
+ "research": {
+  "svg": {
+   "n": 42,
+   "fills": [
+    "rgb(184, 216, 207)"
+   ],
+   "hits": []
+  },
+  "exempt": [],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 1,
+     "hits": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 3,
+     "hits": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 3,
+     "hits": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 5,
+     "hits": []
+    }
+   }
+  }
+ },
+ "brief": {
+  "svg": {
+   "n": 4,
+   "fills": [
+    "rgb(155, 232, 255)",
+    "rgb(126, 240, 212)",
+    "rgb(184, 216, 207)"
+   ],
+   "hits": []
+  },
+  "exempt": [],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 7,
+     "hits": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 9,
+     "hits": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 13,
+     "hits": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 19,
+     "hits": []
+    }
+   }
+  }
+ },
+ "team": {
+  "svg": {
+   "n": 0,
+   "fills": [],
+   "hits": []
+  },
+  "exempt": [],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 7,
+     "hits": []
+    },
+    "stats": [
+     {
+      "text": "HLTH",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 23.1,
+      "fontPx": 9
+     },
+     {
+      "text": "STAMINA",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 40.5,
+      "fontPx": 9
+     },
+     {
+      "text": "FOCUS",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 28.9,
+      "fontPx": 9
+     },
+     {
+      "text": "MOBILITY",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 46.2,
+      "fontPx": 9
+     }
+    ]
+   },
+   "100": {
+    "mw": {
+     "multi": 10,
+     "hits": [
+      {
+       "text": "MOBILITY",
+       "at": "MOBILIT|Y",
+       "lines": 2,
+       "path": "div.scroll.ts-detail-list > div.ts-stats > div > label",
+       "box": {
+        "x": 1197.03125,
+        "y": 179.296875,
+        "w": 49.609375,
+        "h": 22
+       }
+      }
+     ]
+    },
+    "stats": [
+     {
+      "text": "HLTH",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 25.7,
+      "fontPx": 10
+     },
+     {
+      "text": "STAMINA",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 45,
+      "fontPx": 10
+     },
+     {
+      "text": "FOCUS",
+      "lineBoxes": 1,
+      "labelW": 49.6,
+      "textW": 32.1,
+      "fontPx": 10
+     },
+     {
+      "text": "MOBILITY",
+      "lineBoxes": 2,
+      "labelW": 49.6,
+      "textW": 45,
+      "fontPx": 10
+     }
+    ]
+   },
+   "110": {
+    "mw": {
+     "multi": 10,
+     "hits": [
+      {
+       "text": "MOBILITY",
+       "at": "MOBILIT|Y",
+       "lines": 2,
+       "path": "div.scroll.ts-detail-list > div.ts-stats > div > label",
+       "box": {
+        "x": 1194.1875,
+        "y": 197.296875,
+        "w": 52.453125,
+        "h": 26
+       }
+      }
+     ]
+    },
+    "stats": [
+     {
+      "text": "HLTH",
+      "lineBoxes": 1,
+      "labelW": 52.4,
+      "textW": 28.3,
+      "fontPx": 11
+     },
+     {
+      "text": "STAMINA",
+      "lineBoxes": 1,
+      "labelW": 52.5,
+      "textW": 49.5,
+      "fontPx": 11
+     },
+     {
+      "text": "FOCUS",
+      "lineBoxes": 1,
+      "labelW": 52.5,
+      "textW": 35.3,
+      "fontPx": 11
+     },
+     {
+      "text": "MOBILITY",
+      "lineBoxes": 2,
+      "labelW": 52.5,
+      "textW": 49.5,
+      "fontPx": 11
+     }
+    ]
+   },
+   "125": {
+    "mw": {
+     "multi": 10,
+     "hits": [
+      {
+       "text": "MOBILITY",
+       "at": "MOBILIT|Y",
+       "lines": 2,
+       "path": "div.scroll.ts-detail-list > div.ts-stats > div > label",
+       "box": {
+        "x": 1183.765625,
+        "y": 236.296875,
+        "w": 62.875,
+        "h": 30
+       }
+      }
+     ]
+    },
+    "stats": [
+     {
+      "text": "HLTH",
+      "lineBoxes": 1,
+      "labelW": 62.9,
+      "textW": 32.1,
+      "fontPx": 12.5
+     },
+     {
+      "text": "STAMINA",
+      "lineBoxes": 1,
+      "labelW": 62.9,
+      "textW": 56.2,
+      "fontPx": 12.5
+     },
+     {
+      "text": "FOCUS",
+      "lineBoxes": 1,
+      "labelW": 62.9,
+      "textW": 40.1,
+      "fontPx": 12.5
+     },
+     {
+      "text": "MOBILITY",
+      "lineBoxes": 2,
+      "labelW": 62.9,
+      "textW": 56.2,
+      "fontPx": 12.5
+     }
+    ]
+   }
+  }
+ },
+ "debrief": {
+  "svg": {
+   "n": 0,
+   "fills": [],
+   "hits": []
+  },
+  "exempt": [],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 2,
+     "hits": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 3,
+     "hits": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 4,
+     "hits": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 4,
+     "hits": []
+    }
+   }
+  }
+ },
+ "mission": {
+  "svg": {
+   "n": 0,
+   "fills": [],
+   "hits": []
+  },
+  "exempt": [
+   {
+    "text": "+",
+    "ratio": 2.43,
+    "path": "div.hud-panel.hud-minimap.corners > div.hud-mm-body > div.hud-mm-zoom > button",
+    "control": "Zoom minimap in",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   }
+  ],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 3,
+     "hits": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 6,
+     "hits": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 7,
+     "hits": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 10,
+     "hits": []
+    }
+   }
+  },
+  "zoom": [
+   {
+    "label": "Zoom minimap in",
+    "text": "+",
+    "disabled": true
+   },
+   {
+    "label": "Zoom minimap out",
+    "text": "-",
+    "disabled": false
+   }
+  ]
+ },
+ "pause": {
+  "svg": {
+   "n": 0,
+   "fills": [],
+   "hits": []
+  },
+  "exempt": [
+   {
+    "text": "+",
+    "ratio": 2.43,
+    "path": "div.hud-panel.hud-minimap.corners > div.hud-mm-body > div.hud-mm-zoom > button",
+    "control": "Zoom minimap in",
+    "disabled": true,
+    "ariaDisabled": null,
+    "inactive": true,
+    "anims": []
+   }
+  ],
+  "scales": {
+   "90": {
+    "mw": {
+     "multi": 3,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 10,
+     "body": [
+      "textoverlap \"Click an operative or dr\" x \"RESUME\" 44x10",
+      "textoverlap \"Click an operative or dr\" x \"SETTINGS\" 59x10",
+      "textoverlap \"Click an operative or dr\" x \"ABORT\" 37x10",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-top x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 1280x34",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-squad.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 238x306",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-objectives.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 288x121",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-comms.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 294x150",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-weapons x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 662x90",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-minimap.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 222x181",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-toasts x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 480x86"
+     ],
+     "scrollers": [],
+     "hscroll": [],
+     "end": []
+    }
+   },
+   "100": {
+    "mw": {
+     "multi": 7,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 9,
+     "body": [
+      "textoverlap \"DROP THE BACKUP TRANSFOR\" x \"SIM HALTED\" 8x10",
+      "textoverlap \"Click an operative or dr\" x \"RESUME\" 49x9",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-top x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 1280x34",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-squad.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 238x320",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-objectives.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 288x135",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-comms.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 286x150",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-weapons x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 662x106",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-minimap.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 222x182",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-toasts x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 480x91"
+     ],
+     "scrollers": [],
+     "hscroll": [],
+     "end": []
+    }
+   },
+   "110": {
+    "mw": {
+     "multi": 8,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 15,
+     "body": [
+      "textoverlap \"REACH THE RELAY YARD\" x \"SIM HALTED\" 8x7",
+      "textoverlap \"SKIP TUTORIAL\" x \"Right click\" 25x9",
+      "textoverlap \"SKIP TUTORIAL\" x \"Move order\" 45x10",
+      "textoverlap \"X\" x \"Move order\" 8x10",
+      "textoverlap \"Click an operative or dr\" x \"Right click\" 90x10",
+      "textoverlap \"Click an operative or dr\" x \"Attack a hostile\" 46x10",
+      "textoverlap \"Click an operative or dr\" x \"Minimap\" 57x10",
+      "textoverlap \"Click an operative or dr\" x \"Steer the camera\" 61x10",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-top x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 1280x34",
+      "boxoverlap div.app-root > div.mission-screen > div.hud-root > div.hud-panel.hud-squad.corners x div.app-root > div.mission-screen > div.hud-root > div.hud-menu-wrap 238x376"
+     ],
+     "scrollers": [],
+     "hscroll": [],
+     "end": []
+    }
+   },
+   "125": {
+    "mw": {
+     "multi": 11,
+     "hits": []
+    },
+    "wrap": {
+     "top": [],
+     "bodyCount": 23,
+     "body": [
+      "textoverlap \"SABOTAGE\" x \"SIM HALTED\" 28x12",
+      "textoverlap \"G\" x \"SETTINGS\" 8x6",
+      "textoverlap \"3\" x \"ABORT\" 8x6",
+      "textoverlap \"TUTORIAL\" x \"Use power cell\" 88x15",
+      "textoverlap \"1\" x \"Use power cell\" 10x15",
+      "textoverlap \"/\" x \"Use power cell\" 10x15",
+      "textoverlap \"9\" x \"Use power cell\" 8x15",
+      "textoverlap \"SKIP TUTORIAL\" x \"Left\" 37x14",
+      "textoverlap \"SKIP TUTORIAL\" x \"Add to the selection\" 44x15",
+      "textoverlap \"X\" x \"Add to the selection\" 9x15"
+     ],
+     "scrollers": [],
+     "hscroll": [],
+     "end": []
+    }
+   }
+  },
+  "zoom": [
+   {
+    "label": "Zoom minimap in",
+    "text": "+",
+    "disabled": true
+   },
+   {
+    "label": "Zoom minimap out",
+    "text": "-",
+    "disabled": false
+   }
+  ]
+ }
+}

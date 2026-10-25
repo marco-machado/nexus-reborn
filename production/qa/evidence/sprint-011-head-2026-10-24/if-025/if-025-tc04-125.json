@@ -1,0 +1,63 @@
+{
+  "gate": true,
+  "m": [
+    {
+      "name": "1 STABILIZE",
+      "status": "CLEAR",
+      "disabled": false,
+      "label": "1 STABILIZE // 8 PTS // -12 UNREST OVER 6H // CLEAR",
+      "title": null,
+      "effect": "-12 UNREST OVER 6H",
+      "ariaHidden": "true",
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "below": true,
+      "overlap": false,
+      "inView": true,
+      "onTop": true,
+      "ellipsis": false,
+      "w": 282,
+      "h": 15
+    },
+    {
+      "name": "2 LOBBY",
+      "status": "UNAFFORDABLE",
+      "disabled": true,
+      "label": "2 LOBBY // 10 PTS // +8 CONTROL OVER 12H // UNAFFORDABLE",
+      "title": null,
+      "effect": "+8 CONTROL OVER 12H",
+      "ariaHidden": "true",
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "below": true,
+      "overlap": false,
+      "inView": true,
+      "onTop": true,
+      "ellipsis": false,
+      "w": 282,
+      "h": 15
+    },
+    {
+      "name": "3 EXPEDITE",
+      "status": "UNAFFORDABLE",
+      "disabled": true,
+      "label": "3 EXPEDITE // 12 PTS // WAIVE INTEL GATE // +24H EXPIRY // UNAFFORDABLE",
+      "title": null,
+      "effect": "WAIVE INTEL GATE // +24H EXPIRY",
+      "ariaHidden": "true",
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "below": true,
+      "overlap": false,
+      "inView": true,
+      "onTop": true,
+      "ellipsis": false,
+      "w": 282,
+      "h": 15
+    }
+  ],
+  "clipped": []
+}

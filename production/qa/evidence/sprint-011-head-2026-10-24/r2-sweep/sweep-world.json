@@ -1,0 +1,1259 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 202,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 36,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "WORLD NETWORK",
+    "size": 33.28,
+    "w": 415,
+    "key": "h1.screen-title < div"
+   },
+   {
+    "text": "NEXUS GLOBAL // GEOSTRATEGIC COMMAND INT",
+    "size": 10,
+    "w": 415,
+    "key": "div.screen-sub < div"
+   },
+   {
+    "text": "CREDITS",
+    "size": 10,
+    "w": 75,
+    "key": "small < span"
+   },
+   {
+    "text": "128,450",
+    "size": 12,
+    "w": 75,
+    "key": "b.amber < span"
+   },
+   {
+    "text": "CR",
+    "size": 12,
+    "w": 75,
+    "key": "b.amber < span"
+   },
+   {
+    "text": "INFLUENCE",
+    "size": 10,
+    "w": 58,
+    "key": "small < span"
+   },
+   {
+    "text": "8",
+    "size": 12,
+    "w": 58,
+    "key": "b < span"
+   },
+   {
+    "text": "PTS",
+    "size": 12,
+    "w": 58,
+    "key": "b < span"
+   },
+   {
+    "text": "INTEL",
+    "size": 10,
+    "w": 32,
+    "key": "small < span"
+   },
+   {
+    "text": "1",
+    "size": 12,
+    "w": 32,
+    "key": "b < span"
+   },
+   {
+    "text": "ROSTER",
+    "size": 10,
+    "w": 39,
+    "key": "small < span"
+   },
+   {
+    "text": "8",
+    "size": 12,
+    "w": 39,
+    "key": "b < span"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 19,
+    "key": "em < b"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 19,
+    "key": "em < b"
+   },
+   {
+    "text": "SECTORS",
+    "size": 10,
+    "w": 56,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "6",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "7",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "NORTH AMERICA",
+    "size": 12,
+    "w": 105,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 42,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "68",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 36,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "12",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "SOUTH AMERICA",
+    "size": 12,
+    "w": 105,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 42,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "41",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 36,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "24",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "EUROPE",
+    "size": 12,
+    "w": 48,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 42,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "62",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 36,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "18",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "AFRICA",
+    "size": 12,
+    "w": 48,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 42,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "37",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 36,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "28",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "ASIA",
+    "size": 12,
+    "w": 32,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 42,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "55",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 36,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "16",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "OCEANIA",
+    "size": 12,
+    "w": 56,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 42,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "73",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 22,
+    "key": "b < span.wm-sector-reading"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 36,
+    "key": "span < span.wm-sector-reading"
+   },
+   {
+    "text": "9",
+    "size": 12,
+    "w": 14,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "%",
+    "size": 12,
+    "w": 14,
+    "key": "b.ink < span.wm-sector-reading"
+   },
+   {
+    "text": "ANTARCTICA",
+    "size": 12,
+    "w": 81,
+    "key": "b.wm-sector-name < span.wm-sector-top"
+   },
+   {
+    "text": "NO SURVEY DATA",
+    "size": 10,
+    "w": 188,
+    "key": "span.wm-sector-sub.dim < span.wm-sector-main"
+   },
+   {
+    "text": "36.00°N / 102.00°W",
+    "size": 10,
+    "w": 123,
+    "key": "output.globe-coordinates < div.globe-view"
+   },
+   {
+    "text": "ACQUIRING EARTH IMAGERY",
+    "size": 11,
+    "w": 188,
+    "key": "b < div.globe-status"
+   },
+   {
+    "text": "DRAG TO ROTATE",
+    "size": 10,
+    "w": 225,
+    "key": "div.globe-hint < div.globe-view"
+   },
+   {
+    "text": "·",
+    "size": 10,
+    "w": 21,
+    "key": "span < div.globe-hint"
+   },
+   {
+    "text": "SCROLL TO ZOOM",
+    "size": 10,
+    "w": 225,
+    "key": "div.globe-hint < div.globe-view"
+   },
+   {
+    "text": "−",
+    "size": 10,
+    "w": 24,
+    "key": "button < div.globe-toolbar"
+   },
+   {
+    "text": "+",
+    "size": 10,
+    "w": 24,
+    "key": "button < div.globe-toolbar"
+   },
+   {
+    "text": "HOME",
+    "size": 10,
+    "w": 40,
+    "key": "button < div.globe-toolbar"
+   },
+   {
+    "text": "FOCUS SECTOR",
+    "size": 10,
+    "w": 91,
+    "key": "button < div.globe-toolbar"
+   },
+   {
+    "text": "SOUTH POLE",
+    "size": 10,
+    "w": 78,
+    "key": "button < div.globe-toolbar"
+   },
+   {
+    "text": "LABELS",
+    "size": 10,
+    "w": 53,
+    "key": "button < div.globe-toolbar"
+   },
+   {
+    "text": "EARTH IMAGERY · NASA",
+    "size": 10,
+    "w": 136,
+    "key": "a.globe-credit < div.globe-view"
+   },
+   {
+    "text": "ORBITAL VIEW",
+    "size": 10,
+    "w": 111,
+    "key": "b < div.wm-ov.tl"
+   },
+   {
+    "text": "SAT-16E // LIVE",
+    "size": 10,
+    "w": 111,
+    "key": "span.dim < div.wm-ov.tl"
+   },
+   {
+    "text": "NEXUS GLOBAL",
+    "size": 10,
+    "w": 89,
+    "key": "span.dim < div.wm-ov.tc"
+   },
+   {
+    "text": "CONTROL KEY",
+    "size": 10,
+    "w": 174,
+    "key": "b.wm-key-head < div.wm-ov.br"
+   },
+   {
+    "text": "SECTORS",
+    "size": 10,
+    "w": 52,
+    "key": "span.dim < b.wm-key-head"
+   },
+   {
+    "text": "STRATOS INDUSTRIES",
+    "size": 10,
+    "w": 147,
+    "key": "span.wm-key-name < span.wm-key-row"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-key-n < span.wm-key-row"
+   },
+   {
+    "text": "NEXUS GLOBAL",
+    "size": 10,
+    "w": 147,
+    "key": "span.wm-key-name < span.wm-key-row"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-key-n < span.wm-key-row"
+   },
+   {
+    "text": "HELIX CORP",
+    "size": 10,
+    "w": 147,
+    "key": "span.wm-key-name < span.wm-key-row"
+   },
+   {
+    "text": "2",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-key-n < span.wm-key-row"
+   },
+   {
+    "text": "OMNICORP",
+    "size": 10,
+    "w": 147,
+    "key": "span.wm-key-name < span.wm-key-row"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-key-n < span.wm-key-row"
+   },
+   {
+    "text": "CONTESTED",
+    "size": 10,
+    "w": 147,
+    "key": "span.wm-key-name < span.wm-key-row"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-key-n < span.wm-key-row"
+   },
+   {
+    "text": "UNKNOWN",
+    "size": 10,
+    "w": 147,
+    "key": "span.wm-key-name < span.wm-key-row"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-key-n < span.wm-key-row"
+   },
+   {
+    "text": "NORTH AMERICAN SECTOR",
+    "size": 10,
+    "w": 168,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "FOCUS",
+    "size": 10,
+    "w": 53,
+    "key": "span.chip.teal < span.panel-right"
+   },
+   {
+    "text": "COORD",
+    "size": 11,
+    "w": 38,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "36.00N 102.00W",
+    "size": 11,
+    "w": 105,
+    "key": "b < div.kv"
+   },
+   {
+    "text": "CONTROL",
+    "size": 10,
+    "w": 136,
+    "key": "label < div"
+   },
+   {
+    "text": "68",
+    "size": 17.92,
+    "w": 136,
+    "key": "b.teal < div"
+   },
+   {
+    "text": "%",
+    "size": 17.92,
+    "w": 136,
+    "key": "b.teal < div"
+   },
+   {
+    "text": "UNREST",
+    "size": 10,
+    "w": 136,
+    "key": "label < div"
+   },
+   {
+    "text": "12",
+    "size": 17.92,
+    "w": 136,
+    "key": "b.ink < div"
+   },
+   {
+    "text": "%",
+    "size": 17.92,
+    "w": 136,
+    "key": "b.ink < div"
+   },
+   {
+    "text": "HELD BY",
+    "size": 11,
+    "w": 50,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+    "size": 12,
+    "w": 224,
+    "key": "b.wm-kv-readout.teal < div.kv"
+   },
+   {
+    "text": "TAX YIELD",
+    "size": 11,
+    "w": 68,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "4,080",
+    "size": 12,
+    "w": 113,
+    "key": "b.wm-kv-readout < div.kv"
+   },
+   {
+    "text": "CR / 24h",
+    "size": 12,
+    "w": 113,
+    "key": "b.wm-kv-readout < div.kv"
+   },
+   {
+    "text": "TAX PAID",
+    "size": 11,
+    "w": 60,
+    "key": "span < div.kv.wm-tax-pay"
+   },
+   {
+    "text": "YES // NEXUS-HELD",
+    "size": 12,
+    "w": 138,
+    "key": "b.wm-kv-readout.teal < div.kv.wm-tax-pay"
+   },
+   {
+    "text": "GARRISON CONDITION",
+    "size": 11,
+    "w": 135,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "SECURE",
+    "size": 12,
+    "w": 49,
+    "key": "b.wm-kv-readout.teal < div.kv"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-act-num < span.wm-act-name"
+   },
+   {
+    "text": "STABILIZE",
+    "size": 10,
+    "w": 75,
+    "key": "span.wm-act-name < button.wm-act"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 13,
+    "key": "b.wm-act-cost < span.wm-act-sub"
+   },
+   {
+    "text": "P",
+    "size": 10,
+    "w": 13,
+    "key": "b.wm-act-cost < span.wm-act-sub"
+   },
+   {
+    "text": "CLEAR",
+    "size": 10,
+    "w": 34,
+    "key": "i.wm-act-status < span.wm-act-sub"
+   },
+   {
+    "text": "-12 UNREST OVER 6H",
+    "size": 10,
+    "w": 282,
+    "key": "span.wm-act-effect < div.wm-act-wrap"
+   },
+   {
+    "text": "2",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-act-num < span.wm-act-name"
+   },
+   {
+    "text": "LOBBY",
+    "size": 10,
+    "w": 48,
+    "key": "span.wm-act-name < button.wm-act"
+   },
+   {
+    "text": "10",
+    "size": 10,
+    "w": 19,
+    "key": "b.wm-act-cost < span.wm-act-sub"
+   },
+   {
+    "text": "P",
+    "size": 10,
+    "w": 19,
+    "key": "b.wm-act-cost < span.wm-act-sub"
+   },
+   {
+    "text": "UNAFFORDABLE",
+    "size": 10,
+    "w": 82,
+    "key": "i.wm-act-status.dim < span.wm-act-sub"
+   },
+   {
+    "text": "+8 CONTROL OVER 12H",
+    "size": 10,
+    "w": 282,
+    "key": "span.wm-act-effect < div.wm-act-wrap"
+   },
+   {
+    "text": "3",
+    "size": 10,
+    "w": 7,
+    "key": "b.wm-act-num < span.wm-act-name"
+   },
+   {
+    "text": "EXPEDITE",
+    "size": 10,
+    "w": 68,
+    "key": "span.wm-act-name < button.wm-act"
+   },
+   {
+    "text": "12",
+    "size": 10,
+    "w": 19,
+    "key": "b.wm-act-cost < span.wm-act-sub"
+   },
+   {
+    "text": "P",
+    "size": 10,
+    "w": 19,
+    "key": "b.wm-act-cost < span.wm-act-sub"
+   },
+   {
+    "text": "NO TARGET",
+    "size": 10,
+    "w": 61,
+    "key": "i.wm-act-status.dim < span.wm-act-sub"
+   },
+   {
+    "text": "WAIVE INTEL GATE // +24H EXPIRY",
+    "size": 10,
+    "w": 282,
+    "key": "span.wm-act-effect < div.wm-act-wrap"
+   },
+   {
+    "text": "INFLUENCE // 1 STABILIZE",
+    "size": 10,
+    "w": 162,
+    "key": "b.wm-moment-title < span.wm-moment-head"
+   },
+   {
+    "text": "UNDERSTOOD",
+    "size": 10,
+    "w": 96,
+    "key": "button.hud-btn.wm-moment-btn < span.wm-moment-head"
+   },
+   {
+    "text": "Affordable now: 8 PTS for -12 UNREST OVE",
+    "size": 10,
+    "w": 264,
+    "key": "span.wm-moment-body < div.wm-moment.corners"
+   },
+   {
+    "text": "EVENT FORECAST",
+    "size": 10,
+    "w": 282,
+    "key": "label < div.wm-fc"
+   },
+   {
+    "text": "REQUIRES INTEL LVL 2",
+    "size": 10,
+    "w": 136,
+    "key": "span.wm-fc-lock.dim < div.wm-fc"
+   },
+   {
+    "text": "OPEN CONTRACTS",
+    "size": 10,
+    "w": 112,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "/",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 40,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "RUST HAVEN",
+    "size": 12,
+    "w": 144,
+    "key": "b < span.wm-op-main"
+   },
+   {
+    "text": "SABOTAGE",
+    "size": 10,
+    "w": 144,
+    "key": "i.dim < span.wm-op-main"
+   },
+   {
+    "text": "//",
+    "size": 10,
+    "w": 144,
+    "key": "i.dim < span.wm-op-main"
+   },
+   {
+    "text": "DETROIT SPRAWL",
+    "size": 10,
+    "w": 144,
+    "key": "i.dim < span.wm-op-main"
+   },
+   {
+    "text": "CHANCE 82%",
+    "size": 10,
+    "w": 86,
+    "key": "span.chip.dim < span.wm-op-meta"
+   },
+   {
+    "text": "ETA",
+    "size": 10,
+    "w": 57,
+    "key": "span.chip.dim < span.wm-op-meta"
+   },
+   {
+    "text": "3",
+    "size": 10,
+    "w": 57,
+    "key": "span.chip.dim < span.wm-op-meta"
+   },
+   {
+    "text": "D",
+    "size": 10,
+    "w": 57,
+    "key": "span.chip.dim < span.wm-op-meta"
+   },
+   {
+    "text": "TIME CODE",
+    "size": 10,
+    "w": 72,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "2087.05.14",
+    "size": 19.2,
+    "w": 144,
+    "key": "div.wm-date < div.panel-body"
+   },
+   {
+    "text": "14:33:31",
+    "size": 12,
+    "w": 144,
+    "key": "div.wm-clock < div.panel-body"
+   },
+   {
+    "text": "UTC",
+    "size": 12,
+    "w": 144,
+    "key": "div.wm-clock < div.panel-body"
+   },
+   {
+    "text": "LIVE",
+    "size": 10,
+    "w": 42,
+    "key": "span.wm-live < div.panel-body"
+   },
+   {
+    "text": "TIMELINE",
+    "size": 10,
+    "w": 64,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "-24H",
+    "size": 10,
+    "w": 30,
+    "key": "span < div.wm-tl-axis"
+   },
+   {
+    "text": "-12H",
+    "size": 10,
+    "w": 30,
+    "key": "span < div.wm-tl-axis"
+   },
+   {
+    "text": "-6H",
+    "size": 10,
+    "w": 22,
+    "key": "span < div.wm-tl-axis"
+   },
+   {
+    "text": "NOW",
+    "size": 10,
+    "w": 22,
+    "key": "span.now < div.wm-tl-axis"
+   },
+   {
+    "text": "1",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn < div.wm-transport"
+   },
+   {
+    "text": "X",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn < div.wm-transport"
+   },
+   {
+    "text": "2",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn.on < div.wm-transport"
+   },
+   {
+    "text": "X",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn.on < div.wm-transport"
+   },
+   {
+    "text": "4",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn < div.wm-transport"
+   },
+   {
+    "text": "X",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn < div.wm-transport"
+   },
+   {
+    "text": "8",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn < div.wm-transport"
+   },
+   {
+    "text": "X",
+    "size": 10,
+    "w": 30,
+    "key": "button.wm-tbtn < div.wm-transport"
+   },
+   {
+    "text": "CLOCK SPEED:",
+    "size": 10,
+    "w": 114,
+    "key": "div.wm-speed < div.wm-tc"
+   },
+   {
+    "text": "2X",
+    "size": 12,
+    "w": 17,
+    "key": "b.teal < div.wm-speed"
+   },
+   {
+    "text": "FEED",
+    "size": 10,
+    "w": 32,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "2",
+    "size": 10,
+    "w": 67,
+    "key": "button.wm-unread < span.panel-right"
+   },
+   {
+    "text": "UNREAD",
+    "size": 10,
+    "w": 67,
+    "key": "button.wm-unread < span.panel-right"
+   },
+   {
+    "text": "14:32",
+    "size": 10,
+    "w": 33,
+    "key": "span.wm-feed-t < button.wm-feed-line.green"
+   },
+   {
+    "text": "OPEN CONTRACT NEON GARDEN POSTED IN OSLO",
+    "size": 10,
+    "w": 456,
+    "key": "span.wm-feed-x < button.wm-feed-line.green"
+   },
+   {
+    "text": "14:28",
+    "size": 10,
+    "w": 33,
+    "key": "span.wm-feed-t < button.wm-feed-line.red"
+   },
+   {
+    "text": "RIOTS REPORTED IN CAIRO",
+    "size": 10,
+    "w": 456,
+    "key": "span.wm-feed-x < button.wm-feed-line.red"
+   },
+   {
+    "text": "14:11",
+    "size": 10,
+    "w": 33,
+    "key": "span.wm-feed-t < button.wm-feed-line.green"
+   },
+   {
+    "text": "NEXUS GLOBAL TAKES BOGOTA",
+    "size": 10,
+    "w": 456,
+    "key": "span.wm-feed-x < button.wm-feed-line.green"
+   },
+   {
+    "text": "13:47",
+    "size": 10,
+    "w": 33,
+    "key": "span.wm-feed-t < button.wm-feed-line.dim"
+   },
+   {
+    "text": "HELIX CORP SECURES TRADE AGREEMENT IN OS",
+    "size": 10,
+    "w": 456,
+    "key": "span.wm-feed-x < button.wm-feed-line.dim"
+   },
+   {
+    "text": "INTEL",
+    "size": 10,
+    "w": 40,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "LEVEL",
+    "size": 11,
+    "w": 38,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "1",
+    "size": 13,
+    "w": 9,
+    "key": "b < div.kv"
+   },
+   {
+    "text": "PROGRESS",
+    "size": 11,
+    "w": 60,
+    "key": "span < div.kv"
+   },
+   {
+    "text": "25",
+    "size": 13,
+    "w": 70,
+    "key": "b < div.kv"
+   },
+   {
+    "text": "/ 100",
+    "size": 13,
+    "w": 70,
+    "key": "b < div.kv"
+   },
+   {
+    "text": "WORLD NETWORK // ORIENTATION",
+    "size": 10,
+    "w": 225,
+    "key": "span.panel-title < header.panel-head"
+   },
+   {
+    "text": "FIRST UPLINK",
+    "size": 10,
+    "w": 96,
+    "key": "span.dim < span.panel-right"
+   },
+   {
+    "text": "THE JOB",
+    "size": 10,
+    "w": 176,
+    "key": "b < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "You run the network from this desk. Ever",
+    "size": 10,
+    "w": 458,
+    "key": "span < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "START HERE",
+    "size": 10,
+    "w": 176,
+    "key": "b < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "Focus a sector and read its four numbers",
+    "size": 10,
+    "w": 458,
+    "key": "span < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "STRATEGIC TIME",
+    "size": 10,
+    "w": 176,
+    "key": "b < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "Pause and Clock speed control strategic ",
+    "size": 10,
+    "w": 458,
+    "key": "span < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "THE FOUR NUMBERS",
+    "size": 10,
+    "w": 176,
+    "key": "b < div.wm-onboard-row.lead"
+   },
+   {
+    "text": "CONTROL: the order kept in the sector; a",
+    "size": 10,
+    "w": 458,
+    "key": "span < span.wm-onboard-lines"
+   },
+   {
+    "text": "UNREST: pressure against that hold; past",
+    "size": 10,
+    "w": 458,
+    "key": "span < span.wm-onboard-lines"
+   },
+   {
+    "text": "TAX YIELD: Credits per 24 strategic hour",
+    "size": 10,
+    "w": 458,
+    "key": "span < span.wm-onboard-lines"
+   },
+   {
+    "text": "GARRISON CONDITION: SECURE, STRAINED or ",
+    "size": 10,
+    "w": 458,
+    "key": "span < span.wm-onboard-lines"
+   },
+   {
+    "text": "UNDERSTOOD",
+    "size": 10.5,
+    "w": 140,
+    "key": "button.hud-btn.pause < div.hud-menu-actions"
+   },
+   {
+    "text": "WORLD NETWORK",
+    "size": 11.5,
+    "w": 120,
+    "key": "span.navtab-label < button.navtab.active"
+   },
+   {
+    "text": "RESEARCH",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab"
+   },
+   {
+    "text": "BRIEF",
+    "size": 11.5,
+    "w": 46,
+    "key": "span.navtab-label < span.navtab-locked-row"
+   },
+   {
+    "text": "LOCKED",
+    "size": 11.5,
+    "w": 70,
+    "key": "span.navtab-lock < span.navtab-locked-row"
+   },
+   {
+    "text": "NO CONTRACT SELECTED",
+    "size": 10,
+    "w": 144,
+    "key": "span.navtab-cond < button.navtab.locked"
+   },
+   {
+    "text": "ASSEMBLY",
+    "size": 11.5,
+    "w": 74,
+    "key": "span.navtab-label < button.navtab"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "button",
+   "name": "WORLD NETWORK",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "RESEARCH",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+   "dis": "true"
+  },
+  {
+   "tag": "button",
+   "name": "ASSEMBLY",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

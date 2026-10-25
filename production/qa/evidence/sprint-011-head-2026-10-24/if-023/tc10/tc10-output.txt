@@ -1,0 +1,34 @@
+# IF-023 TC-10 — 2026-10-25T02:47:09.791Z
+viewport {"width":1280,"height":720}
+phase after NEW OPERATION: world
+step1 header "INFLUENCE0 PTS" store 0
+after RUST HAVEN row: brief
+after ACCEPT: team
+after DEPLOY: mission
+modules ["/src/state/appStore.ts","/src/state/worldStore.ts","/src/state/missionStore.ts","/src/game/runtime.ts"]
+A step 0 {"t":0.2,"paused":false,"held":false,"live":true,"ph":"yard","result":"none","civ":0,"ag":"a1:124,a2:110,a3:98,a4:132","enemies":7,"relays":3,"rows":"rh1* rh-opt- rh2- rh3- rh4-"}
+A step 10 {"t":4.3,"paused":false,"held":false,"live":true,"ph":"yard","result":"none","civ":0,"ag":"a1:124,a2:110,a3:98,a4:132","enemies":7,"relays":3,"rows":"rh1* rh-opt- rh2- rh3- rh4-"}
+A step 20 {"t":8.3,"paused":false,"held":false,"live":true,"ph":"yard","result":"none","civ":0,"ag":"a1:124,a2:110,a3:98,a4:132","enemies":6,"relays":3,"rows":"rh1* rh-opt- rh2- rh3- rh4-"}
+A step 30 {"t":12.4,"paused":false,"held":false,"live":true,"ph":"relays","result":"none","civ":0,"ag":"a1:65,a2:71,a3:98,a4:91","enemies":3,"relays":3,"rows":"rh1+ rh-opt* rh2* rh3- rh4-"}
+A step 40 {"t":16.4,"paused":false,"held":false,"live":true,"ph":"relays","result":"none","civ":0,"ag":"a1:66,a2:93,a3:98,a4:87","enemies":2,"relays":1,"rows":"rh1+ rh-opt* rh2* rh3- rh4-"}
+A step 47 hold released space:TORQ AT 34% {"t":19.2,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:45,a2:88,a3:98,a4:45","enemies":4,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 50 hold released space:MARA AT 30% {"t":20.2,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 60 {"t":24.3,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 70 {"t":28.3,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 80 {"t":32.4,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 90 {"t":36.4,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 100 {"t":40.5,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 110 {"t":44.6,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 120 {"t":48.6,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 130 {"t":52.7,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 140 {"t":56.7,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 150 {"t":60.8,"paused":false,"held":false,"live":true,"ph":"hold","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3* rh4-"}
+A step 160 {"t":64.8,"paused":false,"held":false,"live":true,"ph":"extract","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3+ rh4*"}
+A step 170 {"t":68.9,"paused":false,"held":false,"live":true,"ph":"extract","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3+ rh4*"}
+A step 180 {"t":73,"paused":false,"held":false,"live":true,"ph":"extract","result":"none","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3+ rh4*"}
+A step 183 {"t":74.2,"paused":false,"held":false,"live":true,"ph":"extract","result":"won","civ":0,"ag":"a1:37,a2:66,a3:98,a4:41","enemies":1,"relays":0,"rows":"rh1+ rh-opt* rh2+ rh3+ rh4+"}
+Phase A end: result won, civ 0, t 73.8, holds released by Space 2, by setHeld 0
+mission result won civ 0
+phase debrief
+OUT {"start":"INFLUENCE0 PTS","startStore":0,"res":"won","civ":0,"assists":[],"deb":["CONTRACT FULFILLED","> COLLATERAL","> CONTRACT VALUE","> COLLATERAL PENALTY","> CONTRACT ETA"],"debStore":8,"debCiv":0,"outcome":{"won":true,"civiliansHit":0,"quietReplay":false},"first":{"phase":"world","header":"INFLUENCE8 PTS","left":1,"leftTitles":["SECTORS"]},"after":"INFLUENCE8 PTS","afterStore":8,"lines":["INFLUENCE","8 PTS","INFLUENCE // 1 STABILIZE","Affordable now: 8 PTS for -12 UNREST OVER 6H on the focused sector. Field wins earn the points to spend."],"runs":[{"text":"INFLUENCE","path":"div.wm-resources > div.wm-resource > span > small","inHeader":true,"inLeft":false},{"text":"INFLUENCE // 1 STABILIZE","path":"div.scroll.wm-sector-scroll > div.wm-moment.corners > span.wm-moment-head > b.wm-moment-title","inHeader":false,"inLeft":false},{"text":"Affordable now: 8 PTS for -12 UNREST OVE","path":"div.scroll-wrap > div.scroll.wm-sector-scroll > div.wm-moment.corners > span.wm-moment-body","inHeader":false,"inLeft":false}]}
+page errors: 0

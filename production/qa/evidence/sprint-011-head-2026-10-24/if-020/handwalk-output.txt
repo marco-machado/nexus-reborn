@@ -1,0 +1,26 @@
+HEAD 131a5c1
+git status --short src/: "M src/game/tutorial.test.ts\n M src/state/tutorialStore.test.ts\n?? src/game/world.noRoute.test.ts"
+viewport 1280x720
+opening assist -> {"phase":"world","card":false}
+IF020-TC-05 set=["eu",55] READ-G={"text":"SECURE","cls":"wm-kv-readout teal","color":"rgb(126, 240, 212)","amber":false,"notice":false,"rect":[1202,303.296875,48.640625,14],"inViewport":true,"clipped":false,"onTop":true} CONTROL=55% shot={"png":"garrison-control-55.png","size":[1280,720]} errors=[]
+PASS IF020-TC-05 Control 55 -> SECURE rgb(126, 240, 212)
+IF020-TC-06 set=["eu",54] READ-G={"text":"STRAINED","cls":"wm-kv-readout notice","color":"rgb(226, 246, 238)","amber":false,"notice":true,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} CONTROL=54% shot={"png":"garrison-control-54.png","size":[1280,720]} errors=[]
+PASS IF020-TC-06 Control 54 -> STRAINED rgb(226, 246, 238)
+IF020-TC-07 set=["eu",35] READ-G={"text":"STRAINED","cls":"wm-kv-readout notice","color":"rgb(226, 246, 238)","amber":false,"notice":true,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} CONTROL=35% shot={"png":"garrison-control-35.png","size":[1280,720]} errors=[]
+PASS IF020-TC-07 Control 35 -> STRAINED rgb(226, 246, 238)
+IF020-TC-08 set=["eu",34] READ-G={"text":"CRITICAL","cls":"wm-kv-readout red","color":"rgb(255, 107, 85)","amber":false,"notice":false,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} CONTROL=34% shot={"png":"garrison-control-34.png","size":[1280,720]} errors=[]
+PASS IF020-TC-08 Control 34 -> CRITICAL rgb(255, 107, 85)
+opening assist -> {"phase":"world","card":false}
+IF020-TC-10 selectedBefore=eu read={"selected":"eu","caption":"ANTARCTICA UNSURVEYED SECTOR","garrisonRows":1,"garrisonValues":["SECURE"],"heading":null,"panelText":"EUROPEAN SECTOR\nFOCUS\n<\n>\nEUROPE // HELIX CORP\nCOORD\n53.00N 27.00E\nCONTROL\n62%\nUNREST\n18%\nHELD BY\nHELIX CORP // 2 OF 3 CITIES\nTAX YIELD\n2,468 CR / 24H\nTAX PAID\nNO // NOT NEXUS-HELD\nGARRISON CONDITION\n"} shot={"png":"antarctica-south-pole.png","size":[1280,720]}
+IF020-TC-10 OPEN_SECTORS=["na","sa","eu","af","as","oc"] focusedOK=true cycle=["af","as","oc","na","sa","eu","af"] errors=[]
+PASS IF020-TC-10 Antarctica prints no Garrison
+opening assist -> {"phase":"world","card":false}
+IF020-TC-11 set=["eu",60] READ-G(before)={"text":"SECURE","cls":"wm-kv-readout teal","color":"rgb(126, 240, 212)","amber":false,"notice":false,"rect":[1202,303.296875,48.640625,14],"inViewport":true,"clipped":false,"onTop":true} filterOn=grayscale(1) READ-G(gray)={"text":"SECURE","cls":"wm-kv-readout teal","color":"rgb(126, 240, 212)","amber":false,"notice":false,"rect":[1202,303.296875,48.640625,14],"inViewport":true,"clipped":false,"onTop":true} shot={"png":"grayscale-secure.png","size":[1280,720]} filterOff="none" READ-C={"text":"128,450 CR","color":"rgb(255, 208, 117)","filter":""} errors=[]
+PASS IF020-TC-11 grayscale SECURE legible by word
+opening assist -> {"phase":"world","card":false}
+IF020-TC-12 set=["eu",45] READ-G(before)={"text":"STRAINED","cls":"wm-kv-readout notice","color":"rgb(226, 246, 238)","amber":false,"notice":true,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} filterOn=grayscale(1) READ-G(gray)={"text":"STRAINED","cls":"wm-kv-readout notice","color":"rgb(226, 246, 238)","amber":false,"notice":true,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} shot={"png":"grayscale-strained.png","size":[1280,720]} filterOff="none" READ-C={"text":"128,450 CR","color":"rgb(255, 208, 117)","filter":""} errors=[]
+PASS IF020-TC-12 grayscale STRAINED legible by word
+opening assist -> {"phase":"world","card":false}
+IF020-TC-13 set=["eu",20] READ-G(before)={"text":"CRITICAL","cls":"wm-kv-readout red","color":"rgb(255, 107, 85)","amber":false,"notice":false,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} filterOn=grayscale(1) READ-G(gray)={"text":"CRITICAL","cls":"wm-kv-readout red","color":"rgb(255, 107, 85)","amber":false,"notice":false,"rect":[1185.796875,303.296875,64.84375,14],"inViewport":true,"clipped":false,"onTop":true} shot={"png":"grayscale-critical.png","size":[1280,720]} filterOff="none" READ-C={"text":"128,450 CR","color":"rgb(255, 208, 117)","filter":""} errors=[]
+PASS IF020-TC-13 grayscale CRITICAL legible by word
+ALL PASS

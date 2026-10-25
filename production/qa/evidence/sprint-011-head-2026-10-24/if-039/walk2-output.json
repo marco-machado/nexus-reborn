@@ -1,0 +1,104 @@
+{
+  "tc09": {
+    "rows": [
+      {
+        "label": "> KIA // DART",
+        "value": "0 XP LOST // ROSTER 7/8",
+        "row": "db-row",
+        "html": "<div class=\"db-row\" style=\"animation-delay: 330ms;\"><span class=\"db-row-label\">&gt; KIA // DART</span><span class=\"db-dots\" aria-hidden=\"true\"></span><b class=\"red\">0 XP LOST // ROSTER 7/8</b></div>"
+      }
+    ],
+    "idxCasualties": 165,
+    "idxKia": 186,
+    "idxInjured": 224,
+    "lines": [
+      "> SQUAD CASUALTIES",
+      "> KIA // DART",
+      "> INJURED // GHOST",
+      "> EXPERIENCE // MARA"
+    ],
+    "store": {
+      "operatives": 7,
+      "kia": [
+        {
+          "id": "op3",
+          "codename": "DART",
+          "xp": 0
+        }
+      ]
+    }
+  },
+  "tc10-seed": {
+    "op1": 120,
+    "op3": 45
+  },
+  "tc10-two": {
+    "rows": [
+      {
+        "label": "> KIA // MARA",
+        "value": "120 XP LOST // ROSTER 6/8",
+        "row": "db-row",
+        "html": "<div class=\"db-row\" style=\"animation-delay: 330ms;\"><span class=\"db-row-label\">&gt; KIA // MARA</span><span class=\"db-dots\" aria-hidden=\"true\"></span><b class=\"red\">120 XP LOST // ROSTER 6/8</b></div>"
+      },
+      {
+        "label": "> KIA // DART",
+        "value": "45 XP LOST // ROSTER 6/8",
+        "row": "db-row",
+        "html": "<div class=\"db-row\" style=\"animation-delay: 440ms;\"><span class=\"db-row-label\">&gt; KIA // DART</span><span class=\"db-dots\" aria-hidden=\"true\"></span><b class=\"red\">45 XP LOST // ROSTER 6/8</b></div>"
+      }
+    ],
+    "idxCasualties": 165,
+    "idxKia": 186,
+    "idxInjured": -1,
+    "lines": [
+      "> SQUAD CASUALTIES",
+      "> KIA // MARA",
+      "> KIA // DART"
+    ]
+  },
+  "tc10-none": {
+    "rows": [],
+    "idxCasualties": 165,
+    "idxKia": -1,
+    "idxInjured": -1,
+    "lines": [
+      "> SQUAD CASUALTIES"
+    ]
+  },
+  "tc12-125": {
+    "afterScale": {
+      "hint": "",
+      "btn": "ABORT"
+    },
+    "t0": {
+      "hint": "PRESS AGAIN WITHIN 3 S TO ABORT // NO INVOICE, CONTRACT STAYS OPEN, ROSTER AS DEPLOYED",
+      "btn": "CONFIRM?"
+    },
+    "t150": {
+      "hint": "PRESS AGAIN WITHIN 3 S TO ABORT // NO INVOICE, CONTRACT STAYS OPEN, ROSTER AS DEPLOYED",
+      "btn": "CONFIRM?"
+    },
+    "geo": {
+      "text": "PRESS AGAIN WITHIN 3 S TO ABORT // NO INVOICE, CONTRACT STAYS OPEN, ROSTER AS DEPLOYED",
+      "hintL": 261,
+      "hintR": 1019,
+      "scrollW": 758,
+      "clientW": 758,
+      "panelL": 250,
+      "panelR": 1030,
+      "lines": [
+        {
+          "l": 287.4,
+          "r": 992.6,
+          "t": 630
+        },
+        {
+          "l": 545.3,
+          "r": 734.7,
+          "t": 648
+        }
+      ]
+    }
+  },
+  "pageerrors": []
+}

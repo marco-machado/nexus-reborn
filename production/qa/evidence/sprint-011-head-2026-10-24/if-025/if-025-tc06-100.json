@@ -1,0 +1,36 @@
+{
+  "gate": true,
+  "m": {
+    "name": "3 EXPEDITE",
+    "status": "CLEAR",
+    "disabled": false,
+    "label": "3 EXPEDITE // 12 PTS // WAIVE INTEL GATE // +24H EXPIRY // CLEAR",
+    "title": null,
+    "effect": "WAIVE INTEL GATE // +24H EXPIRY",
+    "ariaHidden": "true",
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "below": true,
+    "overlap": false,
+    "inView": true,
+    "onTop": true,
+    "ellipsis": false,
+    "w": 282,
+    "h": 12
+  },
+  "g": {
+    "lines": 1,
+    "sw": 282,
+    "cw": 282,
+    "sh": 12,
+    "ch": 12,
+    "left": 968.453125,
+    "right": 1250.640625,
+    "bottom": 358.296875,
+    "wrapL": 968.453125,
+    "wrapR": 1250.640625,
+    "next": null,
+    "nextTop": null
+  }
+}

@@ -1,0 +1,22 @@
+H5 m01 s90 PASS last="RISK INDEX89 // SEVERE" row 555.6-569.6 rail 396.6-569.6 scrollable=true fade={"on":false,"opacity":0,"top":549.6,"bottom":569.6,"opaqueFrom":null}
+H5 m01 s100 PASS last="RISK INDEX89 // SEVERE" row 530.2-564.2 rail 395.2-564.2 scrollable=true fade={"on":false,"opacity":0,"top":544.6,"bottom":564.6,"opaqueFrom":null}
+H5 m01 s110 PASS last="RISK INDEX89 // SEVERE" row 517.4-554.4 rail 392.4-554.4 scrollable=true fade={"on":false,"opacity":0,"top":534.6,"bottom":554.6,"opaqueFrom":null}
+H5 m01 s125 PASS last="RISK INDEX89 // SEVERE" row 502.1-544.1 rail 389.1-544.1 scrollable=true fade={"on":false,"opacity":0,"top":523.6,"bottom":543.6,"opaqueFrom":null}
+H5 m02 s90 PASS last="RISK INDEX66 // HIGH" row 555.6-569.6 rail 396.6-569.6 scrollable=true fade={"on":false,"opacity":0,"top":549.6,"bottom":569.6,"opaqueFrom":null}
+H5 m02 s100 PASS last="RISK INDEX66 // HIGH" row 560.4-575.4 rail 401.4-575.4 scrollable=true fade={"on":false,"opacity":0,"top":555.6,"bottom":575.6,"opaqueFrom":null}
+H5 m02 s110 PASS last="RISK INDEX66 // HIGH" row 530.8-567.8 rail 399.8-567.8 scrollable=true fade={"on":false,"opacity":0,"top":547.6,"bottom":567.6,"opaqueFrom":null}
+H5 m02 s125 PASS last="RISK INDEX66 // HIGH" row 502.1-544.1 rail 389.1-544.1 scrollable=true fade={"on":false,"opacity":0,"top":523.6,"bottom":543.6,"opaqueFrom":null}
+H5 m03 s90 PASS last="PROJECTED SUCCESS82%" row 555.6-569.6 rail 396.6-569.6 scrollable=true fade={"on":false,"opacity":0,"top":549.6,"bottom":569.6,"opaqueFrom":null}
+H5 m03 s100 PASS last="PROJECTED SUCCESS82%" row 560.4-575.4 rail 401.4-575.4 scrollable=true fade={"on":false,"opacity":0,"top":555.6,"bottom":575.6,"opaqueFrom":null}
+H5 m03 s110 PASS last="PROJECTED SUCCESS82%" row 551.8-567.8 rail 399.8-567.8 scrollable=true fade={"on":false,"opacity":0,"top":547.6,"bottom":567.6,"opaqueFrom":null}
+H5 m03 s125 PASS last="PROJECTED SUCCESS82%" row 516.5-558.5 rail 397.5-558.5 scrollable=true fade={"on":false,"opacity":0,"top":538.6,"bottom":558.6,"opaqueFrom":null}
+H6 expedite PASS applied=true phase=mission labels=true kits=true before==after=true
+H6 reclient PASS applied=true phase=mission labels=true kits=true before==after=true
+NEON {"id":"gc7518e2d3","codename":"NEON GARDEN","threat":"MODERATE","sector":"eu","client":"helix","cityId":"os","expedited":false,"city":"OSLO"}
+H7 s90 PASS phase=brief kits=2 clipped=0/0 
+H7 s100 PASS phase=brief kits=2 clipped=0/0 
+H7 s110 PASS phase=brief kits=2 clipped=0/0 
+H7 s125 PASS phase=brief kits=2 clipped=0/0 
+H8 m03 PASS clipped=0  grew=[{"k":"main","w1280":1249.3,"h1280":511.3,"w1920":1880,"h1920":855.6,"ok":true},{"k":"left","w1280":906.5,"h1280":511.3,"w1920":1490,"h1920":855.6,"ok":true},{"k":"tac","w1280":906.5,"h1280":218.2,"w1920":1490,"h1920":367.9,"ok":true},{"k":"plate","w1280":174.2,"h1280":174.2,"w1920":323.9,"h1920":323.9,"ok":true},{"k":"dossier","w1280":332.8,"h1280":511.3,"w1920":380,"h1920":855.6,"ok":true}] fills=true screen={"x":0,"y":0,"w":1920,"h":1080}
+H8 neon PASS clipped=0  grew=[{"k":"main","w1280":1249.3,"h1280":511.3,"w1920":1880,"h1920":855.6,"ok":true},{"k":"left","w1280":906.5,"h1280":511.3,"w1920":1490,"h1920":855.6,"ok":true},{"k":"tac","w1280":906.5,"h1280":218.2,"w1920":1490,"h1920":367.9,"ok":true},{"k":"plate","w1280":174.2,"h1280":174.2,"w1920":323.9,"h1920":323.9,"ok":true},{"k":"dossier","w1280":332.8,"h1280":511.3,"w1920":380,"h1920":855.6,"ok":true}] fills=true screen={"x":0,"y":0,"w":1920,"h":1080}
+page errors: 0

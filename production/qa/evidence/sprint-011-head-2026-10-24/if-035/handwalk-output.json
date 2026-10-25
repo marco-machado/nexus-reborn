@@ -1,0 +1,1173 @@
+{
+  "IF035-02": {
+    "runningAnimations": 1,
+    "env": {
+      "vp": [
+        1280,
+        720
+      ],
+      "textScale": 100,
+      "highContrast": false,
+      "card": false
+    },
+    "count": 13,
+    "targets": [
+      {
+        "sel": ".wm-tbtn:first-child",
+        "label": "RESUME STRATEGIC CLOCK",
+        "ariaDisabled": null,
+        "ariaPressed": "true",
+        "x": 202.8,
+        "y": 603.1,
+        "w": 30,
+        "h": 24
+      },
+      {
+        "sel": ".wm-unread",
+        "label": "3 UNREAD // MARK ALL EVENTS READ",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 933.1,
+        "y": 542.6,
+        "w": 67.4,
+        "h": 24
+      },
+      {
+        "sel": ".globe-toolbar button",
+        "label": "Zoom out",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 448.2,
+        "y": 472.6,
+        "w": 24,
+        "h": 28
+      },
+      {
+        "sel": ".globe-toolbar button",
+        "label": "Zoom in",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 475.2,
+        "y": 472.6,
+        "w": 24,
+        "h": 28
+      },
+      {
+        "sel": ".globe-toolbar button",
+        "label": "HOME",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 506.2,
+        "y": 472.6,
+        "w": 39.7,
+        "h": 28
+      },
+      {
+        "sel": ".globe-toolbar button",
+        "label": "FOCUS SECTOR",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 548.9,
+        "y": 472.6,
+        "w": 91,
+        "h": 28
+      },
+      {
+        "sel": ".globe-toolbar button",
+        "label": "SOUTH POLE",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 642.9,
+        "y": 472.6,
+        "w": 78.2,
+        "h": 28
+      },
+      {
+        "sel": ".globe-toolbar button",
+        "label": "LABELS",
+        "ariaDisabled": null,
+        "ariaPressed": "true",
+        "x": 728.1,
+        "y": 472.6,
+        "w": 52.5,
+        "h": 28
+      },
+      {
+        "sel": ".globe-credit",
+        "label": "EARTH IMAGERY · NASA",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 302.4,
+        "y": 129.3,
+        "w": 136.4,
+        "h": 24
+      },
+      {
+        "sel": ".navtab",
+        "label": "WORLD NETWORK",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 15.4,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "RESEARCH",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 329.7,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+        "ariaDisabled": "true",
+        "ariaPressed": null,
+        "x": 644,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "ASSEMBLY",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 958.3,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      }
+    ],
+    "under": [],
+    "measuredSelectors": [
+      ".wm-tbtn:first-child",
+      ".wm-unread",
+      ".globe-toolbar button",
+      ".globe-credit",
+      ".navtab"
+    ],
+    "errors": []
+  },
+  "IF035-13": {
+    "toolbarCount": 6,
+    "labels": [
+      "Zoom out",
+      "Zoom in",
+      "HOME",
+      "FOCUS SECTOR",
+      "SOUTH POLE",
+      "LABELS"
+    ],
+    "credit": {
+      "tag": "A",
+      "href": "https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/",
+      "visible": true,
+      "text": "EARTH IMAGERY · NASA"
+    },
+    "markersOnPage": 18,
+    "markerInMeasuredSet": false,
+    "errors": []
+  },
+  "IF035-03": {
+    "paused_true": {
+      "runningAnimations": 1,
+      "btn": [
+        {
+          "sel": ".wm-tbtn:first-child",
+          "label": "RESUME STRATEGIC CLOCK",
+          "ariaDisabled": null,
+          "ariaPressed": "true",
+          "x": 202.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        }
+      ]
+    },
+    "paused_false": {
+      "runningAnimations": 1,
+      "btn": [
+        {
+          "sel": ".wm-tbtn:first-child",
+          "label": "PAUSE STRATEGIC CLOCK",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 202.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        }
+      ]
+    },
+    "env": {
+      "vp": [
+        1280,
+        720
+      ],
+      "textScale": 100,
+      "highContrast": false,
+      "card": false
+    },
+    "errors": []
+  },
+  "IF035-14": {
+    "paused_true": {
+      "count": 5,
+      "buttons": [
+        {
+          "sel": ".wm-tbtn",
+          "label": "RESUME STRATEGIC CLOCK",
+          "ariaDisabled": null,
+          "ariaPressed": "true",
+          "x": 202.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 1X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 236.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 2X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 270.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 4X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 304.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 8X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 338.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        }
+      ],
+      "overlaps": [],
+      "hits": {
+        "points": 25,
+        "miss": []
+      }
+    },
+    "paused_false": {
+      "count": 5,
+      "buttons": [
+        {
+          "sel": ".wm-tbtn",
+          "label": "PAUSE STRATEGIC CLOCK",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 202.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 1X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 236.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 2X",
+          "ariaDisabled": null,
+          "ariaPressed": "true",
+          "x": 270.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 4X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 304.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        },
+        {
+          "sel": ".wm-tbtn",
+          "label": "CLOCK SPEED 8X",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 338.8,
+          "y": 603.1,
+          "w": 30,
+          "h": 24
+        }
+      ],
+      "overlaps": [],
+      "hits": {
+        "points": 25,
+        "miss": []
+      }
+    },
+    "errors": []
+  },
+  "IF035-15": {
+    "before": {
+      "count": 7,
+      "controls": [
+        {
+          "sel": ".globe-toolbar button",
+          "label": "Zoom out",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 448.2,
+          "y": 472.6,
+          "w": 24,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "Zoom in",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 475.2,
+          "y": 472.6,
+          "w": 24,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "HOME",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 506.2,
+          "y": 472.6,
+          "w": 39.7,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "FOCUS SECTOR",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 548.9,
+          "y": 472.6,
+          "w": 91,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "SOUTH POLE",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 642.9,
+          "y": 472.6,
+          "w": 78.2,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "LABELS",
+          "ariaDisabled": null,
+          "ariaPressed": "true",
+          "x": 728.1,
+          "y": 472.6,
+          "w": 52.5,
+          "h": 28
+        },
+        {
+          "sel": ".globe-credit",
+          "label": "EARTH IMAGERY · NASA",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 302.4,
+          "y": 129.3,
+          "w": 136.4,
+          "h": 24
+        }
+      ],
+      "overlaps": [],
+      "hits": {
+        "points": 35,
+        "miss": []
+      }
+    },
+    "labelsToggled": {
+      "count": 7,
+      "controls": [
+        {
+          "sel": ".globe-toolbar button",
+          "label": "Zoom out",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 448.2,
+          "y": 472.6,
+          "w": 24,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "Zoom in",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 475.2,
+          "y": 472.6,
+          "w": 24,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "HOME",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 506.2,
+          "y": 472.6,
+          "w": 39.7,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "FOCUS SECTOR",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 548.9,
+          "y": 472.6,
+          "w": 91,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "SOUTH POLE",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 642.9,
+          "y": 472.6,
+          "w": 78.2,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "LABELS",
+          "ariaDisabled": null,
+          "ariaPressed": "false",
+          "x": 728.1,
+          "y": 472.6,
+          "w": 52.5,
+          "h": 28
+        },
+        {
+          "sel": ".globe-credit",
+          "label": "EARTH IMAGERY · NASA",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 302.4,
+          "y": 129.3,
+          "w": 136.4,
+          "h": 24
+        }
+      ],
+      "overlaps": [],
+      "hits": {
+        "points": 35,
+        "miss": []
+      }
+    },
+    "restored": {
+      "count": 7,
+      "controls": [
+        {
+          "sel": ".globe-toolbar button",
+          "label": "Zoom out",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 448.2,
+          "y": 472.6,
+          "w": 24,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "Zoom in",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 475.2,
+          "y": 472.6,
+          "w": 24,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "HOME",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 506.2,
+          "y": 472.6,
+          "w": 39.7,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "FOCUS SECTOR",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 548.9,
+          "y": 472.6,
+          "w": 91,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "SOUTH POLE",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 642.9,
+          "y": 472.6,
+          "w": 78.2,
+          "h": 28
+        },
+        {
+          "sel": ".globe-toolbar button",
+          "label": "LABELS",
+          "ariaDisabled": null,
+          "ariaPressed": "true",
+          "x": 728.1,
+          "y": 472.6,
+          "w": 52.5,
+          "h": 28
+        },
+        {
+          "sel": ".globe-credit",
+          "label": "EARTH IMAGERY · NASA",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 302.4,
+          "y": 129.3,
+          "w": 136.4,
+          "h": 24
+        }
+      ],
+      "overlaps": [],
+      "hits": {
+        "points": 35,
+        "miss": []
+      }
+    },
+    "errors": []
+  },
+  "IF035-17": {
+    "step1_unread": {
+      "count": 1,
+      "target": {
+        "x": 933.078125,
+        "y": 542.640625,
+        "w": 67.4,
+        "h": 24
+      },
+      "neighbours": [
+        {
+          "label": "Interactive Earth globe. Drag ",
+          "path": "div.wm-main > section.wm-center.corners > div.wm-map-wrap > div.globe-view",
+          "dist": 28,
+          "box": {
+            "x": 292.359375,
+            "y": 85.296875,
+            "w": 644.1,
+            "h": 429.3
+          },
+          "overlap": null
+        },
+        {
+          "label": "GLASS VEIL // LOCKED // REQUIR",
+          "path": "div.panel-body.wm-ops-body > div.scroll-wrap > div.scroll.wm-ops-list > button.wm-op.locked",
+          "dist": 47,
+          "box": {
+            "x": 966.453125,
+            "y": 446.640625,
+            "w": 286.2,
+            "h": 49
+          },
+          "overlap": null
+        },
+        {
+          "label": "OPEN CONTRACT NEON GARDEN // S",
+          "path": "div.panel-body.wm-ops-body > div.scroll-wrap > div.scroll.wm-ops-list > button.wm-op",
+          "dist": 0,
+          "box": {
+            "x": 966.453125,
+            "y": 501.640625,
+            "w": 286.2,
+            "h": 85
+          },
+          "overlap": "34.0x24.0"
+        },
+        {
+          "label": "14:45 HELIX CORP SECURES TRADE",
+          "path": "div.panel-body.wm-feed-body > div.scroll-wrap > div.scroll.wm-feed-list > button.wm-feed-line.dim",
+          "dist": 13,
+          "box": {
+            "x": 479.546875,
+            "y": 579.640625,
+            "w": 522.9,
+            "h": 24
+          },
+          "overlap": null
+        },
+        {
+          "label": "14:44 HELIX CORP SECURES TRADE",
+          "path": "div.panel-body.wm-feed-body > div.scroll-wrap > div.scroll.wm-feed-list > button.wm-feed-line.dim",
+          "dist": 38,
+          "box": {
+            "x": 479.546875,
+            "y": 604.640625,
+            "w": 522.9,
+            "h": 24
+          },
+          "overlap": null
+        }
+      ],
+      "overlapping": [
+        {
+          "label": "OPEN CONTRACT NEON GARDEN // S",
+          "path": "div.panel-body.wm-ops-body > div.scroll-wrap > div.scroll.wm-ops-list > button.wm-op",
+          "dist": 0,
+          "box": {
+            "x": 966.453125,
+            "y": 501.640625,
+            "w": 286.2,
+            "h": 85
+          },
+          "overlap": "34.0x24.0"
+        }
+      ],
+      "hits": {
+        "points": 5,
+        "miss": []
+      }
+    },
+    "step2_golive": {
+      "count": 1,
+      "target": {
+        "x": 26.359375,
+        "y": 619.140625,
+        "w": 93.9,
+        "h": 24
+      },
+      "neighbours": [
+        {
+          "label": "WORLD NETWORK",
+          "path": "div.screen.wm > nav.navtabs > span.navtab-wrap > button.navtab.active",
+          "dist": 26.5,
+          "box": {
+            "x": 15.359375,
+            "y": 669.640625,
+            "w": 306.3,
+            "h": 35
+          },
+          "overlap": null
+        }
+      ],
+      "overlapping": [],
+      "hits": {
+        "points": 5,
+        "miss": []
+      }
+    },
+    "step3_note": {
+      "count": 1,
+      "target": {
+        "x": 1145.421875,
+        "y": 408.296875,
+        "w": 96.2,
+        "h": 24
+      },
+      "neighbours": [
+        {
+          "label": "3 EXPEDITE // 12 PTS // WAIVE ",
+          "path": "div.scroll.wm-sector-scroll > div.wm-actions > div.wm-act-wrap > button.wm-act",
+          "dist": 25,
+          "box": {
+            "x": 968.453125,
+            "y": 359.296875,
+            "w": 282.2,
+            "h": 24
+          },
+          "overlap": null
+        },
+        {
+          "label": "OPEN CONTRACT RUST HAVEN // SA",
+          "path": "div.panel-body.wm-ops-body > div.scroll-wrap > div.scroll.wm-ops-list > button.wm-op",
+          "dist": 14.3,
+          "box": {
+            "x": 966.453125,
+            "y": 446.640625,
+            "w": 286.2,
+            "h": 54
+          },
+          "overlap": null
+        }
+      ],
+      "overlapping": [],
+      "hits": {
+        "points": 5,
+        "miss": [
+          "UNDERSTOOD // DISMISS THE INFL @1193.5,420.3 -> div.wm-main > aside.wm-right > section.panel.corners.wm-ops > header.panel-head",
+          "UNDERSTOOD // DISMISS THE INFL @1146.4,409.3 -> div.app-root > div.screen.wm > div.wm-main > aside.wm-right",
+          "UNDERSTOOD // DISMISS THE INFL @1240.6,409.3 -> div.app-root > div.screen.wm > div.wm-main > aside.wm-right",
+          "UNDERSTOOD // DISMISS THE INFL @1146.4,431.3 -> div.wm-main > aside.wm-right > section.panel.corners.wm-ops > header.panel-head",
+          "UNDERSTOOD // DISMISS THE INFL @1240.6,431.3 -> section.panel.corners.wm-ops > header.panel-head > span.panel-right > span.dim"
+        ]
+      }
+    },
+    "step4_card": {
+      "count": 1,
+      "target": {
+        "x": 569.9375,
+        "y": 513,
+        "w": 140.1,
+        "h": 26
+      },
+      "neighbours": [],
+      "overlapping": [],
+      "hits": {
+        "points": 5,
+        "miss": []
+      }
+    },
+    "errors": []
+  },
+  "IF035-12": {
+    "feedClear": {
+      "tag": "SPAN",
+      "role": null,
+      "tabIndex": -1,
+      "onclickProp": null,
+      "reactHandlers": [],
+      "cursor": "auto",
+      "box": {
+        "x": 920.234375,
+        "y": 542.640625,
+        "w": 80.2,
+        "h": 11
+      }
+    },
+    "wmUnreadCount": 0,
+    "tabPresses": 80,
+    "focusedFeedClear": false,
+    "focusSequenceFirst30": [
+      "EARTH IMAGERY · NASA",
+      "FOCUS PREVIOUS SECTOR",
+      "FOCUS NEXT SECTOR",
+      "GLASS VEIL // LOCKED // ",
+      "OPEN CONTRACT NEON GARDE",
+      "TIMELINE REVIEW",
+      "RESUME STRATEGIC CLOCK",
+      "CLOCK SPEED 1X",
+      "CLOCK SPEED 2X",
+      "CLOCK SPEED 4X",
+      "CLOCK SPEED 8X",
+      "14:45 HELIX CORP SECURES",
+      "14:44 HELIX CORP SECURES",
+      "14:43 HELIX CORP SECURES",
+      "14:42 HELIX CORP SECURES",
+      "14:41 HELIX CORP SECURES",
+      "14:40 HELIX CORP SECURES",
+      "14:39 HELIX CORP SECURES",
+      "14:38 HELIX CORP SECURES",
+      "14:37 HELIX CORP SECURES",
+      "14:36 HELIX CORP SECURES",
+      "14:35 HELIX CORP SECURES",
+      "14:34 HELIX CORP SECURES",
+      "14:33 HELIX CORP SECURES",
+      "14:32 HELIX CORP SECURES",
+      "WORLD NETWORK",
+      "RESEARCH",
+      "BRIEF // LOCKED // NO CO",
+      "ASSEMBLY",
+      "WORLD NETWORKNEXUS GLOBA"
+    ],
+    "env": {
+      "vp": [
+        1280,
+        720
+      ],
+      "textScale": 100,
+      "highContrast": false,
+      "card": false
+    },
+    "errors": []
+  },
+  "IF035-10": {
+    "locked": {
+      "name": "world-brief-locked",
+      "env": {
+        "vp": [
+          1280,
+          720
+        ],
+        "textScale": 100,
+        "highContrast": false,
+        "card": false
+      },
+      "phase": {
+        "phase": "world",
+        "missionId": null
+      },
+      "tabs": [
+        {
+          "sel": ".navtab",
+          "label": "WORLD NETWORK",
+          "cls": "navtab active",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 15.4,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        },
+        {
+          "sel": ".navtab",
+          "label": "RESEARCH",
+          "cls": "navtab",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 329.7,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        },
+        {
+          "sel": ".navtab",
+          "label": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+          "cls": "navtab locked",
+          "ariaDisabled": "true",
+          "ariaPressed": null,
+          "x": 644,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        },
+        {
+          "sel": ".navtab",
+          "label": "ASSEMBLY",
+          "cls": "navtab",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 958.3,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        }
+      ],
+      "under": [],
+      "overlaps": [],
+      "hits": {
+        "points": 20,
+        "miss": []
+      }
+    },
+    "open": {
+      "name": "world-brief-unlocked",
+      "env": {
+        "vp": [
+          1280,
+          720
+        ],
+        "textScale": 100,
+        "highContrast": false,
+        "card": false
+      },
+      "phase": {
+        "phase": "world",
+        "missionId": "m03"
+      },
+      "tabs": [
+        {
+          "sel": ".navtab",
+          "label": "WORLD NETWORK",
+          "cls": "navtab active",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 15.4,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        },
+        {
+          "sel": ".navtab",
+          "label": "RESEARCH",
+          "cls": "navtab",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 329.7,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        },
+        {
+          "sel": ".navtab",
+          "label": "BRIEF",
+          "cls": "navtab",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 644,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        },
+        {
+          "sel": ".navtab",
+          "label": "ASSEMBLY",
+          "cls": "navtab",
+          "ariaDisabled": null,
+          "ariaPressed": null,
+          "x": 958.3,
+          "y": 669.6,
+          "w": 306.3,
+          "h": 35
+        }
+      ],
+      "under": [],
+      "overlaps": [],
+      "hits": {
+        "points": 20,
+        "miss": []
+      }
+    },
+    "errors": []
+  },
+  "IF035-07": {
+    "name": "research",
+    "env": {
+      "vp": [
+        1280,
+        720
+      ],
+      "textScale": 100,
+      "highContrast": false,
+      "card": false
+    },
+    "phase": {
+      "phase": "research",
+      "missionId": null
+    },
+    "tabs": [
+      {
+        "sel": ".navtab",
+        "label": "WORLD NETWORK",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 15.4,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "RESEARCH",
+        "cls": "navtab active",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 329.7,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+        "cls": "navtab locked",
+        "ariaDisabled": "true",
+        "ariaPressed": null,
+        "x": 644,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "ASSEMBLY",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 958.3,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      }
+    ],
+    "under": [],
+    "overlaps": [],
+    "hits": {
+      "points": 20,
+      "miss": []
+    },
+    "errors": []
+  },
+  "IF035-08": {
+    "name": "team",
+    "env": {
+      "vp": [
+        1280,
+        720
+      ],
+      "textScale": 100,
+      "highContrast": false,
+      "card": false
+    },
+    "phase": {
+      "phase": "team",
+      "missionId": null
+    },
+    "tabs": [
+      {
+        "sel": ".navtab",
+        "label": "WORLD NETWORK",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 15.4,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "RESEARCH",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 329.7,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "BRIEF // LOCKED // NO CONTRACT SELECTED",
+        "cls": "navtab locked",
+        "ariaDisabled": "true",
+        "ariaPressed": null,
+        "x": 644,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "ASSEMBLY",
+        "cls": "navtab active",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 958.3,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      }
+    ],
+    "under": [],
+    "overlaps": [],
+    "hits": {
+      "points": 20,
+      "miss": []
+    },
+    "errors": []
+  },
+  "IF035-09": {
+    "name": "brief",
+    "env": {
+      "vp": [
+        1280,
+        720
+      ],
+      "textScale": 100,
+      "highContrast": false,
+      "card": false
+    },
+    "phase": {
+      "phase": "brief",
+      "missionId": "m03"
+    },
+    "tabs": [
+      {
+        "sel": ".navtab",
+        "label": "WORLD NETWORK",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 15.4,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "RESEARCH",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 329.7,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "BRIEF",
+        "cls": "navtab active",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 644,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      },
+      {
+        "sel": ".navtab",
+        "label": "ASSEMBLY",
+        "cls": "navtab",
+        "ariaDisabled": null,
+        "ariaPressed": null,
+        "x": 958.3,
+        "y": 669.6,
+        "w": 306.3,
+        "h": 35
+      }
+    ],
+    "under": [],
+    "overlaps": [],
+    "hits": {
+      "points": 20,
+      "miss": []
+    },
+    "errors": []
+  },
+  "allErrors": []
+}

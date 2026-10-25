@@ -1,0 +1,849 @@
+{
+  "TC03": {
+    "90": {
+      "refText": "ADV.PROPELLANTS",
+      "labels": 21,
+      "fs": 9.54,
+      "ctmScale": 1.0102719907407407,
+      "rendered": 9.638,
+      "dys": [
+        "1.05em"
+      ],
+      "dyCount": 21,
+      "textoverlap": [],
+      "textoverlapLabels": 0,
+      "clippedAll": 0,
+      "outside": []
+    },
+    "100": {
+      "refText": "ADV.PROPELLANTS",
+      "labels": 21,
+      "fs": 10.6,
+      "ctmScale": 1.001953125,
+      "rendered": 10.621,
+      "dys": [
+        "1.05em"
+      ],
+      "dyCount": 21,
+      "textoverlap": [],
+      "textoverlapLabels": 0,
+      "clippedAll": 0,
+      "outside": []
+    },
+    "110": {
+      "refText": "ADV.PROPELLANTS",
+      "labels": 21,
+      "fs": 11.66,
+      "ctmScale": 0.9683159722222222,
+      "rendered": 11.291,
+      "dys": [
+        "1.05em"
+      ],
+      "dyCount": 21,
+      "textoverlap": [],
+      "textoverlapLabels": 0,
+      "clippedAll": 0,
+      "outside": []
+    },
+    "125": {
+      "refText": "ADV.PROPELLANTS",
+      "labels": 21,
+      "fs": 11.66,
+      "ctmScale": 0.8599537037037037,
+      "rendered": 10.027,
+      "dys": [
+        "1.05em"
+      ],
+      "dyCount": 21,
+      "textoverlap": [],
+      "textoverlapLabels": 0,
+      "clippedAll": 0,
+      "outside": []
+    }
+  },
+  "TC04": {
+    "settings": {
+      "90": [
+        1,
+        []
+      ],
+      "100": [
+        1,
+        []
+      ],
+      "110": [
+        1,
+        []
+      ],
+      "125": [
+        1,
+        []
+      ],
+      "125-scrolled": {
+        "scrolledRegions": 2,
+        "entries": []
+      }
+    },
+    "pause": {
+      "90": [
+        1,
+        []
+      ],
+      "100": [
+        1,
+        []
+      ],
+      "110": [
+        1,
+        []
+      ],
+      "125": [
+        1,
+        []
+      ],
+      "125-scrolled": {
+        "scrolledRegions": 0,
+        "entries": []
+      }
+    },
+    "pauseSettings": {
+      "90": [
+        1,
+        []
+      ],
+      "100": [
+        1,
+        []
+      ],
+      "110": [
+        1,
+        []
+      ],
+      "125": [
+        1,
+        []
+      ],
+      "125-scrolled": {
+        "scrolledRegions": 2,
+        "entries": []
+      }
+    },
+    "balance": {
+      "90": [
+        1,
+        []
+      ],
+      "100": [
+        1,
+        []
+      ],
+      "110": [
+        1,
+        []
+      ],
+      "125": [
+        1,
+        []
+      ],
+      "125-scrolled": {
+        "scrolledRegions": 0,
+        "entries": []
+      }
+    }
+  },
+  "TC05": {
+    "90": [],
+    "100": [],
+    "110": [],
+    "125": [],
+    "present": true,
+    "scrolledRegions": 0,
+    "125-scrolled": [],
+    "ellipsisText": false
+  },
+  "TC06": {
+    "bad": [],
+    "max": 1280,
+    "maxScrollX": 0,
+    "out": {
+      "menu": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "settings": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "research": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "brief": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "team": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "debrief": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "mission": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "pause": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "balance": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "world": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      },
+      "market": {
+        "90": [
+          1280,
+          1280,
+          0
+        ],
+        "100": [
+          1280,
+          1280,
+          0
+        ],
+        "110": [
+          1280,
+          1280,
+          0
+        ],
+        "125": [
+          1280,
+          1280,
+          0
+        ]
+      }
+    }
+  },
+  "TC08_exception": "ReferenceError: active is not defined",
+  "TC12_exception": "ReferenceError: active is not defined",
+  "TC13_exception": "ReferenceError: active is not defined",
+  "TC15": {
+    "pause": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".hud-menu-wrap[aria-label=\"Mission paused\"]",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 22904.899999976158,
+      "msAfterArm": 17
+    },
+    "pauseSettings": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".hud-menu-wrap[aria-label=\"Settings\"]",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel settings-panel",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 23705.5,
+      "msAfterArm": 64
+    },
+    "balance": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".balance-panel",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel balance-panel",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 2234.1999999284744,
+      "msAfterArm": 30
+    },
+    "balanceWrap": {
+      "anim": "none",
+      "opacity": "1"
+    },
+    "market": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".ts-recruit-overlay",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "ts-recruit corners",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": [
+            {
+              "name": "blink",
+              "cls": "[object SVGAnimatedString]",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "[object SVGAnimatedString]",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "[object SVGAnimatedString]",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            }
+          ]
+        },
+        {
+          "sel": ".ts-recruit",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "ts-recruit corners",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": [
+            {
+              "name": "blink",
+              "cls": "[object SVGAnimatedString]",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "[object SVGAnimatedString]",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            },
+            {
+              "name": "blink",
+              "cls": "[object SVGAnimatedString]",
+              "props": [
+                "opacity",
+                "opacity",
+                "opacity"
+              ]
+            }
+          ]
+        }
+      ],
+      "at": 2514.2999999523163,
+      "msAfterArm": 80
+    },
+    "world": {
+      "reduceClass": true,
+      "roots": [
+        {
+          "sel": ".wm-onboard-wrap",
+          "rootAnim": "none",
+          "rootOpacity": "1",
+          "panelCls": "hud-menu-panel wm-onboard",
+          "panelAnim": "none",
+          "panelOpacity": "1",
+          "opacityOrTransformAnims": []
+        }
+      ],
+      "at": 1324.1000000238419,
+      "msAfterArm": 0
+    }
+  },
+  "TC17": {
+    "reduceClass": true,
+    "greenVar": "#7de08a",
+    "green": "rgb(125, 224, 138)",
+    "researched": [
+      {
+        "label": "ADV.PROPELLANTS",
+        "done": true,
+        "w": 9,
+        "h": 7,
+        "color": "rgb(125, 224, 138)"
+      }
+    ],
+    "unresearched": 20,
+    "unresWithDone": 0
+  },
+  "TC19": {
+    "reduceClass": true,
+    "selSegs": [
+      {
+        "text": "100%",
+        "aria": "true",
+        "label": "Text scale 100%",
+        "cls": "btn set-scale-btn sel",
+        "color": "rgb(126, 240, 212)",
+        "bw": "2px",
+        "bs": "solid",
+        "bc": "rgb(126, 240, 212)"
+      },
+      {
+        "text": "STANDARD",
+        "aria": "true",
+        "label": "Difficulty STANDARD",
+        "cls": "btn set-scale-btn sel",
+        "color": "rgb(126, 240, 212)",
+        "bw": "2px",
+        "bs": "solid",
+        "bc": "rgb(126, 240, 212)"
+      },
+      {
+        "text": "AUTO",
+        "aria": "true",
+        "label": "AUTO // RENDER QUALITY auto",
+        "cls": "btn set-scale-btn sel",
+        "color": "rgb(126, 240, 212)",
+        "bw": "2px",
+        "bs": "solid",
+        "bc": "rgb(126, 240, 212)"
+      }
+    ],
+    "unselSegs": [
+      {
+        "text": "90%",
+        "aria": "false",
+        "label": "Text scale 90%",
+        "cls": "btn set-scale-btn",
+        "color": "rgb(184, 216, 207)",
+        "bw": "1px",
+        "bs": "solid",
+        "bc": "rgba(126, 240, 212, 0.22)"
+      },
+      {
+        "text": "110%",
+        "aria": "false",
+        "label": "Text scale 110%",
+        "cls": "btn set-scale-btn",
+        "color": "rgb(184, 216, 207)",
+        "bw": "1px",
+        "bs": "solid",
+        "bc": "rgba(126, 240, 212, 0.22)"
+      },
+      {
+        "text": "125%",
+        "aria": "false",
+        "label": "Text scale 125%",
+        "cls": "btn set-scale-btn",
+        "color": "rgb(184, 216, 207)",
+        "bw": "1px",
+        "bs": "solid",
+        "bc": "rgba(126, 240, 212, 0.22)"
+      }
+    ],
+    "toggles": [
+      {
+        "text": "OFF",
+        "aria": "false",
+        "label": "MUTE // OFF",
+        "cls": "btn set-toggle-btn",
+        "color": "rgb(184, 216, 207)",
+        "bw": "1px",
+        "bs": "solid",
+        "bc": "rgba(126, 240, 212, 0.22)"
+      },
+      {
+        "text": "ON",
+        "aria": "true",
+        "label": "REDUCED MOTION // ON",
+        "cls": "btn set-toggle-btn sel",
+        "color": "rgb(126, 240, 212)",
+        "bw": "2px",
+        "bs": "solid",
+        "bc": "rgb(126, 240, 212)"
+      },
+      {
+        "text": "OFF",
+        "aria": "false",
+        "label": "HIGH CONTRAST // OFF",
+        "cls": "btn set-toggle-btn",
+        "color": "rgb(184, 216, 207)",
+        "bw": "1px",
+        "bs": "solid",
+        "bc": "rgba(126, 240, 212, 0.22)"
+      },
+      {
+        "text": "OFF",
+        "aria": "false",
+        "label": "TELEMETRY: LOCAL ONLY // OFF",
+        "cls": "btn set-toggle-btn",
+        "color": "rgb(184, 216, 207)",
+        "bw": "1px",
+        "bs": "solid",
+        "bc": "rgba(126, 240, 212, 0.22)"
+      }
+    ]
+  },
+  "TC20": {
+    "reducedMotion": {
+      "rows": 13,
+      "first": [
+        {
+          "anims": [],
+          "rect": {
+            "x": 357,
+            "y": 206.328125
+          }
+        },
+        {
+          "anims": [],
+          "rect": {
+            "x": 357,
+            "y": 233.328125
+          }
+        },
+        {
+          "anims": [],
+          "rect": {
+            "x": 357,
+            "y": 260.328125
+          }
+        }
+      ],
+      "firstAnimsAll": [],
+      "end": [
+        {
+          "rect": {
+            "x": 357,
+            "y": 206.328125
+          },
+          "opacity": "1",
+          "running": 0
+        },
+        {
+          "rect": {
+            "x": 357,
+            "y": 233.328125
+          },
+          "opacity": "1",
+          "running": 0
+        },
+        {
+          "rect": {
+            "x": 357,
+            "y": 260.328125
+          },
+          "opacity": "1",
+          "running": 0
+        }
+      ],
+      "finalOpacities": [
+        "1"
+      ],
+      "reduceClass": true
+    },
+    "motionOn": {
+      "rows": 13,
+      "first": [
+        {
+          "anims": [
+            {
+              "name": "row-in",
+              "dur": 120,
+              "kf": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "rect": {
+            "x": 357,
+            "y": 206.328125
+          }
+        },
+        {
+          "anims": [
+            {
+              "name": "row-in",
+              "dur": 120,
+              "kf": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "rect": {
+            "x": 357,
+            "y": 233.328125
+          }
+        },
+        {
+          "anims": [
+            {
+              "name": "row-in",
+              "dur": 120,
+              "kf": [
+                [
+                  "opacity"
+                ],
+                [
+                  "opacity"
+                ]
+              ]
+            }
+          ],
+          "rect": {
+            "x": 357,
+            "y": 260.328125
+          }
+        }
+      ],
+      "firstAnimsAll": [
+        "row-in:120:opacity/opacity"
+      ],
+      "end": [
+        {
+          "rect": {
+            "x": 357,
+            "y": 206.328125
+          },
+          "opacity": "1",
+          "running": 1
+        },
+        {
+          "rect": {
+            "x": 357,
+            "y": 233.328125
+          },
+          "opacity": "1",
+          "running": 1
+        },
+        {
+          "rect": {
+            "x": 357,
+            "y": 260.328125
+          },
+          "opacity": "1",
+          "running": 1
+        }
+      ],
+      "finalOpacities": [
+        "1"
+      ]
+    }
+  },
+  "pageerrors_total": []
+}

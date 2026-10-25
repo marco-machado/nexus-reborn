@@ -89,3 +89,29 @@ describe('hint and seen ids', () => {
     for (const id of HINT_IDS) expect(SEEN_IDS).toContain(id)
   })
 })
+
+describe('grenade hint and the hold key (TM-021 AC-1)', () => {
+  afterEach(() => {
+    applyOverrides({})
+  })
+
+  it('BLAST RADIUS says the ring hits everyone, the squad included, and names throw and cancel', () => {
+    const hint = HINTS['hint-grenade']
+    expect(hint.title).toBe('BLAST RADIUS')
+    const body = hint.body(bindingKeys)
+    expect(body).toContain('everyone inside it takes damage, your squad included')
+    expect(body).toContain('Left click throws')
+    expect(body).toContain('G cancels')
+    applyOverrides({ grenade: ['KeyT'] })
+    expect(hint.body(bindingKeys)).toContain('T cancels')
+  })
+
+  it('the first tutorial step names the tactical hold key', () => {
+    const first = TUTORIAL_STEPS[0]
+    expect(first.id).toBe('tut-select')
+    expect(first.body(bindingKeys)).toContain('Space stops time with orders open')
+    // The hold row is fixed (TM-019 AC-1): an override does not rename it.
+    applyOverrides({ tacticalHold: ['KeyB'] })
+    expect(first.body(bindingKeys)).toContain('Space stops time with orders open')
+  })
+})

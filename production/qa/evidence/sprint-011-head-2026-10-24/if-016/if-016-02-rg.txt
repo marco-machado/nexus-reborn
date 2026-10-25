@@ -1,0 +1,8 @@
+$ git status --porcelain src
+ M src/game/tutorial.test.ts
+ M src/state/tutorialStore.test.ts
+?? src/game/world.noRoute.test.ts
+$ rg -n "NETWORK COMMAND SUSPENDED" src; echo "exit $?"
+exit 1
+$ rg -n -i "network command suspended" src; echo "exit $?"
+exit 1

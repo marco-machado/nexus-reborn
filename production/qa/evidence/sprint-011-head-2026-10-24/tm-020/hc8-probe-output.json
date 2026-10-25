@@ -1,0 +1,362 @@
+{
+ "R": {
+  "hcCity": {
+   "landmarks": {
+    "gate": {
+     "x": 72,
+     "z": 48.5,
+     "r": 3.5
+    },
+    "console": {
+     "x": 73,
+     "z": 37,
+     "r": 2
+    },
+    "server": {
+     "x": 83,
+     "z": 43.5,
+     "r": 2
+    },
+    "side-entry": {
+     "x": 58.5,
+     "z": 40,
+     "r": 2.5
+    },
+    "insertion": {
+     "x": 46.5,
+     "z": 88.5,
+     "r": 4
+    },
+    "extraction": {
+     "x": 48,
+     "z": 88,
+     "r": 4
+    },
+    "target": {
+     "x": 75,
+     "z": 40.5,
+     "r": 7
+    }
+   },
+   "checkpoint": {
+    "x": 75,
+    "z": 40.5,
+    "r": 7
+   },
+   "extraction": {
+    "x": 48,
+    "z": 88,
+    "r": 4
+   },
+   "size": 96
+  },
+  "t01": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 72,
+      "y": 0.06,
+      "z": 48.5,
+      "scale": 3.5,
+      "scaleZ": 3.5,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.364,
+      "beam": true,
+      "bx": 72,
+      "by": 0,
+      "bz": 48.5
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 72,
+     "z": 48.5,
+     "r": 3.5,
+     "optional": false
+    }
+   ]
+  },
+  "t06aDecal": [
+   {
+    "count": 20,
+    "visible": true,
+    "pos": [
+     0,
+     0,
+     0
+    ],
+    "instCentre": {
+     "x": 48,
+     "z": 88
+    },
+    "color": "000000",
+    "emissive": "7ef0d4"
+   }
+  ],
+  "t08a": {
+   "r": {
+    "w": 210,
+    "h": 150,
+    "cssW": 208,
+    "cssH": 148,
+    "s": 1.1048543456039805,
+    "ox": 30,
+    "oy": 0,
+    "px": 123.359375,
+    "py": 94.14062500000001,
+    "rad": 4,
+    "dpr": 1,
+    "fracAtExpected": 0.7777777777777778,
+    "best": {
+     "f": 0.8055555555555556,
+     "dx": -1.5,
+     "dy": -0.5
+    },
+    "bestOffset": 1.5811388300841898
+   },
+   "box": {
+    "x": 1054,
+    "y": 554,
+    "width": 210,
+    "height": 150
+   }
+  },
+  "t02reach": true,
+  "t02": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 83,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.226,
+      "beam": false,
+      "bx": 83,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 1,
+      "x": 73,
+      "y": 0.06,
+      "z": 37,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.37,
+      "beam": true,
+      "bx": 73,
+      "by": 0,
+      "bz": 37
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 83,
+     "z": 43.5,
+     "r": 2,
+     "optional": true
+    },
+    {
+     "x": 73,
+     "z": 37,
+     "r": 2,
+     "optional": false
+    }
+   ]
+  },
+  "t07a": {
+   "0": {
+    "inner": 0.94,
+    "frames": 60,
+    "opMin": 0.22000243631818336,
+    "opMax": 0.5489688111465546,
+    "opSpread": 0.3289663748283712,
+    "scMin": 2,
+    "scMax": 2
+   },
+   "1": {
+    "inner": 0.88,
+    "frames": 60,
+    "opMin": 0.36000398670248185,
+    "opMax": 0.8983126000579984,
+    "opSpread": 0.5383086133555166,
+    "scMin": 2,
+    "scMax": 2
+   }
+  },
+  "t07b": {
+   "0": {
+    "inner": 0.94,
+    "frames": 60,
+    "opMin": 0.55,
+    "opMax": 0.55,
+    "opSpread": 0,
+    "scMin": 2,
+    "scMax": 2
+   },
+   "1": {
+    "inner": 0.88,
+    "frames": 60,
+    "opMin": 0.9,
+    "opMax": 0.9,
+    "opSpread": 0,
+    "scMin": 2,
+    "scMax": 2
+   }
+  },
+  "t08b": {
+   "r": {
+    "w": 210,
+    "h": 150,
+    "cssW": 208,
+    "cssH": 148,
+    "s": 1.1048543456039805,
+    "ox": 30,
+    "oy": 0,
+    "px": 133.125,
+    "py": 85.9375,
+    "rad": 4,
+    "dpr": 1,
+    "fracAtExpected": 0.8611111111111112,
+    "best": {
+     "f": 0.9722222222222222,
+     "dx": 0.5,
+     "dy": -1
+    },
+    "bestOffset": 1.118033988749895
+   },
+   "box": {
+    "x": 1054,
+    "y": 554,
+    "width": 210,
+    "height": 150
+   }
+  },
+  "t08bServer": {
+   "w": 210,
+   "h": 150,
+   "cssW": 208,
+   "cssH": 148,
+   "s": 1.1048543456039805,
+   "ox": 30,
+   "oy": 0,
+   "px": 135.859375,
+   "py": 98.828125,
+   "rad": 4,
+   "dpr": 1,
+   "fracAtExpected": 0,
+   "best": {
+    "f": 0.1527777777777778,
+    "dx": -1,
+    "dy": -5
+   },
+   "bestOffset": 5.099019513592785
+  },
+  "t07c": {
+   "0": {
+    "inner": 0.94,
+    "frames": 60,
+    "opMin": 0.22010934352739808,
+    "opMax": 0.5499999980040543,
+    "opSpread": 0.3298906544766562,
+    "scMin": 2,
+    "scMax": 2
+   },
+   "1": {
+    "inner": 0.88,
+    "frames": 60,
+    "opMin": 0.3601789257721059,
+    "opMax": 0.8999999967339071,
+    "opSpread": 0.5398210709618012,
+    "scMin": 2,
+    "scMax": 2
+   }
+  }
+ },
+ "errs": []
+}

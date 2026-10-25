@@ -1,0 +1,57 @@
+S0 menu buttons: ["<< NEW OPERATION >>","SETTINGS"]
+CLICK NEW OPERATION
+S0 phase after new op: world
+cleared card UNDERSTOOD // DISMISS THE ORIENTATION
+CLICK RUST HAVEN row: BUTTON OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL
+CLICK ACCEPT CONTRACT
+CLICK DEPLOY TEAM
+S0 state {"phase":"mission","live":true,"held":false,"mission":"m03","codename":"RUST HAVEN"}
+SCENE {"ok":true,"ent":"http://localhost:4200/node_modules/.vite/deps/@react-three_fiber.js?v=cbb1798c","rootsSize":1,"camera":"PerspectiveCamera","fov":25}
+C3.1 tut-1 [{"text":"TUTORIAL 1/9 // SELECTION SKIP TUTORIAL X CLICK AN OPERATIVE OR DRAG A BOX TO SELECT. 1-4 PICKS A SLOT; 0 / ` TAKES THE LIVING SQUAD. SPACE STOPS TIME WITH ORDERS OPEN; PRESS IT AGAIN TO RESUME.","box":[400,497,480,91],"inViewport":true,"overflow":[]}]
+C3.2 selected ["a1"]
+C3.2 tut-2 [{"text":"TUTORIAL 2/9 // MOVEMENT SKIP TUTORIAL X RIGHT CLICK ON OPEN GROUND MOVES THE SELECTION THERE. W / UP A / LEFT S / DOWN D / RIGHT PAN THE CAMERA, THE WHEEL ZOOMS, F RECENTERS ON THE SQUAD.","box":[400,497,480,91],"inViewport":true,"overflow":[]}]
+C3.3 pan W focus {"x":48,"z":84.5} -> {"x":45.51,"z":82.01} moved=true
+C3.3 pan A focus {"x":45.51,"z":82.01} -> {"x":40.99,"z":84.41} moved=true
+C3.3 pan S focus {"x":40.99,"z":84.41} -> {"x":41.03,"z":88.29} moved=true
+C3.3 pan D focus {"x":41.03,"z":88.29} -> {"x":41.17,"z":89.08} moved=true
+C3.3 wheel camera distance 72 -> (wheel -400) 50.29 -> (wheel +400) 62.69
+C3.3 F focus {"x":41.27,"z":89.68} -> {"x":45.97,"z":88.85}; living squad centroid {"x":48,"z":88.5}
+C3.3 toasts after camera keys [{"text":"TUTORIAL 2/9 // MOVEMENT SKIP TUTORIAL X RIGHT CLICK ON OPEN GROUND MOVES THE SELECTION THERE. W / UP A / LEFT S / DOWN D / RIGHT PAN THE CAMERA, THE WHEEL ZOOMS, F RECENTERS ON THE SQUAD.","box":[400,497,480,91],"inViewport":true,"overflow":[]}]
+C3.4 dismissed MOVEMENT
+C3.4 dismissed ENGAGEMENT
+C3.4 dismissed STANCES
+C3.4 dismissed ROLE ABILITY
+C3.5 tut-6 [{"text":"TUTORIAL 6/9 // ITEMS SKIP TUTORIAL X E / M SPENDS A MED KIT; R SPENDS A POWER CELL. G ARMS A GRENADE (ONE CELL): ITS BLAST HURTS EVERYONE INSIDE THE RED RING, YOUR SQUAD INCLUDED.","box":[400,497,480,91],"inViewport":true,"overflow":[]}]
+C2.1-2 pre-arm {"selected":["a1"],"avail":"usable","inventory":{"med":2,"cell":1},"targeting":false,"ring":{"visible":false,"params":{"innerRadius":3.35,"outerRadius":3.5,"thetaSegments":48,"phiSegments":1,"thetaStart":0,"thetaLength":6.283185307179586},"type":"MeshBasicMaterial","color":"ff6b55","opacity":0.85,"renderOrder":8}}
+C2.3 armed {"targeting":true,"ringVisible":true}
+C3.6 hint-grenade toasts [{"text":"TUTORIAL 6/9 // ITEMS SKIP TUTORIAL X E / M SPENDS A MED KIT; R SPENDS A POWER CELL. G ARMS A GRENADE (ONE CELL): ITS BLAST HURTS EVERYONE INSIDE THE RED RING, YOUR SQUAD INCLUDED.","box":[400,414,480,91],"inViewport":true,"overflow":["hud-toast-head","hud-toast-ctl","hud-toast-btn"]},{"text":"ADVISORY // BLAST RADIUS X THE RED RING IS THE BLAST: EVERYONE INSIDE IT TAKES DAMAGE, YOUR SQUAD INCLUDED. LEFT CLICK THROWS; G CANCELS.","box":[400,513,480,75],"inViewport":true,"overflow":[]}]
+C3.6 tutorial store {"hints":["hint-grenade"],"seen":["hint-worldmap","tut-select","tut-move","tut-attack","tut-hold","tut-ability","hint-grenade"]}
+C2 ring-a pointer (520,400) {"visible":true,"pos":[45.806,0.06,93.704],"ground":{"x":45.806,"z":93.704},"dxz":0,"centrePx":[519.9,399.2],"edgePx":[575.4,447.5],"innerEdgePx":[573,445.4],"outerRadiusPx":73.6}
+C2 ring-b pointer (760,460) {"visible":true,"pos":[55.276,0.06,88.562],"ground":{"x":55.276,"z":88.562},"dxz":0,"centrePx":[760.1,459.3],"edgePx":[822.1,510.1],"innerEdgePx":[819.4,507.9],"outerRadiusPx":80.2}
+C2.7 ring-a red scan along +x from centre {"firstRed":597,"lastRedInBand":598,"sample":[597,598]} expected outer edge x=575.4 inner x=573
+C2.8 cancelled {"targeting":false,"ringVisible":false}
+C3.7 toasts after cancel [{"text":"TUTORIAL 6/9 // ITEMS SKIP TUTORIAL X E / M SPENDS A MED KIT; R SPENDS A POWER CELL. G ARMS A GRENADE (ONE CELL): ITS BLAST HURTS EVERYONE INSIDE THE RED RING, YOUR SQUAD INCLUDED.","box":[400,414,480,91],"inViewport":true,"overflow":["hud-toast-head","hud-toast-ctl","hud-toast-btn"]},{"text":"ADVISORY // BLAST RADIUS X THE RED RING IS THE BLAST: EVERYONE INSIDE IT TAKES DAMAGE, YOUR SQUAD INCLUDED. LEFT CLICK THROWS; G CANCELS.","box":[400,513,480,75],"inViewport":true,"overflow":[]}]
+C3.7 dismissed BLAST RADIUS advisory
+C3.7 second arming {"hints":[],"seenHasHint":true,"targeting":true}
+C3.7 toasts [{"text":"TUTORIAL 6/9 // ITEMS SKIP TUTORIAL X E / M SPENDS A MED KIT; R SPENDS A POWER CELL. G ARMS A GRENADE (ONE CELL): ITS BLAST HURTS EVERYONE INSIDE THE RED RING, YOUR SQUAD INCLUDED.","box":[400,497,480,91],"inViewport":true,"overflow":[]}]
+C1.1 relays [{"id":"d1","x":59.5,"z":37.5,"hp":120,"maxHp":120,"stance":"idle"},{"id":"d2","x":67.5,"z":41.5,"hp":120,"maxHp":120,"stance":"idle"},{"id":"d3","x":81.5,"z":39.5,"hp":120,"maxHp":120,"stance":"idle"}]
+C1.2 R core before {"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}
+C1.3 framing live {"focus":{"x":56.03626655813041,"y":0,"z":52.86090480837544},"cam":[85.24,58.98,82.06],"proj":{"sx":924.7250152577709,"sy":198.978226321356,"ndcZ":0.978547829349767}}
+C1.3 relay-live patch {"meanL":139.8,"maxL":220.9,"icePx":384,"redPx":0,"px":784}
+C1.3 other relays [{"id":"d2","sx":756.9373550326266,"sy":488.1341146670337,"ndcZ":0.9750002067547813,"core":{"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}},{"id":"d3","sx":1062.0472682954319,"sy":679.9959244907884,"ndcZ":0.9726462747782995,"core":{"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}}]
+C1.5 squad ordered to R (orderMove + free fire): ["a1","a2","a3","a4"]
+C1.5 t+3s R {"hp":120,"stance":"idle","agents":[{"id":"a1","hp":124,"d":42.7,"target":null},{"id":"a2","hp":110,"d":41.1,"target":null},{"id":"a3","hp":98,"d":39.9,"target":null},{"id":"a4","hp":132,"d":42.2,"target":null}]}
+C1.5 t+5s R {"hp":120,"stance":"idle","agents":[{"id":"a1","hp":124,"d":34.3,"target":null},{"id":"a2","hp":110,"d":30.4,"target":null},{"id":"a3","hp":98,"d":27.8,"target":null},{"id":"a4","hp":132,"d":33.7,"target":null}]}
+C1.5 t+8s R {"hp":120,"stance":"idle","agents":[{"id":"a1","hp":124,"d":20.5,"target":"e5"},{"id":"a2","hp":110,"d":12.8,"target":null},{"id":"a3","hp":98,"d":8.9,"target":null},{"id":"a4","hp":132,"d":18.7,"target":null}]}
+C1.5 t+11s R {"hp":57,"stance":"idle","agents":[{"id":"a1","hp":124,"d":19.2,"target":null},{"id":"a2","hp":110,"d":10.7,"target":"d1"},{"id":"a3","hp":85,"d":7.6,"target":"e3"},{"id":"a4","hp":114,"d":8.7,"target":"d2"}]}
+C1.6 death read {"frame":46,"simTime":44.615500000118836,"readSameCallback":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.9685600002288822,"faction":[{"type":"Mesh","visible":false}]},"nextFrame":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.8651200001716631,"faction":[{"type":"Mesh","visible":false}]},"frame2":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.6683200001716785,"faction":[{"type":"Mesh","visible":false}]},"after400ms":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.4,"faction":[{"type":"Mesh","visible":false}]}}
+C1.7 framing dead {"focus":{"x":59.4999999137187,"y":0,"z":37.5000003826388},"cam":[88.7,58.98,66.7],"proj":{"sx":640.0000075738735,"sy":345.45718038331444,"ndcZ":0.9767506947661673}}
+C1.7 relay-dead patch {"meanL":67.1,"maxL":174.6,"icePx":0,"redPx":0,"px":784}
+C1.8 other relays after [{"id":"d2","hp":0,"stance":"dead","core":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.8238400000572312,"faction":[{"type":"Mesh","visible":false}]}},{"id":"d3","hp":120,"stance":"idle","core":{"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}}]
+C1.8 other relay d2 patch {"meanL":43.4,"maxL":207.5,"icePx":16,"redPx":0,"px":784}
+C1.8 other relay d3 patch {"meanL":43.4,"maxL":208.5,"icePx":36,"redPx":0,"px":784}
+ASSIST in C1 destruction: false
+done
+
+ERRORS:
+

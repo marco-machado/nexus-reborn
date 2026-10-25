@@ -1,0 +1,1072 @@
+{
+ "R": {
+  "hcCity": {
+   "landmarks": {
+    "gate": {
+     "x": 72,
+     "z": 48.5,
+     "r": 3.5
+    },
+    "console": {
+     "x": 73,
+     "z": 37,
+     "r": 2
+    },
+    "server": {
+     "x": 83,
+     "z": 43.5,
+     "r": 2
+    },
+    "side-entry": {
+     "x": 58.5,
+     "z": 40,
+     "r": 2.5
+    },
+    "insertion": {
+     "x": 46.5,
+     "z": 88.5,
+     "r": 4
+    },
+    "extraction": {
+     "x": 48,
+     "z": 88,
+     "r": 4
+    },
+    "target": {
+     "x": 75,
+     "z": 40.5,
+     "r": 7
+    }
+   },
+   "checkpoint": {
+    "x": 75,
+    "z": 40.5,
+    "r": 7
+   },
+   "extraction": {
+    "x": 48,
+    "z": 88,
+    "r": 4
+   },
+   "size": 96
+  },
+  "t01": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 72,
+      "y": 0.06,
+      "z": 48.5,
+      "scale": 3.5,
+      "scaleZ": 3.5,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.368,
+      "beam": true,
+      "bx": 72,
+      "by": 0,
+      "bz": 48.5
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 72,
+     "z": 48.5,
+     "r": 3.5,
+     "optional": false
+    }
+   ]
+  },
+  "t06aDecal": [
+   {
+    "count": 20,
+    "visible": true,
+    "pos": [
+     0,
+     0,
+     0
+    ],
+    "instCentre": {
+     "x": 48,
+     "z": 88
+    },
+    "color": "000000",
+    "emissive": "7ef0d4"
+   }
+  ],
+  "t08a": {
+   "r": {
+    "w": 208,
+    "h": 148,
+    "s": 1.0901229543292608,
+    "ox": 30,
+    "oy": 0,
+    "px": 122.11458333333333,
+    "py": 92.88541666666667,
+    "rad": 4,
+    "dpr": 1.0096153846153846,
+    "fracAtExpected": 0,
+    "best": {
+     "f": 0,
+     "dx": 0,
+     "dy": 0
+    },
+    "bestOffset": 0
+   },
+   "box": {
+    "x": 1054,
+    "y": 554,
+    "width": 210,
+    "height": 150
+   }
+  },
+  "t02reach": true,
+  "t02": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 83,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.35,
+      "beam": false,
+      "bx": 83,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 1,
+      "x": 73,
+      "y": 0.06,
+      "z": 37,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.573,
+      "beam": true,
+      "bx": 73,
+      "by": 0,
+      "bz": 37
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 83,
+     "z": 43.5,
+     "r": 2,
+     "optional": true
+    },
+    {
+     "x": 73,
+     "z": 37,
+     "r": 2,
+     "optional": false
+    }
+   ]
+  },
+  "t07a": {
+   "0": {
+    "inner": 0.94,
+    "frames": 60,
+    "opMin": 0.22146200076304115,
+    "opMax": 0.5478887225787212,
+    "opSpread": 0.3264267218156801,
+    "scMin": 2,
+    "scMax": 2
+   },
+   "1": {
+    "inner": 0.88,
+    "frames": 60,
+    "opMin": 0.3623923648849764,
+    "opMax": 0.8965451824015437,
+    "opSpread": 0.5341528175165673,
+    "scMin": 2,
+    "scMax": 2
+   }
+  },
+  "t07b": {
+   "0": {
+    "inner": 0.94,
+    "frames": 60,
+    "opMin": 0.55,
+    "opMax": 0.55,
+    "opSpread": 0,
+    "scMin": 2,
+    "scMax": 2
+   },
+   "1": {
+    "inner": 0.88,
+    "frames": 60,
+    "opMin": 0.9,
+    "opMax": 0.9,
+    "opSpread": 0,
+    "scMin": 2,
+    "scMax": 2
+   }
+  },
+  "t08b": {
+   "r": {
+    "w": 208,
+    "h": 148,
+    "s": 1.0901229543292608,
+    "ox": 30,
+    "oy": 0,
+    "px": 131.75,
+    "py": 84.79166666666667,
+    "rad": 4,
+    "dpr": 1.0096153846153846,
+    "fracAtExpected": 0,
+    "best": {
+     "f": 0,
+     "dx": 0,
+     "dy": 0
+    },
+    "bestOffset": 0
+   },
+   "box": {
+    "x": 1054,
+    "y": 554,
+    "width": 210,
+    "height": 150
+   }
+  },
+  "t08bServer": {
+   "w": 208,
+   "h": 148,
+   "s": 1.0901229543292608,
+   "ox": 30,
+   "oy": 0,
+   "px": 134.44791666666669,
+   "py": 97.51041666666666,
+   "rad": 4,
+   "dpr": 1.0096153846153846,
+   "fracAtExpected": 0,
+   "best": {
+    "f": 0,
+    "dx": 0,
+    "dy": 0
+   },
+   "bestOffset": 0
+  },
+  "t07c": {
+   "0": {
+    "inner": 0.94,
+    "frames": 60,
+    "opMin": 0.2200000375591897,
+    "opMax": 0.5499895211093984,
+    "opSpread": 0.32998948355020863,
+    "scMin": 2,
+    "scMax": 2
+   },
+   "1": {
+    "inner": 0.88,
+    "frames": 60,
+    "opMin": 0.36000006146049224,
+    "opMax": 0.89998285272447,
+    "opSpread": 0.5399827912639777,
+    "scMin": 2,
+    "scMax": 2
+   }
+  },
+  "t04before": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 83,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.438,
+      "beam": false,
+      "bx": 83,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 1,
+      "x": 73,
+      "y": 0.06,
+      "z": 37,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.717,
+      "beam": true,
+      "bx": 73,
+      "by": 0,
+      "bz": 37
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 83,
+     "z": 43.5,
+     "r": 2,
+     "optional": true
+    },
+    {
+     "x": 73,
+     "z": 37,
+     "r": 2,
+     "optional": false
+    }
+   ]
+  },
+  "t04reach": true,
+  "t04": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 83,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.457,
+      "beam": false,
+      "bx": 83,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 1,
+      "x": 48,
+      "y": 0.06,
+      "z": 88,
+      "scale": 4,
+      "scaleZ": 4,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.747,
+      "beam": true,
+      "bx": 48,
+      "by": 0,
+      "bz": 88
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 83,
+     "z": 43.5,
+     "r": 2,
+     "optional": true
+    },
+    {
+     "x": 48,
+     "z": 88,
+     "r": 4,
+     "optional": false
+    }
+   ]
+  },
+  "t05pre": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 83,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 2,
+      "scaleZ": 2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.532,
+      "beam": false,
+      "bx": 83,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 1,
+      "x": 48,
+      "y": 0.06,
+      "z": 88,
+      "scale": 4,
+      "scaleZ": 4,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.871,
+      "beam": true,
+      "bx": 48,
+      "by": 0,
+      "bz": 88
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 83,
+     "z": 43.5,
+     "r": 2,
+     "optional": true
+    },
+    {
+     "x": 48,
+     "z": 88,
+     "r": 4,
+     "optional": false
+    }
+   ]
+  },
+  "t05reach": true,
+  "t05live": true,
+  "t05": {
+   "rows": [
+    {
+     "id": "hc1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc-opt",
+     "active": false,
+     "done": false,
+     "failed": true,
+     "optional": true
+    },
+    {
+     "id": "hc2",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc3",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "hc4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 48,
+      "y": 0.06,
+      "z": 88,
+      "scale": 4,
+      "scaleZ": 4,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.9,
+      "beam": true,
+      "bx": 48,
+      "by": 0,
+      "bz": 88
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 48,
+     "z": 88,
+     "r": 4,
+     "optional": false
+    }
+   ]
+  },
+  "rhCity": {
+   "landmarks": {
+    "yard-a": {
+     "x": 72,
+     "z": 41.5,
+     "r": 6
+    },
+    "yard-b": {
+     "x": 72,
+     "z": 35,
+     "r": 6
+    },
+    "gate": {
+     "x": 60,
+     "z": 45.5,
+     "r": 3.5
+    },
+    "waveEntry-a": {
+     "x": 60,
+     "z": 47.5,
+     "r": 1
+    },
+    "waveEntry-b": {
+     "x": 82,
+     "z": 29.5,
+     "r": 1
+    },
+    "insertion": {
+     "x": 46.5,
+     "z": 88.5,
+     "r": 4
+    },
+    "extraction": {
+     "x": 48,
+     "z": 88,
+     "r": 4
+    },
+    "target": {
+     "x": 72,
+     "z": 38.5,
+     "r": 8
+    }
+   },
+   "checkpoint": {
+    "x": 72,
+    "z": 38.5,
+    "r": 8
+   },
+   "extraction": {
+    "x": 48,
+    "z": 88,
+    "r": 4
+   },
+   "size": 96
+  },
+  "t03reach": true,
+  "t03devices": [
+   {
+    "id": "d1",
+    "tag": "relay",
+    "x": 68.5,
+    "z": 39.5,
+    "stance": "dead",
+    "hp": 0
+   },
+   {
+    "id": "d2",
+    "tag": "relay",
+    "x": 76.5,
+    "z": 43.5,
+    "stance": "idle",
+    "hp": 120
+   },
+   {
+    "id": "d3",
+    "tag": "relay",
+    "x": 72.5,
+    "z": 35.5,
+    "stance": "idle",
+    "hp": 120
+   },
+   {
+    "id": "d4",
+    "tag": "transformer",
+    "x": 77.5,
+    "z": 37.5,
+    "stance": "idle",
+    "hp": 120
+   }
+  ],
+  "t03a": {
+   "rows": [
+    {
+     "id": "rh1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "rh2",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 77.5,
+      "y": 0.06,
+      "z": 37.5,
+      "scale": 1.2,
+      "scaleZ": 1.2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.543,
+      "beam": false,
+      "bx": 77.5,
+      "by": 0,
+      "bz": 37.5
+     },
+     {
+      "i": 1,
+      "x": 76.5,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 1.2,
+      "scaleZ": 1.2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.889,
+      "beam": true,
+      "bx": 76.5,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 2,
+      "x": 72.5,
+      "y": 0.06,
+      "z": 35.5,
+      "scale": 1.2,
+      "scaleZ": 1.2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.889,
+      "beam": true,
+      "bx": 72.5,
+      "by": 0,
+      "bz": 35.5
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 77.5,
+     "z": 37.5,
+     "r": 1.2,
+     "optional": true
+    },
+    {
+     "x": 76.5,
+     "z": 43.5,
+     "r": 1.2,
+     "optional": false
+    },
+    {
+     "x": 72.5,
+     "z": 35.5,
+     "r": 1.2,
+     "optional": false
+    }
+   ]
+  },
+  "t03killed": {
+   "dev": {
+    "id": "d1",
+    "tag": "relay",
+    "x": 68.5,
+    "z": 39.5,
+    "stance": "dead",
+    "hp": 0
+   },
+   "rh2": {
+    "id": "rh2",
+    "label": "DESTROY THE THREE FUEL RELAYS",
+    "done": false,
+    "active": true,
+    "optional": false,
+    "failed": false
+   }
+  },
+  "t03b": {
+   "rows": [
+    {
+     "id": "rh1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh-opt",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "rh2",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh3",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh4",
+     "active": false,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": [
+     {
+      "i": 0,
+      "x": 77.5,
+      "y": 0.06,
+      "z": 37.5,
+      "scale": 1.2,
+      "scaleZ": 1.2,
+      "inner": 0.94,
+      "color": "9be8ff",
+      "opacity": 0.537,
+      "beam": false,
+      "bx": 77.5,
+      "by": 0,
+      "bz": 37.5
+     },
+     {
+      "i": 1,
+      "x": 76.5,
+      "y": 0.06,
+      "z": 43.5,
+      "scale": 1.2,
+      "scaleZ": 1.2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.88,
+      "beam": true,
+      "bx": 76.5,
+      "by": 0,
+      "bz": 43.5
+     },
+     {
+      "i": 2,
+      "x": 72.5,
+      "y": 0.06,
+      "z": 35.5,
+      "scale": 1.2,
+      "scaleZ": 1.2,
+      "inner": 0.88,
+      "color": "9be8ff",
+      "opacity": 0.88,
+      "beam": true,
+      "bx": 72.5,
+      "by": 0,
+      "bz": 35.5
+     }
+    ]
+   },
+   "oracle": [
+    {
+     "x": 77.5,
+     "z": 37.5,
+     "r": 1.2,
+     "optional": true
+    },
+    {
+     "x": 76.5,
+     "z": 43.5,
+     "r": 1.2,
+     "optional": false
+    },
+    {
+     "x": 72.5,
+     "z": 35.5,
+     "r": 1.2,
+     "optional": false
+    }
+   ]
+  },
+  "t06breach": true,
+  "t06b": {
+   "rows": [
+    {
+     "id": "rh1",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh-opt",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": true
+    },
+    {
+     "id": "rh2",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh3",
+     "active": false,
+     "done": true,
+     "failed": false,
+     "optional": false
+    },
+    {
+     "id": "rh4",
+     "active": true,
+     "done": false,
+     "failed": false,
+     "optional": false
+    }
+   ],
+   "slots": {
+    "slots": []
+   },
+   "oracle": []
+  },
+  "t06bDecal": [
+   {
+    "count": 20,
+    "visible": true,
+    "pos": [
+     0,
+     0,
+     0
+    ],
+    "instCentre": {
+     "x": 48,
+     "z": 88
+    },
+    "color": "000000",
+    "emissive": "7ef0d4"
+   }
+  ],
+  "t06bLive": true
+ },
+ "errs": []
+}

@@ -1,0 +1,41 @@
+# IF-034 — Inset steppers have a 24 px hit area — Execution results
+
+**Story type**: UI | **Gate**: BLOCKING | **Build**: HEAD `131a5c1` (the only uncommitted src changes are three test files that the app does not import)
+**Cases**: `production/qa/test-cases/if-034-inset-steppers-have-a-24-px-hit-area-cases.md`
+**Date**: 2026-10-24 | **Executor**: Claude (qa-tester), Sprint 11 /team-qa Phase 5
+**Server**: the existing dev server on `http://localhost:4200` (already restarted for this session; this run did not start or stop it).
+**Hand-walk harness**: `if034.mjs` in this folder. It uses playwright-core with headless Chrome for Testing at 1280x720; the launch code and the fresh()/dismissCard()/pause() fixtures are copied from `production/qa/evidence/sprint-011/probe.mjs` lines 22-60. Its output is in `run.log` (from the third and final run). Harness assists used: localStorage clear, `save.startNewOperation`, `goto('world')`, `markSeen('hint-worldmap')`, `worldStore.setState({ paused | selected | influence })`, `setTextScale(100)`, and `page.focus()` on a stepper. The first-visit card was gone after dismissCard() in every fixture: no `card still up` line appears in the log. No console or page errors (`run.log`: "no console or page errors").
+**Script changes between runs (script only, no app changes)**: run 2 added diagnostics to IF-034-12. Run 3 added a hit-grid over UNDERSTOOD and a real mouse wheel over the sector panel before the UNDERSTOOD click (see Notes N1).
+
+## Results
+
+| Case | AC | Coverage | Actual Result | Result |
+|---|---|---|---|---|
+| IF-034-01 | AC-1 | R1 probe | `r1-probe/run.log:144`: `PASS IF-034 inset steppers each >= 24x24 // [{"x":972.453125,"y":127.296875,"w":24,"h":30},{"x":1222.640625,"y":127.296875,"w":24,"h":30}]`. Exactly 2 boxes, each 24x30. Shared capture: `r1-probe/if-031-035-targets.png`. | PASS |
+| IF-034-02 | AC-1 | Hand-walk | In all six open sectors (eu, na, sa, af, as, oc), sampling `elementFromPoint` on a 24x24 square at 1 px pitch, centred on each stepper's centre: `.wm-inset-chev.l` hit 576/576 and `.wm-inset-chev.r` hit 576/576, miss `{}`. Boxes did not move between sectors (l x 972.45, r x 1222.64, y 127.30, 24x30), and that includes the longest tag, `NORTH AMERICA // NEXUS GLOBAL`. Captures: `if-034-hit-area-na.png`, `if-034-hit-area-eu.png`. | PASS |
+| IF-034-03 | AC-2 click | Hand-walk | Six real `mouse.click` presses at the NEXT centre read `["af","as","oc","na","sa","eu"]` against expected `["af","as","oc","na","sa","eu"]`. Antarctica seen 0 times; tag matched `selected` 6/6; scrollY 0 throughout. | PASS |
+| IF-034-04 | AC-2 click | Hand-walk | Six real clicks at the PREVIOUS centre read `["sa","na","oc","as","af","eu"]`, which matches expected; the wrap went na→oc. Antarctica 0; tag mismatches 0. | PASS |
+| IF-034-05 | AC-1 + AC-2 | Hand-walk | Clicking NEXT at (1223.64, 128.30), its top-left corner 1 px inside, read `af`. After resetting to eu, clicking PREVIOUS at (994.45, 155.30), its bottom-right corner (x+w-2, y+h-2), read `sa`. | PASS |
+| IF-034-06 | AC-2 Enter | Hand-walk | NEXT had focus before press 1. Six `Enter` presses, never refocused, read `["af","as","oc","na","sa","eu"]`, which matches expected. Antarctica 0; focus stayed on `FOCUS NEXT SECTOR` for 6/6 readings. | PASS |
+| IF-034-07 | AC-2 Enter | Hand-walk | PREVIOUS had focus before press 1. Six `Enter` presses read `["sa","na","oc","as","af","eu"]`, which matches expected. Antarctica 0; focus was never lost. | PASS |
+| IF-034-08 | AC-2 Space | Hand-walk | NEXT had focus before press 1. Six `Space` presses read `["af","as","oc","na","sa","eu"]`: one step per press, no double step. Antarctica 0; scrollY 0 for all 6; focus was never lost. | PASS |
+| IF-034-09 | AC-2 Space | Hand-walk | PREVIOUS had focus before press 1. Six `Space` presses read `["sa","na","oc","as","af","eu"]`: one step per press. Antarctica 0; scrollY 0; focus was never lost. Capture `if-034-keyboard-focus.png` shows PREVIOUS focused (`:focus-visible` true). | PASS |
+| IF-034-10 | AC-2 absence | R1 probe | `r1-probe/run.log:153`: `PASS IF-034 steppers absent while the Influence note is up // []`. `r1-probe/run.log:152`: `PASS IF-035 Influence note UNDERSTOOD >= 24x24 // [{"x":1145.421875,"y":408.296875,"w":96.2,"h":24}]` (exactly one `.wm-moment-btn`). Shared capture: `r1-probe/if-035-influence-note.png`. | PASS |
+| IF-034-11 | AC-2 absence | Hand-walk | Fixture influence-note, `.wm-moment[role="note"]` count 1. Stepper aria-label count 0. Starting from UNDERSTOOD: 40 Tab presses plus 40 Shift+Tab presses gave 0/80 stops on a stepper (both stop lists are in `run.log`). At the end, `selected` was `na`. | PASS |
+| IF-034-12 (own addition) | AC-1 + AC-2 guard | Hand-walk | Run 3: scrolled the sector panel with a real wheel, then a real click on UNDERSTOOD. Note count went to 0. Two steppers returned, each 24x30 (l x 972.45, r x 1222.64). One `Enter` on focused NEXT moved na→sa. Capture: `if-034-after-note.png`. Runs 1-2, with no scroll first, did not dismiss the note; see N1. | PASS (the first two runs' click failure is recorded in N1, not as an IF-034 fail) |
+
+### Per-AC
+
+- **AC-1** (each stepper at least 24x24 at 1280x720, 100%): **PASS**. Cases 01, 02, 05 and 12 measured 24x30, with 576/576 hit samples per stepper in all six sectors.
+- **AC-2** (click, Enter and Space each step and skip Antarctica; steppers absent under the Influence note): **PASS**. Click (03, 04, 05), Enter (06, 07, 12) and Space (08, 09) each produced the exact cycle with 0 Antarctica readings. Absence is covered by 10 and 11.
+
+## Notes
+
+- **N1 — The Influence note's UNDERSTOOD is below the visible part of the sector panel at 1280x720.** This belongs to IF-035 / the UX spec, not IF-034. It is an observation, not a defect: no spec line was checked that says the note must be visible without scrolling. Fixture influence-note (`influence: 8, selected: 'na'`), text scale 100. The UNDERSTOOD box is at y 408.3–432.3. Its scroll container `.scroll.wm-sector-scroll` has a visible area of only y 111.3–396.6 (scrollTop 0, scrollHeight 409, clientHeight 285). A hit-grid over the button found **0/576** samples on UNDERSTOOD. `elementFromPoint` at the button centre returns `HEADER.panel-head "OPEN CONTRACTS1 / 1"`. A real click at that centre therefore lands on the OPEN CONTRACTS header and leaves the note up; this was observed in runs 1 and 2, before the click and again 500 ms and 2000 ms after it. The note is not visible in `r1-probe/if-035-influence-note.png` or in the run-1 `if-034-after-note.png` capture either; that capture was overwritten by run 3. After a real wheel of 600 over the panel (scrollTop 123), the hit-grid read 576/576 and the click dismissed the note. R1's `IF-035 Influence note UNDERSTOOD >= 24x24` (`run.log:152`) measures box size only, so it cannot detect this. Recommend that qa-lead / ux-designer decide whether the note must be in view when it fires (for example, scrolled into view or placed at the top of the panel body).
+- **N2 — After dismissal the steppers return scrolled out of view.** At the scroll position from N1, the returned steppers sit at y 21.3. That is above the scroller's visible top (y 111.3), so they are clipped until the user scrolls the panel back up. `page.focus` + Enter still worked (na→sa). This is an observation only; no AC covers it.
+- **N3 — Focus retention (own addition).** In all four keyboard walks (06–09), focus stayed on the activated stepper for 24/24 readings. The refocus path in step 5 of the case never ran. After pointer clicks (03/04), the clicked stepper also held focus. No concern.
+- **N4 — Case-file evidence location.** The cases file asks for a `README.md` in `production/qa/evidence/if-034/`. As this phase instructed, the evidence and this results file are in `production/qa/evidence/sprint-011-head-2026-10-24/if-034/` instead. Captures: `if-034-hit-area-na.png`, `if-034-hit-area-eu.png`, `if-034-keyboard-focus.png` and `if-034-after-note.png` are here; `if-031-035-targets.png` and `if-035-influence-note.png` are in `../r1-probe/`.
+
+## Story verdict
+
+**PASS WITH NOTES**: every IF-034 case passes on HEAD `131a5c1`. N1 (UNDERSTOOD scrolled out of view under the Influence note) is an IF-035/UX observation for qa-lead to rule on.

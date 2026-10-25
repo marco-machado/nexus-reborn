@@ -1,0 +1,99 @@
+{
+  "gate": true,
+  "s1": {
+    "sh": 452,
+    "ch": 247,
+    "oy": "auto"
+  },
+  "atTop0": {
+    "headText": "OPEN CONTRACTS1 / 2",
+    "headInView": true,
+    "firstRowInView": true
+  },
+  "wheel": {
+    "before": 0,
+    "after": {
+      "top": 205,
+      "max": 205
+    }
+  },
+  "end": {
+    "inside": true,
+    "e": [
+      306.296875,
+      321.296875
+    ],
+    "s": [
+      119.296875,
+      366.078125
+    ]
+  },
+  "ops": {
+    "sh": 173,
+    "ch": 94,
+    "oy": "auto",
+    "count": 2,
+    "res": [
+      {
+        "i": 0,
+        "inside": true,
+        "onTop": true,
+        "text": "GLASS VEILREQUIRES INTEL LVL 2CHANCE 36%",
+        "row": [
+          420.1,
+          486.1,
+          966,
+          1253
+        ],
+        "list": [
+          420.1,
+          514.1,
+          966,
+          1256
+        ],
+        "scrollTop": 0
+      },
+      {
+        "i": 1,
+        "inside": false,
+        "onTop": true,
+        "text": "NEON GARDENSABOTAGE // OSLOGENERATEDCHAN",
+        "row": [
+          420.1,
+          521.1,
+          966,
+          1253
+        ],
+        "list": [
+          420.1,
+          514.1,
+          966,
+          1256
+        ],
+        "scrollTop": 72
+      }
+    ],
+    "maxTop": 79,
+    "lastAtMax": [
+      413.078125,
+      514.078125
+    ],
+    "listAtMax": [
+      420.078125,
+      514.078125
+    ],
+    "listStyle": {
+      "pt": "0px",
+      "pb": "0px",
+      "h": "94px"
+    },
+    "cutText": [],
+    "firstTextTop": 423.078125,
+    "lastRowStyle": {
+      "pt": "7px",
+      "bt": "1px",
+      "h": "101px"
+    },
+    "lastInsideAtMax": false
+  }
+}

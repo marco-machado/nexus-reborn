@@ -1,0 +1,1529 @@
+{
+  "meta": {
+    "url": "http://localhost:4200/",
+    "at": "2026-10-25T02:52:32.851Z"
+  },
+  "H5": [
+    {
+      "id": "m01",
+      "scale": 90,
+      "intel": 2,
+      "lastRow": "RISK INDEX89 // SEVERE",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 33,
+      "scrollHeight": 206,
+      "clientHeight": 173,
+      "railVisible": {
+        "top": 396.6,
+        "bottom": 569.6,
+        "left": 26.4,
+        "right": 363.4
+      },
+      "rowBox": {
+        "top": 555.6,
+        "bottom": 569.6,
+        "left": 185.6,
+        "right": 353.6
+      },
+      "textBox": {
+        "top": 555.6,
+        "bottom": 569.6
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 549.6,
+        "bottom": 569.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m01",
+      "scale": 100,
+      "intel": 2,
+      "lastRow": "RISK INDEX89 // SEVERE",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 67,
+      "scrollHeight": 236,
+      "clientHeight": 169,
+      "railVisible": {
+        "top": 395.2,
+        "bottom": 564.2,
+        "left": 26.4,
+        "right": 365.4
+      },
+      "rowBox": {
+        "top": 530.2,
+        "bottom": 564.2,
+        "left": 187.4,
+        "right": 355.4
+      },
+      "textBox": {
+        "top": 530.2,
+        "bottom": 564.2
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 544.6,
+        "bottom": 564.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m01",
+      "scale": 110,
+      "intel": 2,
+      "lastRow": "RISK INDEX89 // SEVERE",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 104,
+      "scrollHeight": 266,
+      "clientHeight": 162,
+      "railVisible": {
+        "top": 392.4,
+        "bottom": 554.4,
+        "left": 26.4,
+        "right": 369.4
+      },
+      "rowBox": {
+        "top": 517.4,
+        "bottom": 554.4,
+        "left": 191,
+        "right": 359
+      },
+      "textBox": {
+        "top": 517.4,
+        "bottom": 554.4
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 534.6,
+        "bottom": 554.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m01",
+      "scale": 125,
+      "intel": 2,
+      "lastRow": "RISK INDEX89 // SEVERE",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 148,
+      "scrollHeight": 303,
+      "clientHeight": 155,
+      "railVisible": {
+        "top": 389.1,
+        "bottom": 544.1,
+        "left": 26.4,
+        "right": 372.4
+      },
+      "rowBox": {
+        "top": 502.1,
+        "bottom": 544.1,
+        "left": 194.8,
+        "right": 362.8
+      },
+      "textBox": {
+        "top": 502.1,
+        "bottom": 544.1
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 523.6,
+        "bottom": 543.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m02",
+      "scale": 90,
+      "intel": 2,
+      "lastRow": "RISK INDEX66 // HIGH",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 33,
+      "scrollHeight": 206,
+      "clientHeight": 173,
+      "railVisible": {
+        "top": 396.6,
+        "bottom": 569.6,
+        "left": 26.4,
+        "right": 363.4
+      },
+      "rowBox": {
+        "top": 555.6,
+        "bottom": 569.6,
+        "left": 185.6,
+        "right": 353.6
+      },
+      "textBox": {
+        "top": 555.6,
+        "bottom": 569.6
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 549.6,
+        "bottom": 569.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m02",
+      "scale": 100,
+      "intel": 2,
+      "lastRow": "RISK INDEX66 // HIGH",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 43,
+      "scrollHeight": 217,
+      "clientHeight": 174,
+      "railVisible": {
+        "top": 401.4,
+        "bottom": 575.4,
+        "left": 26.4,
+        "right": 363.4
+      },
+      "rowBox": {
+        "top": 560.4,
+        "bottom": 575.4,
+        "left": 185,
+        "right": 353
+      },
+      "textBox": {
+        "top": 560.4,
+        "bottom": 575.4
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 555.6,
+        "bottom": 575.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m02",
+      "scale": 110,
+      "intel": 2,
+      "lastRow": "RISK INDEX66 // HIGH",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 82,
+      "scrollHeight": 250,
+      "clientHeight": 168,
+      "railVisible": {
+        "top": 399.8,
+        "bottom": 567.8,
+        "left": 26.4,
+        "right": 366.4
+      },
+      "rowBox": {
+        "top": 530.8,
+        "bottom": 567.8,
+        "left": 188.2,
+        "right": 356.2
+      },
+      "textBox": {
+        "top": 530.8,
+        "bottom": 567.8
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 547.6,
+        "bottom": 567.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m02",
+      "scale": 125,
+      "intel": 2,
+      "lastRow": "RISK INDEX66 // HIGH",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 129,
+      "scrollHeight": 284,
+      "clientHeight": 155,
+      "railVisible": {
+        "top": 389.1,
+        "bottom": 544.1,
+        "left": 26.4,
+        "right": 372.4
+      },
+      "rowBox": {
+        "top": 502.1,
+        "bottom": 544.1,
+        "left": 194.8,
+        "right": 362.8
+      },
+      "textBox": {
+        "top": 502.1,
+        "bottom": 544.1
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 523.6,
+        "bottom": 543.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m03",
+      "scale": 90,
+      "intel": 1,
+      "lastRow": "PROJECTED SUCCESS82%",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 33,
+      "scrollHeight": 206,
+      "clientHeight": 173,
+      "railVisible": {
+        "top": 396.6,
+        "bottom": 569.6,
+        "left": 26.4,
+        "right": 363.4
+      },
+      "rowBox": {
+        "top": 555.6,
+        "bottom": 569.6,
+        "left": 185.6,
+        "right": 353.6
+      },
+      "textBox": {
+        "top": 555.6,
+        "bottom": 569.6
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 549.6,
+        "bottom": 569.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m03",
+      "scale": 100,
+      "intel": 1,
+      "lastRow": "PROJECTED SUCCESS82%",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 43,
+      "scrollHeight": 217,
+      "clientHeight": 174,
+      "railVisible": {
+        "top": 401.4,
+        "bottom": 575.4,
+        "left": 26.4,
+        "right": 363.4
+      },
+      "rowBox": {
+        "top": 560.4,
+        "bottom": 575.4,
+        "left": 185,
+        "right": 353
+      },
+      "textBox": {
+        "top": 560.4,
+        "bottom": 575.4
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 555.6,
+        "bottom": 575.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m03",
+      "scale": 110,
+      "intel": 1,
+      "lastRow": "PROJECTED SUCCESS82%",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 61,
+      "scrollHeight": 229,
+      "clientHeight": 168,
+      "railVisible": {
+        "top": 399.8,
+        "bottom": 567.8,
+        "left": 26.4,
+        "right": 366.4
+      },
+      "rowBox": {
+        "top": 551.8,
+        "bottom": 567.8,
+        "left": 188.2,
+        "right": 356.2
+      },
+      "textBox": {
+        "top": 551.8,
+        "bottom": 567.8
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 547.6,
+        "bottom": 567.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    },
+    {
+      "id": "m03",
+      "scale": 125,
+      "intel": 1,
+      "lastRow": "PROJECTED SUCCESS82%",
+      "rows": 9,
+      "scrollable": true,
+      "scrollTop": 123,
+      "scrollHeight": 284,
+      "clientHeight": 161,
+      "railVisible": {
+        "top": 397.5,
+        "bottom": 558.5,
+        "left": 26.4,
+        "right": 369.4
+      },
+      "rowBox": {
+        "top": 516.5,
+        "bottom": 558.5,
+        "left": 191.5,
+        "right": 359.5
+      },
+      "textBox": {
+        "top": 516.5,
+        "bottom": 558.5
+      },
+      "fade": {
+        "on": false,
+        "opacity": 0,
+        "top": 538.6,
+        "bottom": 558.6,
+        "opaqueFrom": null
+      },
+      "inside": true,
+      "clearOfFade": true,
+      "pass": true
+    }
+  ],
+  "H6": [
+    {
+      "mode": "expedite",
+      "steps": [],
+      "contract": {
+        "id": "gc7518e2d3",
+        "codename": "NEON GARDEN",
+        "threat": "MODERATE",
+        "sector": "eu",
+        "client": "helix",
+        "cityId": "os",
+        "expedited": false,
+        "city": "OSLO"
+      },
+      "contracts": [
+        {
+          "id": "gc7518e2d3",
+          "codename": "NEON GARDEN",
+          "threat": "MODERATE",
+          "sector": "eu",
+          "client": "helix",
+          "cityId": "os",
+          "expedited": false,
+          "city": "OSLO"
+        }
+      ],
+      "before": {
+        "sub": "NEON GARDEN // OSLO",
+        "threat": {
+          "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+          "box": {
+            "x": 940.84375,
+            "y": 275.296875,
+            "w": 314.8,
+            "h": 76
+          }
+        },
+        "objectives": [
+          {
+            "tier": "PRIMARY:",
+            "label": "REACH THE RELAY YARD",
+            "optional": false,
+            "kit": null
+          },
+          {
+            "tier": "OPTIONAL:",
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "optional": true,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "SECONDARY:",
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "optional": false,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "TERTIARY:",
+            "label": "EXTRACT THE SQUAD",
+            "optional": false,
+            "kit": null
+          }
+        ],
+        "kitBoxes": [
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 501.296875,
+            "w": 278.8,
+            "h": 26.4
+          },
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 545.671875,
+            "w": 278.8,
+            "h": 26.4
+          }
+        ],
+        "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+        "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+        "notes": [
+          "HEAVY RAIN. VISIBILITY REDUCED.",
+          "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+          "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+        ]
+      },
+      "buttonFound": true,
+      "buttonText": "3 EXPEDITE12PCLEAR",
+      "buttonDisabled": false,
+      "via": "UI click on the EXPEDITE button",
+      "after": {
+        "id": "gc7518e2d3",
+        "codename": "NEON GARDEN",
+        "threat": "MODERATE",
+        "sector": "eu",
+        "client": "helix",
+        "cityId": "os",
+        "expedited": true,
+        "city": "OSLO"
+      },
+      "missionIdOnReturn": "gc7518e2d3",
+      "brief": {
+        "sub": "NEON GARDEN // OSLO",
+        "threat": {
+          "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+          "box": {
+            "x": 940.84375,
+            "y": 275.296875,
+            "w": 314.8,
+            "h": 76
+          }
+        },
+        "objectives": [
+          {
+            "tier": "PRIMARY:",
+            "label": "REACH THE RELAY YARD",
+            "optional": false,
+            "kit": null
+          },
+          {
+            "tier": "OPTIONAL:",
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "optional": true,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "SECONDARY:",
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "optional": false,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "TERTIARY:",
+            "label": "EXTRACT THE SQUAD",
+            "optional": false,
+            "kit": null
+          }
+        ],
+        "kitBoxes": [
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 501.296875,
+            "w": 278.8,
+            "h": 26.4
+          },
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 545.671875,
+            "w": 278.8,
+            "h": 26.4
+          }
+        ],
+        "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+        "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+        "notes": [
+          "HEAVY RAIN. VISIBILITY REDUCED.",
+          "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+          "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED.",
+          "EXPEDITED CONTRACT // INTEL GATE WAIVED."
+        ]
+      },
+      "deployDisabled": false,
+      "phaseAfterDeploy": "mission",
+      "hud": [
+        {
+          "label": "REACH THE RELAY YARD",
+          "optional": false
+        },
+        {
+          "label": "DROP THE BACKUP TRANSFORMER",
+          "optional": true
+        },
+        {
+          "label": "DESTROY THE THREE FUEL RELAYS",
+          "optional": false
+        },
+        {
+          "label": "EXTRACT THE SQUAD",
+          "optional": false
+        }
+      ],
+      "simKits": {
+        "live": [
+          {
+            "id": "gc7518e2d3-o1",
+            "label": "REACH THE RELAY YARD",
+            "optional": false
+          },
+          {
+            "id": "gc7518e2d3-opt",
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "optional": true
+          },
+          {
+            "id": "gc7518e2d3-o2",
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "optional": false
+          },
+          {
+            "id": "gc7518e2d3-o3",
+            "label": "EXTRACT THE SQUAD",
+            "optional": false
+          }
+        ],
+        "defKits": [
+          {
+            "label": "REACH THE RELAY YARD",
+            "kit": null
+          },
+          {
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "label": "EXTRACT THE SQUAD",
+            "kit": null
+          }
+        ]
+      },
+      "labelsMatch": true,
+      "kitsMatch": true,
+      "beforeEqualsAfter": true,
+      "actionApplied": true,
+      "pass": true
+    },
+    {
+      "mode": "reclient",
+      "steps": [],
+      "contract": {
+        "id": "gc7518e2d3",
+        "codename": "NEON GARDEN",
+        "threat": "MODERATE",
+        "sector": "eu",
+        "client": "helix",
+        "cityId": "os",
+        "expedited": false,
+        "city": "OSLO"
+      },
+      "contracts": [
+        {
+          "id": "gc7518e2d3",
+          "codename": "NEON GARDEN",
+          "threat": "MODERATE",
+          "sector": "eu",
+          "client": "helix",
+          "cityId": "os",
+          "expedited": false,
+          "city": "OSLO"
+        }
+      ],
+      "before": {
+        "sub": "NEON GARDEN // OSLO",
+        "threat": {
+          "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+          "box": {
+            "x": 940.84375,
+            "y": 275.296875,
+            "w": 314.8,
+            "h": 76
+          }
+        },
+        "objectives": [
+          {
+            "tier": "PRIMARY:",
+            "label": "REACH THE RELAY YARD",
+            "optional": false,
+            "kit": null
+          },
+          {
+            "tier": "OPTIONAL:",
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "optional": true,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "SECONDARY:",
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "optional": false,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "TERTIARY:",
+            "label": "EXTRACT THE SQUAD",
+            "optional": false,
+            "kit": null
+          }
+        ],
+        "kitBoxes": [
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 501.296875,
+            "w": 278.8,
+            "h": 26.4
+          },
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 545.671875,
+            "w": 278.8,
+            "h": 26.4
+          }
+        ],
+        "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+        "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+        "notes": [
+          "HEAVY RAIN. VISIBILITY REDUCED.",
+          "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+          "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+        ]
+      },
+      "via": "reclientContract (game function) applied to the open record; in play a seizure or city flip calls it",
+      "reclient": {
+        "applied": true,
+        "tried": [
+          "stratos->stratos"
+        ],
+        "from": "helix",
+        "to": "stratos",
+        "cityFrom": "os",
+        "cityTo": "os"
+      },
+      "after": {
+        "id": "gc7518e2d3",
+        "codename": "NEON GARDEN",
+        "threat": "MODERATE",
+        "sector": "eu",
+        "client": "stratos",
+        "cityId": "os",
+        "expedited": false,
+        "city": "OSLO"
+      },
+      "missionIdOnReturn": "gc7518e2d3",
+      "brief": {
+        "sub": "NEON GARDEN // OSLO",
+        "threat": {
+          "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+          "box": {
+            "x": 940.84375,
+            "y": 275.296875,
+            "w": 314.8,
+            "h": 76
+          }
+        },
+        "objectives": [
+          {
+            "tier": "PRIMARY:",
+            "label": "REACH THE RELAY YARD",
+            "optional": false,
+            "kit": null
+          },
+          {
+            "tier": "OPTIONAL:",
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "optional": true,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "SECONDARY:",
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "optional": false,
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "tier": "TERTIARY:",
+            "label": "EXTRACT THE SQUAD",
+            "optional": false,
+            "kit": null
+          }
+        ],
+        "kitBoxes": [
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 501.296875,
+            "w": 278.8,
+            "h": 26.4
+          },
+          {
+            "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+            "x": 966.84375,
+            "y": 545.671875,
+            "w": 278.8,
+            "h": 26.4
+          }
+        ],
+        "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+        "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+        "notes": [
+          "HEAVY RAIN. VISIBILITY REDUCED.",
+          "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+          "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+        ]
+      },
+      "deployDisabled": false,
+      "phaseAfterDeploy": "mission",
+      "hud": [
+        {
+          "label": "REACH THE RELAY YARD",
+          "optional": false
+        },
+        {
+          "label": "DROP THE BACKUP TRANSFORMER",
+          "optional": true
+        },
+        {
+          "label": "DESTROY THE THREE FUEL RELAYS",
+          "optional": false
+        },
+        {
+          "label": "EXTRACT THE SQUAD",
+          "optional": false
+        }
+      ],
+      "simKits": {
+        "live": [
+          {
+            "id": "gc7518e2d3-o1",
+            "label": "REACH THE RELAY YARD",
+            "optional": false
+          },
+          {
+            "id": "gc7518e2d3-opt",
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "optional": true
+          },
+          {
+            "id": "gc7518e2d3-o2",
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "optional": false
+          },
+          {
+            "id": "gc7518e2d3-o3",
+            "label": "EXTRACT THE SQUAD",
+            "optional": false
+          }
+        ],
+        "defKits": [
+          {
+            "label": "REACH THE RELAY YARD",
+            "kit": null
+          },
+          {
+            "label": "DROP THE BACKUP TRANSFORMER",
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "label": "DESTROY THE THREE FUEL RELAYS",
+            "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+          },
+          {
+            "label": "EXTRACT THE SQUAD",
+            "kit": null
+          }
+        ]
+      },
+      "labelsMatch": true,
+      "kitsMatch": true,
+      "beforeEqualsAfter": true,
+      "actionApplied": true,
+      "pass": true
+    }
+  ],
+  "H7": [
+    {
+      "scale": 90,
+      "phase": "brief",
+      "sub": "NEON GARDEN // OSLO",
+      "threat": {
+        "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+        "box": {
+          "x": 940.84375,
+          "y": 263.296875,
+          "w": 314.8,
+          "h": 74
+        }
+      },
+      "objectives": [
+        {
+          "tier": "PRIMARY:",
+          "label": "REACH THE RELAY YARD",
+          "optional": false,
+          "kit": null
+        },
+        {
+          "tier": "OPTIONAL:",
+          "label": "DROP THE BACKUP TRANSFORMER",
+          "optional": true,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "SECONDARY:",
+          "label": "DESTROY THE THREE FUEL RELAYS",
+          "optional": false,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "TERTIARY:",
+          "label": "EXTRACT THE SQUAD",
+          "optional": false,
+          "kit": null
+        }
+      ],
+      "kitBoxes": [
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 481.296875,
+          "w": 278.8,
+          "h": 23.8
+        },
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 522.046875,
+          "w": 278.8,
+          "h": 23.8
+        }
+      ],
+      "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+      "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+      "notes": [
+        "HEAVY RAIN. VISIBILITY REDUCED.",
+        "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+        "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+      ],
+      "clipped": [],
+      "clippedDossierEnd": [],
+      "overlaps": [],
+      "pass": true
+    },
+    {
+      "scale": 100,
+      "phase": "brief",
+      "sub": "NEON GARDEN // OSLO",
+      "threat": {
+        "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+        "box": {
+          "x": 940.84375,
+          "y": 275.296875,
+          "w": 314.8,
+          "h": 76
+        }
+      },
+      "objectives": [
+        {
+          "tier": "PRIMARY:",
+          "label": "REACH THE RELAY YARD",
+          "optional": false,
+          "kit": null
+        },
+        {
+          "tier": "OPTIONAL:",
+          "label": "DROP THE BACKUP TRANSFORMER",
+          "optional": true,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "SECONDARY:",
+          "label": "DESTROY THE THREE FUEL RELAYS",
+          "optional": false,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "TERTIARY:",
+          "label": "EXTRACT THE SQUAD",
+          "optional": false,
+          "kit": null
+        }
+      ],
+      "kitBoxes": [
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 501.296875,
+          "w": 278.8,
+          "h": 26.4
+        },
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 545.671875,
+          "w": 278.8,
+          "h": 26.4
+        }
+      ],
+      "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+      "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+      "notes": [
+        "HEAVY RAIN. VISIBILITY REDUCED.",
+        "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+        "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+      ],
+      "clipped": [],
+      "clippedDossierEnd": [],
+      "overlaps": [],
+      "pass": true
+    },
+    {
+      "scale": 110,
+      "phase": "brief",
+      "sub": "NEON GARDEN // OSLO",
+      "threat": {
+        "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+        "box": {
+          "x": 940.84375,
+          "y": 290.296875,
+          "w": 314.8,
+          "h": 80
+        }
+      },
+      "objectives": [
+        {
+          "tier": "PRIMARY:",
+          "label": "REACH THE RELAY YARD",
+          "optional": false,
+          "kit": null
+        },
+        {
+          "tier": "OPTIONAL:",
+          "label": "DROP THE BACKUP TRANSFORMER",
+          "optional": true,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "SECONDARY:",
+          "label": "DESTROY THE THREE FUEL RELAYS",
+          "optional": false,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "TERTIARY:",
+          "label": "EXTRACT THE SQUAD",
+          "optional": false,
+          "kit": null
+        }
+      ],
+      "kitBoxes": [
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 532.296875,
+          "w": 278.8,
+          "h": 29
+        },
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 595.328125,
+          "w": 278.8,
+          "h": 29
+        }
+      ],
+      "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+      "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+      "notes": [
+        "HEAVY RAIN. VISIBILITY REDUCED.",
+        "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+        "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+      ],
+      "clipped": [],
+      "clippedDossierEnd": [],
+      "overlaps": [],
+      "pass": true
+    },
+    {
+      "scale": 125,
+      "phase": "brief",
+      "sub": "NEON GARDEN // OSLO",
+      "threat": {
+        "text": "THREAT RATINGMODERATEETA RESPONSE: < 06:00",
+        "box": {
+          "x": 940.84375,
+          "y": 308.296875,
+          "w": 314.8,
+          "h": 84
+        }
+      },
+      "objectives": [
+        {
+          "tier": "PRIMARY:",
+          "label": "REACH THE RELAY YARD",
+          "optional": false,
+          "kit": null
+        },
+        {
+          "tier": "OPTIONAL:",
+          "label": "DROP THE BACKUP TRANSFORMER",
+          "optional": true,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "SECONDARY:",
+          "label": "DESTROY THE THREE FUEL RELAYS",
+          "optional": false,
+          "kit": "power cells arm grenades, the fast tool; gunfire works, slowly"
+        },
+        {
+          "tier": "TERTIARY:",
+          "label": "EXTRACT THE SQUAD",
+          "optional": false,
+          "kit": null
+        }
+      ],
+      "kitBoxes": [
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 578.296875,
+          "w": 278.8,
+          "h": 33
+        },
+        {
+          "t": "KIT: power cells arm grenades, the fast tool; gunfire works, slowly",
+          "x": 966.84375,
+          "y": 647.296875,
+          "w": 278.8,
+          "h": 33
+        }
+      ],
+      "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+      "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+      "notes": [
+        "HEAVY RAIN. VISIBILITY REDUCED.",
+        "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+        "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+      ],
+      "clipped": [],
+      "clippedDossierEnd": [],
+      "overlaps": [],
+      "pass": true
+    }
+  ],
+  "H8": [
+    {
+      "id": "m03",
+      "name": "m03",
+      "phase": "brief",
+      "clipped": [],
+      "layout1920": {
+        "screen": {
+          "x": 0,
+          "y": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "main": {
+          "x": 20,
+          "y": 83.890625,
+          "w": 1880,
+          "h": 855.6
+        },
+        "left": {
+          "x": 20,
+          "y": 83.890625,
+          "w": 1490,
+          "h": 855.6
+        },
+        "recon": {
+          "x": 20,
+          "y": 83.890625,
+          "w": 1490,
+          "h": 477.7
+        },
+        "tac": {
+          "x": 20,
+          "y": 571.5625,
+          "w": 1490,
+          "h": 367.9
+        },
+        "plate": {
+          "x": 597.546875,
+          "y": 605.5625,
+          "w": 323.9,
+          "h": 323.9
+        },
+        "dossier": {
+          "x": 1520,
+          "y": 83.890625,
+          "w": 380,
+          "h": 855.6
+        },
+        "foot": {
+          "x": 20,
+          "y": 949.46875,
+          "w": 1880,
+          "h": 65.5
+        },
+        "railScrolls": false,
+        "dossierScrolls": false,
+        "docOverflow": {
+          "w": 1920,
+          "h": 1080
+        }
+      },
+      "layout1280": {
+        "screen": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 720
+        },
+        "main": {
+          "x": 15.359375,
+          "y": 74.296875,
+          "w": 1249.3,
+          "h": 511.3
+        },
+        "left": {
+          "x": 15.359375,
+          "y": 74.296875,
+          "w": 906.5,
+          "h": 511.3
+        },
+        "recon": {
+          "x": 15.359375,
+          "y": 74.296875,
+          "w": 906.5,
+          "h": 283.1
+        },
+        "tac": {
+          "x": 15.359375,
+          "y": 367.40625,
+          "w": 906.5,
+          "h": 218.2
+        },
+        "plate": {
+          "x": 375.984375,
+          "y": 401.40625,
+          "w": 174.2,
+          "h": 174.2
+        },
+        "dossier": {
+          "x": 931.84375,
+          "y": 74.296875,
+          "w": 332.8,
+          "h": 511.3
+        },
+        "foot": {
+          "x": 15.359375,
+          "y": 595.640625,
+          "w": 1249.3,
+          "h": 64
+        },
+        "railScrolls": true,
+        "dossierScrolls": true,
+        "docOverflow": {
+          "w": 1280,
+          "h": 720
+        }
+      },
+      "grew": [
+        {
+          "k": "main",
+          "w1280": 1249.3,
+          "h1280": 511.3,
+          "w1920": 1880,
+          "h1920": 855.6,
+          "ok": true
+        },
+        {
+          "k": "left",
+          "w1280": 906.5,
+          "h1280": 511.3,
+          "w1920": 1490,
+          "h1920": 855.6,
+          "ok": true
+        },
+        {
+          "k": "tac",
+          "w1280": 906.5,
+          "h1280": 218.2,
+          "w1920": 1490,
+          "h1920": 367.9,
+          "ok": true
+        },
+        {
+          "k": "plate",
+          "w1280": 174.2,
+          "h1280": 174.2,
+          "w1920": 323.9,
+          "h1920": 323.9,
+          "ok": true
+        },
+        {
+          "k": "dossier",
+          "w1280": 332.8,
+          "h1280": 511.3,
+          "w1920": 380,
+          "h1920": 855.6,
+          "ok": true
+        }
+      ],
+      "fills": true,
+      "pass": true
+    },
+    {
+      "id": "gc7518e2d3",
+      "name": "neon",
+      "phase": "brief",
+      "clipped": [],
+      "layout1920": {
+        "screen": {
+          "x": 0,
+          "y": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "main": {
+          "x": 20,
+          "y": 83.890625,
+          "w": 1880,
+          "h": 855.6
+        },
+        "left": {
+          "x": 20,
+          "y": 83.890625,
+          "w": 1490,
+          "h": 855.6
+        },
+        "recon": {
+          "x": 20,
+          "y": 83.890625,
+          "w": 1490,
+          "h": 477.7
+        },
+        "tac": {
+          "x": 20,
+          "y": 571.5625,
+          "w": 1490,
+          "h": 367.9
+        },
+        "plate": {
+          "x": 597.546875,
+          "y": 605.5625,
+          "w": 323.9,
+          "h": 323.9
+        },
+        "dossier": {
+          "x": 1520,
+          "y": 83.890625,
+          "w": 380,
+          "h": 855.6
+        },
+        "foot": {
+          "x": 20,
+          "y": 949.46875,
+          "w": 1880,
+          "h": 65.5
+        },
+        "railScrolls": false,
+        "dossierScrolls": false,
+        "docOverflow": {
+          "w": 1920,
+          "h": 1080
+        }
+      },
+      "layout1280": {
+        "screen": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 720
+        },
+        "main": {
+          "x": 15.359375,
+          "y": 74.296875,
+          "w": 1249.3,
+          "h": 511.3
+        },
+        "left": {
+          "x": 15.359375,
+          "y": 74.296875,
+          "w": 906.5,
+          "h": 511.3
+        },
+        "recon": {
+          "x": 15.359375,
+          "y": 74.296875,
+          "w": 906.5,
+          "h": 283.1
+        },
+        "tac": {
+          "x": 15.359375,
+          "y": 367.40625,
+          "w": 906.5,
+          "h": 218.2
+        },
+        "plate": {
+          "x": 375.984375,
+          "y": 401.40625,
+          "w": 174.2,
+          "h": 174.2
+        },
+        "dossier": {
+          "x": 931.84375,
+          "y": 74.296875,
+          "w": 332.8,
+          "h": 511.3
+        },
+        "foot": {
+          "x": 15.359375,
+          "y": 595.640625,
+          "w": 1249.3,
+          "h": 64
+        },
+        "railScrolls": true,
+        "dossierScrolls": true,
+        "docOverflow": {
+          "w": 1280,
+          "h": 720
+        }
+      },
+      "grew": [
+        {
+          "k": "main",
+          "w1280": 1249.3,
+          "h1280": 511.3,
+          "w1920": 1880,
+          "h1920": 855.6,
+          "ok": true
+        },
+        {
+          "k": "left",
+          "w1280": 906.5,
+          "h1280": 511.3,
+          "w1920": 1490,
+          "h1920": 855.6,
+          "ok": true
+        },
+        {
+          "k": "tac",
+          "w1280": 906.5,
+          "h1280": 218.2,
+          "w1920": 1490,
+          "h1920": 367.9,
+          "ok": true
+        },
+        {
+          "k": "plate",
+          "w1280": 174.2,
+          "h1280": 174.2,
+          "w1920": 323.9,
+          "h1920": 323.9,
+          "ok": true
+        },
+        {
+          "k": "dossier",
+          "w1280": 332.8,
+          "h1280": 511.3,
+          "w1920": 380,
+          "h1920": 855.6,
+          "ok": true
+        }
+      ],
+      "fills": true,
+      "pass": true
+    }
+  ],
+  "neon": {
+    "id": "gc7518e2d3",
+    "codename": "NEON GARDEN",
+    "threat": "MODERATE",
+    "sector": "eu",
+    "client": "helix",
+    "cityId": "os",
+    "expedited": false,
+    "city": "OSLO"
+  },
+  "errors": []
+}

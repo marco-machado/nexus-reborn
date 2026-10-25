@@ -1,0 +1,1029 @@
+{
+ "01.lin": [],
+ "01.controls": [
+  {
+   "name": "UNDERSTOOD orientation",
+   "found": 1,
+   "rows": [
+    {
+     "label": "UNDERSTOOD // DISMISS THE ORIENTATION",
+     "first": "UNDERSTOOD",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  },
+  {
+   "name": "n UNREAD",
+   "found": 1,
+   "rows": [
+    {
+     "label": "2 UNREAD // MARK ALL EVENTS READ",
+     "first": "2 UNREAD",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "02.controls": [
+  {
+   "name": "UNDERSTOOD influence",
+   "found": 1,
+   "rows": [
+    {
+     "label": "UNDERSTOOD // DISMISS THE INFLUENCE NOTE",
+     "first": "UNDERSTOOD",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "02.momentBtn": [
+  {
+   "vis": true,
+   "label": "UNDERSTOOD // DISMISS THE INFLUENCE NOTE"
+  }
+ ],
+ "02.lin": [],
+ "03.lin": [],
+ "03.controls": [
+  {
+   "name": "RECRUIT +",
+   "found": 1,
+   "rows": [
+    {
+     "label": "RECRUIT + (8/8) // OPEN THE RECRUITMENT MARKET",
+     "first": "RECRUIT + (8/8)",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  },
+  {
+   "name": "Item slots",
+   "found": 2,
+   "rows": [
+    {
+     "label": "EMPTY SLOT // ITEM SLOT 1 // CYCLE",
+     "first": "EMPTY SLOT",
+     "starts": true,
+     "disabled": false
+    },
+    {
+     "label": "EMPTY SLOT // ITEM SLOT 2 // CYCLE",
+     "first": "EMPTY SLOT",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  },
+  {
+   "name": "DEPLOY TEAM",
+   "found": 1,
+   "rows": [
+    {
+     "label": "DEPLOY TEAM // STRIKE TEAM 04",
+     "first": "DEPLOY TEAM >>",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "04.tsNone": {
+  "vis": true,
+  "text": "ROSTER EMPTY\nRECRUIT REPLACEMENTS TO REBUILD STRIKE TEAM 04\nRECRUIT >>",
+  "btn": [
+   {
+    "label": "RECRUIT // OPEN THE RECRUITMENT MARKET",
+    "text": "RECRUIT >>"
+   }
+  ]
+ },
+ "04.controls": [
+  {
+   "name": "RECRUIT >>",
+   "found": 1,
+   "rows": [
+    {
+     "label": "RECRUIT // OPEN THE RECRUITMENT MARKET",
+     "first": "RECRUIT >>",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "04.lin": [],
+ "05.lin": [],
+ "05.controls": [
+  {
+   "name": "AUTHORIZE PROJECT",
+   "found": 1,
+   "rows": [
+    {
+     "label": "AUTHORIZE PROJECT // ADVANCED PROPELLANTS // COMMITS 16,000 CR // 2H IN BALLISTICS LAB",
+     "first": "AUTHORIZE PROJECT",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "06.lin": [],
+ "06.controls": [
+  {
+   "name": "RESET ALL",
+   "found": 1,
+   "rows": [
+    {
+     "label": "RESET ALL // EVERY CONTROL TO ITS DEFAULT KEY",
+     "first": "RESET ALL",
+     "starts": true,
+     "disabled": true
+    }
+   ]
+  },
+  {
+   "name": "Quality segments",
+   "found": 4,
+   "rows": [
+    {
+     "label": "AUTO // RENDER QUALITY auto",
+     "first": "AUTO",
+     "starts": true,
+     "disabled": false
+    },
+    {
+     "label": "HIGH // RENDER QUALITY high",
+     "first": "HIGH",
+     "starts": true,
+     "disabled": false
+    },
+    {
+     "label": "MED // RENDER QUALITY medium",
+     "first": "MED",
+     "starts": true,
+     "disabled": false
+    },
+    {
+     "label": "LOW // RENDER QUALITY low",
+     "first": "LOW",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "07.lin": [],
+ "07.controls": [
+  {
+   "name": "EXPORT JSON",
+   "found": 1,
+   "rows": [
+    {
+     "label": "EXPORT JSON // THE TELEMETRY RECORDS",
+     "first": "EXPORT JSON",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "08.r2state.lin": [],
+ "08.r2state.controls": [
+  {
+   "name": "OPEN RESEARCH",
+   "found": 0,
+   "rows": []
+  },
+  {
+   "name": "UNDERSTOOD research",
+   "found": 0,
+   "rows": []
+  }
+ ],
+ "08.fallback.controls": [
+  {
+   "name": "OPEN RESEARCH",
+   "found": 1,
+   "rows": [
+    {
+     "label": "OPEN RESEARCH // THE RESEARCH TAB",
+     "first": "OPEN RESEARCH",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  },
+  {
+   "name": "UNDERSTOOD research",
+   "found": 1,
+   "rows": [
+    {
+     "label": "UNDERSTOOD // DISMISS THE RESEARCH PROMPT",
+     "first": "UNDERSTOOD",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "08.fallback.lin": [],
+ "09.controls": [
+  {
+   "name": "BALANCE DATA",
+   "found": 1,
+   "rows": [
+    {
+     "label": "BALANCE DATA // OPEN THE DASHBOARD OVER THE LOCAL MISSION LOG",
+     "first": "BALANCE DATA",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "09.lin": [],
+ "10.controls": [
+  {
+   "name": "SKIP TUTORIAL",
+   "found": 1,
+   "rows": [
+    {
+     "label": "SKIP TUTORIAL // SKIP THE WHOLE TUTORIAL",
+     "first": "SKIP TUTORIAL",
+     "starts": true,
+     "disabled": false
+    }
+   ]
+  }
+ ],
+ "10.toastBtn": [
+  {
+   "vis": true,
+   "label": "SKIP TUTORIAL // SKIP THE WHOLE TUTORIAL"
+  },
+  {
+   "vis": true,
+   "label": "Dismiss tutorial step SELECTION"
+  }
+ ],
+ "20.parents": {
+  "toasts": true,
+  "weapons": true,
+  "comms": true,
+  "toastsParent": "hud-root",
+  "weaponsParent": "hud-root",
+  "commsParent": "hud-root",
+  "toastsWeapons": true,
+  "commsWeapons": true,
+  "pos": [
+   "absolute",
+   "absolute",
+   "absolute"
+  ]
+ },
+ "20.direct1280": {
+  "90": {
+   "toasts": {
+    "l": 400,
+    "r": 880,
+    "t": 513.3,
+    "b": 599.4,
+    "w": 480,
+    "h": 86.1
+   },
+   "weapons": {
+    "l": 309,
+    "r": 971,
+    "t": 620,
+    "b": 710,
+    "w": 662,
+    "h": 90
+   },
+   "comms": {
+    "l": 10,
+    "r": 304,
+    "t": 560,
+    "b": 710,
+    "w": 294,
+    "h": 150
+   },
+   "toastsXweapons": {
+    "w": 480,
+    "h": -20.6
+   },
+   "commsXweapons": {
+    "w": -5,
+    "h": 90
+   }
+  },
+  "100": {
+   "toasts": {
+    "l": 400,
+    "r": 880,
+    "t": 497.3,
+    "b": 588,
+    "w": 480,
+    "h": 90.7
+   },
+   "weapons": {
+    "l": 309,
+    "r": 971,
+    "t": 604,
+    "b": 710,
+    "w": 662,
+    "h": 106
+   },
+   "comms": {
+    "l": 10,
+    "r": 296,
+    "t": 560,
+    "b": 710,
+    "w": 286,
+    "h": 150
+   },
+   "toastsXweapons": {
+    "w": 480,
+    "h": -16
+   },
+   "commsXweapons": {
+    "w": -13,
+    "h": 106
+   }
+  },
+  "110": {
+   "toasts": {
+    "l": 400,
+    "r": 880,
+    "t": 481.4,
+    "b": 576.6,
+    "w": 480,
+    "h": 95.2
+   },
+   "weapons": {
+    "l": 309,
+    "r": 971,
+    "t": 584.4,
+    "b": 710,
+    "w": 662,
+    "h": 125.6
+   },
+   "comms": {
+    "l": 10,
+    "r": 288,
+    "t": 560,
+    "b": 710,
+    "w": 278,
+    "h": 150
+   },
+   "toastsXweapons": {
+    "w": 480,
+    "h": -7.8
+   },
+   "commsXweapons": {
+    "w": -21,
+    "h": 125.6
+   }
+  },
+  "125": {
+   "toasts": {
+    "l": 400,
+    "r": 880,
+    "t": 438.4,
+    "b": 559.5,
+    "w": 480,
+    "h": 121.1
+   },
+   "weapons": {
+    "l": 309,
+    "r": 971,
+    "t": 574.5,
+    "b": 710,
+    "w": 662,
+    "h": 135.5
+   },
+   "comms": {
+    "l": 10,
+    "r": 276,
+    "t": 560,
+    "b": 710,
+    "w": 266,
+    "h": 150
+   },
+   "toastsXweapons": {
+    "w": 480,
+    "h": -15
+   },
+   "commsXweapons": {
+    "w": -33,
+    "h": 135.5
+   }
+  }
+ },
+ "15.top": {
+  "sh": 622,
+  "ch": 354,
+  "top": 0,
+  "tab": 0,
+  "role": "region",
+  "label": "Mission invoice",
+  "fade": "scroll-fade on"
+ },
+ "15.tabReached": true,
+ "15.bottom": {
+  "sh": 622,
+  "ch": 354,
+  "top": 267,
+  "tab": 0,
+  "role": "region",
+  "label": "Mission invoice",
+  "fade": "scroll-fade",
+  "via": "End"
+ },
+ "16.banner": [
+  {
+   "vis": true,
+   "role": "status",
+   "text": "◆\nCAMPAIGN FAILED\nROSTER EMPTY // NO CONTRACT CAN BE TAKEN\n0 / 3"
+  }
+ ],
+ "18.structure": {
+  "rright": 1,
+  "readoutsInside": 1,
+  "readoutsTotal": 1,
+  "calloutInside": 1,
+  "calloutTotal": 1
+ },
+ "18.scales": {
+  "90": {
+   "bg": {
+    "rbrief": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rreadout": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rcallout": [
+     "rgba(4, 10, 9, 0.9)"
+    ]
+   },
+   "rbrief": {
+    "l": 33.3,
+    "r": 559.8,
+    "t": 105.8,
+    "b": 166.5,
+    "w": 526.4,
+    "h": 60.8
+   },
+   "rright": {
+    "l": 748,
+    "r": 905.8,
+    "t": 105.8,
+    "b": 231.2,
+    "w": 157.8,
+    "h": 125.4
+   },
+   "intersect": {
+    "w": -188.2,
+    "h": 60.7
+   }
+  },
+  "100": {
+   "bg": {
+    "rbrief": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rreadout": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rcallout": [
+     "rgba(4, 10, 9, 0.9)"
+    ]
+   },
+   "rbrief": {
+    "l": 33.3,
+    "r": 594.1,
+    "t": 107.9,
+    "b": 199.9,
+    "w": 560.8,
+    "h": 92
+   },
+   "rright": {
+    "l": 732.4,
+    "r": 905.8,
+    "t": 107.9,
+    "b": 242.9,
+    "w": 173.3,
+    "h": 135
+   },
+   "intersect": {
+    "w": -138.3,
+    "h": 92
+   }
+  },
+  "110": {
+   "bg": {
+    "rbrief": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rreadout": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rcallout": [
+     "rgba(4, 10, 9, 0.9)"
+    ]
+   },
+   "rbrief": {
+    "l": 33.3,
+    "r": 594.1,
+    "t": 111.6,
+    "b": 211.4,
+    "w": 560.8,
+    "h": 99.8
+   },
+   "rright": {
+    "l": 716.9,
+    "r": 905.8,
+    "t": 111.6,
+    "b": 258.1,
+    "w": 188.9,
+    "h": 146.5
+   },
+   "intersect": {
+    "w": -122.8,
+    "h": 99.8
+   }
+  },
+  "125": {
+   "bg": {
+    "rbrief": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rreadout": [
+     "rgba(7, 16, 15, 0.92)"
+    ],
+    "rcallout": [
+     "rgba(4, 10, 9, 0.9)"
+    ]
+   },
+   "rbrief": {
+    "l": 33.3,
+    "r": 594.1,
+    "t": 115.3,
+    "b": 259.3,
+    "w": 560.8,
+    "h": 144
+   },
+   "rright": {
+    "l": 693.6,
+    "r": 905.8,
+    "t": 115.3,
+    "b": 278.6,
+    "w": 212.2,
+    "h": 163.3
+   },
+   "intersect": {
+    "w": -99.5,
+    "h": 144
+   }
+  }
+ },
+ "19.scales": {
+  "90": {
+   "text": "EUROPE // HELIX CORP",
+   "tag": {
+    "l": 1000.5,
+    "r": 1145.6,
+    "t": 156.3,
+    "b": 168.3,
+    "w": 145.2,
+    "h": 12
+   },
+   "l": {
+    "l": 972.5,
+    "r": 996.5,
+    "t": 125.3,
+    "b": 155.3,
+    "w": 24,
+    "h": 30
+   },
+   "r": {
+    "l": 1222.6,
+    "r": 1246.6,
+    "t": 125.3,
+    "b": 155.3,
+    "w": 24,
+    "h": 30
+   },
+   "xL": {
+    "w": -4,
+    "h": -1
+   },
+   "xR": {
+    "w": -77,
+    "h": -1
+   },
+   "clip": []
+  },
+  "100": {
+   "text": "EUROPE // HELIX CORP",
+   "tag": {
+    "l": 1000.5,
+    "r": 1160.9,
+    "t": 157.3,
+    "b": 170.3,
+    "w": 160.4,
+    "h": 13
+   },
+   "l": {
+    "l": 972.5,
+    "r": 996.5,
+    "t": 127.3,
+    "b": 157.3,
+    "w": 24,
+    "h": 30
+   },
+   "r": {
+    "l": 1222.6,
+    "r": 1246.6,
+    "t": 127.3,
+    "b": 157.3,
+    "w": 24,
+    "h": 30
+   },
+   "xL": {
+    "w": -4,
+    "h": 0
+   },
+   "xR": {
+    "w": -61.7,
+    "h": 0
+   },
+   "clip": []
+  },
+  "110": {
+   "text": "EUROPE // HELIX CORP",
+   "tag": {
+    "l": 1000.5,
+    "r": 1176.1,
+    "t": 159.3,
+    "b": 174.3,
+    "w": 175.7,
+    "h": 15
+   },
+   "l": {
+    "l": 972.5,
+    "r": 996.5,
+    "t": 131.3,
+    "b": 161.3,
+    "w": 24,
+    "h": 30
+   },
+   "r": {
+    "l": 1222.6,
+    "r": 1246.6,
+    "t": 131.3,
+    "b": 161.3,
+    "w": 24,
+    "h": 30
+   },
+   "xL": {
+    "w": -4,
+    "h": 2
+   },
+   "xR": {
+    "w": -46.5,
+    "h": 2
+   },
+   "clip": []
+  },
+  "125": {
+   "text": "EUROPE // HELIX CORP",
+   "tag": {
+    "l": 1000.5,
+    "r": 1199,
+    "t": 161.3,
+    "b": 178.3,
+    "w": 198.5,
+    "h": 17
+   },
+   "l": {
+    "l": 972.5,
+    "r": 996.5,
+    "t": 135.3,
+    "b": 165.3,
+    "w": 24,
+    "h": 30
+   },
+   "r": {
+    "l": 1222.6,
+    "r": 1246.6,
+    "t": 135.3,
+    "b": 165.3,
+    "w": 24,
+    "h": 30
+   },
+   "xL": {
+    "w": -4,
+    "h": 4
+   },
+   "xR": {
+    "w": -23.6,
+    "h": 4
+   },
+   "clip": []
+  }
+ },
+ "19.sectors125": [
+  {
+   "text": "EUROPE // HELIX CORP",
+   "xL": {
+    "w": -4,
+    "h": 4
+   },
+   "xR": {
+    "w": -23.6,
+    "h": 4
+   },
+   "clip": 0,
+   "tagH": 17
+  },
+  {
+   "text": "AFRICA // OMNICORP",
+   "xL": {
+    "w": -4,
+    "h": 4
+   },
+   "xR": {
+    "w": -42.7,
+    "h": 4
+   },
+   "clip": 0,
+   "tagH": 17
+  },
+  {
+   "text": "ASIA // HELIX CORP",
+   "xL": {
+    "w": -4,
+    "h": 4
+   },
+   "xR": {
+    "w": -42.7,
+    "h": 4
+   },
+   "clip": 0,
+   "tagH": 17
+  },
+  {
+   "text": "OCEANIA // STRATOS INDUSTRIES",
+   "xL": {
+    "w": -4,
+    "h": 19
+   },
+   "xR": {
+    "w": -4,
+    "h": 19
+   },
+   "clip": 0,
+   "tagH": 32
+  },
+  {
+   "text": "NORTH AMERICA // NEXUS GLOBAL",
+   "xL": {
+    "w": -4,
+    "h": 19
+   },
+   "xR": {
+    "w": -4,
+    "h": 19
+   },
+   "clip": 0,
+   "tagH": 32
+  },
+  {
+   "text": "SOUTH AMERICA // CONTESTED",
+   "xL": {
+    "w": -4,
+    "h": 19
+   },
+   "xR": {
+    "w": -4,
+    "h": 19
+   },
+   "clip": 0,
+   "tagH": 32
+  }
+ ],
+ "19.longest": {
+  "text": "OCEANIA // STRATOS INDUSTRIES",
+  "tag": {
+   "l": 1000.5,
+   "r": 1218.6,
+   "t": 146.3,
+   "b": 178.3,
+   "w": 218.2,
+   "h": 32
+  },
+  "l": {
+   "l": 972.5,
+   "r": 996.5,
+   "t": 135.3,
+   "b": 165.3,
+   "w": 24,
+   "h": 30
+  },
+  "r": {
+   "l": 1222.6,
+   "r": 1246.6,
+   "t": 135.3,
+   "b": 165.3,
+   "w": 24,
+   "h": 30
+  },
+  "xL": {
+   "w": -4,
+   "h": 19
+  },
+  "xR": {
+   "w": -4,
+   "h": 19
+  },
+  "clip": []
+ },
+ "23.write.world": {
+  "ok": false,
+  "status": "write-failed",
+  "reason": "quota"
+ },
+ "23.world": {
+  "found": true,
+  "text": "SAVE FAILED // CAMPAIGN NOT FILED",
+  "color": "rgb(255, 107, 85)",
+  "border": [
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)"
+  ],
+  "borderW": "1px",
+  "bg": "rgba(7, 16, 15, 0.92)",
+  "before": {
+   "content": "\"\"",
+   "border": [
+    "rgb(255, 107, 85)",
+    "rgb(255, 107, 85)"
+   ],
+   "bg": "rgba(0, 0, 0, 0)"
+  },
+  "after": {
+   "content": "none",
+   "border": [
+    "rgb(255, 107, 85)",
+    "rgb(255, 107, 85)"
+   ],
+   "bg": "rgba(0, 0, 0, 0)"
+  },
+  "ratio": 6.9
+ },
+ "23.research": {
+  "found": true,
+  "text": "SAVE FAILED // CAMPAIGN NOT FILED",
+  "color": "rgb(255, 107, 85)",
+  "border": [
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)"
+  ],
+  "borderW": "1px",
+  "bg": "rgba(7, 16, 15, 0.92)",
+  "before": {
+   "content": "\"\"",
+   "border": [
+    "rgb(255, 107, 85)",
+    "rgb(255, 107, 85)"
+   ],
+   "bg": "rgba(0, 0, 0, 0)"
+  },
+  "after": {
+   "content": "none",
+   "border": [
+    "rgb(255, 107, 85)",
+    "rgb(255, 107, 85)"
+   ],
+   "bg": "rgba(0, 0, 0, 0)"
+  },
+  "ratio": 6.9
+ },
+ "23.write.restored": {
+  "ok": true,
+  "status": "filed",
+  "reason": null
+ },
+ "23.afterRestore": 0,
+ "23.write.card": {
+  "ok": false,
+  "status": "write-failed",
+  "reason": "quota"
+ },
+ "23.card": {
+  "found": true,
+  "text": "SAVE FAILED // CAMPAIGN NOT FILED",
+  "color": "rgb(255, 107, 85)",
+  "border": [
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)",
+   "color(srgb 1 0.419608 0.333333 / 0.6)"
+  ],
+  "borderW": "1px",
+  "bg": "rgba(7, 16, 15, 0.92)",
+  "before": {
+   "content": "\"\"",
+   "border": [
+    "rgb(255, 107, 85)",
+    "rgb(255, 107, 85)"
+   ],
+   "bg": "rgba(0, 0, 0, 0)"
+  },
+  "after": {
+   "content": "none",
+   "border": [
+    "rgb(255, 107, 85)",
+    "rgb(255, 107, 85)"
+   ],
+   "bg": "rgba(0, 0, 0, 0)"
+  },
+  "ratio": 6.85
+ },
+ "23.cardRegionHidden": {
+  "vis": false,
+  "clipPath": "inset(50%)"
+ },
+ "23.afterReset": 0,
+ "22.1360": {
+  "90": {
+   "commsW": 294,
+   "commsR": 304,
+   "weaponsL": 345.9,
+   "expected": 294,
+   "ok": true
+  },
+  "100": {
+   "commsW": 286,
+   "commsR": 296,
+   "weaponsL": 341.9,
+   "expected": 286,
+   "ok": true
+  },
+  "110": {
+   "commsW": 278,
+   "commsR": 288,
+   "weaponsL": 340,
+   "expected": 278,
+   "ok": true
+  },
+  "125": {
+   "commsW": 266,
+   "commsR": 276,
+   "weaponsL": 340,
+   "expected": 266,
+   "ok": true
+  }
+ },
+ "22.1280": {
+  "90": {
+   "commsW": 294,
+   "commsR": 304,
+   "weaponsL": 309,
+   "expected": 294,
+   "ok": true
+  },
+  "100": {
+   "commsW": 286,
+   "commsR": 296,
+   "weaponsL": 309,
+   "expected": 286,
+   "ok": true
+  },
+  "110": {
+   "commsW": 278,
+   "commsR": 288,
+   "weaponsL": 309,
+   "expected": 278,
+   "ok": true
+  },
+  "125": {
+   "commsW": 266,
+   "commsR": 276,
+   "weaponsL": 309,
+   "expected": 266,
+   "ok": true
+  }
+ },
+ "errors": []
+}

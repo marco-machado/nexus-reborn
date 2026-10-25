@@ -1,0 +1,23 @@
+S0 menu buttons: ["<< NEW OPERATION >>","SETTINGS"]
+CLICK NEW OPERATION
+S0 phase after new op: world
+cleared card UNDERSTOOD // DISMISS THE ORIENTATION
+CLICK RUST HAVEN row: BUTTON OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL
+CLICK ACCEPT CONTRACT
+CLICK DEPLOY TEAM
+S0 state {"phase":"mission","live":true,"held":false,"mission":"m03","codename":"RUST HAVEN"}
+SCENE {"ok":true,"ent":"http://localhost:4200/node_modules/.vite/deps/@react-three_fiber.js?v=cbb1798c","rootsSize":1,"camera":"PerspectiveCamera","fov":25}
+pre: SKIP TUTORIAL clicked to clear toasts
+ring geometry {"visible":true,"pos":[43.58,0.06,80.08],"ground":{"x":43.580201692876926,"z":80.08020169287694},"centre":[640,249.2]}
+C2.7 {"deg":0,"projectedOuterPx":68.8,"projectedInnerPx":65.8,"redBandPx":[65.5,67.75],"outerEdgeErrPx":-1.02}
+C2.7 {"deg":45,"projectedOuterPx":60.3,"projectedInnerPx":57.6,"redBandPx":[57.5,60.25],"outerEdgeErrPx":-0.04}
+C2.7 {"deg":90,"projectedOuterPx":68.8,"projectedInnerPx":65.8,"redBandPx":[65.75,68.75],"outerEdgeErrPx":-0.02}
+C2.7 {"deg":135,"projectedOuterPx":75.2,"projectedInnerPx":72,"redBandPx":[72.5,75.25],"outerEdgeErrPx":0.01}
+C2.7 {"deg":180,"projectedOuterPx":66.2,"projectedInnerPx":63.4,"redBandPx":[64.25,67.75],"outerEdgeErrPx":1.52}
+C2.7 {"deg":225,"projectedOuterPx":57.2,"projectedInnerPx":54.8,"redBandPx":[54.75,57.5],"outerEdgeErrPx":0.33}
+C2.7 {"deg":270,"projectedOuterPx":66.2,"projectedInnerPx":63.4,"redBandPx":[63,66.5],"outerEdgeErrPx":0.27}
+C2.7 {"deg":315,"projectedOuterPx":75.2,"projectedInnerPx":72,"redBandPx":[71.75,74.5],"outerEdgeErrPx":-0.74}
+done
+
+ERRORS:
+

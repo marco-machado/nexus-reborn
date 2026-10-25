@@ -1,0 +1,74 @@
+# IF-029 hand-walk — 2026-10-25T02:43:14.941Z — http://localhost:4200/
+viewport {"width":1280,"height":720}
+TC-05 default ink rgb(184, 216, 207) (lum 0.6381) ink-dim rgb(93, 125, 117) ink-faint rgb(53, 80, 74) locked rows 1
+  GLASS VEIL [codename] "GLASS VEIL" rgb(184, 216, 207) lum 0.6381 alpha 1 ratio 12.68 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-main > b
+  GLASS VEIL [reason] "REQUIRES INTEL LVL 2" rgb(255, 107, 85) lum 0.3243 alpha 1 ratio 6.9 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-main > i.red
+  GLASS VEIL [chip] "CHANCE 36%" rgb(184, 216, 207) lum 0.6381 alpha 1 ratio 13.04 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  GLASS VEIL [chip] "ETA" rgb(184, 216, 207) lum 0.6381 alpha 1 ratio 13.04 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  GLASS VEIL [chip] "2" rgb(184, 216, 207) lum 0.6381 alpha 1 ratio 13.04 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  GLASS VEIL [chip] "D" rgb(184, 216, 207) lum 0.6381 alpha 1 ratio 13.04 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  TC-05 default: no TYPE // CITY run in any locked row (as built the reason replaces it)
+TC-05 hc ink rgb(226, 246, 238) (lum 0.8825) ink-dim rgb(157, 195, 184) ink-faint rgb(109, 147, 138) locked rows 1
+  GLASS VEIL [codename] "GLASS VEIL" rgb(226, 246, 238) lum 0.8825 alpha 1 ratio 17.18 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-main > b
+  GLASS VEIL [reason] "REQUIRES INTEL LVL 2" rgb(255, 107, 85) lum 0.3243 alpha 1 ratio 6.9 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-main > i.red
+  GLASS VEIL [chip] "CHANCE 36%" rgb(226, 246, 238) lum 0.8825 alpha 1 ratio 17.67 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  GLASS VEIL [chip] "ETA" rgb(226, 246, 238) lum 0.8825 alpha 1 ratio 17.67 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  GLASS VEIL [chip] "2" rgb(226, 246, 238) lum 0.8825 alpha 1 ratio 17.67 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  GLASS VEIL [chip] "D" rgb(226, 246, 238) lum 0.8825 alpha 1 ratio 17.67 div.scroll.wm-ops-list > button.wm-op.locked > span.wm-op-meta > span.chip.dim
+  TC-05 hc: no TYPE // CITY run in any locked row (as built the reason replaces it)
+PASS IF-029 TC-05 codename/chips in locked rows Ink or brighter, alpha 1, >= 4.5:1 (default + HC) // []
+TC-06 eu GLASS VEIL locked true viewBox ["0 0 12 14"] box {"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}
+TC-06 eu NEON GARDEN locked false viewBox ["0 0 16 16"] box {"w":14,"h":14,"vis":"visible","color":"rgb(89, 214, 201)","alpha":1}
+TC-06 as HOLLOW CROWN locked true viewBox ["0 0 12 14"] box {"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}
+TC-06 na RUST HAVEN locked false viewBox ["0 0 16 16"] box {"w":14,"h":14,"vis":"visible","color":"rgb(89, 214, 201)","alpha":1}
+PASS IF-029 TC-06 lock glyph on locked rows, target glyph on open rows // []
+TC-07 default HOLLOW CROWN {"codename":"HOLLOW CROWN","locked":true,"ariaDisabled":"true","ariaLabel":"HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2","reason":{"text":"REQUIRES INTEL LVL 2","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.22)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}}
+TC-07 default RUST HAVEN frame {"border":"rgba(126, 240, 212, 0.22)","style":"solid","bg":"rgba(4, 10, 9, 0.9)","op":"1"} locked false
+TC-07 hc HOLLOW CROWN {"codename":"HOLLOW CROWN","locked":true,"ariaDisabled":"true","ariaLabel":"HOLLOW CROWN // LOCKED // REQUIRES INTEL LVL 2","reason":{"text":"REQUIRES INTEL LVL 2","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.42)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(226, 246, 238)","alpha":1}}
+TC-07 hc RUST HAVEN frame {"border":"rgba(126, 240, 212, 0.42)","style":"solid","bg":"rgba(4, 10, 9, 0.9)","op":"1"} locked false
+PASS IF-029 TC-07 HOLLOW CROWN meets AC-1/AC-2 in both modes // []
+TC-08 open-row frames (opening, default): eu NEON GARDEN {"border":"rgba(126, 240, 212, 0.22)","style":"solid","bg":"rgba(4, 10, 9, 0.9)","op":"1"}; na RUST HAVEN {"border":"rgba(126, 240, 212, 0.22)","style":"solid","bg":"rgba(4, 10, 9, 0.9)","op":"1"}
+TC-08 eu {"codename":"GLASS VEIL","locked":true,"ariaDisabled":"true","ariaLabel":"GLASS VEIL // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.22)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}}
+TC-08 eu {"codename":"NEON GARDEN","locked":true,"ariaDisabled":"true","ariaLabel":"NEON GARDEN // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.22)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}}
+TC-08 na {"codename":"RUST HAVEN","locked":true,"ariaDisabled":"true","ariaLabel":"RUST HAVEN // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.22)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}}
+TC-08 as {"codename":"HOLLOW CROWN","locked":true,"ariaDisabled":"true","ariaLabel":"HOLLOW CROWN // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.22)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(184, 216, 207)","alpha":1}}
+PASS IF-029 TC-08 failed campaign rows locked treatment (default) rows 4 // []
+TC-09 open-row frames (opening, hc): eu NEON GARDEN {"border":"rgba(126, 240, 212, 0.42)","style":"solid","bg":"rgba(4, 10, 9, 0.9)","op":"1"}; na RUST HAVEN {"border":"rgba(126, 240, 212, 0.42)","style":"solid","bg":"rgba(4, 10, 9, 0.9)","op":"1"}
+TC-09 eu {"codename":"GLASS VEIL","locked":true,"ariaDisabled":"true","ariaLabel":"GLASS VEIL // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.42)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(226, 246, 238)","alpha":1}}
+TC-09 eu {"codename":"NEON GARDEN","locked":true,"ariaDisabled":"true","ariaLabel":"NEON GARDEN // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.42)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(226, 246, 238)","alpha":1}}
+TC-09 na {"codename":"RUST HAVEN","locked":true,"ariaDisabled":"true","ariaLabel":"RUST HAVEN // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.42)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(226, 246, 238)","alpha":1}}
+TC-09 as {"codename":"HOLLOW CROWN","locked":true,"ariaDisabled":"true","ariaLabel":"HOLLOW CROWN // LOCKED // CAMPAIGN LOST","reason":{"text":"CAMPAIGN LOST","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]},"redDim":false,"frame":{"border":"rgba(126, 240, 212, 0.42)","style":"dashed","bg":"rgba(0, 0, 0, 0)","op":"1"},"minAlpha":1,"minRatio":6.9,"glyphs":["0 0 12 14"],"glyph":{"w":10,"h":11.5,"vis":"visible","color":"rgb(226, 246, 238)","alpha":1}}
+PASS IF-029 TC-09 failed campaign rows locked treatment (high contrast) rows 4 // []
+TC-10 eu scrolled in-view [{"codename":"GLASS VEIL","locked":true,"glyphInView":false,"textInView":false,"text":"REQUIRES INTEL LVL 2","viewBox":"0 0 12 14"},{"codename":"NEON GARDEN","locked":false,"glyphInView":true,"textInView":true,"text":"SABOTAGE // OSLO","viewBox":"0 0 16 16"}]
+TC-10 eu GLASS VEIL locked true viewBox ["0 0 12 14"] reason {"text":"REQUIRES INTEL LVL 2","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]}
+TC-10 eu NEON GARDEN locked false viewBox ["0 0 16 16"] reason {"text":"SABOTAGE // OSLO","color":"rgb(184, 216, 207)","cls":"dim","w":144,"h":11,"clippedHits":[]}
+TC-10 eu gray glyph pixels {"codename":"GLASS VEIL","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(205, 205, 205)","bg":"rgb(14, 14, 14)","ratio":12.14}
+TC-10 eu gray reason GLASS VEIL: brightest rgb(132, 132, 132) vs row bg rgb(14, 14, 14) ratio 5.16
+TC-10 as HOLLOW CROWN locked true viewBox ["0 0 12 14"] reason {"text":"REQUIRES INTEL LVL 2","color":"rgb(255, 107, 85)","cls":"red","w":144,"h":11,"clippedHits":[]}
+TC-10 as gray glyph pixels {"codename":"HOLLOW CROWN","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(205, 205, 205)","bg":"rgb(14, 14, 14)","ratio":12.14}
+TC-10 as gray reason HOLLOW CROWN: brightest rgb(132, 132, 132) vs row bg rgb(14, 14, 14) ratio 5.16
+TC-10 na RUST HAVEN locked false viewBox ["0 0 16 16"] reason {"text":"SABOTAGE // DETROIT SPRAWL","color":"rgb(184, 216, 207)","cls":"dim","w":144,"h":22,"clippedHits":[]}
+PASS IF-029 TC-10 grayscale: locked rows lock glyph + visible unclipped reason; open rows neither // []
+TC-11 default eu computed {"codename":"GLASS VEIL","fill":"rgb(184, 216, 207)","color":"rgb(184, 216, 207)","alpha":1,"bg":"rgb(7, 15, 15)","ratio":12.68}
+TC-11 default eu pixel {"codename":"GLASS VEIL","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(180, 212, 203)","bg":"rgb(7, 16, 15)","ratio":12.13}
+TC-11 default as computed {"codename":"HOLLOW CROWN","fill":"rgb(184, 216, 207)","color":"rgb(184, 216, 207)","alpha":1,"bg":"rgb(7, 15, 15)","ratio":12.68}
+TC-11 default as pixel {"codename":"HOLLOW CROWN","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(180, 212, 203)","bg":"rgb(6, 16, 15)","ratio":12.14}
+TC-11 hc eu computed {"codename":"GLASS VEIL","fill":"rgb(226, 246, 238)","color":"rgb(226, 246, 238)","alpha":1,"bg":"rgb(7, 15, 15)","ratio":17.18}
+TC-11 hc eu pixel {"codename":"GLASS VEIL","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(222, 241, 233)","bg":"rgb(7, 16, 15)","ratio":16.39}
+TC-11 hc as computed {"codename":"HOLLOW CROWN","fill":"rgb(226, 246, 238)","color":"rgb(226, 246, 238)","alpha":1,"bg":"rgb(7, 15, 15)","ratio":17.18}
+TC-11 hc as pixel {"codename":"HOLLOW CROWN","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(222, 241, 233)","bg":"rgb(6, 16, 15)","ratio":16.41}
+TC-11 grayscale eu pixel {"codename":"GLASS VEIL","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(205, 205, 205)","bg":"rgb(14, 14, 14)","ratio":12.14}
+TC-11 grayscale as pixel {"codename":"HOLLOW CROWN","size":[1280,720],"bodyAt":[986,473],"bgAt":[972,471],"body":"rgb(205, 205, 205)","bg":"rgb(14, 14, 14)","ratio":12.14}
+PASS IF-029 TC-11 lock glyph >= 3:1 computed and pixel (default, HC, grayscale) // []
+TC-12 default eu GLASS VEIL locked true aria-disabled "true"
+TC-12 default eu NEON GARDEN locked false aria-disabled null
+TC-12 default as HOLLOW CROWN locked true aria-disabled "true"
+TC-12 default na RUST HAVEN locked false aria-disabled null
+TC-12 hc eu GLASS VEIL locked true aria-disabled "true"
+TC-12 hc eu NEON GARDEN locked false aria-disabled null
+TC-12 hc as HOLLOW CROWN locked true aria-disabled "true"
+TC-12 hc na RUST HAVEN locked false aria-disabled null
+TC-12 after force-click on locked row: phase world
+PASS IF-029 TC-12 aria-disabled true on locked, absent on open, both modes; locked click stays on world // []
+no console or page errors
+ALL PASS

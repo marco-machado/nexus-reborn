@@ -4,18 +4,25 @@
 > step, and every new step updates it in the same turn. It always lists the
 > next steps, and at the very least the very next step. Rules: `CLAUDE.md` → Roadmap.
 
-**Last updated:** 2026-10-24
+**Last updated:** 2026-10-25
 **Stage:** Production (`project.yaml`)
-**Sprint:** Sprint 11 (2026-10-23 to 2026-10-28) — all 24 stories Complete 2026-10-23 (IF-016 to IF-035, plus IF-036 to IF-038 and TM-018 added during the sprint); QA sign-off pending
+**Sprint:** Sprint 11 (2026-10-23 to 2026-10-28) — all 24 stories Complete 2026-10-23 (IF-016 to IF-035, plus IF-036 to IF-038 and TM-018 added during the sprint); QA sign-off 2026-10-25: **NOT APPROVED** (`production/qa/qa-signoff-sprint-011-2026-10-25.md`)
 **Goal (owner, 2026-10-23):** pass the Production → Polish `/gate-check`. Open blockers from gate re-run 3 (`gate-check-polish-2026-10-19-r3.md`): five screens without UX specs; playtests 2–3 and the fun hypothesis; smoke at HEAD; plus accessibility compliance and the pattern library.
 
 ## Next step
 
-1. **`/team-qa sprint`** for Sprint 11. Smoke check at HEAD passed 2026-10-24 (`production/qa/smoke-2026-10-24-sprint-011.md`: suite 1664/1664, lint and build green, all eight smoke items pass). Open owner call carried: Assembly `MOBILITY` mid-word break (`design/ux/assembly.md` Open Question 15).
+1. **Fix the three Sprint 11 story FAILs**, then re-walk only their failing cases on the new HEAD (sign-off conditions 1–3):
+   - BUG-0010 (S3, P1): Rust Haven and industrial generated Brief notes lack `EVERY CIVILIAN HIT IS BILLED.` (IF-039 AC-1; `src/game/data.ts:246`, `src/game/contracts.ts:420`). Re-walk IF-039 TC-02.
+   - BUG-0011 (S3, P2): Assembly `MOBILITY` mid-word break (IF-036 AC-2; `src/ui/ui.css:2471`). Re-walk TC-036-22.
+   - BUG-0013 (S3, P2): Research node labels draw smaller at 125% than at 100% (IF-037 AC-1). Re-walk TC-037-03.
+   - Sign-offs: TM-020 art lead and QA lead; TM-018 lead (rows in their `production/qa/evidence/*-evidence.md`).
+   - The owner may instead record a workaround or accept a FAIL, story by story.
 
 ## After that
 
 2. **`/retrospective`**, then **`/gate-check`** Production → Polish.
+2a. Owner questions from the Sprint 11 sign-off "Observations" (Influence note below the fold since HELD BY; Review NOW in Ink; crisis bar `--red`; `.pp-live` blink under reduced motion; Antarctica Garrison CRITICAL; Print White spec value). BUG-0012 (failed banner `0 / 3`, P3) in the backlog.
+2b. Harness: `production/qa/evidence/screens-2026-10-23/focus.mjs` step 4 re-marks the Debrief note seen (R3 15/16); fix the ordering.
 3. A human playtest after the fixes (CD-PLAYTEST: every timing finding so far comes from agents; TM-019 needs a person at real-time speed); owner hand-play dated 2026-10-28.
 4. Owner decisions from `production/qa/playtests/fun-hypothesis-2026-10-23.md`: adopt the revised hypothesis in `design/gdd/game-concept.md` or keep the original; after the human session, whether "too hard" needs a third profile (difficulty-curve OQ); in Polish, whether to reopen Abort (§19 #8).
 5. `/code-review` of the playtest 3–4 fixes (WN-021, WN-022, TM-019 to TM-021, IF-039; not run); Visual/Feel sign-off for TM-020.
@@ -32,6 +39,8 @@
 | Polish | BUG-0008 (deferred) |
 
 ## Done recently
+
+- 2026-10-25 — `/team-qa sprint` for Sprint 11: **NOT APPROVED** (`production/qa/qa-signoff-sprint-011-2026-10-25.md`). 30 stories in scope: the sprint's 24 plus TM-019 to TM-021, IF-039, WN-021 and WN-022 from `2c73542`. All executed on HEAD `131a5c1`: 26 PASS or PASS WITH NOTES, 3 FAIL (IF-036, IF-037, IF-039), and TM-020 passes its cases with sign-off open. Scripted re-runs R1 152/152; R2 and R4 0 on every surface; R3 15/16 (a script defect). The F2 "14 low-contrast hits" happen only mid-fade at 40 ms (alpha 0.378); the settled reading is 0. Bugs filed: BUG-0010 to BUG-0013 (all S3). TM-021 tests added (4, mutation-checked; suite 1668/1668 three times in a row). Carried Sprint 10 condition 4 (Brief H5–H8) PASS. Evidence: `production/qa/evidence/sprint-011-head-2026-10-24/`.
 
 - 2026-10-24 — `/smoke-check sprint` for Sprint 11: PASS (`production/qa/smoke-2026-10-24-sprint-011.md`). Suite 1664/1664, lint and build green; all eight QA-plan smoke items walked, incl. the Rust Haven Debrief return (Influence 0 → 8), the failed-campaign fixture, 125% + high contrast on four screens, and the frame fixture (World Network p95 9.1 ms, 0 live-mission frames over 50 ms; `evidence/smoke-2026-10-24-s11/perf.json`).
 - 2026-10-24 — Playtest screenshots gitignored (`production/qa/playtests/*/shots/`); session 2's 150 tracked shots untracked, kept on disk (owner).

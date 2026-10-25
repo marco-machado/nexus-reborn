@@ -1,0 +1,1010 @@
+{
+  "COLLATERAL_FINE": 5000,
+  "brief-m03-phase": "brief",
+  "brief-m03": {
+    "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "boxText": "COLLATERAL: 5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "meters": [],
+    "pct": false,
+    "tierParen": false,
+    "tolerance": false,
+    "ten": false,
+    "eta": "A WIN SPENDS 3 DAYS OF WORLD TIME",
+    "etaInReward": true,
+    "etaOld": [],
+    "etaDays": 3,
+    "tiers": [
+      {
+        "tier": "PRIMARY:",
+        "text": "PRIMARY: REACH THE RELAY YARD"
+      },
+      {
+        "tier": "OPTIONAL:",
+        "text": "OPTIONAL: DROP THE BACKUP TRANSFORMER (+6,000 CR) KIT: POWER CELLS ARM GRENADES, THE FAST TOOL; GUNFIRE WORKS, SLOWLY"
+      },
+      {
+        "tier": "SECONDARY:",
+        "text": "SECONDARY: DESTROY THE THREE FUEL RELAYS KIT: POWER CELLS ARM GRENADES, THE FAST TOOL; GUNFIRE WORKS, SLOWLY"
+      },
+      {
+        "tier": "TERTIARY:",
+        "text": "TERTIARY: HOLD THE YARD FOR THE BURN KIT: HOLD THE ZONE FOR 45 S"
+      },
+      {
+        "tier": "QUATERNARY:",
+        "text": "QUATERNARY: EXTRACT THE SQUAD"
+      }
+    ]
+  },
+  "brief-m01-phase": "brief",
+  "brief-m01": {
+    "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "boxText": "COLLATERAL: 5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "meters": [],
+    "pct": false,
+    "tierParen": false,
+    "tolerance": false,
+    "ten": false,
+    "eta": "A WIN SPENDS 2 DAYS OF WORLD TIME",
+    "etaInReward": true,
+    "etaOld": [],
+    "etaDays": 2,
+    "tiers": [
+      {
+        "tier": "PRIMARY:",
+        "text": "PRIMARY: REACH THE CHECKPOINT GATE"
+      },
+      {
+        "tier": "SECONDARY:",
+        "text": "SECONDARY: ELIMINATE THE CORPSEC GARRISON"
+      },
+      {
+        "tier": "TERTIARY:",
+        "text": "TERTIARY: EXTRACT THE SQUAD"
+      }
+    ]
+  },
+  "brief-m02-phase": "brief",
+  "brief-m02": {
+    "collateral": "5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "boxText": "COLLATERAL: 5,000 CR PER CIVILIAN HIT // CAPPED AT THE REWARD",
+    "meters": [],
+    "pct": false,
+    "tierParen": false,
+    "tolerance": false,
+    "ten": false,
+    "eta": "A WIN SPENDS 4 DAYS OF WORLD TIME",
+    "etaInReward": true,
+    "etaOld": [],
+    "etaDays": 4,
+    "tiers": [
+      {
+        "tier": "PRIMARY:",
+        "text": "PRIMARY: REACH THE COMPOUND GATE"
+      },
+      {
+        "tier": "OPTIONAL:",
+        "text": "OPTIONAL: PULL THE DETENTION SERVER (+9,000 CR) KIT: AN OPERATIVE HOLDS THE CONSOLE FOR 4 S"
+      },
+      {
+        "tier": "SECONDARY:",
+        "text": "SECONDARY: OVERRIDE THE CELL BLOCK LOCKS KIT: AN OPERATIVE HOLDS THE CONSOLE FOR 5 S"
+      },
+      {
+        "tier": "TERTIARY:",
+        "text": "TERTIARY: EXTRACT THE HELIX ASSET KIT: THE ASSET MUST REACH THE PAD ALIVE"
+      },
+      {
+        "tier": "QUATERNARY:",
+        "text": "QUATERNARY: EXTRACT THE SQUAD"
+      }
+    ]
+  },
+  "tc02-contracts-at-fresh": [
+    {
+      "id": "gc7518e2d3",
+      "createdT": 0,
+      "expiresAtT": 125502,
+      "sector": "eu",
+      "cityId": "os",
+      "district": 25,
+      "type": "SABOTAGE",
+      "client": "helix",
+      "threat": "MODERATE",
+      "reward": 37000,
+      "seed": 1964565203,
+      "priority": false,
+      "expedited": false
+    }
+  ],
+  "tc02-clone": {
+    "base": {
+      "id": "gc7518e2d3",
+      "createdT": 0,
+      "expiresAtT": 125502,
+      "sector": "eu",
+      "cityId": "os",
+      "district": 25,
+      "type": "SABOTAGE",
+      "client": "helix",
+      "threat": "MODERATE",
+      "reward": 37000,
+      "seed": 1964565203,
+      "priority": false,
+      "expedited": false
+    },
+    "clones": [
+      {
+        "id": "qa039-seizure",
+        "createdT": 0,
+        "expiresAtT": 125502,
+        "sector": "eu",
+        "cityId": "os",
+        "district": 25,
+        "type": "SEIZURE",
+        "client": "helix",
+        "threat": "MODERATE",
+        "reward": 37000,
+        "seed": 1964565203,
+        "priority": false,
+        "expedited": false
+      },
+      {
+        "id": "qa039-extraction",
+        "createdT": 0,
+        "expiresAtT": 125502,
+        "sector": "eu",
+        "cityId": "os",
+        "district": 25,
+        "type": "EXTRACTION",
+        "client": "helix",
+        "threat": "MODERATE",
+        "reward": 37000,
+        "seed": 1964565203,
+        "priority": false,
+        "expedited": false
+      },
+      {
+        "id": "qa039-sabotage",
+        "createdT": 0,
+        "expiresAtT": 125502,
+        "sector": "eu",
+        "cityId": "os",
+        "district": 25,
+        "type": "SABOTAGE",
+        "client": "helix",
+        "threat": "MODERATE",
+        "reward": 37000,
+        "seed": 1964565203,
+        "priority": false,
+        "expedited": false
+      }
+    ]
+  },
+  "tc02-m01": {
+    "phase": "brief",
+    "notes": [
+      "HEAVY RAIN. FRONT CLEARS 22:16:38.",
+      "CIVILIAN DENSITY MODERATE. EVERY CIVILIAN HIT IS BILLED.",
+      "EXTRACTION WINDOW OPENS WHEN THE GARRISON FALLS."
+    ],
+    "has": true
+  },
+  "tc02-m02": {
+    "phase": "brief",
+    "notes": [
+      "LIGHT RAIN. FRONT CLEARS 22:17:08.",
+      "CIVILIAN DENSITY LOW. EVERY CIVILIAN HIT IS BILLED.",
+      "THE ASSET IS FRAGILE. KEEP IT OUT OF THE CROSSFIRE.",
+      "THE COMPOUND GARRISON CAN BE BYPASSED. ENGAGEMENT IS OPTIONAL.",
+      "THE DETENTION SERVER STARTS ITS WIPE WHEN THE GATE FALLS. 90 SECONDS."
+    ],
+    "has": true
+  },
+  "tc02-m03": {
+    "phase": "brief",
+    "notes": [
+      "CLEAR DUSK. GUARDS SEE AND HEAR AT FULL RANGE.",
+      "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+      "DEMOLITION CELLS ARE THE FAST TOOL. GUNFIRE WORKS, SLOWLY.",
+      "THE YARD GUARD CAN BE BYPASSED ON THE WAY IN."
+    ],
+    "has": false
+  },
+  "tc02-qa039-seizure": {
+    "phase": "brief",
+    "notes": [
+      "HEAVY RAIN. VISIBILITY REDUCED.",
+      "CIVILIAN DENSITY MODERATE. EVERY CIVILIAN HIT IS BILLED.",
+      "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+    ],
+    "has": true
+  },
+  "tc02-qa039-extraction": {
+    "phase": "brief",
+    "notes": [
+      "HEAVY RAIN. VISIBILITY REDUCED.",
+      "CIVILIAN DENSITY LOW. EVERY CIVILIAN HIT IS BILLED.",
+      "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+    ],
+    "has": true
+  },
+  "tc02-qa039-sabotage": {
+    "phase": "brief",
+    "notes": [
+      "HEAVY RAIN. VISIBILITY REDUCED.",
+      "CIVILIAN DENSITY SPARSE. INDUSTRIAL BAND MOSTLY EMPTY.",
+      "GENERATED CONTRACT // OFFER EXPIRES IF UNACCEPTED."
+    ],
+    "has": false
+  },
+  "tc05-S1": 2,
+  "tc05-clone": {
+    "base": {
+      "id": "gc7518e2d3",
+      "createdT": 0,
+      "expiresAtT": 125502,
+      "sector": "eu",
+      "cityId": "os",
+      "district": 25,
+      "type": "SABOTAGE",
+      "client": "helix",
+      "threat": "MODERATE",
+      "reward": 37000,
+      "seed": 1964565203,
+      "priority": false,
+      "expedited": false
+    },
+    "clones": [
+      {
+        "id": "qa039-sab-v1",
+        "createdT": 0,
+        "expiresAtT": 125502,
+        "sector": "eu",
+        "cityId": "os",
+        "district": 25,
+        "type": "SABOTAGE",
+        "client": "helix",
+        "threat": "MODERATE",
+        "reward": 37000,
+        "seed": 2,
+        "priority": false,
+        "expedited": false
+      },
+      {
+        "id": "qa039-ext",
+        "createdT": 0,
+        "expiresAtT": 125502,
+        "sector": "eu",
+        "cityId": "os",
+        "district": 25,
+        "type": "EXTRACTION",
+        "client": "helix",
+        "threat": "MODERATE",
+        "reward": 37000,
+        "seed": 1964565203,
+        "priority": false,
+        "expedited": false
+      }
+    ],
+    "variants": [
+      1,
+      2
+    ]
+  },
+  "tc05-qa039-sab-v1": {
+    "phase": "brief",
+    "tiers": [
+      {
+        "tier": "PRIMARY:",
+        "text": "PRIMARY: REACH THE RELAY YARD"
+      },
+      {
+        "tier": "SECONDARY:",
+        "text": "SECONDARY: DESTROY THE THREE FUEL RELAYS KIT: POWER CELLS ARM GRENADES, THE FAST TOOL; GUNFIRE WORKS, SLOWLY"
+      },
+      {
+        "tier": "TERTIARY:",
+        "text": "TERTIARY: HOLD THE YARD FOR THE BURN KIT: HOLD THE ZONE FOR 45 S"
+      },
+      {
+        "tier": "QUATERNARY:",
+        "text": "QUATERNARY: EXTRACT THE SQUAD"
+      }
+    ]
+  },
+  "tc05-qa039-ext": {
+    "phase": "brief",
+    "tiers": [
+      {
+        "tier": "PRIMARY:",
+        "text": "PRIMARY: REACH THE COMPOUND GATE"
+      },
+      {
+        "tier": "OPTIONAL:",
+        "text": "OPTIONAL: PULL THE DETENTION SERVER (+9,000 CR) KIT: AN OPERATIVE HOLDS THE CONSOLE FOR 4 S"
+      },
+      {
+        "tier": "SECONDARY:",
+        "text": "SECONDARY: OVERRIDE THE CELL BLOCK LOCKS KIT: AN OPERATIVE HOLDS THE CONSOLE FOR 5 S"
+      },
+      {
+        "tier": "TERTIARY:",
+        "text": "TERTIARY: EXTRACT THE ASSET KIT: THE ASSET MUST REACH THE PAD ALIVE"
+      },
+      {
+        "tier": "QUATERNARY:",
+        "text": "QUATERNARY: EXTRACT THE SQUAD"
+      }
+    ]
+  },
+  "tc07-m03": {
+    "sub": "RUST HAVEN // A WIN SPENDS 3 DAYS OF WORLD TIME",
+    "deployBtn": {
+      "text": "DEPLOY TEAM >>",
+      "disabled": false
+    },
+    "hint": "CLICK A SLOT TO CYCLE: EMPTY > MED KIT > POWER CELL",
+    "hintInBox": true,
+    "hintAboveLoadout": true,
+    "cycle": [
+      {
+        "text": "+ EMPTY SLOT 0.0 KG",
+        "filled": false
+      },
+      {
+        "text": "MED KIT 8.0 KG",
+        "filled": true
+      },
+      {
+        "text": "POWER CELL 6.0 KG",
+        "filled": true
+      },
+      {
+        "text": "+ EMPTY SLOT 0.0 KG",
+        "filled": false
+      }
+    ]
+  },
+  "tc07-m01": {
+    "sub": "GLASS VEIL // A WIN SPENDS 2 DAYS OF WORLD TIME",
+    "deployBtn": {
+      "text": "DEPLOY TEAM >>",
+      "disabled": false
+    },
+    "hint": "CLICK A SLOT TO CYCLE: EMPTY > MED KIT > POWER CELL",
+    "hintInBox": true,
+    "hintAboveLoadout": true
+  },
+  "tc07-m02": {
+    "sub": "HOLLOW CROWN // A WIN SPENDS 4 DAYS OF WORLD TIME",
+    "deployBtn": {
+      "text": "DEPLOY TEAM >>",
+      "disabled": false
+    },
+    "hint": "CLICK A SLOT TO CYCLE: EMPTY > MED KIT > POWER CELL",
+    "hintInBox": true,
+    "hintAboveLoadout": true
+  },
+  "tc09": {
+    "rows": [],
+    "idxCasualties": 165,
+    "idxKia": 186,
+    "idxInjured": 224,
+    "dartLines": [
+      "> KIA // DART"
+    ],
+    "store": {
+      "operatives": 7,
+      "kia": [
+        {
+          "id": "op3",
+          "codename": "DART",
+          "xp": 0
+        }
+      ]
+    }
+  },
+  "tc10-seed": {
+    "op1": 120,
+    "op3": 45,
+    "codenames": [
+      "op1:MARA",
+      "op2:GHOST",
+      "op3:DART",
+      "op4:TORQ",
+      "op5:RAVEN",
+      "op6:SLATE",
+      "op7:VEX",
+      "op8:KESTREL"
+    ]
+  },
+  "tc10-two": {
+    "rows": [],
+    "idxCasualties": 165,
+    "idxKia": 186,
+    "idxInjured": -1,
+    "dartLines": [
+      "> KIA // DART"
+    ]
+  },
+  "tc10-none": {
+    "rows": [],
+    "idxCasualties": 165,
+    "idxKia": -1,
+    "idxInjured": -1,
+    "dartLines": []
+  },
+  "tc12": {
+    "before": {
+      "hint": "",
+      "btn": "ABORT",
+      "aria": "Abort mission",
+      "phase": "mission"
+    },
+    "armed": {
+      "hint": "PRESS AGAIN WITHIN 3 S TO ABORT // NO INVOICE, CONTRACT STAYS OPEN, ROSTER AS DEPLOYED",
+      "btn": "CONFIRM?",
+      "aria": "Confirm abort mission",
+      "phase": "mission"
+    },
+    "lapsed": {
+      "hint": "",
+      "btn": "ABORT",
+      "aria": "Abort mission",
+      "phase": "mission"
+    },
+    "armed125": {
+      "text": "",
+      "left": 261,
+      "right": 1019,
+      "scrollW": 758,
+      "clientW": 758,
+      "lines": [],
+      "chain": [
+        {
+          "cls": "panel-body",
+          "left": 251,
+          "right": 1029
+        },
+        {
+          "cls": "panel corners",
+          "left": 250,
+          "right": 1030
+        },
+        {
+          "cls": "hud-menu-panel",
+          "left": 250,
+          "right": 1030
+        },
+        {
+          "cls": "hud-menu-wrap",
+          "left": 0,
+          "right": 1280
+        },
+        {
+          "cls": "hud-root",
+          "left": 0,
+          "right": 1280
+        }
+      ]
+    },
+    "after125": {
+      "hint": "",
+      "btn": "ABORT",
+      "aria": "Abort mission",
+      "phase": "mission"
+    }
+  },
+  "tc15": {
+    "at100": [
+      {
+        "panel": "hud-panel hud-squad corners",
+        "text": "SQUAD LINK",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 80,
+        "panelL": 10,
+        "panelR": 248,
+        "inner": 236,
+        "lines": [
+          {
+            "l": 19,
+            "r": 99.2,
+            "t": 49
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-objectives corners",
+        "text": "MISSION DIRECTIVES // SABOTAGE",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 241,
+        "panelL": 982,
+        "panelR": 1270,
+        "inner": 286,
+        "lines": [
+          {
+            "l": 991,
+            "r": 1167.5,
+            "t": 49
+          },
+          {
+            "l": 1167.5,
+            "r": 1231.6,
+            "t": 49
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-comms corners",
+        "text": "COMM LOG",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 64,
+        "panelL": 10,
+        "panelR": 296,
+        "inner": 284,
+        "lines": [
+          {
+            "l": 19,
+            "r": 83.2,
+            "t": 565
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-wpn corners",
+        "text": "PRIMARY // MARA",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 120,
+        "panelL": 309,
+        "panelR": 490.9,
+        "inner": 180,
+        "lines": [
+          {
+            "l": 318,
+            "r": 406.2,
+            "t": 609
+          },
+          {
+            "l": 406.2,
+            "r": 438.3,
+            "t": 609
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-wpn secondary corners",
+        "text": "SECONDARY",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 72,
+        "panelL": 498.9,
+        "panelR": 640.2,
+        "inner": 139,
+        "lines": [
+          {
+            "l": 507.9,
+            "r": 580.1,
+            "t": 609
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-abilities corners",
+        "text": "ABILITIES",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 72,
+        "panelL": 648.2,
+        "panelR": 860.2,
+        "inner": 210,
+        "lines": [
+          {
+            "l": 657.2,
+            "r": 729.4,
+            "t": 609
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-items corners",
+        "text": "ITEMS",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 40,
+        "panelL": 868.2,
+        "panelR": 971,
+        "inner": 101,
+        "lines": [
+          {
+            "l": 877.2,
+            "r": 917.3,
+            "t": 609
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-minimap corners",
+        "text": "DISTRICT 03",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 88,
+        "panelL": 1048,
+        "panelR": 1270,
+        "inner": 220,
+        "lines": [
+          {
+            "l": 1057,
+            "r": 1145.2,
+            "t": 533
+          }
+        ],
+        "ok": true
+      }
+    ],
+    "single100": 241,
+    "at125": [
+      {
+        "panel": "hud-panel hud-squad corners",
+        "text": "SQUAD LINK",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 100,
+        "panelL": 10,
+        "panelR": 248,
+        "inner": 236,
+        "lines": [
+          {
+            "l": 19,
+            "r": 119.3,
+            "t": 49
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-objectives corners",
+        "text": "MISSION DIRECTIVES // SABOTAGE",
+        "ellipsis": false,
+        "lineCount": 2,
+        "spanW": 270,
+        "panelL": 982,
+        "panelR": 1270,
+        "inner": 286,
+        "lines": [
+          {
+            "l": 991,
+            "r": 1201.5,
+            "t": 49
+          },
+          {
+            "l": 991,
+            "r": 1071.2,
+            "t": 64
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-comms corners",
+        "text": "COMM LOG",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 80,
+        "panelL": 10,
+        "panelR": 276,
+        "inner": 264,
+        "lines": [
+          {
+            "l": 19,
+            "r": 99.2,
+            "t": 565
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-wpn corners",
+        "text": "PRIMARY // MARA",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 150,
+        "panelL": 309,
+        "panelR": 482.2,
+        "inner": 171,
+        "lines": [
+          {
+            "l": 318,
+            "r": 428.3,
+            "t": 580
+          },
+          {
+            "l": 428.3,
+            "r": 468.4,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-wpn secondary corners",
+        "text": "SECONDARY",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 90,
+        "panelL": 490.2,
+        "panelR": 626.6,
+        "inner": 134,
+        "lines": [
+          {
+            "l": 499.2,
+            "r": 589.5,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-abilities corners",
+        "text": "ABILITIES",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 90,
+        "panelL": 634.6,
+        "panelR": 846.6,
+        "inner": 210,
+        "lines": [
+          {
+            "l": 643.6,
+            "r": 733.8,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-items corners",
+        "text": "ITEMS",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 50,
+        "panelL": 854.6,
+        "panelR": 971,
+        "inner": 114,
+        "lines": [
+          {
+            "l": 863.6,
+            "r": 913.7,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-minimap corners",
+        "text": "DISTRICT 03",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 110,
+        "panelL": 1048,
+        "panelR": 1270,
+        "inner": 220,
+        "lines": [
+          {
+            "l": 1057,
+            "r": 1167.3,
+            "t": 529
+          }
+        ],
+        "ok": true
+      }
+    ],
+    "single125": 301
+  },
+  "tc16-clone": {
+    "base": {
+      "id": "gc7518e2d3",
+      "createdT": 0,
+      "expiresAtT": 125502,
+      "sector": "eu",
+      "cityId": "os",
+      "district": 25,
+      "type": "SABOTAGE",
+      "client": "helix",
+      "threat": "MODERATE",
+      "reward": 37000,
+      "seed": 1964565203,
+      "priority": false,
+      "expedited": false
+    },
+    "clones": [
+      {
+        "id": "qa039-supp",
+        "createdT": 0,
+        "expiresAtT": 125502,
+        "sector": "eu",
+        "cityId": "os",
+        "district": 25,
+        "type": "SUPPRESSION",
+        "client": "helix",
+        "threat": "MODERATE",
+        "reward": 37000,
+        "seed": 1964565203,
+        "priority": false,
+        "expedited": false
+      }
+    ]
+  },
+  "tc16": {
+    "phase": "mission",
+    "at125": [
+      {
+        "panel": "hud-panel hud-squad corners",
+        "text": "SQUAD LINK",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 100,
+        "panelL": 10,
+        "panelR": 248,
+        "inner": 236,
+        "lines": [
+          {
+            "l": 19,
+            "r": 119.3,
+            "t": 49
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-objectives corners",
+        "text": "MISSION DIRECTIVES // SUPPRESSION",
+        "ellipsis": false,
+        "lineCount": 2,
+        "spanW": 270,
+        "panelL": 982,
+        "panelR": 1270,
+        "inner": 286,
+        "lines": [
+          {
+            "l": 991,
+            "r": 1201.5,
+            "t": 49
+          },
+          {
+            "l": 991,
+            "r": 1101.3,
+            "t": 64
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-comms corners",
+        "text": "COMM LOG",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 80,
+        "panelL": 10,
+        "panelR": 276,
+        "inner": 264,
+        "lines": [
+          {
+            "l": 19,
+            "r": 99.2,
+            "t": 565
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-wpn corners",
+        "text": "PRIMARY // MARA",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 150,
+        "panelL": 309,
+        "panelR": 482.2,
+        "inner": 171,
+        "lines": [
+          {
+            "l": 318,
+            "r": 428.3,
+            "t": 580
+          },
+          {
+            "l": 428.3,
+            "r": 468.4,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-wpn secondary corners",
+        "text": "SECONDARY",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 90,
+        "panelL": 490.2,
+        "panelR": 626.6,
+        "inner": 134,
+        "lines": [
+          {
+            "l": 499.2,
+            "r": 589.5,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-abilities corners",
+        "text": "ABILITIES",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 90,
+        "panelL": 634.6,
+        "panelR": 846.6,
+        "inner": 210,
+        "lines": [
+          {
+            "l": 643.6,
+            "r": 733.8,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-items corners",
+        "text": "ITEMS",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 50,
+        "panelL": 854.6,
+        "panelR": 971,
+        "inner": 114,
+        "lines": [
+          {
+            "l": 863.6,
+            "r": 913.7,
+            "t": 580
+          }
+        ],
+        "ok": true
+      },
+      {
+        "panel": "hud-panel hud-minimap corners",
+        "text": "DISTRICT 25",
+        "ellipsis": false,
+        "lineCount": 1,
+        "spanW": 110,
+        "panelL": 1048,
+        "panelR": 1270,
+        "inner": 220,
+        "lines": [
+          {
+            "l": 1057,
+            "r": 1167.3,
+            "t": 529
+          }
+        ],
+        "ok": true
+      }
+    ],
+    "single125": 331
+  },
+  "pageerrors": []
+}

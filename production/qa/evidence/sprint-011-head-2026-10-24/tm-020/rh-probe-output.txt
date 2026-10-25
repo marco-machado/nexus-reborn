@@ -1,0 +1,33 @@
+[m03] mission live; fiber url http://localhost:4200/node_modules/.vite/deps/@react-three_fiber.js?v=cbb1798c; VIP #9be8ff; CAMERA_YAW 0.7853981633974483
+  city landmarks {"yard-a":{"x":72,"z":41.5,"r":6},"yard-b":{"x":72,"z":35,"r":6},"gate":{"x":60,"z":45.5,"r":3.5},"waveEntry-a":{"x":60,"z":47.5,"r":1},"waveEntry-b":{"x":82,"z":29.5,"r":1},"insertion":{"x":46.5,"z":88.5,"r":4},"extraction":{"x":48,"z":88,"r":4},"target":{"x":72,"z":38.5,"r":8}} extraction {"x":48,"z":88,"r":4}
+  assist: orderHoldFire(agents, true) before entering yard-a [["a1",true],["a2",true],["a3",true],["a4",true]]
+  assist: orderMove squad -> yard-a at {"x":76.3,"z":44}
+  rh1 done after 12.0s -> setHeld(true) (assist)
+  [TM-03] devices [{"id":"d1","tag":"relay","x":68.5,"z":39.5,"stance":"idle","hp":115.1},{"id":"d2","tag":"relay","x":76.5,"z":43.5,"stance":"idle","hp":120},{"id":"d3","tag":"relay","x":72.5,"z":35.5,"stance":"idle","hp":120},{"id":"d4","tag":"transformer","x":77.5,"z":37.5,"stance":"idle","hp":120}]
+  [TM-03 a] rows [{"id":"rh1","active":false,"done":true,"failed":false,"optional":false},{"id":"rh-opt","active":true,"done":false,"failed":false,"optional":true},{"id":"rh2","active":true,"done":false,"failed":false,"optional":false},{"id":"rh3","active":false,"done":false,"failed":false,"optional":false},{"id":"rh4","active":false,"done":false,"failed":false,"optional":false}]
+  [TM-03 a] slots {"slots":[{"i":0,"x":77.5,"y":0.06,"z":37.5,"scale":1.2,"scaleZ":1.2,"inner":0.94,"color":"9be8ff","opacity":0.355,"beam":false,"bx":77.5,"by":0,"bz":37.5},{"i":1,"x":68.5,"y":0.06,"z":39.5,"scale":1.2,"scaleZ":1.2,"inner":0.88,"color":"9be8ff","opacity":0.581,"beam":true,"bx":68.5,"by":0,"bz":39.5},{"i":2,"x":76.5,"y":0.06,"z":43.5,"scale":1.2,"scaleZ":1.2,"inner":0.88,"color":"9be8ff","opacity":0.581,"beam":true,"bx":76.5,"by":0,"bz":43.5},{"i":3,"x":72.5,"y":0.06,"z":35.5,"scale":1.2,"scaleZ":1.2,"inner":0.88,"color":"9be8ff","opacity":0.581,"beam":true,"bx":72.5,"by":0,"bz":35.5}]}
+  [TM-03 a] oracle [{"x":77.5,"z":37.5,"r":1.2,"optional":true},{"x":68.5,"z":39.5,"r":1.2,"optional":false},{"x":76.5,"z":43.5,"r":1.2,"optional":false},{"x":72.5,"z":35.5,"r":1.2,"optional":false}]
+  [TM-03] devices after snap [{"id":"d1","tag":"relay","x":68.5,"z":39.5,"stance":"idle","hp":115.1},{"id":"d2","tag":"relay","x":76.5,"z":43.5,"stance":"idle","hp":120},{"id":"d3","tag":"relay","x":72.5,"z":35.5,"stance":"idle","hp":120},{"id":"d4","tag":"transformer","x":77.5,"z":37.5,"stance":"idle","hp":120}]
+  captured tm-020-03-relays-3.png (camera on 72.50, 39.50)
+  assist: fixture shortcut kill d1 (stance dead, hp 0)
+  [TM-03] after kill {"dev":{"id":"d1","tag":"relay","x":68.5,"z":39.5,"stance":"dead","hp":0},"rh2":{"id":"rh2","label":"DESTROY THE THREE FUEL RELAYS","done":false,"active":true,"optional":false,"failed":false}}
+  [TM-03 b] rows [{"id":"rh1","active":false,"done":true,"failed":false,"optional":false},{"id":"rh-opt","active":true,"done":false,"failed":false,"optional":true},{"id":"rh2","active":true,"done":false,"failed":false,"optional":false},{"id":"rh3","active":false,"done":false,"failed":false,"optional":false},{"id":"rh4","active":false,"done":false,"failed":false,"optional":false}]
+  [TM-03 b] slots {"slots":[{"i":0,"x":77.5,"y":0.06,"z":37.5,"scale":1.2,"scaleZ":1.2,"inner":0.94,"color":"9be8ff","opacity":0.504,"beam":false,"bx":77.5,"by":0,"bz":37.5},{"i":1,"x":76.5,"y":0.06,"z":43.5,"scale":1.2,"scaleZ":1.2,"inner":0.88,"color":"9be8ff","opacity":0.824,"beam":true,"bx":76.5,"by":0,"bz":43.5},{"i":2,"x":72.5,"y":0.06,"z":35.5,"scale":1.2,"scaleZ":1.2,"inner":0.88,"color":"9be8ff","opacity":0.824,"beam":true,"bx":72.5,"by":0,"bz":35.5}]}
+  [TM-03 b] oracle [{"x":77.5,"z":37.5,"r":1.2,"optional":true},{"x":76.5,"z":43.5,"r":1.2,"optional":false},{"x":72.5,"z":35.5,"r":1.2,"optional":false}]
+  captured tm-020-03-relays-2.png (camera on 72.50, 39.50)
+  released QA freeze (setHeld false)
+  released hold fire
+  assist: fixture shortcut kill remaining relays + transformer
+  rh2 done: met after 0.5s
+  assist: orderMove squad -> target (defend)
+  hold seen -> Space
+  hold seen -> Space
+  only rh4 active: met after 45.2s
+  [TM-06b] rows [{"id":"rh1","active":false,"done":true,"failed":false,"optional":false},{"id":"rh-opt","active":false,"done":true,"failed":false,"optional":true},{"id":"rh2","active":false,"done":true,"failed":false,"optional":false},{"id":"rh3","active":false,"done":true,"failed":false,"optional":false},{"id":"rh4","active":true,"done":false,"failed":false,"optional":false}]
+  [TM-06b] slots {"slots":[]}
+  [TM-06b] oracle []
+  [TM-06b] decal [{"count":20,"visible":true,"pos":[0,0,0],"instCentre":{"x":48,"z":88},"color":"000000","emissive":"7ef0d4"}]
+  captured tm-020-06-extraction-only.png (camera on 48.00, 88.00)
+holds released: 2
+
+ERRORS:

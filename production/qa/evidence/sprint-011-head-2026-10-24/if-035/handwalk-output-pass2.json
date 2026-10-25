@@ -1,0 +1,210 @@
+{
+  "runningAnimationsOpening": [
+    {
+      "name": "blink",
+      "target": "section.panel.corners.wm-time > div.panel-body > span.wm-live > i.wm-live-dot",
+      "iterations": null
+    }
+  ],
+  "step1_unread": {
+    "target": {
+      "sel": ".wm-unread",
+      "x": 933.078125,
+      "y": 542.640625,
+      "w": 67.4,
+      "h": 24,
+      "visiblePart": {
+        "left": 933.078125,
+        "top": 542.640625,
+        "right": 1000.453125,
+        "bottom": 566.640625,
+        "w": 67.375,
+        "h": 24
+      }
+    },
+    "neighbours": [
+      {
+        "label": "Interactive Earth globe. Drag ",
+        "dist": 28,
+        "visiblePart": {
+          "left": 292.359375,
+          "top": 85.296875,
+          "right": 936.453125,
+          "bottom": 514.640625,
+          "w": 644.09375,
+          "h": 429.34375
+        },
+        "overlap": null
+      },
+      {
+        "label": "GLASS VEIL // LOCKED // REQUIR",
+        "dist": 47,
+        "visiblePart": {
+          "left": 966.453125,
+          "top": 446.640625,
+          "right": 1252.640625,
+          "bottom": 495.640625,
+          "w": 286.1875,
+          "h": 49
+        },
+        "overlap": null
+      },
+      {
+        "label": "OPEN CONTRACT NEON GARDEN // S",
+        "dist": 26,
+        "visiblePart": {
+          "left": 966.453125,
+          "top": 501.640625,
+          "right": 1252.640625,
+          "bottom": 516.640625,
+          "w": 286.1875,
+          "h": 15
+        },
+        "overlap": null
+      },
+      {
+        "label": "14:45 HELIX CORP SECURES TRADE",
+        "dist": 13,
+        "visiblePart": {
+          "left": 479.546875,
+          "top": 579.640625,
+          "right": 1002.453125,
+          "bottom": 603.640625,
+          "w": 522.90625,
+          "h": 24
+        },
+        "overlap": null
+      },
+      {
+        "label": "14:44 HELIX CORP SECURES TRADE",
+        "dist": 38,
+        "visiblePart": {
+          "left": 479.546875,
+          "top": 604.640625,
+          "right": 1002.453125,
+          "bottom": 628.640625,
+          "w": 522.90625,
+          "h": 24
+        },
+        "overlap": null
+      }
+    ]
+  },
+  "step1_opButtonRaw": [
+    {
+      "label": "GLASS VEIL // LOCKED // REQUIR",
+      "box": {
+        "x": 966.453125,
+        "y": 446.640625,
+        "w": 286.2,
+        "h": 49
+      },
+      "visiblePart": {
+        "left": 966.453125,
+        "top": 446.640625,
+        "right": 1252.640625,
+        "bottom": 495.640625,
+        "w": 286.1875,
+        "h": 49
+      }
+    },
+    {
+      "label": "OPEN CONTRACT NEON GARDEN // S",
+      "box": {
+        "x": 966.453125,
+        "y": 501.640625,
+        "w": 286.2,
+        "h": 85
+      },
+      "visiblePart": {
+        "left": 966.453125,
+        "top": 501.640625,
+        "right": 1252.640625,
+        "bottom": 516.640625,
+        "w": 286.1875,
+        "h": 15
+      }
+    }
+  ],
+  "step3_before": {
+    "target": {
+      "sel": ".wm-moment-btn",
+      "x": 1145.421875,
+      "y": 408.296875,
+      "w": 96.2,
+      "h": 24,
+      "visiblePart": {
+        "left": 1145.421875,
+        "top": 408.296875,
+        "right": 1241.640625,
+        "bottom": 396.640625,
+        "w": 96.21875,
+        "h": 0
+      }
+    },
+    "neighbours": [
+      {
+        "label": "3 EXPEDITE // 12 PTS // WAIVE ",
+        "dist": 25,
+        "visiblePart": {
+          "left": 968.453125,
+          "top": 359.296875,
+          "right": 1250.640625,
+          "bottom": 383.296875,
+          "w": 282.1875,
+          "h": 24
+        },
+        "overlap": null
+      }
+    ]
+  },
+  "step3_noteContainer": {
+    "path": "section.panel.corners > div.panel-body.wm-sector-panel-body > div.scroll-wrap > div.scroll.wm-sector-scroll",
+    "scrollTop": 0,
+    "scrollHeight": 409,
+    "clientHeight": 285,
+    "box": {
+      "x": 968.453125,
+      "y": 111.296875,
+      "w": 285.2,
+      "h": 285.3
+    }
+  },
+  "step3_afterScroll": {
+    "target": {
+      "sel": ".wm-moment-btn",
+      "x": 1145.421875,
+      "y": 372.296875,
+      "w": 96.2,
+      "h": 24,
+      "visiblePart": {
+        "left": 1145.421875,
+        "top": 372.296875,
+        "right": 1241.640625,
+        "bottom": 396.296875,
+        "w": 96.21875,
+        "h": 24
+      }
+    },
+    "neighbours": [
+      {
+        "label": "3 EXPEDITE // 12 PTS // WAIVE ",
+        "dist": 25,
+        "visiblePart": {
+          "left": 968.453125,
+          "top": 323.296875,
+          "right": 1250.640625,
+          "bottom": 347.296875,
+          "w": 282.1875,
+          "h": 24
+        },
+        "overlap": null
+      }
+    ]
+  },
+  "step3_hitsAfterScroll": {
+    "points": 5,
+    "miss": []
+  },
+  "errors": []
+}

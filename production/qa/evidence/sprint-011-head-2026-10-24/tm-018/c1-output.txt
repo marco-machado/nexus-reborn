@@ -1,0 +1,35 @@
+S0 menu buttons: ["<< NEW OPERATION >>","SETTINGS"]
+CLICK NEW OPERATION
+S0 phase after new op: world
+cleared card UNDERSTOOD // DISMISS THE ORIENTATION
+CLICK RUST HAVEN row: BUTTON OPEN CONTRACT RUST HAVEN // SABOTAGE // DETROIT SPRAWL
+CLICK ACCEPT CONTRACT
+CLICK DEPLOY TEAM
+S0 state {"phase":"mission","live":true,"held":false,"mission":"m03","codename":"RUST HAVEN"}
+SCENE {"ok":true,"ent":"http://localhost:4200/node_modules/.vite/deps/@react-three_fiber.js?v=cbb1798c","rootsSize":1,"camera":"PerspectiveCamera","fov":25}
+C2.7 rescan ring-a along projected +x: {"expectedOuterPx":73.6,"redAt":null,"n":0}
+C3.3 F recenter: before {"x":39.89,"z":82.25} -> +600ms {"x":46.36,"z":87.24} -> +2200ms {"x":47.96,"z":88.47}; living squad centroid {"x":48,"z":88.5}
+C1 pre: clicked SKIP TUTORIAL to clear toasts from the capture
+C1 pre: camera distance (no wheel input this session) 72
+C1.1 relays [{"id":"d1","x":59.5,"z":37.5,"hp":120,"maxHp":120,"stance":"idle"},{"id":"d2","x":67.5,"z":41.5,"hp":120,"maxHp":120,"stance":"idle"},{"id":"d3","x":81.5,"z":39.5,"hp":120,"maxHp":120,"stance":"idle"}]
+C1.2 R core before {"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}
+relay-live framing {"focus":{"x":55.99863592055296,"y":0,"z":52.90605817834168},"cam":[85.2,58.979,82.108],"proj":{"sx":925.9656407747439,"sy":198.89149630562142,"ndcZ":0.978548893431764}} after-shot cam [85.202,58.979,82.103] proj (925.9, 198.9) patch16 {"meanL":215.5,"maxL":245.2,"icePx":234,"redPx":0,"px":256} patch28 {"meanL":162.1,"maxL":245.2,"icePx":357,"redPx":0,"px":784}
+C1.5 squad ordered next to R (orderMove = right-click order; free fire on): ["a1","a2","a3","a4"]
+C1.5 t+2s R {"hp":120,"stance":"idle","targeting":[]}
+C1.5 t+3s R {"hp":120,"stance":"idle","targeting":[]}
+C1.5 t+5s R {"hp":120,"stance":"idle","targeting":[]}
+C1.5 t+6s R {"hp":120,"stance":"idle","targeting":[]}
+C1.5 t+8s R {"hp":120,"stance":"idle","targeting":[]}
+C1.5 t+10s R {"hp":120,"stance":"idle","targeting":[]}
+C1.5 t+11s R {"hp":93.9,"stance":"idle","targeting":["a1","a2"]}
+HOLD seen -> Space
+C1.6 death read {"frame":59,"simTime":22.593699999809424,"readSameCallback":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":false}]},"nextFrame":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.9469599999427828,"faction":[{"type":"Mesh","visible":false}]},"othersNextFrame":[{"id":"d2","hp":29,"core":{"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}},{"id":"d3","hp":120,"core":{"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}}],"frame2":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.9078399997711244,"faction":[{"type":"Mesh","visible":false}]},"after400ms":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.4,"faction":[{"type":"Mesh","visible":false}]}}
+relay-dead framing {"focus":{"x":55.99999999999999,"y":0,"z":52.900000000000006},"cam":[85.202,58.979,82.102],"proj":{"sx":925.8605512679281,"sy":198.9456140273654,"ndcZ":0.9785482294672375}} after-shot cam [85.202,58.979,82.102] proj (925.9, 198.9) patch16 {"meanL":53.6,"maxL":90.8,"icePx":0,"redPx":0,"px":256} patch28 {"meanL":57.2,"maxL":91.8,"icePx":0,"redPx":0,"px":784}
+C1.8 other relays after [{"id":"d2","x":67.5,"z":41.5,"hp":0,"maxHp":120,"stance":"dead","core":{"visible":false,"worldVisible":false,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":0.4,"faction":[{"type":"Mesh","visible":false}]}},{"id":"d3","x":81.5,"z":39.5,"hp":120,"maxHp":120,"stance":"idle","core":{"visible":true,"worldVisible":true,"emissiveIntensity":2.8,"emissive":"9be8ff","matType":"MeshStandardMaterial","rigScaleY":1,"faction":[{"type":"Mesh","visible":true}]}}]
+relay-other-d2-dead framing {"focus":{"x":63.99074839711809,"y":0,"z":56.89537419855904},"cam":[93.192,58.979,86.097],"proj":{"sx":925.9517161133782,"sy":199.10562088723734,"ndcZ":0.978546266360227}} after-shot cam [93.199,58.979,86.1] proj (925.9, 199.0) patch16 {"meanL":74.8,"maxL":102.2,"icePx":0,"redPx":0,"px":256} patch28 {"meanL":74.8,"maxL":103.1,"icePx":0,"redPx":0,"px":784}
+relay-other-d3-alive framing {"focus":{"x":77.9911917127266,"y":0,"z":54.901257871490635},"cam":[107.193,58.979,84.103],"proj":{"sx":926.0243383442566,"sy":199.03266758971708,"ndcZ":0.9785471614164135}} after-shot cam [107.199,58.979,84.102] proj (925.9, 199.0) patch16 {"meanL":209.9,"maxL":244.2,"icePx":189,"redPx":0,"px":256} patch28 {"meanL":148.6,"maxL":244.2,"icePx":257,"redPx":0,"px":784}
+ASSIST in C1 destruction: false
+done
+
+ERRORS:
+

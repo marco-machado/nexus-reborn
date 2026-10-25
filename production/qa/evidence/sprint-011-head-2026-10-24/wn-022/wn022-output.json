@@ -1,0 +1,1056 @@
+{
+  "10": {
+    "na-90": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "sw": 212,
+      "cw": 212,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1039.1,
+        "y": 241.3,
+        "r": 1250.6,
+        "b": 254.3,
+        "h": 13
+      },
+      "span": {
+        "x": 968.5,
+        "y": 242.3,
+        "r": 1015.7,
+        "b": 253.3,
+        "h": 11
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 109.3,
+        "r": 1253.6,
+        "b": 407.8,
+        "h": 298.5
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "oc-90": {
+      "text": "STRATOS INDUSTRIES // 2 OF 3 CITIES",
+      "sw": 231,
+      "cw": 231,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1019.3,
+        "y": 241.3,
+        "r": 1250.6,
+        "b": 267.3,
+        "h": 26
+      },
+      "span": {
+        "x": 968.5,
+        "y": 243.3,
+        "r": 1011.3,
+        "b": 265.3,
+        "h": 22
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 109.3,
+        "r": 1253.6,
+        "b": 407.8,
+        "h": 298.5
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "sa-90": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "sw": 226,
+      "cw": 226,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1024.5,
+        "y": 241.3,
+        "r": 1250.6,
+        "b": 254.3,
+        "h": 13
+      },
+      "span": {
+        "x": 968.5,
+        "y": 242.3,
+        "r": 1015.7,
+        "b": 253.3,
+        "h": 11
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 109.3,
+        "r": 1253.6,
+        "b": 407.8,
+        "h": 298.5
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "na-100": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "sw": 224,
+      "cw": 224,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1026.5,
+        "y": 246.3,
+        "r": 1250.6,
+        "b": 274.3,
+        "h": 28
+      },
+      "span": {
+        "x": 968.5,
+        "y": 247.3,
+        "r": 1018.5,
+        "b": 273.3,
+        "h": 26
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 111.3,
+        "r": 1253.6,
+        "b": 396.6,
+        "h": 285.3
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "oc-100": {
+      "text": "STRATOS INDUSTRIES // 2 OF 3 CITIES",
+      "sw": 231,
+      "cw": 231,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1019.3,
+        "y": 246.3,
+        "r": 1250.6,
+        "b": 274.3,
+        "h": 28
+      },
+      "span": {
+        "x": 968.5,
+        "y": 247.3,
+        "r": 1011.3,
+        "b": 273.3,
+        "h": 26
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 111.3,
+        "r": 1253.6,
+        "b": 396.6,
+        "h": 285.3
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "sa-100": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "sw": 227,
+      "cw": 227,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1023.9,
+        "y": 246.3,
+        "r": 1250.6,
+        "b": 274.3,
+        "h": 28
+      },
+      "span": {
+        "x": 968.5,
+        "y": 247.3,
+        "r": 1015.9,
+        "b": 273.3,
+        "h": 26
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 111.3,
+        "r": 1253.6,
+        "b": 396.6,
+        "h": 285.3
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "na-110": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "sw": 224,
+      "cw": 224,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1026.5,
+        "y": 253.3,
+        "r": 1250.6,
+        "b": 283.3,
+        "h": 30
+      },
+      "span": {
+        "x": 968.5,
+        "y": 254.3,
+        "r": 1018.5,
+        "b": 282.3,
+        "h": 28
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 115.3,
+        "r": 1253.6,
+        "b": 385.5,
+        "h": 270.2
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "oc-110": {
+      "text": "STRATOS INDUSTRIES // 2 OF 3 CITIES",
+      "sw": 231,
+      "cw": 231,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1019.3,
+        "y": 253.3,
+        "r": 1250.6,
+        "b": 283.3,
+        "h": 30
+      },
+      "span": {
+        "x": 968.5,
+        "y": 254.3,
+        "r": 1011.3,
+        "b": 282.3,
+        "h": 28
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 115.3,
+        "r": 1253.6,
+        "b": 385.5,
+        "h": 270.2
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "sa-110": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "sw": 227,
+      "cw": 227,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1023.9,
+        "y": 253.3,
+        "r": 1250.6,
+        "b": 283.3,
+        "h": 30
+      },
+      "span": {
+        "x": 968.5,
+        "y": 254.3,
+        "r": 1015.9,
+        "b": 282.3,
+        "h": 28
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 115.3,
+        "r": 1253.6,
+        "b": 385.5,
+        "h": 270.2
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "na-125": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "sw": 224,
+      "cw": 224,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1026.5,
+        "y": 261.3,
+        "r": 1250.6,
+        "b": 297.3,
+        "h": 36
+      },
+      "span": {
+        "x": 968.5,
+        "y": 263.3,
+        "r": 1018.5,
+        "b": 295.3,
+        "h": 32
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 119.3,
+        "r": 1253.6,
+        "b": 366.1,
+        "h": 246.8
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "oc-125": {
+      "text": "STRATOS INDUSTRIES // 2 OF 3 CITIES",
+      "sw": 231,
+      "cw": 231,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1019.3,
+        "y": 261.3,
+        "r": 1250.6,
+        "b": 297.3,
+        "h": 36
+      },
+      "span": {
+        "x": 968.5,
+        "y": 263.3,
+        "r": 1011.3,
+        "b": 295.3,
+        "h": 32
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 119.3,
+        "r": 1253.6,
+        "b": 366.1,
+        "h": 246.8
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "sa-125": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "sw": 227,
+      "cw": 227,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1023.9,
+        "y": 261.3,
+        "r": 1250.6,
+        "b": 297.3,
+        "h": 36
+      },
+      "span": {
+        "x": 968.5,
+        "y": 263.3,
+        "r": 1015.9,
+        "b": 295.3,
+        "h": 32
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 119.3,
+        "r": 1253.6,
+        "b": 366.1,
+        "h": 246.8
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "na-hc": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "sw": 224,
+      "cw": 224,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1026.5,
+        "y": 246.3,
+        "r": 1250.6,
+        "b": 274.3,
+        "h": 28
+      },
+      "span": {
+        "x": 968.5,
+        "y": 247.3,
+        "r": 1018.5,
+        "b": 273.3,
+        "h": 26
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 111.3,
+        "r": 1253.6,
+        "b": 396.6,
+        "h": 285.3
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "oc-hc": {
+      "text": "STRATOS INDUSTRIES // 2 OF 3 CITIES",
+      "sw": 231,
+      "cw": 231,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1019.3,
+        "y": 246.3,
+        "r": 1250.6,
+        "b": 274.3,
+        "h": 28
+      },
+      "span": {
+        "x": 968.5,
+        "y": 247.3,
+        "r": 1011.3,
+        "b": 273.3,
+        "h": 26
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 111.3,
+        "r": 1253.6,
+        "b": 396.6,
+        "h": 285.3
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "sa-hc": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "sw": 227,
+      "cw": 227,
+      "to": "clip",
+      "ws": "normal",
+      "b": {
+        "x": 1023.9,
+        "y": 246.3,
+        "r": 1250.6,
+        "b": 274.3,
+        "h": 28
+      },
+      "span": {
+        "x": 968.5,
+        "y": 247.3,
+        "r": 1015.9,
+        "b": 273.3,
+        "h": 26
+      },
+      "scroll": {
+        "x": 968.5,
+        "y": 111.3,
+        "r": 1253.6,
+        "b": 396.6,
+        "h": 285.3
+      },
+      "insideX": true,
+      "insideY": true,
+      "overlap": false,
+      "inViewport": true
+    },
+    "errs": []
+  },
+  "11": {
+    "90": {
+      "card": {
+        "x": 300,
+        "y": 197,
+        "r": 980,
+        "b": 523
+      },
+      "cardOverflowY": "visible",
+      "cardScroll": {
+        "sh": 326,
+        "ch": 326
+      },
+      "job": {
+        "x": 311,
+        "y": 231,
+        "r": 969,
+        "b": 285
+      },
+      "jobOv": {
+        "sw": 656,
+        "cw": 656,
+        "sh": 54,
+        "ch": 54,
+        "to": "clip"
+      },
+      "jobIn": true,
+      "ctl": {
+        "x": 511,
+        "y": 383,
+        "r": 969,
+        "b": 410
+      },
+      "ctlOv": {
+        "sw": 458,
+        "cw": 458,
+        "sh": 27,
+        "ch": 27,
+        "to": "clip"
+      },
+      "ctlIn": true,
+      "btn": {
+        "x": 574,
+        "y": 487,
+        "r": 706,
+        "b": 512
+      },
+      "btnIn": true
+    },
+    "100": {
+      "card": {
+        "x": 300,
+        "y": 170,
+        "r": 980,
+        "b": 550
+      },
+      "cardOverflowY": "visible",
+      "cardScroll": {
+        "sh": 380,
+        "ch": 380
+      },
+      "job": {
+        "x": 311,
+        "y": 205,
+        "r": 969,
+        "b": 265
+      },
+      "jobOv": {
+        "sw": 656,
+        "cw": 656,
+        "sh": 60,
+        "ch": 60,
+        "to": "clip"
+      },
+      "jobIn": true,
+      "ctl": {
+        "x": 511,
+        "y": 385,
+        "r": 969,
+        "b": 430
+      },
+      "ctlOv": {
+        "sw": 458,
+        "cw": 458,
+        "sh": 45,
+        "ch": 45,
+        "to": "clip"
+      },
+      "ctlIn": true,
+      "btn": {
+        "x": 570,
+        "y": 513,
+        "r": 710,
+        "b": 539
+      },
+      "btnIn": true
+    },
+    "110": {
+      "card": {
+        "x": 300,
+        "y": 139,
+        "r": 980,
+        "b": 581
+      },
+      "cardOverflowY": "visible",
+      "cardScroll": {
+        "sh": 443,
+        "ch": 443
+      },
+      "job": {
+        "x": 311,
+        "y": 176,
+        "r": 969,
+        "b": 242
+      },
+      "jobOv": {
+        "sw": 656,
+        "cw": 656,
+        "sh": 66,
+        "ch": 66,
+        "to": "clip"
+      },
+      "jobIn": true,
+      "ctl": {
+        "x": 511,
+        "y": 371,
+        "r": 969,
+        "b": 420
+      },
+      "ctlOv": {
+        "sw": 458,
+        "cw": 458,
+        "sh": 50,
+        "ch": 50,
+        "to": "clip"
+      },
+      "ctlIn": true,
+      "btn": {
+        "x": 566,
+        "y": 542,
+        "r": 714,
+        "b": 570
+      },
+      "btnIn": true
+    },
+    "125": {
+      "card": {
+        "x": 300,
+        "y": 97,
+        "r": 980,
+        "b": 623
+      },
+      "cardOverflowY": "visible",
+      "cardScroll": {
+        "sh": 526,
+        "ch": 526
+      },
+      "job": {
+        "x": 311,
+        "y": 136,
+        "r": 969,
+        "b": 230
+      },
+      "jobOv": {
+        "sw": 656,
+        "cw": 656,
+        "sh": 94,
+        "ch": 94,
+        "to": "clip"
+      },
+      "jobIn": true,
+      "ctl": {
+        "x": 511,
+        "y": 391,
+        "r": 969,
+        "b": 447
+      },
+      "ctlOv": {
+        "sw": 458,
+        "cw": 458,
+        "sh": 56,
+        "ch": 56,
+        "to": "clip"
+      },
+      "ctlIn": true,
+      "btn": {
+        "x": 560,
+        "y": 583,
+        "r": 720,
+        "b": 612
+      },
+      "btnIn": true
+    },
+    "hc": {
+      "card": {
+        "x": 300,
+        "y": 170,
+        "r": 980,
+        "b": 550
+      },
+      "cardOverflowY": "visible",
+      "cardScroll": {
+        "sh": 380,
+        "ch": 380
+      },
+      "job": {
+        "x": 311,
+        "y": 205,
+        "r": 969,
+        "b": 265
+      },
+      "jobOv": {
+        "sw": 656,
+        "cw": 656,
+        "sh": 60,
+        "ch": 60,
+        "to": "clip"
+      },
+      "jobIn": true,
+      "ctl": {
+        "x": 511,
+        "y": 385,
+        "r": 969,
+        "b": 430
+      },
+      "ctlOv": {
+        "sw": 458,
+        "cw": 458,
+        "sh": 45,
+        "ch": 45,
+        "to": "clip"
+      },
+      "ctlIn": true,
+      "btn": {
+        "x": 570,
+        "y": 513,
+        "r": 710,
+        "b": 539
+      },
+      "btnIn": true
+    },
+    "errs": []
+  },
+  "12": {
+    "held": {
+      "text": "UNKNOWN",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "tax": {
+      "text": "NO // NOT NEXUS-HELD",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "order": [
+      "COORD",
+      "CONTROL",
+      "UNREST",
+      "HELD BY",
+      "TAX YIELD",
+      "TAX PAID",
+      "GARRISON CONDITION"
+    ],
+    "errs": []
+  },
+  "01": {
+    "ord": {
+      "na": {
+        "order": [
+          "COORD",
+          "CONTROL",
+          "UNREST",
+          "HELD BY",
+          "TAX YIELD",
+          "TAX PAID",
+          "GARRISON CONDITION"
+        ],
+        "held": 1,
+        "diff": 1
+      },
+      "eu": {
+        "order": [
+          "COORD",
+          "CONTROL",
+          "UNREST",
+          "HELD BY",
+          "TAX YIELD",
+          "TAX PAID",
+          "GARRISON CONDITION"
+        ],
+        "held": 1,
+        "diff": 1
+      },
+      "sa": {
+        "order": [
+          "COORD",
+          "CONTROL",
+          "UNREST",
+          "HELD BY",
+          "TAX YIELD",
+          "TAX PAID",
+          "GARRISON CONDITION"
+        ],
+        "held": 1,
+        "diff": 1
+      },
+      "af": {
+        "order": [
+          "COORD",
+          "CONTROL",
+          "UNREST",
+          "HELD BY",
+          "TAX YIELD",
+          "TAX PAID",
+          "GARRISON CONDITION"
+        ],
+        "held": 1,
+        "diff": 1
+      },
+      "as": {
+        "order": [
+          "COORD",
+          "CONTROL",
+          "UNREST",
+          "HELD BY",
+          "TAX YIELD",
+          "TAX PAID",
+          "GARRISON CONDITION"
+        ],
+        "held": 1,
+        "diff": 1
+      },
+      "oc": {
+        "order": [
+          "COORD",
+          "CONTROL",
+          "UNREST",
+          "HELD BY",
+          "TAX YIELD",
+          "TAX PAID",
+          "GARRISON CONDITION"
+        ],
+        "held": 1,
+        "diff": 1
+      }
+    },
+    "errs": []
+  },
+  "02": {
+    "off": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout teal",
+      "color": "rgb(126, 240, 212)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "hcColor": "rgb(126, 240, 212)",
+    "errs": []
+  },
+  "03": {
+    "flip": {
+      "text": "NEXUS GLOBAL // 3 OF 3 CITIES",
+      "cls": "wm-kv-readout teal",
+      "color": "rgb(126, 240, 212)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "back": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout teal",
+      "color": "rgb(126, 240, 212)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "errs": []
+  },
+  "04": {
+    "eu": {
+      "text": "HELIX CORP // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "af": {
+      "text": "OMNICORP // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "as": {
+      "text": "HELIX CORP // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "oc": {
+      "text": "STRATOS INDUSTRIES // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "euHC": "rgb(226, 246, 238)",
+    "errs": []
+  },
+  "05": {
+    "held": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "tax": {
+      "text": "NO // NOT NEXUS-HELD",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "errs": []
+  },
+  "06": {
+    "s1": {
+      "held": {
+        "text": "CONTESTED // CITIES SPLIT 1-1-1",
+        "cls": "wm-kv-readout dim",
+        "color": "rgb(184, 216, 207)",
+        "children": [
+          "span",
+          "b"
+        ]
+      },
+      "tax": {
+        "text": "NO // NOT NEXUS-HELD",
+        "cls": "wm-kv-readout dim",
+        "color": "rgb(184, 216, 207)",
+        "children": [
+          "span",
+          "b"
+        ]
+      }
+    },
+    "s2": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "s3": {
+      "held": {
+        "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+        "cls": "wm-kv-readout teal",
+        "color": "rgb(126, 240, 212)",
+        "children": [
+          "span",
+          "b"
+        ]
+      },
+      "tax": {
+        "text": "YES // NEXUS-HELD",
+        "cls": "wm-kv-readout teal",
+        "color": "rgb(126, 240, 212)",
+        "children": [
+          "span",
+          "b"
+        ]
+      }
+    },
+    "s4": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout teal",
+      "color": "rgb(126, 240, 212)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "errs": []
+  },
+  "07": {
+    "na": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout teal",
+      "color": "rgb(126, 240, 212)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "eu": {
+      "text": "HELIX CORP // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "sa": {
+      "text": "CONTESTED // CITIES SPLIT 1-1-1",
+      "cls": "wm-kv-readout dim",
+      "color": "rgb(184, 216, 207)",
+      "children": [
+        "span",
+        "b"
+      ]
+    },
+    "errs": []
+  },
+  "08_09": {
+    "present": true,
+    "jobTitle": "THE JOB",
+    "jobBody": "You run the network from this desk. Every sector prints a Tax yield, but only a Nexus-held sector pays it: one where Nexus holds most of its cities. North America pays from the start, Europe does not. A win hands the mission city to Nexus.",
+    "jobSpans": [
+      "You run the network from this desk. Every sector prints a Tax yield, but only a Nexus-held sector pays it: one where Nexus holds most of its cities. North America pays from the start, Europe does not. A win hands the mission city to Nexus."
+    ],
+    "numTitle": "THE FOUR NUMBERS",
+    "numLines": [
+      "CONTROL: the order kept in the sector; a win raises it. It sets Tax yield and Garrison, not who holds the sector (HELD BY on the sector panel).",
+      "UNREST: pressure against that hold; past the pressure line a crisis can break out.",
+      "TAX YIELD: Credits per 24 strategic hours, paid only while Nexus-held.",
+      "GARRISON CONDITION: SECURE, STRAINED or CRITICAL, read from Control."
+    ],
+    "oldDef": false,
+    "errs": []
+  },
+  "09_step5": {
+    "held": {
+      "text": "NEXUS GLOBAL // 2 OF 3 CITIES",
+      "cls": "wm-kv-readout teal",
+      "color": "rgb(126, 240, 212)",
+      "children": [
+        "span",
+        "b"
+      ]
+    }
+  },
+  "ALL_ERRS": []
+}

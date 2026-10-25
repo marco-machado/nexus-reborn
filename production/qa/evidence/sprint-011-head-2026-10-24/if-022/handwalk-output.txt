@@ -1,0 +1,23 @@
+TC-02 feed {"body":"-- CHANNEL OPEN --","rows":0,"head":"FEEDFEED CLEAR","tokenInBody":true}
+TC-02 step1 innerHTML.includes(NO TRAFFIC) = false
+TC-02 step2 innerText.includes(NO TRAFFIC) = false
+TC-04 pre feed {"body":"14:32OPEN CONTRACT NEON GARDEN POSTED IN OSLO>14:28RIOTS REPORTED IN CAIRO>14:11NEXUS GLOBAL TAKES BOGOTA>13:47HELIX CORP SECURES TRADE AGREEMENT IN OSLO>","rows":4,"head":"FEED4 UNREAD","tokenInBody":false}
+TC-04 pre tl {"role":"slider","label":"TIMELINE REVIEW","valuetext":"LIVE","review":null,"t":94.03200000286103,"nEvents":4,"unread":4}
+TC-04 activeElement is track = true
+TC-04 step2 tl {"role":"slider","label":"TIMELINE REVIEW","valuetext":"14:33","review":-86305.96799999714,"t":94.03200000286103,"nEvents":4,"unread":4}
+TC-04 step3 body="-- CHANNEL OPEN --" rows=0
+TC-04 step4 innerText.includes(NO TRAFFIC) = false
+TC-04 step5 header="FEED4 UNREAD"
+TC-04 step7 tl {"role":"slider","label":"TIMELINE REVIEW","valuetext":"LIVE","review":null,"t":94.03200000286103,"nEvents":4,"unread":4}
+TC-04 step7 feed {"body":"14:32OPEN CONTRACT NEON GARDEN POSTED IN OSLO>14:28RIOTS REPORTED IN CAIRO>14:11NEXUS GLOBAL TAKES BOGOTA>13:47HELIX CORP SECURES TRADE AGREEMENT IN OSLO>","rows":4,"head":"FEED4 UNREAD","tokenInBody":false}
+TC-05 step3 feed {"body":"14:32OPEN CONTRACT NEON GARDEN POSTED IN OSLO>14:28RIOTS REPORTED IN CAIRO>14:11NEXUS GLOBAL TAKES BOGOTA>13:47HELIX CORP SECURES TRADE AGREEMENT IN OSLO>","rows":4,"head":"FEED4 UNREAD","tokenInBody":false}
+TC-05 step4 feed {"body":"13:47HELIX CORP SECURES TRADE AGREEMENT IN OSLO>","rows":1,"head":"FEED4 UNREAD","tokenInBody":false}
+S-1 scale 100 card-up token {"found":true,"rect":[479.5,566.6,1002.5,607.6],"panel":[470.5,535.6,1011.5,659.6],"inside":true,"scrollW":521,"clientW":521,"overflow":"visible","textOverflow":"clip","whiteSpace":"normal","lines":null,"topElAtCentre":"wm-empty","unoccludedLeftCentreRight":[true,true,true],"onboardUp":true}
+S-1 scale 100 card-dismissed feed {"body":"-- CHANNEL OPEN --","rows":0,"head":"FEEDFEED CLEAR","tokenInBody":true}
+S-1 scale 100 card-dismissed token {"found":true,"rect":[479.5,566.6,1002.5,607.6],"panel":[470.5,535.6,1011.5,659.6],"inside":true,"scrollW":521,"clientW":521,"overflow":"visible","textOverflow":"clip","whiteSpace":"normal","lines":null,"topElAtCentre":"wm-empty","unoccludedLeftCentreRight":[true,true,true],"onboardUp":false}
+S-1 scale 100 card-dismissed clipped(.wm-feed) = []
+S-1 scale 125 card-up token {"found":true,"rect":[479.5,568.1,1002.5,613.1],"panel":[470.5,533.1,1011.5,657.1],"inside":true,"scrollW":521,"clientW":521,"overflow":"visible","textOverflow":"clip","whiteSpace":"normal","lines":null,"topElAtCentre":"hud-menu-actions","unoccludedLeftCentreRight":[false,false,true],"onboardUp":true}
+S-1 scale 125 card-dismissed feed {"body":"-- CHANNEL OPEN --","rows":0,"head":"FEEDFEED CLEAR","tokenInBody":true}
+S-1 scale 125 card-dismissed token {"found":true,"rect":[479.5,568.1,1002.5,613.1],"panel":[470.5,533.1,1011.5,657.1],"inside":true,"scrollW":521,"clientW":521,"overflow":"visible","textOverflow":"clip","whiteSpace":"normal","lines":null,"topElAtCentre":"wm-empty","unoccludedLeftCentreRight":[true,true,true],"onboardUp":false}
+S-1 scale 125 card-dismissed clipped(.wm-feed) = []
+no console or page errors

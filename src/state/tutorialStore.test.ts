@@ -67,6 +67,15 @@ describe('contextual hints', () => {
     expect(useTutorialStore.getState().hints).toEqual([])
   })
 
+  it('BLAST RADIUS fires once per campaign (TM-021 AC-1)', () => {
+    fireTutorialHint('hint-grenade')
+    fireTutorialHint('hint-grenade')
+    expect(useTutorialStore.getState().hints).toEqual(['hint-grenade'])
+    useTutorialStore.getState().dismissHint('hint-grenade')
+    fireTutorialHint('hint-grenade')
+    expect(useTutorialStore.getState().hints).toEqual([])
+  })
+
   it('queues independent hints side by side', () => {
     fireTutorialHint('hint-alert')
     fireTutorialHint('hint-overweight')

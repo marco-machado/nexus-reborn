@@ -1,0 +1,21 @@
+# IF-018 hand-walk — 2026-10-25T02:10:30.127Z
+PRE viewport/card {"w":1280,"h":720,"card":true}
+TC-01 {"modal":null,"desc":0,"anyModal":0,"role":"dialog","label":"World Network orientation"}
+PASS IF-018 TC-01 aria-modal absent/not true and 0 descendants
+TC-07 wrap {"background":"rgba(0, 0, 0, 0)","backdropFilter":"none","pointerEvents":"none","box":[0,0,1280,720]}
+PASS IF-018 TC-07 wrap draws no backdrop // rgba(0, 0, 0, 0)
+TC-02 {"text":"UNDERSTOOD","tag":"BUTTON","cls":"hud-btn pause","aria":"UNDERSTOOD // DISMISS THE ORIENTATION","inBottom":false,"inCard":true,"inNav":false,"card":true}
+PASS IF-018 TC-02 UNDERSTOOD focused, inside .wm-onboard
+TC-03 {"text":"WORLD NETWORK","tag":"BUTTON","cls":"navtab active","aria":"WORLD NETWORK","inBottom":false,"inCard":false,"inNav":true,"card":true}
+PASS IF-018 TC-03 Tab -> nav, card stays // WORLD NETWORK
+TC-04 {"text":"UNDERSTOOD","tag":"BUTTON","cls":"hud-btn pause","aria":"UNDERSTOOD // DISMISS THE ORIENTATION","inBottom":false,"inCard":true,"inNav":false,"card":true}
+PASS IF-018 TC-04 Shift+Tab -> UNDERSTOOD, card stays
+TC-06 {"text":"UNDERSTOOD","tag":"BUTTON","cls":"hud-btn pause","aria":"UNDERSTOOD // DISMISS THE ORIENTATION","inBottom":false,"inCard":true,"inNav":false,"card":true,"seenHintWorldmap":false}
+PASS IF-018 TC-06 Esc leaves card; hint-worldmap not seen // seen=false
+TC-05 pre {"text":"UNDERSTOOD","tag":"BUTTON","cls":"hud-btn pause","aria":"UNDERSTOOD // DISMISS THE ORIENTATION","inBottom":false,"inCard":true,"inNav":false,"card":true}
+TC-05 after Shift+Tab {"text":"13:47HELIX CORP SECURES TRADE AGREEMENT IN OSLO>","tag":"BUTTON","cls":"wm-feed-line dim","aria":"13:47 HELIX CORP SECURES TRADE AGREEMENT IN OSLO // FOCUS EUROPE","inBottom":true,"inCard":false,"inNav":false,"card":true}
+TC-05 after Tab {"text":"UNDERSTOOD","tag":"BUTTON","cls":"hud-btn pause","aria":"UNDERSTOOD // DISMISS THE ORIENTATION","inBottom":false,"inCard":true,"inNav":false,"card":true}
+PASS IF-018 TC-05 pre-focus UNDERSTOOD
+PASS IF-018 TC-05 Shift+Tab: inBottom/inCard/card/Tab-back // true/false/true/UNDERSTOOD
+errors: none
+# 0 FAIL

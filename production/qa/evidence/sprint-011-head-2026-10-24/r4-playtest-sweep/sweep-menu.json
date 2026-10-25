@@ -1,0 +1,127 @@
+{
+ "def": {
+  "svgRuns": 0,
+  "svgSmall": [],
+  "svgLow": [],
+  "runs": 15,
+  "small": [],
+  "low": [],
+  "exempt": [],
+  "dim": [],
+  "faint": [],
+  "targets": 2,
+  "underTargets": [],
+  "labelInName": [],
+  "textBoxes": [
+   {
+    "text": "SYS:GN-7A // BOOT SEQUENCE COMPLETE",
+    "size": 10,
+    "w": 297,
+    "key": "div < div.menu-boot"
+   },
+   {
+    "text": "PRT:ON | SEC:LVL 3 | UPLINK EU-4 STRONG",
+    "size": 10,
+    "w": 297,
+    "key": "div < div.menu-boot"
+   },
+   {
+    "text": "AWAITING OPERATOR",
+    "size": 10,
+    "w": 297,
+    "key": "div.dim < div.menu-boot"
+   },
+   {
+    "text": "_",
+    "size": 10,
+    "w": 8,
+    "key": "span.cursor < div.dim"
+   },
+   {
+    "text": "02:34:54",
+    "size": 11,
+    "w": 106,
+    "key": "div.menu-clock < header.menu-top"
+   },
+   {
+    "text": "UTC",
+    "size": 11,
+    "w": 106,
+    "key": "div.menu-clock < header.menu-top"
+   },
+   {
+    "text": "NEXUS",
+    "size": 64.8,
+    "w": 292,
+    "key": "span < h1.menu-wordmark"
+   },
+   {
+    "text": "REBORN",
+    "size": 64.8,
+    "w": 351,
+    "key": "span < h1.menu-wordmark"
+   },
+   {
+    "text": "CORPORATE GEOSTRATEGIC COMMAND INTERFACE",
+    "size": 12.8,
+    "w": 571,
+    "key": "div.menu-tagline < div.menu-center"
+   },
+   {
+    "text": "NO CAMPAIGN ON FILE",
+    "size": 10,
+    "w": 160,
+    "key": "div.menu-save-line < div.menu-center"
+   },
+   {
+    "text": "<< NEW OPERATION >>",
+    "size": 16,
+    "w": 358,
+    "key": "span.cta-inner < button.cta.menu-cta"
+   },
+   {
+    "text": "SETTINGS",
+    "size": 12,
+    "w": 360,
+    "key": "button.btn.menu-settings-btn < div.menu-actions"
+   },
+   {
+    "text": "VER 7.2.1 // BUILD 2087.05.14",
+    "size": 10,
+    "w": 215,
+    "key": "span < footer.menu-foot"
+   },
+   {
+    "text": "UNAUTHORIZED ACCESS IS A CLASS-1 CORPORA",
+    "size": 10,
+    "w": 371,
+    "key": "span.dim < footer.menu-foot"
+   },
+   {
+    "text": "USER: OPS_DIRECTOR // NEXUS GLOBAL // CL",
+    "size": 10,
+    "w": 430,
+    "key": "span < footer.menu-foot"
+   }
+  ]
+ },
+ "hcLow": [],
+ "tab": [
+  {
+   "tag": "button",
+   "name": "BEGIN NEW OPERATION",
+   "dis": null
+  },
+  {
+   "tag": "button",
+   "name": "OPEN SETTINGS // AUDIO, CONTROLS AND ACCESSIBILITY",
+   "dis": null
+  }
+ ],
+ "clips": {
+  "90": [],
+  "100": [],
+  "110": [],
+  "125": []
+ }
+}

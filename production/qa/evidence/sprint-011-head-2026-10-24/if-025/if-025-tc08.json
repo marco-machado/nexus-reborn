@@ -1,0 +1,21 @@
+{
+  "gate": true,
+  "afterClick": "eu",
+  "res": {
+    "100": {
+      "wraps": 0,
+      "acts": 0,
+      "actionsChildren": 0,
+      "found": [],
+      "clipped": []
+    },
+    "125": {
+      "wraps": 0,
+      "acts": 0,
+      "actionsChildren": 0,
+      "found": [],
+      "clipped": []
+    }
+  },
+  "back": 3
+}
