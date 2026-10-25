@@ -53,7 +53,17 @@ const stats = await page.evaluate(() => {
   const heapMb = {}
   for (const [p, f] of Object.entries(hby)) heapMb[p] = { max: +Math.max(...f).toFixed(1), last: +f[f.length - 1].toFixed(1) }
   const lt = window.__long.map(([t, d, p]) => [p, +d.toFixed(1)])
-  return { frames, draws, heapMb, longTasks: lt }
+  // Ported from perf-2026-10-19: where each >50 ms frame sits, and mission
+  // frames after the first 2 s (live play, the hitch budget's window).
+  const firstOf = {}; const idx = {}; const spikes = []
+  for (const [t, d, p] of window.__frames) {
+    firstOf[p] ??= t; idx[p] = (idx[p] ?? -1) + 1
+    if (d > 50) spikes.push({ phase: p, msIntoPhase: +(t - firstOf[p]).toFixed(0), frameInPhase: idx[p], ms: +d.toFixed(1) })
+  }
+  const m = window.__frames.filter(([t, , p]) => p === 'mission' && t > firstOf.mission + 2000).map(([, d]) => d).sort((a, b) => a - b)
+  const mq = (x) => +m[Math.min(m.length - 1, Math.floor(x * m.length))].toFixed(1)
+  const missionLive = { n: m.length, p50: mq(0.5), p95: mq(0.95), max: +m[m.length - 1].toFixed(1), over50ms: m.filter((d) => d > 50).length }
+  return { frames, missionLive, spikes, draws, heapMb, longTasks: lt }
 })
 const res = { at: new Date().toISOString(), wallSec: Math.round((Date.now() - t0) / 1000), nav, missionEntryMs, play, ...stats, errs }
 console.log(JSON.stringify(res, null, 1))

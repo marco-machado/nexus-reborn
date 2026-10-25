@@ -177,7 +177,8 @@ export async function deploy(page, label) {
     await assign.first().click()
     await page.waitForTimeout(150)
   }
-  await page.locator('[aria-label^="DEPLOY STRIKE TEAM"]').click()
+  // IF-038 (ad176af) renamed the button to its visible text: DEPLOY TEAM // STRIKE TEAM 04.
+  await page.locator('[aria-label="DEPLOY TEAM // STRIKE TEAM 04"]').click()
   await page.waitForFunction(() => window.__phase === 'mission' || document.body.innerText.includes('OBJECTIVES'), null, { timeout: 30000 }).catch(() => {})
 }
 
@@ -203,6 +204,11 @@ export const play = (page, opts) =>
     while (performance.now() - t0 < (opts.budgetMs ?? 600000)) {
       const ms = MS.getState()
       if (ms.result !== 'none') break
+      // TM-019 casualty hold freezes the sim until Space; resume it as Space does.
+      if (ms.held) {
+        log.push([Math.round(w.time), 'resume-hold', ms.holdReason])
+        ms.setHeld(false)
+      }
       const agents = w.units.filter((u) => u.kind === 'agent' && u.stance !== 'dead')
       if (agents.length === 0) break
       const ids = agents.map((u) => u.id)
